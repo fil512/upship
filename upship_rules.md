@@ -500,7 +500,7 @@ Every player begins with these basic cards representing primitive but essential 
 | **Apprentice** | 2 | Any | None | 1 Influence |
 | **Mechanic** | 2 | Hangar | +1 Reliability for this launch | 1 Ops |
 | **Draftsman** | 2 | Design | +1 tile swap this action | 1 Influence |
-| **Researcher** | 2 | Research Institute | +1 Research discount | 1 Ops |
+| **Researcher** | 2 | Research Institute | Research costs £2 instead of £3 | 1 Ops |
 | **Purser** | 1 | Bank | Gain £2 | 2 Influence |
 | **Co-Pilot** | 1 | Hangar | +1 to Hazard Check | 2 Ops |
 
@@ -509,7 +509,7 @@ Every player begins with these basic cards representing primitive but essential 
 The Market Row offers more powerful cards in several categories:
 
 **Technical Support (High Ops)**
-- Cards that help pass Hazard checks and win contests
+- Cards that help pass Hazard Checks and provide safety margins during risky launches
 - Example: *Chief Engineer* — Agent (Design): +2 tile swaps. Reveal: 3 Ops
 
 **Political Backing (High Influence)**
@@ -522,7 +522,7 @@ The Market Row offers more powerful cards in several categories:
 
 **Research & Development**
 - Cards that accelerate technology acquisition
-- Example: *University Partnership* — Agent (Research Institute): -2 Research cost. Reveal: 2 Influence, 1 Ops
+- Example: *University Partnership* — Agent (Research Institute): Research costs £1 each. Reveal: 2 Influence, 1 Ops
 
 **Organizations & Institutions**
 - Expensive, powerful cards representing major backing
@@ -534,7 +534,7 @@ The Market Row offers more powerful cards in several categories:
 
 ## 9.1 Triggering the Transition
 
-Each Age ends when [TO BE DETERMINED - need new Age end trigger without Headline deck]. When an Age ends:
+Each Age ends when the Progress Track reaches or exceeds the Age threshold (see Section 1.3 for thresholds by player count). The transition is checked during the Income & Cleanup phase, after Technologies are acquired but before Agents are refreshed. When an Age ends:
 
 1. **Route Wipe:** Remove the current Map. All ships on it are returned to player supplies.
 2. **Income Crash:** Players immediately reduce their Income Track by the combined value of all routes lost.
@@ -591,7 +591,7 @@ Each nation has a unique starting Blueprint configuration, special technology, a
 
 **Starting Advantage:** *Helium Monopoly* — The only faction that starts with the Helium Handling technology already in their Drawing Office. Their ships can be immune to Fire disaster cards and the Hindenburg Disaster.
 
-**Starting Technology (pre-printed on Player Board):** *Trapeze Fighter System* — Unlocks the Sparrowhawk Hangar upgrade: A hangar for biplanes. In contested routes and Headline Contests, add +3 to any contest. Dominate patrol contracts.
+**Starting Technology (pre-printed on Player Board):** *Trapeze Fighter System* — Unlocks the Sparrowhawk Hangar upgrade: A hangar for biplanes. When launching to a route, you may ignore one stat requirement (your fighter escorts compensate). Additionally, military routes in Age II provide +2 Income.
 
 **The Flaw:** *Heavy Frame* — Helium lifts less than Hydrogen. All Helium Gas Cell upgrades provide -1 Lift compared to their Hydrogen equivalents, forcing smaller payloads or more gas cells.
 
@@ -782,7 +782,7 @@ The following items require finalization before the game is complete:
    - Varied costs (2-8 Influence)
    - Balance between Ops-heavy and Influence-heavy reveals
    - Research bonus cards for tech acquisition strategies
-   - [TO BE DETERMINED: What is the purpose of Ops without Headline Contests?]
+   - **RESOLVED:** Ops are used for Hazard Checks during launches (see Section 7.2)
 
 3. **Starter Deck Review:** Verify the 10-card starter deck provides:
    - Access to all Ground Board locations
@@ -799,9 +799,10 @@ The following items require finalization before the game is complete:
 
 2. **Engineer Economy:**
    - Starting Engineers: 2
-   - Recruit cost: £3 per Engineer
+   - Recruit cost: £4 per Engineer (see Section 6.1)
    - Upkeep cost: £1 per Engineer per round
    - Research generation: 1 per Engineer at Reveal
+   - **Note:** Pilots cost £2 to recruit (cheaper because consumed on launch)
 
 3. **Route Income Values:** Determine £ values for routes based on:
    - Distance/difficulty
@@ -809,11 +810,9 @@ The following items require finalization before the game is complete:
    - Strategic importance
    - Target: Ships should pay for themselves in ~3-5 turns
 
-4. **Progress Track Thresholds:** Verify pacing:
-   - 2 Players: 20 technologies (aggressive)
-   - 3 Players: 25 technologies
-   - 4 Players: 30 technologies
-   - Test: Does game end feel earned, not arbitrary?
+4. **Progress Track Thresholds:** **RESOLVED** - See Section 1.3 for complete table including Age transitions:
+   - Age transitions at 8/16/20 (2P), 10/20/25 (3P), 12/24/30 (4P)
+   - Test: Does game pacing feel appropriate across all Ages?
 
 5. **Lifting Gas Market:** Set price scaling and:
    - Starting supply per Age
@@ -822,18 +821,13 @@ The following items require finalization before the game is complete:
 
 ## A.4 Gameplay Polish
 
-1. **Age End Triggers:** Define what triggers the end of each Age (without Headline decks):
-   - Should it be based on number of rounds?
-   - Based on Progress Track milestones?
-   - Based on number of routes claimed?
-   - Other mechanism?
+1. **Age End Triggers:** **RESOLVED** - Progress Track milestones trigger Age transitions (see Section 1.3 and 9.1)
 
-2. **Action Selection Mechanism:** Redesign how players choose actions (see note O):
+2. **Action Selection Mechanism:** Partially resolved:
    - Current system requires spending matching cards for worker placement
-   - Need to determine optimal number of action spaces before deciding agent count
-   - Consider alternative card-to-action relationships (e.g., Seven Wonders model where cards are spent regardless of card content)
-   - Determine purpose of Ops icons without Headline Contests
-   - Possibly redesign or remove Research Institute action space
+   - **RESOLVED:** Research Institute now allows purchasing Research with £ (see Section 6.1)
+   - **RESOLVED:** Ops are used for Hazard Checks during launches (see Section 7.2)
+   - Still needs testing: Is card-icon matching too restrictive? Consider Apprentice "Any" cards as wild
 
 3. **Agent Count:** Determine appropriate number of agents per player after finalizing action spaces
    - Currently set at 3, but may need adjustment based on final action selection design
@@ -872,12 +866,12 @@ The following items require finalization before the game is complete:
 
 ## Phase Order (Each Round)
 
-1. **Worker Placement:** Take turns placing Agents
-2. **Reveal:** Show remaining hands, calculate Influence/Ops/Research
-3. **Acquire Technologies:** Spend Research (Engineers + card bonuses) on Technologies
+1. **Worker Placement:** Take turns placing Agents (play cards to visit locations)
+2. **Reveal:** Show remaining hands, calculate Influence and Research
+3. **Acquire Technologies:** Spend Research (Engineers + card bonuses + purchased) on Technologies
 4. **Purchase Cards:** Spend Influence on Market cards
 5. **Income:** Pay Engineer upkeep, collect £ from Income Track
-6. **Cleanup:** Refresh R&D Board (advance Progress), refresh Agents, draw cards
+6. **Cleanup:** Refresh R&D Board, check Age transition, refresh Agents, draw cards
 
 ## Launch Checklist
 
@@ -887,17 +881,18 @@ The following items require finalization before the game is complete:
 4. ✓ Pay Production Cost
 5. ✓ Pay Lifting Gas
 6. ✓ Spend 1 Pilot token from Barracks to shared supply
-7. ✓ Draw and resolve Hazard Card from your personal Hazard Deck
-8. ✓ (Optional) Spend Engineers reactively to prevent crash if Hazard Card allows
-9. ✓ If passed: Place ship, increase Income
-10. ✓ If failed on Luxury Launch with Hydrogen in Age III: Hindenburg Disaster triggered
-11. ✓ If failed otherwise: Return ship to supply, lose all costs including Pilot
+7. ✓ Draw Hazard Card from your personal Hazard Deck
+8. ✓ (Optional) Play cards from hand to add their Ops to your Hazard Check total
+9. ✓ (Optional) Spend Engineers reactively to prevent crash if Hazard Card allows
+10. ✓ If passed: Place ship, increase Income
+11. ✓ If failed on Luxury Launch with Hydrogen in Age III: Hindenburg Disaster triggered
+12. ✓ If failed otherwise: Return ship to supply, lose all costs including Pilot
 
 ## Key Formulas
 
 - **Physics Check:** Total Lift ≥ Total Weight
 - **Hazard Check:** Ship Stat + Ops + Engineers spent (if allowed by Hazard Card) ≥ Hazard Difficulty
-- **Research per Round:** Number of Engineers in Barracks + Research bonuses from revealed cards
+- **Research per Round:** Engineers in Barracks + card bonuses + Research purchased at Research Institute
 - **Engineer Upkeep:** £1 per Engineer in Barracks
 - **Tech Cost:** Listed cost − Specialization Discount
 - **Victory:** Most Victory Points wins (tiebreakers: Income, Cash, Ships on map)
