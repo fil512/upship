@@ -195,9 +195,11 @@ A holding area for ships you have built but not yet launched:
 
 **Strategic Value:** Building ships across multiple rounds then launching together lets you claim multiple routes in one action, but requires careful timing and saving Ops cards for the mass Hazard Checks.
 
-## 3.5 Zone 5: Economy Track (Right Edge)
+## 3.5 Zone 5: Economy Tracks (Right Edge)
 
-- **Income Track:** Tracks your current £ earned per round
+- **Income Track:** Tracks your current £ earned per round from routes
+- **Pilot Income Track:** Tracks free Pilots gained per round (starts at 1)
+- **Engineer Income Track:** Tracks free Engineers gained per round (starts at 1)
 - **Loan Marker:** Tracks penalties from loans taken
 
 ## 3.6 Zone 6: Blueprint Stat Tracks (Adjacent to Blueprint)
@@ -459,12 +461,24 @@ At the start of each round, determine turn order based on **Income Track positio
 - **Result:** Gain Pilot or Engineer tokens from the shared supply to your Barracks
 - **Note:** Pilots are cheaper because they are consumed when launching ships; Engineers persist and generate ongoing Research
 
-**6. The Bank (Coin Icon)**
+**6. The Flight School (Wings Icon)**
+- **Action:** Expand your pilot training program
+- **Cost:** £5 per level
+- **Effect:** Increase your Pilot Income track by 1 step
+- **Strategic Note:** Investing in Pilot Income provides a steady stream of free Pilots each round, reducing reliance on the Academy
+
+**7. The Technical Institute (Gear Icon)**
+- **Action:** Expand your engineering program
+- **Cost:** £6 per level
+- **Effect:** Increase your Engineer Income track by 1 step
+- **Strategic Note:** Investing in Engineer Income provides free Engineers each round, fueling your Research capacity without ongoing recruitment costs
+
+**8. The Bank (Coin Icon)**
 - **Action:** Take a loan
 - **Effect:** Gain £30 immediately
 - **Penalty:** Reduce Income Track by 3 steps
 
-**7. The Ministry (Crown Icon)**
+**9. The Ministry (Crown Icon)**
 - **Action:** Political maneuvering
 - **Effect:** Various special actions (claim bonus rewards, change turn order)
 
@@ -495,11 +509,12 @@ Players may spend Influence to buy cards from the Market Row. Purchased cards go
 
 1. **Pay Engineer Upkeep:** Deduct £1 per Engineer in your Barracks from your income
 2. **Collect Income:** Each player gains £ equal to their Income Track position (minus Engineer upkeep)
-3. **Refresh R&D Board:** Draw new Technology tiles from the bag to fill empty R&D Board spaces
-4. **Check Age Transition:** If the Progress Track has reached or exceeded the current Age threshold, trigger Age Transition (see Section 9)
-5. **Refresh Agents:** Return all Agents to player supplies
-6. **Draw Cards:** Shuffle discard pile into deck if needed; draw back to hand size (typically 5)
-7. **Refill Markets:** Refill the Card Market Row
+3. **Collect Crew Income:** Each player gains Pilots equal to their Pilot Income Track, and Engineers equal to their Engineer Income Track
+4. **Refresh R&D Board:** Draw new Technology tiles from the bag to fill empty R&D Board spaces
+5. **Check Age Transition:** If the Progress Track has reached or exceeded the current Age threshold, trigger Age Transition (see Section 9)
+6. **Refresh Agents:** Return all Agents to player supplies
+7. **Draw Cards:** Shuffle discard pile into deck if needed; draw back to hand size (typically 5)
+8. **Refill Markets:** Refill the Card Market Row
 
 ---
 
