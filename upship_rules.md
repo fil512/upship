@@ -166,9 +166,9 @@ You cannot launch a ship if its design is physically impossible:
 
 If your Blueprint violates this rule, your ship cannot leave the ground.
 
-### The Frozen Prototype Rule
+### Ship Stats at Launch
 
-When you **build** a ship at the Shipyard, it is constructed with the **exact stats** of your Blueprint at that moment. Ships waiting in your Hangar Bay and ships on the map have "frozen" stats—changing your Blueprint later does *not* affect ships already built. You are designing the *next* generation of ships, while the old models wait in the Hangar Bay or continue on their existing routes.
+Ships in your Hangar Bay are generic airship tokens—they don't track individual stats. When you **launch** a ship, it uses your **current Blueprint stats** at that moment. This means you can build ships now, upgrade your Blueprint later, and launch with the improved design. No bookkeeping required.
 
 ## 3.3 Zone 3: The Barracks (Bottom)
 
@@ -189,11 +189,11 @@ Storage for your crew tokens earned from the shared supply:
 A holding area for ships you have built but not yet launched:
 
 - **Capacity:** Up to 3 ships can wait in your Hangar Bay
-- **Building Ships:** When you take the Shipyard action, built ships are placed here
+- **Building Ships:** When you take the Construction Hall action, built ships are placed here
 - **Launching Ships:** When you take the Launchpad action, all ships in your Hangar Bay are launched simultaneously
-- **Frozen Stats:** Ships in the Hangar Bay retain the Blueprint stats from when they were built, even if you modify your Blueprint later
+- **Current Stats:** Ships use your current Blueprint stats when launched (no individual tracking needed)
 
-**Strategic Value:** Building ships across multiple rounds then launching together lets you claim multiple routes in one action, but requires careful timing and saving Ops cards for the mass Hazard Checks.
+**Strategic Value:** Building ships across multiple rounds then launching together lets you claim multiple routes in one action. You can even upgrade your Blueprint between building and launching!
 
 ## 3.5 Zone 5: Gas Reserve (Adjacent to Hangar Bay)
 
@@ -201,7 +201,7 @@ Storage for lifting gas purchased in advance:
 
 - **Hydrogen Tokens:** Standard lifting gas, cheaper but flammable
 - **Helium Tokens:** Safe lifting gas, more expensive (requires Helium Handling technology)
-- **Usage:** When building ships at the Shipyard, use stored gas first. Any deficit must be purchased at current market price.
+- **Usage:** When building ships at the Construction Hall, use stored gas first. Any deficit must be purchased at current market price.
 - **Strategic Value:** Buy gas when market prices are low; use stored gas to avoid price spikes or Helium shortages
 
 ## 3.6 Zone 6: Economy Tracks (Right Edge)
@@ -457,13 +457,13 @@ The Ground Board has 12 action spaces, each marked with one of three symbols. To
 - **Limit:** 2 tile swaps per action (cards and abilities can increase this)
 - **Constraint:** Can only install Upgrades for Technologies you own
 
-**3. The Shipyard (Wrench)**
+**3. The Construction Hall (Wrench)**
 - **Action:** Build ships
 - **Cost:** Production Cost (£ based on Blueprint complexity) + Lifting Gas per ship
 - **Limit:** Build up to 3 ships per action (if you have the Pilots and funds)
 - **Gas Payment:** Use stored gas from your Gas Reserve first; any deficit must be purchased at current market price
-- **Effect:** For each ship built, spend 1 Pilot from your Barracks and pay costs. Built ships are placed in your **Hangar Bay** (a holding area on your Player Board), waiting to be launched.
-- **Note:** Ships in your Hangar Bay use your Blueprint stats at the moment of building (Frozen Prototype rule applies at build time, not launch time)
+- **Effect:** For each ship built, spend 1 Pilot from your Barracks and pay costs. Built ships are placed in your **Hangar Bay**, waiting to be launched.
+- **Note:** Ships in your Hangar Bay use your current Blueprint stats when launched (no individual stat tracking)
 
 **4. The Launchpad (Propeller)**
 - **Action:** Launch all ships from your Hangar Bay
@@ -558,22 +558,22 @@ Players may spend Influence to buy cards from the Market Row. Purchased cards go
 
 # 7. BUILDING AND LAUNCHING SHIPS
 
-Ships are constructed at the Shipyard and launched from the Launchpad. This two-step process lets you build multiple ships and launch them together.
+Ships are constructed at the Construction Hall and launched from the Launchpad. This two-step process lets you build multiple ships and launch them together.
 
-## 7.1 The Build Procedure (Shipyard Action)
+## 7.1 The Build Procedure (Construction Hall Action)
 
-When you take the **Shipyard Action**, you construct ships:
+When you take the **Construction Hall Action**, you construct ships:
 
 1. **Verify Physics Check:** Your Blueprint must satisfy Total Lift ≥ Total Weight
 2. **Pay Costs Per Ship:** For each ship you build, pay:
    - Production Cost (£ based on Blueprint complexity)
-   - Lifting Gas cost
+   - Lifting Gas cost (from Gas Reserve first, then market price for any deficit)
 3. **Spend Pilot Per Ship:** Return 1 Pilot token from your Barracks to the shared supply for each ship
 4. **Place in Hangar Bay:** Built ships are placed in your Hangar Bay, waiting for launch
 
-**Frozen Prototype Rule:** Ships in your Hangar Bay use your Blueprint's stats at the moment of building. If you modify your Blueprint later, ships already in the Hangar Bay retain their original stats.
+**No Stat Tracking:** Ships in your Hangar Bay are generic tokens. When launched, they use your current Blueprint stats—you can upgrade between building and launching!
 
-**Build Limit:** You may build up to 3 ships per Shipyard action (limited by your available Pilots and funds).
+**Build Limit:** You may build up to 3 ships per Construction Hall action (limited by your available Pilots and funds).
 
 ## 7.2 The Launch Procedure (Launchpad Action)
 
@@ -641,7 +641,7 @@ Every card in the game has **dual functionality**, creating constant tension bet
 | **Reveal Effect** | Bottom | Influence and/or Ops icons generated when revealed |
 
 **The Three Symbols:**
-- **Wrench (Technical):** Design Bureau, Shipyard, Technical Institute, Gas Depot
+- **Wrench (Technical):** Design Bureau, Construction Hall, Technical Institute, Gas Depot
 - **Coin (Business):** Academy, Flight School, Bank, Insurance Bureau
 - **Propeller (Operations):** Research Institute, Launchpad, Ministry, Weather Bureau
 
@@ -651,7 +651,7 @@ When you draw a card, you must decide:
 - **Use it for Worker Placement:** Send an Agent to a matching location (same symbol), trigger the Agent Effect, but the card is discarded (no reveal benefit)
 - **Save it for Reveal:** Keep it in hand until end of round to generate Influence (for buying cards) and/or Ops (for Hazard Checks)
 
-**Symbol Tension:** To build ships AND launch them in the same round, you need both Wrench cards (for Shipyard) and Propeller cards (for Launchpad). Managing your hand's symbol mix is critical.
+**Symbol Tension:** To build ships AND launch them in the same round, you need both Wrench cards (for Construction Hall) and Propeller cards (for Launchpad). Managing your hand's symbol mix is critical.
 
 ## 8.3 Starter Deck (10 Cards)
 
@@ -1086,7 +1086,7 @@ The following items require finalization before the game is complete:
 5. **Income:** Pay Engineer upkeep, collect £ from Income Track
 6. **Cleanup:** Refresh R&D Board, check Age transition, refresh Agents, draw cards
 
-## Build Checklist (Shipyard Action)
+## Build Checklist (Construction Hall Action)
 
 1. ✓ Blueprint passes Physics Check (Lift ≥ Weight)
 2. ✓ For each ship: Pay Production Cost + Lifting Gas
