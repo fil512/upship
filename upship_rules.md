@@ -166,9 +166,9 @@ You cannot launch a ship if its design is physically impossible:
 
 If your Blueprint violates this rule, your ship cannot leave the ground.
 
-### The Frozen Prototype Rule
+### Ship Stats at Launch
 
-When you launch a ship, it enters the map with the **exact stats** of your Blueprint at that moment. Once a ship is on the map, its stats are "frozen"—changing your Blueprint later does *not* affect ships already flying. You are designing the *next* generation of ships, while the old models continue on their existing routes.
+Ships in your Hangar Bay are generic airship tokens—they don't track individual stats. When you **launch** a ship, it uses your **current Blueprint stats** at that moment. This means you can build ships now, upgrade your Blueprint later, and launch with the improved design. No bookkeeping required.
 
 ## 3.3 Zone 3: The Barracks (Bottom)
 
@@ -184,12 +184,34 @@ Storage for your crew tokens earned from the shared supply:
 
 **The Engineer's Dilemma:** Engineers are expensive to recruit and maintain, but they are essential for acquiring new Technologies. Spending Engineers on emergencies saves ships but reduces your innovation capacity next round.
 
-## 3.4 Zone 4: Economy Track (Right Edge)
+## 3.4 Zone 4: The Hangar Bay (Adjacent to Barracks)
 
-- **Income Track:** Tracks your current £ earned per round
+A holding area for ships you have built but not yet launched:
+
+- **Capacity:** Up to 3 ships can wait in your Hangar Bay
+- **Building Ships:** When you take the Construction Hall action, built ships are placed here
+- **Launching Ships:** When you take the Launchpad action, you may launch as many ships as you wish, one after another
+- **Current Stats:** Ships use your current Blueprint stats when launched (no individual tracking needed)
+
+**Strategic Value:** Building ships across multiple rounds then launching in sequence lets you claim multiple routes in one action—but you can stop if Hazards turn ugly. You can even upgrade your Blueprint between building and launching!
+
+## 3.5 Zone 5: Gas Reserve (Adjacent to Hangar Bay)
+
+Storage for lifting gas purchased in advance:
+
+- **Hydrogen Tokens:** Standard lifting gas, cheaper but flammable
+- **Helium Tokens:** Safe lifting gas, more expensive (requires Helium Handling technology)
+- **Usage:** When building ships at the Construction Hall, use stored gas first. Any deficit must be purchased at current market price.
+- **Strategic Value:** Buy gas when market prices are low; use stored gas to avoid price spikes or Helium shortages
+
+## 3.6 Zone 6: Economy Tracks (Right Edge)
+
+- **Income Track:** Tracks your current £ earned per round from routes
+- **Pilot Income Track:** Tracks free Pilots gained per round (starts at 1)
+- **Engineer Income Track:** Tracks free Engineers gained per round (starts at 1)
 - **Loan Marker:** Tracks penalties from loans taken
 
-## 3.5 Zone 5: Blueprint Stat Tracks (Adjacent to Blueprint)
+## 3.7 Zone 7: Blueprint Stat Tracks (Adjacent to Blueprint)
 
 Your Player Board includes dedicated tracks for monitoring your current Blueprint's statistics. As you install or remove Upgrade tiles, adjust tracking cubes on these tracks to reflect your ship's current capabilities:
 
@@ -270,13 +292,13 @@ A shared supply of Upgrade tiles organized by type. Unlike Technologies, Upgrade
 Visit **The Design Bureau** on the Ground Board:
 - **Action:** Modify your Blueprint
 - **Cost:** Free (but limited swaps per action)
-- **Swaps Allowed:** Up to 3 tile installations or removals per action
+- **Swaps Allowed:** 2 tile installations or removals per action (cards and abilities can increase this)
 - **Constraint:** You may only install Upgrades for which you own the corresponding Technology
 
 **Examples of Upgrade Actions:**
-- Install 2 new tiles, remove 1 old tile (3 swaps)
-- Install 3 new tiles (3 swaps)
-- Remove 2 tiles, install 1 tile (3 swaps)
+- Install 2 new tiles (2 swaps, the base action)
+- Remove 1 tile and install 2 new tiles (3 swaps, requires a card bonus)
+- Install 4 new tiles (4 swaps, requires Italy's Rapid Refit or multiple card bonuses)
 
 **Removed Tiles:** When you remove an Upgrade from your Blueprint, return it to the shared Upgrade Supply. You retain the Technology and can reinstall the same Upgrade type later.
 
@@ -414,38 +436,95 @@ At the start of each round, determine turn order based on **Income Track positio
 
 ### Ground Board Locations:
 
-**1. The Research Institute (Propeller Icon)**
+The Ground Board has 12 action spaces, each marked with one of three symbols. To visit a space, you must play a card showing that symbol.
+
+**Symbol Types:**
+- **Wrench (Technical):** Engineering and construction activities
+- **Coin (Business):** Financial and personnel activities
+- **Propeller (Operations):** Research and flight activities
+
+---
+
+**1. The Research Institute (Propeller)**
 - **Action:** Purchase Research with money
 - **Cost:** £3 per Research point (or £2 if you played a Researcher card for this action)
 - **Effect:** Gain Research tokens that can be spent this round during Technology acquisition in the Reveal Phase
 - **Strategic Note:** This provides an alternate path for cash-rich, engineer-poor players to acquire Technologies
 
-**2. The Design Bureau (Compass Icon)**
+**2. The Design Bureau (Wrench)**
 - **Action:** Modify your Blueprint (install/remove Upgrades)
 - **Cost:** Free
-- **Limit:** Up to 3 tile swaps per action
+- **Limit:** 2 tile swaps per action (cards and abilities can increase this)
 - **Constraint:** Can only install Upgrades for Technologies you own
 
-**3. The Hangar (Wrench Icon)**
-- **Action:** Launch a ship
-- **Cost:** Production Cost + Lifting Gas + spend 1 Pilot from Barracks
-- **Triggers:** Hazard Check (see Section 7)
-- **Result:** Place ship on valid route; increase Income Track
+**3. The Construction Hall (Wrench)**
+- **Action:** Build ships
+- **Cost:** Hull Cost per ship (£ based on Frame + Fabric upgrades installed)
+- **Limit:** Build up to 3 ships per action
+- **Cost Reduction:** Card effects and faction abilities can reduce Hull Cost
+- **Effect:** Pay £ costs. Built ships are placed in your **Hangar Bay**, waiting to be launched.
+- **Hull Upgrade Rule:** If you upgrade your Frame or Fabric while ships are in your Hangar, pay the Hull Cost difference for each ship already built
 
-**4. The Academy (Book Icon)**
+**4. The Launchpad (Propeller)**
+- **Action:** Launch ships from your Hangar Bay
+- **Requirement:** Blueprint must pass Physics Check (Total Lift ≥ Total Weight)
+- **Cost per Launch:** 1 Pilot + Lifting Gas (from Gas Reserve first; deficit at market price)
+- **Effect:** You may launch as many ships from your Hangar as you wish, one after another. Each launch is resolved separately:
+  1. Verify Physics Check passes
+  2. Spend 1 Pilot and pay for gas
+  3. Choose a ship and assign it to a valid route
+  4. Pass a Hazard Check (draw one Hazard Card)
+  5. If Hydrogen: Roll d6 for fire risk
+  6. Place successful ship on route; increase Income Track
+  7. Repeat for additional ships, or stop at any time
+- **Result:** You control pacing—stop after a bad Hazard draw, or press your luck
+- **Strategic Note:** Building is cheap; launching is the commitment. Build ships early, upgrade your Blueprint, then launch when ready
+
+**5. The Academy (Coin)**
 - **Action:** Recruit crew from the shared supply
 - **Cost:** £2 per Pilot, £3 per Engineer
 - **Result:** Gain Pilot or Engineer tokens from the shared supply to your Barracks
 - **Note:** Pilots are cheaper because they are consumed when launching ships; Engineers persist and generate ongoing Research
 
-**5. The Bank (Coin Icon)**
+**6. The Flight School (Coin)**
+- **Action:** Expand your pilot training program
+- **Cost:** £5 per level
+- **Effect:** Increase your Pilot Income track by 1 step
+- **Strategic Note:** Investing in Pilot Income provides a steady stream of free Pilots each round, reducing reliance on the Academy
+
+**7. The Technical Institute (Wrench)**
+- **Action:** Expand your engineering program
+- **Cost:** £6 per level
+- **Effect:** Increase your Engineer Income track by 1 step
+- **Strategic Note:** Investing in Engineer Income provides free Engineers each round, fueling your Research capacity without ongoing recruitment costs
+
+**8. The Bank (Coin)**
 - **Action:** Take a loan
 - **Effect:** Gain £30 immediately
 - **Penalty:** Reduce Income Track by 3 steps
 
-**6. The Ministry (Crown Icon)**
+**9. The Ministry (Propeller)**
 - **Action:** Political maneuvering
 - **Effect:** Various special actions (claim bonus rewards, change turn order)
+
+**10. The Gas Depot (Wrench)**
+- **Action:** Purchase lifting gas for storage
+- **Cost:** Current market price per unit (Hydrogen or Helium)
+- **Effect:** Add gas tokens to your Gas Reserve on your Player Board
+- **Strategic Note:** Buy gas when prices are low; stored gas can be used later when building ships, avoiding market price spikes
+
+**11. The Insurance Bureau (Coin)**
+- **Action:** Purchase insurance policies
+- **Cost:** £3 per policy card
+- **Effect:** Take policy cards and place them face-up near your Player Board
+- **Policy Benefit:** When one of your ships fails a Hazard Check, you may discard one policy card to recover the airship token to your Hangar Bay. You still lose the Pilot and any gas spent, but you keep the ship for another attempt.
+- **Strategic Note:** Insurance is valuable for expensive ships or risky launches—it lets you try again without rebuilding from scratch
+
+**12. The Weather Bureau (Propeller)**
+- **Action:** Consult weather forecasts
+- **Cost:** £2
+- **Effect:** Look at the top card of your personal Hazard Deck. You may either leave it on top or move it to the bottom of the deck.
+- **Strategic Note:** Plan your launches around favorable weather, or bury dangerous hazards for later
 
 ## 6.2 Phase B: Reveal & Acquisition
 
@@ -454,11 +533,14 @@ After all players pass, the round enters the Reveal Phase:
 ### Step 1: Reveal Hands
 All players simultaneously reveal the cards remaining in their hands (cards not used for worker placement).
 
-### Step 2: Calculate Resources
-- **Influence (Diamond Icons):** Sum all Influence icons on revealed cards. Use Influence to buy new cards from the Market Row.
-- **Research (from Engineers + Cards + Purchases):** Your total available Research equals: the number of Engineers currently in your Barracks, plus any Research bonuses printed on cards remaining in your hand, plus any Research tokens purchased at the Research Institute this round. This is a "use it or lose it" budget for acquiring Technologies.
-
-**Note on Ops:** Cards with Ops icons are NOT revealed here. Ops are used reactively during Hazard Checks (see Section 7)—cards you play from hand during a launch are discarded, not revealed. The decision to save high-Ops cards for risky launches versus using them for worker placement is a key tactical choice.
+### Step 2: Gain Resources from Reveal Icons
+Collect resources shown on your revealed cards:
+- **£ (Money):** Gain cash immediately
+- **Research:** Add to your Research pool for acquiring Technologies (in addition to Engineers in your Barracks)
+- **Pilot:** Gain Pilot tokens to your Barracks
+- **Engineer:** Gain Engineer tokens to your Barracks
+- **Gas:** Gain gas tokens to your Gas Reserve
+- **Influence:** Save for purchasing cards in Step 4
 
 ### Step 3: Acquire Technologies
 Players may spend their Research budget to acquire one or more Technologies from the R&D Board:
@@ -474,47 +556,88 @@ Players may spend Influence to buy cards from the Market Row. Purchased cards go
 
 1. **Pay Engineer Upkeep:** Deduct £1 per Engineer in your Barracks from your income
 2. **Collect Income:** Each player gains £ equal to their Income Track position (minus Engineer upkeep)
-3. **Refresh R&D Board:** Draw new Technology tiles from the bag to fill empty R&D Board spaces
-4. **Check Age Transition:** If the Progress Track has reached or exceeded the current Age threshold, trigger Age Transition (see Section 9)
-5. **Refresh Agents:** Return all Agents to player supplies
-6. **Draw Cards:** Shuffle discard pile into deck if needed; draw back to hand size (typically 5)
-7. **Refill Markets:** Refill the Card Market Row
+3. **Collect Crew Income:** Each player gains Pilots equal to their Pilot Income Track, and Engineers equal to their Engineer Income Track
+4. **Refresh R&D Board:** Draw new Technology tiles from the bag to fill empty R&D Board spaces
+5. **Check Age Transition:** If the Progress Track has reached or exceeded the current Age threshold, trigger Age Transition (see Section 9)
+6. **Refresh Agents:** Return all Agents to player supplies
+7. **Draw Cards:** Shuffle discard pile into deck if needed; draw back to hand size (typically 5)
+8. **Refill Markets:** Refill the Card Market Row
 
 ---
 
-# 7. THE HAZARD CHECK (Launching Ships)
+# 7. BUILDING AND LAUNCHING SHIPS
 
-When you take the **Launch Action**, your ship must survive its maiden voyage. This represents the inherent danger of early aviation—cheap ships built to minimum specifications often failed catastrophically.
+Ships are constructed at the Construction Hall and launched from the Launchpad. This two-step process lets you build multiple ships and launch them together.
 
-## 7.1 The Launch Procedure
+## 7.1 The Build Procedure (Construction Hall Action)
 
-1. **Pay Costs:** Pay Production Cost (£ based on Blueprint complexity) + Lifting Gas
-2. **Spend Pilot:** Return 1 Pilot token from your Barracks to the shared supply (the Pilot is committed to this ship's operations)
-3. **Draw Hazard Card:** Reveal the top card of your personal Hazard Deck
+When you take the **Construction Hall Action**, you construct ships:
 
-## 7.2 Resolving the Hazard
+1. **Pay Hull Cost:** For each ship you build, pay £ based on your Frame + Fabric upgrades
+2. **Place in Hangar Bay:** Built ships are placed in your Hangar Bay, waiting for launch
+
+**Hull Cost:** Determined by the Frame and Fabric upgrades currently installed on your Blueprint. Basic hull = £2. Each Frame/Fabric upgrade adds to this cost.
+
+**Cost Reduction:** Card effects and faction abilities can reduce Hull Cost (minimum £0).
+
+**Hull Upgrade Rule:** If you upgrade your Frame or Fabric while ships are in your Hangar Bay, you must pay the difference in Hull Cost for each ship already built. This represents retrofitting the improved materials.
+
+**Build Limit:** You may build up to 3 ships per Construction Hall action.
+
+**Note:** Physics Check is NOT required to build—only to launch. You can build ships for a Blueprint that doesn't fly yet, then add Lift upgrades before launching.
+
+## 7.2 The Launch Procedure (Launchpad Action)
+
+When you take the **Launchpad Action**, you may launch as many ships from your Hangar as you wish, one after another. Each launch is resolved separately:
+
+1. **Verify Physics Check:** Your Blueprint must satisfy Total Lift ≥ Total Weight (if not, you cannot launch)
+2. **Select a Ship:** Choose one ship from your Hangar Bay
+3. **Pay Launch Costs:**
+   - Spend 1 Pilot from your Barracks (returned to shared supply)
+   - Pay for Lifting Gas (use Gas Reserve first; any deficit at current market price)
+4. **Assign Route:** Declare which route this ship will attempt (must meet route's stat requirements)
+5. **Resolve Hazard Check:** Draw a Hazard Card and resolve it (see 7.3)
+6. **Hydrogen Fire Roll:** If the ship uses Hydrogen and passed the Hazard Check, roll a d6 for fire risk (see 7.4)
+7. **Outcome:**
+   - **Success:** Place ship on route; increase your Income Track
+   - **Failure:** Ship is returned to your Hangar Bay (you lose the Pilot and gas already spent)
+8. **Continue or Stop:** After resolving each ship, you may launch another ship or stop
+
+**Strategic Timing:** Building is cheap; launching is the commitment. You can stockpile ships in your Hangar, then upgrade your Blueprint to pass the Physics Check before launching.
+
+## 7.3 Resolving Hazard Checks
 
 Each Hazard Card shows a **Challenge Type** and **Difficulty Rating**:
 - *Example:* "Strong Headwind — Requires Speed 3"
 - *Example:* "Icing Conditions — Requires Ceiling 2"
 - *Example:* "Clear Skies — Auto Pass"
 
-**Calculate Your Total:**
-> Ship's Relevant Stat + Ops from cards played from hand
+**Check Your Ship Stat:**
+> Compare your Blueprint's relevant stat to the Hazard Difficulty
 
-**Playing Ops:** After seeing the Hazard Card, you may play any number of cards from your hand and add their Ops icons to your total. Cards played this way are discarded immediately—they will NOT be available during the Reveal Phase.
+**Reactive Engineer Spending:** After seeing the Hazard Card, you may spend Engineer tokens from your Barracks to boost your check. Each Engineer spent adds +1 to your total. Engineers spent now won't generate Research during the Reveal Phase.
 
-**Reactive Engineer Spending:** After seeing the Hazard Card and calculating your initial total (including any Ops you choose to play), you may spend Engineer tokens from your Barracks to prevent crashes under certain circumstances. The specific ways Engineers can help will depend on the Hazard Card type (see individual card text for details).
+**Outcome:**
+- **Pass:** If your ship stat (+ Engineers spent) meets or exceeds the Difficulty, the ship is successfully launched. Place it on the route and increase your Income Track.
+- **Fail:** If your total is less than the Difficulty, the launch fails. The ship returns to your Hangar Bay, but you lose the Pilot and gas already spent.
 
-**The Dilemma:**
-- Cards with high Ops values are your safety net for risky launches—but playing them means losing their Influence bonuses during the Reveal Phase
-- Engineers spent now won't generate Research during the Reveal Phase
-- This creates a meaningful choice: Do you save your best cards for the end of round, or spend them to ensure a safe launch?
+## 7.4 Hydrogen Fire Risk
 
-- **Pass:** If your total meets or exceeds the Difficulty, the ship is successfully launched. Place it on the route and increase your Income Track.
-- **Fail:** If your total is less than the Difficulty, the launch fails. The ship returns to your supply (you keep the ship token), but you lose all costs paid including the Pilot already spent. Your turn is wasted.
+When launching a ship that uses **Hydrogen** gas (including the printed base Gas Cell), roll a d6 after resolving the Hazard Check:
 
-## 7.3 Luxury Launches (Age III)
+| Roll | Result |
+|------|--------|
+| 1-4 | **Safe** — No fire. Proceed normally. |
+| 5 | **Controllable Fire** — A fire breaks out! You may spend 1 Engineer from your Barracks to extinguish it. If you do, the launch succeeds. If you cannot or choose not to spend an Engineer, the ship crashes. |
+| 6 | **Catastrophic Fire** — An unstoppable fire engulfs the ship. The ship crashes regardless of Hazard Check result. No Engineer can save it. |
+
+**Timing:** The fire roll happens *after* you pass the Hazard Check. A ship that fails its Hazard Check does not roll for fire—it has already crashed.
+
+**Helium Ships:** Ships using **Helium Gas Cells** (from the Helium Handling technology) skip this roll entirely. Helium is non-flammable.
+
+**The Hydrogen Gamble:** Hydrogen is cheaper and provides more lift, but every launch carries a 1-in-3 chance of fire. Helium is expensive and harder to obtain, but eliminates fire risk completely. This is the core risk/reward tradeoff of gas selection.
+
+## 7.5 Luxury Launches (Age III)
 
 Routes marked as **Luxury Routes** require ships with the Luxury stat and trigger special rules:
 
@@ -538,52 +661,67 @@ Every card in the game has **dual functionality**, creating constant tension bet
 
 | Section | Location | Function |
 |---------|----------|----------|
-| **Agent Icon** | Top Left | Determines which Ground Board locations you can visit |
+| **Action Symbol** | Top Left | One of three symbols (Wrench/Coin/Propeller) determining which action spaces you can visit |
 | **Agent Effect** | Middle | Bonus when using this card for worker placement |
-| **Reveal Effect** | Bottom | Influence and/or Ops icons generated when revealed |
+| **Reveal Icons** | Bottom | Resource icons generated when card is revealed at end of round |
+
+**The Three Action Symbols:**
+- **Wrench (Technical):** Design Bureau, Construction Hall, Technical Institute, Gas Depot
+- **Coin (Business):** Academy, Flight School, Bank, Insurance Bureau
+- **Propeller (Operations):** Research Institute, Launchpad, Ministry, Weather Bureau
+
+**Reveal Resource Icons:**
+- **£ (Money):** Gain this much cash immediately
+- **Research:** Add to your Research pool for acquiring Technologies
+- **Pilot:** Gain a Pilot token to your Barracks
+- **Engineer:** Gain an Engineer token to your Barracks
+- **Gas:** Gain a gas token to your Gas Reserve
+- **Influence:** Spend to purchase cards from the Market Row
 
 ## 8.2 The Core Decision
 
 When you draw a card, you must decide:
-- **Use it for Worker Placement:** Send an Agent to the matching location, trigger the Agent Effect, but the card is discarded (no reveal benefit)
-- **Save it for Reveal:** Keep it in hand until end of round to generate Influence (for buying cards) and/or Ops (for contests and hazard checks)
+- **Use it for Worker Placement:** Send an Agent to a matching location (same symbol), trigger the Agent Effect, but the card is discarded (no reveal benefit)
+- **Save it for Reveal:** Keep it in hand until end of round to generate resources from Reveal Icons
+
+**Symbol Tension:** To build ships AND launch them in the same round, you need both Wrench cards (for Construction Hall) and Propeller cards (for Launchpad). Managing your hand's symbol mix is critical.
 
 ## 8.3 Starter Deck (10 Cards)
 
 Every player begins with these basic cards representing primitive but essential capabilities:
 
-| Card | Qty | Agent Icon | Agent Effect | Reveal |
-|------|-----|------------|--------------|--------|
+| Card | Qty | Symbol | Agent Effect | Reveal |
+|------|-----|--------|--------------|--------|
 | **Apprentice** | 2 | Any | None | 1 Influence |
-| **Mechanic** | 2 | Hangar | +1 Reliability for this launch | 1 Ops |
-| **Draftsman** | 2 | Design | +1 tile swap this action | 1 Influence |
-| **Researcher** | 2 | Research Institute | Research costs £2 instead of £3 | 1 Ops |
-| **Purser** | 1 | Bank | Gain £2 | 2 Influence |
-| **Co-Pilot** | 1 | Hangar | +1 to Hazard Check | 2 Ops |
+| **Mechanic** | 2 | Wrench | +1 tile swap this action | 1 £ |
+| **Draftsman** | 2 | Wrench | Draw 1 card | 1 Influence |
+| **Researcher** | 2 | Propeller | +1 Research this round | 1 Research |
+| **Purser** | 1 | Coin | Gain £2 | 2 Influence |
+| **Helmsman** | 1 | Propeller | +1 to any ship stat for this launch | 1 Pilot |
 
 ## 8.4 Market Deck Categories
 
 The Market Row offers more powerful cards in several categories:
 
-**Technical Support (High Ops)**
-- Cards that help pass Hazard Checks and provide safety margins during risky launches
-- Example: *Chief Engineer* — Agent (Design): +2 tile swaps. Reveal: 3 Ops
+**Technical Support**
+- Cards that help with building, upgrades, and engineering
+- Example: *Chief Engineer* — Wrench: +2 tile swaps. Reveal: 1 Engineer
 
 **Political Backing (High Influence)**
-- Cards that help purchase expensive upgrades
-- Example: *The Aristocrat* — Agent (Bank): Gain £5. Reveal: 3 Influence
+- Cards that help purchase expensive cards and gain favor
+- Example: *The Aristocrat* — Coin: Gain £5. Reveal: 3 Influence
 
 **Operational Efficiency**
 - Cards that reduce costs or provide special abilities
-- Example: *Test Pilot* — Agent (Hangar): Ignore the Hazard card completely. Reveal: 1 Ops
+- Example: *Test Pilot* — Propeller: Reroll the Hydrogen Fire die. Reveal: 1 Pilot
 
 **Research & Development**
 - Cards that accelerate technology acquisition
-- Example: *University Partnership* — Agent (Research Institute): Research costs £1 each. Reveal: 2 Influence, 1 Ops
+- Example: *University Partnership* — Propeller: -£2 per Technology this round. Reveal: 2 Research
 
 **Organizations & Institutions**
 - Expensive, powerful cards representing major backing
-- Example: *Royal Geographic Society* — Agent (Design): Install an Upgrade ignoring Technology requirements. Reveal: 2 Influence, 2 Ops
+- Example: *Royal Geographic Society* — Wrench: Install an Upgrade ignoring Technology requirements. Reveal: 1 Engineer, 2 Influence
 
 ---
 
@@ -644,7 +782,7 @@ Each nation has a unique starting Blueprint configuration, special technology, a
 
 **Starting Technology (pre-printed on Player Board):** *Imperial Mooring System* — Unlocks the Imperial Mast upgrade: Treat any British Territory (Egypt, Canada, India) as a Home Base for repair/refuel, extending effective range.
 
-**The Flaw:** *Red Tape* — When taking the Upgrade Action at the Design Bureau, Britain may only make 2 tile swaps instead of 3 (government inefficiency).
+**The Flaw:** *Red Tape* — When taking the Upgrade Action at the Design Bureau, Britain may only make 1 tile swap instead of 2 (government inefficiency).
 
 **Home Base (Age II):** Cardington
 
@@ -666,7 +804,7 @@ Each nation has a unique starting Blueprint configuration, special technology, a
 **Archetype:** The Agile Explorers
 **Philosophy:** Small is beautiful. They build nimble semi-rigid ships designed to dance through storms.
 
-**Starting Advantage:** *Rapid Refit* — When taking the Upgrade Action, Italy may make up to 5 tile swaps instead of 3. They can completely reconfigure their Blueprint in a single action.
+**Starting Advantage:** *Rapid Refit* — When taking the Upgrade Action, Italy may make up to 4 tile swaps instead of 2. They can reconfigure their Blueprint much faster than other nations.
 
 **Starting Technology (pre-printed on Player Board):** *Articulated Keel Design* — Unlocks the Flexible Frame upgrade: Ignore Weather penalties on Hazard cards. When others are grounded by storms, you can fly.
 
@@ -866,9 +1004,12 @@ The following items require finalization before the game is complete:
 
 7. **Iconography:** Create distinct icons for:
    - Research (Lightbulb or Beaker)
-   - Ops (Gear)
    - Influence (Diamond)
-   - Lift (Balloon)
+   - Money (£ or Coin)
+   - Pilot (Aviator cap)
+   - Engineer (Wrench or Gear)
+   - Gas (Balloon or Tank)
+   - Lift (Up arrow)
    - Speed (Propeller)
    - Range (Fuel Gauge)
    - Reliability (Shield)
@@ -886,16 +1027,16 @@ The following items require finalization before the game is complete:
    - ~2 Catastrophic Events (Difficulty 6+, Fire keyword)
    - Design cards to specify when/how Engineers can be spent to prevent crashes
 
-2. **Market Deck:** Design 20-30 purchasable crew cards with:
-   - Varied costs (2-8 Influence)
-   - Balance between Ops-heavy and Influence-heavy reveals
-   - Research bonus cards for tech acquisition strategies
-   - **RESOLVED:** Ops are used for Hazard Checks during launches (see Section 7.2)
+2. **Market Deck:** Design 30 purchasable crew cards with:
+   - Varied costs (2-6 Influence)
+   - Mix of resource reveal icons (£, Research, Pilot, Engineer, Gas, Influence)
+   - Cards that provide resources you can't easily get elsewhere
+   - **RESOLVED:** Cards provide resources when revealed (see Section 8)
 
 3. **Starter Deck Review:** Verify the 10-card starter deck provides:
-   - Access to all Ground Board locations
-   - Balance between Ops and Influence
-   - Research Institute access
+   - Access to all Ground Board locations (mix of symbols)
+   - Variety of reveal resources
+   - Enough Influence to occasionally buy Market cards
 
 ## A.3 Economy Balancing
 
@@ -934,7 +1075,7 @@ The following items require finalization before the game is complete:
 2. **Action Selection Mechanism:** Partially resolved:
    - Current system requires spending matching cards for worker placement
    - **RESOLVED:** Research Institute now allows purchasing Research with £ (see Section 6.1)
-   - **RESOLVED:** Ops are used for Hazard Checks during launches (see Section 7.2)
+   - **RESOLVED:** Cards provide resources when revealed instead of being played reactively
    - Still needs testing: Is card-icon matching too restrictive? Consider Apprentice "Any" cards as wild
 
 3. **Agent Count:** Determine appropriate number of agents per player after finalizing action spaces
@@ -981,26 +1122,34 @@ The following items require finalization before the game is complete:
 5. **Income:** Pay Engineer upkeep, collect £ from Income Track
 6. **Cleanup:** Refresh R&D Board, check Age transition, refresh Agents, draw cards
 
-## Launch Checklist
+## Build Checklist (Construction Hall Action)
 
-1. ✓ Blueprint passes Physics Check (Lift ≥ Weight)
-2. ✓ Blueprint meets Route requirements
-3. ✓ If Luxury Route: Verify Luxury stat requirement met
-4. ✓ Pay Production Cost
-5. ✓ Pay Lifting Gas
-6. ✓ Spend 1 Pilot token from Barracks to shared supply
+1. ✓ For each ship: Pay Hull Cost in £ (Frame + Fabric upgrades determine cost)
+2. ✓ Place built ships in your Hangar Bay (up to 3 per action)
+3. ✓ Note: Physics Check NOT required to build—only to launch
+
+## Launch Checklist (Launchpad Action)
+
+1. ✓ Verify Physics Check (Lift ≥ Weight) — cannot launch if Blueprint doesn't fly
+2. ✓ Select a ship from Hangar Bay
+3. ✓ Spend 1 Pilot (Barracks → shared supply)
+4. ✓ Pay for Lifting Gas (Gas Reserve first, then market price for deficit)
+5. ✓ Assign to valid route (must meet stat requirements)
+6. ✓ If Luxury Route: Verify ship has Luxury stat requirement met
 7. ✓ Draw Hazard Card from your personal Hazard Deck
-8. ✓ (Optional) Play cards from hand to add their Ops to your Hazard Check total
-9. ✓ (Optional) Spend Engineers reactively to prevent crash if Hazard Card allows
-10. ✓ If passed: Place ship, increase Income
-11. ✓ If failed on Luxury Launch with Hydrogen in Age III: Hindenburg Disaster triggered
-12. ✓ If failed otherwise: Return ship to supply, lose all costs including Pilot
+8. ✓ Compare Ship Stat to Hazard Difficulty
+9. ✓ (Optional) Spend Engineers (+1 per Engineer) to boost check
+10. ✓ If using Hydrogen and passed Hazard Check: Roll d6 for fire (5 = spend Engineer or crash, 6 = crash)
+11. ✓ If passed all checks: Place ship on route, increase Income
+12. ✓ If failed on Luxury Launch with Hydrogen in Age III: Hindenburg Disaster triggered
+13. ✓ If failed otherwise: Ship returns to Hangar Bay (Pilot and gas lost)
+14. ✓ Continue launching more ships or stop
 
 ## Key Formulas
 
 - **Physics Check:** Total Lift ≥ Total Weight
-- **Hazard Check:** Ship Stat + Ops + Engineers spent (if allowed by Hazard Card) ≥ Hazard Difficulty
-- **Research per Round:** Engineers in Barracks + card bonuses + Research purchased at Research Institute
+- **Hazard Check:** Ship Stat + Engineers spent ≥ Hazard Difficulty
+- **Research per Round:** Engineers in Barracks + Research icons from revealed cards
 - **Engineer Upkeep:** £1 per Engineer in Barracks
 - **Tech Cost:** Listed cost − Specialization Discount
 - **Transition Income:** (£ from Tech tiles) − (£1 × routes lost), minimum £0
@@ -1224,8 +1373,8 @@ Each player has an identical Personal Hazard Deck of 20 cards. When launching a 
 **Resolving Hazards:**
 1. Draw card from your Personal Hazard Deck
 2. Check if auto-pass (Clear Weather cards)
-3. Calculate: Ship's relevant stat + Ops played from hand
-4. (Optional) Spend Engineers as shown on card
+3. Compare: Ship's relevant stat vs Difficulty
+4. (Optional) Spend Engineers: +1 per Engineer spent
 5. If total ≥ Difficulty: Pass. If total < Difficulty: Fail.
 
 **Deck Management:** Shuffle your discard pile back into your Hazard Deck when the deck is empty.
@@ -1238,53 +1387,53 @@ The Market Deck contains 30 purchasable crew cards. Five are displayed in the Ma
 
 ## Technical Personnel (10 cards)
 
-| Name | Cost | Agent Icon | Agent Effect | Reveal |
-|------|------|------------|--------------|--------|
-| Chief Engineer | 4 | Design | +2 tile swaps | 3 Ops |
-| Test Pilot | 5 | Hangar | Ignore Hazard card entirely | 1 Ops |
-| Navigator | 3 | Hangar | +1 Range for this launch | 2 Ops |
-| Weather Expert | 4 | Hangar | +2 to Weather hazards | 2 Ops, 1 Influence |
-| Gas Engineer | 3 | Design | Install Gas upgrade: -1 Weight | 2 Ops |
-| Engine Specialist | 3 | Design | Install Propulsion upgrade: -1 Weight | 2 Ops |
-| Safety Inspector | 4 | Hangar | +2 Reliability for this launch | 3 Ops |
-| Ground Crew Chief | 2 | Hangar | -£2 Production Cost | 1 Ops, 1 Influence |
-| Structural Engineer | 3 | Design | Install Structure upgrade: +1 Lift | 2 Ops |
-| Fuel Specialist | 3 | Hangar | -£2 Lifting Gas cost | 2 Ops |
+| Name | Cost | Symbol | Agent Effect | Reveal |
+|------|------|--------|--------------|--------|
+| Chief Engineer | 4 | Wrench | +2 tile swaps | 1 Engineer |
+| Test Pilot | 5 | Propeller | Reroll Hydrogen Fire die | 1 Pilot |
+| Navigator | 3 | Propeller | +1 Range for this launch | 1 £, 1 Influence |
+| Weather Expert | 4 | Propeller | Ignore Weather hazards this launch | 1 Engineer |
+| Gas Engineer | 3 | Wrench | Install Gas upgrade: -1 Weight | 1 Gas |
+| Engine Specialist | 3 | Wrench | Install Propulsion upgrade: -1 Weight | 1 £, 1 Research |
+| Safety Inspector | 4 | Wrench | +2 Reliability for this launch | 1 Engineer |
+| Ground Crew Chief | 2 | Wrench | -£2 Hull Cost | 2 £ |
+| Structural Engineer | 3 | Wrench | Install Structure upgrade: +1 Lift | 1 Research |
+| Fuel Specialist | 3 | Wrench | -£2 Lifting Gas cost | 1 Gas, 1 £ |
 
 ## Political/Financial Personnel (10 cards)
 
-| Name | Cost | Agent Icon | Agent Effect | Reveal |
-|------|------|------------|--------------|--------|
-| The Aristocrat | 5 | Bank | Gain £5 | 3 Influence |
+| Name | Cost | Symbol | Agent Effect | Reveal |
+|------|------|--------|--------------|--------|
+| The Aristocrat | 5 | Coin | Gain £5 | 3 Influence |
 | Industrial Magnate | 6 | Any | Gain £3 | 4 Influence |
-| Government Minister | 5 | Ministry | Take 2 Ministry actions | 2 Influence, 1 Ops |
-| Shipping Tycoon | 4 | Hangar | +£2 Income from this route | 3 Influence |
-| Press Baron | 4 | Any | No action effect | 2 Influence, 2 Ops |
-| Foreign Investor | 3 | Bank | Loan gives £35 instead of £30 | 2 Influence |
-| Insurance Agent | 3 | Bank | Recover £5 on failed launch | 2 Influence |
-| Bureaucrat | 2 | Ministry | Go first in turn order next round | 2 Influence |
-| Union Representative | 2 | Academy | -£1 per crew recruited this action | 1 Influence, 1 Ops |
-| Customs Official | 3 | Ministry | Claim route even if tied | 2 Influence |
+| Government Minister | 5 | Propeller | Take 2 Ministry actions | 2 Influence, 1 £ |
+| Shipping Tycoon | 4 | Propeller | +£2 Income from this route | 3 Influence |
+| Press Baron | 4 | Any | No action effect | 2 Influence, 2 £ |
+| Foreign Investor | 3 | Coin | Loan gives £35 instead of £30 | 2 Influence |
+| Insurance Agent | 3 | Coin | Gain 1 Insurance policy | 2 Influence |
+| Bureaucrat | 2 | Propeller | Go first in turn order next round | 2 Influence |
+| Union Representative | 2 | Coin | -£1 per crew recruited this action | 1 Influence, 1 Pilot |
+| Customs Official | 3 | Propeller | Claim route even if tied | 2 Influence |
 
 ## Research Personnel (5 cards)
 
-| Name | Cost | Agent Icon | Agent Effect | Reveal |
-|------|------|------------|--------------|--------|
-| University Partnership | 4 | Research | Research costs £1 each this action | 2 Influence, 1 Ops |
-| Patent Attorney | 3 | Research | -1 to Technology Research cost | 2 Influence |
-| Research Assistant | 2 | Research | Gain 1 Research token | 1 Influence, 1 Ops |
-| Technical Library | 3 | Research | Look at top 3 R&D tiles; reorder them | 2 Influence |
-| Foreign Consultant | 4 | Research | Acquire Tech another player owns (pay double) | 2 Ops |
+| Name | Cost | Symbol | Agent Effect | Reveal |
+|------|------|--------|--------------|--------|
+| University Partnership | 4 | Propeller | -£2 per Technology this round | 2 Research |
+| Patent Attorney | 3 | Propeller | -1 to Technology Research cost | 2 Influence |
+| Research Assistant | 2 | Propeller | +1 Research this round | 1 Influence, 1 Research |
+| Technical Library | 3 | Propeller | Look at top 3 R&D tiles; reorder them | 2 Research |
+| Foreign Consultant | 4 | Propeller | Acquire Tech another player owns (pay double) | 1 Research, 1 £ |
 
 ## Organizations (5 cards)
 
-| Name | Cost | Agent Icon | Agent Effect | Reveal |
-|------|------|------------|--------------|--------|
-| Royal Geographic Society | 6 | Design | Install 1 Upgrade ignoring Tech requirement | 2 Influence, 2 Ops |
-| Military Contract | 5 | Ministry | Gain £8; Military routes: +£2 Income | 1 Influence, 2 Ops |
-| Luxury Travel Agency | 5 | Hangar | +1 Luxury stat for this launch | 3 Influence |
-| Aviation Club | 4 | Academy | Recruit 1 Pilot free | 2 Influence, 2 Ops |
-| Engineering Guild | 4 | Academy | Recruit 1 Engineer at -£1 | 1 Influence, 3 Ops |
+| Name | Cost | Symbol | Agent Effect | Reveal |
+|------|------|--------|--------------|--------|
+| Royal Geographic Society | 6 | Wrench | Install 1 Upgrade ignoring Tech requirement | 1 Engineer, 2 Influence |
+| Military Contract | 5 | Propeller | Gain £8; Military routes: +£2 Income | 1 Pilot, 1 £ |
+| Luxury Travel Agency | 5 | Propeller | +1 Luxury stat for this launch | 3 Influence |
+| Aviation Club | 4 | Coin | Recruit 1 Pilot free | 2 Influence, 1 Pilot |
+| Engineering Guild | 4 | Coin | Recruit 1 Engineer at -£1 | 1 Influence, 1 Engineer |
 
 **Market Row Refresh:** At the end of each round, discard any remaining cards in the Market Row and deal 5 new cards.
 
