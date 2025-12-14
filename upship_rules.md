@@ -65,7 +65,7 @@ When the marker reaches or exceeds an Age threshold, that Age ends after the cur
 - 1 Set of Airship Tokens (wooden meeples in player color)
 - 3 Agent Tokens (workers)
 - 1 Income Track Marker
-- 1 Research Track Marker
+- 1 VP Track Marker
 - 1 Personal Hazard Deck (20 cards)
 - Starting Deck of 10 Cards
 - £15 Starting Cash
@@ -78,11 +78,13 @@ When the marker reaches or exceeds an Age threshold, that Age ends after the cur
 - Technology Tile Bag (~60 tiles, Age-sorted)
 - Upgrade Tile Supply (organized by type)
 - Progress Track
+- VP Track (0-80 range)
 - Market Deck (purchasable crew cards)
 - Currency Tokens (£)
 - Pilot Tokens (shared supply)
 - Engineer Tokens (shared supply)
 - Lifting Gas Market Track (for Helium)
+- Achievement Tokens (Atlantic Pioneer, Safety Record)
 
 ---
 
@@ -536,13 +538,14 @@ The Market Row offers more powerful cards in several categories:
 
 Each Age ends when the Progress Track reaches or exceeds the Age threshold (see Section 1.3 for thresholds by player count). The transition is checked during the Income & Cleanup phase, after Technologies are acquired but before Agents are refreshed. When an Age ends:
 
-1. **Route Wipe:** Remove the current Map. All ships on it are returned to player supplies.
-2. **Income Crash:** Players immediately reduce their Income Track by the combined value of all routes lost.
-3. **Pilot Recovery:** All Pilots spent on ships (currently in the shared supply) return to player Barracks. This represents pilots becoming available for the new generation of aircraft.
-4. **Blueprint Transition:** All players replace their Blueprint overlay with the new Age's version. As a one-time special action during this transition, you may transfer all Upgrade tiles from your old Blueprint to your new Blueprint for free (subject to the new Blueprint's slot availability and the Physics Check). Any Upgrades you choose not to transfer are returned to the shared supply. Technologies in your Drawing Office are always retained.
-5. **Map Setup:** Place the new Age's Map in the center of the table.
-6. **Technology Bag Update:** Add the new Age's Technology tiles to the bag (remove all old Age tiles from the bag—older tech that was already acquired by players remains available on the R&D Board if not purchased).
-7. **R&D Board Refresh:** Draw tiles to fill the R&D Board.
+1. **Route Scoring:** Before removing any ships, all players score VP for their routes on the current map (see Section 12.7 for VP values by route type and Age).
+2. **Route Wipe:** Remove the current Map. All ships on it are returned to player supplies.
+3. **Income Crash:** Players immediately reduce their Income Track by the combined value of all routes lost.
+4. **Pilot Recovery:** All Pilots spent on ships (currently in the shared supply) return to player Barracks. This represents pilots becoming available for the new generation of aircraft.
+5. **Blueprint Transition:** All players replace their Blueprint overlay with the new Age's version. As a one-time special action during this transition, you may transfer all Upgrade tiles from your old Blueprint to your new Blueprint for free (subject to the new Blueprint's slot availability and the Physics Check). Any Upgrades you choose not to transfer are returned to the shared supply. Technologies in your Drawing Office are always retained.
+6. **Map Setup:** Place the new Age's Map in the center of the table.
+7. **Technology Bag Update:** Add the new Age's Technology tiles to the bag (remove all old Age tiles from the bag—older tech that was already acquired by players remains available on the R&D Board if not purchased).
+8. **R&D Board Refresh:** Draw tiles to fill the R&D Board.
 
 ## 9.2 The Strategic Challenge
 
@@ -685,6 +688,69 @@ When a player fails a Hazard Check during a Luxury Launch in Age III while using
 - Engineers may be spent reactively after a Hazard Card is drawn to prevent crashes under certain circumstances
 - Engineers spent during a Hazard Check do not generate Research that round
 - Engineer upkeep (£1 per Engineer) is paid at the start of the Income Phase based on Engineers currently in your Barracks
+
+## 12.7 Victory Point Scoring
+
+Victory Points are earned through route operations, technological investment, fleet presence, and financial management. Routes are scored at the **end of each Age** (before ships are removed), while other categories are scored at **game end**.
+
+### Route Scoring (End of Each Age)
+
+When an Age ends, score all routes before removing ships from the map:
+
+| Route Type | Age I | Age II | Age III |
+|------------|-------|--------|---------|
+| Short (Range 1-2) | 1 VP | 2 VP | 2 VP |
+| Medium (Range 3-4) | 2 VP | 3 VP | 4 VP |
+| Long (Range 5-6) | — | 4 VP | 6 VP |
+| **Luxury Bonus** | — | — | +2 VP |
+
+### Technology Scoring (Game End)
+
+| Achievement | VP |
+|-------------|-----|
+| Each Technology tile owned | 1 VP |
+| **Specialization Bonus**: 5+ tiles in one track | +3 VP |
+| **Polymath Bonus**: 3+ tiles in all four tracks | +4 VP |
+
+*Note: You may earn either the Specialization Bonus OR the Polymath Bonus, not both.*
+
+### Fleet Presence (Game End)
+
+| Achievement | VP |
+|-------------|-----|
+| Each ship on the map at game end | 2 VP |
+| **Largest Fleet** (most ships on map) | +3 VP |
+
+In case of a tie for Largest Fleet, all tied players receive +1 VP instead.
+
+### Financial Standing (Game End)
+
+| Achievement | VP |
+|-------------|-----|
+| Each full £10 in Cash | 1 VP |
+| **Highest Income Track** position | +2 VP |
+| Each outstanding Loan | -3 VP |
+
+In case of a tie for Highest Income, all tied players receive +1 VP instead.
+
+### Special Achievements (Game End)
+
+| Achievement | VP |
+|-------------|-----|
+| **Atlantic Pioneer**: First to complete a Transatlantic route (Range 5+) in Age III | +4 VP |
+| **Safety Record**: No ships lost to failed Hazard Checks all game | +3 VP |
+| **The Hindenburg Disaster** (player who caused it) | -5 VP |
+
+### Expected Score Ranges
+
+| Category | Typical Range |
+|----------|---------------|
+| Route VP (all Ages combined) | 15-40 VP |
+| Technology VP | 8-18 VP |
+| Fleet VP | 4-12 VP |
+| Financial VP | 2-8 VP |
+| Achievements | -5 to +7 VP |
+| **Winning Score (4 players)** | **45-65 VP** |
 
 ---
 
@@ -901,6 +967,29 @@ The following items require finalization before the game is complete:
 
 1. **Hindenburg Disaster:** Failed Luxury Launch + Hydrogen + Age III
 2. **Fixed-Wing Rise:** Progress Track reaches threshold
+
+## Scoring Summary
+
+**Route VP (scored at end of each Age):**
+| Route | Age I | Age II | Age III |
+|-------|-------|--------|---------|
+| Short (Range 1-2) | 1 | 2 | 2 |
+| Medium (Range 3-4) | 2 | 3 | 4 |
+| Long (Range 5-6) | — | 4 | 6 |
+| Luxury Bonus | — | — | +2 |
+
+**Game End VP:**
+- Each Technology: 1 VP
+- Specialization (5+ in one track): +3 VP
+- Polymath (3+ in all tracks): +4 VP
+- Each ship on map: 2 VP
+- Largest Fleet: +3 VP
+- Each £10 Cash: 1 VP
+- Highest Income: +2 VP
+- Each Loan: -3 VP
+- Atlantic Pioneer: +4 VP
+- Safety Record: +3 VP
+- Hindenburg Disaster: -5 VP
 
 ---
 
