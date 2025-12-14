@@ -427,26 +427,35 @@ At the start of each round, determine turn order based on **Income Track positio
 
 ### Ground Board Locations:
 
-**1. The Research Institute (Propeller Icon)**
+The Ground Board has 9 action spaces, each marked with one of three symbols. To visit a space, you must play a card showing that symbol.
+
+**Symbol Types:**
+- **Wrench (Technical):** Engineering and construction activities
+- **Coin (Business):** Financial and personnel activities
+- **Propeller (Operations):** Research and flight activities
+
+---
+
+**1. The Research Institute (Propeller)**
 - **Action:** Purchase Research with money
 - **Cost:** £3 per Research point (or £2 if you played a Researcher card for this action)
 - **Effect:** Gain Research tokens that can be spent this round during Technology acquisition in the Reveal Phase
 - **Strategic Note:** This provides an alternate path for cash-rich, engineer-poor players to acquire Technologies
 
-**2. The Design Bureau (Compass Icon)**
+**2. The Design Bureau (Wrench)**
 - **Action:** Modify your Blueprint (install/remove Upgrades)
 - **Cost:** Free
 - **Limit:** 2 tile swaps per action (cards and abilities can increase this)
 - **Constraint:** Can only install Upgrades for Technologies you own
 
-**3. The Shipyard (Wrench Icon)**
+**3. The Shipyard (Wrench)**
 - **Action:** Build ships
 - **Cost:** Production Cost (£ based on Blueprint complexity) + Lifting Gas cost per ship
 - **Limit:** Build up to 3 ships per action (if you have the Pilots and funds)
 - **Effect:** For each ship built, spend 1 Pilot from your Barracks and pay costs. Built ships are placed in your **Hangar Bay** (a holding area on your Player Board), waiting to be launched.
 - **Note:** Ships in your Hangar Bay use your Blueprint stats at the moment of building (Frozen Prototype rule applies at build time, not launch time)
 
-**4. The Launchpad (Airship Icon)**
+**4. The Launchpad (Propeller)**
 - **Action:** Launch all ships from your Hangar Bay
 - **Cost:** Free (costs were paid during building)
 - **Effect:** Launch all ships currently in your Hangar Bay simultaneously. Each ship must:
@@ -455,30 +464,30 @@ At the start of each round, determine turn order based on **Income Track positio
 - **Result:** Ships that pass their Hazard Checks are placed on routes; increase Income Track for each successful placement
 - **Strategic Note:** Building multiple ships then launching together lets you claim multiple routes in one action, but you risk multiple Hazard Checks in sequence
 
-**5. The Academy (Book Icon)**
+**5. The Academy (Coin)**
 - **Action:** Recruit crew from the shared supply
 - **Cost:** £2 per Pilot, £3 per Engineer
 - **Result:** Gain Pilot or Engineer tokens from the shared supply to your Barracks
 - **Note:** Pilots are cheaper because they are consumed when launching ships; Engineers persist and generate ongoing Research
 
-**6. The Flight School (Wings Icon)**
+**6. The Flight School (Coin)**
 - **Action:** Expand your pilot training program
 - **Cost:** £5 per level
 - **Effect:** Increase your Pilot Income track by 1 step
 - **Strategic Note:** Investing in Pilot Income provides a steady stream of free Pilots each round, reducing reliance on the Academy
 
-**7. The Technical Institute (Gear Icon)**
+**7. The Technical Institute (Wrench)**
 - **Action:** Expand your engineering program
 - **Cost:** £6 per level
 - **Effect:** Increase your Engineer Income track by 1 step
 - **Strategic Note:** Investing in Engineer Income provides free Engineers each round, fueling your Research capacity without ongoing recruitment costs
 
-**8. The Bank (Coin Icon)**
+**8. The Bank (Coin)**
 - **Action:** Take a loan
 - **Effect:** Gain £30 immediately
 - **Penalty:** Reduce Income Track by 3 steps
 
-**9. The Ministry (Crown Icon)**
+**9. The Ministry (Propeller)**
 - **Action:** Political maneuvering
 - **Effect:** Various special actions (claim bonus rewards, change turn order)
 
@@ -598,28 +607,35 @@ Every card in the game has **dual functionality**, creating constant tension bet
 
 | Section | Location | Function |
 |---------|----------|----------|
-| **Agent Icon** | Top Left | Determines which Ground Board locations you can visit |
+| **Agent Symbol** | Top Left | One of three symbols (Wrench/Coin/Propeller) determining which action spaces you can visit |
 | **Agent Effect** | Middle | Bonus when using this card for worker placement |
 | **Reveal Effect** | Bottom | Influence and/or Ops icons generated when revealed |
+
+**The Three Symbols:**
+- **Wrench (Technical):** Design Bureau, Shipyard, Technical Institute
+- **Coin (Business):** Academy, Flight School, Bank
+- **Propeller (Operations):** Research Institute, Launchpad, Ministry
 
 ## 8.2 The Core Decision
 
 When you draw a card, you must decide:
-- **Use it for Worker Placement:** Send an Agent to the matching location, trigger the Agent Effect, but the card is discarded (no reveal benefit)
-- **Save it for Reveal:** Keep it in hand until end of round to generate Influence (for buying cards) and/or Ops (for contests and hazard checks)
+- **Use it for Worker Placement:** Send an Agent to a matching location (same symbol), trigger the Agent Effect, but the card is discarded (no reveal benefit)
+- **Save it for Reveal:** Keep it in hand until end of round to generate Influence (for buying cards) and/or Ops (for Hazard Checks)
+
+**Symbol Tension:** To build ships AND launch them in the same round, you need both Wrench cards (for Shipyard) and Propeller cards (for Launchpad). Managing your hand's symbol mix is critical.
 
 ## 8.3 Starter Deck (10 Cards)
 
 Every player begins with these basic cards representing primitive but essential capabilities:
 
-| Card | Qty | Agent Icon | Agent Effect | Reveal |
-|------|-----|------------|--------------|--------|
+| Card | Qty | Symbol | Agent Effect | Reveal |
+|------|-----|--------|--------------|--------|
 | **Apprentice** | 2 | Any | None | 1 Influence |
-| **Mechanic** | 2 | Hangar | +1 Reliability for this launch | 1 Ops |
-| **Draftsman** | 2 | Design | +1 tile swap this action | 1 Influence |
-| **Researcher** | 2 | Research Institute | Research costs £2 instead of £3 | 1 Ops |
-| **Purser** | 1 | Bank | Gain £2 | 2 Influence |
-| **Co-Pilot** | 1 | Hangar | +1 to Hazard Check | 2 Ops |
+| **Mechanic** | 2 | Wrench | +1 Reliability for this launch | 1 Ops |
+| **Draftsman** | 2 | Wrench | +1 tile swap this action | 1 Influence |
+| **Researcher** | 2 | Propeller | Research costs £2 instead of £3 | 1 Ops |
+| **Purser** | 1 | Coin | Gain £2 | 2 Influence |
+| **Co-Pilot** | 1 | Propeller | +1 to Hazard Check | 2 Ops |
 
 ## 8.4 Market Deck Categories
 
@@ -627,23 +643,23 @@ The Market Row offers more powerful cards in several categories:
 
 **Technical Support (High Ops)**
 - Cards that help pass Hazard Checks and provide safety margins during risky launches
-- Example: *Chief Engineer* — Agent (Design): +2 tile swaps. Reveal: 3 Ops
+- Example: *Chief Engineer* — Wrench: +2 tile swaps. Reveal: 3 Ops
 
 **Political Backing (High Influence)**
 - Cards that help purchase expensive upgrades
-- Example: *The Aristocrat* — Agent (Bank): Gain £5. Reveal: 3 Influence
+- Example: *The Aristocrat* — Coin: Gain £5. Reveal: 3 Influence
 
 **Operational Efficiency**
 - Cards that reduce costs or provide special abilities
-- Example: *Test Pilot* — Agent (Hangar): Ignore the Hazard card completely. Reveal: 1 Ops
+- Example: *Test Pilot* — Propeller: Ignore the Hazard card completely. Reveal: 1 Ops
 
 **Research & Development**
 - Cards that accelerate technology acquisition
-- Example: *University Partnership* — Agent (Research Institute): Research costs £1 each. Reveal: 2 Influence, 1 Ops
+- Example: *University Partnership* — Propeller: Research costs £1 each. Reveal: 2 Influence, 1 Ops
 
 **Organizations & Institutions**
 - Expensive, powerful cards representing major backing
-- Example: *Royal Geographic Society* — Agent (Design): Install an Upgrade ignoring Technology requirements. Reveal: 2 Influence, 2 Ops
+- Example: *Royal Geographic Society* — Wrench: Install an Upgrade ignoring Technology requirements. Reveal: 2 Influence, 2 Ops
 
 ---
 
@@ -1301,53 +1317,53 @@ The Market Deck contains 30 purchasable crew cards. Five are displayed in the Ma
 
 ## Technical Personnel (10 cards)
 
-| Name | Cost | Agent Icon | Agent Effect | Reveal |
-|------|------|------------|--------------|--------|
-| Chief Engineer | 4 | Design | +2 tile swaps | 3 Ops |
-| Test Pilot | 5 | Hangar | Ignore Hazard card entirely | 1 Ops |
-| Navigator | 3 | Hangar | +1 Range for this launch | 2 Ops |
-| Weather Expert | 4 | Hangar | +2 to Weather hazards | 2 Ops, 1 Influence |
-| Gas Engineer | 3 | Design | Install Gas upgrade: -1 Weight | 2 Ops |
-| Engine Specialist | 3 | Design | Install Propulsion upgrade: -1 Weight | 2 Ops |
-| Safety Inspector | 4 | Hangar | +2 Reliability for this launch | 3 Ops |
-| Ground Crew Chief | 2 | Hangar | -£2 Production Cost | 1 Ops, 1 Influence |
-| Structural Engineer | 3 | Design | Install Structure upgrade: +1 Lift | 2 Ops |
-| Fuel Specialist | 3 | Hangar | -£2 Lifting Gas cost | 2 Ops |
+| Name | Cost | Symbol | Agent Effect | Reveal |
+|------|------|--------|--------------|--------|
+| Chief Engineer | 4 | Wrench | +2 tile swaps | 3 Ops |
+| Test Pilot | 5 | Propeller | Ignore Hazard card entirely | 1 Ops |
+| Navigator | 3 | Propeller | +1 Range for this launch | 2 Ops |
+| Weather Expert | 4 | Propeller | +2 to Weather hazards | 2 Ops, 1 Influence |
+| Gas Engineer | 3 | Wrench | Install Gas upgrade: -1 Weight | 2 Ops |
+| Engine Specialist | 3 | Wrench | Install Propulsion upgrade: -1 Weight | 2 Ops |
+| Safety Inspector | 4 | Wrench | +2 Reliability for this launch | 3 Ops |
+| Ground Crew Chief | 2 | Wrench | -£2 Production Cost | 1 Ops, 1 Influence |
+| Structural Engineer | 3 | Wrench | Install Structure upgrade: +1 Lift | 2 Ops |
+| Fuel Specialist | 3 | Wrench | -£2 Lifting Gas cost | 2 Ops |
 
 ## Political/Financial Personnel (10 cards)
 
-| Name | Cost | Agent Icon | Agent Effect | Reveal |
-|------|------|------------|--------------|--------|
-| The Aristocrat | 5 | Bank | Gain £5 | 3 Influence |
+| Name | Cost | Symbol | Agent Effect | Reveal |
+|------|------|--------|--------------|--------|
+| The Aristocrat | 5 | Coin | Gain £5 | 3 Influence |
 | Industrial Magnate | 6 | Any | Gain £3 | 4 Influence |
-| Government Minister | 5 | Ministry | Take 2 Ministry actions | 2 Influence, 1 Ops |
-| Shipping Tycoon | 4 | Hangar | +£2 Income from this route | 3 Influence |
+| Government Minister | 5 | Propeller | Take 2 Ministry actions | 2 Influence, 1 Ops |
+| Shipping Tycoon | 4 | Propeller | +£2 Income from this route | 3 Influence |
 | Press Baron | 4 | Any | No action effect | 2 Influence, 2 Ops |
-| Foreign Investor | 3 | Bank | Loan gives £35 instead of £30 | 2 Influence |
-| Insurance Agent | 3 | Bank | Recover £5 on failed launch | 2 Influence |
-| Bureaucrat | 2 | Ministry | Go first in turn order next round | 2 Influence |
-| Union Representative | 2 | Academy | -£1 per crew recruited this action | 1 Influence, 1 Ops |
-| Customs Official | 3 | Ministry | Claim route even if tied | 2 Influence |
+| Foreign Investor | 3 | Coin | Loan gives £35 instead of £30 | 2 Influence |
+| Insurance Agent | 3 | Coin | Recover £5 on failed launch | 2 Influence |
+| Bureaucrat | 2 | Propeller | Go first in turn order next round | 2 Influence |
+| Union Representative | 2 | Coin | -£1 per crew recruited this action | 1 Influence, 1 Ops |
+| Customs Official | 3 | Propeller | Claim route even if tied | 2 Influence |
 
 ## Research Personnel (5 cards)
 
-| Name | Cost | Agent Icon | Agent Effect | Reveal |
-|------|------|------------|--------------|--------|
-| University Partnership | 4 | Research | Research costs £1 each this action | 2 Influence, 1 Ops |
-| Patent Attorney | 3 | Research | -1 to Technology Research cost | 2 Influence |
-| Research Assistant | 2 | Research | Gain 1 Research token | 1 Influence, 1 Ops |
-| Technical Library | 3 | Research | Look at top 3 R&D tiles; reorder them | 2 Influence |
-| Foreign Consultant | 4 | Research | Acquire Tech another player owns (pay double) | 2 Ops |
+| Name | Cost | Symbol | Agent Effect | Reveal |
+|------|------|--------|--------------|--------|
+| University Partnership | 4 | Propeller | Research costs £1 each this action | 2 Influence, 1 Ops |
+| Patent Attorney | 3 | Propeller | -1 to Technology Research cost | 2 Influence |
+| Research Assistant | 2 | Propeller | Gain 1 Research token | 1 Influence, 1 Ops |
+| Technical Library | 3 | Propeller | Look at top 3 R&D tiles; reorder them | 2 Influence |
+| Foreign Consultant | 4 | Propeller | Acquire Tech another player owns (pay double) | 2 Ops |
 
 ## Organizations (5 cards)
 
-| Name | Cost | Agent Icon | Agent Effect | Reveal |
-|------|------|------------|--------------|--------|
-| Royal Geographic Society | 6 | Design | Install 1 Upgrade ignoring Tech requirement | 2 Influence, 2 Ops |
-| Military Contract | 5 | Ministry | Gain £8; Military routes: +£2 Income | 1 Influence, 2 Ops |
-| Luxury Travel Agency | 5 | Hangar | +1 Luxury stat for this launch | 3 Influence |
-| Aviation Club | 4 | Academy | Recruit 1 Pilot free | 2 Influence, 2 Ops |
-| Engineering Guild | 4 | Academy | Recruit 1 Engineer at -£1 | 1 Influence, 3 Ops |
+| Name | Cost | Symbol | Agent Effect | Reveal |
+|------|------|--------|--------------|--------|
+| Royal Geographic Society | 6 | Wrench | Install 1 Upgrade ignoring Tech requirement | 2 Influence, 2 Ops |
+| Military Contract | 5 | Propeller | Gain £8; Military routes: +£2 Income | 1 Influence, 2 Ops |
+| Luxury Travel Agency | 5 | Propeller | +1 Luxury stat for this launch | 3 Influence |
+| Aviation Club | 4 | Coin | Recruit 1 Pilot free | 2 Influence, 2 Ops |
+| Engineering Guild | 4 | Coin | Recruit 1 Engineer at -£1 | 1 Influence, 3 Ops |
 
 **Market Row Refresh:** At the end of each round, discard any remaining cards in the Market Row and deal 5 new cards.
 
