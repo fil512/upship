@@ -168,7 +168,7 @@ If your Blueprint violates this rule, your ship cannot leave the ground.
 
 ### The Frozen Prototype Rule
 
-When you launch a ship, it enters the map with the **exact stats** of your Blueprint at that moment. Once a ship is on the map, its stats are "frozen"—changing your Blueprint later does *not* affect ships already flying. You are designing the *next* generation of ships, while the old models continue on their existing routes.
+When you **build** a ship at the Shipyard, it is constructed with the **exact stats** of your Blueprint at that moment. Ships waiting in your Hangar Bay and ships on the map have "frozen" stats—changing your Blueprint later does *not* affect ships already built. You are designing the *next* generation of ships, while the old models wait in the Hangar Bay or continue on their existing routes.
 
 ## 3.3 Zone 3: The Barracks (Bottom)
 
@@ -184,12 +184,23 @@ Storage for your crew tokens earned from the shared supply:
 
 **The Engineer's Dilemma:** Engineers are expensive to recruit and maintain, but they are essential for acquiring new Technologies. Spending Engineers on emergencies saves ships but reduces your innovation capacity next round.
 
-## 3.4 Zone 4: Economy Track (Right Edge)
+## 3.4 Zone 4: The Hangar Bay (Adjacent to Barracks)
+
+A holding area for ships you have built but not yet launched:
+
+- **Capacity:** Up to 3 ships can wait in your Hangar Bay
+- **Building Ships:** When you take the Shipyard action, built ships are placed here
+- **Launching Ships:** When you take the Launchpad action, all ships in your Hangar Bay are launched simultaneously
+- **Frozen Stats:** Ships in the Hangar Bay retain the Blueprint stats from when they were built, even if you modify your Blueprint later
+
+**Strategic Value:** Building ships across multiple rounds then launching together lets you claim multiple routes in one action, but requires careful timing and saving Ops cards for the mass Hazard Checks.
+
+## 3.5 Zone 5: Economy Track (Right Edge)
 
 - **Income Track:** Tracks your current £ earned per round
 - **Loan Marker:** Tracks penalties from loans taken
 
-## 3.5 Zone 5: Blueprint Stat Tracks (Adjacent to Blueprint)
+## 3.6 Zone 6: Blueprint Stat Tracks (Adjacent to Blueprint)
 
 Your Player Board includes dedicated tracks for monitoring your current Blueprint's statistics. As you install or remove Upgrade tiles, adjust tracking cubes on these tracks to reflect your ship's current capabilities:
 
@@ -270,13 +281,13 @@ A shared supply of Upgrade tiles organized by type. Unlike Technologies, Upgrade
 Visit **The Design Bureau** on the Ground Board:
 - **Action:** Modify your Blueprint
 - **Cost:** Free (but limited swaps per action)
-- **Swaps Allowed:** Up to 3 tile installations or removals per action
+- **Swaps Allowed:** 1 tile installation or removal per action (cards and abilities can increase this)
 - **Constraint:** You may only install Upgrades for which you own the corresponding Technology
 
 **Examples of Upgrade Actions:**
-- Install 2 new tiles, remove 1 old tile (3 swaps)
-- Install 3 new tiles (3 swaps)
-- Remove 2 tiles, install 1 tile (3 swaps)
+- Install 1 new tile (1 swap, the base action)
+- Remove 1 tile and install 1 new tile (2 swaps, requires a card bonus)
+- Install 3 new tiles (3 swaps, requires Italy's Rapid Refit or multiple card bonuses)
 
 **Removed Tiles:** When you remove an Upgrade from your Blueprint, return it to the shared Upgrade Supply. You retain the Technology and can reinstall the same Upgrade type later.
 
@@ -423,27 +434,37 @@ At the start of each round, determine turn order based on **Income Track positio
 **2. The Design Bureau (Compass Icon)**
 - **Action:** Modify your Blueprint (install/remove Upgrades)
 - **Cost:** Free
-- **Limit:** Up to 3 tile swaps per action
+- **Limit:** 1 tile swap per action (cards and abilities can increase this)
 - **Constraint:** Can only install Upgrades for Technologies you own
 
-**3. The Hangar (Wrench Icon)**
-- **Action:** Launch a ship
-- **Cost:** Production Cost + Lifting Gas + spend 1 Pilot from Barracks
-- **Triggers:** Hazard Check (see Section 7)
-- **Result:** Place ship on valid route; increase Income Track
+**3. The Shipyard (Wrench Icon)**
+- **Action:** Build ships
+- **Cost:** Production Cost (£ based on Blueprint complexity) + Lifting Gas cost per ship
+- **Limit:** Build up to 3 ships per action (if you have the Pilots and funds)
+- **Effect:** For each ship built, spend 1 Pilot from your Barracks and pay costs. Built ships are placed in your **Hangar Bay** (a holding area on your Player Board), waiting to be launched.
+- **Note:** Ships in your Hangar Bay use your Blueprint stats at the moment of building (Frozen Prototype rule applies at build time, not launch time)
 
-**4. The Academy (Book Icon)**
+**4. The Launchpad (Anchor Icon)**
+- **Action:** Launch all ships from your Hangar Bay
+- **Cost:** Free (costs were paid during building)
+- **Effect:** Launch all ships currently in your Hangar Bay simultaneously. Each ship must:
+  1. Pass an individual Hazard Check (draw one Hazard Card per ship)
+  2. Be assigned to a valid route that meets its requirements
+- **Result:** Ships that pass their Hazard Checks are placed on routes; increase Income Track for each successful placement
+- **Strategic Note:** Building multiple ships then launching together lets you claim multiple routes in one action, but you risk multiple Hazard Checks in sequence
+
+**5. The Academy (Book Icon)**
 - **Action:** Recruit crew from the shared supply
 - **Cost:** £2 per Pilot, £3 per Engineer
 - **Result:** Gain Pilot or Engineer tokens from the shared supply to your Barracks
 - **Note:** Pilots are cheaper because they are consumed when launching ships; Engineers persist and generate ongoing Research
 
-**5. The Bank (Coin Icon)**
+**6. The Bank (Coin Icon)**
 - **Action:** Take a loan
 - **Effect:** Gain £30 immediately
 - **Penalty:** Reduce Income Track by 3 steps
 
-**6. The Ministry (Crown Icon)**
+**7. The Ministry (Crown Icon)**
 - **Action:** Political maneuvering
 - **Effect:** Various special actions (claim bonus rewards, change turn order)
 
@@ -482,17 +503,39 @@ Players may spend Influence to buy cards from the Market Row. Purchased cards go
 
 ---
 
-# 7. THE HAZARD CHECK (Launching Ships)
+# 7. BUILDING AND LAUNCHING SHIPS
 
-When you take the **Launch Action**, your ship must survive its maiden voyage. This represents the inherent danger of early aviation—cheap ships built to minimum specifications often failed catastrophically.
+Ships are constructed at the Shipyard and launched from the Launchpad. This two-step process lets you build multiple ships and launch them together.
 
-## 7.1 The Launch Procedure
+## 7.1 The Build Procedure (Shipyard Action)
 
-1. **Pay Costs:** Pay Production Cost (£ based on Blueprint complexity) + Lifting Gas
-2. **Spend Pilot:** Return 1 Pilot token from your Barracks to the shared supply (the Pilot is committed to this ship's operations)
-3. **Draw Hazard Card:** Reveal the top card of your personal Hazard Deck
+When you take the **Shipyard Action**, you construct ships:
 
-## 7.2 Resolving the Hazard
+1. **Verify Physics Check:** Your Blueprint must satisfy Total Lift ≥ Total Weight
+2. **Pay Costs Per Ship:** For each ship you build, pay:
+   - Production Cost (£ based on Blueprint complexity)
+   - Lifting Gas cost
+3. **Spend Pilot Per Ship:** Return 1 Pilot token from your Barracks to the shared supply for each ship
+4. **Place in Hangar Bay:** Built ships are placed in your Hangar Bay, waiting for launch
+
+**Frozen Prototype Rule:** Ships in your Hangar Bay use your Blueprint's stats at the moment of building. If you modify your Blueprint later, ships already in the Hangar Bay retain their original stats.
+
+**Build Limit:** You may build up to 3 ships per Shipyard action (limited by your available Pilots and funds).
+
+## 7.2 The Launch Procedure (Launchpad Action)
+
+When you take the **Launchpad Action**, all ships in your Hangar Bay are launched:
+
+1. **Assign Routes:** Declare which route each ship will attempt (each ship must meet the route's stat requirements)
+2. **Resolve Hazard Checks:** For each ship, in the order you choose:
+   - Draw a Hazard Card from your personal Hazard Deck
+   - Resolve the Hazard Check (see 7.3)
+3. **Place Successful Ships:** Ships that pass are placed on their assigned routes; increase your Income Track
+4. **Failed Ships:** Ships that fail their Hazard Check are returned to your supply (you lose the Pilot and costs already paid)
+
+**Strategic Timing:** You can hold ships in your Hangar Bay across multiple rounds, waiting for favorable conditions or saving Ops cards for a mass launch.
+
+## 7.3 Resolving Hazard Checks
 
 Each Hazard Card shows a **Challenge Type** and **Difficulty Rating**:
 - *Example:* "Strong Headwind — Requires Speed 3"
@@ -512,9 +555,11 @@ Each Hazard Card shows a **Challenge Type** and **Difficulty Rating**:
 - This creates a meaningful choice: Do you save your best cards for the end of round, or spend them to ensure a safe launch?
 
 - **Pass:** If your total meets or exceeds the Difficulty, the ship is successfully launched. Place it on the route and increase your Income Track.
-- **Fail:** If your total is less than the Difficulty, the launch fails. The ship returns to your supply (you keep the ship token), but you lose all costs paid including the Pilot already spent. Your turn is wasted.
+- **Fail:** If your total is less than the Difficulty, the launch fails. The ship returns to your supply (you keep the ship token), but you lose all costs paid including the Pilot already spent.
 
-## 7.3 Luxury Launches (Age III)
+**Mass Launch Note:** When launching multiple ships, you may use the same Ops cards to help multiple Hazard Checks (cards stay in hand until you choose to discard them), but Engineers spent are gone for subsequent checks that round.
+
+## 7.4 Luxury Launches (Age III)
 
 Routes marked as **Luxury Routes** require ships with the Luxury stat and trigger special rules:
 
@@ -644,7 +689,7 @@ Each nation has a unique starting Blueprint configuration, special technology, a
 
 **Starting Technology (pre-printed on Player Board):** *Imperial Mooring System* — Unlocks the Imperial Mast upgrade: Treat any British Territory (Egypt, Canada, India) as a Home Base for repair/refuel, extending effective range.
 
-**The Flaw:** *Red Tape* — When taking the Upgrade Action at the Design Bureau, Britain may only make 2 tile swaps instead of 3 (government inefficiency).
+**The Flaw:** *Red Tape* — When taking the Upgrade Action at the Design Bureau, Britain gets 0 base tile swaps instead of 1 (government inefficiency). They must rely on cards and abilities to make any modifications at all.
 
 **Home Base (Age II):** Cardington
 
@@ -666,7 +711,7 @@ Each nation has a unique starting Blueprint configuration, special technology, a
 **Archetype:** The Agile Explorers
 **Philosophy:** Small is beautiful. They build nimble semi-rigid ships designed to dance through storms.
 
-**Starting Advantage:** *Rapid Refit* — When taking the Upgrade Action, Italy may make up to 5 tile swaps instead of 3. They can completely reconfigure their Blueprint in a single action.
+**Starting Advantage:** *Rapid Refit* — When taking the Upgrade Action, Italy may make up to 3 tile swaps instead of 1. They can reconfigure their Blueprint much faster than other nations.
 
 **Starting Technology (pre-printed on Player Board):** *Articulated Keel Design* — Unlocks the Flexible Frame upgrade: Ignore Weather penalties on Hazard cards. When others are grounded by storms, you can fly.
 
@@ -981,20 +1026,23 @@ The following items require finalization before the game is complete:
 5. **Income:** Pay Engineer upkeep, collect £ from Income Track
 6. **Cleanup:** Refresh R&D Board, check Age transition, refresh Agents, draw cards
 
-## Launch Checklist
+## Build Checklist (Shipyard Action)
 
-1. ✓ Blueprint passes Physics Check (Lift ≥ Weight)
-2. ✓ Blueprint meets Route requirements
-3. ✓ If Luxury Route: Verify Luxury stat requirement met
-4. ✓ Pay Production Cost
-5. ✓ Pay Lifting Gas
-6. ✓ Spend 1 Pilot token from Barracks to shared supply
-7. ✓ Draw Hazard Card from your personal Hazard Deck
-8. ✓ (Optional) Play cards from hand to add their Ops to your Hazard Check total
-9. ✓ (Optional) Spend Engineers reactively to prevent crash if Hazard Card allows
-10. ✓ If passed: Place ship, increase Income
-11. ✓ If failed on Luxury Launch with Hydrogen in Age III: Hindenburg Disaster triggered
-12. ✓ If failed otherwise: Return ship to supply, lose all costs including Pilot
+1. ✓ Blueprint passes Physics Check (Lift ≥ Weight)
+2. ✓ For each ship: Pay Production Cost + Lifting Gas
+3. ✓ For each ship: Spend 1 Pilot token from Barracks to shared supply
+4. ✓ Place built ships in your Hangar Bay (up to 3 per action)
+
+## Launch Checklist (Launchpad Action)
+
+1. ✓ Assign each ship in Hangar Bay to a valid route (must meet requirements)
+2. ✓ If Luxury Route: Verify ship has Luxury stat requirement met
+3. ✓ For each ship, draw Hazard Card from your personal Hazard Deck
+4. ✓ (Optional) Play cards from hand to add their Ops to Hazard Check total
+5. ✓ (Optional) Spend Engineers reactively to prevent crash if Hazard Card allows
+6. ✓ If passed: Place ship on route, increase Income
+7. ✓ If failed on Luxury Launch with Hydrogen in Age III: Hindenburg Disaster triggered
+8. ✓ If failed otherwise: Return ship to supply, lose Pilot (costs already paid at build)
 
 ## Key Formulas
 
