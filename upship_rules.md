@@ -190,10 +190,10 @@ A holding area for ships you have built but not yet launched:
 
 - **Capacity:** Up to 3 ships can wait in your Hangar Bay
 - **Building Ships:** When you take the Construction Hall action, built ships are placed here
-- **Launching Ships:** When you take the Launchpad action, all ships in your Hangar Bay are launched simultaneously
+- **Launching Ships:** When you take the Launchpad action, you may launch as many ships as you wish, one after another
 - **Current Stats:** Ships use your current Blueprint stats when launched (no individual tracking needed)
 
-**Strategic Value:** Building ships across multiple rounds then launching together lets you claim multiple routes in one action. You can even upgrade your Blueprint between building and launching!
+**Strategic Value:** Building ships across multiple rounds then launching in sequence lets you claim multiple routes in one action—but you can stop if Hazards turn ugly. You can even upgrade your Blueprint between building and launching!
 
 ## 3.5 Zone 5: Gas Reserve (Adjacent to Hangar Bay)
 
@@ -466,13 +466,15 @@ The Ground Board has 12 action spaces, each marked with one of three symbols. To
 - **Note:** Ships in your Hangar Bay use your current Blueprint stats when launched (no individual stat tracking)
 
 **4. The Launchpad (Propeller)**
-- **Action:** Launch all ships from your Hangar Bay
+- **Action:** Launch ships from your Hangar Bay
 - **Cost:** Free (costs were paid during building)
-- **Effect:** Launch all ships currently in your Hangar Bay simultaneously. Each ship must:
-  1. Pass an individual Hazard Check (draw one Hazard Card per ship)
-  2. Be assigned to a valid route that meets its requirements
-- **Result:** Ships that pass their Hazard Checks are placed on routes; increase Income Track for each successful placement
-- **Strategic Note:** Building multiple ships then launching together lets you claim multiple routes in one action, but you risk multiple Hazard Checks in sequence
+- **Effect:** You may launch as many ships from your Hangar as you wish, one after another. Each launch is resolved separately:
+  1. Choose a ship and assign it to a valid route
+  2. Pass a Hazard Check (draw one Hazard Card)
+  3. Place successful ship on route; increase Income Track
+  4. Repeat for additional ships, or stop at any time
+- **Result:** You control pacing—stop after a bad Hazard draw, or press your luck
+- **Strategic Note:** You can stop launching after seeing a dangerous Hazard Card, saving remaining ships for a future action
 
 **5. The Academy (Coin)**
 - **Action:** Recruit crew from the shared supply
@@ -577,16 +579,17 @@ When you take the **Construction Hall Action**, you construct ships:
 
 ## 7.2 The Launch Procedure (Launchpad Action)
 
-When you take the **Launchpad Action**, all ships in your Hangar Bay are launched:
+When you take the **Launchpad Action**, you may launch as many ships from your Hangar as you wish, one after another. Each launch is resolved separately:
 
-1. **Assign Routes:** Declare which route each ship will attempt (each ship must meet the route's stat requirements)
-2. **Resolve Hazard Checks:** For each ship, in the order you choose:
-   - Draw a Hazard Card from your personal Hazard Deck
-   - Resolve the Hazard Check (see 7.3)
-3. **Place Successful Ships:** Ships that pass are placed on their assigned routes; increase your Income Track
-4. **Failed Ships:** Ships that fail their Hazard Check are returned to your supply (you lose the Pilot and costs already paid)
+1. **Select a Ship:** Choose one ship from your Hangar Bay
+2. **Assign Route:** Declare which route this ship will attempt (must meet route's stat requirements)
+3. **Resolve Hazard Check:** Draw a Hazard Card and resolve it (see 7.3)
+4. **Outcome:**
+   - **Success:** Place ship on route; increase your Income Track
+   - **Failure:** Ship is returned to your supply (you lose the Pilot and costs already paid)
+5. **Continue or Stop:** After resolving each ship, you may launch another ship or stop
 
-**Strategic Timing:** You can hold ships in your Hangar Bay across multiple rounds, waiting for favorable conditions or saving Ops cards for a mass launch.
+**Strategic Timing:** Because each launch resolves before the next, you can react to Hazard results. A dangerous card might convince you to save remaining ships for later—or a lucky streak might encourage you to press on!
 
 ## 7.3 Resolving Hazard Checks
 
