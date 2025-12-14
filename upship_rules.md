@@ -584,10 +584,11 @@ When you take the **Launchpad Action**, you may launch as many ships from your H
 1. **Select a Ship:** Choose one ship from your Hangar Bay
 2. **Assign Route:** Declare which route this ship will attempt (must meet route's stat requirements)
 3. **Resolve Hazard Check:** Draw a Hazard Card and resolve it (see 7.3)
-4. **Outcome:**
+4. **Hydrogen Fire Roll:** If the ship uses Hydrogen and passed the Hazard Check, roll a d6 for fire risk (see 7.4)
+5. **Outcome:**
    - **Success:** Place ship on route; increase your Income Track
    - **Failure:** Ship is returned to your supply (you lose the Pilot and costs already paid)
-5. **Continue or Stop:** After resolving each ship, you may launch another ship or stop
+6. **Continue or Stop:** After resolving each ship, you may launch another ship or stop
 
 **Strategic Timing:** Because each launch resolves before the next, you can react to Hazard results. A dangerous card might convince you to save remaining ships for later—or a lucky streak might encourage you to press on!
 
@@ -615,7 +616,23 @@ Each Hazard Card shows a **Challenge Type** and **Difficulty Rating**:
 
 **Mass Launch Note:** When launching multiple ships, you may use the same Ops cards to help multiple Hazard Checks (cards stay in hand until you choose to discard them), but Engineers spent are gone for subsequent checks that round.
 
-## 7.4 Luxury Launches (Age III)
+## 7.4 Hydrogen Fire Risk
+
+When launching a ship that uses **Hydrogen** gas (including the printed base Gas Cell), roll a d6 after resolving the Hazard Check:
+
+| Roll | Result |
+|------|--------|
+| 1-4 | **Safe** — No fire. Proceed normally. |
+| 5 | **Controllable Fire** — A fire breaks out! You may spend 1 Engineer from your Barracks to extinguish it. If you do, the launch succeeds. If you cannot or choose not to spend an Engineer, the ship crashes. |
+| 6 | **Catastrophic Fire** — An unstoppable fire engulfs the ship. The ship crashes regardless of Hazard Check result. No Engineer can save it. |
+
+**Timing:** The fire roll happens *after* you pass the Hazard Check. A ship that fails its Hazard Check does not roll for fire—it has already crashed.
+
+**Helium Ships:** Ships using **Helium Gas Cells** (from the Helium Handling technology) skip this roll entirely. Helium is non-flammable.
+
+**The Hydrogen Gamble:** Hydrogen is cheaper and provides more lift, but every launch carries a 1-in-3 chance of fire. Helium is expensive and harder to obtain, but eliminates fire risk completely. This is the core risk/reward tradeoff of gas selection.
+
+## 7.5 Luxury Launches (Age III)
 
 Routes marked as **Luxury Routes** require ships with the Luxury stat and trigger special rules:
 
@@ -1098,14 +1115,16 @@ The following items require finalization before the game is complete:
 
 ## Launch Checklist (Launchpad Action)
 
-1. ✓ Assign each ship in Hangar Bay to a valid route (must meet requirements)
+1. ✓ Select a ship from Hangar Bay, assign to valid route (must meet requirements)
 2. ✓ If Luxury Route: Verify ship has Luxury stat requirement met
-3. ✓ For each ship, draw Hazard Card from your personal Hazard Deck
+3. ✓ Draw Hazard Card from your personal Hazard Deck
 4. ✓ (Optional) Play cards from hand to add their Ops to Hazard Check total
 5. ✓ (Optional) Spend Engineers reactively to prevent crash if Hazard Card allows
-6. ✓ If passed: Place ship on route, increase Income
-7. ✓ If failed on Luxury Launch with Hydrogen in Age III: Hindenburg Disaster triggered
-8. ✓ If failed otherwise: Return ship to supply, lose Pilot (costs already paid at build)
+6. ✓ If using Hydrogen and passed Hazard Check: Roll d6 for fire (5 = spend Engineer or crash, 6 = crash)
+7. ✓ If passed all checks: Place ship on route, increase Income
+8. ✓ If failed on Luxury Launch with Hydrogen in Age III: Hindenburg Disaster triggered
+9. ✓ If failed otherwise: Return ship to supply, lose Pilot (costs already paid at build)
+10. ✓ Continue launching more ships or stop
 
 ## Key Formulas
 
