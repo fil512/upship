@@ -54,6 +54,19 @@ When the marker reaches or exceeds an Age threshold, that Age ends after the cur
 
 **Thematic Note:** Every breakthrough in aviation technology—whether for airships or not—brings fixed-wing aircraft closer to commercial viability. Your innovations hasten your own obsolescence. The more aggressively players pursue technology, the faster the Ages advance.
 
+### 1.4 Player Count Scaling
+
+The game adjusts for different player counts:
+
+| Component | 2 Players | 3 Players | 4 Players |
+|-----------|-----------|-----------|-----------|
+| R&D Board tiles | 4 | 5 | 6 |
+| Market Row cards | 4 | 5 | 6 |
+| Starting Cash | £18 | £15 | £12 |
+| Map routes | Use 2P markers | Standard | Standard |
+
+**2-Player Rules:** Some single-track routes are marked "3-4P only" and are unavailable in 2-player games. This maintains competition over limited routes.
+
 ---
 
 # 2. COMPONENTS
@@ -65,7 +78,7 @@ When the marker reaches or exceeds an Age threshold, that Age ends after the cur
 - 1 Set of Airship Tokens (wooden meeples in player color)
 - 3 Agent Tokens (workers)
 - 1 Income Track Marker
-- 1 Research Track Marker
+- 1 VP Track Marker
 - 1 Personal Hazard Deck (20 cards)
 - Starting Deck of 10 Cards
 - £15 Starting Cash
@@ -78,6 +91,7 @@ When the marker reaches or exceeds an Age threshold, that Age ends after the cur
 - Technology Tile Bag (~60 tiles, Age-sorted)
 - Upgrade Tile Supply (organized by type)
 - Progress Track
+- VP Track (0-100 range)
 - Market Deck (purchasable crew cards)
 - Currency Tokens (£)
 - Pilot Tokens (shared supply)
@@ -204,6 +218,14 @@ Technologies represent patents, expertise, and manufacturing capability. They ar
 - **Track:** Which Drawing Office track it belongs to (Propulsion/Structure/Gas/Payload)
 - **Age:** Minimum Age when this technology becomes available
 - **Unlocks:** Which Upgrade tiles this technology allows you to install
+- **£ Value:** Income generated during Age Transitions (all tiles have this)
+- **VP Value:** Victory Points scored at each Age end (only some tiles have this)
+
+| Age | Typical £ Value | Typical VP Value |
+|-----|-----------------|------------------|
+| Age I | £1 | 0-1 VP |
+| Age II | £1-2 | 1-2 VP |
+| Age III | £2-3 | 2-3 VP |
 
 ### The R&D Board
 
@@ -345,6 +367,33 @@ Your Blueprint stats must meet or exceed **all** listed requirements to claim a 
 - **Double Track:** Up to 2 players can claim the same connection
 - Routes are exclusive monopolies until the Age ends or your ship crashes
 
+**Simultaneous Claims:** If multiple players attempt to claim the same single-track route in the same round, resolve by turn order—earlier players claim first. Later players may redirect to a different valid route before paying costs, or forfeit their action.
+
+## 5.6 Route Income Values
+
+When you claim a route, increase your Income Track by the route's Income value. Income values are printed on each route and follow this formula:
+
+> **Route Income = Range requirement + Age bonus + Luxury bonus**
+
+| Component | Value |
+|-----------|-------|
+| Range requirement | £1 per Range point |
+| Age II bonus | +£1 |
+| Age III bonus | +£2 |
+| Luxury route bonus | +£2 |
+
+**Example Routes:**
+
+| Route | Range | Age | Luxury | Income |
+|-------|-------|-----|--------|--------|
+| Hamburg → Berlin | 1 | I | No | £1 |
+| London → Paris | 2 | I | No | £2 |
+| Berlin → Moscow | 3 | II | No | £4 |
+| London → New York | 5 | III | Yes | £9 |
+| New York → Rio | 4 | III | Yes | £8 |
+
+**Design Target:** Ships should pay for themselves within 3-5 rounds of operation.
+
 ---
 
 # 6. THE GAME LOOP
@@ -354,6 +403,14 @@ The game is played in **Rounds**. Each round follows this structure:
 ## 6.1 Phase A: Worker Placement (Ground Operations)
 
 Players take turns placing **one Agent** at a time until all players pass. To place an Agent, you must play a **Card** from your hand that matches the location's icon.
+
+### Turn Order
+
+At the start of each round, determine turn order based on **Income Track position** (lowest goes first). This creates a catch-up mechanism: struggling players get first choice of actions.
+
+**Ties:** If players are tied on Income, the player with less Cash goes first. If still tied, maintain previous turn order.
+
+**First Round:** Determine randomly or by historical precedent (Germany first, as Count Zeppelin flew in 1900).
 
 ### Ground Board Locations:
 
@@ -377,7 +434,7 @@ Players take turns placing **one Agent** at a time until all players pass. To pl
 
 **4. The Academy (Book Icon)**
 - **Action:** Recruit crew from the shared supply
-- **Cost:** £2 per Pilot, £4 per Engineer
+- **Cost:** £2 per Pilot, £3 per Engineer
 - **Result:** Gain Pilot or Engineer tokens from the shared supply to your Barracks
 - **Note:** Pilots are cheaper because they are consumed when launching ships; Engineers persist and generate ongoing Research
 
@@ -536,21 +593,28 @@ The Market Row offers more powerful cards in several categories:
 
 Each Age ends when the Progress Track reaches or exceeds the Age threshold (see Section 1.3 for thresholds by player count). The transition is checked during the Income & Cleanup phase, after Technologies are acquired but before Agents are refreshed. When an Age ends:
 
-1. **Route Wipe:** Remove the current Map. All ships on it are returned to player supplies.
-2. **Income Crash:** Players immediately reduce their Income Track by the combined value of all routes lost.
-3. **Pilot Recovery:** All Pilots spent on ships (currently in the shared supply) return to player Barracks. This represents pilots becoming available for the new generation of aircraft.
-4. **Blueprint Transition:** All players replace their Blueprint overlay with the new Age's version. As a one-time special action during this transition, you may transfer all Upgrade tiles from your old Blueprint to your new Blueprint for free (subject to the new Blueprint's slot availability and the Physics Check). Any Upgrades you choose not to transfer are returned to the shared supply. Technologies in your Drawing Office are always retained.
-5. **Map Setup:** Place the new Age's Map in the center of the table.
-6. **Technology Bag Update:** Add the new Age's Technology tiles to the bag (remove all old Age tiles from the bag—older tech that was already acquired by players remains available on the R&D Board if not purchased).
-7. **R&D Board Refresh:** Draw tiles to fill the R&D Board.
+1. **Scoring:** All players score VP for routes and Technology tiles (see Section 12.7).
+2. **Route Wipe:** Remove the current Map. All ships on it are returned to player supplies.
+3. **Transition Income:** Calculate your starting Income for the next Age:
+   > **New Income = (£ from Technology tiles) − (£1 × number of routes lost)**
+
+   Each Technology tile shows a £ value representing licensing fees and consulting contracts. Each route you lose costs £1 in restructuring. Set your Income Track to this value (minimum £0).
+
+   *Example: You have Technologies worth £5 total and lost 2 routes. Your new Income = £5 − £2 = £3.*
+
+4. **Pilot Recovery:** All Pilots spent on ships return to player Barracks.
+5. **Blueprint Transition:** Replace your Blueprint overlay with the new Age's version. You may transfer Upgrade tiles from your old Blueprint to your new Blueprint for free (subject to slot availability and the Physics Check). Upgrades not transferred return to the supply. Technologies are always retained.
+6. **Map Setup:** Place the new Age's Map.
+7. **Technology Bag Update:** Add the new Age's Technology tiles to the bag.
+8. **R&D Board Refresh:** Draw tiles to fill the R&D Board.
 
 ## 9.2 The Strategic Challenge
 
 The Age Transition creates a "ticking clock" forcing difficult decisions:
-- Do you invest heavily in Age I routes knowing they will be wiped?
-- Do you save Research for Age II technologies?
-- Can you survive the Income Crash if you've taken loans?
-- Your Technologies carry forward, but your Upgrades don't—plan your tech acquisitions for future Ages
+- Do you invest in routes for VP, knowing each one costs £1 at transition?
+- Do you acquire Technologies for their £ values to cushion the transition?
+- Can you balance short-term route income with long-term Technology investment?
+- Your Technologies carry forward, but your Upgrades don't—plan ahead
 
 ---
 
@@ -685,6 +749,41 @@ When a player fails a Hazard Check during a Luxury Launch in Age III while using
 - Engineers may be spent reactively after a Hazard Card is drawn to prevent crashes under certain circumstances
 - Engineers spent during a Hazard Check do not generate Research that round
 - Engineer upkeep (£1 per Engineer) is paid at the start of the Income Phase based on Engineers currently in your Barracks
+
+## 12.7 Victory Point Scoring
+
+Victory Points are earned from **routes** and **Technology tiles**. All VP is scored at the **end of each Age** (before ships are removed), not at game end.
+
+### Route Scoring
+
+When an Age ends, score VP for each route you control:
+
+| Route Type | Age I | Age II | Age III |
+|------------|-------|--------|---------|
+| Short (Range 1-2) | 1 VP | 2 VP | 2 VP |
+| Medium (Range 3-4) | 2 VP | 3 VP | 4 VP |
+| Long (Range 5-6) | — | 4 VP | 6 VP |
+| **Luxury Bonus** | — | — | +2 VP |
+
+### Technology Scoring
+
+Some Technology tiles have **VP values printed on them**. When an Age ends, score VP for all Technology tiles you own that show VP values. (Technologies without printed VP values contribute £ to transition income but not VP.)
+
+| Age | Typical VP on Tiles |
+|-----|---------------------|
+| Age I | 0-1 VP |
+| Age II | 1-2 VP |
+| Age III | 2-3 VP |
+
+**Note:** Technology VP is scored at every Age end, not just when acquired. A tile worth 2 VP that you own for Ages II and III scores 4 VP total.
+
+### Expected Score Ranges
+
+| Category | Typical Range |
+|----------|---------------|
+| Route VP (all Ages combined) | 15-35 VP |
+| Technology VP (all Ages combined) | 10-25 VP |
+| **Winning Score (4 players)** | **35-50 VP** |
 
 ---
 
@@ -895,12 +994,290 @@ The following items require finalization before the game is complete:
 - **Research per Round:** Engineers in Barracks + card bonuses + Research purchased at Research Institute
 - **Engineer Upkeep:** £1 per Engineer in Barracks
 - **Tech Cost:** Listed cost − Specialization Discount
+- **Transition Income:** (£ from Tech tiles) − (£1 × routes lost), minimum £0
 - **Victory:** Most Victory Points wins (tiebreakers: Income, Cash, Ships on map)
 
 ## Game End Conditions
 
 1. **Hindenburg Disaster:** Failed Luxury Launch + Hydrogen + Age III
 2. **Fixed-Wing Rise:** Progress Track reaches threshold
+
+## Scoring Summary (at end of each Age)
+
+**Route VP:**
+| Route | Age I | Age II | Age III |
+|-------|-------|--------|---------|
+| Short (Range 1-2) | 1 | 2 | 2 |
+| Medium (Range 3-4) | 2 | 3 | 4 |
+| Long (Range 5-6) | — | 4 | 6 |
+| Luxury Bonus | — | — | +2 |
+
+**Technology VP:** Score VP printed on each Technology tile you own (scored every Age)
+
+## Age Transition Income
+
+> **New Income = (£ from Tech tiles) − (£1 × routes lost)**
+
+Minimum £0. Technologies cushion the transition; routes cost £1 each when wiped.
+
+---
+
+# APPENDIX C: TECHNOLOGY TILES
+
+Technology tiles are acquired from the R&D Board using Research. Each tile shows: Research Cost, Track (color), Age, £ Value, VP Value (if any), and which Upgrade it unlocks.
+
+## Propulsion Track (15 tiles)
+
+| Age | Name | Cost | £ | VP | Unlocks |
+|-----|------|------|---|----|---------|
+| I | Daimler Petrol Engine | 2 | 1 | — | Basic Engine |
+| I | Improved Propeller | 2 | 1 | — | Efficient Propeller |
+| I | Dual Engine Mount | 3 | 1 | 1 | Twin Engine |
+| II | Maybach Engine Design | 4 | 2 | 1 | Maybach CX Engine |
+| II | Diesel Powerplant | 4 | 1 | 1 | Diesel Engine |
+| II | Swiveling Propeller | 5 | 2 | 1 | Vectored Thrust |
+| II | Contra-Rotating Props | 5 | 2 | 2 | Balanced Propulsion |
+| III | Streamlined Nacelle | 6 | 2 | 2 | Aerodynamic Engine |
+| III | Supercharged Engine | 7 | 3 | 2 | High-Altitude Engine |
+| III | Diesel-Electric Drive | 7 | 2 | 2 | Hybrid Powerplant |
+| III | Variable-Pitch Propeller | 6 | 2 | 2 | Adaptive Propeller |
+
+## Structure Track (15 tiles)
+
+| Age | Name | Cost | £ | VP | Unlocks |
+|-----|------|------|---|----|---------|
+| I | Wooden Framework | 2 | 1 | — | Reinforced Frame |
+| I | External Walkway | 2 | 1 | — | Crew Access |
+| I | Wire Bracing | 3 | 1 | 1 | Tensioned Structure |
+| II | Duralumin Framework | 5 | 2 | 1 | Rigid Frame |
+| II | Fireproof Coating | 4 | 1 | 1 | Fire Retardant |
+| II | Armored Gondola | 5 | 2 | 2 | Military Armor |
+| II | Internal Keel | 4 | 1 | 1 | Structural Keel |
+| III | Geodetic Structure | 6 | 2 | 2 | Lightweight Frame |
+| III | Pressurized Cabin | 7 | 3 | 2 | Altitude Cabin |
+| III | Crash Safety System | 6 | 2 | 2 | Emergency Ballast |
+| III | Modular Construction | 7 | 2 | 3 | Quick-Swap Components |
+
+## Gas Systems Track (15 tiles)
+
+| Age | Name | Cost | £ | VP | Unlocks |
+|-----|------|------|---|----|---------|
+| I | Improved Valving | 2 | 1 | — | Pressure Control |
+| I | Goldbeater's Skin | 3 | 1 | 1 | Leak-Proof Cell |
+| I | Manual Ballonets | 2 | 1 | — | Altitude Ballonets |
+| II | Multiple Gas Cells | 4 | 1 | 1 | Compartmented Gas |
+| II | Helium Handling | 5 | 2 | 2 | Helium Gas Cell |
+| II | Blaugas Storage | 4 | 2 | 1 | Blaugas Tank |
+| II | Automatic Valves | 5 | 2 | 1 | Smart Valving |
+| III | Pressure Altitude System | 7 | 3 | 2 | High-Ceiling Gas |
+| III | Triple Gas Cell | 6 | 2 | 2 | Redundant Cells |
+| III | Emergency Venting | 6 | 2 | 2 | Rapid Descent System |
+| III | Gas Recovery | 7 | 2 | 3 | Reclamation System |
+
+## Payload Track (15 tiles)
+
+| Age | Name | Cost | £ | VP | Unlocks |
+|-----|------|------|---|----|---------|
+| I | Observation Platform | 2 | 1 | — | Spotter Gondola |
+| I | Mail Compartment | 2 | 1 | — | Postal Service |
+| I | Cargo Nets | 3 | 1 | 1 | External Cargo |
+| II | Passenger Gondola | 4 | 1 | 1 | Basic Cabin |
+| II | Bomb Bay Design | 5 | 2 | 2 | Bombing Equipment |
+| II | Trapeze System | 5 | 2 | 2 | Sparrowhawk Hangar |
+| II | Radio Equipment | 4 | 1 | 1 | Communications Suite |
+| III | Luxury Accommodation | 6 | 2 | 2 | Luxury Cabin |
+| III | Dining Saloon | 7 | 3 | 2 | Restaurant |
+| III | Promenade Deck | 8 | 3 | 3 | Observation Lounge |
+| III | Sleeping Quarters | 6 | 2 | 2 | Private Berths |
+| III | Smoking Room | 7 | 2 | 2 | Pressurized Lounge |
+
+**Total: 56 Technology Tiles** (14 per track)
+
+---
+
+# APPENDIX D: UPGRADE TILES
+
+Upgrade tiles are installed on your Blueprint. You must own the corresponding Technology to install an Upgrade. Each shows: Weight cost, stat bonuses, and special abilities.
+
+## Propulsion Upgrades
+
+| Name | Required Tech | Weight | Stats | Special |
+|------|---------------|--------|-------|---------|
+| Basic Engine | Daimler Petrol Engine | -1 | Speed +1 | — |
+| Efficient Propeller | Improved Propeller | -1 | Speed +1, Range +1 | — |
+| Twin Engine | Dual Engine Mount | -3 | Speed +2, Reliability +1 | — |
+| Maybach CX Engine | Maybach Engine Design | -2 | Speed +2, Range +1 | — |
+| Diesel Engine | Diesel Powerplant | -2 | Range +2, Reliability +1 | — |
+| Vectored Thrust | Swiveling Propeller | -2 | Speed +1, Ceiling +1 | — |
+| Balanced Propulsion | Contra-Rotating Props | -2 | Speed +2, Reliability +1 | — |
+| Aerodynamic Engine | Streamlined Nacelle | -2 | Speed +3 | — |
+| High-Altitude Engine | Supercharged Engine | -3 | Speed +2, Ceiling +2 | — |
+| Hybrid Powerplant | Diesel-Electric Drive | -3 | Range +3, Reliability +1 | — |
+| Adaptive Propeller | Variable-Pitch Propeller | -2 | Speed +1, Range +2 | — |
+
+## Structure Upgrades
+
+| Name | Required Tech | Weight | Stats | Special |
+|------|---------------|--------|-------|---------|
+| Reinforced Frame | Wooden Framework | -2 | Reliability +1 | — |
+| Crew Access | External Walkway | -1 | Reliability +1 | Engineers: +1 to repair checks |
+| Tensioned Structure | Wire Bracing | -1 | Ceiling +1 | — |
+| Rigid Frame | Duralumin Framework | -2 | Reliability +2, Ceiling +1 | — |
+| Fire Retardant | Fireproof Coating | -1 | Reliability +1 | Ignore first Fire hazard |
+| Military Armor | Armored Gondola | -4 | Reliability +2 | Ignore War Zone penalties |
+| Structural Keel | Internal Keel | -2 | Reliability +1, Lift +1 | — |
+| Lightweight Frame | Geodetic Structure | -1 | Reliability +2, Ceiling +1 | — |
+| Altitude Cabin | Pressurized Cabin | -2 | Ceiling +2 | — |
+| Emergency Ballast | Crash Safety System | -2 | Reliability +2 | On failed Hazard: reroll once |
+| Quick-Swap Components | Modular Construction | -1 | — | +2 tile swaps at Design Bureau |
+
+## Gas System Upgrades
+
+| Name | Required Tech | Weight | Stats | Special |
+|------|---------------|--------|-------|---------|
+| Pressure Control | Improved Valving | -1 | Ceiling +1 | — |
+| Leak-Proof Cell | Goldbeater's Skin | 0 | Reliability +1 | — |
+| Altitude Ballonets | Manual Ballonets | -1 | Ceiling +1 | — |
+| Compartmented Gas | Multiple Gas Cells | -1 | Lift +2, Reliability +1 | — |
+| Helium Gas Cell | Helium Handling | -1 | Lift +5 | Safe (immune to Fire) |
+| Blaugas Tank | Blaugas Storage | 0 | Range +3 | Neutral buoyancy fuel |
+| Smart Valving | Automatic Valves | -1 | Reliability +1, Ceiling +1 | — |
+| High-Ceiling Gas | Pressure Altitude System | -2 | Lift +3, Ceiling +2 | — |
+| Redundant Cells | Triple Gas Cell | -2 | Lift +4, Reliability +2 | — |
+| Rapid Descent System | Emergency Venting | -1 | Reliability +2 | Ignore Weather hazards |
+| Reclamation System | Gas Recovery | -1 | Range +2 | -£2 Lifting Gas cost |
+
+## Payload Upgrades
+
+| Name | Required Tech | Weight | Stats | Special |
+|------|---------------|--------|-------|---------|
+| Spotter Gondola | Observation Platform | -1 | Income +1 | — |
+| Postal Service | Mail Compartment | -1 | Income +2 | — |
+| External Cargo | Cargo Nets | -2 | Income +2 | — |
+| Basic Cabin | Passenger Gondola | -2 | Income +2, Luxury +1 | — |
+| Bombing Equipment | Bomb Bay Design | -3 | — | Military routes: +£3 Income |
+| Sparrowhawk Hangar | Trapeze System | -3 | — | Ignore one route requirement |
+| Communications Suite | Radio Equipment | -1 | Reliability +1 | +1 to Navigation hazards |
+| Luxury Cabin | Luxury Accommodation | -3 | Income +3, Luxury +2 | — |
+| Restaurant | Dining Saloon | -2 | Income +2, Luxury +2 | — |
+| Observation Lounge | Promenade Deck | -2 | Income +1, Luxury +3 | — |
+| Private Berths | Sleeping Quarters | -2 | Income +2, Luxury +1 | — |
+| Pressurized Lounge | Smoking Room | -2 | Income +1, Luxury +2 | Helium ships only |
+
+**Total: 44 Upgrade Tiles**
+
+---
+
+# APPENDIX E: HAZARD DECK
+
+Each player has an identical Personal Hazard Deck of 20 cards. When launching a ship, draw one card and resolve it.
+
+## Clear Weather (4 cards)
+
+| Name | Effect |
+|------|--------|
+| Clear Skies | Auto-pass. No hazard. |
+| Favorable Winds | Auto-pass. No hazard. |
+| Calm Conditions | Auto-pass. No hazard. |
+| Perfect Visibility | Auto-pass. No hazard. |
+
+## Minor Hazards (8 cards)
+
+| Name | Difficulty | Stat | Type | Engineer Option |
+|------|------------|------|------|-----------------|
+| Light Turbulence | 2 | Speed | Weather | Spend 1: +2 to check |
+| Minor Engine Trouble | 2 | Reliability | Mechanical | Spend 1: Auto-pass |
+| Crosswind | 3 | Speed | Weather | Spend 1: +2 to check |
+| Gas Leak | 3 | Reliability | Mechanical | Spend 1: Auto-pass |
+| Low Visibility | 2 | Ceiling | Weather | Spend 1: +2 to check |
+| Fuel Concern | 3 | Range | Supply | Spend 1: +2 to check |
+| Headwind | 3 | Speed | Weather | Spend 1: +2 to check |
+| Structural Stress | 2 | Reliability | Mechanical | Spend 1: Auto-pass |
+
+## Major Hazards (6 cards)
+
+| Name | Difficulty | Stat | Type | Engineer Option |
+|------|------------|------|------|-----------------|
+| Strong Headwind | 4 | Speed | Weather | Spend 2: +3 to check |
+| Icing Conditions | 4 | Ceiling | Weather | Spend 2: +3 to check |
+| Engine Failure | 5 | Reliability | Mechanical | Spend 2: Reduce to Difficulty 3 |
+| Storm System | 5 | Speed | Weather | Spend 2: +3 to check |
+| Structural Damage | 4 | Reliability | Mechanical | Spend 2: Reduce to Difficulty 2 |
+| Navigation Error | 4 | Range | Supply | Spend 1: +2 to check |
+
+## Catastrophic Events (2 cards)
+
+| Name | Difficulty | Stat | Type | Engineer Option |
+|------|------------|------|------|-----------------|
+| Hydrogen Fire | 6 | Reliability | Fire | Spend 3: Prevent crash. Helium ships: Auto-pass |
+| Structural Failure | 6 | Reliability | Mechanical | Spend 3: Reduce to Difficulty 4 |
+
+**Resolving Hazards:**
+1. Draw card from your Personal Hazard Deck
+2. Check if auto-pass (Clear Weather cards)
+3. Calculate: Ship's relevant stat + Ops played from hand
+4. (Optional) Spend Engineers as shown on card
+5. If total ≥ Difficulty: Pass. If total < Difficulty: Fail.
+
+**Deck Management:** Shuffle your discard pile back into your Hazard Deck when the deck is empty.
+
+---
+
+# APPENDIX F: MARKET DECK
+
+The Market Deck contains 30 purchasable crew cards. Five are displayed in the Market Row at all times. Purchase cards using Influence during the Reveal Phase.
+
+## Technical Personnel (10 cards)
+
+| Name | Cost | Agent Icon | Agent Effect | Reveal |
+|------|------|------------|--------------|--------|
+| Chief Engineer | 4 | Design | +2 tile swaps | 3 Ops |
+| Test Pilot | 5 | Hangar | Ignore Hazard card entirely | 1 Ops |
+| Navigator | 3 | Hangar | +1 Range for this launch | 2 Ops |
+| Weather Expert | 4 | Hangar | +2 to Weather hazards | 2 Ops, 1 Influence |
+| Gas Engineer | 3 | Design | Install Gas upgrade: -1 Weight | 2 Ops |
+| Engine Specialist | 3 | Design | Install Propulsion upgrade: -1 Weight | 2 Ops |
+| Safety Inspector | 4 | Hangar | +2 Reliability for this launch | 3 Ops |
+| Ground Crew Chief | 2 | Hangar | -£2 Production Cost | 1 Ops, 1 Influence |
+| Structural Engineer | 3 | Design | Install Structure upgrade: +1 Lift | 2 Ops |
+| Fuel Specialist | 3 | Hangar | -£2 Lifting Gas cost | 2 Ops |
+
+## Political/Financial Personnel (10 cards)
+
+| Name | Cost | Agent Icon | Agent Effect | Reveal |
+|------|------|------------|--------------|--------|
+| The Aristocrat | 5 | Bank | Gain £5 | 3 Influence |
+| Industrial Magnate | 6 | Any | Gain £3 | 4 Influence |
+| Government Minister | 5 | Ministry | Take 2 Ministry actions | 2 Influence, 1 Ops |
+| Shipping Tycoon | 4 | Hangar | +£2 Income from this route | 3 Influence |
+| Press Baron | 4 | Any | No action effect | 2 Influence, 2 Ops |
+| Foreign Investor | 3 | Bank | Loan gives £35 instead of £30 | 2 Influence |
+| Insurance Agent | 3 | Bank | Recover £5 on failed launch | 2 Influence |
+| Bureaucrat | 2 | Ministry | Go first in turn order next round | 2 Influence |
+| Union Representative | 2 | Academy | -£1 per crew recruited this action | 1 Influence, 1 Ops |
+| Customs Official | 3 | Ministry | Claim route even if tied | 2 Influence |
+
+## Research Personnel (5 cards)
+
+| Name | Cost | Agent Icon | Agent Effect | Reveal |
+|------|------|------------|--------------|--------|
+| University Partnership | 4 | Research | Research costs £1 each this action | 2 Influence, 1 Ops |
+| Patent Attorney | 3 | Research | -1 to Technology Research cost | 2 Influence |
+| Research Assistant | 2 | Research | Gain 1 Research token | 1 Influence, 1 Ops |
+| Technical Library | 3 | Research | Look at top 3 R&D tiles; reorder them | 2 Influence |
+| Foreign Consultant | 4 | Research | Acquire Tech another player owns (pay double) | 2 Ops |
+
+## Organizations (5 cards)
+
+| Name | Cost | Agent Icon | Agent Effect | Reveal |
+|------|------|------------|--------------|--------|
+| Royal Geographic Society | 6 | Design | Install 1 Upgrade ignoring Tech requirement | 2 Influence, 2 Ops |
+| Military Contract | 5 | Ministry | Gain £8; Military routes: +£2 Income | 1 Influence, 2 Ops |
+| Luxury Travel Agency | 5 | Hangar | +1 Luxury stat for this launch | 3 Influence |
+| Aviation Club | 4 | Academy | Recruit 1 Pilot free | 2 Influence, 2 Ops |
+| Engineering Guild | 4 | Academy | Recruit 1 Engineer at -£1 | 1 Influence, 3 Ops |
+
+**Market Row Refresh:** At the end of each round, discard any remaining cards in the Market Row and deal 5 new cards.
 
 ---
 
