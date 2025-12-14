@@ -195,14 +195,23 @@ A holding area for ships you have built but not yet launched:
 
 **Strategic Value:** Building ships across multiple rounds then launching together lets you claim multiple routes in one action, but requires careful timing and saving Ops cards for the mass Hazard Checks.
 
-## 3.5 Zone 5: Economy Tracks (Right Edge)
+## 3.5 Zone 5: Gas Reserve (Adjacent to Hangar Bay)
+
+Storage for lifting gas purchased in advance:
+
+- **Hydrogen Tokens:** Standard lifting gas, cheaper but flammable
+- **Helium Tokens:** Safe lifting gas, more expensive (requires Helium Handling technology)
+- **Usage:** When building ships at the Shipyard, use stored gas first. Any deficit must be purchased at current market price.
+- **Strategic Value:** Buy gas when market prices are low; use stored gas to avoid price spikes or Helium shortages
+
+## 3.6 Zone 6: Economy Tracks (Right Edge)
 
 - **Income Track:** Tracks your current £ earned per round from routes
 - **Pilot Income Track:** Tracks free Pilots gained per round (starts at 1)
 - **Engineer Income Track:** Tracks free Engineers gained per round (starts at 1)
 - **Loan Marker:** Tracks penalties from loans taken
 
-## 3.6 Zone 6: Blueprint Stat Tracks (Adjacent to Blueprint)
+## 3.7 Zone 7: Blueprint Stat Tracks (Adjacent to Blueprint)
 
 Your Player Board includes dedicated tracks for monitoring your current Blueprint's statistics. As you install or remove Upgrade tiles, adjust tracking cubes on these tracks to reflect your ship's current capabilities:
 
@@ -427,7 +436,7 @@ At the start of each round, determine turn order based on **Income Track positio
 
 ### Ground Board Locations:
 
-The Ground Board has 9 action spaces, each marked with one of three symbols. To visit a space, you must play a card showing that symbol.
+The Ground Board has 12 action spaces, each marked with one of three symbols. To visit a space, you must play a card showing that symbol.
 
 **Symbol Types:**
 - **Wrench (Technical):** Engineering and construction activities
@@ -450,8 +459,9 @@ The Ground Board has 9 action spaces, each marked with one of three symbols. To 
 
 **3. The Shipyard (Wrench)**
 - **Action:** Build ships
-- **Cost:** Production Cost (£ based on Blueprint complexity) + Lifting Gas cost per ship
+- **Cost:** Production Cost (£ based on Blueprint complexity) + Lifting Gas per ship
 - **Limit:** Build up to 3 ships per action (if you have the Pilots and funds)
+- **Gas Payment:** Use stored gas from your Gas Reserve first; any deficit must be purchased at current market price
 - **Effect:** For each ship built, spend 1 Pilot from your Barracks and pay costs. Built ships are placed in your **Hangar Bay** (a holding area on your Player Board), waiting to be launched.
 - **Note:** Ships in your Hangar Bay use your Blueprint stats at the moment of building (Frozen Prototype rule applies at build time, not launch time)
 
@@ -490,6 +500,25 @@ The Ground Board has 9 action spaces, each marked with one of three symbols. To 
 **9. The Ministry (Propeller)**
 - **Action:** Political maneuvering
 - **Effect:** Various special actions (claim bonus rewards, change turn order)
+
+**10. The Gas Depot (Wrench)**
+- **Action:** Purchase lifting gas for storage
+- **Cost:** Current market price per unit (Hydrogen or Helium)
+- **Effect:** Add gas tokens to your Gas Reserve on your Player Board
+- **Strategic Note:** Buy gas when prices are low; stored gas can be used later when building ships, avoiding market price spikes
+
+**11. The Insurance Bureau (Coin)**
+- **Action:** Purchase insurance policies
+- **Cost:** £3 per policy card
+- **Effect:** Take policy cards and place them face-up near your Player Board
+- **Policy Benefit:** When one of your ships fails a Hazard Check, you may discard one policy card to recover the airship token to your Hangar Bay. You still lose the Pilot and any gas spent, but you keep the ship for another attempt.
+- **Strategic Note:** Insurance is valuable for expensive ships or risky launches—it lets you try again without rebuilding from scratch
+
+**12. The Weather Bureau (Propeller)**
+- **Action:** Consult weather forecasts
+- **Cost:** £2
+- **Effect:** Look at the top card of your personal Hazard Deck. You may either leave it on top or move it to the bottom of the deck.
+- **Strategic Note:** Plan your launches around favorable weather, or bury dangerous hazards for later
 
 ## 6.2 Phase B: Reveal & Acquisition
 
@@ -612,9 +641,9 @@ Every card in the game has **dual functionality**, creating constant tension bet
 | **Reveal Effect** | Bottom | Influence and/or Ops icons generated when revealed |
 
 **The Three Symbols:**
-- **Wrench (Technical):** Design Bureau, Shipyard, Technical Institute
-- **Coin (Business):** Academy, Flight School, Bank
-- **Propeller (Operations):** Research Institute, Launchpad, Ministry
+- **Wrench (Technical):** Design Bureau, Shipyard, Technical Institute, Gas Depot
+- **Coin (Business):** Academy, Flight School, Bank, Insurance Bureau
+- **Propeller (Operations):** Research Institute, Launchpad, Ministry, Weather Bureau
 
 ## 8.2 The Core Decision
 
