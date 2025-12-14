@@ -223,9 +223,9 @@ Technologies represent patents, expertise, and manufacturing capability. They ar
 
 | Age | Typical £ Value | Typical VP Value |
 |-----|-----------------|------------------|
-| Age I | £1 | 0-1 VP |
-| Age II | £1-2 | 1-2 VP |
-| Age III | £2-3 | 2-3 VP |
+| Age I | £1 | 0-1 VP (most are 0) |
+| Age II | £1-2 | 0-3 VP (essential techs are 0, niche techs are 2-3) |
+| Age III | £2-3 | 0-3 VP (essential techs are 0, niche techs are 2-3) |
 
 ### The R&D Board
 
@@ -754,36 +754,45 @@ When a player fails a Hazard Check during a Luxury Launch in Age III while using
 
 Victory Points are earned from **routes** and **Technology tiles**. All VP is scored at the **end of each Age** (before ships are removed), not at game end.
 
+**Design Target:** Routes should contribute approximately **2/3 of total VP**, while Technologies contribute approximately **1/3**. This is achieved by:
+- Increasing route VP values, especially for challenging routes
+- Reducing Tech VP on highly useful technologies (you benefit from using them)
+- Increasing Tech VP on niche/situational technologies (to compensate for limited practical value)
+
 ### Route Scoring
 
-When an Age ends, score VP for each route you control:
+When an Age ends, score VP for each route you control. More challenging routes (higher Range requirements) are worth significantly more VP:
 
 | Route Type | Age I | Age II | Age III |
 |------------|-------|--------|---------|
-| Short (Range 1-2) | 1 VP | 2 VP | 2 VP |
-| Medium (Range 3-4) | 2 VP | 3 VP | 4 VP |
-| Long (Range 5-6) | — | 4 VP | 6 VP |
-| **Luxury Bonus** | — | — | +2 VP |
+| Short (Range 1-2) | 2 VP | 3 VP | 4 VP |
+| Medium (Range 3-4) | 4 VP | 5 VP | 7 VP |
+| Long (Range 5-6) | — | 7 VP | 10 VP |
+| **Luxury Bonus** | — | — | +3 VP |
+
+**Route VP Philosophy:** The harder the route, the greater the reward. Long-haul luxury routes in Age III (like London → New York) can be worth 13 VP, while short pioneer routes in Age I are worth only 2 VP.
 
 ### Technology Scoring
 
-Some Technology tiles have **VP values printed on them**. When an Age ends, score VP for all Technology tiles you own that show VP values. (Technologies without printed VP values contribute £ to transition income but not VP.)
+Technology tiles have **VP values printed on them** based on their practical utility:
 
-| Age | Typical VP on Tiles |
-|-----|---------------------|
-| Age I | 0-1 VP |
-| Age II | 1-2 VP |
-| Age III | 2-3 VP |
+| Utility Level | VP Value | Description |
+|---------------|----------|-------------|
+| **Essential** | 0 VP | Core technologies everyone needs (engines, frames, gas cells) |
+| **Useful** | 1 VP | Good specialized technologies with clear benefits |
+| **Niche** | 2-3 VP | Situational technologies with limited applications |
 
-**Note:** Technology VP is scored at every Age end, not just when acquired. A tile worth 2 VP that you own for Ages II and III scores 4 VP total.
+**The VP/Utility Tradeoff:** Highly useful technologies (like Helium Handling or Duralumin Framework) have 0 VP because their practical benefits are reward enough. Niche technologies (like Bomb Bay Design or Smoking Room) have higher VP to compensate for their limited usefulness.
+
+**Note:** Technology VP is scored at every Age end, not just when acquired. Since Age I techs are scored 3 times, Age II techs 2 times, and Age III techs only once, earlier niche acquisitions accumulate more VP over time—but you sacrifice practical utility in the early game.
 
 ### Expected Score Ranges
 
 | Category | Typical Range |
 |----------|---------------|
-| Route VP (all Ages combined) | 15-35 VP |
-| Technology VP (all Ages combined) | 10-25 VP |
-| **Winning Score (4 players)** | **35-50 VP** |
+| Route VP (all Ages combined) | 25-40 VP |
+| Technology VP (all Ages combined) | 10-18 VP |
+| **Winning Score (4 players)** | **40-55 VP** |
 
 ---
 
@@ -1004,15 +1013,15 @@ The following items require finalization before the game is complete:
 
 ## Scoring Summary (at end of each Age)
 
-**Route VP:**
+**Route VP (2/3 of total):**
 | Route | Age I | Age II | Age III |
 |-------|-------|--------|---------|
-| Short (Range 1-2) | 1 | 2 | 2 |
-| Medium (Range 3-4) | 2 | 3 | 4 |
-| Long (Range 5-6) | — | 4 | 6 |
-| Luxury Bonus | — | — | +2 |
+| Short (Range 1-2) | 2 | 3 | 4 |
+| Medium (Range 3-4) | 4 | 5 | 7 |
+| Long (Range 5-6) | — | 7 | 10 |
+| Luxury Bonus | — | — | +3 |
 
-**Technology VP:** Score VP printed on each Technology tile you own (scored every Age)
+**Technology VP (1/3 of total):** Score VP printed on each Technology tile you own (scored every Age). Essential techs = 0 VP, Useful techs = 1 VP, Niche techs = 2-3 VP
 
 ## Age Transition Income
 
@@ -1033,14 +1042,14 @@ Technology tiles are acquired from the R&D Board using Research. Each tile shows
 | I | Daimler Petrol Engine | 2 | 1 | — | Basic Engine |
 | I | Improved Propeller | 2 | 1 | — | Efficient Propeller |
 | I | Dual Engine Mount | 3 | 1 | 1 | Twin Engine |
-| II | Maybach Engine Design | 4 | 2 | 1 | Maybach CX Engine |
+| II | Maybach Engine Design | 4 | 2 | — | Maybach CX Engine |
 | II | Diesel Powerplant | 4 | 1 | 1 | Diesel Engine |
 | II | Swiveling Propeller | 5 | 2 | 1 | Vectored Thrust |
-| II | Contra-Rotating Props | 5 | 2 | 2 | Balanced Propulsion |
-| III | Streamlined Nacelle | 6 | 2 | 2 | Aerodynamic Engine |
-| III | Supercharged Engine | 7 | 3 | 2 | High-Altitude Engine |
-| III | Diesel-Electric Drive | 7 | 2 | 2 | Hybrid Powerplant |
-| III | Variable-Pitch Propeller | 6 | 2 | 2 | Adaptive Propeller |
+| II | Contra-Rotating Props | 5 | 2 | — | Balanced Propulsion |
+| III | Streamlined Nacelle | 6 | 2 | — | Aerodynamic Engine |
+| III | Supercharged Engine | 7 | 3 | 1 | High-Altitude Engine |
+| III | Diesel-Electric Drive | 7 | 2 | 1 | Hybrid Powerplant |
+| III | Variable-Pitch Propeller | 6 | 2 | — | Adaptive Propeller |
 
 ## Structure Track (15 tiles)
 
@@ -1049,12 +1058,12 @@ Technology tiles are acquired from the R&D Board using Research. Each tile shows
 | I | Wooden Framework | 2 | 1 | — | Reinforced Frame |
 | I | External Walkway | 2 | 1 | — | Crew Access |
 | I | Wire Bracing | 3 | 1 | 1 | Tensioned Structure |
-| II | Duralumin Framework | 5 | 2 | 1 | Rigid Frame |
-| II | Fireproof Coating | 4 | 1 | 1 | Fire Retardant |
+| II | Duralumin Framework | 5 | 2 | — | Rigid Frame |
+| II | Fireproof Coating | 4 | 1 | 2 | Fire Retardant |
 | II | Armored Gondola | 5 | 2 | 2 | Military Armor |
 | II | Internal Keel | 4 | 1 | 1 | Structural Keel |
-| III | Geodetic Structure | 6 | 2 | 2 | Lightweight Frame |
-| III | Pressurized Cabin | 7 | 3 | 2 | Altitude Cabin |
+| III | Geodetic Structure | 6 | 2 | — | Lightweight Frame |
+| III | Pressurized Cabin | 7 | 3 | 1 | Altitude Cabin |
 | III | Crash Safety System | 6 | 2 | 2 | Emergency Ballast |
 | III | Modular Construction | 7 | 2 | 3 | Quick-Swap Components |
 
@@ -1065,14 +1074,14 @@ Technology tiles are acquired from the R&D Board using Research. Each tile shows
 | I | Improved Valving | 2 | 1 | — | Pressure Control |
 | I | Goldbeater's Skin | 3 | 1 | 1 | Leak-Proof Cell |
 | I | Manual Ballonets | 2 | 1 | — | Altitude Ballonets |
-| II | Multiple Gas Cells | 4 | 1 | 1 | Compartmented Gas |
-| II | Helium Handling | 5 | 2 | 2 | Helium Gas Cell |
-| II | Blaugas Storage | 4 | 2 | 1 | Blaugas Tank |
+| II | Multiple Gas Cells | 4 | 1 | — | Compartmented Gas |
+| II | Helium Handling | 5 | 2 | — | Helium Gas Cell |
+| II | Blaugas Storage | 4 | 2 | 2 | Blaugas Tank |
 | II | Automatic Valves | 5 | 2 | 1 | Smart Valving |
-| III | Pressure Altitude System | 7 | 3 | 2 | High-Ceiling Gas |
-| III | Triple Gas Cell | 6 | 2 | 2 | Redundant Cells |
+| III | Pressure Altitude System | 7 | 3 | 1 | High-Ceiling Gas |
+| III | Triple Gas Cell | 6 | 2 | — | Redundant Cells |
 | III | Emergency Venting | 6 | 2 | 2 | Rapid Descent System |
-| III | Gas Recovery | 7 | 2 | 3 | Reclamation System |
+| III | Gas Recovery | 7 | 2 | 2 | Reclamation System |
 
 ## Payload Track (15 tiles)
 
@@ -1081,15 +1090,15 @@ Technology tiles are acquired from the R&D Board using Research. Each tile shows
 | I | Observation Platform | 2 | 1 | — | Spotter Gondola |
 | I | Mail Compartment | 2 | 1 | — | Postal Service |
 | I | Cargo Nets | 3 | 1 | 1 | External Cargo |
-| II | Passenger Gondola | 4 | 1 | 1 | Basic Cabin |
-| II | Bomb Bay Design | 5 | 2 | 2 | Bombing Equipment |
+| II | Passenger Gondola | 4 | 1 | — | Basic Cabin |
+| II | Bomb Bay Design | 5 | 2 | 3 | Bombing Equipment |
 | II | Trapeze System | 5 | 2 | 2 | Sparrowhawk Hangar |
 | II | Radio Equipment | 4 | 1 | 1 | Communications Suite |
-| III | Luxury Accommodation | 6 | 2 | 2 | Luxury Cabin |
-| III | Dining Saloon | 7 | 3 | 2 | Restaurant |
-| III | Promenade Deck | 8 | 3 | 3 | Observation Lounge |
-| III | Sleeping Quarters | 6 | 2 | 2 | Private Berths |
-| III | Smoking Room | 7 | 2 | 2 | Pressurized Lounge |
+| III | Luxury Accommodation | 6 | 2 | — | Luxury Cabin |
+| III | Dining Saloon | 7 | 3 | — | Restaurant |
+| III | Promenade Deck | 8 | 3 | 2 | Observation Lounge |
+| III | Sleeping Quarters | 6 | 2 | 1 | Private Berths |
+| III | Smoking Room | 7 | 2 | 3 | Pressurized Lounge |
 
 **Total: 56 Technology Tiles** (14 per track)
 
