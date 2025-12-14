@@ -459,22 +459,24 @@ The Ground Board has 12 action spaces, each marked with one of three symbols. To
 
 **3. The Construction Hall (Wrench)**
 - **Action:** Build ships
-- **Cost:** Production Cost (£ based on Blueprint complexity) + Lifting Gas per ship
-- **Limit:** Build up to 3 ships per action (if you have the Pilots and funds)
-- **Gas Payment:** Use stored gas from your Gas Reserve first; any deficit must be purchased at current market price
-- **Effect:** For each ship built, spend 1 Pilot from your Barracks and pay costs. Built ships are placed in your **Hangar Bay**, waiting to be launched.
+- **Cost:** Production Cost per ship (£ based on Blueprint complexity)
+- **Limit:** Build up to 3 ships per action
+- **Cost Reduction:** Card effects and faction abilities can reduce Production Cost
+- **Effect:** Pay £ costs. Built ships are placed in your **Hangar Bay**, waiting to be launched.
 - **Note:** Ships in your Hangar Bay use your current Blueprint stats when launched (no individual stat tracking)
 
 **4. The Launchpad (Propeller)**
 - **Action:** Launch ships from your Hangar Bay
-- **Cost:** Free (costs were paid during building)
+- **Cost per Launch:** 1 Pilot + Lifting Gas (from Gas Reserve first; deficit at market price)
 - **Effect:** You may launch as many ships from your Hangar as you wish, one after another. Each launch is resolved separately:
-  1. Choose a ship and assign it to a valid route
-  2. Pass a Hazard Check (draw one Hazard Card)
-  3. Place successful ship on route; increase Income Track
-  4. Repeat for additional ships, or stop at any time
+  1. Spend 1 Pilot and pay for gas
+  2. Choose a ship and assign it to a valid route
+  3. Pass a Hazard Check (draw one Hazard Card)
+  4. If Hydrogen: Roll d6 for fire risk
+  5. Place successful ship on route; increase Income Track
+  6. Repeat for additional ships, or stop at any time
 - **Result:** You control pacing—stop after a bad Hazard draw, or press your luck
-- **Strategic Note:** You can stop launching after seeing a dangerous Hazard Card, saving remaining ships for a future action
+- **Strategic Note:** Building is cheap; launching is the commitment. Build ships early, then launch when conditions are favorable
 
 **5. The Academy (Coin)**
 - **Action:** Recruit crew from the shared supply
@@ -567,30 +569,32 @@ Ships are constructed at the Construction Hall and launched from the Launchpad. 
 When you take the **Construction Hall Action**, you construct ships:
 
 1. **Verify Physics Check:** Your Blueprint must satisfy Total Lift ≥ Total Weight
-2. **Pay Costs Per Ship:** For each ship you build, pay:
-   - Production Cost (£ based on Blueprint complexity)
-   - Lifting Gas cost (from Gas Reserve first, then market price for any deficit)
-3. **Spend Pilot Per Ship:** Return 1 Pilot token from your Barracks to the shared supply for each ship
-4. **Place in Hangar Bay:** Built ships are placed in your Hangar Bay, waiting for launch
+2. **Pay Production Cost:** For each ship you build, pay £ based on Blueprint complexity
+3. **Place in Hangar Bay:** Built ships are placed in your Hangar Bay, waiting for launch
+
+**Cost Reduction:** Card effects and faction abilities can reduce Production Cost (minimum £0).
 
 **No Stat Tracking:** Ships in your Hangar Bay are generic tokens. When launched, they use your current Blueprint stats—you can upgrade between building and launching!
 
-**Build Limit:** You may build up to 3 ships per Construction Hall action (limited by your available Pilots and funds).
+**Build Limit:** You may build up to 3 ships per Construction Hall action.
 
 ## 7.2 The Launch Procedure (Launchpad Action)
 
 When you take the **Launchpad Action**, you may launch as many ships from your Hangar as you wish, one after another. Each launch is resolved separately:
 
 1. **Select a Ship:** Choose one ship from your Hangar Bay
-2. **Assign Route:** Declare which route this ship will attempt (must meet route's stat requirements)
-3. **Resolve Hazard Check:** Draw a Hazard Card and resolve it (see 7.3)
-4. **Hydrogen Fire Roll:** If the ship uses Hydrogen and passed the Hazard Check, roll a d6 for fire risk (see 7.4)
-5. **Outcome:**
+2. **Pay Launch Costs:**
+   - Spend 1 Pilot from your Barracks (returned to shared supply)
+   - Pay for Lifting Gas (use Gas Reserve first; any deficit at current market price)
+3. **Assign Route:** Declare which route this ship will attempt (must meet route's stat requirements)
+4. **Resolve Hazard Check:** Draw a Hazard Card and resolve it (see 7.3)
+5. **Hydrogen Fire Roll:** If the ship uses Hydrogen and passed the Hazard Check, roll a d6 for fire risk (see 7.4)
+6. **Outcome:**
    - **Success:** Place ship on route; increase your Income Track
-   - **Failure:** Ship is returned to your supply (you lose the Pilot and costs already paid)
-6. **Continue or Stop:** After resolving each ship, you may launch another ship or stop
+   - **Failure:** Ship is returned to your Hangar Bay (you lose the Pilot and gas already spent)
+7. **Continue or Stop:** After resolving each ship, you may launch another ship or stop
 
-**Strategic Timing:** Because each launch resolves before the next, you can react to Hazard results. A dangerous card might convince you to save remaining ships for later—or a lucky streak might encourage you to press on!
+**Strategic Timing:** Building is cheap; launching is the commitment. You can stockpile ships in your Hangar, then launch when you have pilots, gas, and favorable conditions.
 
 ## 7.3 Resolving Hazard Checks
 
@@ -1109,22 +1113,24 @@ The following items require finalization before the game is complete:
 ## Build Checklist (Construction Hall Action)
 
 1. ✓ Blueprint passes Physics Check (Lift ≥ Weight)
-2. ✓ For each ship: Pay Production Cost + Lifting Gas
-3. ✓ For each ship: Spend 1 Pilot token from Barracks to shared supply
-4. ✓ Place built ships in your Hangar Bay (up to 3 per action)
+2. ✓ For each ship: Pay Production Cost in £ (card/faction effects can reduce this)
+3. ✓ Place built ships in your Hangar Bay (up to 3 per action)
 
 ## Launch Checklist (Launchpad Action)
 
-1. ✓ Select a ship from Hangar Bay, assign to valid route (must meet requirements)
-2. ✓ If Luxury Route: Verify ship has Luxury stat requirement met
-3. ✓ Draw Hazard Card from your personal Hazard Deck
-4. ✓ (Optional) Play cards from hand to add their Ops to Hazard Check total
-5. ✓ (Optional) Spend Engineers reactively to prevent crash if Hazard Card allows
-6. ✓ If using Hydrogen and passed Hazard Check: Roll d6 for fire (5 = spend Engineer or crash, 6 = crash)
-7. ✓ If passed all checks: Place ship on route, increase Income
-8. ✓ If failed on Luxury Launch with Hydrogen in Age III: Hindenburg Disaster triggered
-9. ✓ If failed otherwise: Return ship to supply, lose Pilot (costs already paid at build)
-10. ✓ Continue launching more ships or stop
+1. ✓ Select a ship from Hangar Bay
+2. ✓ Spend 1 Pilot (Barracks → shared supply)
+3. ✓ Pay for Lifting Gas (Gas Reserve first, then market price for deficit)
+4. ✓ Assign to valid route (must meet stat requirements)
+5. ✓ If Luxury Route: Verify ship has Luxury stat requirement met
+6. ✓ Draw Hazard Card from your personal Hazard Deck
+7. ✓ (Optional) Play cards from hand to add their Ops to Hazard Check total
+8. ✓ (Optional) Spend Engineers reactively to prevent crash if Hazard Card allows
+9. ✓ If using Hydrogen and passed Hazard Check: Roll d6 for fire (5 = spend Engineer or crash, 6 = crash)
+10. ✓ If passed all checks: Place ship on route, increase Income
+11. ✓ If failed on Luxury Launch with Hydrogen in Age III: Hindenburg Disaster triggered
+12. ✓ If failed otherwise: Ship returns to Hangar Bay (Pilot and gas lost)
+13. ✓ Continue launching more ships or stop
 
 ## Key Formulas
 
