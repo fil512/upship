@@ -281,13 +281,13 @@ A shared supply of Upgrade tiles organized by type. Unlike Technologies, Upgrade
 Visit **The Design Bureau** on the Ground Board:
 - **Action:** Modify your Blueprint
 - **Cost:** Free (but limited swaps per action)
-- **Swaps Allowed:** 1 tile installation or removal per action (cards and abilities can increase this)
+- **Swaps Allowed:** 2 tile installations or removals per action (cards and abilities can increase this)
 - **Constraint:** You may only install Upgrades for which you own the corresponding Technology
 
 **Examples of Upgrade Actions:**
-- Install 1 new tile (1 swap, the base action)
-- Remove 1 tile and install 1 new tile (2 swaps, requires a card bonus)
-- Install 3 new tiles (3 swaps, requires Italy's Rapid Refit or multiple card bonuses)
+- Install 2 new tiles (2 swaps, the base action)
+- Remove 1 tile and install 2 new tiles (3 swaps, requires a card bonus)
+- Install 4 new tiles (4 swaps, requires Italy's Rapid Refit or multiple card bonuses)
 
 **Removed Tiles:** When you remove an Upgrade from your Blueprint, return it to the shared Upgrade Supply. You retain the Technology and can reinstall the same Upgrade type later.
 
@@ -434,7 +434,7 @@ At the start of each round, determine turn order based on **Income Track positio
 **2. The Design Bureau (Compass Icon)**
 - **Action:** Modify your Blueprint (install/remove Upgrades)
 - **Cost:** Free
-- **Limit:** 1 tile swap per action (cards and abilities can increase this)
+- **Limit:** 2 tile swaps per action (cards and abilities can increase this)
 - **Constraint:** Can only install Upgrades for Technologies you own
 
 **3. The Shipyard (Wrench Icon)**
@@ -444,7 +444,7 @@ At the start of each round, determine turn order based on **Income Track positio
 - **Effect:** For each ship built, spend 1 Pilot from your Barracks and pay costs. Built ships are placed in your **Hangar Bay** (a holding area on your Player Board), waiting to be launched.
 - **Note:** Ships in your Hangar Bay use your Blueprint stats at the moment of building (Frozen Prototype rule applies at build time, not launch time)
 
-**4. The Launchpad (Anchor Icon)**
+**4. The Launchpad (Airship Icon)**
 - **Action:** Launch all ships from your Hangar Bay
 - **Cost:** Free (costs were paid during building)
 - **Effect:** Launch all ships currently in your Hangar Bay simultaneously. Each ship must:
@@ -689,7 +689,7 @@ Each nation has a unique starting Blueprint configuration, special technology, a
 
 **Starting Technology (pre-printed on Player Board):** *Imperial Mooring System* — Unlocks the Imperial Mast upgrade: Treat any British Territory (Egypt, Canada, India) as a Home Base for repair/refuel, extending effective range.
 
-**The Flaw:** *Red Tape* — When taking the Upgrade Action at the Design Bureau, Britain gets 0 base tile swaps instead of 1 (government inefficiency). They must rely on cards and abilities to make any modifications at all.
+**The Flaw:** *Red Tape* — When taking the Upgrade Action at the Design Bureau, Britain may only make 1 tile swap instead of 2 (government inefficiency).
 
 **Home Base (Age II):** Cardington
 
@@ -711,7 +711,7 @@ Each nation has a unique starting Blueprint configuration, special technology, a
 **Archetype:** The Agile Explorers
 **Philosophy:** Small is beautiful. They build nimble semi-rigid ships designed to dance through storms.
 
-**Starting Advantage:** *Rapid Refit* — When taking the Upgrade Action, Italy may make up to 3 tile swaps instead of 1. They can reconfigure their Blueprint much faster than other nations.
+**Starting Advantage:** *Rapid Refit* — When taking the Upgrade Action, Italy may make up to 4 tile swaps instead of 2. They can reconfigure their Blueprint much faster than other nations.
 
 **Starting Technology (pre-printed on Player Board):** *Articulated Keel Design* — Unlocks the Flexible Frame upgrade: Ignore Weather penalties on Hazard cards. When others are grounded by storms, you can fly.
 
