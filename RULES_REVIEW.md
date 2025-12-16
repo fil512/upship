@@ -97,7 +97,7 @@ This document identifies inconsistencies, conflicts, and gaps in `upship_rules.m
 
 The same section contains conflicting information:
 - Headline flavor: "2 swaps instead of 3"
-- Rule text: "Britain may only make **1 tile swap** instead of 2"
+- - Rule text: "Britain may only make **1 tile swap** instead of 2"
 
 **Impact:** Unclear what Britain's actual swap limit is.
 
