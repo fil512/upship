@@ -92,31 +92,37 @@ Fabric determines gas-tightness, weather resistance, and aerodynamics.
 
 ## Interaction with Existing Rules
 
-### Blueprint Slots
+### Blueprint Slots (Updated)
 
-Keep the existing Structure slots. Frame and Fabric tiles both occupy Structure slots:
-- **Age I:** 1 Structure slot (choose Frame OR Fabric, or another Structure upgrade)
-- **Age II:** 2 Structure slots
-- **Age III:** 2 Structure slots
+Blueprints now have **dedicated slot types** instead of generic Structure slots:
+- **Frame slots:** Only accept Frame tiles (structural skeleton)
+- **Fabric slots:** Only accept Fabric tiles (outer covering)
+- **Drive slots:** Accept Propulsion tiles (unchanged)
+- **Payload slots:** Accept Payload tiles (unchanged)
 
-This creates a meaningful choice: do you invest in Frame (ceiling, structural reliability) or Fabric (gas-tightness, range, fire resistance)?
+**Slot Scaling by Age:**
+| Age | Frame | Fabric | Drive | Payload |
+|-----|-------|--------|-------|---------|
+| Age I | 1 | 1 | 1 | 1 |
+| Age II | 1 | 1 | 2 | 2 |
+| Age III | 2 | 2 | 2 | 3 |
 
 ### Default/Baseline
 
-If no Frame or Fabric upgrades are installed, ships use the **printed baseline** on the Blueprint:
-- Implied basic wooden frame and cotton covering
-- Hull Cost = £2 base only
-- No stat bonuses from Frame/Fabric
+Empty Frame/Fabric slots use the **printed baseline** on the Blueprint:
+- Basic frame and cotton covering implied
+- Hull Cost = £2 base only for empty slots
+- No stat bonuses until tiles are installed
 
-### Existing Structure Tiles
+**Required Slots:** You must fill all Frame and Fabric slots to launch. Empty slots mean the ship isn't complete.
 
-Some current Structure tiles are neither Frame nor Fabric — they remain as general Structure upgrades:
-- **Crew Access** (External Walkway) — crew mobility system
-- **Military Armor** (Armored Gondola) — defensive plating
-- **Altitude Cabin** (Pressurized Cabin) — crew environment
-- **Emergency Ballast** (Crash Safety System) — safety system
+### Gas Cubes on Frame Tiles
 
-These don't contribute to Hull Cost but still occupy Structure slots and provide stats.
+Each Frame tile has a **gas cube socket**:
+- When installing a Frame tile, place 1 gas cube (Hydrogen or Helium) on it
+- Gas cubes provide Lift based on gas type
+- This creates a physical link between structure and buoyancy
+- Age III ships need 2 Frame tiles = 2 gas cubes = more lift capacity
 
 ---
 
@@ -179,17 +185,96 @@ These don't contribute to Hull Cost but still occupy Structure slots and provide
 
 ---
 
-## Open Questions
+## RESOLVED: Design Decisions
 
-1. **Separate tracks or sub-categories?**
-   - Option A: Keep as Structure track, mark tiles as Frame/Fabric type
-   - Option B: Create separate Frame and Fabric tracks (affects specialization discounts)
+### 1. Dedicated Slot Types (Confirmed)
 
-2. **Slot types?**
-   - Option A: Any Structure slot can hold Frame, Fabric, or other Structure
-   - Option B: Dedicated Frame slot and Fabric slot on Blueprint
+Each Blueprint has **dedicated Frame slots** and **dedicated Fabric slots**:
+- Frame tiles can only go in Frame slots
+- Fabric tiles can only go in Fabric slots
+- This replaces the generic "Structure slot" concept
 
-3. **Faction starting techs?**
-   - Should factions start with specific Frame/Fabric technologies?
+### 2. Age Scaling (Confirmed)
 
-**Recommendation:** Option A for both — simpler, maintains current slot system, just adds Hull Cost and tile categorization.
+| Age | Frame Slots | Fabric Slots | Total |
+|-----|-------------|--------------|-------|
+| Age I | 1 | 1 | 2 |
+| Age II | 1 | 1 | 2 |
+| Age III | 2 | 2 | 4 |
+
+Age III ships are significantly more complex, requiring more Frame and Fabric investment.
+
+### 3. Frame Tiles Have Gas Cube Slots (Confirmed)
+
+Each **Frame tile** has an **empty square** printed on it where a **gas cube** is placed:
+- This physically ties Frame to gas capacity
+- More Frame tiles = more gas cubes = more Lift potential
+- Creates a visual representation of the airship's internal structure
+
+**Gas Cube Mechanic:**
+- When you install a Frame tile, place 1 gas cube on it
+- Each gas cube provides Lift (amount varies by gas type: Hydrogen vs Helium)
+- At launch, you must have enough gas cubes to satisfy the Physics Check
+
+### 4. Faction Starting Technologies (Confirmed)
+
+Based on historical accuracy:
+
+| Faction | Starting Frame Tech | Starting Fabric Tech | Historical Basis |
+|---------|--------------------|--------------------|------------------|
+| **Germany** | Duralumin Framework | Goldbeater's Skin | Zeppelin mastery of both |
+| **Britain** | Wire Bracing | Doped Canvas | Conservative R-series approach |
+| **USA** | Duralumin Framework | Gelatinized Latex | Goodyear-Zeppelin partnership |
+| **Italy** | Internal Keel | Rubberized Cotton | Nobile semi-rigid designs |
+
+**Design Notes:**
+- Germany starts with premium materials (Goldbeater's Skin) but faces the Helium Embargo
+- USA starts with the synthetic fabric (Gelatinized Latex) reflecting Goodyear innovation
+- Italy's Internal Keel supports their semi-rigid specialty and grants +1 Lift
+- Britain starts with basic materials but has early Luxury (from existing faction design)
+
+---
+
+## Updated Blueprint Slot Configuration
+
+Replacing the old Drive/Structure/Payload system with explicit slot types:
+
+| Faction | Age I | Age II | Age III |
+|---------|-------|--------|---------|
+| | F/Fb/D/P | F/Fb/D/D/P/P | F/F/Fb/Fb/D/D/P/P/P |
+| **Germany** | 1/1/1/1 | 1/1/2/2 | 2/2/2/3 |
+| **Britain** | 1/1/1/1 | 1/1/2/2 | 2/2/2/3 |
+| **USA** | 1/1/1/1 | 1/1/2/2 | 2/2/2/3 |
+| **Italy** | 1/1/1/1 | 1/1/2/1 | 2/2/2/2 |
+
+**Key:** F=Frame, Fb=Fabric, D=Drive, P=Payload
+
+**Note:** Italy retains their "Low Ceiling" flaw with fewer Payload slots.
+
+---
+
+## Existing Structure Tiles — Reclassification
+
+Current Structure tiles need reclassification:
+
+| Current Tile | New Category | Rationale |
+|--------------|--------------|-----------|
+| Wooden Framework → Wooden Frame | Frame | Structural skeleton |
+| Wire Bracing → Tensioned Frame | Frame | Structural skeleton |
+| Duralumin Framework → Duralumin Frame | Frame | Structural skeleton |
+| Internal Keel → Semi-Rigid Keel | Frame | Structural skeleton |
+| Geodetic Structure → Geodetic Frame | Frame | Structural skeleton |
+| Modular Construction → Modular Frame | Frame | Structural skeleton |
+| Fireproof Coating → Fire-Resistant Fabric | Fabric | Outer covering treatment |
+| External Walkway → Crew Access | **Remove** | Merge into Frame functionality |
+| Armored Gondola → Military Armor | **Payload** | Defensive equipment, not structure |
+| Pressurized Cabin → Altitude Cabin | **Payload** | Crew environment system |
+| Crash Safety System → Emergency Ballast | **Payload** | Safety equipment |
+
+**New Fabric Tiles to Add:**
+- Cotton Envelope (Rubberized Cotton)
+- Doped Covering (Doped Canvas)
+- Premium Envelope (Goldbeater's Skin)
+- Reflective Covering (Aluminum Doping)
+- Synthetic Envelope (Gelatinized Latex)
+- Advanced Fabric (Composite Covering)
