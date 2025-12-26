@@ -6,14 +6,25 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This is a board game design project for **UP SHIP!**, a strategy game about airship conglomerates during the Golden Age of Airships (1900-1937). Players act as Directors of rival airship companies representing Germany, Britain, the United States, and Italy, competing across three historical Ages.
 
-The project is currently in the **design phase** - there is no software codebase yet. The primary artifact is `upship_rules.md`, which contains the complete game rules and design specifications.
+The project is in the **design phase** - no software codebase yet. The primary artifact is `upship_rules.md`.
 
-## Current State
+## Document Structure
 
-- **Primary Document**: `upship_rules.md` - comprehensive rules covering mechanics, components, gameplay flow, factions, and incomplete design elements
-- **No Build Process**: This is a board game design, not a software project
-- **No Testing Framework**: Game balancing and playtesting are manual processes
-- **No Dependencies**: Pure design documentation
+- **`upship_rules.md`** - Complete game rules (~1500 lines)
+  - Sections 1-13: Core rules (overview, components, mechanics, factions, setup)
+  - Appendix A: TODO list of remaining design work
+  - Appendix B: Quick reference/cheat sheet
+  - Appendix C: Technology Tiles (45 tiles, organized by track)
+  - Appendix D: Upgrade Tiles (44 tiles with stats)
+  - Appendix E: Hazard Deck (20 cards)
+  - Appendix F: Market Deck (30 cards)
+
+## Utility Scripts
+
+```bash
+# Fix UTF-8 encoding corruption (creates backup automatically)
+./scripts/fix-encoding.sh [file.md]
+```
 
 ## Game Architecture (High-Level Concepts)
 
@@ -62,48 +73,26 @@ The game combines several mechanical systems that interact:
 
 ## Known Design Gaps (Appendix A)
 
-The rules document explicitly lists incomplete elements:
-
-1. **Age End Triggers**: No mechanism defined for when Ages transition (Headline deck removed, replacement needed)
-2. **Action Selection**: Worker placement system needs redesign; Research Institute action space purpose unclear
-3. **Ops Icons Purpose**: Originally for Headline Contests (removed); needs new function
-4. **Component Art**: All visual assets need creation (maps, boards, tiles, cards)
-5. **Economy Balancing**: Route income values, tech costs, Progress thresholds need playtesting
-6. **Agent Count**: Currently 3 per player, but may need adjustment based on final action spaces
+Check Appendix A in `upship_rules.md` for the current TODO list. Key remaining work:
+- **Component Art**: Maps, boards, tiles, cards need visual design
+- **Economy Balancing**: Route income, tech costs need playtesting
+- **Playtesting**: Engineer economy, Progress Track pacing, faction balance
 
 ## Working with This Project
 
 ### When Editing Rules
-- The document is structured in numbered sections (1-13 plus Appendices)
 - Cross-references use section numbers frequently
-- Maintain consistency between:
-  - Section 4 (Technology/Upgrade System)
-  - Section 3.2 (Blueprint mechanics)
-  - Section 6 (Game Loop phases)
-  - Appendix A (TODO list)
-- When mechanics change, update all related sections
+- Key interconnected sections to keep consistent:
+  - Section 3.2 (Blueprint mechanics) ↔ Section 4 (Technology/Upgrade System)
+  - Section 6 (Game Loop phases) ↔ Section 7 (Building and Launching)
+  - Appendix C/D (Tile specs) ↔ Section 4 (System descriptions)
+- When mechanics change, update all related sections and Appendix A TODO list
 
 ### Design Philosophy
 - **Engineering Reality**: Physics (Lift vs Weight) is the core constraint
 - **Industrial Management**: Blueprint represents factory capability, not individual ships
 - **Historical Narrative**: Three Ages mirror actual airship history
 - **Risk Management**: Hazard Checks make every launch uncertain
-
-### Thematic Inspirations
-The game draws from:
-- **Eclipse**: Tech tracks with specialization, blueprint customization
-- **Dune: Imperium**: Deck building with worker placement
-- **Brass: Lancashire**: Age-based obsolescence, loan economy
-- **Ticket to Ride**: Route claiming and networks
-
-## Common Tasks
-
-### Reviewing Mechanics
-When analyzing game systems, consider interactions between:
-- Engineer economy (Research generation vs emergency spending)
-- Technology acquisition timing (specialization discount builds over time)
-- Age transitions (Tech persists, Upgrades reset)
-- Progress Track pacing (every tech acquired accelerates game end)
 
 ### Proposing Changes
 When suggesting mechanical changes:
@@ -113,13 +102,12 @@ When suggesting mechanical changes:
 4. Consider faction balance implications
 5. Verify thematic consistency with historical airship era
 
-### Balancing Work
-Key balance levers:
-- Research costs per Age (currently 2-4 / 4-6 / 5-8)
-- Engineer costs (recruit: £3, upkeep: £1/round)
-- Specialization discounts (-1 at 3+, -2 at 5+)
-- Progress Track thresholds (20/25/30)
-- Route income values (target: ships pay for themselves in 3-5 turns)
+### Key Balance Levers
+- Research costs: Age I (1-3), Age II (3-5), Age III (4-6)
+- Engineer: recruit £4, upkeep £1/round (Pilot: recruit £2, consumed on launch)
+- Specialization discounts: -1 at 3+ tiles, -2 at 5+ tiles
+- Progress Track: Age ends at 8/16/20 (2P), 10/20/25 (3P), 12/24/30 (4P)
+- Route income target: ships pay for themselves in 3-5 turns
 
 ## Critical Design Notes
 
