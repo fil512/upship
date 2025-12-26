@@ -4,25 +4,13 @@
 
 After incorporating your merged changes, many issues have been resolved. This updated review contains only **remaining issues** that still need attention.
 
-**Remaining:** 4 numerical issues, 6 mechanical gaps, 2 clarity issues, 6 balance concerns
+**Remaining:** 3 numerical issues, 6 mechanical gaps, 2 clarity issues, 6 balance concerns
 
 ---
 
 # PART 1: REMAINING NUMERICAL ISSUES
 
-## 1.1 Upgrade Tile Count Mismatch
-**Issue:** Appendix D summary says "Total: 44 Upgrade Tiles" but the actual listings total 45 tiles:
-- Propulsion Upgrades: 11
-- Structure Upgrades: 11
-- Gas System Upgrades: 11
-- Payload Upgrades: 12
-- **Actual Total: 45 tiles**
-
-**Recommendation:** Update the summary line to "Total: 45 Upgrade Tiles"
-
----
-
-## 1.2 Italy's Strategy Tip Incorrect
+## 1.1 Italy's Strategy Tip Incorrect
 **Issue:** Section 13 (Strategy Tips) says: "Italian Flexibility: Your 5-swap Upgrade action..."
 
 But Section 10.4 says Italy gets 4 swaps, not 5.
@@ -31,7 +19,7 @@ But Section 10.4 says Italy gets 4 swaps, not 5.
 
 ---
 
-## 1.3 Helium Gas Cell Lift Value Inconsistency
+## 1.2 Helium Gas Cell Lift Value Inconsistency
 **Issue:**
 - Appendix D note says: "The Helium Gas Cell upgrade provides Lift +5, which is 1 less than the equivalent Hydrogen cell"
 - But the base Hydrogen cells provide different Lift by Age (+4/+6/+8)
@@ -43,7 +31,7 @@ But Section 10.4 says Italy gets 4 swaps, not 5.
 
 ---
 
-## 1.4 Research Costs vs Technology Tile Costs
+## 1.3 Research Costs vs Technology Tile Costs
 **Issue:** Appendix A.3 lists Research costs as:
 - Age I: 1-3 Research
 - Age II: 3-5 Research
