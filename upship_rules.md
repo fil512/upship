@@ -1484,41 +1484,41 @@ Each player has an identical Personal Hazard Deck of 20 cards. When launching a 
 
 ## Minor Hazards (8 cards)
 
-| Name | Difficulty | Stat | Type | Engineer Option |
-|------|------------|------|------|-----------------|
-| Light Turbulence | 2 | Speed | Weather | Spend 1: +2 to check |
-| Minor Engine Trouble | 2 | Reliability | Mechanical | Spend 1: Auto-pass |
-| Crosswind | 3 | Speed | Weather | Spend 1: +2 to check |
-| Gas Leak | 3 | Reliability | Mechanical | Spend 1: Auto-pass |
-| Low Visibility | 2 | Ceiling | Weather | Spend 1: +2 to check |
-| Fuel Concern | 3 | Range | Supply | Spend 1: +2 to check |
-| Headwind | 3 | Speed | Weather | Spend 1: +2 to check |
-| Structural Stress | 2 | Reliability | Mechanical | Spend 1: Auto-pass |
+| Name | Difficulty | Stat | Type |
+|------|------------|------|------|
+| Light Turbulence | 2 | Speed | Weather |
+| Minor Engine Trouble | 2 | Reliability | Mechanical |
+| Crosswind | 3 | Speed | Weather |
+| Gas Leak | 3 | Reliability | Mechanical |
+| Low Visibility | 2 | Ceiling | Weather |
+| Fuel Concern | 3 | Range | Supply |
+| Headwind | 3 | Speed | Weather |
+| Structural Stress | 2 | Reliability | Mechanical |
 
 ## Major Hazards (6 cards)
 
-| Name | Difficulty | Stat | Type | Engineer Option |
-|------|------------|------|------|-----------------|
-| Strong Headwind | 4 | Speed | Weather | Spend 2: +3 to check |
-| Icing Conditions | 4 | Ceiling | Weather | Spend 2: +3 to check |
-| Engine Failure | 5 | Reliability | Mechanical | Spend 2: Reduce to Difficulty 3 |
-| Storm System | 5 | Speed | Weather | Spend 2: +3 to check |
-| Structural Damage | 4 | Reliability | Mechanical | Spend 2: Reduce to Difficulty 2 |
-| Navigation Error | 4 | Range | Supply | Spend 1: +2 to check |
+| Name | Difficulty | Stat | Type |
+|------|------------|------|------|
+| Strong Headwind | 4 | Speed | Weather |
+| Icing Conditions | 4 | Ceiling | Weather |
+| Engine Failure | 5 | Reliability | Mechanical |
+| Storm System | 5 | Speed | Weather |
+| Structural Damage | 4 | Reliability | Mechanical |
+| Navigation Error | 4 | Range | Supply |
 
 ## Catastrophic Events (2 cards)
 
-| Name | Difficulty | Stat | Type | Engineer Option |
-|------|------------|------|------|-----------------|
-| Hydrogen Fire | 6 | Reliability | Fire | Spend 3: Prevent crash. Helium ships: Auto-pass |
-| Structural Failure | 6 | Reliability | Mechanical | Spend 3: Reduce to Difficulty 4 |
+| Name | Difficulty | Stat | Type | Special |
+|------|------------|------|------|---------|
+| Hydrogen Fire | 6 | Reliability | Fire | Helium ships: Auto-pass |
+| Structural Failure | 6 | Reliability | Mechanical | — |
 
 **Resolving Hazards:**
 1. Draw card from your Personal Hazard Deck
-2. Check if auto-pass (Clear Weather cards)
+2. Check if auto-pass (Clear Weather cards, or Helium ship vs Hydrogen Fire)
 3. Compare: Ship's relevant stat vs Difficulty
-4. (Optional) Spend Engineers: +1 per Engineer spent
-5. If total ≥ Difficulty: Pass. If total < Difficulty: Fail.
+4. (Optional) Spend Engineers from your Barracks: **+1 per Engineer spent** (standard rule for all hazards)
+5. If total ≥ Difficulty: Pass. If total < Difficulty: Fail (ship returns to Hangar, Pilot and gas lost).
 
 **Deck Management:** Shuffle your discard pile back into your Hazard Deck when the deck is empty.
 

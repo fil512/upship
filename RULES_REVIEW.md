@@ -4,26 +4,13 @@
 
 After incorporating your merged changes, many issues have been resolved. This updated review contains only **remaining issues** that still need attention.
 
-**Remaining:** 3 mechanical gaps, 2 clarity issues, 6 balance concerns
+**Remaining:** 2 mechanical gaps, 2 clarity issues, 6 balance concerns
 
 ---
 
 # PART 1: REMAINING MECHANICAL GAPS
 
-## 1.1 Engineer Hazard Spending: Dual System Conflict
-**Gap:** Two different systems for Engineer spending during Hazard Checks:
-1. **Section 7.3 (Generic):** "Each Engineer spent adds +1 to your total"
-2. **Appendix E (Card-Specific):** Different effects per card (e.g., "Spend 1: Auto-pass", "Spend 2: +3 to check")
-
-**Question:** Which system applies? Can players choose?
-
-**Recommendation:** Clarify in Section 7.3:
-> **Standard Option:** You may spend any number of Engineers to add +1 per Engineer to your check.
-> **Card-Specific Option:** Some Hazard cards offer special Engineer abilities (listed on the card). You may use either the standard +1 per Engineer OR the card's specific ability, not both.
-
----
-
-## 1.2 Pressurized Lounge "Helium Ships Only" Restriction
+## 1.1 Pressurized Lounge "Helium Ships Only" Restriction
 **Gap:** Appendix D says Pressurized Lounge is "Helium ships only" but doesn't explain:
 - Can you install it on any Blueprint?
 - Does it only function on Helium ships?
@@ -34,7 +21,7 @@ After incorporating your merged changes, many issues have been resolved. This up
 
 ---
 
-## 1.3 Structural Keel Grants Positive Lift
+## 1.2 Structural Keel Grants Positive Lift
 **Gap:** Appendix D shows Structural Keel provides "Weight -2" AND "Reliability +1, Lift +1". Most upgrades only have negative Weight; this one also grants positive Lift.
 
 **Question:** Is this intentional? It's the only upgrade that grants Lift.
@@ -149,13 +136,12 @@ This 33% attrition affects every Hydrogen launch.
 # PART 4: RECOMMENDED PRIORITY FIXES
 
 ## Design Decisions Needed
-1. **Engineer Hazard spending** - Standard +1/Engineer OR card-specific, not both? (Issue 1.1)
-2. **Structural Keel +1 Lift** - Intentional or remove? (Issue 1.3)
+1. **Structural Keel +1 Lift** - Intentional or remove? (Issue 1.2)
 
 ## Clarifications (Low Priority)
-3. **Pressurized Lounge restriction** - Add explicit Helium requirement (Issue 1.2)
-4. **Pioneer Scramble conflicts** - Add cross-reference for turn order (Issue 2.1)
-5. **Route claiming priority** - Add cross-reference to Section 5.5 (Issue 2.2)
+2. **Pressurized Lounge restriction** - Add explicit Helium requirement (Issue 1.1)
+3. **Pioneer Scramble conflicts** - Add cross-reference for turn order (Issue 2.1)
+4. **Route claiming priority** - Add cross-reference to Section 5.5 (Issue 2.2)
 
 ---
 
@@ -191,6 +177,7 @@ The following issues from the original review were resolved in the merged change
 - **Frozen Prototype Rule:** Added explicit rule that ships on routes retain launch stats (Section 3.2)
 - **Pilot/Engineer Income Track Setup:** Added to player setup (Section 11.2)
 - **Technology Bag Accumulation:** Clarified that tiles from all Ages accumulate in bag (Section 4.1)
+- **Engineer Hazard Spending:** Standardized to +1 per Engineer for all hazards; removed card-specific abilities (Appendix E)
 
 ## Clarity Issues Resolved
 - **Crash vs Aborted:** New Section 12.7 defines terminology
