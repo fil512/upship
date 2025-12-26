@@ -128,22 +128,31 @@ An Age-specific overlay representing your current Airship Model—your "Factory 
 
 ### Age-Specific Blueprints
 
-Each Age, you replace your Blueprint overlay with the new Age's version. Blueprints have **printed baseline components** representing standard manufacturing capability for that era:
+Each Age, you replace your Blueprint overlay with the new Age's version. Blueprints have **four slot types** for installing upgrade tiles:
+
+- **Frame Slots:** Accept Frame tiles (structural skeleton). Each Frame tile has a **gas cube socket** where you place a Hydrogen or Helium cube for lift.
+- **Fabric Slots:** Accept Fabric tiles (outer covering and gas cell materials)
+- **Drive Slots:** Accept Propulsion tiles (engines and propellers)
+- **Payload Slots:** Accept Payload tiles (cargo, passengers, equipment)
 
 **Age I Blueprint (Pioneer Era):**
-- Pre-printed: Basic Gas Cell (Hydrogen, Lift 4), Primitive Engine (Speed 1, Range 1)
-- Open Slots: 1 Drive, 1 Structure, 1 Payload
-- Baseline Stats: Lift 4, Speed 1, Range 1, Ceiling 0, Reliability 0
+- Open Slots: 1 Frame, 1 Fabric, 1 Drive, 1 Payload
+- Printed Baseline: Primitive Engine (Speed 1, Range 1)
+- Baseline Stats: Speed 1, Range 1, Ceiling 0, Reliability 0
+- *Note: Lift comes from gas cubes placed on Frame tiles*
 
 **Age II Blueprint (Great War):**
-- Pre-printed: Standard Gas Cell (Hydrogen, Lift 6), Military Engine (Speed 2, Range 2)
-- Open Slots: 2 Drive, 2 Structure, 2 Payload
-- Baseline Stats: Lift 6, Speed 2, Range 2, Ceiling 1, Reliability 1
+- Open Slots: 1 Frame, 1 Fabric, 2 Drive, 2 Payload
+- Printed Baseline: Military Engine (Speed 2, Range 2)
+- Baseline Stats: Speed 2, Range 2, Ceiling 1, Reliability 1
 
 **Age III Blueprint (Golden Age):**
-- Pre-printed: Large Gas Cell (Hydrogen, Lift 8), Modern Engine (Speed 3, Range 3)
-- Open Slots: 2 Drive, 2 Structure, 3 Payload
-- Baseline Stats: Lift 8, Speed 3, Range 3, Ceiling 2, Reliability 2
+- Open Slots: 2 Frame, 2 Fabric, 2 Drive, 3 Payload
+- Printed Baseline: Modern Engine (Speed 3, Range 3)
+- Baseline Stats: Speed 3, Range 3, Ceiling 2, Reliability 2
+- *Note: Two Frame slots = two gas cubes = greater lift capacity*
+
+**Required Slots:** You must fill all Frame and Fabric slots before launching. Empty structural slots mean the ship isn't airworthy.
 
 **Historical Blueprint Designs:** Each Blueprint overlay has a distinctive silhouette reflecting the actual airship designs of that era:
 - **Age I:** Small, cigar-shaped designs with minimal structure (non-rigid or semi-rigid designs)
@@ -573,10 +582,22 @@ Ships are constructed at the Construction Hall and launched from the Launchpad. 
 
 When you take the **Construction Hall Action**, you construct ships:
 
-1. **Pay Hull Cost:** For each ship you build, pay £ based on your Frame + Fabric upgrades
+1. **Pay Hull Cost:** For each ship you build, pay the Hull Cost in £
 2. **Place in Hangar Bay:** Built ships are placed in your Hangar Bay, waiting for launch
 
-**Hull Cost:** Determined by the Frame and Fabric upgrades currently installed on your Blueprint. Basic hull = £2. Each Frame/Fabric upgrade adds to this cost.
+### Hull Cost Formula
+
+> **Hull Cost = £2 base + Frame tile cost + Fabric tile cost**
+
+Each Frame and Fabric upgrade tile shows a **Hull Cost modifier** (£0 to £3). Add all installed Frame and Fabric tile costs to the £2 base.
+
+**Example Hull Costs:**
+| Configuration | Calculation | Total |
+|---------------|-------------|-------|
+| No upgrades (baseline) | £2 base | £2 |
+| Wooden Frame + Cotton Envelope | £2 + £1 + £0 | £3 |
+| Duralumin Frame + Doped Covering | £2 + £2 + £1 | £5 |
+| Geodetic Frame + Premium Envelope | £2 + £3 + £3 | £8 |
 
 **Cost Reduction:** Card effects and faction abilities can reduce Hull Cost (minimum £0).
 
@@ -584,7 +605,7 @@ When you take the **Construction Hall Action**, you construct ships:
 
 **Build Limit:** You may build up to 3 ships per Construction Hall action.
 
-**Note:** Physics Check is NOT required to build—only to launch. You can build ships for a Blueprint that doesn't fly yet, then add Lift upgrades before launching.
+**Note:** Physics Check is NOT required to build—only to launch. You can build ships for a Blueprint that doesn't fly yet, then add gas cubes and Lift upgrades before launching.
 
 ## 7.2 The Launch Procedure (Launchpad Action)
 
@@ -767,9 +788,12 @@ Each nation has a unique starting Blueprint configuration, special technology, a
 **Archetype:** The High-Stakes Engineers
 **Philosophy:** Technological superiority at any cost. They build the biggest, fastest ships but must use dangerous hydrogen.
 
-**Starting Advantage:** Maximum Lift slots. Their Blueprint overlays have the most Gas Cell slots across all Ages, allowing them to carry the heaviest engines and payloads.
+**Starting Advantage:** Masters of rigid airship construction. Germany starts with premium structural technologies.
 
-**Starting Technology (pre-printed on Player Board):** *Blaugas Fuel System* — A special fuel that weighs the same as air. Unlocks the Blaugas Tank upgrade: you do not lose Lift as you burn fuel, allowing extreme Range.
+**Starting Technologies (pre-printed on Player Board):**
+- *Duralumin Framework* — The lightweight aluminum alloy that made giant Zeppelins possible. Unlocks the Duralumin Frame upgrade.
+- *Goldbeater's Skin* — Cattle intestine membrane, the finest gas cell material. Unlocks the Premium Envelope upgrade.
+- *Blaugas Fuel System* — A special fuel that weighs the same as air. Unlocks the Blaugas Tank upgrade.
 
 **The Flaw:** *The Helium Embargo* — Germany cannot acquire the Helium Handling technology. They are permanently locked to Hydrogen (Flammable). In Age III, every Luxury Launch risks triggering the Hindenburg Disaster.
 
@@ -782,7 +806,10 @@ Each nation has a unique starting Blueprint configuration, special technology, a
 
 **Starting Advantage:** *Pre-Installed Luxury* — Their Age I Blueprint includes a printed Dining Saloon component, generating steady VP/Income from Turn 1 and giving them an early Luxury stat.
 
-**Starting Technology (pre-printed on Player Board):** *Imperial Mooring System* — Unlocks the Imperial Mast upgrade: Treat any British Territory (Egypt, Canada, India) as a Home Base for repair/refuel, extending effective range.
+**Starting Technologies (pre-printed on Player Board):**
+- *Wire Bracing* — Conservative but proven structural approach. Unlocks the Tensioned Frame upgrade.
+- *Doped Canvas* — Cellulose-treated cotton for a taut, aerodynamic finish. Unlocks the Doped Covering upgrade.
+- *Imperial Mooring System* — Unlocks the Imperial Mast upgrade: Treat any British Territory (Egypt, Canada, India) as a Home Base for repair/refuel, extending effective range.
 
 **The Flaw:** *Red Tape* — When taking the Upgrade Action at the Design Bureau, Britain may only make 1 tile swap instead of 2 (government inefficiency).
 
@@ -795,7 +822,11 @@ Each nation has a unique starting Blueprint configuration, special technology, a
 
 **Starting Advantage:** *Helium Monopoly* — The only faction that starts with the Helium Handling technology already in their Drawing Office. Their ships can be immune to Fire disaster cards and the Hindenburg Disaster.
 
-**Starting Technology (pre-printed on Player Board):** *Trapeze Fighter System* — Unlocks the Sparrowhawk Hangar upgrade: A hangar for biplanes. When launching to a route, you may ignore one stat requirement (your fighter escorts compensate). Additionally, military routes in Age II provide +2 Income.
+**Starting Technologies (pre-printed on Player Board):**
+- *Duralumin Framework* — Licensed from Germany through the Goodyear-Zeppelin partnership. Unlocks the Duralumin Frame upgrade.
+- *Gelatinized Latex* — Goodyear's synthetic innovation that replaced goldbeater's skin. Unlocks the Synthetic Envelope upgrade.
+- *Trapeze Fighter System* — Unlocks the Sparrowhawk Hangar upgrade: A hangar for biplanes. When launching to a route, you may ignore one stat requirement (your fighter escorts compensate). Additionally, military routes in Age II provide +2 Income.
+- *Helium Handling* — Safe, non-flammable lifting gas. Unlocks the Helium Gas Cell upgrade.
 
 **The Flaw:** *Heavy Frame* — Helium lifts less than Hydrogen. All Helium Gas Cell upgrades provide -1 Lift compared to their Hydrogen equivalents, forcing smaller payloads or more gas cells.
 
@@ -810,7 +841,10 @@ Each nation has a unique starting Blueprint configuration, special technology, a
 
 **Starting Advantage:** *Rapid Refit* — When taking the Upgrade Action, Italy may make up to 4 tile swaps instead of 2. They can reconfigure their Blueprint much faster than other nations.
 
-**Starting Technology (pre-printed on Player Board):** *Articulated Keel Design* — Unlocks the Flexible Frame upgrade: Ignore Weather penalties on Hazard cards. When others are grounded by storms, you can fly.
+**Starting Technologies (pre-printed on Player Board):**
+- *Internal Keel* — The signature semi-rigid design. Unlocks the Semi-Rigid Keel upgrade (+1 Lift from the flexible structure).
+- *Rubberized Cotton* — Simple, proven envelope material. Unlocks the Cotton Envelope upgrade.
+- *Articulated Keel Design* — Unlocks the Flexible Frame upgrade: Ignore Weather penalties on Hazard cards. When others are grounded by storms, you can fly.
 
 **The Flaw:** *Low Ceiling* — Semi-rigid frames cannot support heavy payloads. Italy's Blueprint overlays have one fewer Payload slot than other factions. They must win on quantity, not quality.
 
@@ -818,16 +852,16 @@ Each nation has a unique starting Blueprint configuration, special technology, a
 
 ## 10.5 Faction Blueprint Slot Summary
 
-Each faction's Blueprint has different slot configurations. Slots are listed as Drive/Structure/Payload (D/S/P):
+Each faction's Blueprint has different slot configurations. Slots are listed as Frame/Fabric/Drive/Payload (F/Fb/D/P):
 
 | Faction | Age I Slots | Age II Slots | Age III Slots |
 |---------|-------------|--------------|---------------|
-| Germany | 1/1/1 | 2/2/2 | 2/2/3 |
-| Britain | 1/1/1 | 2/2/2 | 2/2/3 |
-| USA | 1/1/1 | 2/2/2 | 2/2/3 |
-| Italy | 1/1/1 | 2/2/1 | 2/2/2 |
+| Germany | 1/1/1/1 | 1/1/2/2 | 2/2/2/3 |
+| Britain | 1/1/1/1 | 1/1/2/2 | 2/2/2/3 |
+| USA | 1/1/1/1 | 1/1/2/2 | 2/2/2/3 |
+| Italy | 1/1/1/1 | 1/1/2/1 | 2/2/2/2 |
 
-**Note:** Italy's "Low Ceiling" flaw results in one fewer Payload slot in Ages II and III compared to other factions.
+**Note:** Italy's "Low Ceiling" flaw results in fewer Payload slots. Frame slots determine gas cube capacity (and thus Lift potential).
 
 ---
 
@@ -918,9 +952,14 @@ In both cases, the Pilot and any gas spent on the launch are lost.
 
 ## 12.8 Terminology: Slots, Swaps, and Tiles
 
-- **Slot:** An empty space on the Blueprint where an Upgrade tile can be installed
+- **Slot:** An empty space on the Blueprint where an Upgrade tile can be installed. There are four slot types:
+  - **Frame Slot:** Accepts Frame tiles (structural skeleton). Each Frame tile has a gas cube socket.
+  - **Fabric Slot:** Accepts Fabric tiles (outer covering materials)
+  - **Drive Slot:** Accepts Propulsion tiles (engines and propellers)
+  - **Payload Slot:** Accepts Payload tiles (cargo, passengers, equipment)
 - **Swap:** One installation or removal of an Upgrade tile at the Design Bureau (one swap = one action)
 - **Tile:** The physical component—either a Technology tile (stored in Drawing Office) or an Upgrade tile (installed on Blueprint)
+- **Gas Cube:** A cube (Hydrogen or Helium) placed on a Frame tile's socket to provide Lift
 
 ## 12.9 Victory Point Scoring
 
@@ -983,7 +1022,7 @@ Technology tiles have **VP values printed on them** based on their practical uti
 1. **The Germany Gambit:** High risk, high reward. Build monsters, but avoid Luxury Routes in Age III or accept the Hindenburg risk.
 2. **The British Empire:** Your early Luxury stat lets you claim premium routes. Slow start on tech, strong finish.
 3. **American Safety:** Your helium monopoly means you dominate Age III safely. Tech up on Payload to maximize it.
-4. **Italian Flexibility:** Your 5-swap Upgrade action means you can pivot instantly. React to what others are doing.
+4. **Italian Flexibility:** Your 4-swap Upgrade action means you can pivot instantly. React to what others are doing.
 
 ---
 
@@ -1008,9 +1047,10 @@ The following items require finalization before the game is complete:
    - Blueprint stat tracking area with cube tracks for: Lift, Weight, Speed, Range, Ceiling, Reliability, Luxury (each with min/max values)
 
 3. **Blueprint Overlays (12 total):** Design 3 per faction with:
-   - Age-appropriate printed baseline components
-   - Different slot configurations per faction
-   - Clear slot type indicators
+   - Frame slots (with gas cube sockets) and Fabric slots for structural components
+   - Drive slots and Payload slots for systems
+   - Different slot configurations per faction (see Section 10.5)
+   - Clear slot type indicators (Frame/Fabric/Drive/Payload)
    - Historically accurate silhouettes:
      * Age I: Small, cigar-shaped non-rigid/semi-rigid designs
      * Age II: Longer, refined transitional rigid designs
@@ -1023,7 +1063,8 @@ The following items require finalization before the game is complete:
 
 4. **Technology Tiles (~60):** Create tiles organized by track:
    - Propulsion: Engine technologies across Ages
-   - Structure: Frame and safety technologies
+   - Frame: Structural skeleton technologies (wood, duralumin, geodetic)
+   - Fabric: Outer covering technologies (cotton, goldbeater's skin, gelatinized latex)
    - Gas Systems: Hydrogen improvements, Helium handling
    - Payload: Cargo, passenger, and mission technologies
 
@@ -1159,9 +1200,10 @@ The following items require finalization before the game is complete:
 
 ## Build Checklist (Construction Hall Action)
 
-1. ✓ For each ship: Pay Hull Cost in £ (Frame + Fabric upgrades determine cost)
-2. ✓ Place built ships in your Hangar Bay (up to 3 per action)
-3. ✓ Note: Physics Check NOT required to build—only to launch
+1. ✓ Calculate Hull Cost: £2 base + Frame tile cost + Fabric tile cost
+2. ✓ For each ship: Pay Hull Cost in £
+3. ✓ Place built ships in your Hangar Bay (up to 3 per action)
+4. ✓ Note: Physics Check NOT required to build—only to launch
 
 ## Launch Checklist (Launchpad Action)
 
@@ -1183,7 +1225,9 @@ The following items require finalization before the game is complete:
 
 ## Key Formulas
 
+- **Hull Cost:** £2 base + Frame tile cost + Fabric tile cost
 - **Physics Check:** Total Lift ≥ Total Weight
+- **Lift Calculation:** Sum of gas cube Lift values (Hydrogen +4/+6/+8 by Age, Helium +5) + upgrade bonuses
 - **Hazard Check:** Ship Stat + Engineers spent ≥ Hazard Difficulty
 - **Research per Round:** Engineers in Barracks + Research icons from revealed cards
 - **Engineer Upkeep:** £1 per Engineer in Barracks
@@ -1236,28 +1280,39 @@ Technology tiles are acquired from the R&D Board using Research. Each tile shows
 | III | Diesel-Electric Drive | 5 | 2 | 1 | Hybrid Powerplant |
 | III | Variable-Pitch Propeller | 4 | 2 | — | Adaptive Propeller |
 
-## Structure Track (11 tiles)
+## Frame Track (7 tiles)
+
+Frame technologies unlock structural skeleton upgrades. Each Frame upgrade tile has a **gas cube socket** for placing Hydrogen or Helium cubes.
 
 | Age | Name | Cost | £ | VP | Unlocks |
 |-----|------|------|---|----|---------|
-| I | Wooden Framework | 1 | 1 | — | Reinforced Frame |
-| I | External Walkway | 1 | 1 | — | Crew Access |
-| I | Wire Bracing | 2 | 1 | 1 | Tensioned Structure |
-| II | Duralumin Framework | 4 | 2 | — | Rigid Frame |
-| II | Fireproof Coating | 3 | 1 | 2 | Fire Retardant |
-| II | Armored Gondola | 4 | 2 | 2 | Military Armor |
-| II | Internal Keel | 3 | 1 | 1 | Structural Keel |
-| III | Geodetic Structure | 4 | 2 | — | Lightweight Frame |
-| III | Pressurized Cabin | 5 | 3 | 1 | Altitude Cabin |
-| III | Crash Safety System | 4 | 2 | 2 | Emergency Ballast |
-| III | Modular Construction | 5 | 2 | 3 | Quick-Swap Components |
+| I | Wooden Framework | 1 | 1 | — | Wooden Frame |
+| I | Wire Bracing | 2 | 1 | 1 | Tensioned Frame |
+| II | Duralumin Framework | 3 | 2 | — | Duralumin Frame |
+| II | Steel Framework | 2 | 1 | 2 | Steel Frame |
+| II | Internal Keel | 3 | 1 | 1 | Semi-Rigid Keel |
+| III | Geodetic Structure | 4 | 2 | — | Geodetic Frame |
+| III | Modular Construction | 5 | 2 | 3 | Modular Frame |
 
-## Gas Systems Track (11 tiles)
+## Fabric Track (7 tiles)
+
+Fabric technologies unlock outer covering and gas cell material upgrades.
+
+| Age | Name | Cost | £ | VP | Unlocks |
+|-----|------|------|---|----|---------|
+| I | Rubberized Cotton | 1 | 1 | — | Cotton Envelope |
+| I | Doped Canvas | 2 | 1 | — | Doped Covering |
+| II | Goldbeater's Skin | 4 | 2 | 2 | Premium Envelope |
+| II | Fireproof Coating | 3 | 1 | 2 | Fire-Resistant Fabric |
+| II | Aluminum Doping | 3 | 1 | 1 | Reflective Covering |
+| III | Gelatinized Latex | 4 | 2 | — | Synthetic Envelope |
+| III | Composite Covering | 5 | 2 | 1 | Advanced Fabric |
+
+## Gas Systems Track (10 tiles)
 
 | Age | Name | Cost | £ | VP | Unlocks |
 |-----|------|------|---|----|---------|
 | I | Improved Valving | 1 | 1 | — | Pressure Control |
-| I | Goldbeater's Skin | 2 | 1 | 1 | Leak-Proof Cell |
 | I | Manual Ballonets | 1 | 1 | — | Altitude Ballonets |
 | II | Multiple Gas Cells | 3 | 1 | — | Compartmented Gas |
 | II | Helium Handling | 4 | 2 | — | Helium Gas Cell |
@@ -1285,9 +1340,9 @@ Technology tiles are acquired from the R&D Board using Research. Each tile shows
 | III | Sleeping Quarters | 4 | 2 | 1 | Private Berths |
 | III | Smoking Room | 5 | 2 | 3 | Pressurized Lounge |
 
-**Total: 45 Technology Tiles** (11-12 per track)
+**Total: 47 Technology Tiles** (Propulsion 11, Frame 7, Fabric 7, Gas Systems 10, Payload 12)
 
-**TODO:** Expand each track to 15 tiles (60 total) for final production.
+**TODO:** Expand each track to balance the game for final production.
 
 ---
 
@@ -1311,30 +1366,41 @@ Upgrade tiles are installed on your Blueprint. You must own the corresponding Te
 | Hybrid Powerplant | Diesel-Electric Drive | -3 | Range +3, Reliability +1 | — |
 | Adaptive Propeller | Variable-Pitch Propeller | -2 | Speed +1, Range +2 | — |
 
-## Structure Upgrades
+## Frame Upgrades
 
-| Name | Required Tech | Weight | Stats | Special |
-|------|---------------|--------|-------|---------|
-| Reinforced Frame | Wooden Framework | -2 | Reliability +1 | — |
-| Crew Access | External Walkway | -1 | Reliability +1 | Engineers: +1 to repair checks |
-| Tensioned Structure | Wire Bracing | -1 | Ceiling +1 | — |
-| Rigid Frame | Duralumin Framework | -2 | Reliability +2, Ceiling +1 | — |
-| Fire Retardant | Fireproof Coating | -1 | Reliability +1 | Ignore first Fire hazard |
-| Military Armor | Armored Gondola | -4 | Reliability +2 | Ignore War Zone penalties |
-| Structural Keel | Internal Keel | -2 | Reliability +1, Lift +1 | — |
-| Lightweight Frame | Geodetic Structure | -1 | Reliability +2, Ceiling +1 | — |
-| Altitude Cabin | Pressurized Cabin | -2 | Ceiling +2 | — |
-| Emergency Ballast | Crash Safety System | -2 | Reliability +2 | On failed Hazard: reroll once |
-| Quick-Swap Components | Modular Construction | -1 | — | +2 tile swaps at Design Bureau |
+Frame tiles go in Frame slots. Each has a **gas cube socket** where you place a Hydrogen or Helium cube for Lift. The **Hull Cost** column shows how much this tile adds to the cost of building ships.
+
+| Name | Required Tech | Weight | Hull Cost | Stats | Special |
+|------|---------------|--------|-----------|-------|---------|
+| Wooden Frame | Wooden Framework | -2 | +£1 | Reliability +1 | — |
+| Tensioned Frame | Wire Bracing | -1 | +£1 | Ceiling +1 | — |
+| Duralumin Frame | Duralumin Framework | -2 | +£2 | Reliability +2, Ceiling +1 | — |
+| Steel Frame | Steel Framework | -3 | +£1 | Reliability +2 | Heavier but cheap |
+| Semi-Rigid Keel | Internal Keel | -2 | +£1 | Reliability +1, Lift +1 | Italy's specialty |
+| Geodetic Frame | Geodetic Structure | -1 | +£3 | Reliability +2, Ceiling +1 | Lightest, most expensive |
+| Modular Frame | Modular Construction | -1 | +£2 | — | +2 tile swaps at Design Bureau |
+
+## Fabric Upgrades
+
+Fabric tiles go in Fabric slots. The **Hull Cost** column shows how much this tile adds to the cost of building ships.
+
+| Name | Required Tech | Weight | Hull Cost | Stats | Special |
+|------|---------------|--------|-----------|-------|---------|
+| Cotton Envelope | Rubberized Cotton | 0 | +£0 | — | Basic default |
+| Doped Covering | Doped Canvas | 0 | +£1 | Speed +1 | Improved aerodynamics |
+| Premium Envelope | Goldbeater's Skin | 0 | +£3 | Reliability +1, Range +1 | Best gas-tightness |
+| Fire-Resistant Fabric | Fireproof Coating | -1 | +£2 | Reliability +1 | Ignore first Fire hazard |
+| Reflective Covering | Aluminum Doping | 0 | +£1 | Reliability +1 | Protects gas from heat |
+| Synthetic Envelope | Gelatinized Latex | 0 | +£2 | Reliability +1, Range +1 | Modern replacement for goldbeater's |
+| Advanced Fabric | Composite Covering | 0 | +£2 | Reliability +2 | Multi-layer protection |
 
 ## Gas System Upgrades
 
-**Note:** The base Hydrogen Gas Cell is printed on each Age's Blueprint and provides Lift +6 (Ages I/II/III vary: +4/+6/+8 respectively) with the Flammable trait. The Helium Gas Cell upgrade provides Lift +5, which is 1 less than the equivalent Hydrogen cell—this represents the USA's "Heavy Frame" flaw (helium lifts less than hydrogen).
+**Note:** Base Lift comes from **gas cubes** placed on Frame tiles. Hydrogen cubes provide Lift +6 (varies by Age: +4/+6/+8). Helium cubes provide Lift +5 (1 less than Hydrogen)—this represents the USA's "Heavy Frame" flaw. Gas System upgrades enhance or modify the gas cell performance.
 
 | Name | Required Tech | Weight | Stats | Special |
 |------|---------------|--------|-------|---------|
 | Pressure Control | Improved Valving | -1 | Ceiling +1 | — |
-| Leak-Proof Cell | Goldbeater's Skin | 0 | Reliability +1 | — |
 | Altitude Ballonets | Manual Ballonets | -1 | Ceiling +1 | — |
 | Compartmented Gas | Multiple Gas Cells | -1 | Lift +2, Reliability +1 | — |
 | Helium Gas Cell | Helium Handling | -1 | Lift +5 | Safe (immune to Fire) |
@@ -1362,7 +1428,7 @@ Upgrade tiles are installed on your Blueprint. You must own the corresponding Te
 | Private Berths | Sleeping Quarters | -2 | Income +2, Luxury +1 | — |
 | Pressurized Lounge | Smoking Room | -2 | Income +1, Luxury +2 | Helium ships only |
 
-**Total: 44 Upgrade Tiles**
+**Total: 47 Upgrade Tiles** (Propulsion 11, Frame 7, Fabric 7, Gas Systems 10, Payload 12)
 
 ---
 
