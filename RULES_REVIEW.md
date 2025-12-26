@@ -4,27 +4,13 @@
 
 After incorporating your merged changes, many issues have been resolved. This updated review contains only **remaining issues** that still need attention.
 
-**Remaining:** 1 numerical issue, 4 mechanical gaps, 2 clarity issues, 6 balance concerns
+**Remaining:** 3 mechanical gaps, 2 clarity issues, 6 balance concerns
 
 ---
 
-# PART 1: REMAINING NUMERICAL ISSUES
+# PART 1: REMAINING MECHANICAL GAPS
 
-## 1.1 Helium Gas Cell Lift Value Inconsistency
-**Issue:**
-- Appendix D note says: "The Helium Gas Cell upgrade provides Lift +5, which is 1 less than the equivalent Hydrogen cell"
-- But the base Hydrogen cells provide different Lift by Age (+4/+6/+8)
-- So Helium at +5 is only "-1" compared to Age II, but is +1 compared to Age I and -3 compared to Age III
-
-**Recommendation:** Either:
-- Make Helium Gas Cell scale by Age (Lift +3/+5/+7)
-- Or clarify that Helium is a fixed +5 regardless of Age (making it better early, worse late)
-
----
-
-# PART 2: REMAINING MECHANICAL GAPS
-
-## 2.1 Engineer Hazard Spending: Dual System Conflict
+## 1.1 Engineer Hazard Spending: Dual System Conflict
 **Gap:** Two different systems for Engineer spending during Hazard Checks:
 1. **Section 7.3 (Generic):** "Each Engineer spent adds +1 to your total"
 2. **Appendix E (Card-Specific):** Different effects per card (e.g., "Spend 1: Auto-pass", "Spend 2: +3 to check")
@@ -37,7 +23,7 @@ After incorporating your merged changes, many issues have been resolved. This up
 
 ---
 
-## 2.2 Pressurized Lounge "Helium Ships Only" Restriction
+## 1.2 Pressurized Lounge "Helium Ships Only" Restriction
 **Gap:** Appendix D says Pressurized Lounge is "Helium ships only" but doesn't explain:
 - Can you install it on any Blueprint?
 - Does it only function on Helium ships?
@@ -48,7 +34,7 @@ After incorporating your merged changes, many issues have been resolved. This up
 
 ---
 
-## 2.3 Structural Keel Grants Positive Lift
+## 1.3 Structural Keel Grants Positive Lift
 **Gap:** Appendix D shows Structural Keel provides "Weight -2" AND "Reliability +1, Lift +1". Most upgrades only have negative Weight; this one also grants positive Lift.
 
 **Question:** Is this intentional? It's the only upgrade that grants Lift.
@@ -60,9 +46,9 @@ If unintentional, remove the "+1 Lift" bonus.
 
 ---
 
-# PART 3: REMAINING CLARITY ISSUES
+# PART 2: REMAINING CLARITY ISSUES
 
-## 3.1 Age I Pioneer Scramble Conflict Resolution
+## 2.1 Age I Pioneer Scramble Conflict Resolution
 **Unclear:** Age I has "no home bases" and players can claim "any unclaimed route." But how are simultaneous claims resolved?
 
 Section 5.5 says "resolve by turn order" but this appears in the general Route Capacity section, not specifically for Age I.
@@ -72,7 +58,7 @@ Section 5.5 says "resolve by turn order" but this appears in the general Route C
 
 ---
 
-## 3.2 Route Claiming Priority Source
+## 2.2 Route Claiming Priority Source
 **Minor:** Section 5.5 and Section 6.1 both discuss turn order for route claiming, but the connection between "lowest Income goes first" and "earlier players claim first" could be more explicit.
 
 **Recommendation:** Add cross-reference in Section 5.5:
@@ -80,9 +66,9 @@ Section 5.5 says "resolve by turn order" but this appears in the general Route C
 
 ---
 
-# PART 4: REMAINING BALANCE CONCERNS
+# PART 3: REMAINING BALANCE CONCERNS
 
-## 4.1 Germany's Hindenburg Risk Relative to Other Flaws
+## 3.1 Germany's Hindenburg Risk Relative to Other Flaws
 **Concern:** While the Hindenburg trigger was improved (now only on roll of 6, not failed Hazard Check), Germany still has a significantly more punishing flaw than other factions:
 
 | Faction | Flaw | Impact |
@@ -100,7 +86,7 @@ Section 5.5 says "resolve by turn order" but this appears in the general Route C
 
 ---
 
-## 4.2 Hydrogen Fire Risk (33%) May Still Be High
+## 3.2 Hydrogen Fire Risk (33%) May Still Be High
 **Concern:** For all Hydrogen users:
 - Roll 5 (16.7%): Spend Engineer or crash
 - Roll 6 (16.7%): Automatic crash
@@ -115,7 +101,7 @@ This 33% attrition affects every Hydrogen launch.
 
 ---
 
-## 4.3 Research Institute vs Engineer Economy Revisited
+## 3.3 Research Institute vs Engineer Economy Revisited
 **Previous concern:** Engineers might never break even compared to Research Institute.
 
 **Update:** With Research tokens now carrying over between rounds, the calculation changes significantly. Players can accumulate Research over time, making Engineers more valuable for sustained technology acquisition.
@@ -124,7 +110,7 @@ This 33% attrition affects every Hydrogen launch.
 
 ---
 
-## 4.4 Income Track Negative Spiral
+## 3.4 Income Track Negative Spiral
 **Concern:** Section 12.3 says if Income goes negative, you must discard Technologies permanently to become solvent. This creates a death spiral:
 1. Take a loan or lose routes
 2. Income goes negative
@@ -140,7 +126,7 @@ This 33% attrition affects every Hydrogen launch.
 
 ---
 
-## 4.5 Technology VP Scoring Creates "Niche Tech Rush" Incentive
+## 3.5 Technology VP Scoring Creates "Niche Tech Rush" Incentive
 **Mechanic:** Technology VP is scored at every Age end. A 3 VP Age I niche tech = 9 VP total over the game.
 
 **Consideration:** This is intentional design tension—players must choose between useful but 0 VP technologies vs niche but high VP technologies.
@@ -149,7 +135,7 @@ This 33% attrition affects every Hydrogen launch.
 
 ---
 
-## 4.6 Insurance Bureau Income Cost
+## 3.6 Insurance Bureau Income Cost
 **New mechanic:** Insurance now costs Income Track reduction instead of flat £.
 
 **Consideration:** This makes insurance a long-term investment decision. Each policy permanently reduces income but provides crash protection.
@@ -160,17 +146,16 @@ This 33% attrition affects every Hydrogen launch.
 
 ---
 
-# PART 5: RECOMMENDED PRIORITY FIXES
+# PART 4: RECOMMENDED PRIORITY FIXES
 
 ## Design Decisions Needed
-1. **Helium Lift scaling** - Fixed +5 or scale by Age? (Issue 1.1)
-2. **Engineer Hazard spending** - Standard +1/Engineer OR card-specific, not both? (Issue 2.1)
-3. **Structural Keel +1 Lift** - Intentional or remove? (Issue 2.3)
+1. **Engineer Hazard spending** - Standard +1/Engineer OR card-specific, not both? (Issue 1.1)
+2. **Structural Keel +1 Lift** - Intentional or remove? (Issue 1.3)
 
 ## Clarifications (Low Priority)
-4. **Pressurized Lounge restriction** - Add explicit Helium requirement (Issue 2.2)
-5. **Pioneer Scramble conflicts** - Add cross-reference for turn order (Issue 3.1)
-6. **Route claiming priority** - Add cross-reference to Section 5.5 (Issue 3.2)
+3. **Pressurized Lounge restriction** - Add explicit Helium requirement (Issue 1.2)
+4. **Pioneer Scramble conflicts** - Add cross-reference for turn order (Issue 2.1)
+5. **Route claiming priority** - Add cross-reference to Section 5.5 (Issue 2.2)
 
 ---
 
@@ -187,6 +172,7 @@ The following issues from the original review were resolved in the merged change
 - **Britain's Swap Count:** Confirmed as 1 instead of 2 (Section 10.2)
 - **Italy's Strategy Tip:** Already correct at 4-swap (Section 13)
 - **Research Cost Ranges:** Updated to match actual tiles: Age I 1-2, Age II 2-4, Age III 4-6 (Appendix A.3)
+- **Helium Lift Scaling:** Changed from fixed +5 to +3/+5/+7 by Age (always 1 less than Hydrogen) (Section 4.4, Appendix B, D)
 
 ## Mechanical Gaps Resolved
 - **Gas Reserve Usage:** Fixed to say "launching" not "building" (Section 3.5)

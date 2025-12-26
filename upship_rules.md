@@ -316,7 +316,7 @@ Visit **The Design Bureau** on the Ground Board:
 | Technology (Drawing Office) | Unlocks Upgrade (Blueprint) |
 |----------------------------|----------------------------|
 | Maybach Engine Design | Maybach CX Engine: Speed +2, Range +1, Weight -2 |
-| Helium Handling | Helium Gas Cell: Lift +5, Safe, Weight -1 |
+| Helium Handling | Helium Gas Cell: Safe, Weight -1 (enables Helium cubes) |
 | Passenger Gondola | Luxury Cabin: Income +3, Luxury +2, Weight -3 |
 | Duralumin Framework | Rigid Frame: Reliability +2, Ceiling +1, Weight -2 |
 
@@ -328,7 +328,9 @@ Historically, helium was so scarce that the first American airship to use it (US
 
 Each Frame tile on your Blueprint has a **gas cube socket**. When you launch a ship, you must place one gas cube (from your Gas Reserve) on each Frame slot. These cubes provide Lift:
 - **Hydrogen Cubes (Yellow):** Lift +4 (Age I), +6 (Age II), +8 (Age III)
-- **Helium Cubes (White):** Lift +5 (fixed across all Ages)
+- **Helium Cubes (White):** Lift +3 (Age I), +5 (Age II), +7 (Age III)
+
+Helium always provides 1 less Lift than Hydrogen—this is the USA's "Heavy Frame" flaw. The disadvantage scales with ship size: minor in Age I, significant in Age III.
 
 This means Age I/II ships require 1 gas cube; Age III ships require 2 gas cubes.
 
@@ -1249,7 +1251,7 @@ The following items require finalization before the game is complete:
 
 - **Hull Cost:** £2 base + Frame tile cost + Fabric tile cost
 - **Physics Check:** Total Lift ≥ Total Weight
-- **Lift Calculation:** Sum of gas cube Lift values (Hydrogen +4/+6/+8 by Age, Helium +5) + upgrade bonuses
+- **Lift Calculation:** Sum of gas cube Lift values (Hydrogen +4/+6/+8 by Age, Helium +3/+5/+7 by Age) + upgrade bonuses
 - **Hazard Check:** Ship Stat + Engineers spent ≥ Hazard Difficulty
 - **Research per Round:** Engineers in Barracks + Research icons from revealed cards
 - **Engineer Upkeep:** £1 per Engineer in Barracks
@@ -1431,14 +1433,14 @@ Fabric tiles go in Fabric slots. The **Hull Cost** column shows how much this ti
 
 ## Gas System Upgrades
 
-**Note:** Base Lift comes from **gas cubes** placed on Frame tiles. Hydrogen cubes provide Lift +6 (varies by Age: +4/+6/+8). Helium cubes provide Lift +5 (1 less than Hydrogen)—this represents the USA's "Heavy Frame" flaw. Gas System upgrades enhance or modify the gas cell performance.
+**Note:** Base Lift comes from **gas cubes** placed on Frame tiles. Hydrogen cubes provide Lift +4/+6/+8 (by Age). Helium cubes provide Lift +3/+5/+7 (by Age)—always 1 less than Hydrogen, representing the USA's "Heavy Frame" flaw. Gas System upgrades enhance or modify gas cell performance.
 
 | Name | Required Tech | Weight | Stats | Special |
 |------|---------------|--------|-------|---------|
 | Pressure Control | Improved Valving | -1 | Ceiling +1 | — |
 | Altitude Ballonets | Manual Ballonets | -1 | Ceiling +1 | — |
 | Compartmented Gas | Multiple Gas Cells | -1 | Lift +2, Reliability +1 | — |
-| Helium Gas Cell | Helium Handling | -1 | Lift +5 | Safe (immune to Fire) |
+| Helium Gas Cell | Helium Handling | -1 | — | Safe (immune to Fire); use Helium cubes |
 | Blaugas Tank | Blaugas Storage | 0 | Range +3 | Neutral buoyancy fuel |
 | Smart Valving | Automatic Valves | -1 | Reliability +1, Ceiling +1 | — |
 | High-Ceiling Gas | Pressure Altitude System | -2 | Lift +3, Ceiling +2 | — |
