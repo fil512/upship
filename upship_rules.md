@@ -16,7 +16,7 @@ Players act as Directors of rival Airship Conglomerates representing the great p
 
 **Game End Triggers:** The game ends immediately when ANY of the following occur:
 
-1. **The Hindenburg Disaster:** A player fails a Hazard Check during a Luxury Launch in Age III while using a Hydrogen-equipped ship. The burning wreckage signals the end of public confidence in airship travel. Complete the current round, then proceed to final scoring.
+1. **The Hindenburg Disaster:** A player rolls a 6 (Catastrophic Fire) on the Hydrogen Fire Roll during a Luxury Launch in Age III. The burning wreckage signals the end of public confidence in airship travel. Complete the current round, then proceed to final scoring.
 
 2. **The Rise of Fixed-Wing Aircraft:** The Progress Track reaches its threshold (see Section 1.3). Heavier-than-air craft have become viable competitors, rendering airships obsolete. Complete the current round, then proceed to final scoring.
 
@@ -60,9 +60,6 @@ The game adjusts for different player counts:
 
 | Component | 2 Players | 3 Players | 4 Players |
 |-----------|-----------|-----------|-----------|
-| R&D Board tiles | 4 | 5 | 6 |
-| Market Row cards | 4 | 5 | 6 |
-| Starting Cash | £18 | £15 | £12 |
 | Map routes | Use 2P markers | Standard | Standard |
 
 **2-Player Rules:** Some single-track routes are marked "3-4P only" and are unavailable in 2-player games. This maintains competition over limited routes.
@@ -88,12 +85,13 @@ The game adjusts for different player counts:
 - 3 Map Boards (Age I, Age II, Age III)
 - 1 Ground Board (Worker Placement locations)
 - 1 R&D Board (shared technology market)
-- Technology Tile Bag (~60 tiles, Age-sorted)
+- Technology Tile Bag (45 tiles currently, target 60, Age-sorted)
 - Upgrade Tile Supply (organized by type)
 - Progress Track
-- VP Track (0-100 range)
+- VP Track
 - Market Deck (purchasable crew cards)
 - Currency Tokens (£)
+- Research Tokens (shared supply)
 - Pilot Tokens (shared supply)
 - Engineer Tokens (shared supply)
 - Lifting Gas Market Track (for Helium)
@@ -201,7 +199,7 @@ Storage for lifting gas purchased in advance:
 
 - **Hydrogen Tokens:** Standard lifting gas, cheaper but flammable
 - **Helium Tokens:** Safe lifting gas, more expensive (requires Helium Handling technology)
-- **Usage:** When building ships at the Construction Hall, use stored gas first. Any deficit must be purchased at current market price.
+- **Usage:** When launching ships from the Launchpad, use stored gas first. Any deficit must be purchased at current market price.
 - **Strategic Value:** Buy gas when market prices are low; use stored gas to avoid price spikes or Helium shortages
 
 ## 3.6 Zone 6: Economy Tracks (Right Edge)
@@ -267,7 +265,7 @@ During the **Reveal Phase** at the end of each round:
 - **Calculate Research Budget:** Your total available Research equals the number of Engineers in your Barracks plus any Research bonuses printed on cards remaining in your hand
 - **Spend Research:** You may spend this Research to acquire one or more Technologies from the R&D Board
 - **Cost:** Pay Research equal to the tile's cost (minus any specialization discount)
-- **Use It Or Lose It:** Unspent Research does not carry over to the next round
+- **Save Research:** Unspent Research tokens carry over to the next round, allowing players to accumulate Research for expensive Technologies
 - **Result:** Add acquired tiles to the appropriate track in your Drawing Office
 - **Progress:** Advance the Progress Track by 1 for each Technology acquired
 
@@ -482,7 +480,7 @@ The Ground Board has 12 action spaces, each marked with one of three symbols. To
 
 **5. The Academy (Coin)**
 - **Action:** Recruit crew from the shared supply
-- **Cost:** £2 per Pilot, £3 per Engineer
+- **Cost:** £2 per Pilot, £4 per Engineer
 - **Result:** Gain Pilot or Engineer tokens from the shared supply to your Barracks
 - **Note:** Pilots are cheaper because they are consumed when launching ships; Engineers persist and generate ongoing Research
 
@@ -505,7 +503,9 @@ The Ground Board has 12 action spaces, each marked with one of three symbols. To
 
 **9. The Ministry (Propeller)**
 - **Action:** Political maneuvering
-- **Effect:** Various special actions (claim bonus rewards, change turn order)
+- **Cost:** Free
+- **Effect:** Draw 2 cards from your deck and discard 1. Additionally, you go first in turn order next round (regardless of Income Track position).
+- **Strategic Note:** The Ministry gives you both card selection and priority. Use it when you need to ensure you claim a contested route or action space before your opponents.
 
 **10. The Gas Depot (Wrench)**
 - **Action:** Purchase lifting gas for storage
@@ -515,16 +515,16 @@ The Ground Board has 12 action spaces, each marked with one of three symbols. To
 
 **11. The Insurance Bureau (Coin)**
 - **Action:** Purchase insurance policies
-- **Cost:** £3 per policy card
-- **Effect:** Take policy cards and place them face-up near your Player Board
-- **Policy Benefit:** When one of your ships fails a Hazard Check, you may discard one policy card to recover the airship token to your Hangar Bay. You still lose the Pilot and any gas spent, but you keep the ship for another attempt.
-- **Strategic Note:** Insurance is valuable for expensive ships or risky launches—it lets you try again without rebuilding from scratch
+- **Cost:** Reduce your Income Track by 1 step per policy (representing ongoing premiums)
+- **Effect:** Take policy cards and place them face-up near your Player Board. You may purchase any number of policies.
+- **Policy Benefit:** When one of your ships crashes (from a failed Fire Roll or Catastrophic Hazard), you may discard one policy card to recover the airship token to your Hangar Bay instead of losing it. You still lose the Pilot and any gas spent, but you keep the ship for another attempt.
+- **Strategic Note:** Insurance protects against catastrophic losses but reduces your income permanently. The more policies you hold, the safer you are—but the poorer you become.
 
 **12. The Weather Bureau (Propeller)**
 - **Action:** Consult weather forecasts
 - **Cost:** £2
-- **Effect:** Look at the top card of your personal Hazard Deck. You may either leave it on top or move it to the bottom of the deck.
-- **Strategic Note:** Plan your launches around favorable weather, or bury dangerous hazards for later
+- **Effect:** Look at the top card of your personal Hazard Deck. You may either leave it on top or discard it (place in your Hazard discard pile).
+- **Strategic Note:** Plan your launches around favorable weather, or discard dangerous hazards to improve your odds.
 
 ## 6.2 Phase B: Reveal & Acquisition
 
@@ -547,7 +547,7 @@ Players may spend their Research budget to acquire one or more Technologies from
 - Pay Research equal to each tile's cost (minus any specialization discount)
 - Add acquired tiles to the appropriate track in your Drawing Office
 - Advance the Progress Track by 1 for each Technology acquired
-- Unspent Research is lost
+- Unspent Research tokens are saved for future rounds
 
 ### Step 4: Purchase Cards
 Players may spend Influence to buy cards from the Market Row. Purchased cards go to your discard pile.
@@ -560,7 +560,7 @@ Players may spend Influence to buy cards from the Market Row. Purchased cards go
 4. **Refresh R&D Board:** Draw new Technology tiles from the bag to fill empty R&D Board spaces
 5. **Check Age Transition:** If the Progress Track has reached or exceeded the current Age threshold, trigger Age Transition (see Section 9)
 6. **Refresh Agents:** Return all Agents to player supplies
-7. **Draw Cards:** Shuffle discard pile into deck if needed; draw back to hand size (typically 5)
+7. **Draw Cards:** Shuffle discard pile into deck if needed; draw cards until you have 5 cards in hand
 8. **Refill Markets:** Refill the Card Market Row
 
 ---
@@ -621,6 +621,8 @@ Each Hazard Card shows a **Challenge Type** and **Difficulty Rating**:
 - **Pass:** If your ship stat (+ Engineers spent) meets or exceeds the Difficulty, the ship is successfully launched. Place it on the route and increase your Income Track.
 - **Fail:** If your total is less than the Difficulty, the launch fails. The ship returns to your Hangar Bay, but you lose the Pilot and gas already spent.
 
+**Hazard Card Discard:** After resolving a Hazard Check, place the drawn card face-up in your Hazard discard pile. When your Hazard deck is empty and you need to draw, shuffle your discard pile to form a new deck.
+
 ## 7.4 Hydrogen Fire Risk
 
 When launching a ship that uses **Hydrogen** gas (including the printed base Gas Cell), roll a d6 after resolving the Hazard Check:
@@ -645,11 +647,11 @@ Routes marked as **Luxury Routes** require ships with the Luxury stat and trigge
 - Your Blueprint must have at least one Payload upgrade with the **Luxury** trait
 - The route must show a Luxury requirement you can meet
 
-**The Hindenburg Risk:** If you fail a Hazard Check during a Luxury Launch while your ship uses **Hydrogen** (including the printed base Gas Cell), the game immediately triggers the **Hindenburg Disaster** end condition.
+**The Hindenburg Risk:** If you roll a 6 (Catastrophic Fire) on the Hydrogen Fire Roll during a Luxury Launch in Age III, the game immediately triggers the **Hindenburg Disaster** end condition.
 
 **Thematic Note:** A luxury liner full of passengers catching fire over a crowded landing field is a catastrophe that ends public trust in airship travel forever.
 
-**Safe Alternative:** Ships using **Helium Gas Cells** (from the Helium Handling technology) do not trigger the Hindenburg Disaster on failed Luxury Launches—the fire simply doesn't happen. The launch still fails, but the game continues.
+**Safe Alternative:** Ships using **Helium Gas Cells** (from the Helium Handling technology) skip the Fire Roll entirely and cannot trigger the Hindenburg Disaster.
 
 ---
 
@@ -695,7 +697,7 @@ Every player begins with these basic cards representing primitive but essential 
 | **Apprentice** | 2 | Any | None | 1 Influence |
 | **Mechanic** | 2 | Wrench | +1 tile swap this action | 1 £ |
 | **Draftsman** | 2 | Wrench | Draw 1 card | 1 Influence |
-| **Researcher** | 2 | Propeller | +1 Research this round | 1 Research |
+| **Researcher** | 2 | Propeller | -£1 per Research at Research Institute | 1 Research |
 | **Purser** | 1 | Coin | Gain £2 | 2 Influence |
 | **Helmsman** | 1 | Propeller | +1 to any ship stat for this launch | 1 Pilot |
 
@@ -797,7 +799,9 @@ Each nation has a unique starting Blueprint configuration, special technology, a
 
 **The Flaw:** *Heavy Frame* — Helium lifts less than Hydrogen. All Helium Gas Cell upgrades provide -1 Lift compared to their Hydrogen equivalents, forcing smaller payloads or more gas cells.
 
-**Home Base (Age II):** Paimboeuf, France
+**Home Base (Age II):** Paimboeuf, France (American transatlantic operations base)
+
+**Home Base (Age III):** Lakehurst, New Jersey
 
 ## 10.4 Italy (Nobile Construction)
 
@@ -811,6 +815,19 @@ Each nation has a unique starting Blueprint configuration, special technology, a
 **The Flaw:** *Low Ceiling* — Semi-rigid frames cannot support heavy payloads. Italy's Blueprint overlays have one fewer Payload slot than other factions. They must win on quantity, not quality.
 
 **Home Base (Age II):** Rome
+
+## 10.5 Faction Blueprint Slot Summary
+
+Each faction's Blueprint has different slot configurations. Slots are listed as Drive/Structure/Payload (D/S/P):
+
+| Faction | Age I Slots | Age II Slots | Age III Slots |
+|---------|-------------|--------------|---------------|
+| Germany | 1/1/1 | 2/2/2 | 2/2/3 |
+| Britain | 1/1/1 | 2/2/2 | 2/2/3 |
+| USA | 1/1/1 | 2/2/2 | 2/2/3 |
+| Italy | 1/1/1 | 2/2/1 | 2/2/2 |
+
+**Note:** Italy's "Low Ceiling" flaw results in one fewer Payload slot in Ages II and III compared to other factions.
 
 ---
 
@@ -875,10 +892,10 @@ If your Income Track goes negative (from loans, Engineer upkeep, or route losses
 
 ## 12.5 The Hindenburg Disaster
 
-When a player fails a Hazard Check during a Luxury Launch in Age III while using a Hydrogen ship:
+When a player rolls a 6 (Catastrophic Fire) on the Hydrogen Fire Roll during a Luxury Launch in Age III:
 1. The game end is triggered
 2. Complete the current round normally
-3. The player whose ship caused the disaster loses 5 VP
+3. The player whose ship caused the disaster gains 3 VP (historical infamy)
 4. Proceed to final scoring
 
 ## 12.6 Engineer Timing
@@ -888,7 +905,24 @@ When a player fails a Hazard Check during a Luxury Launch in Age III while using
 - Engineers spent during a Hazard Check do not generate Research that round
 - Engineer upkeep (£1 per Engineer) is paid at the start of the Income Phase based on Engineers currently in your Barracks
 
-## 12.7 Victory Point Scoring
+## 12.7 Launch Outcomes: Crash vs. Aborted
+
+**Crash:** The ship is destroyed. The ship token returns to the shared supply and must be rebuilt at the Construction Hall. Crashes occur when:
+- You fail the Hydrogen Fire Roll (roll 5 and cannot/choose not to spend an Engineer, or roll 6)
+- A Catastrophic Event Hazard Card destroys the ship
+
+**Aborted Launch:** The launch fails but the ship is not destroyed. The ship returns to your Hangar Bay intact and can attempt another launch later. Aborted launches occur when:
+- You fail a Hazard Check (ship stat + Engineers < Difficulty)
+
+In both cases, the Pilot and any gas spent on the launch are lost.
+
+## 12.8 Terminology: Slots, Swaps, and Tiles
+
+- **Slot:** An empty space on the Blueprint where an Upgrade tile can be installed
+- **Swap:** One installation or removal of an Upgrade tile at the Design Bureau (one swap = one action)
+- **Tile:** The physical component—either a Technology tile (stored in Drawing Office) or an Upgrade tile (installed on Blueprint)
+
+## 12.9 Victory Point Scoring
 
 Victory Points are earned from **routes** and **Technology tiles**. All VP is scored at the **end of each Age** (before ships are removed), not at game end.
 
@@ -1041,10 +1075,11 @@ The following items require finalization before the game is complete:
 ## A.3 Economy Balancing
 
 1. **Research Costs:** Balance Technology prices:
-   - Age I: 2-4 Research
-   - Age II: 4-6 Research
-   - Age III: 5-8 Research
+   - Age I: 1-3 Research
+   - Age II: 3-5 Research
+   - Age III: 4-6 Research
    - Specialization discounts: -1 at 3+ tiles, -2 at 5+ tiles
+   - **Note:** Research tokens can be saved between rounds, allowing players to accumulate for expensive Technologies
 
 2. **Engineer Economy:**
    - Starting Engineers: 2
@@ -1092,14 +1127,14 @@ The following items require finalization before the game is complete:
    - Progress Track threshold
 
 7. **Hindenburg Disaster Tuning:**
-   - Is -5 VP appropriate?
-   - Should there be any positive outcome (historical notoriety)?
+   - Is +3 VP for historical infamy appropriate?
+   - Does the fire roll trigger (rather than hazard check) feel thematically correct?
 
 ## A.5 Playtesting Priorities
 
 1. **Engineer Economy Test:** Verify the tension between Research generation and emergency spending feels meaningful
 
-2. **Progress Track Pacing:** Does the fixed-wing threshold create appropriate tension?
+2. **Progress Track Pacing:** Does the fixed-wing threshold create appropriate tension? Assess whether players avoid acquiring Technologies to extend the game, causing Analysis Paralysis. With reduced tech costs and saveable Research tokens, verify this doesn't cause runaway tech acquisition that ends the game too quickly.
 
 3. **Technology/Upgrade Flow:** Is the two-step system (acquire tech → install upgrade) intuitive?
 
@@ -1140,10 +1175,11 @@ The following items require finalization before the game is complete:
 8. ✓ Compare Ship Stat to Hazard Difficulty
 9. ✓ (Optional) Spend Engineers (+1 per Engineer) to boost check
 10. ✓ If using Hydrogen and passed Hazard Check: Roll d6 for fire (5 = spend Engineer or crash, 6 = crash)
-11. ✓ If passed all checks: Place ship on route, increase Income
-12. ✓ If failed on Luxury Launch with Hydrogen in Age III: Hindenburg Disaster triggered
-13. ✓ If failed otherwise: Ship returns to Hangar Bay (Pilot and gas lost)
-14. ✓ Continue launching more ships or stop
+11. ✓ If rolled 6 on Luxury Launch in Age III: Hindenburg Disaster triggered
+12. ✓ If passed all checks: Place ship on route, increase Income
+13. ✓ If fire crash: Ship destroyed (token to supply), Pilot and gas lost
+14. ✓ If failed Hazard Check: Ship returns to Hangar Bay (Pilot and gas lost)
+15. ✓ Continue launching more ships or stop
 
 ## Key Formulas
 
@@ -1157,7 +1193,7 @@ The following items require finalization before the game is complete:
 
 ## Game End Conditions
 
-1. **Hindenburg Disaster:** Failed Luxury Launch + Hydrogen + Age III
+1. **Hindenburg Disaster:** Roll 6 on Fire Roll during Luxury Launch + Age III
 2. **Fixed-Wing Rise:** Progress Track reaches threshold
 
 ## Scoring Summary (at end of each Age)
@@ -1184,72 +1220,74 @@ Minimum £0. Technologies cushion the transition; routes cost £1 each when wipe
 
 Technology tiles are acquired from the R&D Board using Research. Each tile shows: Research Cost, Track (color), Age, £ Value, VP Value (if any), and which Upgrade it unlocks.
 
-## Propulsion Track (15 tiles)
+## Propulsion Track (11 tiles)
 
 | Age | Name | Cost | £ | VP | Unlocks |
 |-----|------|------|---|----|---------|
-| I | Daimler Petrol Engine | 2 | 1 | — | Basic Engine |
-| I | Improved Propeller | 2 | 1 | — | Efficient Propeller |
-| I | Dual Engine Mount | 3 | 1 | 1 | Twin Engine |
-| II | Maybach Engine Design | 4 | 2 | — | Maybach CX Engine |
-| II | Diesel Powerplant | 4 | 1 | 1 | Diesel Engine |
-| II | Swiveling Propeller | 5 | 2 | 1 | Vectored Thrust |
-| II | Contra-Rotating Props | 5 | 2 | — | Balanced Propulsion |
-| III | Streamlined Nacelle | 6 | 2 | — | Aerodynamic Engine |
-| III | Supercharged Engine | 7 | 3 | 1 | High-Altitude Engine |
-| III | Diesel-Electric Drive | 7 | 2 | 1 | Hybrid Powerplant |
-| III | Variable-Pitch Propeller | 6 | 2 | — | Adaptive Propeller |
+| I | Daimler Petrol Engine | 1 | 1 | — | Basic Engine |
+| I | Improved Propeller | 1 | 1 | — | Efficient Propeller |
+| I | Dual Engine Mount | 2 | 1 | 1 | Twin Engine |
+| II | Maybach Engine Design | 3 | 2 | — | Maybach CX Engine |
+| II | Diesel Powerplant | 3 | 1 | 1 | Diesel Engine |
+| II | Swiveling Propeller | 4 | 2 | 1 | Vectored Thrust |
+| II | Contra-Rotating Props | 4 | 2 | — | Balanced Propulsion |
+| III | Streamlined Nacelle | 4 | 2 | — | Aerodynamic Engine |
+| III | Supercharged Engine | 5 | 3 | 1 | High-Altitude Engine |
+| III | Diesel-Electric Drive | 5 | 2 | 1 | Hybrid Powerplant |
+| III | Variable-Pitch Propeller | 4 | 2 | — | Adaptive Propeller |
 
-## Structure Track (15 tiles)
-
-| Age | Name | Cost | £ | VP | Unlocks |
-|-----|------|------|---|----|---------|
-| I | Wooden Framework | 2 | 1 | — | Reinforced Frame |
-| I | External Walkway | 2 | 1 | — | Crew Access |
-| I | Wire Bracing | 3 | 1 | 1 | Tensioned Structure |
-| II | Duralumin Framework | 5 | 2 | — | Rigid Frame |
-| II | Fireproof Coating | 4 | 1 | 2 | Fire Retardant |
-| II | Armored Gondola | 5 | 2 | 2 | Military Armor |
-| II | Internal Keel | 4 | 1 | 1 | Structural Keel |
-| III | Geodetic Structure | 6 | 2 | — | Lightweight Frame |
-| III | Pressurized Cabin | 7 | 3 | 1 | Altitude Cabin |
-| III | Crash Safety System | 6 | 2 | 2 | Emergency Ballast |
-| III | Modular Construction | 7 | 2 | 3 | Quick-Swap Components |
-
-## Gas Systems Track (15 tiles)
+## Structure Track (11 tiles)
 
 | Age | Name | Cost | £ | VP | Unlocks |
 |-----|------|------|---|----|---------|
-| I | Improved Valving | 2 | 1 | — | Pressure Control |
-| I | Goldbeater's Skin | 3 | 1 | 1 | Leak-Proof Cell |
-| I | Manual Ballonets | 2 | 1 | — | Altitude Ballonets |
-| II | Multiple Gas Cells | 4 | 1 | — | Compartmented Gas |
-| II | Helium Handling | 5 | 2 | — | Helium Gas Cell |
-| II | Blaugas Storage | 4 | 2 | 2 | Blaugas Tank |
-| II | Automatic Valves | 5 | 2 | 1 | Smart Valving |
-| III | Pressure Altitude System | 7 | 3 | 1 | High-Ceiling Gas |
-| III | Triple Gas Cell | 6 | 2 | — | Redundant Cells |
-| III | Emergency Venting | 6 | 2 | 2 | Rapid Descent System |
-| III | Gas Recovery | 7 | 2 | 2 | Reclamation System |
+| I | Wooden Framework | 1 | 1 | — | Reinforced Frame |
+| I | External Walkway | 1 | 1 | — | Crew Access |
+| I | Wire Bracing | 2 | 1 | 1 | Tensioned Structure |
+| II | Duralumin Framework | 4 | 2 | — | Rigid Frame |
+| II | Fireproof Coating | 3 | 1 | 2 | Fire Retardant |
+| II | Armored Gondola | 4 | 2 | 2 | Military Armor |
+| II | Internal Keel | 3 | 1 | 1 | Structural Keel |
+| III | Geodetic Structure | 4 | 2 | — | Lightweight Frame |
+| III | Pressurized Cabin | 5 | 3 | 1 | Altitude Cabin |
+| III | Crash Safety System | 4 | 2 | 2 | Emergency Ballast |
+| III | Modular Construction | 5 | 2 | 3 | Quick-Swap Components |
 
-## Payload Track (15 tiles)
+## Gas Systems Track (11 tiles)
 
 | Age | Name | Cost | £ | VP | Unlocks |
 |-----|------|------|---|----|---------|
-| I | Observation Platform | 2 | 1 | — | Spotter Gondola |
-| I | Mail Compartment | 2 | 1 | — | Postal Service |
-| I | Cargo Nets | 3 | 1 | 1 | External Cargo |
-| II | Passenger Gondola | 4 | 1 | — | Basic Cabin |
-| II | Bomb Bay Design | 5 | 2 | 3 | Bombing Equipment |
-| II | Trapeze System | 5 | 2 | 2 | Sparrowhawk Hangar |
-| II | Radio Equipment | 4 | 1 | 1 | Communications Suite |
-| III | Luxury Accommodation | 6 | 2 | — | Luxury Cabin |
-| III | Dining Saloon | 7 | 3 | — | Restaurant |
-| III | Promenade Deck | 8 | 3 | 2 | Observation Lounge |
-| III | Sleeping Quarters | 6 | 2 | 1 | Private Berths |
-| III | Smoking Room | 7 | 2 | 3 | Pressurized Lounge |
+| I | Improved Valving | 1 | 1 | — | Pressure Control |
+| I | Goldbeater's Skin | 2 | 1 | 1 | Leak-Proof Cell |
+| I | Manual Ballonets | 1 | 1 | — | Altitude Ballonets |
+| II | Multiple Gas Cells | 3 | 1 | — | Compartmented Gas |
+| II | Helium Handling | 4 | 2 | — | Helium Gas Cell |
+| II | Blaugas Storage | 3 | 2 | 2 | Blaugas Tank |
+| II | Automatic Valves | 4 | 2 | 1 | Smart Valving |
+| III | Pressure Altitude System | 5 | 3 | 1 | High-Ceiling Gas |
+| III | Triple Gas Cell | 4 | 2 | — | Redundant Cells |
+| III | Emergency Venting | 4 | 2 | 2 | Rapid Descent System |
+| III | Gas Recovery | 5 | 2 | 2 | Reclamation System |
 
-**Total: 56 Technology Tiles** (14 per track)
+## Payload Track (12 tiles)
+
+| Age | Name | Cost | £ | VP | Unlocks |
+|-----|------|------|---|----|---------|
+| I | Observation Platform | 1 | 1 | — | Spotter Gondola |
+| I | Mail Compartment | 1 | 1 | — | Postal Service |
+| I | Cargo Nets | 2 | 1 | 1 | External Cargo |
+| II | Passenger Gondola | 3 | 1 | — | Basic Cabin |
+| II | Bomb Bay Design | 4 | 2 | 3 | Bombing Equipment |
+| II | Trapeze System | 4 | 2 | 2 | Sparrowhawk Hangar |
+| II | Radio Equipment | 3 | 1 | 1 | Communications Suite |
+| III | Luxury Accommodation | 4 | 2 | — | Luxury Cabin |
+| III | Dining Saloon | 5 | 3 | — | Restaurant |
+| III | Promenade Deck | 6 | 3 | 2 | Observation Lounge |
+| III | Sleeping Quarters | 4 | 2 | 1 | Private Berths |
+| III | Smoking Room | 5 | 2 | 3 | Pressurized Lounge |
+
+**Total: 45 Technology Tiles** (11-12 per track)
+
+**TODO:** Expand each track to 15 tiles (60 total) for final production.
 
 ---
 
@@ -1290,6 +1328,8 @@ Upgrade tiles are installed on your Blueprint. You must own the corresponding Te
 | Quick-Swap Components | Modular Construction | -1 | — | +2 tile swaps at Design Bureau |
 
 ## Gas System Upgrades
+
+**Note:** The base Hydrogen Gas Cell is printed on each Age's Blueprint and provides Lift +6 (Ages I/II/III vary: +4/+6/+8 respectively) with the Flammable trait. The Helium Gas Cell upgrade provides Lift +5, which is 1 less than the equivalent Hydrogen cell—this represents the USA's "Heavy Frame" flaw (helium lifts less than hydrogen).
 
 | Name | Required Tech | Weight | Stats | Special |
 |------|---------------|--------|-------|---------|
