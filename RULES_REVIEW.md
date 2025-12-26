@@ -4,7 +4,7 @@
 
 After incorporating your merged changes, many issues have been resolved. This updated review contains only **remaining issues** that still need attention.
 
-**Remaining:** 2 mechanical gaps, 2 clarity issues, 6 balance concerns
+**Remaining:** 1 mechanical gap, 2 clarity issues, 6 balance concerns
 
 ---
 
@@ -18,18 +18,6 @@ After incorporating your merged changes, many issues have been resolved. This up
 
 **Recommendation:** Clarify in Appendix D:
 > **Helium ships only:** You may only install Pressurized Lounge if your Blueprint has a Helium Gas Cell upgrade installed. If you later remove the Helium Gas Cell, you must also remove the Pressurized Lounge.
-
----
-
-## 1.2 Structural Keel Grants Positive Lift
-**Gap:** Appendix D shows Structural Keel provides "Weight -2" AND "Reliability +1, Lift +1". Most upgrades only have negative Weight; this one also grants positive Lift.
-
-**Question:** Is this intentional? It's the only upgrade that grants Lift.
-
-**Recommendation:** If intentional, add a design note:
-> *Design Note: The Internal Keel's streamlined shape provides slight additional buoyancy.*
-
-If unintentional, remove the "+1 Lift" bonus.
 
 ---
 
@@ -135,13 +123,10 @@ This 33% attrition affects every Hydrogen launch.
 
 # PART 4: RECOMMENDED PRIORITY FIXES
 
-## Design Decisions Needed
-1. **Structural Keel +1 Lift** - Intentional or remove? (Issue 1.2)
-
 ## Clarifications (Low Priority)
-2. **Pressurized Lounge restriction** - Add explicit Helium requirement (Issue 1.1)
-3. **Pioneer Scramble conflicts** - Add cross-reference for turn order (Issue 2.1)
-4. **Route claiming priority** - Add cross-reference to Section 5.5 (Issue 2.2)
+1. **Pressurized Lounge restriction** - Add explicit Helium requirement (Issue 1.1)
+2. **Pioneer Scramble conflicts** - Add cross-reference for turn order (Issue 2.1)
+3. **Route claiming priority** - Add cross-reference to Section 5.5 (Issue 2.2)
 
 ---
 
@@ -178,6 +163,7 @@ The following issues from the original review were resolved in the merged change
 - **Pilot/Engineer Income Track Setup:** Added to player setup (Section 11.2)
 - **Technology Bag Accumulation:** Clarified that tiles from all Ages accumulate in bag (Section 4.1)
 - **Engineer Hazard Spending:** Standardized to +1 per Engineer for all hazards; removed card-specific abilities (Appendix E)
+- **Semi-Rigid Keel +1 Lift:** Removed erroneous Lift bonus; now only Weight -2, Reliability +1 (Appendix D, Section 10.4)
 
 ## Clarity Issues Resolved
 - **Crash vs Aborted:** New Section 12.7 defines terminology

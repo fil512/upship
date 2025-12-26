@@ -864,7 +864,7 @@ Each nation has a unique starting Blueprint configuration, special technology, a
 **Starting Advantage:** *Rapid Refit* — When taking the Upgrade Action, Italy may make up to 4 tile swaps instead of 2. They can reconfigure their Blueprint much faster than other nations.
 
 **Starting Technologies (pre-printed on Player Board):**
-- *Internal Keel* — The signature semi-rigid design. Unlocks the Semi-Rigid Keel upgrade (+1 Lift from the flexible structure).
+- *Internal Keel* — The signature semi-rigid design. Unlocks the Semi-Rigid Keel upgrade (lightweight and reliable).
 - *Rubberized Cotton* — Simple, proven envelope material. Unlocks the Cotton Envelope upgrade.
 - *Articulated Keel Design* — Unlocks the Flexible Frame upgrade: Ignore Weather penalties on Hazard cards. When others are grounded by storms, you can fly.
 
@@ -1413,7 +1413,7 @@ Frame tiles go in Frame slots. Each has a **gas cube socket** where you place a 
 | Tensioned Frame | Wire Bracing | -1 | +£1 | Ceiling +1 | — |
 | Duralumin Frame | Duralumin Framework | -2 | +£2 | Reliability +2, Ceiling +1 | — |
 | Steel Frame | Steel Framework | -3 | +£1 | Reliability +2 | Heavier but cheap |
-| Semi-Rigid Keel | Internal Keel | -2 | +£1 | Reliability +1, Lift +1 | Italy's specialty |
+| Semi-Rigid Keel | Internal Keel | -2 | +£1 | Reliability +1 | Italy's specialty |
 | Geodetic Frame | Geodetic Structure | -1 | +£3 | Reliability +2, Ceiling +1 | Lightest, most expensive |
 | Modular Frame | Modular Construction | -1 | +£2 | — | +2 tile swaps at Design Bureau |
 
