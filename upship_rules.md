@@ -368,7 +368,7 @@ The game features three physical map boards, one for each Age. When an Age ends,
 - Low stat requirements
 - Focus on **Reliability** (can you fly 100km without your engine seizing up?)
 
-**Placement Rule:** No home bases. Players can launch to *any* unclaimed route on the map (the Pioneer Scramble).
+**Placement Rule:** No home bases. Players can launch to *any* unclaimed route on the map (the Pioneer Scramble). If multiple players attempt to claim the same single-track route in the same round, resolve by turn order (lowest Income goes first—see Section 6.1).
 
 ## 5.2 Age II: The Great War (Greater Europe)
 
@@ -416,7 +416,7 @@ Your Blueprint stats must meet or exceed **all** listed requirements to claim a 
 - **Double Track:** Up to 2 players can claim the same connection
 - Routes are exclusive monopolies until the Age ends or your ship crashes
 
-**Simultaneous Claims:** If multiple players attempt to claim the same single-track route in the same round, resolve by turn order—earlier players claim first. Later players may redirect to a different valid route before paying costs, or forfeit their action.
+**Simultaneous Claims:** If multiple players attempt to claim the same single-track route in the same round, resolve by turn order (lowest Income goes first—see Section 6.1). Later players may redirect to a different valid route before paying costs, or forfeit their action.
 
 ## 5.6 Route Income Values
 
@@ -1463,7 +1463,7 @@ Fabric tiles go in Fabric slots. The **Hull Cost** column shows how much this ti
 | Restaurant | Dining Saloon | -2 | Income +2, Luxury +2 | — |
 | Observation Lounge | Promenade Deck | -2 | Income +1, Luxury +3 | — |
 | Private Berths | Sleeping Quarters | -2 | Income +2, Luxury +1 | — |
-| Pressurized Lounge | Smoking Room | -2 | Income +1, Luxury +2 | Helium ships only |
+| Pressurized Lounge | Smoking Room | -2 | Income +1, Luxury +2 | Requires Helium Gas Cell installed |
 
 **Total: 47 Upgrade Tiles** (Propulsion 11, Frame 7, Fabric 7, Gas Systems 10, Payload 12)
 

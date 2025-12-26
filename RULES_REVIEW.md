@@ -4,46 +4,13 @@
 
 After incorporating your merged changes, many issues have been resolved. This updated review contains only **remaining issues** that still need attention.
 
-**Remaining:** 1 mechanical gap, 2 clarity issues, 6 balance concerns
+**Remaining:** 6 balance concerns (for playtesting)
 
 ---
 
-# PART 1: REMAINING MECHANICAL GAPS
+# PART 1: REMAINING BALANCE CONCERNS
 
-## 1.1 Pressurized Lounge "Helium Ships Only" Restriction
-**Gap:** Appendix D says Pressurized Lounge is "Helium ships only" but doesn't explain:
-- Can you install it on any Blueprint?
-- Does it only function on Helium ships?
-- What happens if you install it then switch away from Helium?
-
-**Recommendation:** Clarify in Appendix D:
-> **Helium ships only:** You may only install Pressurized Lounge if your Blueprint has a Helium Gas Cell upgrade installed. If you later remove the Helium Gas Cell, you must also remove the Pressurized Lounge.
-
----
-
-# PART 2: REMAINING CLARITY ISSUES
-
-## 2.1 Age I Pioneer Scramble Conflict Resolution
-**Unclear:** Age I has "no home bases" and players can claim "any unclaimed route." But how are simultaneous claims resolved?
-
-Section 5.5 says "resolve by turn order" but this appears in the general Route Capacity section, not specifically for Age I.
-
-**Recommendation:** Add to Section 5.1:
-> **Pioneer Scramble Conflicts:** If multiple players attempt to claim the same single-track route in the same round during Age I, resolve by turn order (lowest Income goes first, as per Section 6.1).
-
----
-
-## 2.2 Route Claiming Priority Source
-**Minor:** Section 5.5 and Section 6.1 both discuss turn order for route claiming, but the connection between "lowest Income goes first" and "earlier players claim first" could be more explicit.
-
-**Recommendation:** Add cross-reference in Section 5.5:
-> **Simultaneous Claims:** If multiple players attempt to claim the same single-track route in the same round, resolve by turn order (see Section 6.1—lowest Income goes first).
-
----
-
-# PART 3: REMAINING BALANCE CONCERNS
-
-## 3.1 Germany's Hindenburg Risk Relative to Other Flaws
+## 1.1 Germany's Hindenburg Risk Relative to Other Flaws
 **Concern:** While the Hindenburg trigger was improved (now only on roll of 6, not failed Hazard Check), Germany still has a significantly more punishing flaw than other factions:
 
 | Faction | Flaw | Impact |
@@ -61,7 +28,7 @@ Section 5.5 says "resolve by turn order" but this appears in the general Route C
 
 ---
 
-## 3.2 Hydrogen Fire Risk (33%) May Still Be High
+## 1.2 Hydrogen Fire Risk (33%) May Still Be High
 **Concern:** For all Hydrogen users:
 - Roll 5 (16.7%): Spend Engineer or crash
 - Roll 6 (16.7%): Automatic crash
@@ -76,7 +43,7 @@ This 33% attrition affects every Hydrogen launch.
 
 ---
 
-## 3.3 Research Institute vs Engineer Economy Revisited
+## 1.3 Research Institute vs Engineer Economy Revisited
 **Previous concern:** Engineers might never break even compared to Research Institute.
 
 **Update:** With Research tokens now carrying over between rounds, the calculation changes significantly. Players can accumulate Research over time, making Engineers more valuable for sustained technology acquisition.
@@ -85,7 +52,7 @@ This 33% attrition affects every Hydrogen launch.
 
 ---
 
-## 3.4 Income Track Negative Spiral
+## 1.4 Income Track Negative Spiral
 **Concern:** Section 12.3 says if Income goes negative, you must discard Technologies permanently to become solvent. This creates a death spiral:
 1. Take a loan or lose routes
 2. Income goes negative
@@ -101,7 +68,7 @@ This 33% attrition affects every Hydrogen launch.
 
 ---
 
-## 3.5 Technology VP Scoring Creates "Niche Tech Rush" Incentive
+## 1.5 Technology VP Scoring Creates "Niche Tech Rush" Incentive
 **Mechanic:** Technology VP is scored at every Age end. A 3 VP Age I niche tech = 9 VP total over the game.
 
 **Consideration:** This is intentional design tension—players must choose between useful but 0 VP technologies vs niche but high VP technologies.
@@ -110,7 +77,7 @@ This 33% attrition affects every Hydrogen launch.
 
 ---
 
-## 3.6 Insurance Bureau Income Cost
+## 1.6 Insurance Bureau Income Cost
 **New mechanic:** Insurance now costs Income Track reduction instead of flat £.
 
 **Consideration:** This makes insurance a long-term investment decision. Each policy permanently reduces income but provides crash protection.
@@ -121,12 +88,9 @@ This 33% attrition affects every Hydrogen launch.
 
 ---
 
-# PART 4: RECOMMENDED PRIORITY FIXES
+# PART 2: PLAYTESTING NOTES
 
-## Clarifications (Low Priority)
-1. **Pressurized Lounge restriction** - Add explicit Helium requirement (Issue 1.1)
-2. **Pioneer Scramble conflicts** - Add cross-reference for turn order (Issue 2.1)
-3. **Route claiming priority** - Add cross-reference to Section 5.5 (Issue 2.2)
+All mechanical issues and clarifications are now resolved. The remaining balance concerns above should be monitored during playtesting.
 
 ---
 
@@ -164,6 +128,9 @@ The following issues from the original review were resolved in the merged change
 - **Technology Bag Accumulation:** Clarified that tiles from all Ages accumulate in bag (Section 4.1)
 - **Engineer Hazard Spending:** Standardized to +1 per Engineer for all hazards; removed card-specific abilities (Appendix E)
 - **Semi-Rigid Keel +1 Lift:** Removed erroneous Lift bonus; now only Weight -2, Reliability +1 (Appendix D, Section 10.4)
+- **Pressurized Lounge Restriction:** Clarified "Requires Helium Gas Cell installed" (Appendix D)
+- **Pioneer Scramble Conflicts:** Added turn order cross-reference (Section 5.1)
+- **Route Claiming Priority:** Added Section 6.1 cross-reference for turn order (Section 5.5)
 
 ## Clarity Issues Resolved
 - **Crash vs Aborted:** New Section 12.7 defines terminology
