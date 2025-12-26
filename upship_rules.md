@@ -322,12 +322,27 @@ Visit **The Design Bureau** on the Ground Board:
 
 Historically, helium was so scarce that the first American airship to use it (USS Shenandoah) contained most of the world's supply. This scarcity is reflected in the game.
 
-**Hydrogen** is the default. All Blueprint base Gas Cells use Hydrogen. It provides excellent lift but is **Flammable**—ships using hydrogen are vulnerable to fire-related Hazard cards and the Hindenburg Disaster game-end condition.
+### Gas Cubes and Frame Slots
 
-**Helium** requires the *Helium Handling* Technology. Once acquired, you can install Helium Gas Cell upgrades. There is a Helium Market Track on the board:
-- The first few units cost £2 each
-- As the market empties, prices rise to £4, £6, £10+
-- You must pay this cost each time you Launch a Helium ship
+Each Frame tile on your Blueprint has a **gas cube socket**. When you launch a ship, you must place one gas cube (from your Gas Reserve) on each Frame slot. These cubes provide Lift:
+- **Hydrogen Cubes (Yellow):** Lift +4 (Age I), +6 (Age II), +8 (Age III)
+- **Helium Cubes (White):** Lift +5 (fixed across all Ages)
+
+This means Age I/II ships require 1 gas cube; Age III ships require 2 gas cubes.
+
+### Gas Pricing
+
+**Hydrogen** costs £1 per cube (fixed price). It provides excellent lift but is **Flammable**—ships using hydrogen are vulnerable to fire-related Hazard cards and the Hindenburg Disaster game-end condition.
+
+**Helium** requires the *Helium Handling* Technology and uses a **market track** pricing system:
+- **Starting Price:** £2 per cube
+- **Market Advancement:** When a non-USA player purchases Helium at the Gas Depot, advance the Helium Market Track by 1 step per cube. Prices increase as the track advances: £2 → £3 → £4 → £5 → £6 → £8 → £10 → £15.
+- **USA Exception:** The United States has domestic Helium production. When USA purchases Helium, the Market Track does NOT advance (they draw from their own supply, not the global market).
+- **Age Reset:** The Helium Market Track resets to £2 at each Age Transition (new sources discovered).
+
+### Gas Storage (Gas Reserve)
+
+Players store gas cubes on their Player Board in the **Gas Reserve** area. You purchase gas at the Gas Depot action space, then spend it when launching ships. Having gas in reserve lets you avoid market spikes.
 
 **Strategic Choice:** Build fast and cheap with dangerous hydrogen, or invest in the safety of helium?
 
@@ -518,9 +533,11 @@ The Ground Board has 12 action spaces, each marked with one of three symbols. To
 
 **10. The Gas Depot (Wrench)**
 - **Action:** Purchase lifting gas for storage
-- **Cost:** Current market price per unit (Hydrogen or Helium)
-- **Effect:** Add gas tokens to your Gas Reserve on your Player Board
-- **Strategic Note:** Buy gas when prices are low; stored gas can be used later when building ships, avoiding market price spikes
+- **Hydrogen Price:** £1 per cube (fixed price)
+- **Helium Price:** Current market track price (starts at £2, increases as supply depletes)
+- **Effect:** Add gas cubes to your Gas Reserve on your Player Board. When purchasing Helium, advance the Helium Market Track by 1 for each cube purchased (increasing the price for future purchases).
+- **USA Special:** The United States may purchase Helium without advancing the Market Track (representing their domestic supply). Other factions must purchase from the limited global supply.
+- **Strategic Note:** Buy gas when prices are low; stored gas can be used later when launching ships, avoiding market price spikes. Americans have guaranteed Helium access at stable prices.
 
 **11. The Insurance Bureau (Coin)**
 - **Action:** Purchase insurance policies
@@ -820,7 +837,7 @@ Each nation has a unique starting Blueprint configuration, special technology, a
 **Archetype:** The Military Industrialists
 **Philosophy:** Safety and power. They have access to strategic resources Europeans don't.
 
-**Starting Advantage:** *Helium Monopoly* — The only faction that starts with the Helium Handling technology already in their Drawing Office. Their ships can be immune to Fire disaster cards and the Hindenburg Disaster.
+**Starting Advantage:** *Helium Monopoly* — The only faction that starts with the Helium Handling technology already in their Drawing Office. Their ships can be immune to Fire disaster cards and the Hindenburg Disaster. Additionally, when the USA purchases Helium at the Gas Depot, the Helium Market Track does NOT advance—they draw from domestic reserves rather than the global supply, giving them stable prices while other factions drive costs up.
 
 **Starting Technologies (pre-printed on Player Board):**
 - *Duralumin Framework* — Licensed from Germany through the Goodyear-Zeppelin partnership. Unlocks the Duralumin Frame upgrade.
@@ -1021,7 +1038,7 @@ Technology tiles have **VP values printed on them** based on their practical uti
 
 1. **The Germany Gambit:** High risk, high reward. Build monsters, but avoid Luxury Routes in Age III or accept the Hindenburg risk.
 2. **The British Empire:** Your early Luxury stat lets you claim premium routes. Slow start on tech, strong finish.
-3. **American Safety:** Your helium monopoly means you dominate Age III safely. Tech up on Payload to maximize it.
+3. **American Safety:** Your helium monopoly means you dominate Age III safely, and your purchases don't increase global Helium prices. Let Europeans bid up the market while you buy at stable prices.
 4. **Italian Flexibility:** Your 4-swap Upgrade action means you can pivot instantly. React to what others are doing.
 
 ---
@@ -1234,6 +1251,17 @@ The following items require finalization before the game is complete:
 - **Tech Cost:** Listed cost − Specialization Discount
 - **Transition Income:** (£ from Tech tiles) − (£1 × routes lost), minimum £0
 - **Victory:** Most Victory Points wins (tiebreakers: Income, Cash, Ships on map)
+
+## Gas Pricing (Gas Depot Action)
+
+| Gas Type | Price | Notes |
+|----------|-------|-------|
+| Hydrogen | £1/cube | Fixed price, flammable |
+| Helium | £2-15/cube | Market track (advances when purchased by non-USA) |
+
+**Helium Market Track:** £2 → £3 → £4 → £5 → £6 → £8 → £10 → £15
+**USA Exception:** USA purchases do not advance the track (domestic supply)
+**Age Reset:** Track resets to £2 at each Age Transition
 
 ## Game End Conditions
 

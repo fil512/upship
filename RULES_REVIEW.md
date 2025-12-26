@@ -4,7 +4,7 @@
 
 After incorporating your merged changes, many issues have been resolved. This updated review contains only **remaining issues** that still need attention.
 
-**Remaining:** 4 numerical issues, 8 mechanical gaps, 3 clarity issues, 6 balance concerns
+**Remaining:** 4 numerical issues, 6 mechanical gaps, 2 clarity issues, 6 balance concerns
 
 ---
 
@@ -61,31 +61,7 @@ This is minor but the guidance in A.3 could be tightened to match actual tile co
 
 # PART 2: REMAINING MECHANICAL GAPS
 
-## 2.1 Hull Cost Formula Still Undefined
-**Gap:** Section 7.1 states Hull Cost is "based on Frame + Fabric upgrades" but provides no formula.
-
-**Questions:**
-- What is the base Hull Cost? (Section 7.1 says "£2" but this isn't in the Quick Reference)
-- Which specific upgrades count as "Frame" vs "Fabric"?
-- How much does each add?
-
-**Recommendation:** Add explicit formula to Section 7.1 and Quick Reference, e.g.:
-> **Hull Cost = £2 base + £1 per Structure upgrade installed**
-
----
-
-## 2.2 Lifting Gas Consumption Still Undefined
-**Gap:** The rules mention paying for Lifting Gas but never specify:
-- How much gas per ship launch?
-- What is the base price of Hydrogen?
-- Is it 1 unit per launch? Per Lift point?
-
-**Recommendation:** Add clear gas consumption rules, e.g.:
-> Each ship launch requires 1 Gas unit. Hydrogen costs £1/unit base. Helium prices follow the market track (starting at £2, rising as supply depletes).
-
----
-
-## 2.3 Frozen Prototype Rule Still Implicit
+## 2.1 Frozen Prototype Rule Still Implicit
 **Gap:** Section 3.2 implies ships use Blueprint stats at launch, but never explicitly states ships on routes are NOT retroactively affected by Blueprint changes.
 
 **Current text:** "Ships in your Hangar Bay are generic airship tokens—they don't track individual stats."
@@ -95,7 +71,7 @@ This is minor but the guidance in A.3 could be tightened to match actual tile co
 
 ---
 
-## 2.4 Pilot/Engineer Income Track Setup Missing
+## 2.2 Pilot/Engineer Income Track Setup Missing
 **Gap:** Section 3.6 says Pilot/Engineer Income Tracks "start at 1" but Section 11.2 (Player Setup) doesn't include setting these tracks.
 
 **Recommendation:** Add to Section 11.2:
@@ -106,7 +82,7 @@ This is minor but the guidance in A.3 could be tightened to match actual tile co
 
 ---
 
-## 2.5 Engineer Hazard Spending: Dual System Conflict
+## 2.3 Engineer Hazard Spending: Dual System Conflict
 **Gap:** Two different systems for Engineer spending during Hazard Checks:
 1. **Section 7.3 (Generic):** "Each Engineer spent adds +1 to your total"
 2. **Appendix E (Card-Specific):** Different effects per card (e.g., "Spend 1: Auto-pass", "Spend 2: +3 to check")
@@ -119,7 +95,7 @@ This is minor but the guidance in A.3 could be tightened to match actual tile co
 
 ---
 
-## 2.6 Pressurized Lounge "Helium Ships Only" Restriction
+## 2.4 Pressurized Lounge "Helium Ships Only" Restriction
 **Gap:** Appendix D says Pressurized Lounge is "Helium ships only" but doesn't explain:
 - Can you install it on any Blueprint?
 - Does it only function on Helium ships?
@@ -130,7 +106,7 @@ This is minor but the guidance in A.3 could be tightened to match actual tile co
 
 ---
 
-## 2.7 Structural Keel Grants Positive Lift
+## 2.5 Structural Keel Grants Positive Lift
 **Gap:** Appendix D shows Structural Keel provides "Weight -2" AND "Reliability +1, Lift +1". Most upgrades only have negative Weight; this one also grants positive Lift.
 
 **Question:** Is this intentional? It's the only upgrade that grants Lift.
@@ -142,7 +118,7 @@ If unintentional, remove the "+1 Lift" bonus.
 
 ---
 
-## 2.8 Technology Bag Accumulation Clarification
+## 2.6 Technology Bag Accumulation Clarification
 **Minor Gap:** Section 4.1 says the bag "only contains tiles appropriate to the current Age" but Section 9.1 says "Add the new Age's Technology tiles to the bag."
 
 The rules now imply accumulation (which is correct) but could be clearer.
@@ -169,16 +145,6 @@ Section 5.5 says "resolve by turn order" but this appears in the general Route C
 
 **Recommendation:** Add cross-reference in Section 5.5:
 > **Simultaneous Claims:** If multiple players attempt to claim the same single-track route in the same round, resolve by turn order (see Section 6.1—lowest Income goes first).
-
----
-
-## 3.3 Gas Depot Strategic Note Incorrect
-**Error:** Section 6.1, The Gas Depot says: "stored gas can be used later when building ships"
-
-But gas is consumed at LAUNCH, not BUILD. Section 3.5 was corrected but this instance remains.
-
-**Recommendation:** Change to:
-> "stored gas can be used later when **launching** ships"
 
 ---
 
@@ -265,21 +231,18 @@ This 33% attrition affects every Hydrogen launch.
 # PART 5: RECOMMENDED PRIORITY FIXES
 
 ## High Priority (Before First Playtest)
-1. **Define Hull Cost formula** (Section 7.1) - currently players can't calculate build costs
-2. **Define Gas consumption** (Section 3.5/7.2) - currently undefined
-3. **Fix Upgrade Tile count** in Appendix D summary (44 → 45)
-4. **Fix Gas Depot strategic note** (build → launch)
+1. **Fix Upgrade Tile count** in Appendix D summary (44 → 45)
+2. **Add Frozen Prototype rule** explicitly to Section 3.2
 
 ## Medium Priority (Clarifications)
-5. **Add Frozen Prototype rule** explicitly to Section 3.2
-6. **Reconcile Engineer Hazard spending** (Section 7.3 vs Appendix E)
-7. **Add Income Track setup** to Section 11.2
-8. **Fix Italy's strategy tip** (5-swap → 4-swap)
+3. **Reconcile Engineer Hazard spending** (Section 7.3 vs Appendix E)
+4. **Add Income Track setup** to Section 11.2
+5. **Fix Italy's strategy tip** (5-swap → 4-swap)
 
 ## Low Priority (Polish)
-9. **Clarify Helium Gas Cell Lift scaling**
-10. **Clarify Pressurized Lounge restriction**
-11. **Add cross-references for turn order/route claiming**
+6. **Clarify Helium Gas Cell Lift scaling**
+7. **Clarify Pressurized Lounge restriction**
+8. **Add cross-references for turn order/route claiming**
 
 ---
 
@@ -305,6 +268,10 @@ The following issues from the original review were resolved in the merged change
 - **USA Home Base:** Added Age III base (Lakehurst, NJ) (Section 10.3)
 - **Faction Blueprint Slots:** Added summary table (Section 10.5)
 - **Research Tokens:** Now carry over between rounds (Section 4.1, 6.2)
+- **Hull Cost Formula:** Defined as £2 base + Frame tile cost + Fabric tile cost (Section 7.1, Appendix B)
+- **Gas Consumption & Pricing:** 1 gas cube per Frame slot; Hydrogen £1/cube; Helium market track £2-£15 (Section 4.4, 6.1)
+- **USA Helium Advantage:** USA purchases don't advance the Helium Market Track (Section 6.1, 10.3)
+- **Gas Depot Strategic Note:** Fixed "building" to "launching" (Section 6.1)
 
 ## Clarity Issues Resolved
 - **Crash vs Aborted:** New Section 12.7 defines terminology
