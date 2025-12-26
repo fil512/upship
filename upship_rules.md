@@ -337,6 +337,7 @@ This means Age I/II ships require 1 gas cube; Age III ships require 2 gas cubes.
 **Helium** requires the *Helium Handling* Technology and uses a **market track** pricing system:
 - **Starting Price:** £2 per cube
 - **Market Advancement:** When a non-USA player purchases Helium at the Gas Depot, advance the Helium Market Track by 1 step per cube. Prices increase as the track advances: £2 → £3 → £4 → £5 → £6 → £8 → £10 → £15.
+- **Market Reduction:** The Ministry action reduces the Helium Market Track by 1 step (minimum £2)—political lobbying releases government reserves.
 - **USA Exception:** The United States has domestic Helium production. When USA purchases Helium, the Market Track does NOT advance (they draw from their own supply, not the global market).
 - **Age Reset:** The Helium Market Track resets to £2 at each Age Transition (new sources discovered).
 
@@ -528,8 +529,8 @@ The Ground Board has 12 action spaces, each marked with one of three symbols. To
 **9. The Ministry (Propeller)**
 - **Action:** Political maneuvering
 - **Cost:** Free
-- **Effect:** Draw 2 cards from your deck and discard 1. Additionally, you go first in turn order next round (regardless of Income Track position).
-- **Strategic Note:** The Ministry gives you both card selection and priority. Use it when you need to ensure you claim a contested route or action space before your opponents.
+- **Effect:** Draw 2 cards from your deck and discard 1. Additionally, you go first in turn order next round (regardless of Income Track position). Finally, reduce the Helium Market Track by 1 step (minimum £2)—your lobbying pressures governments to release strategic reserves.
+- **Strategic Note:** The Ministry gives you card selection, priority, AND lowers Helium prices. Even if you don't use Helium yourself, lowering prices helps all non-USA players—or you can time your visit to buy cheap Helium next round.
 
 **10. The Gas Depot (Wrench)**
 - **Action:** Purchase lifting gas for storage
@@ -1260,6 +1261,8 @@ The following items require finalization before the game is complete:
 | Helium | £2-15/cube | Market track (advances when purchased by non-USA) |
 
 **Helium Market Track:** £2 → £3 → £4 → £5 → £6 → £8 → £10 → £15
+**Price Increases:** Non-USA purchases advance the track by 1 per cube
+**Price Decreases:** Ministry action reduces the track by 1 (minimum £2)
 **USA Exception:** USA purchases do not advance the track (domestic supply)
 **Age Reset:** Track resets to £2 at each Age Transition
 
