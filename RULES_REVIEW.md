@@ -4,22 +4,13 @@
 
 After incorporating your merged changes, many issues have been resolved. This updated review contains only **remaining issues** that still need attention.
 
-**Remaining:** 3 numerical issues, 6 mechanical gaps, 2 clarity issues, 6 balance concerns
+**Remaining:** 1 numerical issue, 4 mechanical gaps, 2 clarity issues, 6 balance concerns
 
 ---
 
 # PART 1: REMAINING NUMERICAL ISSUES
 
-## 1.1 Italy's Strategy Tip Incorrect
-**Issue:** Section 13 (Strategy Tips) says: "Italian Flexibility: Your 5-swap Upgrade action..."
-
-But Section 10.4 says Italy gets 4 swaps, not 5.
-
-**Recommendation:** Change to "4-swap Upgrade action"
-
----
-
-## 1.2 Helium Gas Cell Lift Value Inconsistency
+## 1.1 Helium Gas Cell Lift Value Inconsistency
 **Issue:**
 - Appendix D note says: "The Helium Gas Cell upgrade provides Lift +5, which is 1 less than the equivalent Hydrogen cell"
 - But the base Hydrogen cells provide different Lift by Age (+4/+6/+8)
@@ -31,46 +22,9 @@ But Section 10.4 says Italy gets 4 swaps, not 5.
 
 ---
 
-## 1.3 Research Costs vs Technology Tile Costs
-**Issue:** Appendix A.3 lists Research costs as:
-- Age I: 1-3 Research
-- Age II: 3-5 Research
-- Age III: 4-6 Research
-
-But Appendix C Technology tiles show some tiles costing more:
-- Promenade Deck (Age III): 6 Research (matches)
-- But the max in Age II is Helium Handling at 4, not 5
-
-This is minor but the guidance in A.3 could be tightened to match actual tile costs.
-
-**Recommendation:** Verify tile costs match the stated ranges, or update ranges to match actual tiles.
-
----
-
 # PART 2: REMAINING MECHANICAL GAPS
 
-## 2.1 Frozen Prototype Rule Still Implicit
-**Gap:** Section 3.2 implies ships use Blueprint stats at launch, but never explicitly states ships on routes are NOT retroactively affected by Blueprint changes.
-
-**Current text:** "Ships in your Hangar Bay are generic airship tokens—they don't track individual stats."
-
-**Recommendation:** Add explicit rule:
-> **Frozen Prototype Rule:** Ships on routes use the Blueprint stats they had when launched. Upgrading your Blueprint does not affect ships already on the map—only future launches benefit from improvements.
-
----
-
-## 2.2 Pilot/Engineer Income Track Setup Missing
-**Gap:** Section 3.6 says Pilot/Engineer Income Tracks "start at 1" but Section 11.2 (Player Setup) doesn't include setting these tracks.
-
-**Recommendation:** Add to Section 11.2:
-> 10. **Set Pilot Income Track** to 1
-> 11. **Set Engineer Income Track** to 1
-
-(Renumber subsequent items)
-
----
-
-## 2.3 Engineer Hazard Spending: Dual System Conflict
+## 2.1 Engineer Hazard Spending: Dual System Conflict
 **Gap:** Two different systems for Engineer spending during Hazard Checks:
 1. **Section 7.3 (Generic):** "Each Engineer spent adds +1 to your total"
 2. **Appendix E (Card-Specific):** Different effects per card (e.g., "Spend 1: Auto-pass", "Spend 2: +3 to check")
@@ -83,7 +37,7 @@ This is minor but the guidance in A.3 could be tightened to match actual tile co
 
 ---
 
-## 2.4 Pressurized Lounge "Helium Ships Only" Restriction
+## 2.2 Pressurized Lounge "Helium Ships Only" Restriction
 **Gap:** Appendix D says Pressurized Lounge is "Helium ships only" but doesn't explain:
 - Can you install it on any Blueprint?
 - Does it only function on Helium ships?
@@ -94,7 +48,7 @@ This is minor but the guidance in A.3 could be tightened to match actual tile co
 
 ---
 
-## 2.5 Structural Keel Grants Positive Lift
+## 2.3 Structural Keel Grants Positive Lift
 **Gap:** Appendix D shows Structural Keel provides "Weight -2" AND "Reliability +1, Lift +1". Most upgrades only have negative Weight; this one also grants positive Lift.
 
 **Question:** Is this intentional? It's the only upgrade that grants Lift.
@@ -103,16 +57,6 @@ This is minor but the guidance in A.3 could be tightened to match actual tile co
 > *Design Note: The Internal Keel's streamlined shape provides slight additional buoyancy.*
 
 If unintentional, remove the "+1 Lift" bonus.
-
----
-
-## 2.6 Technology Bag Accumulation Clarification
-**Minor Gap:** Section 4.1 says the bag "only contains tiles appropriate to the current Age" but Section 9.1 says "Add the new Age's Technology tiles to the bag."
-
-The rules now imply accumulation (which is correct) but could be clearer.
-
-**Recommendation:** Update Section 4.1:
-> Technologies from previous Ages remain available on the R&D Board. At each Age transition, new Age tiles are added to the bag—tiles from all Ages can be drawn.
 
 ---
 
@@ -218,19 +162,15 @@ This 33% attrition affects every Hydrogen launch.
 
 # PART 5: RECOMMENDED PRIORITY FIXES
 
-## High Priority (Before First Playtest)
-1. **Fix Upgrade Tile count** in Appendix D summary (44 → 45)
-2. **Add Frozen Prototype rule** explicitly to Section 3.2
+## Design Decisions Needed
+1. **Helium Lift scaling** - Fixed +5 or scale by Age? (Issue 1.1)
+2. **Engineer Hazard spending** - Standard +1/Engineer OR card-specific, not both? (Issue 2.1)
+3. **Structural Keel +1 Lift** - Intentional or remove? (Issue 2.3)
 
-## Medium Priority (Clarifications)
-3. **Reconcile Engineer Hazard spending** (Section 7.3 vs Appendix E)
-4. **Add Income Track setup** to Section 11.2
-5. **Fix Italy's strategy tip** (5-swap → 4-swap)
-
-## Low Priority (Polish)
-6. **Clarify Helium Gas Cell Lift scaling**
-7. **Clarify Pressurized Lounge restriction**
-8. **Add cross-references for turn order/route claiming**
+## Clarifications (Low Priority)
+4. **Pressurized Lounge restriction** - Add explicit Helium requirement (Issue 2.2)
+5. **Pioneer Scramble conflicts** - Add cross-reference for turn order (Issue 3.1)
+6. **Route claiming priority** - Add cross-reference to Section 5.5 (Issue 3.2)
 
 ---
 
@@ -243,8 +183,10 @@ The following issues from the original review were resolved in the merged change
 - **Starting Cash:** Fixed at £15 for all player counts (Section 2.1)
 - **R&D Board Tiles:** Scale by Age (4/5/6), not player count (Section 4.1)
 - **Market Row Cards:** Fixed at 5 cards (Section 11.1)
-- **Technology Tile Count:** Acknowledged at 45 with TODO to expand (Appendix C)
+- **Technology Tile Count:** Updated to 47 after Frame/Fabric split (Appendix C, D)
 - **Britain's Swap Count:** Confirmed as 1 instead of 2 (Section 10.2)
+- **Italy's Strategy Tip:** Already correct at 4-swap (Section 13)
+- **Research Cost Ranges:** Updated to match actual tiles: Age I 1-2, Age II 2-4, Age III 4-6 (Appendix A.3)
 
 ## Mechanical Gaps Resolved
 - **Gas Reserve Usage:** Fixed to say "launching" not "building" (Section 3.5)
@@ -260,6 +202,9 @@ The following issues from the original review were resolved in the merged change
 - **Gas Consumption & Pricing:** 1 gas cube per Frame slot; Hydrogen £1/cube; Helium market track £2-£15 (Section 4.4, 6.1)
 - **USA Helium Advantage:** USA purchases don't advance the Helium Market Track (Section 6.1, 10.3)
 - **Gas Depot Strategic Note:** Fixed "building" to "launching" (Section 6.1)
+- **Frozen Prototype Rule:** Added explicit rule that ships on routes retain launch stats (Section 3.2)
+- **Pilot/Engineer Income Track Setup:** Added to player setup (Section 11.2)
+- **Technology Bag Accumulation:** Clarified that tiles from all Ages accumulate in bag (Section 4.1)
 
 ## Clarity Issues Resolved
 - **Crash vs Aborted:** New Section 12.7 defines terminology

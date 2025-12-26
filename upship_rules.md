@@ -177,6 +177,8 @@ If your Blueprint violates this rule, your ship cannot leave the ground.
 
 Ships in your Hangar Bay are generic airship tokens—they don't track individual stats. When you **launch** a ship, it uses your **current Blueprint stats** at that moment. This means you can build ships now, upgrade your Blueprint later, and launch with the improved design. No bookkeeping required.
 
+**Frozen Prototype Rule:** Once a ship is on a route, it retains the stats it had when launched. Upgrading your Blueprint does NOT affect ships already on the map—only future launches benefit from improvements.
+
 ## 3.3 Zone 3: The Barracks (Bottom)
 
 Storage for your crew tokens earned from the shared supply:
@@ -266,7 +268,7 @@ A shared display where available Technologies are placed. At the start of each r
 | Age II | 5 tiles |
 | Age III | 6 tiles |
 
-Technologies from previous Ages remain available (older tech doesn't disappear), but the bag only contains tiles appropriate to the current Age.
+At game start, the bag contains only Age I tiles. At each Age Transition, new Age tiles are **added** to the bag—tiles from all previous Ages remain, so the pool of available technologies grows throughout the game.
 
 ### Acquiring Technologies
 
@@ -908,7 +910,9 @@ Each player receives:
 7. **3 Agent Tokens**
 8. **Starter Deck** of 10 cards (shuffled)
 9. **Set Income Track** to starting position (faction-specific, typically £5)
-10. Draw opening hand of 5 cards
+10. **Set Pilot Income Track** to 1
+11. **Set Engineer Income Track** to 1
+12. Draw opening hand of 5 cards
 
 ## 11.3 First Player
 
@@ -1134,8 +1138,8 @@ The following items require finalization before the game is complete:
 ## A.3 Economy Balancing
 
 1. **Research Costs:** Balance Technology prices:
-   - Age I: 1-3 Research
-   - Age II: 3-5 Research
+   - Age I: 1-2 Research
+   - Age II: 2-4 Research
    - Age III: 4-6 Research
    - Specialization discounts: -1 at 3+ tiles, -2 at 5+ tiles
    - **Note:** Research tokens can be saved between rounds, allowing players to accumulate for expensive Technologies
