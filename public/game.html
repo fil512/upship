@@ -1076,14 +1076,37 @@
             Market: H₂ £${state.gasMarket.hydrogen}/cube | He £${state.gasMarket.helium}/cube
           </div>
 
-          <div class="section-title" style="margin-top: 20px;">Hangar</div>
-          <div style="display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 10px;">
-            ${(myState.ships || []).filter(s => s.status === 'hangar').length > 0 ?
-              (myState.ships || []).filter(s => s.status === 'hangar').map(() =>
-                '<span style="font-size: 1.5rem;">🚀</span>'
-              ).join('') :
-              '<span style="color: #666; font-size: 0.8rem;">No ships ready</span>'
+          <div class="section-title" style="margin-top: 20px;">Fleet Status</div>
+          <div style="margin-bottom: 10px;">
+            <div style="font-size: 0.75rem; color: #888; margin-bottom: 5px;">Hangar:</div>
+            <div style="display: flex; gap: 5px; flex-wrap: wrap;">
+              ${(myState.ships || []).filter(s => s.status === 'hangar').length > 0 ?
+                (myState.ships || []).filter(s => s.status === 'hangar').map(() =>
+                  '<span style="font-size: 1.2rem;">🚀</span>'
+                ).join('') :
+                '<span style="color: #666; font-size: 0.75rem;">Empty</span>'
+              }
+            </div>
+          </div>
+          <div style="margin-bottom: 10px;">
+            <div style="font-size: 0.75rem; color: #888; margin-bottom: 5px;">On Routes:</div>
+            ${(myState.ships || []).filter(s => s.status === 'on_route').length > 0 ?
+              (myState.ships || []).filter(s => s.status === 'on_route').map(ship => {
+                const route = state.map?.routes?.find(r => r.id === ship.routeId);
+                return `
+                  <div style="padding: 5px; background: rgba(68, 170, 153, 0.2); border-radius: 4px; margin-bottom: 3px; font-size: 0.75rem; display: flex; justify-content: space-between; align-items: center;">
+                    <span>✈️ ${route ? route.from + ' → ' + route.to : 'Unknown'}</span>
+                    <button class="tech-buy-btn research" onclick="performHazardCheck('${ship.id}')" ${!isMyTurn ? 'disabled' : ''} style="font-size: 0.65rem; padding: 2px 5px;">
+                      ⚠️ Check
+                    </button>
+                  </div>
+                `;
+              }).join('') :
+              '<span style="color: #666; font-size: 0.75rem;">None</span>'
             }
+          </div>
+          <div style="font-size: 0.75rem; color: #888;">
+            Hazard Deck: ${(myState.hazardDeck?.length || 0)} cards
           </div>
           ${myState.insurance ? `
             <div style="background: rgba(68, 170, 153, 0.2); border: 1px solid #4a9; border-radius: 4px; padding: 8px; margin-bottom: 10px; text-align: center;">
@@ -1739,6 +1762,13 @@
     function claimRoute(shipId, routeId) {
       closeModal();
       performAction('CLAIM_ROUTE', { shipId, routeId });
+    }
+
+    // === HAZARD CHECKS ===
+    function performHazardCheck(shipId) {
+      if (confirm('Perform hazard check? This will draw from your hazard deck and test your ship.')) {
+        performAction('PERFORM_HAZARD_CHECK', { shipId });
+      }
     }
 
     function openSlot(slotType, slotIndex) {

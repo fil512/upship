@@ -309,6 +309,9 @@ function processAction(state, playerId, actionType, data) {
     case 'CLAIM_ROUTE':
       return processClaimRoute(newState, playerId, data);
 
+    case 'PERFORM_HAZARD_CHECK':
+      return processHazardCheck(newState, playerId, data);
+
     default:
       return { error: `Unknown action type: ${actionType}` };
   }
@@ -1200,6 +1203,109 @@ function processClaimRoute(state, playerId, data) {
     playerId,
     type: 'action'
   });
+
+  return { newState: state };
+}
+
+// Perform a hazard check for a ship on a route
+function processHazardCheck(state, playerId, data) {
+  const { shipId } = data;
+  const playerState = state.players[playerId];
+
+  // Find the ship
+  const ships = playerState.ships || [];
+  const shipIndex = ships.findIndex(s => s.id === shipId && s.status === 'on_route');
+
+  if (shipIndex === -1) {
+    return { error: 'No ship on route to check' };
+  }
+
+  const ship = ships[shipIndex];
+
+  // Draw from hazard deck
+  if (!playerState.hazardDeck || playerState.hazardDeck.length === 0) {
+    return { error: 'No hazard cards remaining' };
+  }
+
+  const hazard = playerState.hazardDeck.shift();
+
+  // Calculate safety rating
+  // Base reliability from ship stats + crew bonus (1 per pilot)
+  const shipStats = ship.stats || { reliability: 0 };
+  const safetyRating = (shipStats.reliability || 0) + (playerState.pilots || 0);
+
+  // Compare to hazard difficulty
+  const success = safetyRating >= hazard.difficulty;
+
+  // Store hazard check result
+  const checkResult = {
+    hazardType: hazard.type,
+    difficulty: hazard.difficulty,
+    safetyRating,
+    success,
+    timestamp: new Date().toISOString()
+  };
+
+  if (success) {
+    // Ship survives
+    state.log.push({
+      timestamp: new Date().toISOString(),
+      message: `Hazard check PASSED: ${hazard.type} (${hazard.difficulty}) vs Safety ${safetyRating}`,
+      playerId,
+      type: 'hazard'
+    });
+  } else {
+    // Ship takes damage or crashes
+    const crashSeverity = hazard.difficulty - safetyRating;
+
+    if (crashSeverity >= 3 || hazard.type === 'critical') {
+      // Ship destroyed
+      ships[shipIndex].status = 'destroyed';
+
+      // Remove income from the route
+      const route = state.map?.routes?.find(r => r.id === ship.routeId);
+      if (route) {
+        playerState.income = Math.max(0, playerState.income - (route.income || 0));
+        route.claimed = null;
+        route.claimedBy = null;
+      }
+
+      // Insurance mitigation
+      const insurancePolicies = playerState.insurance || 0;
+      if (insurancePolicies > 0) {
+        playerState.cash += 10 * insurancePolicies;
+        state.log.push({
+          timestamp: new Date().toISOString(),
+          message: `Insurance payout: £${10 * insurancePolicies}`,
+          playerId,
+          type: 'action'
+        });
+      }
+
+      state.log.push({
+        timestamp: new Date().toISOString(),
+        message: `DISASTER! ${hazard.type} (${hazard.difficulty}) vs Safety ${safetyRating}. Ship destroyed!`,
+        playerId,
+        type: 'hazard'
+      });
+    } else {
+      // Ship damaged but survives
+      ships[shipIndex].damaged = true;
+
+      state.log.push({
+        timestamp: new Date().toISOString(),
+        message: `Hazard check FAILED: ${hazard.type} (${hazard.difficulty}) vs Safety ${safetyRating}. Ship damaged.`,
+        playerId,
+        type: 'hazard'
+      });
+    }
+  }
+
+  // Track the hazard check result on the player state
+  if (!playerState.lastHazardCheck) {
+    playerState.lastHazardCheck = {};
+  }
+  playerState.lastHazardCheck[shipId] = checkResult;
 
   return { newState: state };
 }
