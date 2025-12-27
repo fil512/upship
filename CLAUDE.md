@@ -20,7 +20,11 @@ The project includes game rules design and an online implementation.
 server/index.js    - Express server (static files + API)
 public/            - Frontend static assets
 railway.json       - Railway deployment configuration
+spec/              - Game rules specification
+plans/             - Implementation plans and design docs
 ```
+
+**Tech Stack:** Node.js + Express, PostgreSQL, Socket.io, Railway hosting
 
 ### Running Locally
 
@@ -49,13 +53,25 @@ Design documents and reviews are organized in `plans/`:
 - **Archived plans**: `plans/archive/*.md` - Completed or superseded documents
 - **Naming convention**: `YYYY-MM-DD_DESCRIPTION.md`
 
+## Implementation Roadmap
+
+See `plans/overview.md` for the 27-phase implementation plan tracking progress from foundation to polish.
+
 ## Available Commands
 
+- `/go-upship` - Continue implementation by working on the next unfinished phase
 - `/review-rules` - Conducts a comprehensive rules review using the boardgame-design skill
 
 ## Available Skills
 
-- `boardgame-design` - Provides expertise for game design, balance analysis, and rules clarity
+**Game Design:**
+- `boardgame-design` - Game mechanics, balance analysis, rules clarity, Eurogame principles
+
+**Development:**
+- `realtime-multiplayer` - Socket.io, state sync, reconnection, room management
+- `game-state` - Reducers, validation, phase management, undo/redo
+- `game-database` - PostgreSQL schemas, JSONB, transactions, migrations
+- `board-game-ui` - SVG boards, drag-drop, responsive layouts, animations
 
 ## Utility Scripts
 
