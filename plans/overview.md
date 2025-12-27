@@ -60,14 +60,14 @@ This document tracks the implementation of UP SHIP! as an online multiplayer boa
 |--------|------|-------------|
 | [x] | [16-hazards.md](16-hazards.md) | Hazard deck and hazard checks |
 | [x] | [17-cards.md](17-cards.md) | Deck building and market cards |
-| [ ] | [18-crew.md](18-crew.md) | Pilots, Engineers, and crew management |
+| [x] | [18-crew.md](18-crew.md) | Pilots, Engineers, and crew management |
 
 ### Phase 7: Game Flow
 
 | Status | Plan | Description |
 |--------|------|-------------|
-| [ ] | [19-rounds.md](19-rounds.md) | Round structure and phase management |
-| [ ] | [20-ages.md](20-ages.md) | Age transitions and progress track |
+| [~] | [19-rounds.md](19-rounds.md) | Round structure and phase management |
+| [~] | [20-ages.md](20-ages.md) | Age transitions and progress track |
 | [ ] | [21-scoring.md](21-scoring.md) | Victory points and end game |
 
 ### Phase 8: Multiplayer
