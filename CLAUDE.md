@@ -6,11 +6,37 @@ This file provides guidance to Claude Code (claude.ai/code) when working with th
 
 This is a board game design project for **UP SHIP!**, a strategy game about airship conglomerates during the Golden Age of Airships (1900-1937). Players act as Directors of rival airship companies representing Germany, Britain, the United States, and Italy, competing across three historical Ages.
 
-The project is in the **design phase** - no software codebase yet. The primary artifact is `upship_rules.md`.
+The project includes game rules design and an online implementation.
+
+## Deployment
+
+- **Production URL**: https://upship-production.up.railway.app
+- **Hosting**: Railway (auto-deploys from GitHub on push to main)
+- **Health Check**: https://upship-production.up.railway.app/health
+
+## Application Structure
+
+```
+server/index.js    - Express server (static files + API)
+public/            - Frontend static assets
+railway.json       - Railway deployment configuration
+spec/              - Game rules specification
+plans/             - Implementation plans and design docs
+```
+
+**Tech Stack:** Node.js + Express, PostgreSQL, Socket.io, Railway hosting
+
+### Running Locally
+
+```bash
+npm install
+npm start          # Production server on port 3000
+npm run dev        # Development with auto-reload
+```
 
 ## Document Structure
 
-- **`upship_rules.md`** - Complete game rules
+- **`spec/upship_rules.md`** - Complete game rules
   - Sections 1-13: Core rules (overview, components, mechanics, factions, setup)
   - Appendix A: TODO list of remaining design work
   - Appendix B: Quick reference/cheat sheet
@@ -27,13 +53,25 @@ Design documents and reviews are organized in `plans/`:
 - **Archived plans**: `plans/archive/*.md` - Completed or superseded documents
 - **Naming convention**: `YYYY-MM-DD_DESCRIPTION.md`
 
+## Implementation Roadmap
+
+See `plans/overview.md` for the 27-phase implementation plan tracking progress from foundation to polish.
+
 ## Available Commands
 
+- `/go-upship` - Continue implementation by working on the next unfinished phase
 - `/review-rules` - Conducts a comprehensive rules review using the boardgame-design skill
 
 ## Available Skills
 
-- `boardgame-design` - Provides expertise for game design, balance analysis, and rules clarity
+**Game Design:**
+- `boardgame-design` - Game mechanics, balance analysis, rules clarity, Eurogame principles
+
+**Development:**
+- `realtime-multiplayer` - Socket.io, state sync, reconnection, room management
+- `game-state` - Reducers, validation, phase management, undo/redo
+- `game-database` - PostgreSQL schemas, JSONB, transactions, migrations
+- `board-game-ui` - SVG boards, drag-drop, responsive layouts, animations
 
 ## Utility Scripts
 
