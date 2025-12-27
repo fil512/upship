@@ -56,8 +56,8 @@ function createInitialBlueprint() {
     frameSlots: [null, null, null, null], // 4 frame slots
     fabricSlots: [null, null],            // 2 fabric slots
     driveSlots: [null, null],             // 2 drive slots
-    componentSlots: [null, null, null],   // 3 component slots
-    gasSockets: [null, null, null, null]  // Gas cubes on frame
+    componentSlots: [null, null, null]    // 3 component slots
+    // Note: Gas sockets removed - gas is spent directly from reserve when launching
   };
 }
 
@@ -156,20 +156,20 @@ const PROGRESS_THRESHOLDS = {
   4: { age2: 10, age3: 20, end: 30 }
 };
 
-// Create initial R&D board with 4 technology tiles
-function createRDBoard(age = 1) {
-  const availableTechs = [...TECHNOLOGY_BAG[age]];
-  return shuffleArray(availableTechs).slice(0, 4);
-}
-
-// Create technology bag for the game
-function createTechBag(age = 1) {
+// Create technology bag and R&D board together to avoid duplicates
+// Returns { rdBoard: [...], techBag: [...] }
+function createTechBagAndRDBoard(age = 1) {
   const bag = [];
   // Add all tiles up to current age
   for (let a = 1; a <= age; a++) {
     bag.push(...TECHNOLOGY_BAG[a].map(t => ({ ...t, age: a })));
   }
-  return shuffleArray(bag);
+  const shuffledBag = shuffleArray(bag);
+
+  // Draw 4 tiles for the R&D board from the shuffled bag
+  const rdBoard = shuffledBag.splice(0, 4);
+
+  return { rdBoard, techBag: shuffledBag };
 }
 
 // Create initial market cards
@@ -238,6 +238,9 @@ async function initializeGameState(gameId, players) {
     // Determine player count for progress thresholds
     const playerCount = Math.min(4, Math.max(2, players.length));
 
+    // Create tech bag and R&D board together to avoid duplicates
+    const { rdBoard, techBag } = createTechBagAndRDBoard(1);
+
     // Create initial game state
     const gameState = {
       age: 1,
@@ -248,8 +251,8 @@ async function initializeGameState(gameId, players) {
       playerOrder,
       playerCount,
       players: playerStates,
-      rdBoard: createRDBoard(1),
-      techBag: createTechBag(1).slice(4), // Remove tiles used for initial board
+      rdBoard,
+      techBag,
       marketCards: createMarketCards(),
       progressTrack: 0,
       progressThresholds: PROGRESS_THRESHOLDS[playerCount],

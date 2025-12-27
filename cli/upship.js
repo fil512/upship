@@ -403,9 +403,13 @@ const commands = {
     const isMyTurn = currentPlayerId === myId;
 
     // Header
+    const progress = gs.progressTrack || 0;
+    const thresholds = gs.progressThresholds || { age2: 10, age3: 20, end: 30 };
+    const nextThreshold = gs.age === 1 ? thresholds.age2 : gs.age === 2 ? thresholds.age3 : thresholds.end;
     console.log('');
     console.log(c(COLORS.bright, '═══════════════════════════════════════════════════════════════════════'));
     console.log(c(COLORS.bright, `  UP SHIP! - Age ${gs.age} │ Turn ${gs.turn} │ Round ${gs.round} │ Phase: ${formatPhase(gs.phase)}`));
+    console.log(c(COLORS.bright, `  Progress: ${progress}/${thresholds.end} (Age ${gs.age + 1 > 3 ? 'End' : gs.age + 1} at ${nextThreshold})`));
     console.log(c(COLORS.bright, '═══════════════════════════════════════════════════════════════════════'));
 
     // Turn indicator
@@ -548,17 +552,6 @@ const commands = {
       });
       console.log(c(color, '└─────────────────────────────────────'));
     }
-
-    // Gas sockets
-    const gasSockets = bp.gasSockets || [];
-    console.log('');
-    console.log(c(COLORS.cyan + COLORS.bright, `┌─ Gas Sockets (${gasSockets.filter(s => s).length}/${gasSockets.length})`));
-    gasSockets.forEach((gas, i) => {
-      const gasColor = gas === 'hydrogen' ? COLORS.cyan : gas === 'helium' ? COLORS.green : COLORS.gray;
-      const status = gas ? c(gasColor, gas) : c(COLORS.gray, 'empty');
-      console.log(`│ [${i}] ${status}`);
-    });
-    console.log(c(COLORS.cyan, '└─────────────────────────────────────'));
 
     console.log('');
   },

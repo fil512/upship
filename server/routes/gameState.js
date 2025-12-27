@@ -453,18 +453,22 @@ function processAcquireTechnology(state, playerId, data) {
     state.age = 2;
     // Add Age 2 technologies to the tech bag
     addAgeTechnologies(state, 2);
+    // Reset gas market prices for new age
+    state.gasMarket = { hydrogen: 2, helium: 5 };
     state.log.push({
       timestamp: new Date().toISOString(),
-      message: `Age II begins! New technologies available.`,
+      message: `Age II begins! New technologies available. Gas market reset.`,
       type: 'system'
     });
   } else if (state.age === 2 && state.progressTrack >= thresholds.age3) {
     state.age = 3;
     // Add Age 3 technologies to the tech bag
     addAgeTechnologies(state, 3);
+    // Reset gas market prices for new age
+    state.gasMarket = { hydrogen: 2, helium: 5 };
     state.log.push({
       timestamp: new Date().toISOString(),
-      message: `Age III begins! Final era technologies unlocked.`,
+      message: `Age III begins! Final era technologies unlocked. Gas market reset.`,
       type: 'system'
     });
   }
@@ -572,20 +576,27 @@ function processRemoveUpgrade(state, playerId, data) {
 function processTakeLoan(state, playerId, data) {
   const playerState = state.players[playerId];
 
+  // Limit maximum loans to 2
+  const maxLoans = 2;
+  const currentLoans = playerState.loans || 0;
+  if (currentLoans >= maxLoans) {
+    return { error: `Maximum ${maxLoans} loans allowed. Pay off existing debt first.` };
+  }
+
   // Give the player £30
   const loanAmount = 30;
   playerState.cash += loanAmount;
 
-  // Reduce income track by 3 (permanent penalty)
+  // Reduce income track by 3 (permanent penalty, minimum 0)
   const incomePenalty = 3;
   playerState.income = Math.max(0, playerState.income - incomePenalty);
 
   // Track loan count for reference
-  playerState.loans = (playerState.loans || 0) + 1;
+  playerState.loans = currentLoans + 1;
 
   state.log.push({
     timestamp: new Date().toISOString(),
-    message: `Took a loan: gained £${loanAmount}, income reduced by ${incomePenalty}`,
+    message: `Took loan ${playerState.loans}/${maxLoans}: gained £${loanAmount}, income reduced by ${incomePenalty}`,
     playerId,
     type: 'action'
   });
@@ -1039,17 +1050,21 @@ function processAcquireTechnologyResearch(state, playerId, data) {
   if (state.age === 1 && state.progressTrack >= thresholds.age2) {
     state.age = 2;
     addAgeTechnologies(state, 2);
+    // Reset gas market prices for new age
+    state.gasMarket = { hydrogen: 2, helium: 5 };
     state.log.push({
       timestamp: new Date().toISOString(),
-      message: `Age II begins! New technologies available.`,
+      message: `Age II begins! New technologies available. Gas market reset.`,
       type: 'system'
     });
   } else if (state.age === 2 && state.progressTrack >= thresholds.age3) {
     state.age = 3;
     addAgeTechnologies(state, 3);
+    // Reset gas market prices for new age
+    state.gasMarket = { hydrogen: 2, helium: 5 };
     state.log.push({
       timestamp: new Date().toISOString(),
-      message: `Age III begins! Final era technologies unlocked.`,
+      message: `Age III begins! Final era technologies unlocked. Gas market reset.`,
       type: 'system'
     });
   }
