@@ -436,15 +436,42 @@ function processAcquireTechnology(state, playerId, data) {
   playerState.cash -= tech.cost;
   playerState.technologies.push(techId);
 
-  // Remove from R&D board (in full game, would draw replacement)
+  // Remove from R&D board
   state.rdBoard.splice(techIndex, 1);
 
+  // Draw replacement from tech bag if available
+  if (state.techBag && state.techBag.length > 0) {
+    state.rdBoard.push(state.techBag.shift());
+  }
+
   // Advance progress track
-  state.progressTrack++;
+  state.progressTrack = (state.progressTrack || 0) + 1;
+
+  // Check for age transition
+  const thresholds = state.progressThresholds || { age2: 10, age3: 20, end: 30 };
+  if (state.age === 1 && state.progressTrack >= thresholds.age2) {
+    state.age = 2;
+    // Add Age 2 technologies to the tech bag
+    addAgeTechnologies(state, 2);
+    state.log.push({
+      timestamp: new Date().toISOString(),
+      message: `Age II begins! New technologies available.`,
+      type: 'system'
+    });
+  } else if (state.age === 2 && state.progressTrack >= thresholds.age3) {
+    state.age = 3;
+    // Add Age 3 technologies to the tech bag
+    addAgeTechnologies(state, 3);
+    state.log.push({
+      timestamp: new Date().toISOString(),
+      message: `Age III begins! Final era technologies unlocked.`,
+      type: 'system'
+    });
+  }
 
   state.log.push({
     timestamp: new Date().toISOString(),
-    message: `Acquired ${tech.name} technology`,
+    message: `Acquired ${tech.name} technology. Progress: ${state.progressTrack}`,
     playerId,
     type: 'action'
   });
@@ -896,6 +923,43 @@ function processBuyInsurance(state, playerId, data) {
   return { newState: state };
 }
 
+// Technology Bag organized by Age (for adding new techs on age transition)
+const TECHNOLOGY_BAG = {
+  2: [ // Age II Technologies
+    { id: 'steel_framework', name: 'Steel Framework', type: 'structure', cost: 4, vp: 1 },
+    { id: 'internal_keel', name: 'Internal Keel', type: 'structure', cost: 3, vp: 0 },
+    { id: 'fireproof_coating', name: 'Fireproof Coating', type: 'fabric', cost: 4, vp: 1 },
+    { id: 'aluminum_doping', name: 'Aluminum Doping', type: 'fabric', cost: 3, vp: 0 },
+    { id: 'dual_engine_mount', name: 'Dual Engine Mount', type: 'drive', cost: 4, vp: 1 },
+    { id: 'diesel_powerplant', name: 'Diesel Powerplant', type: 'drive', cost: 5, vp: 1 },
+    { id: 'radio_equipment', name: 'Radio Equipment', type: 'component', cost: 3, vp: 0 },
+    { id: 'sleeping_quarters', name: 'Sleeping Quarters', type: 'component', cost: 4, vp: 1 },
+    { id: 'mail_systems', name: 'Mail Systems', type: 'component', cost: 3, vp: 0 }
+  ],
+  3: [ // Age III Technologies
+    { id: 'geodetic_structure', name: 'Geodetic Structure', type: 'structure', cost: 6, vp: 2 },
+    { id: 'modular_construction', name: 'Modular Construction', type: 'structure', cost: 4, vp: 1 },
+    { id: 'composite_covering', name: 'Composite Covering', type: 'fabric', cost: 5, vp: 2 },
+    { id: 'streamlined_nacelle', name: 'Streamlined Nacelle', type: 'drive', cost: 5, vp: 1 },
+    { id: 'supercharged_engine', name: 'Supercharged Engine', type: 'drive', cost: 6, vp: 2 },
+    { id: 'luxury_fittings', name: 'Luxury Fittings', type: 'component', cost: 6, vp: 2 },
+    { id: 'advanced_navigation', name: 'Advanced Navigation', type: 'component', cost: 5, vp: 1 },
+    { id: 'pressurization', name: 'Pressurization', type: 'component', cost: 5, vp: 1 }
+  ]
+};
+
+// Add new age technologies to the tech bag
+function addAgeTechnologies(state, age) {
+  const newTechs = TECHNOLOGY_BAG[age] || [];
+  if (newTechs.length > 0) {
+    // Add age marker to each tech
+    const techsWithAge = newTechs.map(t => ({ ...t, age }));
+    // Shuffle and add to tech bag
+    state.techBag = state.techBag || [];
+    state.techBag.push(...shuffleArray(techsWithAge));
+  }
+}
+
 // Calculate specialization discount based on techs in same track
 function calculateSpecializationDiscount(playerTechs, techType) {
   const techsInTrack = playerTechs.filter(t => {
@@ -972,12 +1036,22 @@ function processAcquireTechnologyResearch(state, playerId, data) {
 
   // Check for age transition
   const thresholds = state.progressThresholds || { age2: 10, age3: 20, end: 30 };
-  let transitionMessage = null;
   if (state.age === 1 && state.progressTrack >= thresholds.age2) {
-    transitionMessage = 'Age II begins!';
-    // Age transition would happen here
+    state.age = 2;
+    addAgeTechnologies(state, 2);
+    state.log.push({
+      timestamp: new Date().toISOString(),
+      message: `Age II begins! New technologies available.`,
+      type: 'system'
+    });
   } else if (state.age === 2 && state.progressTrack >= thresholds.age3) {
-    transitionMessage = 'Age III begins!';
+    state.age = 3;
+    addAgeTechnologies(state, 3);
+    state.log.push({
+      timestamp: new Date().toISOString(),
+      message: `Age III begins! Final era technologies unlocked.`,
+      type: 'system'
+    });
   }
 
   state.log.push({
@@ -986,14 +1060,6 @@ function processAcquireTechnologyResearch(state, playerId, data) {
     playerId,
     type: 'action'
   });
-
-  if (transitionMessage) {
-    state.log.push({
-      timestamp: new Date().toISOString(),
-      message: transitionMessage,
-      type: 'system'
-    });
-  }
 
   return { newState: state };
 }
@@ -1159,6 +1225,12 @@ function processLaunchShip(state, playerId, data) {
   const lift = calculateBlueprintLift(playerState.blueprint);
   const weight = calculateBlueprintWeight(playerState.blueprint);
 
+  // Minimum lift requirement: ships need at least 5 lift (1 gas cube) to fly
+  const MINIMUM_LIFT = 5;
+  if (lift < MINIMUM_LIFT) {
+    return { error: `Cannot launch: Minimum 1 gas cube required (Lift ${lift} < ${MINIMUM_LIFT})` };
+  }
+
   if (lift < weight) {
     return { error: `Cannot launch: Lift (${lift}) < Weight (${weight}). Load more gas cubes.` };
   }
@@ -1174,9 +1246,15 @@ function processLaunchShip(state, playerId, data) {
   // Clear gas sockets (gas is used for launch)
   playerState.blueprint.gasSockets = playerState.blueprint.gasSockets.map(() => null);
 
+  // Build a stats summary showing all non-baseline stats
+  const statParts = [`Range ${stats.range}`, `Speed ${stats.speed}`];
+  if (stats.ceiling > 0) statParts.push(`Ceiling ${stats.ceiling}`);
+  if (stats.reliability > 0) statParts.push(`Reliability ${stats.reliability}`);
+  if (stats.luxury > 0) statParts.push(`Luxury ${stats.luxury}`);
+
   state.log.push({
     timestamp: new Date().toISOString(),
-    message: `Launched ship with Range ${stats.range}, Speed ${stats.speed}`,
+    message: `Launched ship: ${statParts.join(', ')}`,
     playerId,
     type: 'action'
   });
@@ -1346,6 +1424,20 @@ function processHazardCheck(state, playerId, data) {
 
 // Calculate scores for all players
 function processCalculateScores(state, playerId, data) {
+  // Check if game end conditions are met
+  const thresholds = state.progressThresholds || { age2: 10, age3: 20, end: 30 };
+  const progressTrack = state.progressTrack || 0;
+  const forceEnd = data?.forceEnd === true; // Allow admin/debug override
+
+  // Game ends when progress track reaches the end threshold OR Age 3 is complete
+  const gameCanEnd = progressTrack >= thresholds.end || state.age >= 3;
+
+  if (!gameCanEnd && !forceEnd) {
+    return {
+      error: `Game cannot end yet. Progress: ${progressTrack}/${thresholds.end}, Age: ${state.age}/3. Need to reach progress ${thresholds.end} or complete Age 3.`
+    };
+  }
+
   const scores = {};
 
   for (const [pid, playerState] of Object.entries(state.players)) {

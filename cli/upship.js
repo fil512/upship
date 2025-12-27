@@ -658,7 +658,8 @@ const commands = {
       console.log('  BUILD_SHIP count=1          - Build ships');
       console.log('  LOAD_GAS type=hydrogen i=0  - Load gas to socket');
       console.log('  UNLOAD_GAS i=0              - Unload gas from socket');
-      console.log('  LAUNCH_SHIP id=<shipId>     - Launch a ship');
+      console.log('  LAUNCH_SHIP ship=<shipId>   - Launch a ship');
+      console.log('  ACQUIRE_TECHNOLOGY tech=<id> - Buy tech from R&D board');
       console.log('  INSTALL_UPGRADE slot=frame i=0 id=<upgradeId>');
       console.log('  REMOVE_UPGRADE slot=frame i=0');
       return;
@@ -685,7 +686,9 @@ const commands = {
       i: 'slotIndex',
       n: 'count',
       id: 'upgradeId',
-      slot: 'slotType'
+      tech: 'techId',
+      slot: 'slotType',
+      ship: 'shipId'
     };
 
     for (const [short, long] of Object.entries(keyMap)) {
@@ -766,7 +769,16 @@ const commands = {
       console.log('Usage: upship <user> launch <gameId> <shipId>');
       return;
     }
-    return commands.action(username, [gameId, 'LAUNCH_SHIP', `shipId=${shipId}`]);
+    return commands.action(username, [gameId, 'LAUNCH_SHIP', `ship=${shipId}`]);
+  },
+
+  async tech(username, args) {
+    const [gameId, techId] = args;
+    if (!gameId || !techId) {
+      console.log('Usage: upship <user> tech <gameId> <techId>');
+      return;
+    }
+    return commands.action(username, [gameId, 'ACQUIRE_TECHNOLOGY', `tech=${techId}`]);
   },
 
   async install(username, args) {
@@ -813,6 +825,7 @@ ${c(COLORS.yellow, 'Actions (shorthand):')}
   upship <user> recruit <id> <type> [count]   Recruit crew
   upship <user> load <id> <type> <socket>     Load gas to blueprint
   upship <user> launch <gameId> <shipId>      Launch a ship
+  upship <user> tech <gameId> <techId>        Acquire technology from R&D
 
 ${c(COLORS.yellow, 'Actions (generic):')}
   upship <user> action <gameId> <TYPE> [key=value ...]
