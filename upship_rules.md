@@ -125,11 +125,11 @@ The game adjusts for different player counts:
 
 - 1 Player Board (The Factory Interface)
 - 3 Age-Specific Blueprint Boards (slotted overlays)
-- 1 Set of Airship Tokens (wooden meeples in player color)
+- 6 Airship Tokens (wooden meeples in player color)
 - 3 Agent Tokens (workers)
 - 1 Income Track Marker
 - 1 VP Track Marker
-- 1 Personal Hazard Deck (20 cards)
+- 1 Personal Hazard Deck (24 cards)
 - Starting Deck of 10 Cards
 - £15 Starting Cash
 
@@ -138,7 +138,7 @@ The game adjusts for different player counts:
 - 3 Map Boards (Age I, Age II, Age III)
 - 1 Ground Board (Worker Placement locations)
 - 1 R&D Board (shared technology market)
-- Technology Tile Bag (45 tiles currently, target 60, Age-sorted)
+- Technology Tile Bag (48 tiles, Age-sorted)
 - Upgrade Tile Supply (organized by type)
 - Progress Track
 - VP Track
@@ -257,6 +257,7 @@ Ships ready to fly:
 
 ### Repair Hangar
 Ships requiring maintenance before flight:
+- **Capacity:** No limit (damaged ships accumulate until repaired)
 - **Damaged Ships:** When a fire is controlled (by spending Engineers), the ship is saved but damaged. Place it in your Repair Hangar.
 - **Repair Cost:** At the Construction Hall, pay **£3 per ship** to move ships from Repair Hangar to Launch Hangar. This can be done in addition to building new ships.
 - **Cannot Launch:** Ships in the Repair Hangar cannot be launched until repaired.
@@ -351,6 +352,8 @@ During the **Reveal Phase** at the end of each round:
 - **Result:** Add acquired tiles to the appropriate track in your Drawing Office
 - **Progress:** Advance the Progress Track by 1 for each Technology acquired
 
+**Note:** Only Technologies acquired from the R&D Board advance the Progress Track. Faction starting Technologies (pre-printed on Player Boards) do not count toward Progress.
+
 **Example:** You have 3 Engineers in your Barracks and reveal 2 cards with Research bonuses (+1 and +2). Your total Research budget is 6. You could acquire a 4-cost Technology and a 2-cost Technology, or a single 6-cost Technology (assuming no specialization discounts).
 
 ## 4.2 Upgrades
@@ -416,7 +419,8 @@ Each gas cube provides **+5 Lift**, regardless of gas type. The number of gas cu
 
 **Helium** requires the *Helium Handling* Technology and uses a **market track** pricing system:
 - **Starting Price:** £2 per cube
-- **Market Advancement:** When a non-USA player purchases Helium at the Gas Depot, advance the Helium Market Track by 1 step per cube. Prices increase as the track advances: £2 → £3 → £4 → £5 → £6 → £8 → £10 → £15.
+- **Market Advancement:** When a non-USA player purchases Helium at the Gas Depot, advance the Helium Market Track by 1 step per cube. Prices increase as the track advances: £2 → £3 → £4 → £5 → £6 → £8 → £10 → £15 (8 steps total).
+- **Market Maximum:** When the track reaches £15, Helium remains available at £15 per cube. The track cannot advance beyond this point.
 - **Market Reduction:** The Ministry action reduces the Helium Market Track by 1 step (minimum £2)—political lobbying releases government reserves.
 - **USA Exception:** The United States has domestic Helium production. When USA purchases Helium, the Market Track does NOT advance (they draw from their own supply, not the global market).
 - **Age Reset:** The Helium Market Track resets to £2 at each Age Transition (new sources discovered).
@@ -457,7 +461,7 @@ The game features three physical map boards, one for each Age. When an Age ends,
 - "War Zone" routes requiring Armor
 - Government contracts provide lump sum bonuses
 
-**Placement Rule:** Players **must** launch their first ship of this Age from their **National Capital** (Berlin, London, Rome, or Paimboeuf, France). Subsequent ships must connect to your existing network.
+**Placement Rule:** Players **must** launch their first ship of this Age from their **Home Base** (Germany: Friedrichshafen, Britain: Cardington, USA: Paimboeuf, Italy: Rome). Subsequent ships must connect to your existing network.
 
 ## 5.3 Age III: The Golden Age (The Atlantic)
 
@@ -590,7 +594,7 @@ The Ground Board has 12 action spaces, each marked with one of three symbols. To
 
 **1. The Research Institute (Propeller)**
 - **Action:** Purchase Research with money
-- **Cost:** £3 per Research point (or £2 if you played a Researcher card for this action)
+- **Cost:** £3 per Research point (card Agent Effects may reduce this cost)
 - **Effect:** Gain Research tokens that can be spent this round during Technology acquisition in the Reveal Phase
 - **Strategic Note:** This provides an alternate path for cash-rich, engineer-poor players to acquire Technologies
 
@@ -606,7 +610,7 @@ The Ground Board has 12 action spaces, each marked with one of three symbols. To
 - **Limit:** Build up to 3 ships per action
 - **Cost Reduction:** Card effects and faction abilities can reduce Hull Cost
 - **Effect:** Pay £ costs. Built ships are placed in your **Hangar Bay**, waiting to be launched.
-- **Hull Upgrade Rule:** If you upgrade your Frame or Fabric while ships are in your Hangar, pay the Hull Cost difference for each ship already built
+- **Hull Upgrade Rule:** If you upgrade your Frame or Fabric while ships are in your Launch Hangar, pay the Hull Cost difference for each ship already built. If you downgrade (remove or replace with cheaper tiles), you do not receive a refund
 
 **4. The Launchpad (Propeller)**
 - **Action:** Launch ships from your Launch Hangar
@@ -644,12 +648,13 @@ The Ground Board has 12 action spaces, each marked with one of three symbols. To
 **8. The Bank (Coin)**
 - **Action:** Take a loan
 - **Effect:** Gain £30 immediately
-- **Penalty:** Reduce Income Track by 3 steps
+- **Penalty:** Immediately reduce your Income Track marker by 3 positions (this is a permanent reduction to your ongoing income)
 
 **9. The Ministry (Propeller)**
 - **Action:** Political maneuvering
 - **Cost:** Free
 - **Effect:** Draw 2 cards from your deck and discard 1. Additionally, you go first in turn order next round (regardless of Income Track position). Finally, reduce the Helium Market Track by 1 step (minimum £2)—your lobbying pressures governments to release strategic reserves.
+- **Multiple Visitors:** If multiple players visit the Ministry in the same round, the player who visited first goes first next round, followed by other Ministry visitors in the order they visited, then remaining players by Income Track.
 - **Strategic Note:** The Ministry gives you card selection, priority, AND lowers Helium prices. Even if you don't use Helium yourself, lowering prices helps all non-USA players—or you can time your visit to buy cheap Helium next round.
 
 **10. The Gas Depot (Wrench)**
@@ -663,7 +668,7 @@ The Ground Board has 12 action spaces, each marked with one of three symbols. To
 **11. The Insurance Bureau (Coin)**
 - **Action:** Purchase insurance policies
 - **Cost:** Reduce your Income Track by 1 step per policy (representing ongoing premiums)
-- **Effect:** Take policy cards and place them face-up near your Player Board. You may purchase any number of policies.
+- **Effect:** Take policy cards and place them face-up near your Player Board. You may purchase up to 3 policies total (not per visit).
 - **Policy Benefit:** When one of your ships **crashes** (destroyed by fire or catastrophic hazard), you may discard one policy card to recover the airship token to your Launch Hangar instead of losing it. You still lose the Pilot and any gas spent, but you keep the ship for another attempt.
 - **Note:** Insurance only applies to crashes (ship destruction), NOT aborted launches from failed Hazard Checks.
 - **Strategic Note:** Insurance protects against catastrophic losses but reduces your income permanently. The more policies you hold, the safer you are—but the poorer you become.
@@ -698,7 +703,7 @@ Players may spend their Research budget to acquire one or more Technologies from
 - Unspent Research tokens are saved for future rounds
 
 ### Step 4: Purchase Cards
-Players may spend Influence to buy cards from the Market Row. Purchased cards go to your discard pile.
+Players may spend Influence to buy cards from the Market Row. Purchased cards go to your discard pile. Unspent Influence is lost at the end of the round (unlike Research, Influence cannot be saved).
 
 ## 6.3 Phase C: Income & Cleanup
 
@@ -708,7 +713,7 @@ Players may spend Influence to buy cards from the Market Row. Purchased cards go
 4. **Refresh R&D Board:** Draw new Technology tiles from the bag to fill empty R&D Board spaces
 5. **Check Age Transition:** If the Progress Track has reached or exceeded the current Age threshold, trigger Age Transition (see Section 9)
 6. **Refresh Agents:** Return all Agents to player supplies
-7. **Draw Cards:** Shuffle discard pile into deck if needed; draw cards until you have 5 cards in hand
+7. **Draw Cards:** Shuffle discard pile into deck if needed; draw cards until you have at least 5 cards in hand (if you already have 5 or more, do not draw)
 8. **Refill Market Row:** Add new cards to the right side of the Market Row until there are 5 cards. When cards are purchased, remaining cards slide left (oldest cards on left, newest on right).
 
 ---
@@ -740,7 +745,7 @@ Each Frame and Fabric upgrade tile shows a **Hull Cost modifier** (£0 to £3). 
 
 **Cost Reduction:** Card effects and faction abilities can reduce Hull Cost (minimum £0).
 
-**Hull Upgrade Rule:** If you upgrade your Frame or Fabric while ships are in your Hangar Bay, you must pay the difference in Hull Cost for each ship already built. This represents retrofitting the improved materials.
+**Hull Upgrade Rule:** If you upgrade your Frame or Fabric while ships are in your Launch Hangar, you must pay the difference in Hull Cost for each ship already built. This represents retrofitting the improved materials. If you downgrade (remove or replace with cheaper tiles), you do not receive a refund. Ships in the Repair Hangar are not affected (they will use the new Blueprint when repaired and launched).
 
 **Build Limit:** You may build up to 3 ships per Construction Hall action.
 
@@ -1079,7 +1084,7 @@ If your Income Track goes negative (from loans, Engineer upkeep, or route losses
 ## 12.4 Network Connectivity
 
 - **Age I:** No connectivity required (pioneer scramble)
-- **Age II:** First ship must launch from National Capital; subsequent ships must connect to your network
+- **Age II:** First ship must launch from Home Base; subsequent ships must connect to your network
 - **Age III:** May launch from any Major Hub; subsequent ships must connect to your network
 
 ## 12.5 The Hindenburg Disaster
@@ -1259,12 +1264,12 @@ The following items require finalization before the game is complete:
 
 ## A.2 Card Design
 
-1. **Personal Hazard Decks (20 cards each):** Each player gets identical deck. Finalize distribution:
-   - ~8 Minor Hazards (Difficulty 2-3)
-   - ~6 Major Hazards (Difficulty 4-5)
-   - ~4 Clear Skies / Favorable conditions (Auto-pass)
-   - ~2 Catastrophic Events (Difficulty 6+, Fire keyword)
-   - Design cards to specify when/how Engineers can be spent to prevent crashes
+1. **Personal Hazard Decks (24 cards each):** Each player gets identical deck. **RESOLVED** - See Appendix E for final distribution:
+   - 4 Clear Weather (Auto-pass)
+   - 8 Minor Hazards (Difficulty 2-3)
+   - 6 Major Hazards (Difficulty 4-5)
+   - 5 Fire Hazards (Hydrogen ships only)
+   - 1 Mechanical Hazard (Critical Structural Stress)
 
 2. **Market Deck:** Design 30 purchasable crew cards with:
    - Varied costs (2-6 Influence)
@@ -1408,7 +1413,7 @@ The following items require finalization before the game is complete:
 | Hydrogen | £1/cube | +5 | Vulnerable |
 | Helium | £2-15/cube | +5 | Immune |
 
-**Helium Market Track:** £2 → £3 → £4 → £5 → £6 → £8 → £10 → £15
+**Helium Market Track:** £2 → £3 → £4 → £5 → £6 → £8 → £10 → £15 (8 steps; stays at £15 if maxed)
 **Price Increases:** Non-USA purchases advance the track by 1 per cube
 **Price Decreases:** Ministry action reduces the track by 1 (minimum £2)
 **USA Exception:** USA purchases do not advance the track (domestic supply)
@@ -1459,7 +1464,7 @@ Technology tiles are acquired from the R&D Board using Research. Each tile shows
 | III | Diesel-Electric Drive | 5 | 2 | 1 | Hybrid Powerplant |
 | III | Variable-Pitch Propeller | 4 | 2 | — | Adaptive Propeller |
 
-## Frame Track (7 tiles)
+## Frame Track (8 tiles)
 
 Frame technologies unlock structural skeleton upgrades. Each Frame upgrade tile has a **gas cube socket** for placing Hydrogen or Helium cubes.
 
@@ -1470,6 +1475,7 @@ Frame technologies unlock structural skeleton upgrades. Each Frame upgrade tile 
 | II | Duralumin Framework | 3 | 2 | — | Duralumin Frame |
 | II | Steel Framework | 2 | 1 | 2 | Steel Frame |
 | II | Internal Keel | 3 | 1 | 1 | Semi-Rigid Keel |
+| II | Articulated Keel Design | 3 | 1 | 2 | Flexible Frame |
 | III | Geodetic Structure | 4 | 2 | — | Geodetic Frame |
 | III | Modular Construction | 5 | 2 | 3 | Modular Frame |
 
@@ -1519,7 +1525,12 @@ Fabric technologies unlock outer covering and gas cell material upgrades.
 | III | Sleeping Quarters | 4 | 2 | 1 | Private Berths |
 | III | Smoking Room | 5 | 2 | 3 | Pressurized Lounge |
 
-**Total: 47 Technology Tiles** (Propulsion 11, Frame 7, Fabric 7, Gas Systems 10, Payload 12)
+**Total: 48 Technology Tiles** (Propulsion 11, Frame 8, Fabric 7, Gas Systems 10, Payload 12)
+
+**Tiles by Age:**
+- Age I: 11 tiles (2 Propulsion, 2 Frame, 2 Fabric, 2 Gas, 3 Payload)
+- Age II: 19 tiles (4 Propulsion, 4 Frame, 3 Fabric, 4 Gas, 4 Payload)
+- Age III: 18 tiles (5 Propulsion, 2 Frame, 2 Fabric, 4 Gas, 5 Payload)
 
 **TODO:** Expand each track to balance the game for final production.
 
@@ -1569,14 +1580,14 @@ Fabric tiles go in Fabric slots. The **Hull Cost** column shows how much this ti
 | Cotton Envelope | Rubberized Cotton | 0 | +£0 | — | Basic default |
 | Doped Covering | Doped Canvas | 0 | +£1 | Speed +1 | Improved aerodynamics |
 | Premium Envelope | Goldbeater's Skin | 0 | +£3 | Reliability +1, Range +1 | Best gas-tightness |
-| Fire-Resistant Fabric | Fireproof Coating | -1 | +£2 | Reliability +1 | Ignore first Fire hazard |
+| Fire-Resistant Fabric | Fireproof Coating | -1 | +£2 | Reliability +1 | Once per Age, treat one Fire hazard as auto-pass |
 | Reflective Covering | Aluminum Doping | 0 | +£1 | Reliability +1 | Protects gas from heat |
 | Synthetic Envelope | Gelatinized Latex | 0 | +£2 | Reliability +1, Range +1 | Modern replacement for goldbeater's |
 | Advanced Fabric | Composite Covering | 0 | +£2 | Reliability +2 | Multi-layer protection |
 
 ## Gas System Upgrades
 
-**Note:** Each gas cube provides **+5 Lift** regardless of type. Gas System upgrades enhance or modify gas cell performance.
+**Note:** Each gas cube provides **+5 Lift** regardless of type. Gas System upgrades enhance or modify gas cell performance. **Lift bonuses from upgrades** (such as Compartmented Gas +2, High-Ceiling Gas +3, or Redundant Cells +4) are **additive** with gas cube Lift—they represent improved gas efficiency that gives you extra buoyancy beyond the cubes themselves.
 
 | Name | Required Tech | Weight | Stats | Special |
 |------|---------------|--------|-------|---------|
