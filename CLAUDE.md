@@ -14,6 +14,35 @@ The project includes game rules design and an online implementation.
 - **Hosting**: Railway (auto-deploys from GitHub on push to main)
 - **Health Check**: https://upship-production.up.railway.app/health
 
+## Test Credentials
+
+For testing the production site:
+- **Username**: testpilot42
+- **Password**: airship123
+
+## Testing with Claude in Chrome
+
+Use the Claude in Chrome MCP browser automation tools to test the production site:
+
+### Getting Started
+1. Call `mcp__claude-in-chrome__tabs_context_mcp` first to see available tabs
+2. Create a new tab with `mcp__claude-in-chrome__tabs_create_mcp` if needed
+3. Navigate to the production URL with `mcp__claude-in-chrome__navigate`
+
+### Common Testing Tasks
+- **Take screenshots**: `mcp__claude-in-chrome__computer` with `action: "screenshot"`
+- **Find elements**: `mcp__claude-in-chrome__find` with natural language queries
+- **Fill forms**: `mcp__claude-in-chrome__form_input` with element ref from find/read_page
+- **Click buttons**: `mcp__claude-in-chrome__computer` with `action: "left_click"` or use ref
+- **Read page structure**: `mcp__claude-in-chrome__read_page` for accessibility tree
+
+### Troubleshooting Deployments
+1. Navigate to https://railway.com/ and log in
+2. Go to the Upship project dashboard
+3. Click "Logs" tab to check for errors
+4. Look for migration errors, startup failures, or runtime exceptions
+5. Check "Architecture" tab to see if services are online/deploying
+
 ## Application Structure
 
 ```

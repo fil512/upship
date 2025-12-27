@@ -35,7 +35,7 @@ router.get('/mine', async (req, res) => {
 // Get single game
 router.get('/:id', async (req, res) => {
   try {
-    const game = await gameService.getGameById(parseInt(req.params.id));
+    const game = await gameService.getGameById(req.params.id);
     if (!game) {
       return res.status(404).json({ error: 'Game not found' });
     }
@@ -70,7 +70,7 @@ router.post('/', async (req, res) => {
 // Join game
 router.post('/:id/join', async (req, res) => {
   try {
-    const game = await gameService.joinGame(parseInt(req.params.id), req.session.userId);
+    const game = await gameService.joinGame(req.params.id, req.session.userId);
     res.json({ game });
   } catch (error) {
     console.error('Join game error:', error);
@@ -82,7 +82,7 @@ router.post('/:id/join', async (req, res) => {
 // Leave game
 router.post('/:id/leave', async (req, res) => {
   try {
-    const game = await gameService.leaveGame(parseInt(req.params.id), req.session.userId);
+    const game = await gameService.leaveGame(req.params.id, req.session.userId);
     res.json({ game });
   } catch (error) {
     console.error('Leave game error:', error);
@@ -101,7 +101,7 @@ router.post('/:id/faction', async (req, res) => {
   }
 
   try {
-    const game = await gameService.selectFaction(parseInt(req.params.id), req.session.userId, faction);
+    const game = await gameService.selectFaction(req.params.id, req.session.userId, faction);
     res.json({ game });
   } catch (error) {
     console.error('Select faction error:', error);
@@ -115,7 +115,7 @@ router.post('/:id/faction', async (req, res) => {
 // Start game (host only)
 router.post('/:id/start', async (req, res) => {
   try {
-    const game = await gameService.startGame(parseInt(req.params.id), req.session.userId);
+    const game = await gameService.startGame(req.params.id, req.session.userId);
     res.json({ game });
   } catch (error) {
     console.error('Start game error:', error);

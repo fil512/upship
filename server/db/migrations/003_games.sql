@@ -1,35 +1,35 @@
--- Games table
-CREATE TABLE games (
-  id SERIAL PRIMARY KEY,
-  name VARCHAR(100) NOT NULL,
-  status VARCHAR(20) NOT NULL DEFAULT 'waiting',
-  host_id INTEGER NOT NULL REFERENCES users(id),
-  min_players INTEGER NOT NULL DEFAULT 2,
-  max_players INTEGER NOT NULL DEFAULT 4,
-  current_player_count INTEGER NOT NULL DEFAULT 1,
-  settings JSONB DEFAULT '{}',
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-  started_at TIMESTAMP WITH TIME ZONE,
-  completed_at TIMESTAMP WITH TIME ZONE,
-  CONSTRAINT valid_status CHECK (status IN ('waiting', 'in_progress', 'completed', 'cancelled')),
-  CONSTRAINT valid_player_counts CHECK (min_players >= 2 AND max_players <= 4 AND min_players <= max_players)
-);
+-- Add missing columns and constraints for game lobby functionality
+-- The games and game_players tables already exist from 001_initial_schema.sql
 
--- Game players junction table
-CREATE TABLE game_players (
-  id SERIAL PRIMARY KEY,
-  game_id INTEGER NOT NULL REFERENCES games(id) ON DELETE CASCADE,
-  user_id INTEGER NOT NULL REFERENCES users(id),
-  faction VARCHAR(20),
-  player_order INTEGER,
-  joined_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-  UNIQUE(game_id, user_id),
-  UNIQUE(game_id, faction),
-  CONSTRAINT valid_faction CHECK (faction IS NULL OR faction IN ('germany', 'britain', 'usa', 'italy'))
-);
+-- Add current_player_count column to games
+ALTER TABLE games ADD COLUMN IF NOT EXISTS current_player_count INTEGER NOT NULL DEFAULT 1;
 
--- Indexes for common queries
-CREATE INDEX idx_games_status ON games(status);
-CREATE INDEX idx_games_host ON games(host_id);
-CREATE INDEX idx_game_players_user ON game_players(user_id);
-CREATE INDEX idx_game_players_game ON game_players(game_id);
+-- Rename seat_position to player_order for clarity (if it exists)
+-- First check if seat_position exists, then rename
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'game_players' AND column_name = 'seat_position') THEN
+    ALTER TABLE game_players RENAME COLUMN seat_position TO player_order;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'game_players' AND column_name = 'player_order') THEN
+    ALTER TABLE game_players ADD COLUMN player_order INTEGER;
+  END IF;
+END $$;
+
+-- Update status constraint to include 'cancelled' (drop old, add new)
+ALTER TABLE games DROP CONSTRAINT IF EXISTS valid_status;
+ALTER TABLE games ADD CONSTRAINT valid_status CHECK (status IN ('waiting', 'in_progress', 'completed', 'abandoned', 'cancelled'));
+
+-- DOWN
+-- Rollback the changes
+ALTER TABLE games DROP CONSTRAINT IF EXISTS valid_status;
+ALTER TABLE games ADD CONSTRAINT valid_status CHECK (status IN ('waiting', 'in_progress', 'completed', 'abandoned'));
+
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'game_players' AND column_name = 'player_order') THEN
+    ALTER TABLE game_players RENAME COLUMN player_order TO seat_position;
+  END IF;
+END $$;
+
+ALTER TABLE games DROP COLUMN IF EXISTS current_player_count;
