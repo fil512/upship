@@ -32,7 +32,7 @@ npm run dev        # Development with auto-reload
 
 ## Document Structure
 
-- **`upship_rules.md`** - Complete game rules
+- **`spec/upship_rules.md`** - Complete game rules
   - Sections 1-13: Core rules (overview, components, mechanics, factions, setup)
   - Appendix A: TODO list of remaining design work
   - Appendix B: Quick reference/cheat sheet
