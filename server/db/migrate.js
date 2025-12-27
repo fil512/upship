@@ -126,44 +126,58 @@ async function showStatus(client) {
 }
 
 /**
- * Main migration runner
+ * Run all pending migrations (can be called from app startup)
  */
-async function main() {
-  const command = process.argv[2] || 'up';
+async function runMigrations() {
   let client;
 
   try {
     client = await pool.connect();
     await ensureMigrationsTable(client);
 
-    switch (command) {
-      case 'up': {
-        const applied = await getAppliedMigrations(client);
-        const pending = await getPendingMigrations(applied);
+    const applied = await getAppliedMigrations(client);
+    const pending = await getPendingMigrations(applied);
 
-        if (pending.length === 0) {
-          console.log('All migrations are up to date');
-          break;
-        }
+    if (pending.length === 0) {
+      console.log('All migrations are up to date');
+      return;
+    }
 
-        console.log(`Running ${pending.length} migration(s)...\n`);
+    console.log(`Running ${pending.length} migration(s)...\n`);
 
-        for (const migration of pending) {
-          await client.query('BEGIN');
-          try {
-            await runMigration(client, migration);
-            await client.query('COMMIT');
-          } catch (err) {
-            await client.query('ROLLBACK');
-            throw err;
-          }
-        }
-
-        console.log('\nAll migrations completed successfully');
-        break;
+    for (const migration of pending) {
+      await client.query('BEGIN');
+      try {
+        await runMigration(client, migration);
+        await client.query('COMMIT');
+      } catch (err) {
+        await client.query('ROLLBACK');
+        throw err;
       }
+    }
+
+    console.log('\nAll migrations completed successfully');
+  } finally {
+    if (client) client.release();
+  }
+}
+
+/**
+ * Main CLI runner
+ */
+async function main() {
+  const command = process.argv[2] || 'up';
+  let client;
+
+  try {
+    switch (command) {
+      case 'up':
+        await runMigrations();
+        break;
 
       case 'down':
+        client = await pool.connect();
+        await ensureMigrationsTable(client);
         await client.query('BEGIN');
         try {
           await rollbackMigration(client);
@@ -175,6 +189,8 @@ async function main() {
         break;
 
       case 'status':
+        client = await pool.connect();
+        await ensureMigrationsTable(client);
         await showStatus(client);
         break;
 
@@ -192,4 +208,10 @@ async function main() {
   }
 }
 
-main();
+// Export for use in app startup
+module.exports = { runMigrations };
+
+// Run CLI if called directly
+if (require.main === module) {
+  main();
+}

@@ -3,6 +3,7 @@ require('dotenv').config();
 const express = require('express');
 const path = require('path');
 const db = require('./db');
+const { runMigrations } = require('./db/migrate');
 const { createSessionMiddleware } = require('./auth');
 const authRoutes = require('./routes/auth');
 
@@ -45,7 +46,20 @@ app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '..', 'public', 'index.html'));
 });
 
-app.listen(PORT, () => {
-  console.log(`UP SHIP! server running on port ${PORT}`);
-  console.log(`Health check available at http://localhost:${PORT}/health`);
-});
+// Run migrations then start server
+async function start() {
+  try {
+    console.log('Running database migrations...');
+    await runMigrations();
+
+    app.listen(PORT, () => {
+      console.log(`UP SHIP! server running on port ${PORT}`);
+      console.log(`Health check available at http://localhost:${PORT}/health`);
+    });
+  } catch (err) {
+    console.error('Failed to start server:', err);
+    process.exit(1);
+  }
+}
+
+start();
