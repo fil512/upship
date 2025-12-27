@@ -74,14 +74,14 @@ This document tracks the implementation of UP SHIP! as an online multiplayer boa
 
 | Status | Plan | Description |
 |--------|------|-------------|
-| [ ] | [22-realtime.md](22-realtime.md) | WebSocket integration for real-time play |
-| [ ] | [23-turns.md](23-turns.md) | Turn management and timeouts |
+| [~] | [22-realtime.md](22-realtime.md) | WebSocket integration for real-time play |
+| [x] | [23-turns.md](23-turns.md) | Turn management and timeouts |
 
 ### Phase 9: Factions
 
 | Status | Plan | Description |
 |--------|------|-------------|
-| [ ] | [24-factions.md](24-factions.md) | Faction-specific abilities and asymmetry |
+| [x] | [24-factions.md](24-factions.md) | Faction-specific abilities and asymmetry |
 
 ### Phase 10: Polish
 
