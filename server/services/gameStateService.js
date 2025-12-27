@@ -36,6 +36,7 @@ function createPlayerState(faction) {
     engineers: 2,
     gasCubes: { hydrogen: 2, helium: 0 },
     agents: 3,
+    research: 0, // Saved research tokens
     technologies: config.startingTechnologies || [],
     ships: [],
     routes: [],
@@ -109,20 +110,66 @@ function shuffleArray(array) {
   return shuffled;
 }
 
-// Create initial R&D board with 4 technology tiles
-function createRDBoard() {
-  const ageITechs = [
-    { id: 'rigid_frame', name: 'Rigid Frame', type: 'structure', cost: 3 },
-    { id: 'duralumin_girders', name: 'Duralumin Girders', type: 'structure', cost: 4 },
-    { id: 'goldbeater_skin', name: "Goldbeater's Skin", type: 'fabric', cost: 3 },
-    { id: 'rubberized_cotton', name: 'Rubberized Cotton', type: 'fabric', cost: 2 },
-    { id: 'maybach_engine', name: 'Maybach Engine', type: 'drive', cost: 4 },
-    { id: 'blau_gas', name: 'Blau Gas System', type: 'fuel', cost: 3 },
-    { id: 'passenger_gondola', name: 'Passenger Gondola', type: 'component', cost: 3 },
-    { id: 'observation_deck', name: 'Observation Deck', type: 'component', cost: 4 }
-  ];
+// Technology Bag organized by Age
+const TECHNOLOGY_BAG = {
+  1: [ // Age I Technologies
+    { id: 'wooden_framework', name: 'Wooden Framework', type: 'structure', cost: 2, vp: 0 },
+    { id: 'wire_bracing', name: 'Wire Bracing', type: 'structure', cost: 2, vp: 0 },
+    { id: 'duralumin_girders', name: 'Duralumin Girders', type: 'structure', cost: 4, vp: 1 },
+    { id: 'rubberized_cotton', name: 'Rubberized Cotton', type: 'fabric', cost: 2, vp: 0 },
+    { id: 'doped_canvas', name: 'Doped Canvas', type: 'fabric', cost: 3, vp: 0 },
+    { id: 'goldbeater_skin', name: "Goldbeater's Skin", type: 'fabric', cost: 3, vp: 1 },
+    { id: 'daimler_engine', name: 'Daimler Engine', type: 'drive', cost: 2, vp: 0 },
+    { id: 'improved_propeller', name: 'Improved Propeller', type: 'drive', cost: 3, vp: 0 },
+    { id: 'maybach_engine', name: 'Maybach Engine', type: 'drive', cost: 4, vp: 1 },
+    { id: 'passenger_gondola', name: 'Passenger Gondola', type: 'component', cost: 3, vp: 0 },
+    { id: 'observation_deck', name: 'Observation Deck', type: 'component', cost: 4, vp: 1 },
+    { id: 'cargo_systems', name: 'Cargo Systems', type: 'component', cost: 3, vp: 0 }
+  ],
+  2: [ // Age II Technologies
+    { id: 'steel_framework', name: 'Steel Framework', type: 'structure', cost: 4, vp: 1 },
+    { id: 'internal_keel', name: 'Internal Keel', type: 'structure', cost: 3, vp: 0 },
+    { id: 'fireproof_coating', name: 'Fireproof Coating', type: 'fabric', cost: 4, vp: 1 },
+    { id: 'aluminum_doping', name: 'Aluminum Doping', type: 'fabric', cost: 3, vp: 0 },
+    { id: 'dual_engine_mount', name: 'Dual Engine Mount', type: 'drive', cost: 4, vp: 1 },
+    { id: 'diesel_powerplant', name: 'Diesel Powerplant', type: 'drive', cost: 5, vp: 1 },
+    { id: 'radio_equipment', name: 'Radio Equipment', type: 'component', cost: 3, vp: 0 },
+    { id: 'sleeping_quarters', name: 'Sleeping Quarters', type: 'component', cost: 4, vp: 1 },
+    { id: 'mail_systems', name: 'Mail Systems', type: 'component', cost: 3, vp: 0 }
+  ],
+  3: [ // Age III Technologies
+    { id: 'geodetic_structure', name: 'Geodetic Structure', type: 'structure', cost: 6, vp: 2 },
+    { id: 'modular_construction', name: 'Modular Construction', type: 'structure', cost: 4, vp: 1 },
+    { id: 'composite_covering', name: 'Composite Covering', type: 'fabric', cost: 5, vp: 2 },
+    { id: 'streamlined_nacelle', name: 'Streamlined Nacelle', type: 'drive', cost: 5, vp: 1 },
+    { id: 'supercharged_engine', name: 'Supercharged Engine', type: 'drive', cost: 6, vp: 2 },
+    { id: 'luxury_fittings', name: 'Luxury Fittings', type: 'component', cost: 6, vp: 2 },
+    { id: 'advanced_navigation', name: 'Advanced Navigation', type: 'component', cost: 5, vp: 1 },
+    { id: 'pressurization', name: 'Pressurization', type: 'component', cost: 5, vp: 1 }
+  ]
+};
 
-  return shuffleArray(ageITechs).slice(0, 4);
+// Progress Track thresholds by player count
+const PROGRESS_THRESHOLDS = {
+  2: { age2: 6, age3: 12, end: 18 },
+  3: { age2: 8, age3: 16, end: 24 },
+  4: { age2: 10, age3: 20, end: 30 }
+};
+
+// Create initial R&D board with 4 technology tiles
+function createRDBoard(age = 1) {
+  const availableTechs = [...TECHNOLOGY_BAG[age]];
+  return shuffleArray(availableTechs).slice(0, 4);
+}
+
+// Create technology bag for the game
+function createTechBag(age = 1) {
+  const bag = [];
+  // Add all tiles up to current age
+  for (let a = 1; a <= age; a++) {
+    bag.push(...TECHNOLOGY_BAG[a].map(t => ({ ...t, age: a })));
+  }
+  return shuffleArray(bag);
 }
 
 // Create initial market cards
@@ -188,6 +235,9 @@ async function initializeGameState(gameId, players) {
       state.hand = state.deck.splice(0, 5);
     }
 
+    // Determine player count for progress thresholds
+    const playerCount = Math.min(4, Math.max(2, players.length));
+
     // Create initial game state
     const gameState = {
       age: 1,
@@ -196,10 +246,13 @@ async function initializeGameState(gameId, players) {
       phase: 'planning', // planning, actions, launch, income, cleanup
       currentPlayerIndex: 0,
       playerOrder,
+      playerCount,
       players: playerStates,
-      rdBoard: createRDBoard(),
+      rdBoard: createRDBoard(1),
+      techBag: createTechBag(1).slice(4), // Remove tiles used for initial board
       marketCards: createMarketCards(),
       progressTrack: 0,
+      progressThresholds: PROGRESS_THRESHOLDS[playerCount],
       gasMarket: { hydrogen: 2, helium: 5 }, // Prices per cube
       map: createAgeIMap(),
       log: [{

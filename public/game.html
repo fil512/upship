@@ -642,6 +642,38 @@
       padding: 20px;
     }
 
+    /* Tech buy buttons */
+    .tech-buy-btn {
+      flex: 1;
+      padding: 4px 8px;
+      font-size: 0.7rem;
+      border-radius: 4px;
+      border: 1px solid #c4a35a;
+      background: rgba(196, 163, 90, 0.2);
+      color: #c4a35a;
+      cursor: pointer;
+      font-family: 'Georgia', serif;
+    }
+
+    .tech-buy-btn:hover:not(:disabled) {
+      background: rgba(196, 163, 90, 0.4);
+    }
+
+    .tech-buy-btn.research {
+      border-color: #4a9;
+      background: rgba(68, 170, 153, 0.2);
+      color: #4a9;
+    }
+
+    .tech-buy-btn.research:hover:not(:disabled) {
+      background: rgba(68, 170, 153, 0.4);
+    }
+
+    .tech-buy-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
     /* Slot with upgrade */
     .slot.filled .slot-icon {
       font-size: 1.2rem;
@@ -848,6 +880,18 @@
               <div class="resource-icon">📈</div>
               <div class="resource-value">£${myState.income}/rnd</div>
               <div class="resource-label">Income</div>
+            </div>
+          </div>
+          <div class="resource-grid">
+            <div class="resource-item">
+              <div class="resource-icon">🔬</div>
+              <div class="resource-value">${(myState.research || 0) + myState.engineers}</div>
+              <div class="resource-label">Research</div>
+            </div>
+            <div class="resource-item">
+              <div class="resource-icon">📊</div>
+              <div class="resource-value">${state.progressTrack || 0}</div>
+              <div class="resource-label">Progress</div>
             </div>
           </div>
           ${myState.loans ? `
@@ -1060,12 +1104,27 @@
 
           <div class="section-title">R&D Board</div>
           <div class="cards-container" style="margin-bottom: 15px;">
-            ${state.rdBoard.map(tech => `
-              <div class="card" onclick="acquireTech('${tech.id}')">
-                <div class="card-name">${tech.name}</div>
-                <div class="card-type">${tech.type} - £${tech.cost}</div>
-              </div>
-            `).join('')}
+            ${state.rdBoard.map(tech => {
+              const discount = getSpecializationDiscount(myState.technologies, tech.type);
+              const researchCost = Math.max(0, tech.cost - discount);
+              const availableResearch = (myState.research || 0) + myState.engineers;
+              const canAffordCash = myState.cash >= tech.cost;
+              const canAffordResearch = availableResearch >= researchCost;
+              return `
+                <div class="card">
+                  <div class="card-name">${tech.name}</div>
+                  <div class="card-type">${tech.type}</div>
+                  <div style="display: flex; gap: 5px; margin-top: 5px;">
+                    <button class="tech-buy-btn" onclick="acquireTech('${tech.id}')" ${!isMyTurn || !canAffordCash ? 'disabled' : ''}>
+                      £${tech.cost}
+                    </button>
+                    <button class="tech-buy-btn research" onclick="acquireTechResearch('${tech.id}')" ${!isMyTurn || !canAffordResearch ? 'disabled' : ''}>
+                      🔬${researchCost}${discount > 0 ? ` (-${discount})` : ''}
+                    </button>
+                  </div>
+                </div>
+              `;
+            }).join('')}
           </div>
 
           <div class="actions-section">
@@ -1250,6 +1309,32 @@
 
     function acquireTech(techId) {
       performAction('ACQUIRE_TECHNOLOGY', { techId });
+    }
+
+    function acquireTechResearch(techId) {
+      performAction('ACQUIRE_TECHNOLOGY_RESEARCH', { techId });
+    }
+
+    // Calculate specialization discount based on techs in same track
+    function getSpecializationDiscount(playerTechs, techType) {
+      const techTypeMap = {
+        structure: ['rigid_frame', 'duralumin_girders', 'wooden_framework', 'wire_bracing', 'steel_framework', 'internal_keel', 'geodetic_structure', 'modular_construction'],
+        fabric: ['dining_saloon', 'rubberized_cotton', 'doped_canvas', 'goldbeater_skin', 'fireproof_coating', 'aluminum_doping', 'composite_covering'],
+        drive: ['maybach_engine', 'daimler_engine', 'improved_propeller', 'dual_engine_mount', 'diesel_powerplant', 'streamlined_nacelle', 'supercharged_engine'],
+        component: ['passenger_gondola', 'observation_deck', 'cargo_systems', 'radio_equipment', 'sleeping_quarters', 'mail_systems', 'luxury_fittings', 'advanced_navigation', 'pressurization'],
+        gas: ['helium_handling']
+      };
+
+      const techsInTrack = playerTechs.filter(t => {
+        for (const [type, ids] of Object.entries(techTypeMap)) {
+          if (ids.includes(t) && type === techType) return true;
+        }
+        return false;
+      }).length;
+
+      if (techsInTrack >= 5) return 2;
+      if (techsInTrack >= 3) return 1;
+      return 0;
     }
 
     function playCard(cardIndex) {

@@ -291,6 +291,12 @@ function processAction(state, playerId, actionType, data) {
     case 'BUY_INSURANCE':
       return processBuyInsurance(newState, playerId, data);
 
+    case 'ACQUIRE_TECHNOLOGY_RESEARCH':
+      return processAcquireTechnologyResearch(newState, playerId, data);
+
+    case 'GAIN_RESEARCH':
+      return processGainResearch(newState, playerId, data);
+
     default:
       return { error: `Unknown action type: ${actionType}` };
   }
@@ -834,6 +840,125 @@ function processBuyInsurance(state, playerId, data) {
   state.log.push({
     timestamp: new Date().toISOString(),
     message: `Purchased insurance policy (${playerState.insurance}/3). Income reduced by 1.`,
+    playerId,
+    type: 'action'
+  });
+
+  return { newState: state };
+}
+
+// Calculate specialization discount based on techs in same track
+function calculateSpecializationDiscount(playerTechs, techType) {
+  const techsInTrack = playerTechs.filter(t => {
+    // Map tech IDs to types (rough approximation)
+    const techTypeMap = {
+      structure: ['rigid_frame', 'duralumin_girders', 'wooden_framework', 'wire_bracing', 'steel_framework', 'internal_keel', 'geodetic_structure', 'modular_construction'],
+      fabric: ['dining_saloon', 'rubberized_cotton', 'doped_canvas', 'goldbeater_skin', 'fireproof_coating', 'aluminum_doping', 'composite_covering'],
+      drive: ['maybach_engine', 'daimler_engine', 'improved_propeller', 'dual_engine_mount', 'diesel_powerplant', 'streamlined_nacelle', 'supercharged_engine'],
+      component: ['passenger_gondola', 'observation_deck', 'cargo_systems', 'radio_equipment', 'sleeping_quarters', 'mail_systems', 'luxury_fittings', 'advanced_navigation', 'pressurization'],
+      gas: ['helium_handling']
+    };
+
+    for (const [type, ids] of Object.entries(techTypeMap)) {
+      if (ids.includes(t) && type === techType) return true;
+    }
+    return false;
+  }).length;
+
+  if (techsInTrack >= 5) return 2;
+  if (techsInTrack >= 3) return 1;
+  return 0;
+}
+
+// Acquire technology using research points
+function processAcquireTechnologyResearch(state, playerId, data) {
+  const { techId } = data;
+  const playerState = state.players[playerId];
+
+  const techIndex = state.rdBoard.findIndex(t => t.id === techId);
+  if (techIndex === -1) {
+    return { error: 'Technology not available on R&D Board' };
+  }
+
+  const tech = state.rdBoard[techIndex];
+
+  // Check if player already has this technology
+  if (playerState.technologies.includes(techId)) {
+    return { error: 'Already own this technology' };
+  }
+
+  // Calculate cost with specialization discount
+  const discount = calculateSpecializationDiscount(playerState.technologies, tech.type);
+  const cost = Math.max(0, tech.cost - discount);
+
+  // Calculate available research
+  const availableResearch = (playerState.research || 0) + (playerState.engineers || 0);
+
+  if (availableResearch < cost) {
+    return { error: `Not enough research (have ${availableResearch}, need ${cost})` };
+  }
+
+  // Spend research (from saved first, then engineers provide the rest)
+  const savedResearch = playerState.research || 0;
+  if (savedResearch >= cost) {
+    playerState.research = savedResearch - cost;
+  } else {
+    playerState.research = 0;
+    // The rest comes from engineers (they're not spent, just used)
+  }
+
+  // Add technology
+  playerState.technologies.push(techId);
+
+  // Remove from R&D board
+  state.rdBoard.splice(techIndex, 1);
+
+  // Draw replacement from tech bag if available
+  if (state.techBag && state.techBag.length > 0) {
+    state.rdBoard.push(state.techBag.shift());
+  }
+
+  // Advance progress track
+  state.progressTrack = (state.progressTrack || 0) + 1;
+
+  // Check for age transition
+  const thresholds = state.progressThresholds || { age2: 10, age3: 20, end: 30 };
+  let transitionMessage = null;
+  if (state.age === 1 && state.progressTrack >= thresholds.age2) {
+    transitionMessage = 'Age II begins!';
+    // Age transition would happen here
+  } else if (state.age === 2 && state.progressTrack >= thresholds.age3) {
+    transitionMessage = 'Age III begins!';
+  }
+
+  state.log.push({
+    timestamp: new Date().toISOString(),
+    message: `Acquired ${tech.name} for ${cost} research${discount > 0 ? ` (${discount} discount)` : ''}. Progress: ${state.progressTrack}`,
+    playerId,
+    type: 'action'
+  });
+
+  if (transitionMessage) {
+    state.log.push({
+      timestamp: new Date().toISOString(),
+      message: transitionMessage,
+      type: 'system'
+    });
+  }
+
+  return { newState: state };
+}
+
+// Gain research points (from Research Institute or card effects)
+function processGainResearch(state, playerId, data) {
+  const { amount = 1 } = data;
+  const playerState = state.players[playerId];
+
+  playerState.research = (playerState.research || 0) + amount;
+
+  state.log.push({
+    timestamp: new Date().toISOString(),
+    message: `Gained ${amount} research point(s). Total saved: ${playerState.research}`,
     playerId,
     type: 'action'
   });
