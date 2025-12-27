@@ -8,7 +8,11 @@
     "dev": "node --watch server/index.js",
     "migrate": "node server/db/migrate.js",
     "migrate:down": "node server/db/migrate.js down",
-    "migrate:status": "node server/db/migrate.js status"
+    "migrate:status": "node server/db/migrate.js status",
+    "cli": "node cli/upship.js"
+  },
+  "bin": {
+    "upship": "./cli/upship.js"
   },
   "keywords": [
     "boardgame",
