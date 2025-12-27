@@ -1398,8 +1398,28 @@
               <button class="action-btn primary" onclick="endTurn()" ${!isMyTurn ? 'disabled' : ''}>
                 End Turn
               </button>
+              <button class="action-btn secondary" onclick="calculateScores()" ${!isMyTurn ? 'disabled' : ''} style="margin-top: 10px;">
+                Calculate Scores
+              </button>
             </div>
           </div>
+
+          ${state.scores ? `
+            <div class="section-title" style="margin-top: 15px;">Final Scores</div>
+            <div style="background: rgba(0,0,0,0.3); border-radius: 8px; padding: 10px;">
+              ${Object.entries(state.scores).map(([pid, score]) => `
+                <div style="padding: 8px; ${pid === state.winner ? 'background: rgba(68, 170, 153, 0.2); border: 1px solid #4a9;' : 'background: rgba(255,255,255,0.05);'} border-radius: 4px; margin-bottom: 5px;">
+                  <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-weight: bold;">${getFactionFlag(score.faction)} ${score.faction} ${pid === state.winner ? '👑' : ''}</span>
+                    <span style="color: #c4a35a; font-size: 1.2rem;">${score.total} VP</span>
+                  </div>
+                  <div style="font-size: 0.7rem; color: #888; margin-top: 3px;">
+                    Routes: ${score.breakdown.routes} | Tech: ${score.breakdown.technologies} | Cash: ${score.breakdown.cash} | Ships: ${score.breakdown.ships}
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          ` : ''}
         </div>
 
         <!-- Game Log -->
@@ -1788,6 +1808,13 @@
     // === MARKET CARDS ===
     function buyMarketCard(cardId) {
       performAction('BUY_MARKET_CARD', { cardId });
+    }
+
+    // === SCORING ===
+    function calculateScores() {
+      if (confirm('Calculate final scores? This will end the game.')) {
+        performAction('CALCULATE_SCORES');
+      }
     }
 
     function openSlot(slotType, slotIndex) {

@@ -66,9 +66,9 @@ This document tracks the implementation of UP SHIP! as an online multiplayer boa
 
 | Status | Plan | Description |
 |--------|------|-------------|
-| [~] | [19-rounds.md](19-rounds.md) | Round structure and phase management |
-| [~] | [20-ages.md](20-ages.md) | Age transitions and progress track |
-| [ ] | [21-scoring.md](21-scoring.md) | Victory points and end game |
+| [x] | [19-rounds.md](19-rounds.md) | Round structure and phase management |
+| [x] | [20-ages.md](20-ages.md) | Age transitions and progress track |
+| [x] | [21-scoring.md](21-scoring.md) | Victory points and end game |
 
 ### Phase 8: Multiplayer
 

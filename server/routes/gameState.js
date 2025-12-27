@@ -315,6 +315,9 @@ function processAction(state, playerId, actionType, data) {
     case 'BUY_MARKET_CARD':
       return processBuyMarketCard(newState, playerId, data);
 
+    case 'CALCULATE_SCORES':
+      return processCalculateScores(newState, playerId, data);
+
     default:
       return { error: `Unknown action type: ${actionType}` };
   }
@@ -1309,6 +1312,76 @@ function processHazardCheck(state, playerId, data) {
     playerState.lastHazardCheck = {};
   }
   playerState.lastHazardCheck[shipId] = checkResult;
+
+  return { newState: state };
+}
+
+// Calculate scores for all players
+function processCalculateScores(state, playerId, data) {
+  const scores = {};
+
+  for (const [pid, playerState] of Object.entries(state.players)) {
+    let totalVP = 0;
+    const breakdown = {};
+
+    // VP from routes (distance = VP value)
+    let routeVP = 0;
+    const routes = state.map?.routes || [];
+    for (const route of routes) {
+      if (route.claimed === pid) {
+        routeVP += route.distance;
+      }
+    }
+    breakdown.routes = routeVP;
+    totalVP += routeVP;
+
+    // VP from technologies
+    let techVP = 0;
+    for (const techId of playerState.technologies) {
+      // Find tech VP value (default 0)
+      const techInfo = state.rdBoard?.find(t => t.id === techId) ||
+                       state.techBag?.find(t => t.id === techId) ||
+                       { vp: 0 };
+      techVP += techInfo.vp || 0;
+    }
+    // Also check TECHNOLOGY_BAG data
+    // For now, approximate 1 VP per 2 techs
+    techVP = Math.floor(playerState.technologies.length / 2);
+    breakdown.technologies = techVP;
+    totalVP += techVP;
+
+    // VP from cash (£10 = 1 VP)
+    const cashVP = Math.floor(playerState.cash / 10);
+    breakdown.cash = cashVP;
+    totalVP += cashVP;
+
+    // VP from ships on routes (2 VP each)
+    const shipsOnRoutes = (playerState.ships || []).filter(s => s.status === 'on_route').length;
+    const shipVP = shipsOnRoutes * 2;
+    breakdown.ships = shipVP;
+    totalVP += shipVP;
+
+    scores[pid] = {
+      total: totalVP,
+      breakdown,
+      faction: playerState.faction
+    };
+  }
+
+  // Store scores in state
+  state.scores = scores;
+
+  // Determine winner
+  const sortedPlayers = Object.entries(scores)
+    .sort((a, b) => b[1].total - a[1].total);
+
+  state.winner = sortedPlayers[0][0];
+
+  state.log.push({
+    timestamp: new Date().toISOString(),
+    message: `Game ended! Winner: ${scores[sortedPlayers[0][0]].faction} with ${sortedPlayers[0][1].total} VP`,
+    type: 'system'
+  });
 
   return { newState: state };
 }
