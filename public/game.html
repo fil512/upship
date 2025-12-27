@@ -846,10 +846,15 @@
             </div>
             <div class="resource-item">
               <div class="resource-icon">📈</div>
-              <div class="resource-value">£${myState.income}</div>
+              <div class="resource-value">£${myState.income}/rnd</div>
               <div class="resource-label">Income</div>
             </div>
           </div>
+          ${myState.loans ? `
+            <div style="background: rgba(231, 76, 60, 0.2); border: 1px solid #e74c3c; border-radius: 4px; padding: 8px; margin-bottom: 10px; text-align: center;">
+              <span style="color: #e74c3c; font-size: 0.8rem;">🏦 ${myState.loans} Loan(s) Taken</span>
+            </div>
+          ` : ''}
 
           <div class="section-title">Crew</div>
           <div class="crew-section">
@@ -1058,6 +1063,12 @@
               <button class="action-btn secondary" onclick="drawCards()" ${!isMyTurn ? 'disabled' : ''}>
                 Draw Card
               </button>
+              <button class="action-btn secondary" onclick="takeLoan()" ${!isMyTurn ? 'disabled' : ''} title="Gain £30, reduce income by 3">
+                Take Loan (£30, -3 Income)
+              </button>
+              <button class="action-btn secondary" onclick="collectIncome()" ${!isMyTurn ? 'disabled' : ''}>
+                Collect Income
+              </button>
               <button class="action-btn primary" onclick="endTurn()" ${!isMyTurn ? 'disabled' : ''}>
                 End Turn
               </button>
@@ -1199,6 +1210,16 @@
 
     function drawCards() {
       performAction('DRAW_CARDS', { count: 1 });
+    }
+
+    function takeLoan() {
+      if (confirm('Take a loan? You will receive £30 but your income will be permanently reduced by 3.')) {
+        performAction('TAKE_LOAN');
+      }
+    }
+
+    function collectIncome() {
+      performAction('COLLECT_INCOME');
     }
 
     function openSlot(slotType, slotIndex) {

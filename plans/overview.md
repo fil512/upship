@@ -35,7 +35,7 @@ This document tracks the implementation of UP SHIP! as an online multiplayer boa
 |--------|------|-------------|
 | [x] | [06-player-board.md](06-player-board.md) | Player board UI layout and zones |
 | [x] | [07-blueprint.md](07-blueprint.md) | Blueprint system with upgrade slots |
-| [ ] | [08-economy.md](08-economy.md) | Cash, income tracks, loans |
+| [x] | [08-economy.md](08-economy.md) | Cash, income tracks, loans |
 
 ### Phase 4: Shared Boards
 
@@ -105,9 +105,9 @@ This document tracks the implementation of UP SHIP! as an online multiplayer boa
 
 ## Current Session
 
-**Active Plan:** 07-blueprint.md
+**Active Plan:** 08-economy.md
 
-**Next Plan:** 08-economy.md
+**Next Plan:** 09-ground-board.md
 
 ---
 

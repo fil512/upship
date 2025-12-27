@@ -221,6 +221,12 @@ function processAction(state, playerId, actionType, data) {
     case 'REMOVE_UPGRADE':
       return processRemoveUpgrade(newState, playerId, data);
 
+    case 'TAKE_LOAN':
+      return processTakeLoan(newState, playerId, data);
+
+    case 'COLLECT_INCOME':
+      return processCollectIncome(newState, playerId, data);
+
     case 'PLAY_CARD':
       return processPlayCard(newState, playerId, data);
 
@@ -423,6 +429,56 @@ function processRemoveUpgrade(state, playerId, data) {
     message: `Removed ${upgradeName} from ${slotType} slot ${slotIndex + 1}`,
     playerId,
     type: 'action'
+  });
+
+  return { newState: state };
+}
+
+// Take a loan at The Bank
+function processTakeLoan(state, playerId, data) {
+  const playerState = state.players[playerId];
+
+  // Give the player £30
+  const loanAmount = 30;
+  playerState.cash += loanAmount;
+
+  // Reduce income track by 3 (permanent penalty)
+  const incomePenalty = 3;
+  playerState.income = Math.max(0, playerState.income - incomePenalty);
+
+  // Track loan count for reference
+  playerState.loans = (playerState.loans || 0) + 1;
+
+  state.log.push({
+    timestamp: new Date().toISOString(),
+    message: `Took a loan: gained £${loanAmount}, income reduced by ${incomePenalty}`,
+    playerId,
+    type: 'action'
+  });
+
+  return { newState: state };
+}
+
+// Collect income at end of round
+function processCollectIncome(state, playerId, data) {
+  const playerState = state.players[playerId];
+
+  // Collect cash from income track
+  const incomeGained = playerState.income;
+  playerState.cash += incomeGained;
+
+  // Gain crew from income tracks
+  const pilotsGained = playerState.pilotIncome || 1;
+  const engineersGained = playerState.engineerIncome || 1;
+
+  playerState.pilots += pilotsGained;
+  playerState.engineers += engineersGained;
+
+  state.log.push({
+    timestamp: new Date().toISOString(),
+    message: `Collected income: £${incomeGained}, +${pilotsGained} Pilot(s), +${engineersGained} Engineer(s)`,
+    playerId,
+    type: 'income'
   });
 
   return { newState: state };
