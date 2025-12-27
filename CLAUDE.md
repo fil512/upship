@@ -225,6 +225,7 @@ See `plans/overview.md` for the 27-phase implementation plan tracking progress f
 
 - `/go-upship` - Continue implementation by working on the next unfinished phase
 - `/review-rules` - Conducts a comprehensive rules review using the boardgame-design skill
+- `/playtest` - Run a full automated playtest using the CLI to validate functionality, rules adherence, and faction balance
 
 ## Available Skills
 
