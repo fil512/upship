@@ -11,6 +11,9 @@ const gameRoutes = require('./routes/games');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Trust proxy for Railway (SSL terminated at load balancer)
+app.set('trust proxy', 1);
+
 // Middleware
 app.use(express.json());
 app.use(createSessionMiddleware());
