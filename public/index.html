@@ -858,6 +858,12 @@
       const game = currentGame;
       if (!game) return;
 
+      // Redirect to game view if game is in progress
+      if (game.status === 'in_progress') {
+        window.location.href = `/game.html?id=${game.id}`;
+        return;
+      }
+
       gameDetailName.textContent = game.name;
       gameDetailStatus.textContent = formatStatus(game.status);
       gameDetailPlayers.textContent = `${game.current_player_count}/${game.max_players} players`;
@@ -987,9 +993,8 @@
           return;
         }
 
-        currentGame = data.game;
-        renderGameDetail();
-        alert('Game started! (Game board coming soon)');
+        // Redirect to game view
+        window.location.href = `/game.html?id=${currentGame.id}`;
       } catch (err) {
         console.error('Start game error:', err);
         alert('Failed to start game');
