@@ -779,7 +779,7 @@ When you take the **Launchpad Action**, you may launch as many ships from your L
 5. **Resolve Hazard Check:** Draw a Hazard Card and resolve it (see 7.3)
 6. **Outcome:**
    - **Success:** Place ship on route; increase your Income Track; gain city bonus from one endpoint
-   - **Aborted:** Ship returns to your Launch Hangar (Pilot and gas lost)
+   - **Aborted:** Ship, Pilot, and gas return to supply (nothing lost, but route not claimed)
    - **Damaged:** Ship goes to Repair Hangar (Pilot and gas lost)
    - **Crash:** Ship destroyed, returns to shared supply (Pilot and gas lost)
 7. **Continue or Stop:** After resolving each ship, you may launch another ship or stop
@@ -800,7 +800,7 @@ Each Hazard Card shows a **Challenge Type** and **Difficulty Rating**:
 
 **Outcome:**
 - **Pass:** If your ship stat (+ Engineers spent) meets or exceeds the Difficulty, the ship is successfully launched. Place it on the route and increase your Income Track.
-- **Aborted:** If your total is less than the Difficulty, the launch is aborted. The ship returns to your Launch Hangar, but you lose the Pilot and gas already spent.
+- **Aborted:** If your total is less than the Difficulty, the launch is aborted. The ship, Pilot, and gas all return to your supply—nothing is lost, but you don't claim the route.
 
 **Hazard Card Discard:** After resolving a Hazard Check, place the drawn card face-up in your Hazard discard pile. When your Hazard deck is empty and you need to draw, shuffle your discard pile to form a new deck.
 
@@ -1160,7 +1160,7 @@ There are four possible outcomes when launching a ship:
 - A Catastrophic Explosion fire hazard is drawn
 - A Critical Structural Stress hazard is failed
 
-In all failure cases (Aborted, Damaged, Crash), the Pilot and any gas spent on the launch are lost.
+In **Damaged** and **Crash** outcomes, the Pilot and gas are lost. In **Aborted** outcomes, the ship, Pilot, and gas all return to supply (nothing lost).
 
 ## 12.8 Terminology: Slots, Swaps, and Tiles
 
@@ -1430,7 +1430,7 @@ The following items require finalization before the game is complete:
 9. ✓ If Fire hazard and using Hydrogen: Spend required Engineers or crash
 10. ✓ If Catastrophic Explosion on Luxury Launch in Age III: Hindenburg Disaster triggered
 11. ✓ **Success:** Place ship on route, increase Income, gain city bonus
-12. ✓ **Aborted:** Ship returns to Launch Hangar (Pilot and gas lost)
+12. ✓ **Aborted:** Ship, Pilot, and gas return to supply (nothing lost)
 13. ✓ **Damaged:** Ship goes to Repair Hangar (Pilot and gas lost)
 14. ✓ **Crash:** Ship destroyed (token to supply, Pilot and gas lost)
 15. ✓ Continue launching more ships or stop
@@ -1773,7 +1773,7 @@ Helium ships automatically pass all Fire-type hazards.
 3. For standard hazards: Compare Ship's relevant stat vs Difficulty. Spend Engineers (+1 each) to boost if needed.
 4. For Fire/Structural hazards: Spend required Engineers or face consequences.
 5. **Pass:** Ship reaches route successfully
-6. **Aborted (standard):** Ship returns to Launch Hangar (Pilot and gas lost)
+6. **Aborted (standard):** Ship, Pilot, and gas return to supply (nothing lost)
 7. **Damaged:** Ship goes to Repair Hangar (Pilot and gas lost)
 8. **Crash:** Ship destroyed (token to supply, Pilot and gas lost)
 
