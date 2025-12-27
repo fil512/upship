@@ -16,7 +16,7 @@ Players act as Directors of rival Airship Conglomerates representing the great p
 
 **Game End Triggers:** The game ends immediately when ANY of the following occur:
 
-1. **The Hindenburg Disaster:** A player rolls a 6 (Catastrophic Fire) on the Hydrogen Fire Roll during a Luxury Launch in Age III. The burning wreckage signals the end of public confidence in airship travel. Complete the current round, then proceed to final scoring.
+1. **The Hindenburg Disaster:** A Catastrophic Explosion destroys a ship during a Luxury Launch in Age III. The burning wreckage signals the end of public confidence in airship travel. Complete the current round, then proceed to final scoring.
 
 2. **The Rise of Fixed-Wing Aircraft:** The Progress Track reaches its threshold (see Section 1.3). Heavier-than-air craft have become viable competitors, rendering airships obsolete. Complete the current round, then proceed to final scoring.
 
@@ -173,11 +173,9 @@ You cannot launch a ship if its design is physically impossible:
 
 If your Blueprint violates this rule, your ship cannot leave the ground.
 
-### Ship Stats at Launch
+### Ship Stats
 
-Ships in your Hangar Bay are generic airship tokens—they don't track individual stats. When you **launch** a ship, it uses your **current Blueprint stats** at that moment. This means you can build ships now, upgrade your Blueprint later, and launch with the improved design. No bookkeeping required.
-
-**Frozen Prototype Rule:** Once a ship is on a route, it retains the stats it had when launched. Upgrading your Blueprint does NOT affect ships already on the map—only future launches benefit from improvements.
+Ships in your Hangar Bay are generic airship tokens—they don't track individual stats. When you **launch** a ship, it uses your **current Blueprint stats** at that moment. This means you can build ships now, upgrade your Blueprint later, and launch with the improved design. No bookkeeping required. Ships on routes always use your current Blueprint stats.
 
 ## 3.3 Zone 3: The Barracks (Bottom)
 
@@ -195,12 +193,20 @@ Storage for your crew tokens earned from the shared supply:
 
 ## 3.4 Zone 4: The Hangar Bay (Adjacent to Barracks)
 
-A holding area for ships you have built but not yet launched:
+Your Hangar Bay has two sections for managing your fleet:
 
-- **Capacity:** Up to 3 ships can wait in your Hangar Bay
+### Launch Hangar
+Ships ready to fly:
+- **Capacity:** Up to 3 ships can wait in your Launch Hangar
 - **Building Ships:** When you take the Construction Hall action, built ships are placed here
-- **Launching Ships:** When you take the Launchpad action, you may launch as many ships as you wish, one after another
-- **Current Stats:** Ships use your current Blueprint stats when launched (no individual tracking needed)
+- **Launching Ships:** When you take the Launchpad action, you may launch ships from here
+- **Build Limit:** You may only build ships up to your Launch Hangar capacity
+
+### Repair Hangar
+Ships requiring maintenance before flight:
+- **Damaged Ships:** When a fire is controlled (by spending Engineers), the ship is saved but damaged. Place it in your Repair Hangar.
+- **Repair Cost:** At the Construction Hall, pay **£3 per ship** to move ships from Repair Hangar to Launch Hangar. This can be done in addition to building new ships.
+- **Cannot Launch:** Ships in the Repair Hangar cannot be launched until repaired.
 
 **Strategic Value:** Building ships across multiple rounds then launching in sequence lets you claim multiple routes in one action—but you can stop if Hazards turn ugly. You can even upgrade your Blueprint between building and launching!
 
@@ -220,19 +226,31 @@ Storage for lifting gas purchased in advance:
 - **Engineer Income Track:** Tracks free Engineers gained per round (starts at 1)
 - **Loan Marker:** Tracks penalties from loans taken
 
-## 3.7 Zone 7: Blueprint Stat Tracks (Adjacent to Blueprint)
+## 3.7 Zone 7: Blueprint Stat Tracks & Lift Calculator (Adjacent to Blueprint)
 
 Your Player Board includes dedicated tracks for monitoring your current Blueprint's statistics. As you install or remove Upgrade tiles, adjust tracking cubes on these tracks to reflect your ship's current capabilities:
 
-- **Lift Track:** Current total lifting capacity (minimum 0, maximum varies by Age)
-- **Weight Track:** Current total weight of all components (minimum 0, maximum varies by Age)
-- **Speed Track:** Current speed rating (minimum 0, maximum varies by design)
-- **Range Track:** Current range rating (minimum 0, maximum varies by design)
-- **Ceiling Track:** Current altitude ceiling (minimum 0, maximum varies by design)
-- **Reliability Track:** Current reliability rating (minimum 0, maximum varies by design)
-- **Luxury Track:** Current luxury rating for passenger comfort (minimum 0, maximum varies by design)
+- **Weight Track:** Current total weight of all components
+- **Speed Track:** Current speed rating
+- **Range Track:** Current range rating
+- **Ceiling Track:** Current altitude ceiling
+- **Reliability Track:** Current reliability rating
+- **Luxury Track:** Current luxury rating for passenger comfort
 
-**Usage:** These tracks provide at-a-glance visibility of whether your Blueprint passes the Physics Check (Lift â‰¥ Weight) and meets route requirements without having to manually count tile bonuses.
+### Lift/Weight Calculator
+
+Your Player Board includes a visual calculator showing how many gas cubes you need to launch:
+
+```
+WEIGHT:     [0]--[5]--[10]--[15]--[20]--[25]--[30]
+                  ↑
+            (your current weight)
+
+GAS NEEDED:  1 cube  |  2 cubes  |  3 cubes  |  4 cubes
+            (Lift 5)   (Lift 10)   (Lift 15)   (Lift 20)
+```
+
+Each gas cube provides **+5 Lift** (regardless of type). At a glance, see how many cubes your current Blueprint requires to pass the Physics Check (Lift ≥ Weight).
 
 ---
 
@@ -324,19 +342,24 @@ Visit **The Design Bureau** on the Ground Board:
 
 Historically, helium was so scarce that the first American airship to use it (USS Shenandoah) contained most of the world's supply. This scarcity is reflected in the game.
 
-### Gas Cubes and Frame Slots
+### Gas Cubes and Lift
 
-Each Frame tile on your Blueprint has a **gas cube socket**. When you launch a ship, you must place one gas cube (from your Gas Reserve) on each Frame slot. These cubes provide Lift:
-- **Hydrogen Cubes (Yellow):** Lift +4 (Age I), +6 (Age II), +8 (Age III)
-- **Helium Cubes (White):** Lift +3 (Age I), +5 (Age II), +7 (Age III)
+Each gas cube provides **+5 Lift**, regardless of gas type. The number of gas cubes needed depends on your Blueprint's total Weight (see the Lift/Weight Calculator on your Player Board).
 
-Helium always provides 1 less Lift than Hydrogen—this is the USA's "Heavy Frame" flaw. The disadvantage scales with ship size: minor in Age I, significant in Age III.
+**Gas Selection:** When launching a ship, you choose which gas type to use. This choice is made independently for each launch—it's purely a cost vs. risk calculation.
 
-This means Age I/II ships require 1 gas cube; Age III ships require 2 gas cubes.
+**No Mixing Rule:** A single launch must use all one gas type. You cannot mix Hydrogen and Helium cubes on the same launch.
+
+**Gas Cubes Consumed:** When you launch, spend gas cubes from your Gas Reserve. If your reserve is insufficient, purchase additional cubes at current market prices. Spent cubes return to the general supply.
 
 ### Gas Pricing
 
-**Hydrogen** costs £1 per cube (fixed price). It provides excellent lift but is **Flammable**—ships using hydrogen are vulnerable to fire-related Hazard cards and the Hindenburg Disaster game-end condition.
+| Gas Type | Price | Lift | Fire Risk |
+|----------|-------|------|-----------|
+| **Hydrogen** | £1/cube (fixed) | +5 | Vulnerable to Fire hazards |
+| **Helium** | £2-15/cube (market) | +5 | Immune to Fire hazards |
+
+**Hydrogen** is cheap and readily available, but ships using it are vulnerable to Fire-type Hazard cards and the Hindenburg Disaster.
 
 **Helium** requires the *Helium Handling* Technology and uses a **market track** pricing system:
 - **Starting Price:** £2 per cube
@@ -349,7 +372,7 @@ This means Age I/II ships require 1 gas cube; Age III ships require 2 gas cubes.
 
 Players store gas cubes on their Player Board in the **Gas Reserve** area. You purchase gas at the Gas Depot action space, then spend it when launching ships. Having gas in reserve lets you avoid market spikes.
 
-**Strategic Choice:** Build fast and cheap with dangerous hydrogen, or invest in the safety of helium?
+**The Strategic Choice:** Hydrogen is cheap but dangerous. Helium is safe but expensive (and gets more expensive as others buy it). Choose your risk tolerance each launch.
 
 ---
 
@@ -416,7 +439,7 @@ Your Blueprint stats must meet or exceed **all** listed requirements to claim a 
 - **Double Track:** Up to 2 players can claim the same connection
 - Routes are exclusive monopolies until the Age ends or your ship crashes
 
-**Simultaneous Claims:** If multiple players attempt to claim the same single-track route in the same round, resolve by turn order (lowest Income goes first—see Section 6.1). Later players may redirect to a different valid route before paying costs, or forfeit their action.
+Since players take turns, route claims are resolved in turn order—no simultaneous claims occur.
 
 ## 5.6 Route Income Values
 
@@ -443,6 +466,45 @@ When you claim a route, increase your Income Track by the route's Income value. 
 
 **Design Target:** Ships should pay for themselves within 3-5 rounds of operation.
 
+## 5.7 City Bonuses
+
+When you successfully claim a route, in addition to increasing your Income Track, you gain a **one-time bonus** from one of the route's endpoint cities (your choice).
+
+### Age I Cities (Western Europe)
+
+| City | Bonus | Thematic Reason |
+|------|-------|-----------------|
+| **London** | +£3 | Financial capital |
+| **Paris** | +1 Influence | Cultural prestige |
+| **Berlin** | +1 Research | Engineering hub |
+| **Frankfurt** | +£2 | Banking center |
+| **Hamburg** | +1 Gas cube (Hydrogen) | Industrial port |
+| **Brussels** | +1 Pilot | Aviation pioneers |
+
+### Age II Cities (Greater Europe)
+
+| City | Bonus | Thematic Reason |
+|------|-------|-----------------|
+| **Friedrichshafen** | +1 Research | Zeppelin headquarters |
+| **Cardington** | +1 Engineer | British R&D base |
+| **Rome** | +1 Influence | Political center |
+| **Moscow** | +£4 | Government contracts |
+| **Cairo** | Free Upgrade swap | Colonial logistics |
+| **Scapa Flow** | +1 Pilot | Naval aviation |
+
+### Age III Cities (The Atlantic)
+
+| City | Bonus | Thematic Reason |
+|------|-------|-----------------|
+| **New York** | +£5 | Commercial capital |
+| **Lakehurst** | +1 Engineer | US airship base |
+| **Rio de Janeiro** | +2 Influence | Prestige destination |
+| **Recife** | +1 Gas cube (any type) | Refueling stop |
+| **Seville** | Draw 1 card | Trade connections |
+| **Bombay** | +£3, +1 Influence | Imperial trade |
+
+**Strategic Note:** When claiming a route, consider which endpoint offers the bonus you need most. City bonuses scale with Age—Age III cities offer the most valuable rewards.
+
 ---
 
 # 6. THE GAME LOOP
@@ -457,9 +519,9 @@ Players take turns placing **one Agent** at a time until all players pass. To pl
 
 At the start of each round, determine turn order based on **Income Track position** (lowest goes first). This creates a catch-up mechanism: struggling players get first choice of actions.
 
-**Ties:** If players are tied on Income, the player with less Cash goes first. If still tied, maintain previous turn order.
+**Ties:** If players are tied on Income, the player with less Cash goes first. If still tied, the player closest clockwise to the start player goes first.
 
-**First Round:** Determine randomly or by historical precedent (Germany first, as Count Zeppelin flew in 1900).
+**First Round:** Determine first player randomly.
 
 ### Ground Board Locations:
 
@@ -469,6 +531,7 @@ The Ground Board has 12 action spaces, each marked with one of three symbols. To
 - **Wrench (Technical):** Engineering and construction activities
 - **Coin (Business):** Financial and personnel activities
 - **Propeller (Operations):** Research and flight activities
+- **Any:** Some cards show "Any" as their symbol—these can be used to visit ANY action space
 
 ---
 
@@ -493,17 +556,16 @@ The Ground Board has 12 action spaces, each marked with one of three symbols. To
 - **Hull Upgrade Rule:** If you upgrade your Frame or Fabric while ships are in your Hangar, pay the Hull Cost difference for each ship already built
 
 **4. The Launchpad (Propeller)**
-- **Action:** Launch ships from your Hangar Bay
-- **Requirement:** Blueprint must pass Physics Check (Total Lift ≥ Total Weight)
+- **Action:** Launch ships from your Launch Hangar
+- **Requirement:** Blueprint must pass Physics Check (Total Lift ≥ Total Weight) AND all Frame/Fabric slots must be filled
 - **Cost per Launch:** 1 Pilot + Lifting Gas (from Gas Reserve first; deficit at market price)
-- **Effect:** You may launch as many ships from your Hangar as you wish, one after another. Each launch is resolved separately:
-  1. Verify Physics Check passes
-  2. Spend 1 Pilot and pay for gas
+- **Effect:** You may launch as many ships from your Launch Hangar as you wish, one after another. Each launch is resolved separately:
+  1. Verify Physics Check passes and all structural slots are filled
+  2. Spend 1 Pilot and pay for gas (choose Hydrogen or Helium, no mixing)
   3. Choose a ship and assign it to a valid route
-  4. Pass a Hazard Check (draw one Hazard Card)
-  5. If Hydrogen: Roll d6 for fire risk
-  6. Place successful ship on route; increase Income Track
-  7. Repeat for additional ships, or stop at any time
+  4. Resolve Hazard Check (draw one Hazard Card)
+  5. If successful: Place ship on route, increase Income Track, gain city bonus
+  6. Repeat for additional ships, or stop at any time
 - **Result:** You control pacing—stop after a bad Hazard draw, or press your luck
 - **Strategic Note:** Building is cheap; launching is the commitment. Build ships early, upgrade your Blueprint, then launch when ready
 
@@ -511,6 +573,7 @@ The Ground Board has 12 action spaces, each marked with one of three symbols. To
 - **Action:** Recruit crew from the shared supply
 - **Cost:** £2 per Pilot, £4 per Engineer
 - **Result:** Gain Pilot or Engineer tokens from the shared supply to your Barracks
+- **Market Purge:** You may also discard the leftmost card from the Market Row (removing unwanted cards from circulation)
 - **Note:** Pilots are cheaper because they are consumed when launching ships; Engineers persist and generate ongoing Research
 
 **6. The Flight School (Coin)**
@@ -548,14 +611,15 @@ The Ground Board has 12 action spaces, each marked with one of three symbols. To
 - **Action:** Purchase insurance policies
 - **Cost:** Reduce your Income Track by 1 step per policy (representing ongoing premiums)
 - **Effect:** Take policy cards and place them face-up near your Player Board. You may purchase any number of policies.
-- **Policy Benefit:** When one of your ships crashes (from a failed Fire Roll or Catastrophic Hazard), you may discard one policy card to recover the airship token to your Hangar Bay instead of losing it. You still lose the Pilot and any gas spent, but you keep the ship for another attempt.
+- **Policy Benefit:** When one of your ships **crashes** (destroyed by fire or catastrophic hazard), you may discard one policy card to recover the airship token to your Launch Hangar instead of losing it. You still lose the Pilot and any gas spent, but you keep the ship for another attempt.
+- **Note:** Insurance only applies to crashes (ship destruction), NOT aborted launches from failed Hazard Checks.
 - **Strategic Note:** Insurance protects against catastrophic losses but reduces your income permanently. The more policies you hold, the safer you are—but the poorer you become.
 
 **12. The Weather Bureau (Propeller)**
 - **Action:** Consult weather forecasts
 - **Cost:** £2
-- **Effect:** Look at the top card of your personal Hazard Deck. You may either leave it on top or discard it (place in your Hazard discard pile).
-- **Strategic Note:** Plan your launches around favorable weather, or discard dangerous hazards to improve your odds.
+- **Effect:** Peek at the top card of your personal Hazard Deck—this is the hazard you'll face on your NEXT launch. You may either leave it on top or discard it to your Hazard discard pile.
+- **Strategic Note:** Preview what's coming. If you see a dangerous hazard, discard it now. If you see Clear Skies, plan a launch!
 
 ## 6.2 Phase B: Reveal & Acquisition
 
@@ -592,7 +656,7 @@ Players may spend Influence to buy cards from the Market Row. Purchased cards go
 5. **Check Age Transition:** If the Progress Track has reached or exceeded the current Age threshold, trigger Age Transition (see Section 9)
 6. **Refresh Agents:** Return all Agents to player supplies
 7. **Draw Cards:** Shuffle discard pile into deck if needed; draw cards until you have 5 cards in hand
-8. **Refill Markets:** Refill the Card Market Row
+8. **Refill Market Row:** Add new cards to the right side of the Market Row until there are 5 cards. When cards are purchased, remaining cards slide left (oldest cards on left, newest on right).
 
 ---
 
@@ -631,20 +695,24 @@ Each Frame and Fabric upgrade tile shows a **Hull Cost modifier** (£0 to £3). 
 
 ## 7.2 The Launch Procedure (Launchpad Action)
 
-When you take the **Launchpad Action**, you may launch as many ships from your Hangar as you wish, one after another. Each launch is resolved separately:
+When you take the **Launchpad Action**, you may launch as many ships from your Launch Hangar as you wish, one after another. Each launch is resolved separately:
 
-1. **Verify Physics Check:** Your Blueprint must satisfy Total Lift ≥ Total Weight (if not, you cannot launch)
-2. **Select a Ship:** Choose one ship from your Hangar Bay
+1. **Verify Requirements:**
+   - Physics Check must pass (Total Lift ≥ Total Weight)
+   - All Frame and Fabric slots must be filled
+2. **Select a Ship:** Choose one ship from your Launch Hangar
 3. **Pay Launch Costs:**
    - Spend 1 Pilot from your Barracks (returned to shared supply)
+   - Choose gas type (Hydrogen or Helium—no mixing)
    - Pay for Lifting Gas (use Gas Reserve first; any deficit at current market price)
 4. **Assign Route:** Declare which route this ship will attempt (must meet route's stat requirements)
 5. **Resolve Hazard Check:** Draw a Hazard Card and resolve it (see 7.3)
-6. **Hydrogen Fire Roll:** If the ship uses Hydrogen and passed the Hazard Check, roll a d6 for fire risk (see 7.4)
-7. **Outcome:**
-   - **Success:** Place ship on route; increase your Income Track
-   - **Failure:** Ship is returned to your Hangar Bay (you lose the Pilot and gas already spent)
-8. **Continue or Stop:** After resolving each ship, you may launch another ship or stop
+6. **Outcome:**
+   - **Success:** Place ship on route; increase your Income Track; gain city bonus from one endpoint
+   - **Aborted:** Ship returns to your Launch Hangar (Pilot and gas lost)
+   - **Damaged:** Ship goes to Repair Hangar (Pilot and gas lost)
+   - **Crash:** Ship destroyed, returns to shared supply (Pilot and gas lost)
+7. **Continue or Stop:** After resolving each ship, you may launch another ship or stop
 
 **Strategic Timing:** Building is cheap; launching is the commitment. You can stockpile ships in your Hangar, then upgrade your Blueprint to pass the Physics Check before launching.
 
@@ -666,21 +734,31 @@ Each Hazard Card shows a **Challenge Type** and **Difficulty Rating**:
 
 **Hazard Card Discard:** After resolving a Hazard Check, place the drawn card face-up in your Hazard discard pile. When your Hazard deck is empty and you need to draw, shuffle your discard pile to form a new deck.
 
-## 7.4 Hydrogen Fire Risk
+## 7.4 Fire Hazards (Hydrogen Ships)
 
-When launching a ship that uses **Hydrogen** gas (including the printed base Gas Cell), roll a d6 after resolving the Hazard Check:
+Ships using **Hydrogen** are vulnerable to fire. The Hazard Deck contains Fire-type hazard cards that only affect Hydrogen ships:
 
-| Roll | Result |
+### Fire Hazard Cards
+
+| Card | Effect |
 |------|--------|
-| 1-4 | **Safe** — No fire. Proceed normally. |
-| 5 | **Controllable Fire** — A fire breaks out! You may spend 1 Engineer from your Barracks to extinguish it. If you do, the launch succeeds. If you cannot or choose not to spend an Engineer, the ship crashes. |
-| 6 | **Catastrophic Fire** — An unstoppable fire engulfs the ship. The ship crashes regardless of Hazard Check result. No Engineer can save it. |
+| **Engine Fire** | Spend 1 Engineer to control. Success: Ship is **Damaged** (→ Repair Hangar). Failure: Ship **crashes**, Pilot lost. |
+| **Gas Cell Rupture** | Spend 2 Engineers to control. Success: Ship is **Damaged** (→ Repair Hangar). Failure: Ship **crashes**, Pilot lost. |
+| **Catastrophic Explosion** | No save possible. Ship **crashes**, Pilot lost. If this occurs during a Luxury Launch in Age III: triggers the **Hindenburg Disaster** game end. |
 
-**Timing:** The fire roll happens *after* you pass the Hazard Check. A ship that fails its Hazard Check does not roll for fire—it has already crashed.
+### Fire Immunity
 
-**Helium Ships:** Ships using **Helium Gas Cells** (from the Helium Handling technology) skip this roll entirely. Helium is non-flammable.
+Ships using **Helium Gas Cells** (from the Helium Handling technology) automatically pass all Fire-type hazards. Helium is non-flammable.
 
-**The Hydrogen Gamble:** Hydrogen is cheaper and provides more lift, but every launch carries a 1-in-3 chance of fire. Helium is expensive and harder to obtain, but eliminates fire risk completely. This is the core risk/reward tradeoff of gas selection.
+### Damaged Ships
+
+When a fire is controlled (by spending the required Engineers), the ship survives but is damaged:
+- Place the ship in your **Repair Hangar** (not on the route)
+- The Pilot survives but returns to the shared supply
+- Gas cubes are still spent
+- You do NOT gain Income or a city bonus from this launch
+
+**The Hydrogen Gamble:** Hydrogen is cheap but every launch risks fire. Helium is expensive but eliminates fire risk completely. This is the core strategic choice.
 
 ## 7.5 Luxury Launches (Age III)
 
@@ -690,11 +768,11 @@ Routes marked as **Luxury Routes** require ships with the Luxury stat and trigge
 - Your Blueprint must have at least one Payload upgrade with the **Luxury** trait
 - The route must show a Luxury requirement you can meet
 
-**The Hindenburg Risk:** If you roll a 6 (Catastrophic Fire) on the Hydrogen Fire Roll during a Luxury Launch in Age III, the game immediately triggers the **Hindenburg Disaster** end condition.
+**The Hindenburg Risk:** If you draw a **Catastrophic Explosion** fire hazard during a Luxury Launch in Age III using Hydrogen, the game immediately triggers the **Hindenburg Disaster** end condition.
 
 **Thematic Note:** A luxury liner full of passengers catching fire over a crowded landing field is a catastrophe that ends public trust in airship travel forever.
 
-**Safe Alternative:** Ships using **Helium Gas Cells** (from the Helium Handling technology) skip the Fire Roll entirely and cannot trigger the Hindenburg Disaster.
+**Safe Alternative:** Ships using **Helium Gas Cells** (from the Helium Handling technology) automatically pass Fire-type hazards and cannot trigger the Hindenburg Disaster.
 
 ---
 
@@ -758,7 +836,7 @@ The Market Row offers more powerful cards in several categories:
 
 **Operational Efficiency**
 - Cards that reduce costs or provide special abilities
-- Example: *Test Pilot* — Propeller: Reroll the Hydrogen Fire die. Reveal: 1 Pilot
+- Example: *Test Pilot* — Propeller: +2 Reliability for this launch. Reveal: 1 Pilot
 
 **Research & Development**
 - Cards that accelerate technology acquisition
@@ -850,7 +928,7 @@ Each nation has a unique starting Blueprint configuration, special technology, a
 - *Trapeze Fighter System* — Unlocks the Sparrowhawk Hangar upgrade: A hangar for biplanes. When launching to a route, you may ignore one stat requirement (your fighter escorts compensate). Additionally, military routes in Age II provide +2 Income.
 - *Helium Handling* — Safe, non-flammable lifting gas. Unlocks the Helium Gas Cell upgrade.
 
-**The Flaw:** *Heavy Frame* — Helium lifts less than Hydrogen. All Helium Gas Cell upgrades provide -1 Lift compared to their Hydrogen equivalents, forcing smaller payloads or more gas cells.
+**No Flaw:** The United States' advantages (Helium monopoly, stable prices, fire immunity) are balanced by Helium's higher cost and the USA's late entry into the airship race historically.
 
 **Home Base (Age II):** Paimboeuf, France (American transatlantic operations base)
 
@@ -909,16 +987,19 @@ Each player receives:
 4. **£15 Cash**
 5. **1 Pilot Token** from shared supply (placed in Barracks)
 6. **2 Engineer Tokens** from shared supply (placed in Barracks)
-7. **3 Agent Tokens**
-8. **Starter Deck** of 10 cards (shuffled)
-9. **Set Income Track** to starting position (faction-specific, typically £5)
-10. **Set Pilot Income Track** to 1
-11. **Set Engineer Income Track** to 1
-12. Draw opening hand of 5 cards
+7. **2 Hydrogen Gas Cubes** (placed in Gas Reserve—enough for an immediate launch)
+8. **3 Agent Tokens**
+9. **Starter Deck** of 10 cards (shuffled)
+10. **Set Income Track** to starting position (faction-specific, typically £5)
+11. **Set Pilot Income Track** to 1
+12. **Set Engineer Income Track** to 1
+13. Draw opening hand of 5 cards
+
+**Note:** Faction starting technologies (pre-printed on Player Boards) do NOT advance the Progress Track. Only Technologies acquired from the R&D Board during play count toward Progress.
 
 ## 11.3 First Player
 
-Determine first player randomly or by historical means (the German player, as Count Zeppelin flew first in 1900).
+Determine first player randomly.
 
 ---
 
@@ -950,7 +1031,7 @@ If your Income Track goes negative (from loans, Engineer upkeep, or route losses
 
 ## 12.5 The Hindenburg Disaster
 
-When a player rolls a 6 (Catastrophic Fire) on the Hydrogen Fire Roll during a Luxury Launch in Age III:
+When a player draws a **Catastrophic Explosion** fire hazard during a Luxury Launch in Age III using Hydrogen:
 1. The game end is triggered
 2. Complete the current round normally
 3. The player whose ship caused the disaster gains 3 VP (historical infamy)
@@ -963,16 +1044,22 @@ When a player rolls a 6 (Catastrophic Fire) on the Hydrogen Fire Roll during a L
 - Engineers spent during a Hazard Check do not generate Research that round
 - Engineer upkeep (£1 per Engineer) is paid at the start of the Income Phase based on Engineers currently in your Barracks
 
-## 12.7 Launch Outcomes: Crash vs. Aborted
+## 12.7 Launch Outcomes
+
+There are four possible outcomes when launching a ship:
+
+**Success:** The ship reaches its destination. Place it on the route, increase your Income Track, and gain a city bonus from one endpoint.
+
+**Aborted:** The launch fails but the ship survives. The ship returns to your Launch Hangar intact. Occurs when you fail a Hazard Check (ship stat + Engineers < Difficulty).
+
+**Damaged:** The ship survives but needs repairs. The ship goes to your Repair Hangar (pay £3 at Construction Hall to move it back to Launch Hangar). Occurs when you control a fire by spending Engineers.
 
 **Crash:** The ship is destroyed. The ship token returns to the shared supply and must be rebuilt at the Construction Hall. Crashes occur when:
-- You fail the Hydrogen Fire Roll (roll 5 and cannot/choose not to spend an Engineer, or roll 6)
-- A Catastrophic Event Hazard Card destroys the ship
+- You fail to control a fire (don't spend required Engineers)
+- A Catastrophic Explosion fire hazard is drawn
+- A Critical Structural Stress hazard is failed
 
-**Aborted Launch:** The launch fails but the ship is not destroyed. The ship returns to your Hangar Bay intact and can attempt another launch later. Aborted launches occur when:
-- You fail a Hazard Check (ship stat + Engineers < Difficulty)
-
-In both cases, the Pilot and any gas spent on the launch are lost.
+In all failure cases (Aborted, Damaged, Crash), the Pilot and any gas spent on the launch are lost.
 
 ## 12.8 Terminology: Slots, Swaps, and Tiles
 
@@ -1231,40 +1318,42 @@ The following items require finalization before the game is complete:
 
 ## Launch Checklist (Launchpad Action)
 
-1. ✓ Verify Physics Check (Lift ≥ Weight) — cannot launch if Blueprint doesn't fly
-2. ✓ Select a ship from Hangar Bay
+1. ✓ Verify Physics Check (Lift ≥ Weight) AND all Frame/Fabric slots filled
+2. ✓ Select a ship from Launch Hangar
 3. ✓ Spend 1 Pilot (Barracks → shared supply)
-4. ✓ Pay for Lifting Gas (Gas Reserve first, then market price for deficit)
-5. ✓ Assign to valid route (must meet stat requirements)
-6. ✓ If Luxury Route: Verify ship has Luxury stat requirement met
+4. ✓ Choose gas type (Hydrogen or Helium—no mixing)
+5. ✓ Pay for Lifting Gas (Gas Reserve first, then market price for deficit)
+6. ✓ Assign to valid route (must meet stat requirements)
 7. ✓ Draw Hazard Card from your personal Hazard Deck
-8. ✓ Compare Ship Stat to Hazard Difficulty
-9. ✓ (Optional) Spend Engineers (+1 per Engineer) to boost check
-10. ✓ If using Hydrogen and passed Hazard Check: Roll d6 for fire (5 = spend Engineer or crash, 6 = crash)
-11. ✓ If rolled 6 on Luxury Launch in Age III: Hindenburg Disaster triggered
-12. ✓ If passed all checks: Place ship on route, increase Income
-13. ✓ If fire crash: Ship destroyed (token to supply), Pilot and gas lost
-14. ✓ If failed Hazard Check: Ship returns to Hangar Bay (Pilot and gas lost)
+8. ✓ Compare Ship Stat to Hazard Difficulty (optional: spend Engineers for +1 each)
+9. ✓ If Fire hazard and using Hydrogen: Spend required Engineers or crash
+10. ✓ If Catastrophic Explosion on Luxury Launch in Age III: Hindenburg Disaster triggered
+11. ✓ **Success:** Place ship on route, increase Income, gain city bonus
+12. ✓ **Aborted:** Ship returns to Launch Hangar (Pilot and gas lost)
+13. ✓ **Damaged:** Ship goes to Repair Hangar (Pilot and gas lost)
+14. ✓ **Crash:** Ship destroyed (token to supply, Pilot and gas lost)
 15. ✓ Continue launching more ships or stop
 
 ## Key Formulas
 
 - **Hull Cost:** £2 base + Frame tile cost + Fabric tile cost
 - **Physics Check:** Total Lift ≥ Total Weight
-- **Lift Calculation:** Sum of gas cube Lift values (Hydrogen +4/+6/+8 by Age, Helium +3/+5/+7 by Age) + upgrade bonuses
+- **Lift Calculation:** Number of gas cubes × 5 (all gas types provide +5 Lift)
+- **Gas Rule:** Choose Hydrogen or Helium per launch—no mixing within a single launch
 - **Hazard Check:** Ship Stat + Engineers spent ≥ Hazard Difficulty
 - **Research per Round:** Engineers in Barracks + Research icons from revealed cards
 - **Engineer Upkeep:** £1 per Engineer in Barracks
 - **Tech Cost:** Listed cost − Specialization Discount
 - **Transition Income:** (£ from Tech tiles) − (£1 × routes lost), minimum £0
+- **Repair Cost:** £3 per ship to move from Repair Hangar to Launch Hangar
 - **Victory:** Most Victory Points wins (tiebreakers: Income, Cash, Ships on map)
 
 ## Gas Pricing (Gas Depot Action)
 
-| Gas Type | Price | Notes |
-|----------|-------|-------|
-| Hydrogen | £1/cube | Fixed price, flammable |
-| Helium | £2-15/cube | Market track (advances when purchased by non-USA) |
+| Gas Type | Price | Lift | Fire Risk |
+|----------|-------|------|-----------|
+| Hydrogen | £1/cube | +5 | Vulnerable |
+| Helium | £2-15/cube | +5 | Immune |
 
 **Helium Market Track:** £2 → £3 → £4 → £5 → £6 → £8 → £10 → £15
 **Price Increases:** Non-USA purchases advance the track by 1 per cube
@@ -1274,7 +1363,7 @@ The following items require finalization before the game is complete:
 
 ## Game End Conditions
 
-1. **Hindenburg Disaster:** Roll 6 on Fire Roll during Luxury Launch + Age III
+1. **Hindenburg Disaster:** Catastrophic Explosion during Luxury Launch in Age III (Hydrogen only)
 2. **Fixed-Wing Rise:** Progress Track reaches threshold
 
 ## Scoring Summary (at end of each Age)
@@ -1416,6 +1505,7 @@ Frame tiles go in Frame slots. Each has a **gas cube socket** where you place a 
 | Semi-Rigid Keel | Internal Keel | -2 | +£1 | Reliability +1 | Italy's specialty |
 | Geodetic Frame | Geodetic Structure | -1 | +£3 | Reliability +2, Ceiling +1 | Lightest, most expensive |
 | Modular Frame | Modular Construction | -1 | +£2 | — | +2 tile swaps at Design Bureau |
+| Flexible Frame | Articulated Keel Design | -1 | +£1 | Reliability +1 | Auto-pass Weather-type hazards (Italy specialty) |
 
 ## Fabric Upgrades
 
@@ -1433,19 +1523,19 @@ Fabric tiles go in Fabric slots. The **Hull Cost** column shows how much this ti
 
 ## Gas System Upgrades
 
-**Note:** Base Lift comes from **gas cubes** placed on Frame tiles. Hydrogen cubes provide Lift +4/+6/+8 (by Age). Helium cubes provide Lift +3/+5/+7 (by Age)—always 1 less than Hydrogen, representing the USA's "Heavy Frame" flaw. Gas System upgrades enhance or modify gas cell performance.
+**Note:** Each gas cube provides **+5 Lift** regardless of type. Gas System upgrades enhance or modify gas cell performance.
 
 | Name | Required Tech | Weight | Stats | Special |
 |------|---------------|--------|-------|---------|
 | Pressure Control | Improved Valving | -1 | Ceiling +1 | — |
 | Altitude Ballonets | Manual Ballonets | -1 | Ceiling +1 | — |
 | Compartmented Gas | Multiple Gas Cells | -1 | Lift +2, Reliability +1 | — |
-| Helium Gas Cell | Helium Handling | -1 | — | Safe (immune to Fire); use Helium cubes |
+| Helium Gas Cell | Helium Handling | -1 | — | Safe (immune to Fire hazards); use Helium cubes |
 | Blaugas Tank | Blaugas Storage | 0 | Range +3 | Neutral buoyancy fuel |
 | Smart Valving | Automatic Valves | -1 | Reliability +1, Ceiling +1 | — |
 | High-Ceiling Gas | Pressure Altitude System | -2 | Lift +3, Ceiling +2 | — |
 | Redundant Cells | Triple Gas Cell | -2 | Lift +4, Reliability +2 | — |
-| Rapid Descent System | Emergency Venting | -1 | Reliability +2 | Ignore Weather hazards |
+| Rapid Descent System | Emergency Venting | -1 | Reliability +2 | Auto-pass Weather-type hazards |
 | Reclamation System | Gas Recovery | -1 | Range +2 | -£2 Lifting Gas cost |
 
 ## Payload Upgrades
@@ -1464,8 +1554,9 @@ Fabric tiles go in Fabric slots. The **Hull Cost** column shows how much this ti
 | Observation Lounge | Promenade Deck | -2 | Income +1, Luxury +3 | — |
 | Private Berths | Sleeping Quarters | -2 | Income +2, Luxury +1 | — |
 | Pressurized Lounge | Smoking Room | -2 | Income +1, Luxury +2 | Requires Helium Gas Cell installed |
+| Imperial Mast | Imperial Mooring System | -1 | — | British Territories count as Home Base (Britain specialty) |
 
-**Total: 47 Upgrade Tiles** (Propulsion 11, Frame 7, Fabric 7, Gas Systems 10, Payload 12)
+**Total: 50 Upgrade Tiles** (Propulsion 11, Frame 8, Fabric 7, Gas Systems 10, Payload 14)
 
 ---
 
@@ -1506,19 +1597,31 @@ Each player has an identical Personal Hazard Deck of 20 cards. When launching a 
 | Structural Damage | 4 | Reliability | Mechanical |
 | Navigation Error | 4 | Range | Supply |
 
-## Catastrophic Events (2 cards)
+## Fire Hazards (5 cards) — Hydrogen Ships Only
 
-| Name | Difficulty | Stat | Type | Special |
-|------|------------|------|------|---------|
-| Hydrogen Fire | 6 | Reliability | Fire | Helium ships: Auto-pass |
-| Structural Failure | 6 | Reliability | Mechanical | — |
+Helium ships automatically pass all Fire-type hazards.
+
+| Name | Qty | Effect |
+|------|-----|--------|
+| **Engine Fire** | 2 | Spend 1 Engineer to control → Ship Damaged (Repair Hangar). Fail → Ship crashes. |
+| **Gas Cell Rupture** | 2 | Spend 2 Engineers to control → Ship Damaged (Repair Hangar). Fail → Ship crashes. |
+| **Catastrophic Explosion** | 1 | No save possible. Ship crashes. If Luxury Launch in Age III: Hindenburg Disaster triggered. |
+
+## Mechanical Hazards (1 card)
+
+| Name | Qty | Effect |
+|------|-----|--------|
+| **Critical Structural Stress** | 1 | Spend 2 Engineers to stabilize → Ship Damaged (Repair Hangar). Fail → Ship crashes. |
 
 **Resolving Hazards:**
 1. Draw card from your Personal Hazard Deck
-2. Check if auto-pass (Clear Weather cards, or Helium ship vs Hydrogen Fire)
-3. Compare: Ship's relevant stat vs Difficulty
-4. (Optional) Spend Engineers from your Barracks: **+1 per Engineer spent** (standard rule for all hazards)
-5. If total ≥ Difficulty: Pass. If total < Difficulty: Fail (ship returns to Hangar, Pilot and gas lost).
+2. Check if auto-pass (Clear Weather cards, or Helium ship vs Fire hazards)
+3. For standard hazards: Compare Ship's relevant stat vs Difficulty. Spend Engineers (+1 each) to boost if needed.
+4. For Fire/Structural hazards: Spend required Engineers or face consequences.
+5. **Pass:** Ship reaches route successfully
+6. **Fail (standard):** Ship returns to Launch Hangar (Pilot and gas lost)
+7. **Damaged:** Ship goes to Repair Hangar (Pilot and gas lost)
+8. **Crash:** Ship destroyed (token to supply, Pilot and gas lost)
 
 **Deck Management:** Shuffle your discard pile back into your Hazard Deck when the deck is empty.
 
@@ -1533,7 +1636,7 @@ The Market Deck contains 30 purchasable crew cards. Five are displayed in the Ma
 | Name | Cost | Symbol | Agent Effect | Reveal |
 |------|------|--------|--------------|--------|
 | Chief Engineer | 4 | Wrench | +2 tile swaps | 1 Engineer |
-| Test Pilot | 5 | Propeller | Reroll Hydrogen Fire die | 1 Pilot |
+| Test Pilot | 5 | Propeller | +2 Reliability for this launch | 1 Pilot |
 | Navigator | 3 | Propeller | +1 Range for this launch | 1 £, 1 Influence |
 | Weather Expert | 4 | Propeller | Ignore Weather hazards this launch | 1 Engineer |
 | Gas Engineer | 3 | Wrench | Install Gas upgrade: -1 Weight | 1 Gas |
@@ -1578,7 +1681,7 @@ The Market Deck contains 30 purchasable crew cards. Five are displayed in the Ma
 | Aviation Club | 4 | Coin | Recruit 1 Pilot free | 2 Influence, 1 Pilot |
 | Engineering Guild | 4 | Coin | Recruit 1 Engineer at -£1 | 1 Influence, 1 Engineer |
 
-**Market Row Refresh:** At the end of each round, discard any remaining cards in the Market Row and deal 5 new cards.
+**Market Row Mechanics:** Cards are added to the right side of the row. When cards are purchased, remaining cards slide left (oldest on left, newest on right). The Academy action can purge the leftmost card. Refill to 5 cards at end of each round.
 
 ---
 
