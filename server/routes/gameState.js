@@ -3,6 +3,13 @@ const router = express.Router();
 const { requireAuth } = require('../auth');
 const gameStateService = require('../services/gameStateService');
 const { pool } = require('../db');
+const {
+  UPGRADES,
+  TECHNOLOGIES,
+  getAvailableUpgrades,
+  calculateShipStats,
+  canLaunch
+} = require('../data/upgrades');
 
 // All game state routes require authentication
 router.use(requireAuth);
@@ -40,6 +47,50 @@ router.get('/:gameId', async (req, res) => {
   } catch (error) {
     console.error('Get game state error:', error);
     res.status(500).json({ error: 'Failed to get game state' });
+  }
+});
+
+// Get available upgrades for a player
+router.get('/:gameId/upgrades', async (req, res) => {
+  try {
+    const { gameId } = req.params;
+
+    // Verify user is in this game
+    const playerCheck = await pool.query(
+      'SELECT * FROM game_players WHERE game_id = $1 AND user_id = $2',
+      [gameId, req.session.userId]
+    );
+
+    if (playerCheck.rows.length === 0) {
+      return res.status(403).json({ error: 'Not a player in this game' });
+    }
+
+    const gameState = await gameStateService.getGameState(gameId);
+
+    if (!gameState) {
+      return res.status(404).json({ error: 'Game state not found' });
+    }
+
+    const playerState = gameState.state.players[req.session.userId];
+    if (!playerState) {
+      return res.status(404).json({ error: 'Player state not found' });
+    }
+
+    // Get available upgrades based on owned technologies
+    const available = getAvailableUpgrades(
+      playerState.technologies,
+      gameState.state.age
+    );
+
+    // Get all upgrade definitions for reference
+    res.json({
+      available,
+      allUpgrades: UPGRADES,
+      allTechnologies: TECHNOLOGIES
+    });
+  } catch (error) {
+    console.error('Get upgrades error:', error);
+    res.status(500).json({ error: 'Failed to get upgrades' });
   }
 });
 
@@ -166,6 +217,9 @@ function processAction(state, playerId, actionType, data) {
 
     case 'INSTALL_UPGRADE':
       return processInstallUpgrade(newState, playerId, data);
+
+    case 'REMOVE_UPGRADE':
+      return processRemoveUpgrade(newState, playerId, data);
 
     case 'PLAY_CARD':
       return processPlayCard(newState, playerId, data);
@@ -299,12 +353,74 @@ function processInstallUpgrade(state, playerId, data) {
     return { error: 'Invalid slot index' };
   }
 
-  // For now, just place the upgrade (in full game, would check requirements)
+  // Check if slot is already occupied
+  if (playerState.blueprint[slotKey][slotIndex]) {
+    return { error: 'Slot already occupied. Remove current upgrade first.' };
+  }
+
+  // Validate upgrade exists
+  const upgrade = UPGRADES[upgradeId];
+  if (!upgrade) {
+    return { error: 'Unknown upgrade' };
+  }
+
+  // Validate upgrade goes in correct slot type
+  if (upgrade.slotType !== slotKey) {
+    return { error: `${upgrade.name} must be installed in ${upgrade.slotType}` };
+  }
+
+  // Validate age requirement
+  if (upgrade.age > state.age) {
+    return { error: `${upgrade.name} not available until Age ${upgrade.age}` };
+  }
+
+  // Validate player owns required technology
+  if (!playerState.technologies.includes(upgrade.requiredTech)) {
+    const tech = TECHNOLOGIES[upgrade.requiredTech];
+    return { error: `Requires ${tech ? tech.name : upgrade.requiredTech} technology` };
+  }
+
+  // Install the upgrade
   playerState.blueprint[slotKey][slotIndex] = upgradeId;
 
   state.log.push({
     timestamp: new Date().toISOString(),
-    message: `Installed upgrade in ${slotType} slot ${slotIndex + 1}`,
+    message: `Installed ${upgrade.name} in ${slotType} slot ${slotIndex + 1}`,
+    playerId,
+    type: 'action'
+  });
+
+  return { newState: state };
+}
+
+// Remove upgrade from blueprint
+function processRemoveUpgrade(state, playerId, data) {
+  const { slotType, slotIndex } = data;
+  const playerState = state.players[playerId];
+
+  const slotKey = `${slotType}Slots`;
+  if (!playerState.blueprint[slotKey]) {
+    return { error: 'Invalid slot type' };
+  }
+
+  if (slotIndex < 0 || slotIndex >= playerState.blueprint[slotKey].length) {
+    return { error: 'Invalid slot index' };
+  }
+
+  const currentUpgrade = playerState.blueprint[slotKey][slotIndex];
+  if (!currentUpgrade) {
+    return { error: 'Slot is already empty' };
+  }
+
+  const upgrade = UPGRADES[currentUpgrade];
+  const upgradeName = upgrade ? upgrade.name : currentUpgrade;
+
+  // Remove the upgrade
+  playerState.blueprint[slotKey][slotIndex] = null;
+
+  state.log.push({
+    timestamp: new Date().toISOString(),
+    message: `Removed ${upgradeName} from ${slotType} slot ${slotIndex + 1}`,
     playerId,
     type: 'action'
   });

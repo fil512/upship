@@ -508,12 +508,192 @@
     .back-btn:hover {
       background: rgba(196, 163, 90, 0.1);
     }
+
+    /* Modal Overlay */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    .modal {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      border: 2px solid #c4a35a;
+      border-radius: 12px;
+      padding: 20px;
+      max-width: 500px;
+      width: 90%;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid rgba(196, 163, 90, 0.3);
+    }
+
+    .modal-title {
+      color: #c4a35a;
+      font-size: 1.2rem;
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      color: #888;
+      font-size: 1.5rem;
+      cursor: pointer;
+    }
+
+    .modal-close:hover {
+      color: #c4a35a;
+    }
+
+    .upgrade-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .upgrade-option {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(196, 163, 90, 0.3);
+      border-radius: 8px;
+      padding: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .upgrade-option:hover {
+      background: rgba(196, 163, 90, 0.1);
+      border-color: #c4a35a;
+    }
+
+    .upgrade-option.locked {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .upgrade-name {
+      font-size: 1rem;
+      color: #e8e8e8;
+      margin-bottom: 5px;
+    }
+
+    .upgrade-stats {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      font-size: 0.75rem;
+    }
+
+    .upgrade-stat {
+      background: rgba(68, 170, 153, 0.2);
+      color: #4a9;
+      padding: 2px 6px;
+      border-radius: 3px;
+    }
+
+    .upgrade-stat.negative {
+      background: rgba(231, 76, 60, 0.2);
+      color: #e74c3c;
+    }
+
+    .upgrade-required {
+      font-size: 0.7rem;
+      color: #888;
+      margin-top: 5px;
+    }
+
+    .upgrade-required.missing {
+      color: #e74c3c;
+    }
+
+    .remove-btn {
+      background: rgba(231, 76, 60, 0.2);
+      color: #e74c3c;
+      border: 1px solid #e74c3c;
+      padding: 8px 15px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-family: 'Georgia', serif;
+      margin-top: 10px;
+      width: 100%;
+    }
+
+    .remove-btn:hover {
+      background: rgba(231, 76, 60, 0.4);
+    }
+
+    .no-upgrades {
+      color: #888;
+      text-align: center;
+      padding: 20px;
+    }
+
+    /* Slot with upgrade */
+    .slot.filled .slot-icon {
+      font-size: 1.2rem;
+    }
+
+    .slot.filled .slot-label {
+      font-size: 0.55rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 70px;
+    }
+
+    /* Physics indicator */
+    .physics-check {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      margin-top: 10px;
+      padding: 10px;
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 8px;
+    }
+
+    .physics-item {
+      text-align: center;
+    }
+
+    .physics-value {
+      font-size: 1.2rem;
+      font-weight: bold;
+    }
+
+    .physics-value.ok {
+      color: #4a9;
+    }
+
+    .physics-value.warning {
+      color: #e74c3c;
+    }
+
+    .physics-label {
+      font-size: 0.7rem;
+      color: #888;
+    }
   </style>
 </head>
 <body>
   <div class="game-container" id="game-container">
     <div class="loading">Loading game...</div>
   </div>
+  <div id="modal-container"></div>
 
   <script>
     // Get game ID from URL
@@ -523,6 +703,38 @@
     let gameState = null;
     let currentUserId = null;
     let refreshInterval = null;
+    let upgradesData = null;
+
+    // Upgrade definitions (loaded from server)
+    const SLOT_ICONS = {
+      frame: '🔩',
+      fabric: '🎨',
+      drive: '⚙️',
+      component: '📦'
+    };
+
+    const SLOT_NAMES = {
+      frame: 'Frame',
+      fabric: 'Fabric',
+      drive: 'Drive',
+      component: 'Component'
+    };
+
+    const STAT_NAMES = {
+      speed: 'Speed',
+      range: 'Range',
+      ceiling: 'Ceiling',
+      reliability: 'Reliability',
+      luxury: 'Luxury',
+      income: 'Income'
+    };
+
+    // Age baseline stats
+    const AGE_BASELINES = {
+      1: { speed: 1, range: 1, ceiling: 0, reliability: 0 },
+      2: { speed: 2, range: 2, ceiling: 1, reliability: 1 },
+      3: { speed: 3, range: 3, ceiling: 2, reliability: 2 }
+    };
 
     // Initialize
     async function init() {
@@ -545,10 +757,25 @@
         return;
       }
 
+      // Load upgrades data
+      await loadUpgrades();
+
       await loadGameState();
 
       // Refresh state every 5 seconds
       refreshInterval = setInterval(loadGameState, 5000);
+    }
+
+    // Load upgrades data
+    async function loadUpgrades() {
+      try {
+        const res = await fetch(`/api/state/${gameId}/upgrades`);
+        if (res.ok) {
+          upgradesData = await res.json();
+        }
+      } catch (err) {
+        console.error('Failed to load upgrades:', err);
+      }
     }
 
     // Load game state
@@ -708,7 +935,7 @@
                 ${myState.blueprint.frameSlots.map((slot, i) => `
                   <div class="slot ${slot ? 'filled' : ''}" onclick="openSlot('frame', ${i})">
                     <div class="slot-icon">${slot ? '🔩' : '➕'}</div>
-                    <div class="slot-label">${slot || 'Empty'}</div>
+                    <div class="slot-label">${getUpgradeName(slot)}</div>
                   </div>
                 `).join('')}
               </div>
@@ -718,7 +945,7 @@
                 ${myState.blueprint.fabricSlots.map((slot, i) => `
                   <div class="slot ${slot ? 'filled' : ''}" onclick="openSlot('fabric', ${i})">
                     <div class="slot-icon">${slot ? '🎨' : '➕'}</div>
-                    <div class="slot-label">${slot || 'Empty'}</div>
+                    <div class="slot-label">${getUpgradeName(slot)}</div>
                   </div>
                 `).join('')}
               </div>
@@ -728,7 +955,7 @@
                 ${myState.blueprint.driveSlots.map((slot, i) => `
                   <div class="slot ${slot ? 'filled' : ''}" onclick="openSlot('drive', ${i})">
                     <div class="slot-icon">${slot ? '⚙️' : '➕'}</div>
-                    <div class="slot-label">${slot || 'Empty'}</div>
+                    <div class="slot-label">${getUpgradeName(slot)}</div>
                   </div>
                 `).join('')}
               </div>
@@ -738,27 +965,53 @@
                 ${myState.blueprint.componentSlots.map((slot, i) => `
                   <div class="slot ${slot ? 'filled' : ''}" onclick="openSlot('component', ${i})">
                     <div class="slot-icon">${slot ? '📦' : '➕'}</div>
-                    <div class="slot-label">${slot || 'Empty'}</div>
+                    <div class="slot-label">${getUpgradeName(slot)}</div>
                   </div>
                 `).join('')}
               </div>
 
               <div class="ship-stats">
                 <div class="stat">
-                  <div class="stat-value">${calculateStat(myState, 'lift')}</div>
-                  <div class="stat-label">Lift</div>
-                </div>
-                <div class="stat">
                   <div class="stat-value">${calculateStat(myState, 'speed')}</div>
                   <div class="stat-label">Speed</div>
                 </div>
                 <div class="stat">
-                  <div class="stat-value">${calculateStat(myState, 'safety')}</div>
-                  <div class="stat-label">Safety</div>
+                  <div class="stat-value">${calculateStat(myState, 'range')}</div>
+                  <div class="stat-label">Range</div>
+                </div>
+                <div class="stat">
+                  <div class="stat-value">${calculateStat(myState, 'ceiling')}</div>
+                  <div class="stat-label">Ceiling</div>
+                </div>
+                <div class="stat">
+                  <div class="stat-value">${calculateStat(myState, 'reliability')}</div>
+                  <div class="stat-label">Reliability</div>
                 </div>
                 <div class="stat">
                   <div class="stat-value">${calculateStat(myState, 'luxury')}</div>
                   <div class="stat-label">Luxury</div>
+                </div>
+              </div>
+
+              <div class="physics-check">
+                <div class="physics-item">
+                  <div class="physics-value ${calculateLift(myState) >= calculateWeight(myState) ? 'ok' : 'warning'}">
+                    ${calculateLift(myState)}
+                  </div>
+                  <div class="physics-label">Lift</div>
+                </div>
+                <div class="physics-item">
+                  <div style="font-size: 1.2rem; color: #888;">vs</div>
+                </div>
+                <div class="physics-item">
+                  <div class="physics-value">${calculateWeight(myState)}</div>
+                  <div class="physics-label">Weight</div>
+                </div>
+                <div class="physics-item" style="margin-left: 20px;">
+                  <div class="physics-value ${calculateLift(myState) >= calculateWeight(myState) ? 'ok' : 'warning'}">
+                    ${calculateLift(myState) >= calculateWeight(myState) ? '✓' : '✗'}
+                  </div>
+                  <div class="physics-label">Can Launch</div>
                 </div>
               </div>
             </div>
@@ -840,10 +1093,68 @@
     }
 
     function calculateStat(playerState, stat) {
-      // Base stats from faction bonuses
-      let value = playerState.bonuses?.[stat] || 0;
-      // Would add upgrades contribution here
+      const age = gameState?.state?.age || 1;
+      const baseline = AGE_BASELINES[age];
+
+      // Start with baseline + faction bonus
+      let value = (baseline[stat] || 0) + (playerState.bonuses?.[stat] || 0);
+
+      // Add stats from installed upgrades
+      if (upgradesData?.allUpgrades && playerState.blueprint) {
+        const slots = ['frameSlots', 'fabricSlots', 'driveSlots', 'componentSlots'];
+        for (const slotKey of slots) {
+          const slotArray = playerState.blueprint[slotKey] || [];
+          for (const upgradeId of slotArray) {
+            if (!upgradeId) continue;
+            const upgrade = upgradesData.allUpgrades[upgradeId];
+            if (upgrade?.stats?.[stat]) {
+              value += upgrade.stats[stat];
+            }
+          }
+        }
+      }
+
       return value;
+    }
+
+    // Calculate total weight from upgrades
+    function calculateWeight(playerState) {
+      let weight = 0;
+      if (upgradesData?.allUpgrades && playerState.blueprint) {
+        const slots = ['frameSlots', 'fabricSlots', 'driveSlots', 'componentSlots'];
+        for (const slotKey of slots) {
+          const slotArray = playerState.blueprint[slotKey] || [];
+          for (const upgradeId of slotArray) {
+            if (!upgradeId) continue;
+            const upgrade = upgradesData.allUpgrades[upgradeId];
+            if (upgrade?.weight) {
+              weight += Math.abs(upgrade.weight);
+            }
+          }
+        }
+      }
+      return weight;
+    }
+
+    // Calculate lift from gas cubes
+    function calculateLift(playerState) {
+      let lift = 0;
+      const gasSockets = playerState.blueprint?.gasSockets || [];
+      for (const cube of gasSockets) {
+        if (cube === 'hydrogen' || cube === 'helium') {
+          lift += 5;
+        }
+      }
+      return lift;
+    }
+
+    // Get upgrade name from ID
+    function getUpgradeName(upgradeId) {
+      if (!upgradeId) return 'Empty';
+      if (upgradesData?.allUpgrades?.[upgradeId]) {
+        return upgradesData.allUpgrades[upgradeId].name;
+      }
+      return formatTechName(upgradeId);
     }
 
     // Action functions
@@ -891,8 +1202,154 @@
     }
 
     function openSlot(slotType, slotIndex) {
-      // Would open a modal to select upgrade
-      alert(`Slot ${slotType} ${slotIndex + 1} - Upgrade installation coming soon!`);
+      if (!gameState?.state) return;
+
+      const state = gameState.state;
+      const myState = state.players[currentUserId];
+      const slotKey = `${slotType}Slots`;
+      const currentUpgrade = myState.blueprint[slotKey]?.[slotIndex];
+
+      // Show the upgrade modal
+      showUpgradeModal(slotType, slotIndex, currentUpgrade);
+    }
+
+    // Show upgrade selection modal
+    function showUpgradeModal(slotType, slotIndex, currentUpgrade) {
+      const container = document.getElementById('modal-container');
+      const slotKey = `${slotType}Slots`;
+      const state = gameState.state;
+      const myState = state.players[currentUserId];
+
+      // Get available upgrades for this slot type
+      const available = upgradesData?.available?.[slotKey] || [];
+      const allUpgrades = upgradesData?.allUpgrades || {};
+      const allTechs = upgradesData?.allTechnologies || {};
+
+      // Get all possible upgrades for this slot type (even locked ones)
+      const allForSlot = Object.values(allUpgrades).filter(u => u.slotType === slotKey);
+
+      let html = `
+        <div class="modal-overlay" onclick="closeModal(event)">
+          <div class="modal" onclick="event.stopPropagation()">
+            <div class="modal-header">
+              <span class="modal-title">${SLOT_ICONS[slotType]} ${SLOT_NAMES[slotType]} Slot ${slotIndex + 1}</span>
+              <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+      `;
+
+      // If slot has an upgrade, show remove option
+      if (currentUpgrade) {
+        const upgrade = allUpgrades[currentUpgrade];
+        html += `
+          <div style="margin-bottom: 15px; padding: 10px; background: rgba(196, 163, 90, 0.1); border-radius: 8px;">
+            <div style="font-weight: bold; margin-bottom: 5px;">Currently Installed:</div>
+            <div class="upgrade-name">${upgrade?.name || currentUpgrade}</div>
+            ${renderUpgradeStats(upgrade)}
+            <button class="remove-btn" onclick="removeUpgrade('${slotType}', ${slotIndex})">
+              Remove Upgrade
+            </button>
+          </div>
+        `;
+      }
+
+      // Show available upgrades
+      html += `<div class="section-title" style="margin-bottom: 10px;">Available Upgrades</div>`;
+
+      if (available.length === 0 && allForSlot.length === 0) {
+        html += `<div class="no-upgrades">No upgrades available for this slot type.</div>`;
+      } else {
+        html += `<div class="upgrade-list">`;
+
+        // First show available (unlocked) upgrades
+        for (const upgrade of available) {
+          // Skip if already installed
+          if (currentUpgrade === upgrade.id) continue;
+
+          html += `
+            <div class="upgrade-option" onclick="installUpgrade('${slotType}', ${slotIndex}, '${upgrade.id}')">
+              <div class="upgrade-name">${upgrade.name}</div>
+              ${renderUpgradeStats(upgrade)}
+            </div>
+          `;
+        }
+
+        // Then show locked upgrades
+        const availableIds = available.map(u => u.id);
+        const locked = allForSlot.filter(u => !availableIds.includes(u.id) && u.age <= state.age);
+
+        for (const upgrade of locked) {
+          if (currentUpgrade === upgrade.id) continue;
+
+          const tech = allTechs[upgrade.requiredTech];
+          html += `
+            <div class="upgrade-option locked">
+              <div class="upgrade-name">${upgrade.name}</div>
+              ${renderUpgradeStats(upgrade)}
+              <div class="upgrade-required missing">
+                Requires: ${tech?.name || upgrade.requiredTech}
+              </div>
+            </div>
+          `;
+        }
+
+        html += `</div>`;
+      }
+
+      html += `
+          </div>
+        </div>
+      `;
+
+      container.innerHTML = html;
+    }
+
+    // Render upgrade stats as badges
+    function renderUpgradeStats(upgrade) {
+      if (!upgrade) return '';
+
+      let html = '<div class="upgrade-stats">';
+
+      // Show weight
+      if (upgrade.weight) {
+        html += `<span class="upgrade-stat negative">Weight ${Math.abs(upgrade.weight)}</span>`;
+      }
+
+      // Show stats
+      if (upgrade.stats) {
+        for (const [stat, value] of Object.entries(upgrade.stats)) {
+          if (value > 0) {
+            html += `<span class="upgrade-stat">+${value} ${STAT_NAMES[stat] || stat}</span>`;
+          }
+        }
+      }
+
+      // Show hull cost
+      if (upgrade.hullCost) {
+        html += `<span class="upgrade-stat negative">+£${upgrade.hullCost} Hull</span>`;
+      }
+
+      html += '</div>';
+      return html;
+    }
+
+    // Close modal
+    function closeModal(event) {
+      if (event && event.target !== event.currentTarget) return;
+      document.getElementById('modal-container').innerHTML = '';
+    }
+
+    // Install upgrade action
+    async function installUpgrade(slotType, slotIndex, upgradeId) {
+      closeModal();
+      await performAction('INSTALL_UPGRADE', { slotType, slotIndex, upgradeId });
+      // Reload upgrades data in case it changed
+      await loadUpgrades();
+    }
+
+    // Remove upgrade action
+    async function removeUpgrade(slotType, slotIndex) {
+      closeModal();
+      await performAction('REMOVE_UPGRADE', { slotType, slotIndex });
     }
 
     function goBack() {
