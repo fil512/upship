@@ -181,9 +181,7 @@ Ships in your Hangar Bay are generic airship tokens—they don't track individua
 
 Storage for your crew tokens earned from the shared supply:
 
-- **Pilots:** Required to launch a ship. When you launch a ship, you spend 1 Pilot token from your Barracks back to the shared supply. Pilots are only returned to your Barracks when:
-  1. An Age ends (all ships are removed from the map)
-  2. You voluntarily ground one of your ships
+- **Pilots:** Required to launch a ship. When you launch a ship, you spend 1 Pilot token from your Barracks back to the shared supply. At the end of each Age, when ships are returned from routes to your Hangar, collect 1 Pilot from the shared supply for each ship returned.
 
 - **Engineers:** Multi-purpose specialists that serve two functions:
   1. **Research Generation:** At the end of each round during the Reveal Phase, your available Research to acquire Technologies equals your number of Engineers in your Barracks plus any Research bonuses from cards remaining in your hand
@@ -867,7 +865,7 @@ Each Age ends when the Progress Track reaches or exceeds the Age threshold (see 
 
    *Example: You have Technologies worth £5 total and lost 2 routes. Your new Income = £5 − £2 = £3.*
 
-4. **Pilot Recovery:** All Pilots spent on ships return to player Barracks.
+4. **Pilot Recovery:** For each ship returned from the map to your Hangar, collect 1 Pilot from the shared supply to your Barracks.
 5. **Blueprint Transition:** Replace your Blueprint overlay with the new Age's version. You may transfer Upgrade tiles from your old Blueprint to your new Blueprint for free (subject to slot availability and the Physics Check). Upgrades not transferred return to the supply. Technologies are always retained.
 6. **Map Setup:** Place the new Age's Map.
 7. **Technology Bag Update:** Add the new Age's Technology tiles to the bag.
