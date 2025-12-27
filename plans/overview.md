@@ -19,8 +19,8 @@ This document tracks the implementation of UP SHIP! as an online multiplayer boa
 | Status | Plan | Description |
 |--------|------|-------------|
 | [x] | [01-setup.md](01-setup.md) | Project setup, tech stack, Railway deployment |
-| [~] | [02-database.md](02-database.md) | Database schema and ORM setup |
-| [ ] | [03-auth.md](03-auth.md) | User authentication and sessions |
+| [x] | [02-database.md](02-database.md) | Database schema and ORM setup |
+| [~] | [03-auth.md](03-auth.md) | User authentication and sessions |
 
 ### Phase 2: Game Lobby
 
@@ -105,9 +105,9 @@ This document tracks the implementation of UP SHIP! as an online multiplayer boa
 
 ## Current Session
 
-**Active Plan:** 02-database.md (In Progress)
+**Active Plan:** 03-auth.md
 
-**Next Plan:** 03-auth.md
+**Next Plan:** 04-lobby.md
 
 ---
 
