@@ -1,0 +1,23 @@
+- 1.1 no sclaling. always $15
+- 1.2 $4 per engineer
+- 1.3 tiles by age
+- 1.4 always 5 cards (like Dune)
+- 1.5 use the actual listings. add a TODO to ensure we have 15 per track (will add those later)
+- 2.1 "Britain may only make **1 tile swap** instead of 2" is correct
+- 2.2 Gas is spent when the ship is launched. NOT when it is built.
+- 2.3 Option A
+- 2.4 Apply proposed Remedy
+- 2.5 The Researcher card should have different effects depending on when it is played. If it is played as an action, then it provides a discount on the cost of tech. If it is played during reveal, it adds Research resources.
+- 3.1 Apply proposed remedy
+- 3.2 Draw until you have 5 cards
+- 3.3 Apply proposed remedy
+- 4.1 For the first 2 ages, the map is only Europe, so the U.S. base needs to be in Europe. Check that Paimboeuf was used by American airships; I believe it was. For the third age, the U.S. airbase should change to Lakehurst, NJ.
+- 4.2 Apply remedy, but change the number of slots so italy has 1/1/1 in age 1
+- 4.3 You don't buy a policy with money. You buy it by reducing your income (representing premiums). Policies are unlimited, but it will be impractical to reduce your income too much.
+- 4.4: Draw 2 cards discard 1 _AND_ go first next round.
+- 4.5 Apply proposed remedy
+- 4.6 Apply proposed remedy. Also let's change the Weather Forecast action (or whatever it is called). You look at the top weather card and either keep it or discard it.
+- 4.7 Remove mention of a maximum VP. There is effectively no maximum.
+- 5.1 Make the Hindenburg Disaster worth VP to the triggering player (historical infamy)
+- 5.2 Reduce the cost of tech tiles. Also ensure the game has Research tokens and that it is clear Research tokens may be saved from round to round so players can save them up.
+- 5.3 Add assessing this to the Playtesting section

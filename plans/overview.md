@@ -27,7 +27,7 @@ This document tracks the implementation of UP SHIP! as an online multiplayer boa
 | Status | Plan | Description |
 |--------|------|-------------|
 | [x] | [04-lobby.md](04-lobby.md) | Create/join games, player matchmaking |
-| [ ] | [05-game-state.md](05-game-state.md) | Core game state management and persistence |
+| [x] | [05-game-state.md](05-game-state.md) | Core game state management and persistence |
 
 ### Phase 3: Player Board
 
@@ -105,9 +105,9 @@ This document tracks the implementation of UP SHIP! as an online multiplayer boa
 
 ## Current Session
 
-**Active Plan:** 05-game-state.md
+**Active Plan:** 06-player-board.md
 
-**Next Plan:** 06-player-board.md
+**Next Plan:** 07-blueprint.md
 
 ---
 

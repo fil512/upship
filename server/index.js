@@ -7,6 +7,7 @@ const { runMigrations } = require('./db/migrate');
 const { createSessionMiddleware } = require('./auth');
 const authRoutes = require('./routes/auth');
 const gameRoutes = require('./routes/games');
+const gameStateRoutes = require('./routes/gameState');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -22,6 +23,7 @@ app.use(express.static(path.join(__dirname, '..', 'public')));
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/games', gameRoutes);
+app.use('/api/state', gameStateRoutes);
 
 // Health check endpoint for Railway (includes database status)
 app.get('/health', async (req, res) => {

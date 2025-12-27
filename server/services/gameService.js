@@ -1,4 +1,5 @@
 const { pool } = require('../db');
+const gameStateService = require('./gameStateService');
 
 // Create a new game
 async function createGame(hostId, name, settings = {}) {
@@ -283,8 +284,11 @@ async function startGame(gameId, userId) {
     );
 
     await client.query('COMMIT');
-
     client.release();
+
+    // Initialize game state (after transaction commits)
+    await gameStateService.initializeGameState(gameId, playersResult.rows);
+
     return getGameById(gameId);
   } catch (error) {
     await client.query('ROLLBACK');
