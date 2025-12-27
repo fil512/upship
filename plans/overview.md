@@ -20,7 +20,7 @@ This document tracks the implementation of UP SHIP! as an online multiplayer boa
 |--------|------|-------------|
 | [x] | [01-setup.md](01-setup.md) | Project setup, tech stack, Railway deployment |
 | [x] | [02-database.md](02-database.md) | Database schema and ORM setup |
-| [ ] | [03-auth.md](03-auth.md) | User authentication and sessions |
+| [~] | [03-auth.md](03-auth.md) | User authentication and sessions |
 
 ### Phase 2: Game Lobby
 

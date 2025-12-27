@@ -11,13 +11,13 @@ Implement user authentication using simple username/password. Users register wit
 
 ## Goals
 
-- [ ] Install authentication dependencies (bcrypt, express-session, connect-pg-simple)
-- [ ] Create session store backed by PostgreSQL
-- [ ] Implement user registration with username/password
-- [ ] Implement login/logout endpoints
-- [ ] Add session middleware to protect routes
-- [ ] Create auth migration for sessions table
-- [ ] Create frontend login/register UI
+- [x] Install authentication dependencies (bcrypt, express-session, connect-pg-simple)
+- [x] Create session store backed by PostgreSQL
+- [x] Implement user registration with username/password
+- [x] Implement login/logout endpoints
+- [x] Add session middleware to protect routes
+- [x] Create auth migration for sessions table
+- [x] Create frontend login/register UI
 - [ ] Test authentication flow end-to-end
 
 ## Implementation Steps
