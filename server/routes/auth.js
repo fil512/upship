@@ -21,13 +21,21 @@ router.post('/register', async (req, res) => {
   try {
     const user = await userService.registerUser(username, password);
     req.session.userId = user.id;
-    res.json({ user });
+
+    // Explicitly save session to catch any session store errors
+    req.session.save((err) => {
+      if (err) {
+        console.error('Session save error:', err);
+        return res.status(500).json({ error: 'Session error: ' + err.message });
+      }
+      res.json({ user });
+    });
   } catch (error) {
     if (error.code === '23505') { // Unique violation
       return res.status(409).json({ error: 'Username already taken' });
     }
     console.error('Registration error:', error);
-    res.status(500).json({ error: 'Registration failed' });
+    res.status(500).json({ error: error.message || 'Registration failed' });
   }
 });
 
@@ -47,10 +55,18 @@ router.post('/login', async (req, res) => {
     }
 
     req.session.userId = user.id;
-    res.json({ user });
+
+    // Explicitly save session to catch any session store errors
+    req.session.save((err) => {
+      if (err) {
+        console.error('Session save error:', err);
+        return res.status(500).json({ error: 'Session error: ' + err.message });
+      }
+      res.json({ user });
+    });
   } catch (error) {
     console.error('Login error:', error);
-    res.status(500).json({ error: 'Login failed' });
+    res.status(500).json({ error: error.message || 'Login failed' });
   }
 });
 
