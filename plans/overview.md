@@ -49,10 +49,10 @@ This document tracks the implementation of UP SHIP! as an online multiplayer boa
 
 | Status | Plan | Description |
 |--------|------|-------------|
-| [ ] | [12-technologies.md](12-technologies.md) | Technology acquisition and Drawing Office |
-| [ ] | [13-upgrades.md](13-upgrades.md) | Upgrade tiles and installation |
-| [ ] | [14-ships.md](14-ships.md) | Ship building, hangars, and launching |
-| [ ] | [15-routes.md](15-routes.md) | Route claiming and requirements |
+| [x] | [12-technologies.md](12-technologies.md) | Technology acquisition and Drawing Office |
+| [x] | [13-upgrades.md](13-upgrades.md) | Upgrade tiles and installation |
+| [x] | [14-ships.md](14-ships.md) | Ship building, hangars, and launching |
+| [x] | [15-routes.md](15-routes.md) | Route claiming and requirements |
 
 ### Phase 6: Advanced Systems
 
@@ -105,9 +105,9 @@ This document tracks the implementation of UP SHIP! as an online multiplayer boa
 
 ## Current Session
 
-**Active Plan:** 12-technologies.md
+**Active Plan:** 16-hazards.md
 
-**Next Plan:** 13-upgrades.md
+**Next Plan:** 17-cards.md
 
 ---
 
