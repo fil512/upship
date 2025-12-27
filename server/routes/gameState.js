@@ -341,7 +341,29 @@ function processEndTurn(state, playerId) {
       state.round = 1;
       state.phase = 'planning';
     } else {
-      state.phase = phases[currentPhaseIndex + 1];
+      const nextPhase = phases[currentPhaseIndex + 1];
+      state.phase = nextPhase;
+
+      // Auto-collect income when entering income phase
+      if (nextPhase === 'income') {
+        for (const pid of state.playerOrder) {
+          const playerState = state.players[pid];
+          const incomeGained = playerState.income;
+          const pilotsGained = playerState.pilotIncome || 1;
+          const engineersGained = playerState.engineerIncome || 1;
+
+          playerState.cash += incomeGained;
+          playerState.pilots += pilotsGained;
+          playerState.engineers += engineersGained;
+
+          state.log.push({
+            timestamp: new Date().toISOString(),
+            message: `${playerState.faction.toUpperCase()} collected income: £${incomeGained}, +${pilotsGained} Pilot(s), +${engineersGained} Engineer(s)`,
+            playerId: pid,
+            type: 'income'
+          });
+        }
+      }
     }
   }
 
@@ -546,6 +568,12 @@ function processTakeLoan(state, playerId, data) {
 
 // Collect income at end of round
 function processCollectIncome(state, playerId, data) {
+  // Income is now auto-collected when entering income phase
+  // This action is kept for backwards compatibility but restricted to income phase
+  if (state.phase !== 'income') {
+    return { error: 'Can only collect income during the Income phase (income is auto-collected when the phase begins)' };
+  }
+
   const playerState = state.players[playerId];
 
   // Collect cash from income track

@@ -437,6 +437,24 @@ const commands = {
         });
         console.log('└─────────────────────────────────────');
       }
+
+      // Show ships with IDs
+      if ((myState.ships || []).length > 0) {
+        console.log('');
+        console.log(c(COLORS.bright, '┌─ Your Ships'));
+        for (const ship of myState.ships) {
+          const statusColor = ship.status === 'hangar' ? COLORS.yellow : ship.status === 'launched' ? COLORS.green : COLORS.red;
+          let shipInfo = `│ ${c(COLORS.cyan, ship.id)} │ ${c(statusColor, ship.status.toUpperCase())}`;
+          if (ship.stats) {
+            shipInfo += ` │ Range:${ship.stats.range} Speed:${ship.stats.speed}`;
+          }
+          if (ship.route) {
+            shipInfo += ` │ Route: ${ship.route}`;
+          }
+          console.log(shipInfo);
+        }
+        console.log('└─────────────────────────────────────');
+      }
     }
 
     // Other players
@@ -456,6 +474,17 @@ const commands = {
     console.log(`│ Hydrogen: ${c(COLORS.cyan, '£' + (gs.gasMarket?.hydrogen || 2) + '/cube')}`);
     console.log(`│ Helium:   ${c(COLORS.green, '£' + (gs.gasMarket?.helium || 3) + '/cube')}`);
     console.log('└─────────────────────────────────────');
+
+    // R&D Board (available technologies)
+    if ((gs.rdBoard || []).length > 0) {
+      console.log('');
+      console.log(c(COLORS.bright, '┌─ R&D Board (Available Technologies)'));
+      for (const tech of gs.rdBoard) {
+        const owned = myState?.technologies?.includes(tech.id) ? c(COLORS.green, ' [OWNED]') : '';
+        console.log(`│ ${c(COLORS.cyan, tech.id.padEnd(22))} │ £${tech.cost || 0}${owned}`);
+      }
+      console.log('└─────────────────────────────────────');
+    }
 
     // Recent log
     const recentLogs = (gs.log || []).slice(-5);
@@ -554,22 +583,32 @@ const commands = {
     console.log(c(COLORS.bright, 'Available Upgrades (based on your technologies):'));
     console.log('─'.repeat(60));
 
-    if (available.length === 0) {
-      console.log(c(COLORS.gray, 'No upgrades available. Acquire technologies first.'));
-      return;
+    // available is an object with slot types as keys
+    const slotTypes = ['frameSlots', 'fabricSlots', 'driveSlots', 'componentSlots'];
+    let totalCount = 0;
+
+    for (const slotType of slotTypes) {
+      const upgrades = available[slotType] || [];
+      if (upgrades.length === 0) continue;
+
+      totalCount += upgrades.length;
+      const slotName = slotType.replace('Slots', '').toUpperCase();
+      console.log(c(COLORS.yellow, `\n${slotName}:`));
+
+      for (const upgrade of upgrades) {
+        const weightStr = upgrade.weight ? `Weight: ${upgrade.weight}` : '';
+        console.log(`  ${c(COLORS.cyan, upgrade.id.padEnd(22))} │ Age ${upgrade.age} │ ${weightStr}`);
+        if (upgrade.stats) {
+          const statStr = Object.entries(upgrade.stats)
+            .map(([k, v]) => `${k}:${v > 0 ? '+' : ''}${v}`)
+            .join(' ');
+          console.log(`  ${''.padEnd(22)} │ ${c(COLORS.green, statStr)}`);
+        }
+      }
     }
 
-    for (const upgradeId of available) {
-      const upgrade = allUpgrades[upgradeId];
-      if (!upgrade) continue;
-
-      console.log(`${c(COLORS.cyan, upgradeId.padEnd(25))} │ ${upgrade.slotType.padEnd(15)} │ Age ${upgrade.age}`);
-      if (upgrade.stats) {
-        const statStr = Object.entries(upgrade.stats)
-          .map(([k, v]) => `${k}:${v > 0 ? '+' : ''}${v}`)
-          .join(' ');
-        console.log(`${''.padEnd(25)} │ ${c(COLORS.green, statStr)}`);
-      }
+    if (totalCount === 0) {
+      console.log(c(COLORS.gray, 'No upgrades available. Acquire technologies first.'));
     }
     console.log('');
   },
