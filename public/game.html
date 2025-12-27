@@ -1356,49 +1356,49 @@
             <div class="section-title">Ground Board Actions</div>
             <div class="action-buttons" style="margin-bottom: 10px;">
               <button class="action-btn secondary" onclick="recruitCrew('pilot')" ${!isMyTurn ? 'disabled' : ''}>
-                Recruit Pilot (£2)
+                🪙 Recruit Pilot (£2)
               </button>
               <button class="action-btn secondary" onclick="recruitCrew('engineer')" ${!isMyTurn ? 'disabled' : ''}>
-                Recruit Engineer (£4)
+                🪙 Recruit Engineer (£4)
               </button>
               <button class="action-btn secondary" onclick="buildShip()" ${!isMyTurn ? 'disabled' : ''}>
-                Build Ship
+                🔧 Build Ship
               </button>
               <button class="action-btn secondary" onclick="showLaunchShipModal()" ${!isMyTurn ? 'disabled' : ''}>
-                Launch Ship
+                ⚙️ Launch Ship
               </button>
               <button class="action-btn secondary" onclick="upgradePilotIncome()" ${!isMyTurn ? 'disabled' : ''}>
-                +1 Pilot Income (£5)
+                🪙 +1 Pilot Income (£5)
               </button>
               <button class="action-btn secondary" onclick="upgradeEngineerIncome()" ${!isMyTurn ? 'disabled' : ''}>
-                +1 Engineer Income (£6)
+                🔧 +1 Engineer Income (£6)
               </button>
             </div>
             <div class="section-title">Other Actions</div>
             <div class="action-buttons">
               <button class="action-btn secondary" onclick="buyGas('hydrogen')" ${!isMyTurn ? 'disabled' : ''}>
-                Buy Hydrogen (£${state.gasMarket.hydrogen})
+                🔧 Buy Hydrogen (£${state.gasMarket.hydrogen})
               </button>
               <button class="action-btn secondary" onclick="buyGas('helium')" ${!isMyTurn ? 'disabled' : ''}>
-                Buy Helium (£${state.gasMarket.helium})
+                🔧 Buy Helium (£${state.gasMarket.helium})
               </button>
               <button class="action-btn secondary" onclick="drawCards()" ${!isMyTurn ? 'disabled' : ''}>
-                Draw Card
+                📋 Draw Card
               </button>
               <button class="action-btn secondary" onclick="takeLoan()" ${!isMyTurn ? 'disabled' : ''} title="Gain £30, reduce income by 3">
-                Take Loan (£30, -3 Inc)
+                🪙 Take Loan (£30, -3 Inc)
               </button>
               <button class="action-btn secondary" onclick="buyInsurance()" ${!isMyTurn ? 'disabled' : ''} title="Insurance policy: -1 Income">
-                Buy Insurance (-1 Inc)
+                🪙 Buy Insurance (-1 Inc)
               </button>
               <button class="action-btn secondary" onclick="collectIncome()" ${!isMyTurn ? 'disabled' : ''}>
-                Collect Income
+                💵 Collect Income
               </button>
               <button class="action-btn primary" onclick="endTurn()" ${!isMyTurn ? 'disabled' : ''}>
-                End Turn
+                ✅ End Turn
               </button>
               <button class="action-btn secondary" onclick="calculateScores()" ${!isMyTurn ? 'disabled' : ''} style="margin-top: 10px;">
-                Calculate Scores
+                🏆 Calculate Scores
               </button>
             </div>
           </div>
