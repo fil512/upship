@@ -41,7 +41,7 @@ This document tracks the implementation of UP SHIP! as an online multiplayer boa
 
 | Status | Plan | Description |
 |--------|------|-------------|
-| [ ] | [09-ground-board.md](09-ground-board.md) | Worker placement board and actions |
+| [x] | [09-ground-board.md](09-ground-board.md) | Worker placement board and actions |
 | [ ] | [10-rd-board.md](10-rd-board.md) | R&D board and technology market |
 | [ ] | [11-maps.md](11-maps.md) | Map boards for all three Ages |
 
@@ -105,9 +105,9 @@ This document tracks the implementation of UP SHIP! as an online multiplayer boa
 
 ## Current Session
 
-**Active Plan:** 08-economy.md
+**Active Plan:** 09-ground-board.md
 
-**Next Plan:** 09-ground-board.md
+**Next Plan:** 10-rd-board.md
 
 ---
 

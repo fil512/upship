@@ -61,18 +61,19 @@ function createInitialBlueprint() {
 }
 
 // Create starter deck of 10 cards
+// Based on rules: Apprentice, Mechanic, Draftsman, Researcher, Clerk
 function createStarterDeck() {
   return [
-    { id: 'starter_1', type: 'basic', name: 'Basic Operations' },
-    { id: 'starter_2', type: 'basic', name: 'Basic Operations' },
-    { id: 'starter_3', type: 'basic', name: 'Basic Operations' },
-    { id: 'starter_4', type: 'basic', name: 'Basic Operations' },
-    { id: 'starter_5', type: 'basic', name: 'Basic Operations' },
-    { id: 'starter_6', type: 'worker', name: 'Skilled Worker' },
-    { id: 'starter_7', type: 'worker', name: 'Skilled Worker' },
-    { id: 'starter_8', type: 'research', name: 'Research Grant' },
-    { id: 'starter_9', type: 'income', name: 'Trade Contract' },
-    { id: 'starter_10', type: 'income', name: 'Trade Contract' }
+    { id: 'starter_1', name: 'Apprentice', symbol: 'any', reveal: { influence: 1 } },
+    { id: 'starter_2', name: 'Apprentice', symbol: 'any', reveal: { influence: 1 } },
+    { id: 'starter_3', name: 'Mechanic', symbol: 'wrench', reveal: { cash: 1 }, effect: '+1 swap' },
+    { id: 'starter_4', name: 'Mechanic', symbol: 'wrench', reveal: { cash: 1 }, effect: '+1 swap' },
+    { id: 'starter_5', name: 'Draftsman', symbol: 'wrench', reveal: { influence: 1 }, effect: 'Draw 1 card' },
+    { id: 'starter_6', name: 'Draftsman', symbol: 'wrench', reveal: { influence: 1 }, effect: 'Draw 1 card' },
+    { id: 'starter_7', name: 'Researcher', symbol: 'propeller', reveal: { research: 1 }, effect: '-£1 Research cost' },
+    { id: 'starter_8', name: 'Researcher', symbol: 'propeller', reveal: { research: 1 }, effect: '-£1 Research cost' },
+    { id: 'starter_9', name: 'Clerk', symbol: 'coin', reveal: { cash: 1 }, effect: 'None' },
+    { id: 'starter_10', name: 'Clerk', symbol: 'coin', reveal: { cash: 1 }, effect: 'None' }
   ];
 }
 

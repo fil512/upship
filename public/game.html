@@ -897,7 +897,22 @@
             Market: H₂ £${state.gasMarket.hydrogen}/cube | He £${state.gasMarket.helium}/cube
           </div>
 
-          <div class="section-title" style="margin-top: 20px;">Technologies</div>
+          <div class="section-title" style="margin-top: 20px;">Hangar</div>
+          <div style="display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 10px;">
+            ${(myState.ships || []).filter(s => s.status === 'hangar').length > 0 ?
+              (myState.ships || []).filter(s => s.status === 'hangar').map(() =>
+                '<span style="font-size: 1.5rem;">🚀</span>'
+              ).join('') :
+              '<span style="color: #666; font-size: 0.8rem;">No ships ready</span>'
+            }
+          </div>
+          ${myState.insurance ? `
+            <div style="background: rgba(68, 170, 153, 0.2); border: 1px solid #4a9; border-radius: 4px; padding: 8px; margin-bottom: 10px; text-align: center;">
+              <span style="color: #4a9; font-size: 0.8rem;">🛡️ ${myState.insurance} Insurance</span>
+            </div>
+          ` : ''}
+
+          <div class="section-title" style="margin-top: 10px;">Technologies</div>
           <div class="tech-list">
             ${myState.technologies.length > 0 ?
               myState.technologies.map(t => `
@@ -1030,8 +1045,10 @@
             <div class="cards-container">
               ${myState.hand.map((card, i) => `
                 <div class="card" onclick="playCard(${i})">
-                  <div class="card-name">${card.name}</div>
-                  <div class="card-type">${card.type}</div>
+                  <div class="card-name">
+                    ${getSymbolIcon(card.symbol)} ${card.name}
+                  </div>
+                  <div class="card-type">${card.effect || 'No effect'}</div>
                 </div>
               `).join('')}
               ${myState.hand.length === 0 ? '<div style="color: #666; font-size: 0.8rem;">No cards in hand</div>' : ''}
@@ -1052,7 +1069,25 @@
           </div>
 
           <div class="actions-section">
-            <div class="section-title">Actions</div>
+            <div class="section-title">Ground Board Actions</div>
+            <div class="action-buttons" style="margin-bottom: 10px;">
+              <button class="action-btn secondary" onclick="recruitCrew('pilot')" ${!isMyTurn ? 'disabled' : ''}>
+                Recruit Pilot (£2)
+              </button>
+              <button class="action-btn secondary" onclick="recruitCrew('engineer')" ${!isMyTurn ? 'disabled' : ''}>
+                Recruit Engineer (£4)
+              </button>
+              <button class="action-btn secondary" onclick="buildShip()" ${!isMyTurn ? 'disabled' : ''}>
+                Build Ship
+              </button>
+              <button class="action-btn secondary" onclick="upgradePilotIncome()" ${!isMyTurn ? 'disabled' : ''}>
+                +1 Pilot Income (£5)
+              </button>
+              <button class="action-btn secondary" onclick="upgradeEngineerIncome()" ${!isMyTurn ? 'disabled' : ''}>
+                +1 Engineer Income (£6)
+              </button>
+            </div>
+            <div class="section-title">Other Actions</div>
             <div class="action-buttons">
               <button class="action-btn secondary" onclick="buyGas('hydrogen')" ${!isMyTurn ? 'disabled' : ''}>
                 Buy Hydrogen (£${state.gasMarket.hydrogen})
@@ -1064,7 +1099,10 @@
                 Draw Card
               </button>
               <button class="action-btn secondary" onclick="takeLoan()" ${!isMyTurn ? 'disabled' : ''} title="Gain £30, reduce income by 3">
-                Take Loan (£30, -3 Income)
+                Take Loan (£30, -3 Inc)
+              </button>
+              <button class="action-btn secondary" onclick="buyInsurance()" ${!isMyTurn ? 'disabled' : ''} title="Insurance policy: -1 Income">
+                Buy Insurance (-1 Inc)
               </button>
               <button class="action-btn secondary" onclick="collectIncome()" ${!isMyTurn ? 'disabled' : ''}>
                 Collect Income
@@ -1101,6 +1139,16 @@
 
     function formatTechName(tech) {
       return tech.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+    }
+
+    function getSymbolIcon(symbol) {
+      const icons = {
+        wrench: '🔧',
+        coin: '🪙',
+        propeller: '⚙️',
+        any: '⭐'
+      };
+      return icons[symbol] || '📋';
     }
 
     function calculateStat(playerState, stat) {
@@ -1220,6 +1268,28 @@
 
     function collectIncome() {
       performAction('COLLECT_INCOME');
+    }
+
+    function recruitCrew(crewType) {
+      performAction('RECRUIT_CREW', { crewType, count: 1 });
+    }
+
+    function buildShip() {
+      performAction('BUILD_SHIP', { count: 1 });
+    }
+
+    function upgradePilotIncome() {
+      performAction('UPGRADE_PILOT_INCOME');
+    }
+
+    function upgradeEngineerIncome() {
+      performAction('UPGRADE_ENGINEER_INCOME');
+    }
+
+    function buyInsurance() {
+      if (confirm('Buy insurance? Your income will be permanently reduced by 1.')) {
+        performAction('BUY_INSURANCE');
+      }
     }
 
     function openSlot(slotType, slotIndex) {

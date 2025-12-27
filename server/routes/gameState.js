@@ -10,6 +10,11 @@ const {
   calculateShipStats,
   canLaunch
 } = require('../data/upgrades');
+const {
+  GROUND_BOARD_LOCATIONS,
+  SYMBOL_ICONS,
+  canPlaceAtLocation
+} = require('../data/groundBoard');
 
 // All game state routes require authentication
 router.use(requireAuth);
@@ -91,6 +96,38 @@ router.get('/:gameId/upgrades', async (req, res) => {
   } catch (error) {
     console.error('Get upgrades error:', error);
     res.status(500).json({ error: 'Failed to get upgrades' });
+  }
+});
+
+// Get Ground Board data
+router.get('/:gameId/ground-board', async (req, res) => {
+  try {
+    const { gameId } = req.params;
+
+    // Verify user is in this game
+    const playerCheck = await pool.query(
+      'SELECT * FROM game_players WHERE game_id = $1 AND user_id = $2',
+      [gameId, req.session.userId]
+    );
+
+    if (playerCheck.rows.length === 0) {
+      return res.status(403).json({ error: 'Not a player in this game' });
+    }
+
+    const gameState = await gameStateService.getGameState(gameId);
+
+    if (!gameState) {
+      return res.status(404).json({ error: 'Game state not found' });
+    }
+
+    res.json({
+      locations: GROUND_BOARD_LOCATIONS,
+      symbols: SYMBOL_ICONS,
+      placements: gameState.state.groundBoard?.placements || {}
+    });
+  } catch (error) {
+    console.error('Get ground board error:', error);
+    res.status(500).json({ error: 'Failed to get ground board' });
   }
 });
 
@@ -232,6 +269,27 @@ function processAction(state, playerId, actionType, data) {
 
     case 'DRAW_CARDS':
       return processDrawCards(newState, playerId, data);
+
+    case 'PLACE_AGENT':
+      return processPlaceAgent(newState, playerId, data);
+
+    case 'RECALL_AGENTS':
+      return processRecallAgents(newState, playerId, data);
+
+    case 'RECRUIT_CREW':
+      return processRecruitCrew(newState, playerId, data);
+
+    case 'BUILD_SHIP':
+      return processBuildShip(newState, playerId, data);
+
+    case 'UPGRADE_PILOT_INCOME':
+      return processUpgradePilotIncome(newState, playerId, data);
+
+    case 'UPGRADE_ENGINEER_INCOME':
+      return processUpgradeEngineerIncome(newState, playerId, data);
+
+    case 'BUY_INSURANCE':
+      return processBuyInsurance(newState, playerId, data);
 
     default:
       return { error: `Unknown action type: ${actionType}` };
@@ -527,6 +585,255 @@ function processDrawCards(state, playerId, data) {
   state.log.push({
     timestamp: new Date().toISOString(),
     message: `Drew ${count} card(s)`,
+    playerId,
+    type: 'action'
+  });
+
+  return { newState: state };
+}
+
+// === GROUND BOARD ACTIONS ===
+
+// Place an agent on a Ground Board location
+function processPlaceAgent(state, playerId, data) {
+  const { locationId, cardIndex } = data;
+  const playerState = state.players[playerId];
+
+  // Initialize ground board state if needed
+  if (!state.groundBoard) {
+    state.groundBoard = {
+      placements: {} // locationId -> { playerId, cardUsed }
+    };
+  }
+
+  // Check if player has agents available
+  const placedAgents = Object.values(state.groundBoard.placements)
+    .filter(p => p.playerId === playerId).length;
+
+  if (placedAgents >= (playerState.agents || 3)) {
+    return { error: 'No agents available' };
+  }
+
+  // Check if location is valid
+  const location = GROUND_BOARD_LOCATIONS[locationId];
+  if (!location) {
+    return { error: 'Invalid location' };
+  }
+
+  // Check if location is already occupied (for exclusive spots)
+  // Some locations allow multiple agents, but for simplicity we'll allow one per player
+  const existingPlacement = state.groundBoard.placements[locationId];
+  if (existingPlacement) {
+    return { error: 'Location already occupied this round' };
+  }
+
+  // Validate card if provided
+  let cardUsed = null;
+  if (cardIndex !== undefined && cardIndex >= 0) {
+    if (cardIndex >= playerState.hand.length) {
+      return { error: 'Invalid card index' };
+    }
+    const card = playerState.hand[cardIndex];
+    cardUsed = card;
+
+    // Check if card symbol matches location
+    if (!canPlaceAtLocation(card.symbol || 'any', locationId)) {
+      return { error: `Card symbol (${card.symbol}) does not match location (${location.symbol})` };
+    }
+
+    // Discard the card
+    playerState.discardPile.push(playerState.hand.splice(cardIndex, 1)[0]);
+  }
+
+  // Place the agent
+  state.groundBoard.placements[locationId] = {
+    playerId,
+    cardUsed: cardUsed ? cardUsed.name : null
+  };
+
+  state.log.push({
+    timestamp: new Date().toISOString(),
+    message: `Placed agent at ${location.name}`,
+    playerId,
+    type: 'action'
+  });
+
+  return { newState: state };
+}
+
+// Recall all agents (end of round)
+function processRecallAgents(state, playerId, data) {
+  if (state.groundBoard) {
+    state.groundBoard.placements = {};
+  }
+
+  state.log.push({
+    timestamp: new Date().toISOString(),
+    message: 'All agents recalled',
+    type: 'system'
+  });
+
+  return { newState: state };
+}
+
+// Recruit crew at the Academy
+function processRecruitCrew(state, playerId, data) {
+  const { crewType, count = 1 } = data;
+  const playerState = state.players[playerId];
+
+  const costs = {
+    pilot: 2,
+    engineer: 4
+  };
+
+  if (!costs[crewType]) {
+    return { error: 'Invalid crew type' };
+  }
+
+  const totalCost = costs[crewType] * count;
+
+  if (playerState.cash < totalCost) {
+    return { error: 'Not enough cash' };
+  }
+
+  playerState.cash -= totalCost;
+
+  if (crewType === 'pilot') {
+    playerState.pilots += count;
+  } else {
+    playerState.engineers += count;
+  }
+
+  state.log.push({
+    timestamp: new Date().toISOString(),
+    message: `Recruited ${count} ${crewType}(s) for £${totalCost}`,
+    playerId,
+    type: 'action'
+  });
+
+  return { newState: state };
+}
+
+// Build a ship at the Construction Hall
+function processBuildShip(state, playerId, data) {
+  const { count = 1 } = data;
+  const playerState = state.players[playerId];
+
+  // Calculate hull cost from installed upgrades
+  let hullCost = 2; // Base cost
+
+  // Add Frame hull costs
+  for (const upgradeId of playerState.blueprint.frameSlots || []) {
+    if (upgradeId && UPGRADES[upgradeId]?.hullCost) {
+      hullCost += UPGRADES[upgradeId].hullCost;
+    }
+  }
+
+  // Add Fabric hull costs
+  for (const upgradeId of playerState.blueprint.fabricSlots || []) {
+    if (upgradeId && UPGRADES[upgradeId]?.hullCost) {
+      hullCost += UPGRADES[upgradeId].hullCost;
+    }
+  }
+
+  const totalCost = hullCost * count;
+
+  if (playerState.cash < totalCost) {
+    return { error: `Not enough cash (need £${totalCost})` };
+  }
+
+  if (count > 3) {
+    return { error: 'Can only build up to 3 ships per action' };
+  }
+
+  playerState.cash -= totalCost;
+
+  // Initialize ships array if needed
+  if (!playerState.ships) {
+    playerState.ships = [];
+  }
+
+  // Add ships to hangar
+  for (let i = 0; i < count; i++) {
+    playerState.ships.push({
+      id: `ship_${Date.now()}_${i}`,
+      status: 'hangar', // hangar, launched, damaged
+      route: null
+    });
+  }
+
+  state.log.push({
+    timestamp: new Date().toISOString(),
+    message: `Built ${count} ship(s) for £${totalCost} (£${hullCost}/ship)`,
+    playerId,
+    type: 'action'
+  });
+
+  return { newState: state };
+}
+
+// Upgrade Pilot Income at Flight School
+function processUpgradePilotIncome(state, playerId, data) {
+  const playerState = state.players[playerId];
+  const cost = 5;
+
+  if (playerState.cash < cost) {
+    return { error: 'Not enough cash' };
+  }
+
+  playerState.cash -= cost;
+  playerState.pilotIncome = (playerState.pilotIncome || 1) + 1;
+
+  state.log.push({
+    timestamp: new Date().toISOString(),
+    message: `Upgraded Pilot Income to ${playerState.pilotIncome}/round for £${cost}`,
+    playerId,
+    type: 'action'
+  });
+
+  return { newState: state };
+}
+
+// Upgrade Engineer Income at Technical Institute
+function processUpgradeEngineerIncome(state, playerId, data) {
+  const playerState = state.players[playerId];
+  const cost = 6;
+
+  if (playerState.cash < cost) {
+    return { error: 'Not enough cash' };
+  }
+
+  playerState.cash -= cost;
+  playerState.engineerIncome = (playerState.engineerIncome || 1) + 1;
+
+  state.log.push({
+    timestamp: new Date().toISOString(),
+    message: `Upgraded Engineer Income to ${playerState.engineerIncome}/round for £${cost}`,
+    playerId,
+    type: 'action'
+  });
+
+  return { newState: state };
+}
+
+// Buy insurance at Insurance Bureau
+function processBuyInsurance(state, playerId, data) {
+  const playerState = state.players[playerId];
+
+  // Track insurance policies
+  const currentPolicies = playerState.insurance || 0;
+
+  if (currentPolicies >= 3) {
+    return { error: 'Maximum 3 insurance policies' };
+  }
+
+  // Cost is -1 Income (permanent)
+  playerState.income = Math.max(0, playerState.income - 1);
+  playerState.insurance = currentPolicies + 1;
+
+  state.log.push({
+    timestamp: new Date().toISOString(),
+    message: `Purchased insurance policy (${playerState.insurance}/3). Income reduced by 1.`,
     playerId,
     type: 'action'
   });
