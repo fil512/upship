@@ -12,13 +12,13 @@ Implement a game lobby system where authenticated users can create new games, br
 
 ## Goals
 
-- [ ] Create games database table with proper schema
-- [ ] Create game_players junction table for player-game relationships
-- [ ] Implement API endpoints for game CRUD operations
-- [ ] Build lobby UI showing available games
-- [ ] Add game creation flow with settings
-- [ ] Implement join game functionality
-- [ ] Add game status management (waiting, in_progress, completed)
+- [x] Create games database table with proper schema
+- [x] Create game_players junction table for player-game relationships
+- [x] Implement API endpoints for game CRUD operations
+- [x] Build lobby UI showing available games
+- [x] Add game creation flow with settings
+- [x] Implement join game functionality
+- [x] Add game status management (waiting, in_progress, completed)
 
 ## Implementation Steps
 
