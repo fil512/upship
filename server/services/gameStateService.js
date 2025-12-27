@@ -1,24 +1,58 @@
 const { pool } = require('../db');
 
 // Faction-specific starting configurations
+// Per rules Section 10: Each nation has unique starting technologies and blueprint configuration
 const FACTION_CONFIG = {
   germany: {
-    startingTechnologies: ['rigid_frame', 'duralumin_girders'],
-    bonuses: { structure: 1 }
+    // Rules 10.1: Duralumin Framework, Goldbeater's Skin, Blaugas Fuel System
+    startingTechnologies: ['duralumin_girders', 'goldbeater_skin', 'blaugas_storage'],
+    // Pre-installed upgrades so Germany can launch on turn 1
+    startingUpgrades: {
+      frame: 'duralumin_frame',
+      fabric: 'premium_envelope'
+    },
+    bonuses: { structure: 1 },
+    // The Flaw: Cannot acquire helium_handling technology
+    bannedTechnologies: ['helium_handling']
   },
   britain: {
-    startingTechnologies: ['dining_saloon'],
-    bonuses: { luxury: 1 }
+    // Rules 10.2: Wire Bracing, Doped Canvas, Imperial Mooring System
+    startingTechnologies: ['wire_bracing', 'doped_canvas', 'imperial_mooring'],
+    // Pre-installed upgrades including printed Dining Saloon (Starting Advantage)
+    startingUpgrades: {
+      frame: 'tensioned_frame',
+      fabric: 'doped_covering',
+      component: 'dining_saloon'  // "Pre-Installed Luxury"
+    },
+    bonuses: { luxury: 1 },
+    // The Flaw: Red Tape - only 1 swap instead of 2
+    upgradeSwaps: 1
   },
   usa: {
-    startingTechnologies: ['helium_handling'],
+    // Rules 10.3: Duralumin Framework, Gelatinized Latex, Trapeze Fighter, Helium Handling
+    startingTechnologies: ['duralumin_girders', 'gelatinized_latex', 'trapeze_system', 'helium_handling'],
+    // Pre-installed upgrades so USA can launch on turn 1
+    startingUpgrades: {
+      frame: 'duralumin_frame',
+      fabric: 'synthetic_envelope'
+    },
     bonuses: { safety: 1 },
+    // Starting Advantage: Helium Monopoly - market doesn't advance when USA buys helium
     heliumMonopoly: true
   },
   italy: {
-    startingTechnologies: ['rapid_refit'],
+    // Rules 10.4: Internal Keel, Rubberized Cotton, Articulated Keel Design
+    startingTechnologies: ['internal_keel', 'rubberized_cotton', 'articulated_keel'],
+    // Pre-installed upgrades so Italy can launch on turn 1
+    startingUpgrades: {
+      frame: 'semi_rigid_keel',
+      fabric: 'cotton_envelope'
+    },
     bonuses: { speed: 1 },
-    upgradeSwaps: 4 // Instead of 2
+    // Starting Advantage: Rapid Refit - 4 swaps instead of 2
+    upgradeSwaps: 4,
+    // The Flaw: Low Ceiling - fewer payload slots (handled in blueprint)
+    lowCeiling: true
   }
 };
 
@@ -40,25 +74,60 @@ function createPlayerState(faction) {
     technologies: config.startingTechnologies || [],
     ships: [],
     routes: [],
-    blueprint: createInitialBlueprint(),
+    blueprint: createInitialBlueprint(faction),
     hand: [],
     deck: createStarterDeck(),
     discardPile: [],
     hazardDeck: createHazardDeck(),
-    bonuses: config.bonuses || {}
+    bonuses: config.bonuses || {},
+    // Faction-specific attributes
+    upgradeSwaps: config.upgradeSwaps || 2,  // Default 2, Britain=1, Italy=4
+    heliumMonopoly: config.heliumMonopoly || false,
+    bannedTechnologies: config.bannedTechnologies || []
   };
 }
 
-// Create initial blueprint for Age I
-function createInitialBlueprint() {
-  return {
+// Create initial blueprint for Age I with faction-specific pre-installed upgrades
+// Per rules Section 10: Each faction has unique starting Blueprint configuration
+// Per rules Section 3.2: All Frame and Fabric slots must be filled to launch
+// Per rules Section 11.2: Players start with 2 H₂ cubes - "enough for an immediate launch"
+function createInitialBlueprint(faction) {
+  const config = FACTION_CONFIG[faction] || {};
+  const startingUpgrades = config.startingUpgrades || {};
+
+  // Age I has 1 Frame, 1 Fabric, 1 Drive, 1 Payload slot per rules Section 3.2
+  // But the code uses 4 frame slots, 2 fabric, 2 drive, 3 component
+  // We'll pre-install in the first slot of each type as specified
+
+  const blueprint = {
     age: 1,
-    frameSlots: [null, null, null, null], // 4 frame slots
-    fabricSlots: [null, null],            // 2 fabric slots
-    driveSlots: [null, null],             // 2 drive slots
-    componentSlots: [null, null, null]    // 3 component slots
+    frameSlots: [null, null, null, null],   // 4 frame slots
+    fabricSlots: [null, null],              // 2 fabric slots
+    driveSlots: [null, null],               // 2 drive slots
+    componentSlots: [null, null, null]      // 3 component slots (Italy has fewer per lowCeiling)
     // Note: Gas sockets removed - gas is spent directly from reserve when launching
   };
+
+  // Pre-install starting upgrades so faction can launch on turn 1
+  if (startingUpgrades.frame) {
+    blueprint.frameSlots[0] = startingUpgrades.frame;
+  }
+  if (startingUpgrades.fabric) {
+    blueprint.fabricSlots[0] = startingUpgrades.fabric;
+  }
+  if (startingUpgrades.drive) {
+    blueprint.driveSlots[0] = startingUpgrades.drive;
+  }
+  if (startingUpgrades.component) {
+    blueprint.componentSlots[0] = startingUpgrades.component;
+  }
+
+  // Italy's "Low Ceiling" flaw: fewer payload slots
+  if (config.lowCeiling) {
+    blueprint.componentSlots = [null, null];  // Only 2 instead of 3
+  }
+
+  return blueprint;
 }
 
 // Create starter deck of 10 cards

@@ -440,11 +440,30 @@ const UPGRADES = {
  * Maps technology IDs to their upgrade unlock and metadata
  */
 const TECHNOLOGIES = {
-  // Starting techs
+  // Faction starting techs (pre-printed on player boards, cost 0, don't advance Progress)
+  // Germany starting techs
+  duralumin_girders: { id: 'duralumin_girders', name: 'Duralumin Framework', type: 'structure', cost: 0, age: 1, faction: 'germany' },
+  goldbeater_skin: { id: 'goldbeater_skin', name: "Goldbeater's Skin", type: 'fabric', cost: 0, age: 1, faction: 'germany' },
+  blaugas_storage: { id: 'blaugas_storage', name: 'Blaugas Fuel System', type: 'gas', cost: 0, age: 1, faction: 'germany' },
+
+  // Britain starting techs
+  wire_bracing: { id: 'wire_bracing', name: 'Wire Bracing', type: 'structure', cost: 0, age: 1, faction: 'britain' },
+  doped_canvas: { id: 'doped_canvas', name: 'Doped Canvas', type: 'fabric', cost: 0, age: 1, faction: 'britain' },
+  imperial_mooring: { id: 'imperial_mooring', name: 'Imperial Mooring System', type: 'special', cost: 0, age: 1, faction: 'britain' },
+
+  // USA starting techs
+  gelatinized_latex: { id: 'gelatinized_latex', name: 'Gelatinized Latex', type: 'fabric', cost: 0, age: 1, faction: 'usa' },
+  trapeze_system: { id: 'trapeze_system', name: 'Trapeze Fighter System', type: 'special', cost: 0, age: 1, faction: 'usa' },
+  helium_handling: { id: 'helium_handling', name: 'Helium Handling', type: 'gas', cost: 0, age: 1, faction: 'usa' },
+
+  // Italy starting techs
+  internal_keel: { id: 'internal_keel', name: 'Internal Keel', type: 'structure', cost: 0, age: 1, faction: 'italy' },
+  rubberized_cotton: { id: 'rubberized_cotton', name: 'Rubberized Cotton', type: 'fabric', cost: 0, age: 1, faction: 'italy' },
+  articulated_keel: { id: 'articulated_keel', name: 'Articulated Keel Design', type: 'structure', cost: 0, age: 1, faction: 'italy' },
+
+  // Legacy entries (kept for backwards compatibility)
   rigid_frame: { id: 'rigid_frame', name: 'Rigid Frame', type: 'structure', cost: 0, age: 1 },
-  duralumin_girders: { id: 'duralumin_girders', name: 'Duralumin Girders', type: 'structure', cost: 0, age: 1 },
   dining_saloon: { id: 'dining_saloon', name: 'Dining Saloon', type: 'component', cost: 0, age: 1 },
-  helium_handling: { id: 'helium_handling', name: 'Helium Handling', type: 'gas', cost: 0, age: 1 },
   rapid_refit: { id: 'rapid_refit', name: 'Rapid Refit', type: 'structure', cost: 0, age: 1 },
 
   // Drive techs
@@ -460,22 +479,22 @@ const TECHNOLOGIES = {
   diesel_electric: { id: 'diesel_electric', name: 'Diesel-Electric Drive', type: 'drive', cost: 6, age: 3 },
   variable_pitch: { id: 'variable_pitch', name: 'Variable-Pitch Propeller', type: 'drive', cost: 5, age: 3 },
 
-  // Frame techs
+  // Frame techs (acquirable from R&D)
   wooden_framework: { id: 'wooden_framework', name: 'Wooden Framework', type: 'structure', cost: 2, age: 1 },
-  wire_bracing: { id: 'wire_bracing', name: 'Wire Bracing', type: 'structure', cost: 2, age: 1 },
+  // wire_bracing - defined above as Britain starting tech
   steel_framework: { id: 'steel_framework', name: 'Steel Framework', type: 'structure', cost: 4, age: 2 },
-  internal_keel: { id: 'internal_keel', name: 'Internal Keel', type: 'structure', cost: 3, age: 2 },
+  // internal_keel - defined above as Italy starting tech
   geodetic_structure: { id: 'geodetic_structure', name: 'Geodetic Structure', type: 'structure', cost: 6, age: 3 },
   modular_construction: { id: 'modular_construction', name: 'Modular Construction', type: 'structure', cost: 4, age: 3 },
-  articulated_keel: { id: 'articulated_keel', name: 'Articulated Keel', type: 'structure', cost: 4, age: 3 },
+  // articulated_keel - defined above as Italy starting tech
 
-  // Fabric techs
-  rubberized_cotton: { id: 'rubberized_cotton', name: 'Rubberized Cotton', type: 'fabric', cost: 2, age: 1 },
-  doped_canvas: { id: 'doped_canvas', name: 'Doped Canvas', type: 'fabric', cost: 3, age: 1 },
-  goldbeater_skin: { id: 'goldbeater_skin', name: "Goldbeater's Skin", type: 'fabric', cost: 3, age: 1 },
+  // Fabric techs (acquirable from R&D)
+  // rubberized_cotton - defined above as Italy starting tech
+  // doped_canvas - defined above as Britain starting tech
+  // goldbeater_skin - defined above as Germany starting tech
   fireproof_coating: { id: 'fireproof_coating', name: 'Fireproof Coating', type: 'fabric', cost: 4, age: 2 },
   aluminum_doping: { id: 'aluminum_doping', name: 'Aluminum Doping', type: 'fabric', cost: 3, age: 2 },
-  gelatinized_latex: { id: 'gelatinized_latex', name: 'Gelatinized Latex', type: 'fabric', cost: 4, age: 3 },
+  // gelatinized_latex - defined above as USA starting tech
   composite_covering: { id: 'composite_covering', name: 'Composite Covering', type: 'fabric', cost: 5, age: 3 },
 
   // Component techs
