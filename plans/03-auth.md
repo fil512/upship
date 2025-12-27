@@ -1,8 +1,8 @@
-# Phase 03: User Authentication and Sessions
+# Phase 03: User Authentication with Google OAuth2
 
 ## Overview
 
-Implement user authentication supporting both guest users (quick play) and registered accounts. Uses session-based auth with cookies for simplicity and security.
+Implement user authentication using Google OAuth2. Users sign in with their Google account - no passwords to manage, no guest users.
 
 ## Prerequisites
 
@@ -11,30 +11,41 @@ Implement user authentication supporting both guest users (quick play) and regis
 
 ## Goals
 
-- [ ] Install authentication dependencies (bcrypt, express-session, connect-pg-simple)
+- [ ] Set up Google OAuth2 credentials in Google Cloud Console
+- [ ] Install authentication dependencies (passport, passport-google-oauth20, express-session)
 - [ ] Create session store backed by PostgreSQL
-- [ ] Implement guest user creation (play immediately without signup)
-- [ ] Implement user registration with username/password
-- [ ] Implement login/logout endpoints
+- [ ] Implement Google OAuth2 login flow
 - [ ] Add session middleware to protect routes
 - [ ] Create auth migration for sessions table
-- [ ] Create basic frontend login/register UI
+- [ ] Create frontend login UI with Google sign-in button
 - [ ] Test authentication flow end-to-end
 
 ## Implementation Steps
 
-### Step 1: Install Dependencies
+### Step 1: Set Up Google OAuth2 Credentials
+
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Create a new project or select existing
+3. Enable Google+ API
+4. Go to Credentials → Create Credentials → OAuth 2.0 Client ID
+5. Configure consent screen
+6. Add authorized redirect URIs:
+   - `http://localhost:3000/api/auth/google/callback` (development)
+   - `https://upship-production.up.railway.app/api/auth/google/callback` (production)
+7. Save Client ID and Client Secret
+
+### Step 2: Install Dependencies
 
 ```bash
-npm install bcrypt express-session connect-pg-simple uuid
+npm install passport passport-google-oauth20 express-session connect-pg-simple
 ```
 
-- `bcrypt`: Password hashing
+- `passport`: Authentication middleware
+- `passport-google-oauth20`: Google OAuth2 strategy
 - `express-session`: Session middleware
 - `connect-pg-simple`: PostgreSQL session store
-- `uuid`: Generate guest user IDs
 
-### Step 2: Create Session Table Migration
+### Step 3: Create Session Table Migration
 
 Create `server/db/migrations/002_sessions.sql`:
 
@@ -50,21 +61,16 @@ CREATE TABLE "session" (
 CREATE INDEX "IDX_session_expire" ON "session" ("expire");
 ```
 
-### Step 3: Create Auth Module
+### Step 4: Create Auth Module
 
-Create `server/auth/index.js` with:
-
-- Session configuration
-- Password hashing utilities
-- Session middleware factory
+Create `server/auth/index.js`:
 
 ```javascript
+const passport = require('passport');
+const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const session = require('express-session');
 const pgSession = require('connect-pg-simple')(session);
-const bcrypt = require('bcrypt');
 const { pool } = require('../db');
-
-const SALT_ROUNDS = 10;
 
 // Session configuration
 function createSessionMiddleware() {
@@ -85,18 +91,69 @@ function createSessionMiddleware() {
   });
 }
 
-// Password utilities
-async function hashPassword(password) {
-  return bcrypt.hash(password, SALT_ROUNDS);
-}
+// Configure Passport with Google OAuth2
+function configurePassport() {
+  passport.use(new GoogleStrategy({
+    clientID: process.env.GOOGLE_CLIENT_ID,
+    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    callbackURL: process.env.GOOGLE_CALLBACK_URL || '/api/auth/google/callback'
+  }, async (accessToken, refreshToken, profile, done) => {
+    try {
+      // Find or create user
+      const email = profile.emails[0].value;
+      const googleId = profile.id;
+      const displayName = profile.displayName;
 
-async function verifyPassword(password, hash) {
-  return bcrypt.compare(password, hash);
+      let result = await pool.query(
+        'SELECT * FROM users WHERE email = $1',
+        [email]
+      );
+
+      let user;
+      if (result.rows.length === 0) {
+        // Create new user
+        result = await pool.query(
+          `INSERT INTO users (username, email, display_name, google_id)
+           VALUES ($1, $2, $3, $4)
+           RETURNING id, username, email, display_name`,
+          [email, email, displayName, googleId]
+        );
+        user = result.rows[0];
+      } else {
+        user = result.rows[0];
+        // Update google_id and last_login
+        await pool.query(
+          `UPDATE users SET google_id = $1, last_login = NOW() WHERE id = $2`,
+          [googleId, user.id]
+        );
+      }
+
+      done(null, user);
+    } catch (error) {
+      done(error, null);
+    }
+  }));
+
+  passport.serializeUser((user, done) => {
+    done(null, user.id);
+  });
+
+  passport.deserializeUser(async (id, done) => {
+    try {
+      const result = await pool.query(
+        'SELECT id, username, email, display_name FROM users WHERE id = $1',
+        [id]
+      );
+      done(null, result.rows[0] || null);
+    } catch (error) {
+      done(error, null);
+    }
+  });
 }
 
 // Auth middleware - requires logged in user
 function requireAuth(req, res, next) {
-  if (!req.session.userId) {
+  if (!req.isAuthenticated()) {
     return res.status(401).json({ error: 'Authentication required' });
   }
   next();
@@ -104,118 +161,9 @@ function requireAuth(req, res, next) {
 
 module.exports = {
   createSessionMiddleware,
-  hashPassword,
-  verifyPassword,
-  requireAuth
-};
-```
-
-### Step 4: Create User Service
-
-Create `server/services/userService.js`:
-
-```javascript
-const { v4: uuidv4 } = require('uuid');
-const { pool } = require('../db');
-const { hashPassword, verifyPassword } = require('../auth');
-
-// Create a guest user (no password required)
-async function createGuestUser() {
-  const guestName = `Guest_${Math.random().toString(36).substring(2, 8)}`;
-
-  const result = await pool.query(
-    `INSERT INTO users (username, display_name, is_guest)
-     VALUES ($1, $2, true)
-     RETURNING id, username, display_name, is_guest`,
-    [guestName, guestName]
-  );
-
-  return result.rows[0];
-}
-
-// Register a new user
-async function registerUser(username, password, email = null) {
-  const passwordHash = await hashPassword(password);
-
-  const result = await pool.query(
-    `INSERT INTO users (username, password_hash, email, display_name)
-     VALUES ($1, $2, $3, $1)
-     RETURNING id, username, display_name, email, is_guest`,
-    [username, passwordHash, email]
-  );
-
-  return result.rows[0];
-}
-
-// Login with username/password
-async function loginUser(username, password) {
-  const result = await pool.query(
-    `SELECT id, username, password_hash, display_name, is_guest
-     FROM users WHERE username = $1`,
-    [username]
-  );
-
-  if (result.rows.length === 0) {
-    return null;
-  }
-
-  const user = result.rows[0];
-
-  if (user.is_guest || !user.password_hash) {
-    return null; // Guest users can't login with password
-  }
-
-  const valid = await verifyPassword(password, user.password_hash);
-  if (!valid) {
-    return null;
-  }
-
-  // Update last login
-  await pool.query(
-    `UPDATE users SET last_login = NOW() WHERE id = $1`,
-    [user.id]
-  );
-
-  return {
-    id: user.id,
-    username: user.username,
-    display_name: user.display_name,
-    is_guest: user.is_guest
-  };
-}
-
-// Get user by ID
-async function getUserById(userId) {
-  const result = await pool.query(
-    `SELECT id, username, display_name, email, is_guest, created_at
-     FROM users WHERE id = $1`,
-    [userId]
-  );
-
-  return result.rows[0] || null;
-}
-
-// Upgrade guest to registered user
-async function upgradeGuestUser(userId, username, password, email = null) {
-  const passwordHash = await hashPassword(password);
-
-  const result = await pool.query(
-    `UPDATE users
-     SET username = $2, password_hash = $3, email = $4, is_guest = false
-     WHERE id = $1 AND is_guest = true
-     RETURNING id, username, display_name, email, is_guest`,
-    [userId, username, passwordHash, email]
-  );
-
-  return result.rows[0] || null;
-}
-
-module.exports = {
-  createGuestUser,
-  registerUser,
-  loginUser,
-  getUserById,
-  upgradeGuestUser
+  configurePassport,
+  requireAuth,
+  passport
 };
 ```
 
@@ -226,138 +174,67 @@ Create `server/routes/auth.js`:
 ```javascript
 const express = require('express');
 const router = express.Router();
-const userService = require('../services/userService');
+const { passport } = require('../auth');
 
-// Play as guest - creates a new guest user
-router.post('/guest', async (req, res) => {
-  try {
-    const user = await userService.createGuestUser();
-    req.session.userId = user.id;
-    res.json({ user });
-  } catch (error) {
-    console.error('Guest creation error:', error);
-    res.status(500).json({ error: 'Failed to create guest user' });
+// Initiate Google OAuth
+router.get('/google', passport.authenticate('google', {
+  scope: ['profile', 'email']
+}));
+
+// Google OAuth callback
+router.get('/google/callback',
+  passport.authenticate('google', {
+    failureRedirect: '/?error=auth_failed'
+  }),
+  (req, res) => {
+    res.redirect('/');
   }
-});
+);
 
-// Register new user
-router.post('/register', async (req, res) => {
-  const { username, password, email } = req.body;
-
-  if (!username || !password) {
-    return res.status(400).json({ error: 'Username and password required' });
+// Get current user
+router.get('/me', (req, res) => {
+  if (!req.isAuthenticated()) {
+    return res.json({ user: null });
   }
-
-  if (username.length < 3 || username.length > 50) {
-    return res.status(400).json({ error: 'Username must be 3-50 characters' });
-  }
-
-  if (password.length < 6) {
-    return res.status(400).json({ error: 'Password must be at least 6 characters' });
-  }
-
-  try {
-    const user = await userService.registerUser(username, password, email);
-    req.session.userId = user.id;
-    res.json({ user });
-  } catch (error) {
-    if (error.code === '23505') { // Unique violation
-      return res.status(409).json({ error: 'Username already taken' });
+  res.json({
+    user: {
+      id: req.user.id,
+      username: req.user.username,
+      email: req.user.email,
+      displayName: req.user.display_name
     }
-    console.error('Registration error:', error);
-    res.status(500).json({ error: 'Registration failed' });
-  }
-});
-
-// Login
-router.post('/login', async (req, res) => {
-  const { username, password } = req.body;
-
-  if (!username || !password) {
-    return res.status(400).json({ error: 'Username and password required' });
-  }
-
-  try {
-    const user = await userService.loginUser(username, password);
-
-    if (!user) {
-      return res.status(401).json({ error: 'Invalid credentials' });
-    }
-
-    req.session.userId = user.id;
-    res.json({ user });
-  } catch (error) {
-    console.error('Login error:', error);
-    res.status(500).json({ error: 'Login failed' });
-  }
+  });
 });
 
 // Logout
 router.post('/logout', (req, res) => {
-  req.session.destroy((err) => {
+  req.logout((err) => {
     if (err) {
       return res.status(500).json({ error: 'Logout failed' });
     }
-    res.clearCookie('connect.sid');
-    res.json({ success: true });
+    req.session.destroy((err) => {
+      res.clearCookie('connect.sid');
+      res.json({ success: true });
+    });
   });
-});
-
-// Get current user
-router.get('/me', async (req, res) => {
-  if (!req.session.userId) {
-    return res.json({ user: null });
-  }
-
-  try {
-    const user = await userService.getUserById(req.session.userId);
-    res.json({ user });
-  } catch (error) {
-    console.error('Get user error:', error);
-    res.status(500).json({ error: 'Failed to get user' });
-  }
-});
-
-// Upgrade guest to registered user
-router.post('/upgrade', async (req, res) => {
-  if (!req.session.userId) {
-    return res.status(401).json({ error: 'Not logged in' });
-  }
-
-  const { username, password, email } = req.body;
-
-  if (!username || !password) {
-    return res.status(400).json({ error: 'Username and password required' });
-  }
-
-  try {
-    const user = await userService.upgradeGuestUser(
-      req.session.userId,
-      username,
-      password,
-      email
-    );
-
-    if (!user) {
-      return res.status(400).json({ error: 'User is not a guest or not found' });
-    }
-
-    res.json({ user });
-  } catch (error) {
-    if (error.code === '23505') {
-      return res.status(409).json({ error: 'Username already taken' });
-    }
-    console.error('Upgrade error:', error);
-    res.status(500).json({ error: 'Upgrade failed' });
-  }
 });
 
 module.exports = router;
 ```
 
-### Step 6: Update Server Index
+### Step 6: Add google_id Column Migration
 
-Modify `server/index.js` to add session middleware and auth routes:
+Create `server/db/migrations/003_google_oauth.sql`:
+
+```sql
+-- Add google_id column for OAuth
+ALTER TABLE users ADD COLUMN IF NOT EXISTS google_id VARCHAR(255);
+CREATE INDEX IF NOT EXISTS idx_users_google_id ON users(google_id);
+```
+
+### Step 7: Update Server Index
+
+Modify `server/index.js`:
 
 ```javascript
 require('dotenv').config();
@@ -365,7 +242,7 @@ require('dotenv').config();
 const express = require('express');
 const path = require('path');
 const db = require('./db');
-const { createSessionMiddleware } = require('./auth');
+const { createSessionMiddleware, configurePassport, passport } = require('./auth');
 const authRoutes = require('./routes/auth');
 
 const app = express();
@@ -374,12 +251,18 @@ const PORT = process.env.PORT || 3000;
 // Middleware
 app.use(express.json());
 app.use(createSessionMiddleware());
+
+// Passport initialization
+configurePassport();
+app.use(passport.initialize());
+app.use(passport.session());
+
 app.use(express.static(path.join(__dirname, '..', 'public')));
 
 // Routes
 app.use('/api/auth', authRoutes);
 
-// Health check (before static file catch-all)
+// Health check
 app.get('/health', async (req, res) => {
   const dbHealthy = await db.healthCheck();
   res.status(dbHealthy ? 200 : 503).json({
@@ -408,83 +291,75 @@ app.listen(PORT, () => {
 });
 ```
 
-### Step 7: Update .env.example
-
-Add session secret to environment template:
+### Step 8: Update .env.example
 
 ```
 DATABASE_URL=postgresql://user:password@localhost:5432/upship
 SESSION_SECRET=your-secure-random-string-here
+GOOGLE_CLIENT_ID=your-google-client-id
+GOOGLE_CLIENT_SECRET=your-google-client-secret
+GOOGLE_CALLBACK_URL=http://localhost:3000/api/auth/google/callback
 NODE_ENV=development
 ```
 
-### Step 8: Create Frontend Auth UI
+### Step 9: Create Frontend Login UI
 
-Update `public/index.html` with login/register forms and guest play option:
+Update `public/index.html` with:
+- "Sign in with Google" button
+- Display current user when logged in
+- Logout button
 
-- Login form (username/password)
-- Register form (username/password/email optional)
-- "Play as Guest" button for quick start
-- Display current user status
-- Logout button when logged in
-
-### Step 9: Add Frontend JavaScript
-
-Create `public/js/auth.js` for handling auth interactions:
-
-- Form submission handlers
-- API calls to auth endpoints
-- Session state management
-- UI updates based on auth state
+Create `public/js/auth.js`:
+- Check auth status on page load
+- Handle login/logout button clicks
+- Update UI based on auth state
 
 ## Files to Create/Modify
 
-- `server/db/migrations/002_sessions.sql` - Session table schema
-- `server/auth/index.js` - Session middleware and password utilities
-- `server/services/userService.js` - User CRUD operations
-- `server/routes/auth.js` - Auth API endpoints
-- `server/index.js` - Add session and auth routes
-- `.env.example` - Add SESSION_SECRET
-- `public/index.html` - Add auth UI elements
+- `server/db/migrations/002_sessions.sql` - Session table
+- `server/db/migrations/003_google_oauth.sql` - Add google_id column
+- `server/auth/index.js` - Passport config and session middleware
+- `server/routes/auth.js` - OAuth routes
+- `server/index.js` - Add passport middleware
+- `.env.example` - Add Google OAuth env vars
+- `public/index.html` - Add Google sign-in button
 - `public/js/auth.js` - Frontend auth logic
 
 ## API Endpoints
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| POST | `/api/auth/guest` | Create guest user and login |
-| POST | `/api/auth/register` | Register new account |
-| POST | `/api/auth/login` | Login with credentials |
-| POST | `/api/auth/logout` | End session |
+| GET | `/api/auth/google` | Initiate Google OAuth |
+| GET | `/api/auth/google/callback` | OAuth callback |
 | GET | `/api/auth/me` | Get current user |
-| POST | `/api/auth/upgrade` | Upgrade guest to registered |
+| POST | `/api/auth/logout` | End session |
+
+## Environment Variables Required
+
+| Variable | Description |
+|----------|-------------|
+| `GOOGLE_CLIENT_ID` | From Google Cloud Console |
+| `GOOGLE_CLIENT_SECRET` | From Google Cloud Console |
+| `GOOGLE_CALLBACK_URL` | OAuth callback URL |
+| `SESSION_SECRET` | Random string for session signing |
 
 ## Testing
 
-1. **Guest Flow:**
-   - Click "Play as Guest"
-   - Verify user is created and logged in
-   - Refresh page - session persists
+1. **Local Development:**
+   - Set up Google OAuth credentials
+   - Add localhost callback URL
+   - Click "Sign in with Google"
+   - Verify redirect to Google, then back
+   - Check `/api/auth/me` returns user
 
-2. **Registration Flow:**
-   - Register with username/password
-   - Verify can login with same credentials
-   - Verify duplicate username is rejected
-
-3. **Login/Logout:**
-   - Login, verify session
-   - Logout, verify session cleared
-   - Verify protected routes require auth
-
-4. **Guest Upgrade:**
-   - Play as guest
-   - Upgrade to registered account
-   - Verify can login with new credentials
+2. **Production:**
+   - Add Railway callback URL to Google Console
+   - Set env vars in Railway
+   - Test full OAuth flow
 
 ## Notes
 
-- Using session cookies instead of JWT for simplicity
-- Guest users get auto-generated usernames like "Guest_abc123"
-- Sessions expire after 30 days of inactivity
-- Production requires strong SESSION_SECRET
-- HTTPS required in production for secure cookies
+- No passwords to manage - Google handles authentication
+- User email becomes their username
+- Display name pulled from Google profile
+- Sessions stored in PostgreSQL for persistence across deploys
