@@ -6,7 +6,29 @@ This file provides guidance to Claude Code (claude.ai/code) when working with th
 
 This is a board game design project for **UP SHIP!**, a strategy game about airship conglomerates during the Golden Age of Airships (1900-1937). Players act as Directors of rival airship companies representing Germany, Britain, the United States, and Italy, competing across three historical Ages.
 
-The project is in the **design phase** - no software codebase yet. The primary artifact is `upship_rules.md`.
+The project includes game rules design and an online implementation.
+
+## Deployment
+
+- **Production URL**: https://upship-production.up.railway.app
+- **Hosting**: Railway (auto-deploys from GitHub on push to main)
+- **Health Check**: https://upship-production.up.railway.app/health
+
+## Application Structure
+
+```
+server/index.js    - Express server (static files + API)
+public/            - Frontend static assets
+railway.json       - Railway deployment configuration
+```
+
+### Running Locally
+
+```bash
+npm install
+npm start          # Production server on port 3000
+npm run dev        # Development with auto-reload
+```
 
 ## Document Structure
 
