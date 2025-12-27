@@ -120,6 +120,8 @@ Your personal Technology display. When you acquire Technologies from the R&D Boa
 | 3-4 | -1 Research |
 | 5+ | -2 Research |
 
+*Note: Faction starting technologies (pre-printed on Player Boards) DO count toward specialization discounts.*
+
 **Key Point:** Technologies never expire. You can use an old "Daimler Engine" technology into Age III, but its poor weight-to-power ratio will make the resulting upgrades inefficient for longer routes.
 
 ## 3.2 Zone 2: The Blueprint (Center)
@@ -717,8 +719,8 @@ Players may spend Influence to buy cards from the Market Row. Purchased cards go
 
 ## 6.3 Phase C: Income & Cleanup
 
-1. **Pay Engineer Upkeep:** Deduct £1 per Engineer in your Barracks from your income
-2. **Collect Income:** Each player gains £ equal to their Income Track position (minus Engineer upkeep)
+1. **Collect Income:** Each player gains £ equal to their Income Track position
+2. **Pay Engineer Upkeep:** Pay £1 per Engineer in your Barracks. If you cannot afford upkeep, you must either dismiss Engineers (return to shared supply) or go into debt (minimum -£10 in Age II, or discard Technologies in Ages I/III per Section 12.3)
 3. **Collect Crew Income:** Each player gains Pilots equal to their Pilot Income Track, and Engineers equal to their Engineer Income Track
 4. **Refresh R&D Board:** Draw new Technology tiles from the bag to fill empty R&D Board spaces
 5. **Check Age Transition:** If the Progress Track has reached or exceeded the current Age threshold, trigger Age Transition (see Section 9)
@@ -798,7 +800,7 @@ Each Hazard Card shows a **Challenge Type** and **Difficulty Rating**:
 
 **Outcome:**
 - **Pass:** If your ship stat (+ Engineers spent) meets or exceeds the Difficulty, the ship is successfully launched. Place it on the route and increase your Income Track.
-- **Fail:** If your total is less than the Difficulty, the launch fails. The ship returns to your Hangar Bay, but you lose the Pilot and gas already spent.
+- **Aborted:** If your total is less than the Difficulty, the launch is aborted. The ship returns to your Launch Hangar, but you lose the Pilot and gas already spent.
 
 **Hazard Card Discard:** After resolving a Hazard Check, place the drawn card face-up in your Hazard discard pile. When your Hazard deck is empty and you need to draw, shuffle your discard pile to form a new deck.
 
@@ -1045,7 +1047,7 @@ Each nation has a unique starting Blueprint configuration, special technology, a
 - *Rubberized Cotton* — Simple, proven envelope material. Unlocks the Cotton Envelope upgrade.
 - *Articulated Keel Design* — Unlocks the Flexible Frame upgrade: Ignore Weather penalties on Hazard cards. When others are grounded by storms, you can fly.
 
-**The Flaw:** *Low Ceiling* — Semi-rigid frames cannot support heavy payloads. Italy's Blueprint overlays have one fewer Payload slot than other factions. They must win on quantity, not quality.
+**The Flaw:** *Light Construction* — Semi-rigid frames cannot support heavy payloads. Italy's Blueprint overlays have one fewer Payload slot than other factions. They must win on quantity, not quality.
 
 **Home Base (Age II):** Rome
 
@@ -1454,10 +1456,11 @@ The following items require finalization before the game is complete:
 | Hydrogen | £1/cube | +5 | Vulnerable |
 | Helium | £2-15/cube | +5 | Immune |
 
-**Helium Market Track:** £2 → £3 → £4 → £5 → £6 → £8 → £10 → £15
+**Helium Market Track:** £2 → £3 → £4 → £5 → £6 → £8 → £10 → £15 → Unavailable
 **Price Increases:** Non-USA purchases advance the track by 1 per cube
 **Price Decreases:** Ministry action reduces the track by 1 (minimum £2)
 **USA Exception:** USA purchases do not advance the track (domestic supply)
+**Unavailable:** If the track advances past £15, Helium cannot be purchased until the Ministry reduces the price
 **Age Reset:** Track resets to £2 at each Age Transition
 
 ## Game End Conditions
@@ -1567,7 +1570,15 @@ Fabric technologies unlock outer covering and gas cell material upgrades.
 
 **Total: 47 Technology Tiles** (Propulsion 11, Frame 7, Fabric 7, Gas Systems 10, Payload 12)
 
-**TODO:** Expand each track to balance the game for final production.
+### Tiles Per Age
+
+| Age | Tiles | Distribution |
+|-----|-------|--------------|
+| Age I | 12 | Propulsion 3, Frame 2, Fabric 2, Gas 2, Payload 3 |
+| Age II | 18 | Propulsion 4, Frame 3, Fabric 3, Gas 4, Payload 4 |
+| Age III | 17 | Propulsion 4, Frame 2, Fabric 2, Gas 4, Payload 5 |
+
+*At game start, only Age I tiles are in the bag. Age II and III tiles are added at their respective transitions.*
 
 ---
 
@@ -1615,7 +1626,7 @@ Fabric tiles go in Fabric slots. The **Hull Cost** column shows how much this ti
 | Cotton Envelope | Rubberized Cotton | 0 | +£0 | — | Basic default |
 | Doped Covering | Doped Canvas | 0 | +£1 | Speed +1 | Improved aerodynamics |
 | Premium Envelope | Goldbeater's Skin | 0 | +£3 | Reliability +1, Range +1 | Best gas-tightness |
-| Fire-Resistant Fabric | Fireproof Coating | -1 | +£2 | Reliability +1 | Ignore first Fire hazard |
+| Fire-Resistant Fabric | Fireproof Coating | -1 | +£2 | Reliability +1 | Ignore first Fire hazard (not Catastrophic Explosion) |
 | Reflective Covering | Aluminum Doping | 0 | +£1 | Reliability +1 | Protects gas from heat |
 | Synthetic Envelope | Gelatinized Latex | 0 | +£2 | Reliability +1, Range +1 | Modern replacement for goldbeater's |
 | Advanced Fabric | Composite Covering | 0 | +£2 | Reliability +2 | Multi-layer protection |
@@ -1677,6 +1688,18 @@ Military upgrades provide **Armor** for surviving flak in Age II. Armor is heavy
 
 Each player has an identical Personal Hazard Deck of 20 cards. When launching a ship, draw one card and resolve it.
 
+## Hazard Types
+
+Each hazard card has a **Type** that determines which effects can counter it:
+
+| Type | Description | Countered By |
+|------|-------------|--------------|
+| **Weather** | Atmospheric conditions (turbulence, wind, storms, ice) | Flexible Frame, Rapid Descent System, Weather Expert card |
+| **Mechanical** | Equipment failures (engine trouble, structural stress) | Engineers, Reliability stat |
+| **Fire** | Combustion hazards (engine fire, gas cell rupture, explosion) | Helium gas, Fire-Resistant Fabric (first time), Engineers |
+
+*Cards that "auto-pass Weather-type hazards" or "ignore Weather hazards" apply to any hazard with the Weather type.*
+
 ## Dual-Use Cards (Age II)
 
 Each hazard card has **two halves**:
@@ -1720,15 +1743,15 @@ Helium ships automatically pass all Fire-type hazards.
 
 | Name | Qty | Effect | Flak |
 |------|-----|--------|------|
-| **Engine Fire** | 2 | Spend 1 Engineer to control → Ship Damaged. Fail → Crash. | 2, 4 |
-| **Gas Cell Rupture** | 2 | Spend 2 Engineers to control → Ship Damaged. Fail → Crash. | 3, 4 |
+| **Engine Fire** | 2 | Spend 1 Engineer to control → Ship Damaged. Otherwise → Crash. | 2, 4 |
+| **Gas Cell Rupture** | 2 | Spend 2 Engineers to control → Ship Damaged. Otherwise → Crash. | 3, 4 |
 | **Catastrophic Explosion** | 1 | No save possible. Ship crashes. If Luxury Launch in Age III: Hindenburg Disaster. | 4 |
 
 ## Mechanical Hazards (1 card)
 
 | Name | Qty | Effect | Flak |
 |------|-----|--------|------|
-| **Critical Structural Stress** | 1 | Spend 2 Engineers to stabilize → Ship Damaged. Fail → Crash. | 4 |
+| **Critical Structural Stress** | 1 | Spend 2 Engineers to stabilize → Ship Damaged. Otherwise → Crash. | 4 |
 
 ## Flak Distribution Summary
 
@@ -1750,7 +1773,7 @@ Helium ships automatically pass all Fire-type hazards.
 3. For standard hazards: Compare Ship's relevant stat vs Difficulty. Spend Engineers (+1 each) to boost if needed.
 4. For Fire/Structural hazards: Spend required Engineers or face consequences.
 5. **Pass:** Ship reaches route successfully
-6. **Fail (standard):** Ship returns to Launch Hangar (Pilot and gas lost)
+6. **Aborted (standard):** Ship returns to Launch Hangar (Pilot and gas lost)
 7. **Damaged:** Ship goes to Repair Hangar (Pilot and gas lost)
 8. **Crash:** Ship destroyed (token to supply, Pilot and gas lost)
 
