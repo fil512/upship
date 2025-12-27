@@ -130,7 +130,7 @@ An Age-specific overlay representing your current Airship Model—your "Factory 
 
 Each Age, you replace your Blueprint overlay with the new Age's version. Blueprints have **four slot types** for installing upgrade tiles:
 
-- **Frame Slots:** Accept Frame tiles (structural skeleton). Each Frame tile has a **gas cube socket** where you place a Hydrogen or Helium cube for lift.
+- **Frame Slots:** Accept Frame tiles (structural skeleton). Each Frame tile shows a **gas cube icon** as a visual reminder of how many gas cubes you must spend when launching (one cube per Frame tile installed).
 - **Fabric Slots:** Accept Fabric tiles (outer covering and gas cell materials)
 - **Drive Slots:** Accept Propulsion tiles (engines and propellers)
 - **Payload Slots:** Accept Payload tiles (cargo, passengers, equipment)
@@ -139,7 +139,7 @@ Each Age, you replace your Blueprint overlay with the new Age's version. Bluepri
 - Open Slots: 1 Frame, 1 Fabric, 1 Drive, 1 Payload
 - Printed Baseline: Primitive Engine (Speed 1, Range 1)
 - Baseline Stats: Speed 1, Range 1, Ceiling 0, Reliability 0
-- *Note: Lift comes from gas cubes placed on Frame tiles*
+- *Note: One Frame slot = one gas cube required per launch*
 
 **Age II Blueprint (Great War):**
 - Open Slots: 1 Frame, 1 Fabric, 2 Drive, 2 Payload
@@ -150,7 +150,7 @@ Each Age, you replace your Blueprint overlay with the new Age's version. Bluepri
 - Open Slots: 2 Frame, 2 Fabric, 2 Drive, 3 Payload
 - Printed Baseline: Modern Engine (Speed 3, Range 3)
 - Baseline Stats: Speed 3, Range 3, Ceiling 2, Reliability 2
-- *Note: Two Frame slots = two gas cubes = greater lift capacity*
+- *Note: Two Frame slots = two gas cubes required per launch = greater lift capacity*
 
 **Required Slots:** You must fill all Frame and Fabric slots before launching. Empty structural slots mean the ship isn't airworthy.
 
@@ -1064,13 +1064,13 @@ In all failure cases (Aborted, Damaged, Crash), the Pilot and any gas spent on t
 ## 12.8 Terminology: Slots, Swaps, and Tiles
 
 - **Slot:** An empty space on the Blueprint where an Upgrade tile can be installed. There are four slot types:
-  - **Frame Slot:** Accepts Frame tiles (structural skeleton). Each Frame tile has a gas cube socket.
+  - **Frame Slot:** Accepts Frame tiles (structural skeleton). Each Frame tile shows a gas cube icon indicating one cube is required per launch.
   - **Fabric Slot:** Accepts Fabric tiles (outer covering materials)
   - **Drive Slot:** Accepts Propulsion tiles (engines and propellers)
   - **Payload Slot:** Accepts Payload tiles (cargo, passengers, equipment)
 - **Swap:** One installation or removal of an Upgrade tile at the Design Bureau (one swap = one action)
 - **Tile:** The physical component—either a Technology tile (stored in Drawing Office) or an Upgrade tile (installed on Blueprint)
-- **Gas Cube:** A cube (Hydrogen or Helium) placed on a Frame tile's socket to provide Lift
+- **Gas Cube:** A cube (Hydrogen or Helium) spent from your Gas Reserve when launching to provide Lift. Each cube provides +5 Lift. The number of cubes required equals the number of Frame tiles installed on your Blueprint.
 
 ## 12.9 Victory Point Scoring
 
@@ -1408,7 +1408,7 @@ Technology tiles are acquired from the R&D Board using Research. Each tile shows
 
 ## Frame Track (7 tiles)
 
-Frame technologies unlock structural skeleton upgrades. Each Frame upgrade tile has a **gas cube socket** for placing Hydrogen or Helium cubes.
+Frame technologies unlock structural skeleton upgrades. Each Frame upgrade tile shows a **gas cube icon** as a reminder that one gas cube must be spent per Frame tile when launching.
 
 | Age | Name | Cost | £ | VP | Unlocks |
 |-----|------|------|---|----|---------|
@@ -1494,7 +1494,7 @@ Upgrade tiles are installed on your Blueprint. You must own the corresponding Te
 
 ## Frame Upgrades
 
-Frame tiles go in Frame slots. Each has a **gas cube socket** where you place a Hydrogen or Helium cube for Lift. The **Hull Cost** column shows how much this tile adds to the cost of building ships.
+Frame tiles go in Frame slots. Each shows a **gas cube icon** as a visual reminder that one gas cube must be spent per Frame tile when launching. The **Hull Cost** column shows how much this tile adds to the cost of building ships.
 
 | Name | Required Tech | Weight | Hull Cost | Stats | Special |
 |------|---------------|--------|-----------|-------|---------|
