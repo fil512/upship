@@ -391,7 +391,11 @@ The game features three physical map boards, one for each Age. When an Age ends,
 - Low stat requirements
 - Focus on **Reliability** (can you fly 100km without your engine seizing up?)
 
-**Placement Rule:** No home bases. Players can launch to *any* unclaimed route on the map (the Pioneer Scramble). If multiple players attempt to claim the same single-track route in the same round, resolve by turn order (lowest Income goes first—see Section 6.1).
+**Placement Rule:** No home bases. Players can launch to *any* unclaimed route on the map (the Pioneer Scramble).
+
+**Transit Cost:** When launching to a route that does not connect to any of your existing routes, pay a **Transit Fee** of £1 per disconnected network you already control. Your first route is free. If you later connect two of your networks, they merge into one.
+
+*Example: You control routes A–B and C–D (two separate networks). Launching to E–F (a third disconnected network) costs £2 Transit Fee. If you then launch to B–C, your networks merge into one.*
 
 ## 5.2 Age II: The Great War (Greater Europe)
 
@@ -1206,12 +1210,12 @@ The following items require finalization before the game is complete:
 
 ## A.2 Card Design
 
-1. **Personal Hazard Decks (20 cards each):** Each player gets identical deck. Finalize distribution:
-   - ~8 Minor Hazards (Difficulty 2-3)
-   - ~6 Major Hazards (Difficulty 4-5)
-   - ~4 Clear Skies / Favorable conditions (Auto-pass)
-   - ~2 Catastrophic Events (Difficulty 6+, Fire keyword)
-   - Design cards to specify when/how Engineers can be spent to prevent crashes
+1. **Personal Hazard Decks (20 cards each):** Each player gets identical deck. **RESOLVED** - Final distribution:
+   - 4 Clear Weather (Auto-pass)
+   - 6 Minor Hazards (Difficulty 2-3)
+   - 4 Major Hazards (Difficulty 4-5)
+   - 5 Fire Hazards (Hydrogen ships only)
+   - 1 Critical Structural Stress
 
 2. **Market Deck:** Design 30 purchasable crew cards with:
    - Varied costs (2-6 Influence)
@@ -1573,7 +1577,7 @@ Each player has an identical Personal Hazard Deck of 20 cards. When launching a 
 | Calm Conditions | Auto-pass. No hazard. |
 | Perfect Visibility | Auto-pass. No hazard. |
 
-## Minor Hazards (8 cards)
+## Minor Hazards (6 cards)
 
 | Name | Difficulty | Stat | Type |
 |------|------------|------|------|
@@ -1581,12 +1585,10 @@ Each player has an identical Personal Hazard Deck of 20 cards. When launching a 
 | Minor Engine Trouble | 2 | Reliability | Mechanical |
 | Crosswind | 3 | Speed | Weather |
 | Gas Leak | 3 | Reliability | Mechanical |
-| Low Visibility | 2 | Ceiling | Weather |
-| Fuel Concern | 3 | Range | Supply |
 | Headwind | 3 | Speed | Weather |
 | Structural Stress | 2 | Reliability | Mechanical |
 
-## Major Hazards (6 cards)
+## Major Hazards (4 cards)
 
 | Name | Difficulty | Stat | Type |
 |------|------------|------|------|
@@ -1594,8 +1596,6 @@ Each player has an identical Personal Hazard Deck of 20 cards. When launching a 
 | Icing Conditions | 4 | Ceiling | Weather |
 | Engine Failure | 5 | Reliability | Mechanical |
 | Storm System | 5 | Speed | Weather |
-| Structural Damage | 4 | Reliability | Mechanical |
-| Navigation Error | 4 | Range | Supply |
 
 ## Fire Hazards (5 cards) — Hydrogen Ships Only
 
