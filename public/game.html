@@ -1322,7 +1322,7 @@
           </div>
 
           <div class="section-title">Map: ${state.map?.name || 'Unknown'}</div>
-          <div class="map-container" style="max-height: 500px; overflow-y: auto;">
+          <div class="map-container" style="min-height: 200px; max-height: 500px; overflow-y: auto;">
             <div class="map-routes">
               ${(state.map?.routes || []).map(route => {
                 const isClaimed = route.claimed;
