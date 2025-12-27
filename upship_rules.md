@@ -395,18 +395,84 @@ The game features three physical map boards, one for each Age. When an Age ends,
 
 *Example: You control routes A–B and C–D (two separate networks). Launching to E–F (a third disconnected network) costs £2 Transit Fee. If you then launch to B–C, your networks merge into one.*
 
-## 5.2 Age II: The Great War (Greater Europe)
+## 5.2 Age II: The Great War (Military Contracts)
 
-**Scale:** Continental (mid-zoom)
-**Geography:** Extends to Scapa Flow (Scotland), the Russian Front (Warsaw), and the Mediterranean
-**Theme:** Hostile and industrial. The war has transformed civilian aviation.
+**Theme:** The war has transformed civilian aviation into military necessity. There is no map—instead, players compete for military contracts, launching ships on dangerous missions where survival is uncertain.
 
-**Route Characteristics:**
-- Direct routes requiring high altitude
-- "War Zone" routes requiring Armor
-- Government contracts provide lump sum bonuses
+### Contract Decks
 
-**Placement Rule:** Players **must** launch their first ship of this Age from their **National Capital** (Berlin, London, Rome, or Paimboeuf, France). Subsequent ships must connect to your existing network.
+Three contract decks replace the Age II map:
+
+| Deck | Theme | Armistice Advancement |
+|------|-------|----------------------|
+| **Bombing** | Strategic bombing runs | +1 per contract (max 5 total) |
+| **Recon** | Intelligence gathering | +1 per contract (max 3 total) |
+| **Supply** | Logistics and resupply | +1 per contract (max 2 total) |
+
+**Setup:** Shuffle each deck. Display 3 face-up contracts from each deck (9 total available).
+
+**Contract Cards Show:**
+- **Mission Requirements:** Stat requirements (Speed, Range, Ceiling, etc.)
+- **Reward:** £ payment and/or VP
+- **Armistice Value:** How much this contract advances the Armistice Track
+
+*Design Note: Contracts that advance the Armistice most (Bombing) also award the most VP. This creates tension—take the best contracts and hasten the war's end?*
+
+### The Armistice Track
+
+A shared track with 10 spaces. When it fills, Age II ends immediately.
+
+**Advancement:** Each time a player successfully completes a contract, advance the Armistice Track by that contract's Armistice Value.
+
+**Economic Exhaustion:** If ALL players reach -£10 (the debt limit), the Armistice triggers immediately regardless of the track position.
+
+### War Missions (Age II Launch Action)
+
+Instead of claiming routes, you fly **military missions**:
+
+1. **Select Contract:** Choose an available face-up contract
+2. **Place Ship:** Put your ship token on the contract card
+3. **Pay Costs:** Spend 1 Pilot + Lifting Gas (as normal)
+4. **Draw Hazard Card:** From your personal deck
+5. **Resolve Mission (Top Half):**
+   - Standard hazard check (ship stat vs difficulty)
+   - **Success:** Take the contract card, gain rewards, advance Armistice Track
+   - **Failure:** Contract remains available; your mission failed
+6. **Resolve Flak (Bottom Half):**
+   - Count flak symbols on the hazard card (0-4)
+   - Compare to your ship's **Armor** stat
+   - **Armor ≥ Flak:** Ship survives, returns to Hangar
+   - **Armor < Flak:** Ship shot down, destroyed (to supply)
+
+**Key Insight:** You can succeed the mission but still lose the ship, or fail the mission but survive to try again.
+
+### The Armor Stat
+
+A new stat relevant primarily in Age II:
+
+- Ships start with **Armor 0** (civilian designs)
+- Military upgrades can add Armor (see Appendix D)
+- Armor adds Weight, reducing lift capacity
+- **Flak Distribution:** About half of hazard cards have Flak 3-4 (unblockable with typical Armor), creating genuine danger
+
+### War Economy
+
+**Debt Limit:** Players can go as low as **-£10** (like Brass). You cannot spend money you don't have beyond this limit.
+
+**No Ongoing Income:** Contracts pay one-time rewards, not ongoing Income. Players drain their economies rebuilding destroyed ships.
+
+**Contract Refill:** At the end of each round, refill each contract row to 3 cards (if cards remain in the deck).
+
+### Scoring in Age II
+
+At the end of each round, score VP from contract cards you've collected that round. Contracts are then discarded.
+
+### Age II Ends When:
+
+1. **Armistice Track reaches 10**, OR
+2. **ALL players reach -£10 debt** (economic exhaustion)
+
+Complete the current round, then proceed to Age II → Age III transition.
 
 ## 5.3 Age III: The Golden Age (The Atlantic)
 
@@ -852,32 +918,63 @@ The Market Row offers more powerful cards in several categories:
 
 # 9. THE AGE TRANSITIONS
 
-## 9.1 Triggering the Transition
+## 9.1 Age I → Age II (War Begins)
 
-Each Age ends when the Progress Track reaches or exceeds the Age threshold (see Section 1.3 for thresholds by player count). The transition is checked during the Income & Cleanup phase, after Technologies are acquired but before Agents are refreshed. When an Age ends:
+Age I ends when the Progress Track reaches the Age I threshold (see Section 1.3).
 
-1. **Scoring:** All players score VP for routes and Technology tiles (see Section 12.7).
-2. **Route Wipe:** Remove the current Map. All ships on it are returned to player supplies.
-3. **Transition Income:** Calculate your starting Income for the next Age:
-   > **New Income = (£ from Technology tiles) − (£1 × number of routes lost)**
+**Transition Steps:**
 
-   Each Technology tile shows a £ value representing licensing fees and consulting contracts. Each route you lose costs £1 in restructuring. Set your Income Track to this value (minimum £0).
+1. **Scoring:** Score VP for routes and Technology tiles (see Section 12.7).
+2. **Route Wipe:** Remove the Age I Map. All ships are returned to player Hangars.
+3. **Pilot Recovery:** For each ship returned, collect 1 Pilot from the shared supply.
+4. **Transition Income:** Calculate starting Income for Age II:
+   > **New Income = (£ from Technology tiles) − (£1 × routes lost)**
 
-   *Example: You have Technologies worth £5 total and lost 2 routes. Your new Income = £5 − £2 = £3.*
+   Minimum £0. *Example: £5 from Tech, 2 routes lost = £3 Income.*
 
-4. **Pilot Recovery:** For each ship returned from the map to your Hangar, collect 1 Pilot from the shared supply to your Barracks.
-5. **Blueprint Transition:** Replace your Blueprint overlay with the new Age's version. You may transfer Upgrade tiles from your old Blueprint to your new Blueprint for free (subject to slot availability and the Physics Check). Upgrades not transferred return to the supply. Technologies are always retained.
-6. **Map Setup:** Place the new Age's Map.
-7. **Technology Bag Update:** Add the new Age's Technology tiles to the bag.
-8. **R&D Board Refresh:** Draw tiles to fill the R&D Board.
+5. **Blueprint Transition:** Replace with Age II Blueprint. Transfer Upgrade tiles (subject to slot limits). Upgrades not transferred return to supply.
+6. **War Mobilization:** Set up the three Contract Decks (Bombing, Recon, Supply). Display 3 cards from each.
+7. **Armistice Track:** Place the Armistice marker at 0.
+8. **Technology Bag Update:** Add Age II tiles to the bag.
+9. **R&D Board Refresh:** Draw tiles to fill the R&D Board.
 
-## 9.2 The Strategic Challenge
+**Thematic Note:** Your civilian fleet is now conscripted for war. Pilots return home, but ships must be retrofitted with military equipment or sacrificed as cannon fodder.
 
-The Age Transition creates a "ticking clock" forcing difficult decisions:
-- Do you invest in routes for VP, knowing each one costs £1 at transition?
-- Do you acquire Technologies for their £ values to cushion the transition?
-- Can you balance short-term route income with long-term Technology investment?
-- Your Technologies carry forward, but your Upgrades don't—plan ahead
+## 9.2 Age II → Age III (Armistice)
+
+Age II ends when the Armistice Track reaches 10, OR when all players reach -£10 debt.
+
+**Transition Steps:**
+
+1. **Scoring:** Score VP for any unclaimed contract cards collected this round, plus Technology tiles.
+2. **Ship Recovery:** Any ships currently on contract cards return to player Hangars.
+3. **Pilot Recovery:** For each ship returned, collect 1 Pilot from the shared supply.
+4. **Debt Carries Forward:** Your current Cash (including debt) carries into Age III. You are NOT reset to £15.
+5. **Transition Income:** Calculate starting Income for Age III:
+   > **New Income = (£ from Technology tiles)**
+
+   No route penalty (there were no routes in Age II). Minimum £0.
+
+6. **Blueprint Transition:** Replace with Age III Blueprint. Transfer Upgrade tiles. **Military Upgrades may be kept or returned to supply** (your choice—they're heavy but some Armor helps against hazards).
+7. **Map Setup:** Place the Age III Map.
+8. **Technology Bag Update:** Add Age III tiles to the bag.
+9. **R&D Board Refresh:** Draw tiles to fill the R&D Board.
+
+**Thematic Note:** The war is over. Nations emerge battered, in debt, but with advanced technology. The race to build luxury transatlantic liners begins—if you can afford it.
+
+## 9.3 The Strategic Challenge
+
+Each Age Transition creates difficult decisions:
+
+**Age I → Age II:**
+- Civilian ships are useless without Armor upgrades
+- Do you invest in military tech, or sacrifice cheap ships?
+- Pilots are precious—losing ships means losing crew
+
+**Age II → Age III:**
+- Debt from wartime may cripple your Age III economy
+- Military Upgrades are heavy—keep Armor or optimize for luxury?
+- First to rebuild wins the lucrative Atlantic routes
 
 ---
 
@@ -1558,7 +1655,21 @@ Fabric tiles go in Fabric slots. The **Hull Cost** column shows how much this ti
 | Pressurized Lounge | Smoking Room | -2 | Income +1, Luxury +2 | Requires Helium Gas Cell installed |
 | Imperial Mast | Imperial Mooring System | -1 | — | British Territories count as Home Base (Britain specialty) |
 
-**Total: 50 Upgrade Tiles** (Propulsion 11, Frame 8, Fabric 7, Gas Systems 10, Payload 14)
+## Military Upgrades (Age II)
+
+Military upgrades provide **Armor** for surviving flak in Age II. Armor is heavy—militarizing your airship sacrifices civilian performance.
+
+| Name | Required Tech | Weight | Stats | Special |
+|------|---------------|--------|-------|---------|
+| Light Plating | — | -2 | Armor +1 | Basic protection |
+| Armored Gondola | — | -3 | Armor +1, Reliability +1 | Protected crew compartment |
+| Heavy Armor | — | -4 | Armor +2 | Significant protection |
+| Defensive Guns | — | -2 | Armor +1 | Can deter fighters |
+| Reinforced Frame | — | -3 | Armor +1, Reliability +1 | Structural protection |
+
+*Design Note: Armor upgrades require no Technology—any nation can militarize ships during wartime. However, the Weight cost is severe. A fully armored ship (Armor 2-3) will struggle to pass the Physics Check without additional gas.*
+
+**Total: 55 Upgrade Tiles** (Propulsion 11, Frame 8, Fabric 7, Gas Systems 10, Payload 14, Military 5)
 
 ---
 
@@ -1566,52 +1677,74 @@ Fabric tiles go in Fabric slots. The **Hull Cost** column shows how much this ti
 
 Each player has an identical Personal Hazard Deck of 20 cards. When launching a ship, draw one card and resolve it.
 
+## Dual-Use Cards (Age II)
+
+Each hazard card has **two halves**:
+- **Top Half (Mission):** Used in ALL Ages. Standard hazard check (stat vs difficulty).
+- **Bottom Half (Flak):** Used in **Age II ONLY**. Flak symbols vs Armor determines ship survival.
+
+In Ages I and III, ignore the bottom half. In Age II, resolve BOTH halves.
+
 ## Clear Weather (4 cards)
 
-| Name | Effect |
-|------|--------|
-| Clear Skies | Auto-pass. No hazard. |
-| Favorable Winds | Auto-pass. No hazard. |
-| Calm Conditions | Auto-pass. No hazard. |
-| Perfect Visibility | Auto-pass. No hazard. |
+| Name | Effect | Flak |
+|------|--------|------|
+| Clear Skies | Auto-pass. No hazard. | 0 |
+| Favorable Winds | Auto-pass. No hazard. | 1 |
+| Calm Conditions | Auto-pass. No hazard. | 0 |
+| Perfect Visibility | Auto-pass. No hazard. | 2 |
 
 ## Minor Hazards (6 cards)
 
-| Name | Difficulty | Stat | Type |
-|------|------------|------|------|
-| Light Turbulence | 2 | Speed | Weather |
-| Minor Engine Trouble | 2 | Reliability | Mechanical |
-| Crosswind | 3 | Speed | Weather |
-| Gas Leak | 3 | Reliability | Mechanical |
-| Headwind | 3 | Speed | Weather |
-| Structural Stress | 2 | Reliability | Mechanical |
+| Name | Difficulty | Stat | Type | Flak |
+|------|------------|------|------|------|
+| Light Turbulence | 2 | Speed | Weather | 1 |
+| Minor Engine Trouble | 2 | Reliability | Mechanical | 2 |
+| Crosswind | 3 | Speed | Weather | 0 |
+| Gas Leak | 3 | Reliability | Mechanical | 3 |
+| Headwind | 3 | Speed | Weather | 1 |
+| Structural Stress | 2 | Reliability | Mechanical | 2 |
 
 ## Major Hazards (4 cards)
 
-| Name | Difficulty | Stat | Type |
-|------|------------|------|------|
-| Strong Headwind | 4 | Speed | Weather |
-| Icing Conditions | 4 | Ceiling | Weather |
-| Engine Failure | 5 | Reliability | Mechanical |
-| Storm System | 5 | Speed | Weather |
+| Name | Difficulty | Stat | Type | Flak |
+|------|------------|------|------|------|
+| Strong Headwind | 4 | Speed | Weather | 3 |
+| Icing Conditions | 4 | Ceiling | Weather | 2 |
+| Engine Failure | 5 | Reliability | Mechanical | 4 |
+| Storm System | 5 | Speed | Weather | 3 |
 
 ## Fire Hazards (5 cards) — Hydrogen Ships Only
 
 Helium ships automatically pass all Fire-type hazards.
 
-| Name | Qty | Effect |
-|------|-----|--------|
-| **Engine Fire** | 2 | Spend 1 Engineer to control → Ship Damaged (Repair Hangar). Fail → Ship crashes. |
-| **Gas Cell Rupture** | 2 | Spend 2 Engineers to control → Ship Damaged (Repair Hangar). Fail → Ship crashes. |
-| **Catastrophic Explosion** | 1 | No save possible. Ship crashes. If Luxury Launch in Age III: Hindenburg Disaster triggered. |
+| Name | Qty | Effect | Flak |
+|------|-----|--------|------|
+| **Engine Fire** | 2 | Spend 1 Engineer to control → Ship Damaged. Fail → Crash. | 2, 4 |
+| **Gas Cell Rupture** | 2 | Spend 2 Engineers to control → Ship Damaged. Fail → Crash. | 3, 4 |
+| **Catastrophic Explosion** | 1 | No save possible. Ship crashes. If Luxury Launch in Age III: Hindenburg Disaster. | 4 |
 
 ## Mechanical Hazards (1 card)
 
-| Name | Qty | Effect |
-|------|-----|--------|
-| **Critical Structural Stress** | 1 | Spend 2 Engineers to stabilize → Ship Damaged (Repair Hangar). Fail → Ship crashes. |
+| Name | Qty | Effect | Flak |
+|------|-----|--------|------|
+| **Critical Structural Stress** | 1 | Spend 2 Engineers to stabilize → Ship Damaged. Fail → Crash. | 4 |
 
-**Resolving Hazards:**
+## Flak Distribution Summary
+
+| Flak Value | Cards | Survivable with Armor... |
+|------------|-------|--------------------------|
+| 0 | 3 | Any (always survives) |
+| 1 | 3 | 1+ |
+| 2 | 5 | 2+ |
+| 3 | 4 | 3+ (rare armor level) |
+| 4 | 5 | 4+ (nearly impossible) |
+
+*Design Note: About half the cards (Flak 3-4) are lethal to typical ships. Armor is expensive and heavy—surviving the war requires sacrificing civilian performance.*
+
+## Resolving Hazards
+
+**Ages I and III (Peacetime):**
 1. Draw card from your Personal Hazard Deck
 2. Check if auto-pass (Clear Weather cards, or Helium ship vs Fire hazards)
 3. For standard hazards: Compare Ship's relevant stat vs Difficulty. Spend Engineers (+1 each) to boost if needed.
@@ -1620,6 +1753,14 @@ Helium ships automatically pass all Fire-type hazards.
 6. **Fail (standard):** Ship returns to Launch Hangar (Pilot and gas lost)
 7. **Damaged:** Ship goes to Repair Hangar (Pilot and gas lost)
 8. **Crash:** Ship destroyed (token to supply, Pilot and gas lost)
+
+**Age II (Wartime) — Resolve BOTH halves:**
+1. Draw card and resolve **Top Half** (mission success/failure) as above
+2. Then resolve **Bottom Half** (flak): Compare Flak symbols to your ship's Armor stat
+   - **Armor ≥ Flak:** Ship survives, returns to Hangar
+   - **Armor < Flak:** Ship shot down (destroyed, to supply)
+
+*You can succeed the mission but lose the ship, or fail the mission but survive.*
 
 **Deck Management:** Shuffle your discard pile back into your Hazard Deck when the deck is empty.
 
