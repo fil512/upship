@@ -674,6 +674,141 @@
       cursor: not-allowed;
     }
 
+    /* Gas sockets */
+    .gas-sockets-row {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin: 15px 0;
+      padding: 10px;
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 8px;
+    }
+
+    .gas-socket {
+      width: 40px;
+      height: 40px;
+      border: 2px dashed rgba(196, 163, 90, 0.5);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 0.8rem;
+    }
+
+    .gas-socket:hover {
+      border-color: #c4a35a;
+      background: rgba(196, 163, 90, 0.1);
+    }
+
+    .gas-socket.hydrogen {
+      background: rgba(231, 76, 60, 0.3);
+      border-color: #e74c3c;
+      border-style: solid;
+    }
+
+    .gas-socket.helium {
+      background: rgba(52, 152, 219, 0.3);
+      border-color: #3498db;
+      border-style: solid;
+    }
+
+    /* Map section */
+    .map-container {
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 8px;
+      padding: 10px;
+      margin-bottom: 15px;
+    }
+
+    .map-routes {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .route-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 4px;
+      font-size: 0.8rem;
+    }
+
+    .route-item.claimed {
+      opacity: 0.6;
+    }
+
+    .route-item.claimed-by-me {
+      background: rgba(68, 170, 153, 0.2);
+      border: 1px solid #4a9;
+    }
+
+    .route-info {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .route-cities {
+      color: #e8e8e8;
+    }
+
+    .route-stats {
+      display: flex;
+      gap: 8px;
+    }
+
+    .route-stat {
+      font-size: 0.7rem;
+      padding: 2px 6px;
+      border-radius: 3px;
+      background: rgba(196, 163, 90, 0.2);
+      color: #c4a35a;
+    }
+
+    .claim-btn {
+      padding: 4px 8px;
+      font-size: 0.7rem;
+      border-radius: 4px;
+      border: 1px solid #4a9;
+      background: rgba(68, 170, 153, 0.2);
+      color: #4a9;
+      cursor: pointer;
+    }
+
+    .claim-btn:hover:not(:disabled) {
+      background: rgba(68, 170, 153, 0.4);
+    }
+
+    .claim-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    /* Launched ships */
+    .launched-ships {
+      display: flex;
+      gap: 5px;
+      flex-wrap: wrap;
+    }
+
+    .launched-ship {
+      background: rgba(68, 170, 153, 0.2);
+      border: 1px solid #4a9;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 0.7rem;
+      cursor: pointer;
+    }
+
+    .launched-ship:hover {
+      background: rgba(68, 170, 153, 0.4);
+    }
+
     /* Slot with upgrade */
     .slot.filled .slot-icon {
       font-size: 1.2rem;
@@ -1057,6 +1192,15 @@
                 </div>
               </div>
 
+              <div class="slot-type-label">Gas Sockets (Click to load gas)</div>
+              <div class="gas-sockets-row">
+                ${(myState.blueprint.gasSockets || []).map((gas, i) => `
+                  <div class="gas-socket ${gas || ''}" onclick="showGasLoadModal(${i}, '${gas || ''}')">
+                    ${gas === 'hydrogen' ? 'H₂' : gas === 'helium' ? 'He' : '➕'}
+                  </div>
+                `).join('')}
+              </div>
+
               <div class="physics-check">
                 <div class="physics-item">
                   <div class="physics-value ${calculateLift(myState) >= calculateWeight(myState) ? 'ok' : 'warning'}">
@@ -1079,6 +1223,20 @@
                 </div>
               </div>
             </div>
+
+            <!-- Launched Ships -->
+            ${(myState.ships || []).filter(s => s.status === 'launched').length > 0 ? `
+              <div style="margin-top: 15px; padding: 10px; background: rgba(0,0,0,0.2); border-radius: 8px;">
+                <div class="section-title" style="margin-bottom: 8px;">Launched Ships (Click to claim route)</div>
+                <div class="launched-ships">
+                  ${(myState.ships || []).filter(s => s.status === 'launched').map(ship => `
+                    <div class="launched-ship" onclick="selectShipForRoute('${ship.id}')">
+                      ✈️ Range: ${ship.stats?.range || 1}
+                    </div>
+                  `).join('')}
+                </div>
+              </div>
+            ` : ''}
           </div>
         </div>
 
@@ -1103,7 +1261,7 @@
           </div>
 
           <div class="section-title">R&D Board</div>
-          <div class="cards-container" style="margin-bottom: 15px;">
+          <div class="cards-container" style="margin-bottom: 15px; max-height: 150px; overflow-y: auto;">
             ${state.rdBoard.map(tech => {
               const discount = getSpecializationDiscount(myState.technologies, tech.type);
               const researchCost = Math.max(0, tech.cost - discount);
@@ -1127,6 +1285,37 @@
             }).join('')}
           </div>
 
+          <div class="section-title">Map: ${state.map?.name || 'Unknown'}</div>
+          <div class="map-container" style="max-height: 200px; overflow-y: auto;">
+            <div class="map-routes">
+              ${(state.map?.routes || []).map(route => {
+                const isClaimed = route.claimed;
+                const isClaimedByMe = route.claimed === currentUserId;
+                const launchedShips = (myState.ships || []).filter(s => s.status === 'launched');
+                const canClaim = !isClaimed && launchedShips.length > 0 && launchedShips.some(s => (s.stats?.range || 1) >= route.distance);
+                return `
+                  <div class="route-item ${isClaimed ? 'claimed' : ''} ${isClaimedByMe ? 'claimed-by-me' : ''}">
+                    <div class="route-info">
+                      <span class="route-cities">${route.from} → ${route.to}</span>
+                      <div class="route-stats">
+                        <span class="route-stat">📏${route.distance}</span>
+                        <span class="route-stat">💰+${route.income}</span>
+                      </div>
+                    </div>
+                    ${isClaimed ?
+                      `<span style="color: ${isClaimedByMe ? '#4a9' : '#888'}; font-size: 0.7rem;">
+                        ${isClaimedByMe ? '✓ Yours' : '✗ Taken'}
+                      </span>` :
+                      `<button class="claim-btn" onclick="showClaimRouteModal('${route.id}', ${route.distance})" ${!isMyTurn || !canClaim ? 'disabled' : ''}>
+                        Claim
+                      </button>`
+                    }
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </div>
+
           <div class="actions-section">
             <div class="section-title">Ground Board Actions</div>
             <div class="action-buttons" style="margin-bottom: 10px;">
@@ -1138,6 +1327,9 @@
               </button>
               <button class="action-btn secondary" onclick="buildShip()" ${!isMyTurn ? 'disabled' : ''}>
                 Build Ship
+              </button>
+              <button class="action-btn secondary" onclick="showLaunchShipModal()" ${!isMyTurn ? 'disabled' : ''}>
+                Launch Ship
               </button>
               <button class="action-btn secondary" onclick="upgradePilotIncome()" ${!isMyTurn ? 'disabled' : ''}>
                 +1 Pilot Income (£5)
@@ -1375,6 +1567,178 @@
       if (confirm('Buy insurance? Your income will be permanently reduced by 1.')) {
         performAction('BUY_INSURANCE');
       }
+    }
+
+    // === GAS LOADING ===
+    function showGasLoadModal(socketIndex, currentGas) {
+      if (!gameState?.state) return;
+
+      const state = gameState.state;
+      const myState = state.players[currentUserId];
+
+      const container = document.getElementById('modal-container');
+      container.innerHTML = `
+        <div class="modal-overlay" onclick="closeModal(event)">
+          <div class="modal" onclick="event.stopPropagation()" style="max-width: 300px;">
+            <div class="modal-header">
+              <span class="modal-title">Gas Socket ${socketIndex + 1}</span>
+              <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            ${currentGas ? `
+              <div style="text-align: center; margin-bottom: 15px;">
+                <div style="font-size: 2rem;">${currentGas === 'hydrogen' ? '🔴 H₂' : '🔵 He'}</div>
+                <div style="color: #888;">Currently loaded: ${currentGas}</div>
+                <button class="remove-btn" onclick="unloadGas(${socketIndex})">Unload</button>
+              </div>
+            ` : `
+              <div style="text-align: center;">
+                <div style="margin-bottom: 15px;">
+                  <div style="color: #888; margin-bottom: 10px;">Available gas cubes:</div>
+                  <div>H₂: ${myState.gasCubes.hydrogen} | He: ${myState.gasCubes.helium}</div>
+                </div>
+                <div style="display: flex; gap: 10px; justify-content: center;">
+                  <button class="action-btn secondary" onclick="loadGas(${socketIndex}, 'hydrogen')" ${myState.gasCubes.hydrogen <= 0 ? 'disabled' : ''}>
+                    🔴 Load Hydrogen
+                  </button>
+                  <button class="action-btn secondary" onclick="loadGas(${socketIndex}, 'helium')" ${myState.gasCubes.helium <= 0 ? 'disabled' : ''}>
+                    🔵 Load Helium
+                  </button>
+                </div>
+              </div>
+            `}
+          </div>
+        </div>
+      `;
+    }
+
+    function loadGas(socketIndex, gasType) {
+      closeModal();
+      performAction('LOAD_GAS', { socketIndex, gasType });
+    }
+
+    function unloadGas(socketIndex) {
+      closeModal();
+      performAction('UNLOAD_GAS', { socketIndex });
+    }
+
+    // === SHIP LAUNCHING ===
+    function showLaunchShipModal() {
+      if (!gameState?.state) return;
+
+      const state = gameState.state;
+      const myState = state.players[currentUserId];
+
+      const hangarShips = (myState.ships || []).filter(s => s.status === 'hangar');
+      const lift = calculateLift(myState);
+      const weight = calculateWeight(myState);
+      const canLaunch = lift >= weight && hangarShips.length > 0;
+
+      const container = document.getElementById('modal-container');
+      container.innerHTML = `
+        <div class="modal-overlay" onclick="closeModal(event)">
+          <div class="modal" onclick="event.stopPropagation()" style="max-width: 400px;">
+            <div class="modal-header">
+              <span class="modal-title">Launch Ship</span>
+              <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+
+            <div style="margin-bottom: 15px;">
+              <div style="display: flex; justify-content: space-around; text-align: center; padding: 10px; background: rgba(0,0,0,0.2); border-radius: 8px;">
+                <div>
+                  <div style="font-size: 1.5rem; color: ${lift >= weight ? '#4a9' : '#e74c3c'};">${lift}</div>
+                  <div style="color: #888; font-size: 0.8rem;">Lift</div>
+                </div>
+                <div style="font-size: 1.5rem; color: #888;">vs</div>
+                <div>
+                  <div style="font-size: 1.5rem;">${weight}</div>
+                  <div style="color: #888; font-size: 0.8rem;">Weight</div>
+                </div>
+                <div>
+                  <div style="font-size: 1.5rem; color: ${lift >= weight ? '#4a9' : '#e74c3c'};">${lift >= weight ? '✓' : '✗'}</div>
+                  <div style="color: #888; font-size: 0.8rem;">Status</div>
+                </div>
+              </div>
+            </div>
+
+            ${!canLaunch ? `
+              <div style="color: #e74c3c; text-align: center; margin-bottom: 15px;">
+                ${hangarShips.length === 0 ? 'No ships in hangar. Build a ship first!' :
+                  'Lift < Weight! Load more gas cubes into sockets.'}
+              </div>
+            ` : ''}
+
+            <div style="margin-bottom: 15px;">
+              <div class="section-title">Ships in Hangar (${hangarShips.length})</div>
+              ${hangarShips.length === 0 ? '<div style="color: #888;">No ships available</div>' :
+                hangarShips.map(ship => `
+                  <div style="padding: 10px; background: rgba(255,255,255,0.05); border-radius: 8px; margin-bottom: 5px; display: flex; justify-content: space-between; align-items: center;">
+                    <span>🚀 Ship</span>
+                    <button class="action-btn primary" onclick="launchShip('${ship.id}')" ${!canLaunch ? 'disabled' : ''}>
+                      Launch
+                    </button>
+                  </div>
+                `).join('')
+              }
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function launchShip(shipId) {
+      closeModal();
+      performAction('LAUNCH_SHIP', { shipId });
+    }
+
+    // === ROUTE CLAIMING ===
+    let selectedShipForRoute = null;
+
+    function selectShipForRoute(shipId) {
+      selectedShipForRoute = shipId;
+      alert('Ship selected! Now click "Claim" on a route to claim it with this ship.');
+    }
+
+    function showClaimRouteModal(routeId, distance) {
+      if (!gameState?.state) return;
+
+      const state = gameState.state;
+      const myState = state.players[currentUserId];
+
+      const launchedShips = (myState.ships || []).filter(s => s.status === 'launched');
+      const eligibleShips = launchedShips.filter(s => (s.stats?.range || 1) >= distance);
+
+      const container = document.getElementById('modal-container');
+      container.innerHTML = `
+        <div class="modal-overlay" onclick="closeModal(event)">
+          <div class="modal" onclick="event.stopPropagation()" style="max-width: 400px;">
+            <div class="modal-header">
+              <span class="modal-title">Claim Route</span>
+              <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+
+            <div style="margin-bottom: 15px; text-align: center;">
+              <div style="color: #888;">Route requires Range: ${distance}</div>
+            </div>
+
+            <div class="section-title">Select a Launched Ship</div>
+            ${eligibleShips.length === 0 ? '<div style="color: #888;">No ships with enough range</div>' :
+              eligibleShips.map(ship => `
+                <div style="padding: 10px; background: rgba(255,255,255,0.05); border-radius: 8px; margin-bottom: 5px; display: flex; justify-content: space-between; align-items: center;">
+                  <span>✈️ Ship (Range: ${ship.stats?.range || 1})</span>
+                  <button class="action-btn primary" onclick="claimRoute('${ship.id}', '${routeId}')">
+                    Use This Ship
+                  </button>
+                </div>
+              `).join('')
+            }
+          </div>
+        </div>
+      `;
+    }
+
+    function claimRoute(shipId, routeId) {
+      closeModal();
+      performAction('CLAIM_ROUTE', { shipId, routeId });
     }
 
     function openSlot(slotType, slotIndex) {

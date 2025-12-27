@@ -297,6 +297,18 @@ function processAction(state, playerId, actionType, data) {
     case 'GAIN_RESEARCH':
       return processGainResearch(newState, playerId, data);
 
+    case 'LOAD_GAS':
+      return processLoadGas(newState, playerId, data);
+
+    case 'UNLOAD_GAS':
+      return processUnloadGas(newState, playerId, data);
+
+    case 'LAUNCH_SHIP':
+      return processLaunchShip(newState, playerId, data);
+
+    case 'CLAIM_ROUTE':
+      return processClaimRoute(newState, playerId, data);
+
     default:
       return { error: `Unknown action type: ${actionType}` };
   }
@@ -959,6 +971,232 @@ function processGainResearch(state, playerId, data) {
   state.log.push({
     timestamp: new Date().toISOString(),
     message: `Gained ${amount} research point(s). Total saved: ${playerState.research}`,
+    playerId,
+    type: 'action'
+  });
+
+  return { newState: state };
+}
+
+// Load gas cubes onto blueprint gas sockets
+function processLoadGas(state, playerId, data) {
+  const { gasType, socketIndex } = data;
+  const playerState = state.players[playerId];
+
+  if (!['hydrogen', 'helium'].includes(gasType)) {
+    return { error: 'Invalid gas type' };
+  }
+
+  // Check player has gas cubes
+  if (playerState.gasCubes[gasType] <= 0) {
+    return { error: `No ${gasType} cubes available` };
+  }
+
+  // Check socket is valid
+  const gasSockets = playerState.blueprint.gasSockets || [];
+  if (socketIndex < 0 || socketIndex >= gasSockets.length) {
+    return { error: 'Invalid socket index' };
+  }
+
+  // Check socket is empty
+  if (gasSockets[socketIndex]) {
+    return { error: 'Socket already occupied' };
+  }
+
+  // Load the gas
+  playerState.gasCubes[gasType]--;
+  playerState.blueprint.gasSockets[socketIndex] = gasType;
+
+  state.log.push({
+    timestamp: new Date().toISOString(),
+    message: `Loaded ${gasType} into gas socket ${socketIndex + 1}`,
+    playerId,
+    type: 'action'
+  });
+
+  return { newState: state };
+}
+
+// Unload gas cube from blueprint socket back to reserve
+function processUnloadGas(state, playerId, data) {
+  const { socketIndex } = data;
+  const playerState = state.players[playerId];
+
+  // Check socket is valid
+  const gasSockets = playerState.blueprint.gasSockets || [];
+  if (socketIndex < 0 || socketIndex >= gasSockets.length) {
+    return { error: 'Invalid socket index' };
+  }
+
+  // Check socket has gas
+  const gasType = gasSockets[socketIndex];
+  if (!gasType) {
+    return { error: 'Socket is already empty' };
+  }
+
+  // Unload the gas
+  playerState.blueprint.gasSockets[socketIndex] = null;
+  playerState.gasCubes[gasType]++;
+
+  state.log.push({
+    timestamp: new Date().toISOString(),
+    message: `Unloaded ${gasType} from gas socket ${socketIndex + 1}`,
+    playerId,
+    type: 'action'
+  });
+
+  return { newState: state };
+}
+
+// Calculate ship stats from blueprint
+function calculateBlueprintStats(blueprint, age = 1) {
+  const AGE_BASELINES = {
+    1: { speed: 1, range: 1, ceiling: 0, reliability: 0 },
+    2: { speed: 2, range: 2, ceiling: 1, reliability: 1 },
+    3: { speed: 3, range: 3, ceiling: 2, reliability: 2 }
+  };
+
+  const stats = { ...AGE_BASELINES[age] };
+
+  // Add stats from upgrades
+  const slots = ['frameSlots', 'fabricSlots', 'driveSlots', 'componentSlots'];
+  for (const slotKey of slots) {
+    const slotArray = blueprint[slotKey] || [];
+    for (const upgradeId of slotArray) {
+      if (!upgradeId) continue;
+      const upgrade = UPGRADES[upgradeId];
+      if (upgrade?.stats) {
+        for (const [stat, value] of Object.entries(upgrade.stats)) {
+          stats[stat] = (stats[stat] || 0) + value;
+        }
+      }
+    }
+  }
+
+  return stats;
+}
+
+// Calculate weight from blueprint
+function calculateBlueprintWeight(blueprint) {
+  let weight = 0;
+  const slots = ['frameSlots', 'fabricSlots', 'driveSlots', 'componentSlots'];
+  for (const slotKey of slots) {
+    const slotArray = blueprint[slotKey] || [];
+    for (const upgradeId of slotArray) {
+      if (!upgradeId) continue;
+      const upgrade = UPGRADES[upgradeId];
+      if (upgrade?.weight) {
+        weight += Math.abs(upgrade.weight);
+      }
+    }
+  }
+  return weight;
+}
+
+// Calculate lift from loaded gas cubes
+function calculateBlueprintLift(blueprint) {
+  let lift = 0;
+  const gasSockets = blueprint.gasSockets || [];
+  for (const cube of gasSockets) {
+    if (cube === 'hydrogen' || cube === 'helium') {
+      lift += 5;
+    }
+  }
+  return lift;
+}
+
+// Launch a ship from hangar
+function processLaunchShip(state, playerId, data) {
+  const { shipId } = data;
+  const playerState = state.players[playerId];
+
+  // Find ship in hangar
+  const ships = playerState.ships || [];
+  const shipIndex = ships.findIndex(s => s.id === shipId && s.status === 'hangar');
+
+  if (shipIndex === -1) {
+    return { error: 'Ship not found in hangar' };
+  }
+
+  // Check Lift >= Weight
+  const lift = calculateBlueprintLift(playerState.blueprint);
+  const weight = calculateBlueprintWeight(playerState.blueprint);
+
+  if (lift < weight) {
+    return { error: `Cannot launch: Lift (${lift}) < Weight (${weight}). Load more gas cubes.` };
+  }
+
+  // Calculate ship stats for the launch
+  const stats = calculateBlueprintStats(playerState.blueprint, state.age);
+
+  // Update ship to launched status
+  ships[shipIndex].status = 'launched';
+  ships[shipIndex].stats = stats;
+  ships[shipIndex].launchedAge = state.age;
+
+  // Clear gas sockets (gas is used for launch)
+  playerState.blueprint.gasSockets = playerState.blueprint.gasSockets.map(() => null);
+
+  state.log.push({
+    timestamp: new Date().toISOString(),
+    message: `Launched ship with Range ${stats.range}, Speed ${stats.speed}`,
+    playerId,
+    type: 'action'
+  });
+
+  return { newState: state };
+}
+
+// Claim a route with a launched ship
+function processClaimRoute(state, playerId, data) {
+  const { shipId, routeId } = data;
+  const playerState = state.players[playerId];
+
+  // Find launched ship
+  const ships = playerState.ships || [];
+  const shipIndex = ships.findIndex(s => s.id === shipId && s.status === 'launched');
+
+  if (shipIndex === -1) {
+    return { error: 'No launched ship available' };
+  }
+
+  const ship = ships[shipIndex];
+
+  // Find route
+  const route = state.map?.routes?.find(r => r.id === routeId);
+  if (!route) {
+    return { error: 'Route not found' };
+  }
+
+  // Check if route already claimed
+  if (route.claimed) {
+    return { error: 'Route already claimed' };
+  }
+
+  // Check ship meets route requirements
+  const shipStats = ship.stats || { range: 1 };
+  if (shipStats.range < route.distance) {
+    return { error: `Ship range (${shipStats.range}) < route distance (${route.distance})` };
+  }
+
+  // Claim the route
+  route.claimed = playerId;
+  route.claimedBy = {
+    playerId,
+    shipId,
+    turn: state.turn
+  };
+
+  // Update ship to on-route status
+  ships[shipIndex].status = 'on_route';
+  ships[shipIndex].routeId = routeId;
+
+  // Add route income to player
+  playerState.income += route.income;
+
+  state.log.push({
+    timestamp: new Date().toISOString(),
+    message: `Claimed route ${route.from} → ${route.to} for +${route.income} income`,
     playerId,
     type: 'action'
   });

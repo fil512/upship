@@ -43,7 +43,7 @@ This document tracks the implementation of UP SHIP! as an online multiplayer boa
 |--------|------|-------------|
 | [x] | [09-ground-board.md](09-ground-board.md) | Worker placement board and actions |
 | [x] | [10-rd-board.md](10-rd-board.md) | R&D board and technology market |
-| [ ] | [11-maps.md](11-maps.md) | Map boards for all three Ages |
+| [x] | [11-maps.md](11-maps.md) | Map boards for all three Ages |
 
 ### Phase 5: Core Mechanics
 
@@ -105,9 +105,9 @@ This document tracks the implementation of UP SHIP! as an online multiplayer boa
 
 ## Current Session
 
-**Active Plan:** 11-maps.md
+**Active Plan:** 12-technologies.md
 
-**Next Plan:** 12-technologies.md
+**Next Plan:** 13-upgrades.md
 
 ---
 
