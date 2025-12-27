@@ -1,15 +1,27 @@
+require('dotenv').config();
+
 const express = require('express');
 const path = require('path');
+const db = require('./db');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Serve static files from the public directory
+// Middleware
+app.use(express.json());
 app.use(express.static(path.join(__dirname, '..', 'public')));
 
-// Health check endpoint for Railway
-app.get('/health', (req, res) => {
-  res.status(200).json({ status: 'healthy', timestamp: new Date().toISOString() });
+// Health check endpoint for Railway (includes database status)
+app.get('/health', async (req, res) => {
+  const dbHealthy = await db.healthCheck();
+
+  const status = {
+    status: dbHealthy ? 'healthy' : 'degraded',
+    timestamp: new Date().toISOString(),
+    database: dbHealthy ? 'connected' : 'disconnected'
+  };
+
+  res.status(dbHealthy ? 200 : 503).json(status);
 });
 
 // API endpoint placeholder

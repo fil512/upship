@@ -10,11 +10,11 @@ Set up PostgreSQL database on Railway with a schema optimized for multiplayer bo
 
 ## Goals
 
-- [ ] Add PostgreSQL database on Railway
-- [ ] Create database connection module with pooling
-- [ ] Implement migration system
-- [ ] Create core schema (users, games, players, game_states, game_actions)
-- [ ] Add database health check endpoint
+- [x] Add PostgreSQL database on Railway
+- [x] Create database connection module with pooling
+- [x] Implement migration system
+- [x] Create core schema (users, games, players, game_states, game_actions)
+- [x] Add database health check endpoint
 - [ ] Test database connectivity locally and on Railway
 
 ## Implementation Steps
