@@ -298,10 +298,10 @@ function processAction(state, playerId, actionType, data) {
       return processGainResearch(newState, playerId, data);
 
     case 'LOAD_GAS':
-      return processLoadGas(newState, playerId, data);
+      return { error: 'LOAD_GAS is deprecated. Gas is spent from reserve when launching - use LAUNCH_SHIP with gasType parameter.' };
 
     case 'UNLOAD_GAS':
-      return processUnloadGas(newState, playerId, data);
+      return { error: 'UNLOAD_GAS is deprecated. Gas is spent from reserve when launching.' };
 
     case 'LAUNCH_SHIP':
       return processLaunchShip(newState, playerId, data);
@@ -1196,22 +1196,22 @@ function calculateBlueprintWeight(blueprint) {
   return weight;
 }
 
-// Calculate lift from loaded gas cubes
-function calculateBlueprintLift(blueprint) {
-  let lift = 0;
-  const gasSockets = blueprint.gasSockets || [];
-  for (const cube of gasSockets) {
-    if (cube === 'hydrogen' || cube === 'helium') {
-      lift += 5;
-    }
-  }
-  return lift;
+// Calculate required gas cubes based on weight (Lift must >= Weight, each cube = +5 Lift)
+function calculateRequiredGasCubes(blueprint) {
+  const weight = calculateBlueprintWeight(blueprint);
+  // Minimum 1 gas cube, otherwise ceil(weight / 5)
+  return Math.max(1, Math.ceil(weight / 5));
 }
 
 // Launch a ship from hangar
 function processLaunchShip(state, playerId, data) {
-  const { shipId } = data;
+  const { shipId, gasType = 'hydrogen' } = data;
   const playerState = state.players[playerId];
+
+  // Validate gas type
+  if (!['hydrogen', 'helium'].includes(gasType)) {
+    return { error: 'Gas type must be hydrogen or helium' };
+  }
 
   // Find ship in hangar
   const ships = playerState.ships || [];
@@ -1221,19 +1221,16 @@ function processLaunchShip(state, playerId, data) {
     return { error: 'Ship not found in hangar' };
   }
 
-  // Check Lift >= Weight
-  const lift = calculateBlueprintLift(playerState.blueprint);
-  const weight = calculateBlueprintWeight(playerState.blueprint);
+  // Calculate required gas cubes
+  const requiredCubes = calculateRequiredGasCubes(playerState.blueprint);
+  const availableCubes = playerState.gasCubes[gasType] || 0;
 
-  // Minimum lift requirement: ships need at least 5 lift (1 gas cube) to fly
-  const MINIMUM_LIFT = 5;
-  if (lift < MINIMUM_LIFT) {
-    return { error: `Cannot launch: Minimum 1 gas cube required (Lift ${lift} < ${MINIMUM_LIFT})` };
+  if (availableCubes < requiredCubes) {
+    return { error: `Not enough ${gasType}: need ${requiredCubes}, have ${availableCubes}` };
   }
 
-  if (lift < weight) {
-    return { error: `Cannot launch: Lift (${lift}) < Weight (${weight}). Load more gas cubes.` };
-  }
+  // Deduct gas cubes from reserve
+  playerState.gasCubes[gasType] -= requiredCubes;
 
   // Calculate ship stats for the launch
   const stats = calculateBlueprintStats(playerState.blueprint, state.age);
@@ -1242,9 +1239,7 @@ function processLaunchShip(state, playerId, data) {
   ships[shipIndex].status = 'launched';
   ships[shipIndex].stats = stats;
   ships[shipIndex].launchedAge = state.age;
-
-  // Clear gas sockets (gas is used for launch)
-  playerState.blueprint.gasSockets = playerState.blueprint.gasSockets.map(() => null);
+  ships[shipIndex].gasType = gasType;  // Track which gas was used
 
   // Build a stats summary showing all non-baseline stats
   const statParts = [`Range ${stats.range}`, `Speed ${stats.speed}`];
@@ -1254,7 +1249,7 @@ function processLaunchShip(state, playerId, data) {
 
   state.log.push({
     timestamp: new Date().toISOString(),
-    message: `Launched ship: ${statParts.join(', ')}`,
+    message: `Launched ship with ${requiredCubes} ${gasType}: ${statParts.join(', ')}`,
     playerId,
     type: 'action'
   });

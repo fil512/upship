@@ -656,9 +656,7 @@ const commands = {
       console.log('  PLAY_CARD idx=0             - Play card from hand');
       console.log('  RECRUIT_CREW type=pilot n=1 - Recruit crew');
       console.log('  BUILD_SHIP count=1          - Build ships');
-      console.log('  LOAD_GAS type=hydrogen i=0  - Load gas to socket');
-      console.log('  UNLOAD_GAS i=0              - Unload gas from socket');
-      console.log('  LAUNCH_SHIP ship=<shipId>   - Launch a ship');
+      console.log('  LAUNCH_SHIP shipId=<id> gasType=hydrogen - Launch a ship (spends gas from reserve)');
       console.log('  ACQUIRE_TECHNOLOGY tech=<id> - Buy tech from R&D board');
       console.log('  INSTALL_UPGRADE slot=frame i=0 id=<upgradeId>');
       console.log('  REMOVE_UPGRADE slot=frame i=0');
@@ -755,21 +753,20 @@ const commands = {
   },
 
   async load(username, args) {
-    const [gameId, gasType, socketIndex] = args;
-    if (!gameId || !gasType || socketIndex === undefined) {
-      console.log('Usage: upship <user> load <gameId> <hydrogen|helium> <socketIndex>');
-      return;
-    }
-    return commands.action(username, [gameId, 'LOAD_GAS', `gasType=${gasType}`, `socketIndex=${socketIndex}`]);
+    console.log(`${COLORS.yellow}Note: Gas loading is no longer needed.${COLORS.reset}`);
+    console.log('Gas cubes are automatically spent from your reserve when you launch.');
+    console.log('Use: upship <user> launch <gameId> <shipId> [hydrogen|helium]');
+    return;
   },
 
   async launch(username, args) {
-    const [gameId, shipId] = args;
+    const [gameId, shipId, gasType = 'hydrogen'] = args;
     if (!gameId || !shipId) {
-      console.log('Usage: upship <user> launch <gameId> <shipId>');
+      console.log('Usage: upship <user> launch <gameId> <shipId> [hydrogen|helium]');
+      console.log('  Gas type defaults to hydrogen if not specified.');
       return;
     }
-    return commands.action(username, [gameId, 'LAUNCH_SHIP', `ship=${shipId}`]);
+    return commands.action(username, [gameId, 'LAUNCH_SHIP', `shipId=${shipId}`, `gasType=${gasType}`]);
   },
 
   async tech(username, args) {
@@ -823,8 +820,7 @@ ${c(COLORS.yellow, 'Actions (shorthand):')}
   upship <user> draw <gameId> [count]         Draw cards
   upship <user> build <gameId> [count]        Build ships
   upship <user> recruit <id> <type> [count]   Recruit crew
-  upship <user> load <id> <type> <socket>     Load gas to blueprint
-  upship <user> launch <gameId> <shipId>      Launch a ship
+  upship <user> launch <gameId> <shipId> [gas] Launch a ship (gas: hydrogen|helium)
   upship <user> tech <gameId> <techId>        Acquire technology from R&D
 
 ${c(COLORS.yellow, 'Actions (generic):')}
