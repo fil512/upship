@@ -1268,9 +1268,9 @@
         <!-- Right Sidebar - Cards & Actions -->
         <div class="sidebar-right">
           <div class="hand-section">
-            <div class="section-title">Hand (${myState.hand.length} cards)</div>
+            <div class="section-title">Hand (${(myState.hand || []).length} cards)</div>
             <div class="cards-container">
-              ${myState.hand.map((card, i) => `
+              ${(myState.hand || []).map((card, i) => `
                 <div class="card" onclick="playCard(${i})">
                   <div class="card-name">
                     ${getSymbolIcon(card.symbol)} ${card.name}
@@ -1278,7 +1278,7 @@
                   <div class="card-type">${card.effect || 'No effect'}</div>
                 </div>
               `).join('')}
-              ${myState.hand.length === 0 ? '<div style="color: #666; font-size: 0.8rem;">No cards in hand</div>' : ''}
+              ${(myState.hand || []).length === 0 ? '<div style="color: #666; font-size: 0.8rem;">No cards in hand</div>' : ''}
             </div>
             <div style="margin-top: 10px; font-size: 0.75rem; color: #888;">
               Deck: ${myState.deck?.length || 0} | Discard: ${myState.discardPile?.length || 0}
