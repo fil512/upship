@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>UP SHIP! - Airship Strategy Game</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Georgia', serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      min-height: 100vh;
+      color: #e8e8e8;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .container {
+      text-align: center;
+      max-width: 800px;
+    }
+
+    h1 {
+      font-size: 4rem;
+      margin-bottom: 0.5rem;
+      text-shadow: 3px 3px 6px rgba(0,0,0,0.5);
+      letter-spacing: 0.2em;
+    }
+
+    .subtitle {
+      font-size: 1.2rem;
+      color: #c4a35a;
+      margin-bottom: 2rem;
+      font-style: italic;
+    }
+
+    .airship {
+      font-size: 6rem;
+      margin: 2rem 0;
+      animation: float 3s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-20px); }
+    }
+
+    .description {
+      font-size: 1.1rem;
+      line-height: 1.8;
+      margin-bottom: 2rem;
+      padding: 0 20px;
+    }
+
+    .status {
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(196, 163, 90, 0.5);
+      border-radius: 8px;
+      padding: 1.5rem 2rem;
+      margin-top: 2rem;
+    }
+
+    .status h2 {
+      color: #c4a35a;
+      margin-bottom: 1rem;
+      font-size: 1.3rem;
+    }
+
+    .factions {
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
+      margin-top: 2rem;
+      flex-wrap: wrap;
+    }
+
+    .faction {
+      padding: 1rem;
+      border-radius: 8px;
+      background: rgba(255,255,255,0.05);
+      min-width: 120px;
+    }
+
+    .faction-flag {
+      font-size: 2rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .faction-name {
+      font-size: 0.9rem;
+      color: #c4a35a;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>UP SHIP!</h1>
+    <p class="subtitle">The Golden Age of Airships (1900-1937)</p>
+
+    <div class="airship">🎈</div>
+
+    <p class="description">
+      Command your airship conglomerate through three dramatic Ages of aviation history.
+      Build legendary vessels, navigate treacherous routes, and outmaneuver your rivals
+      in this strategic game of industrial ambition and aerial adventure.
+    </p>
+
+    <div class="factions">
+      <div class="faction">
+        <div class="faction-flag">🇩🇪</div>
+        <div class="faction-name">Germany</div>
+      </div>
+      <div class="faction">
+        <div class="faction-flag">🇬🇧</div>
+        <div class="faction-name">Britain</div>
+      </div>
+      <div class="faction">
+        <div class="faction-flag">🇺🇸</div>
+        <div class="faction-name">United States</div>
+      </div>
+      <div class="faction">
+        <div class="faction-flag">🇮🇹</div>
+        <div class="faction-name">Italy</div>
+      </div>
+    </div>
+
+    <div class="status">
+      <h2>Development Status</h2>
+      <p>Online implementation coming soon. Game design in progress.</p>
+    </div>
+  </div>
+
+  <script>
+    // Check API status on load
+    fetch('/api/status')
+      .then(res => res.json())
+      .then(data => console.log('Server status:', data))
+      .catch(err => console.error('API error:', err));
+  </script>
+</body>
+</html>

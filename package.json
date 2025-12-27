@@ -1,0 +1,22 @@
+{
+  "name": "upship",
+  "version": "1.0.0",
+  "description": "UP SHIP! - A strategy board game about airship conglomerates during the Golden Age of Airships",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node --watch server/index.js"
+  },
+  "keywords": [
+    "boardgame",
+    "airship",
+    "strategy"
+  ],
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.18.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
