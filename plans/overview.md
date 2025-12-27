@@ -59,7 +59,7 @@ This document tracks the implementation of UP SHIP! as an online multiplayer boa
 | Status | Plan | Description |
 |--------|------|-------------|
 | [x] | [16-hazards.md](16-hazards.md) | Hazard deck and hazard checks |
-| [ ] | [17-cards.md](17-cards.md) | Deck building and market cards |
+| [x] | [17-cards.md](17-cards.md) | Deck building and market cards |
 | [ ] | [18-crew.md](18-crew.md) | Pilots, Engineers, and crew management |
 
 ### Phase 7: Game Flow

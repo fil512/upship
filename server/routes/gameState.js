@@ -312,6 +312,9 @@ function processAction(state, playerId, actionType, data) {
     case 'PERFORM_HAZARD_CHECK':
       return processHazardCheck(newState, playerId, data);
 
+    case 'BUY_MARKET_CARD':
+      return processBuyMarketCard(newState, playerId, data);
+
     default:
       return { error: `Unknown action type: ${actionType}` };
   }
@@ -1306,6 +1309,43 @@ function processHazardCheck(state, playerId, data) {
     playerState.lastHazardCheck = {};
   }
   playerState.lastHazardCheck[shipId] = checkResult;
+
+  return { newState: state };
+}
+
+// Buy a card from the market
+function processBuyMarketCard(state, playerId, data) {
+  const { cardId } = data;
+  const playerState = state.players[playerId];
+
+  // Find card in market
+  const marketCards = state.marketCards || [];
+  const cardIndex = marketCards.findIndex(c => c.id === cardId);
+
+  if (cardIndex === -1) {
+    return { error: 'Card not found in market' };
+  }
+
+  const card = marketCards[cardIndex];
+  const cost = card.value || 3; // Default cost is 3
+
+  if (playerState.cash < cost) {
+    return { error: `Not enough cash (need £${cost})` };
+  }
+
+  // Buy the card
+  playerState.cash -= cost;
+  playerState.discardPile.push(card);
+
+  // Remove from market
+  state.marketCards.splice(cardIndex, 1);
+
+  state.log.push({
+    timestamp: new Date().toISOString(),
+    message: `Bought ${card.name} for £${cost}`,
+    playerId,
+    type: 'action'
+  });
 
   return { newState: state };
 }

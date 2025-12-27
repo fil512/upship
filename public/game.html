@@ -1308,6 +1308,20 @@
             }).join('')}
           </div>
 
+          <div class="section-title">Market Cards</div>
+          <div class="cards-container" style="margin-bottom: 15px; max-height: 120px; overflow-y: auto;">
+            ${(state.marketCards || []).map(card => `
+              <div class="card">
+                <div class="card-name">${card.name}</div>
+                <div class="card-type">${card.type}</div>
+                <button class="tech-buy-btn" onclick="buyMarketCard('${card.id}')" ${!isMyTurn || myState.cash < (card.value || 3) ? 'disabled' : ''} style="margin-top: 5px; width: 100%;">
+                  £${card.value || 3}
+                </button>
+              </div>
+            `).join('')}
+            ${(state.marketCards || []).length === 0 ? '<div style="color: #888; font-size: 0.8rem;">Market empty</div>' : ''}
+          </div>
+
           <div class="section-title">Map: ${state.map?.name || 'Unknown'}</div>
           <div class="map-container" style="max-height: 200px; overflow-y: auto;">
             <div class="map-routes">
@@ -1769,6 +1783,11 @@
       if (confirm('Perform hazard check? This will draw from your hazard deck and test your ship.')) {
         performAction('PERFORM_HAZARD_CHECK', { shipId });
       }
+    }
+
+    // === MARKET CARDS ===
+    function buyMarketCard(cardId) {
+      performAction('BUY_MARKET_CARD', { cardId });
     }
 
     function openSlot(slotType, slotIndex) {
