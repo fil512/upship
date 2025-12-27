@@ -19,96 +19,80 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
       padding: 20px;
     }
 
     .container {
       text-align: center;
-      max-width: 800px;
+      max-width: 900px;
+      width: 100%;
     }
 
     h1 {
-      font-size: 4rem;
-      margin-bottom: 0.5rem;
+      font-size: 3rem;
+      margin-bottom: 0.25rem;
       text-shadow: 3px 3px 6px rgba(0,0,0,0.5);
       letter-spacing: 0.2em;
     }
 
     .subtitle {
-      font-size: 1.2rem;
+      font-size: 1rem;
       color: #c4a35a;
-      margin-bottom: 2rem;
+      margin-bottom: 1.5rem;
       font-style: italic;
     }
 
     .airship {
-      font-size: 6rem;
-      margin: 2rem 0;
+      font-size: 4rem;
+      margin: 1rem 0;
       animation: float 3s ease-in-out infinite;
     }
 
     @keyframes float {
       0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-20px); }
+      50% { transform: translateY(-15px); }
     }
 
     .description {
-      font-size: 1.1rem;
-      line-height: 1.8;
-      margin-bottom: 2rem;
+      font-size: 1rem;
+      line-height: 1.6;
+      margin-bottom: 1.5rem;
       padding: 0 20px;
     }
 
-    .status {
-      background: rgba(255,255,255,0.1);
-      border: 1px solid rgba(196, 163, 90, 0.5);
-      border-radius: 8px;
-      padding: 1.5rem 2rem;
-      margin-top: 2rem;
-    }
-
-    .status h2 {
-      color: #c4a35a;
-      margin-bottom: 1rem;
-      font-size: 1.3rem;
-    }
-
-    .factions {
+    .factions-display {
       display: flex;
       justify-content: center;
-      gap: 2rem;
-      margin-top: 2rem;
+      gap: 1.5rem;
+      margin: 1.5rem 0;
       flex-wrap: wrap;
     }
 
-    .faction {
-      padding: 1rem;
+    .faction-item {
+      padding: 0.75rem;
       border-radius: 8px;
       background: rgba(255,255,255,0.05);
-      min-width: 120px;
+      min-width: 100px;
     }
 
     .faction-flag {
-      font-size: 2rem;
-      margin-bottom: 0.5rem;
+      font-size: 1.5rem;
+      margin-bottom: 0.25rem;
     }
 
     .faction-name {
-      font-size: 0.9rem;
+      font-size: 0.85rem;
       color: #c4a35a;
     }
 
     /* Auth UI */
     .auth-container {
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      background: rgba(0,0,0,0.7);
+      background: rgba(0,0,0,0.5);
       border: 1px solid rgba(196, 163, 90, 0.5);
       border-radius: 8px;
-      padding: 1rem;
-      min-width: 250px;
+      padding: 1.5rem;
+      margin: 1.5rem auto;
+      max-width: 350px;
     }
 
     .auth-container h3 {
@@ -136,7 +120,7 @@
       color: #888;
     }
 
-    .auth-form button {
+    .btn {
       padding: 0.5rem 1rem;
       border: none;
       border-radius: 4px;
@@ -144,11 +128,35 @@
       color: #1a1a2e;
       font-weight: bold;
       cursor: pointer;
-      margin-top: 0.5rem;
+      font-size: 0.9rem;
     }
 
-    .auth-form button:hover {
+    .btn:hover {
       background: #d4b36a;
+    }
+
+    .btn-outline {
+      background: transparent;
+      border: 1px solid #c4a35a;
+      color: #c4a35a;
+    }
+
+    .btn-outline:hover {
+      background: rgba(196, 163, 90, 0.2);
+    }
+
+    .btn-small {
+      padding: 0.35rem 0.75rem;
+      font-size: 0.8rem;
+    }
+
+    .btn-danger {
+      background: #cc4444;
+      color: white;
+    }
+
+    .btn-danger:hover {
+      background: #dd5555;
     }
 
     .auth-tabs {
@@ -164,6 +172,7 @@
       cursor: pointer;
       padding: 0.25rem 0;
       border-bottom: 2px solid transparent;
+      font-size: 0.9rem;
     }
 
     .auth-tab.active {
@@ -171,116 +180,443 @@
       border-bottom-color: #c4a35a;
     }
 
-    .auth-error {
+    .auth-error, .error-message {
       color: #ff6b6b;
       font-size: 0.85rem;
       margin-top: 0.5rem;
     }
 
-    .user-info {
+    .user-header {
       display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      padding: 0.75rem 1rem;
+      background: rgba(0,0,0,0.3);
+      border-radius: 8px;
     }
 
-    .user-info .username {
+    .user-header .username {
       color: #c4a35a;
       font-weight: bold;
-    }
-
-    .user-info button {
-      padding: 0.5rem 1rem;
-      border: 1px solid #c4a35a;
-      border-radius: 4px;
-      background: transparent;
-      color: #c4a35a;
-      cursor: pointer;
-    }
-
-    .user-info button:hover {
-      background: rgba(196, 163, 90, 0.2);
     }
 
     .hidden {
       display: none !important;
     }
+
+    /* Lobby styles */
+    .lobby {
+      width: 100%;
+    }
+
+    .lobby-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+
+    .lobby-header h2 {
+      color: #c4a35a;
+      font-size: 1.3rem;
+    }
+
+    .games-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .game-card {
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(196, 163, 90, 0.3);
+      border-radius: 8px;
+      padding: 1rem;
+      text-align: left;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .game-card:hover {
+      background: rgba(255,255,255,0.12);
+    }
+
+    .game-info h3 {
+      color: #e8e8e8;
+      font-size: 1.1rem;
+      margin-bottom: 0.25rem;
+    }
+
+    .game-meta {
+      color: #888;
+      font-size: 0.85rem;
+    }
+
+    .game-meta span {
+      margin-right: 1rem;
+    }
+
+    .no-games {
+      text-align: center;
+      color: #888;
+      padding: 2rem;
+      font-style: italic;
+    }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+    }
+
+    .modal {
+      background: #1a1a2e;
+      border: 1px solid rgba(196, 163, 90, 0.5);
+      border-radius: 12px;
+      padding: 1.5rem;
+      max-width: 500px;
+      width: 90%;
+    }
+
+    .modal h2 {
+      color: #c4a35a;
+      margin-bottom: 1rem;
+    }
+
+    .modal-form {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .modal-form input {
+      padding: 0.75rem;
+      border: 1px solid rgba(196, 163, 90, 0.5);
+      border-radius: 4px;
+      background: rgba(255,255,255,0.1);
+      color: #e8e8e8;
+      font-size: 1rem;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 0.75rem;
+      justify-content: flex-end;
+      margin-top: 0.5rem;
+    }
+
+    /* Game Detail View */
+    .game-detail {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(196, 163, 90, 0.3);
+      border-radius: 12px;
+      padding: 1.5rem;
+      text-align: left;
+    }
+
+    .game-detail h2 {
+      color: #c4a35a;
+      margin-bottom: 0.5rem;
+    }
+
+    .game-detail .game-status {
+      color: #888;
+      margin-bottom: 1.5rem;
+    }
+
+    .players-section h3 {
+      color: #e8e8e8;
+      margin-bottom: 0.75rem;
+      font-size: 1rem;
+    }
+
+    .players-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .player-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.5rem 0.75rem;
+      background: rgba(255,255,255,0.05);
+      border-radius: 4px;
+    }
+
+    .player-name {
+      font-weight: bold;
+    }
+
+    .player-name.host::after {
+      content: ' (Host)';
+      color: #c4a35a;
+      font-weight: normal;
+      font-size: 0.85rem;
+    }
+
+    .player-faction {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    /* Faction selector */
+    .faction-selector {
+      margin-bottom: 1.5rem;
+    }
+
+    .faction-selector h3 {
+      color: #e8e8e8;
+      margin-bottom: 0.75rem;
+      font-size: 1rem;
+    }
+
+    .faction-buttons {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .faction-btn {
+      padding: 0.5rem 1rem;
+      border: 1px solid rgba(196, 163, 90, 0.5);
+      border-radius: 4px;
+      background: transparent;
+      color: #e8e8e8;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.9rem;
+    }
+
+    .faction-btn:hover:not(:disabled) {
+      background: rgba(196, 163, 90, 0.2);
+    }
+
+    .faction-btn.selected {
+      background: #c4a35a;
+      color: #1a1a2e;
+      font-weight: bold;
+    }
+
+    .faction-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .game-actions {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    .back-link {
+      color: #c4a35a;
+      cursor: pointer;
+      margin-bottom: 1rem;
+      display: inline-block;
+    }
+
+    .back-link:hover {
+      text-decoration: underline;
+    }
+
+    /* Tabs for lobby */
+    .lobby-tabs {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1rem;
+      border-bottom: 1px solid rgba(196, 163, 90, 0.3);
+      padding-bottom: 0.5rem;
+    }
+
+    .lobby-tab {
+      background: none;
+      border: none;
+      color: #888;
+      cursor: pointer;
+      padding: 0.5rem 0;
+      font-size: 1rem;
+    }
+
+    .lobby-tab.active {
+      color: #c4a35a;
+    }
+
+    .loading {
+      text-align: center;
+      color: #888;
+      padding: 2rem;
+    }
   </style>
 </head>
 <body>
-  <!-- Auth Container -->
-  <div class="auth-container" id="authContainer">
-    <!-- Login/Register Forms -->
-    <div id="authForms">
-      <div class="auth-tabs">
-        <button class="auth-tab active" id="loginTab">Login</button>
-        <button class="auth-tab" id="registerTab">Register</button>
-      </div>
-
-      <!-- Login Form -->
-      <form class="auth-form" id="loginForm">
-        <input type="text" name="username" placeholder="Username" required>
-        <input type="password" name="password" placeholder="Password" required>
-        <button type="submit">Login</button>
-        <div class="auth-error hidden" id="loginError"></div>
-      </form>
-
-      <!-- Register Form -->
-      <form class="auth-form hidden" id="registerForm">
-        <input type="text" name="username" placeholder="Username (3-50 chars)" required>
-        <input type="password" name="password" placeholder="Password (6+ chars)" required>
-        <button type="submit">Register</button>
-        <div class="auth-error hidden" id="registerError"></div>
-      </form>
-    </div>
-
-    <!-- Logged In State -->
-    <div class="user-info hidden" id="userInfo">
-      <span>Welcome, <span class="username" id="displayName"></span></span>
-      <button id="logoutBtn">Logout</button>
-    </div>
-  </div>
-
   <div class="container">
     <h1>UP SHIP!</h1>
     <p class="subtitle">The Golden Age of Airships (1900-1937)</p>
 
-    <div class="airship">🎈</div>
+    <!-- Landing page (shown when not logged in) -->
+    <div id="landingPage">
+      <div class="airship">🎈</div>
 
-    <p class="description">
-      Command your airship conglomerate through three dramatic Ages of aviation history.
-      Build legendary vessels, navigate treacherous routes, and outmaneuver your rivals
-      in this strategic game of industrial ambition and aerial adventure.
-    </p>
+      <p class="description">
+        Command your airship conglomerate through three dramatic Ages of aviation history.
+        Build legendary vessels, navigate treacherous routes, and outmaneuver your rivals
+        in this strategic game of industrial ambition and aerial adventure.
+      </p>
 
-    <div class="factions">
-      <div class="faction">
-        <div class="faction-flag">🇩🇪</div>
-        <div class="faction-name">Germany</div>
+      <div class="factions-display">
+        <div class="faction-item">
+          <div class="faction-flag">🇩🇪</div>
+          <div class="faction-name">Germany</div>
+        </div>
+        <div class="faction-item">
+          <div class="faction-flag">🇬🇧</div>
+          <div class="faction-name">Britain</div>
+        </div>
+        <div class="faction-item">
+          <div class="faction-flag">🇺🇸</div>
+          <div class="faction-name">United States</div>
+        </div>
+        <div class="faction-item">
+          <div class="faction-flag">🇮🇹</div>
+          <div class="faction-name">Italy</div>
+        </div>
       </div>
-      <div class="faction">
-        <div class="faction-flag">🇬🇧</div>
-        <div class="faction-name">Britain</div>
-      </div>
-      <div class="faction">
-        <div class="faction-flag">🇺🇸</div>
-        <div class="faction-name">United States</div>
-      </div>
-      <div class="faction">
-        <div class="faction-flag">🇮🇹</div>
-        <div class="faction-name">Italy</div>
+
+      <!-- Auth Container -->
+      <div class="auth-container" id="authContainer">
+        <div id="authForms">
+          <div class="auth-tabs">
+            <button class="auth-tab active" id="loginTab">Login</button>
+            <button class="auth-tab" id="registerTab">Register</button>
+          </div>
+
+          <form class="auth-form" id="loginForm">
+            <input type="text" name="username" placeholder="Username" required>
+            <input type="password" name="password" placeholder="Password" required>
+            <button type="submit" class="btn">Login</button>
+            <div class="auth-error hidden" id="loginError"></div>
+          </form>
+
+          <form class="auth-form hidden" id="registerForm">
+            <input type="text" name="username" placeholder="Username (3-50 chars)" required>
+            <input type="password" name="password" placeholder="Password (6+ chars)" required>
+            <button type="submit" class="btn">Register</button>
+            <div class="auth-error hidden" id="registerError"></div>
+          </form>
+        </div>
       </div>
     </div>
 
-    <div class="status">
-      <h2>Development Status</h2>
-      <p>Online implementation coming soon. Game design in progress.</p>
+    <!-- Lobby (shown when logged in) -->
+    <div id="lobbyPage" class="lobby hidden">
+      <div class="user-header">
+        <span>Welcome, <span class="username" id="displayName"></span></span>
+        <button class="btn btn-outline btn-small" id="logoutBtn">Logout</button>
+      </div>
+
+      <!-- Game List View -->
+      <div id="gameListView">
+        <div class="lobby-tabs">
+          <button class="lobby-tab active" id="openGamesTab">Open Games</button>
+          <button class="lobby-tab" id="myGamesTab">My Games</button>
+        </div>
+
+        <div class="lobby-header">
+          <h2 id="gamesTitle">Open Games</h2>
+          <button class="btn" id="createGameBtn">Create Game</button>
+        </div>
+
+        <div id="gamesList" class="games-list">
+          <div class="loading">Loading games...</div>
+        </div>
+      </div>
+
+      <!-- Game Detail View -->
+      <div id="gameDetailView" class="hidden">
+        <span class="back-link" id="backToList">Back to Games</span>
+
+        <div class="game-detail">
+          <h2 id="gameDetailName">Game Name</h2>
+          <p class="game-status">
+            <span id="gameDetailStatus">Waiting for players</span> |
+            <span id="gameDetailPlayers">1/4 players</span> |
+            Host: <span id="gameDetailHost">username</span>
+          </p>
+
+          <div class="players-section">
+            <h3>Players</h3>
+            <div id="playersList" class="players-list"></div>
+          </div>
+
+          <div class="faction-selector" id="factionSelector">
+            <h3>Select Your Faction</h3>
+            <div class="faction-buttons">
+              <button class="faction-btn" data-faction="germany">🇩🇪 Germany</button>
+              <button class="faction-btn" data-faction="britain">🇬🇧 Britain</button>
+              <button class="faction-btn" data-faction="usa">🇺🇸 United States</button>
+              <button class="faction-btn" data-faction="italy">🇮🇹 Italy</button>
+            </div>
+            <div class="error-message hidden" id="factionError"></div>
+          </div>
+
+          <div class="game-actions" id="gameActions">
+            <button class="btn" id="startGameBtn">Start Game</button>
+            <button class="btn btn-outline btn-danger" id="leaveGameBtn">Leave Game</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Create Game Modal -->
+    <div class="modal-overlay hidden" id="createGameModal">
+      <div class="modal">
+        <h2>Create New Game</h2>
+        <form class="modal-form" id="createGameForm">
+          <input type="text" name="gameName" placeholder="Game Name" required maxlength="100">
+          <div class="error-message hidden" id="createGameError"></div>
+          <div class="modal-actions">
+            <button type="button" class="btn btn-outline" id="cancelCreateGame">Cancel</button>
+            <button type="submit" class="btn">Create</button>
+          </div>
+        </form>
+      </div>
     </div>
   </div>
 
   <script>
-    // Auth UI elements
+    // State
+    let currentUser = null;
+    let currentGame = null;
+    let currentTab = 'open';
+
+    // Faction data
+    const factions = {
+      germany: { flag: '🇩🇪', name: 'Germany' },
+      britain: { flag: '🇬🇧', name: 'Britain' },
+      usa: { flag: '🇺🇸', name: 'United States' },
+      italy: { flag: '🇮🇹', name: 'Italy' }
+    };
+
+    // DOM Elements
+    const landingPage = document.getElementById('landingPage');
+    const lobbyPage = document.getElementById('lobbyPage');
     const authForms = document.getElementById('authForms');
-    const userInfo = document.getElementById('userInfo');
     const loginForm = document.getElementById('loginForm');
     const registerForm = document.getElementById('registerForm');
     const loginTab = document.getElementById('loginTab');
@@ -290,7 +626,33 @@
     const displayName = document.getElementById('displayName');
     const logoutBtn = document.getElementById('logoutBtn');
 
-    // Tab switching
+    // Lobby elements
+    const gameListView = document.getElementById('gameListView');
+    const gameDetailView = document.getElementById('gameDetailView');
+    const gamesList = document.getElementById('gamesList');
+    const openGamesTab = document.getElementById('openGamesTab');
+    const myGamesTab = document.getElementById('myGamesTab');
+    const gamesTitle = document.getElementById('gamesTitle');
+    const createGameBtn = document.getElementById('createGameBtn');
+    const createGameModal = document.getElementById('createGameModal');
+    const createGameForm = document.getElementById('createGameForm');
+    const cancelCreateGame = document.getElementById('cancelCreateGame');
+    const createGameError = document.getElementById('createGameError');
+    const backToList = document.getElementById('backToList');
+
+    // Game detail elements
+    const gameDetailName = document.getElementById('gameDetailName');
+    const gameDetailStatus = document.getElementById('gameDetailStatus');
+    const gameDetailPlayers = document.getElementById('gameDetailPlayers');
+    const gameDetailHost = document.getElementById('gameDetailHost');
+    const playersList = document.getElementById('playersList');
+    const factionSelector = document.getElementById('factionSelector');
+    const factionError = document.getElementById('factionError');
+    const gameActions = document.getElementById('gameActions');
+    const startGameBtn = document.getElementById('startGameBtn');
+    const leaveGameBtn = document.getElementById('leaveGameBtn');
+
+    // Auth tab switching
     loginTab.addEventListener('click', () => {
       loginTab.classList.add('active');
       registerTab.classList.remove('active');
@@ -309,15 +671,18 @@
 
     // Show logged in state
     function showLoggedIn(user) {
-      authForms.classList.add('hidden');
-      userInfo.classList.remove('hidden');
+      currentUser = user;
+      landingPage.classList.add('hidden');
+      lobbyPage.classList.remove('hidden');
       displayName.textContent = user.displayName || user.username;
+      loadGames();
     }
 
     // Show login form
     function showLoginForm() {
-      authForms.classList.remove('hidden');
-      userInfo.classList.add('hidden');
+      currentUser = null;
+      landingPage.classList.remove('hidden');
+      lobbyPage.classList.add('hidden');
       loginForm.reset();
       registerForm.reset();
     }
@@ -394,6 +759,358 @@
       }
     });
 
+    // Lobby tab switching
+    openGamesTab.addEventListener('click', () => {
+      currentTab = 'open';
+      openGamesTab.classList.add('active');
+      myGamesTab.classList.remove('active');
+      gamesTitle.textContent = 'Open Games';
+      loadGames();
+    });
+
+    myGamesTab.addEventListener('click', () => {
+      currentTab = 'mine';
+      myGamesTab.classList.add('active');
+      openGamesTab.classList.remove('active');
+      gamesTitle.textContent = 'My Games';
+      loadGames();
+    });
+
+    // Load games list
+    async function loadGames() {
+      gamesList.innerHTML = '<div class="loading">Loading games...</div>';
+
+      try {
+        const endpoint = currentTab === 'mine' ? '/api/games/mine' : '/api/games?status=waiting';
+        const res = await fetch(endpoint);
+        const data = await res.json();
+
+        if (!res.ok) {
+          gamesList.innerHTML = '<div class="no-games">Failed to load games</div>';
+          return;
+        }
+
+        renderGamesList(data.games);
+      } catch (err) {
+        console.error('Load games error:', err);
+        gamesList.innerHTML = '<div class="no-games">Failed to load games</div>';
+      }
+    }
+
+    // Render games list
+    function renderGamesList(games) {
+      if (!games || games.length === 0) {
+        gamesList.innerHTML = '<div class="no-games">No games found. Create one to get started!</div>';
+        return;
+      }
+
+      gamesList.innerHTML = games.map(game => `
+        <div class="game-card" data-game-id="${game.id}">
+          <div class="game-info">
+            <h3>${escapeHtml(game.name)}</h3>
+            <div class="game-meta">
+              <span>${game.current_player_count}/${game.max_players} players</span>
+              <span>Host: ${escapeHtml(game.host_username)}</span>
+              <span>${formatStatus(game.status)}</span>
+            </div>
+          </div>
+          <button class="btn btn-small" onclick="viewGame(${game.id})">
+            ${game.status === 'waiting' ? 'View' : 'View'}
+          </button>
+        </div>
+      `).join('');
+    }
+
+    // Format status for display
+    function formatStatus(status) {
+      const statusMap = {
+        waiting: 'Waiting',
+        in_progress: 'In Progress',
+        completed: 'Completed',
+        cancelled: 'Cancelled'
+      };
+      return statusMap[status] || status;
+    }
+
+    // View game details
+    async function viewGame(gameId) {
+      try {
+        const res = await fetch(`/api/games/${gameId}`);
+        const data = await res.json();
+
+        if (!res.ok) {
+          alert(data.error || 'Failed to load game');
+          return;
+        }
+
+        currentGame = data.game;
+        renderGameDetail();
+        gameListView.classList.add('hidden');
+        gameDetailView.classList.remove('hidden');
+      } catch (err) {
+        console.error('View game error:', err);
+        alert('Failed to load game');
+      }
+    }
+
+    // Render game detail view
+    function renderGameDetail() {
+      const game = currentGame;
+      if (!game) return;
+
+      gameDetailName.textContent = game.name;
+      gameDetailStatus.textContent = formatStatus(game.status);
+      gameDetailPlayers.textContent = `${game.current_player_count}/${game.max_players} players`;
+      gameDetailHost.textContent = game.host_username;
+
+      // Check if current user is in the game
+      const players = game.players || [];
+      const currentPlayerInGame = players.find(p => p.id === currentUser.id);
+      const isHost = game.host_id === currentUser.id;
+
+      // Render players list
+      playersList.innerHTML = players.map(player => {
+        const isPlayerHost = player.id === game.host_id;
+        const faction = player.faction ? factions[player.faction] : null;
+        return `
+          <div class="player-row">
+            <span class="player-name ${isPlayerHost ? 'host' : ''}">${escapeHtml(player.username)}</span>
+            <span class="player-faction">
+              ${faction ? `${faction.flag} ${faction.name}` : '<em>No faction</em>'}
+            </span>
+          </div>
+        `;
+      }).join('');
+
+      // Show/hide faction selector
+      if (currentPlayerInGame && game.status === 'waiting') {
+        factionSelector.classList.remove('hidden');
+        renderFactionButtons(players, currentPlayerInGame.faction);
+      } else {
+        factionSelector.classList.add('hidden');
+      }
+
+      // Show/hide action buttons
+      if (game.status === 'waiting') {
+        gameActions.classList.remove('hidden');
+
+        if (currentPlayerInGame) {
+          // User is in game
+          startGameBtn.classList.toggle('hidden', !isHost);
+          leaveGameBtn.textContent = isHost ? 'Cancel Game' : 'Leave Game';
+          leaveGameBtn.classList.remove('hidden');
+
+          // Disable start if not enough players or missing factions
+          if (isHost) {
+            const allHaveFactions = players.every(p => p.faction);
+            const enoughPlayers = game.current_player_count >= game.min_players;
+            startGameBtn.disabled = !allHaveFactions || !enoughPlayers;
+            startGameBtn.title = !enoughPlayers ? 'Need more players' :
+                                !allHaveFactions ? 'All players must select a faction' : '';
+          }
+        } else {
+          // User is not in game - show join button
+          startGameBtn.classList.add('hidden');
+          if (game.current_player_count < game.max_players) {
+            leaveGameBtn.textContent = 'Join Game';
+            leaveGameBtn.classList.remove('btn-danger');
+            leaveGameBtn.classList.remove('hidden');
+          } else {
+            leaveGameBtn.classList.add('hidden');
+          }
+        }
+      } else {
+        gameActions.classList.add('hidden');
+      }
+    }
+
+    // Render faction buttons
+    function renderFactionButtons(players, selectedFaction) {
+      const takenFactions = players.filter(p => p.faction && p.id !== currentUser.id).map(p => p.faction);
+
+      document.querySelectorAll('.faction-btn').forEach(btn => {
+        const faction = btn.dataset.faction;
+        const isTaken = takenFactions.includes(faction);
+        const isSelected = faction === selectedFaction;
+
+        btn.disabled = isTaken;
+        btn.classList.toggle('selected', isSelected);
+      });
+    }
+
+    // Faction button clicks
+    document.querySelectorAll('.faction-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        if (!currentGame || btn.disabled) return;
+
+        const faction = btn.dataset.faction;
+        factionError.classList.add('hidden');
+
+        try {
+          const res = await fetch(`/api/games/${currentGame.id}/faction`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ faction })
+          });
+
+          const data = await res.json();
+
+          if (!res.ok) {
+            factionError.textContent = data.error || 'Failed to select faction';
+            factionError.classList.remove('hidden');
+            return;
+          }
+
+          currentGame = data.game;
+          renderGameDetail();
+        } catch (err) {
+          console.error('Select faction error:', err);
+          factionError.textContent = 'Network error';
+          factionError.classList.remove('hidden');
+        }
+      });
+    });
+
+    // Start game button
+    startGameBtn.addEventListener('click', async () => {
+      if (!currentGame) return;
+
+      try {
+        const res = await fetch(`/api/games/${currentGame.id}/start`, {
+          method: 'POST'
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          alert(data.error || 'Failed to start game');
+          return;
+        }
+
+        currentGame = data.game;
+        renderGameDetail();
+        alert('Game started! (Game board coming soon)');
+      } catch (err) {
+        console.error('Start game error:', err);
+        alert('Failed to start game');
+      }
+    });
+
+    // Leave/Join game button
+    leaveGameBtn.addEventListener('click', async () => {
+      if (!currentGame) return;
+
+      const players = currentGame.players || [];
+      const isInGame = players.some(p => p.id === currentUser.id);
+
+      if (isInGame) {
+        // Leave game
+        if (!confirm('Are you sure you want to leave this game?')) return;
+
+        try {
+          const res = await fetch(`/api/games/${currentGame.id}/leave`, {
+            method: 'POST'
+          });
+
+          const data = await res.json();
+
+          if (!res.ok) {
+            alert(data.error || 'Failed to leave game');
+            return;
+          }
+
+          // Go back to list
+          backToList.click();
+        } catch (err) {
+          console.error('Leave game error:', err);
+          alert('Failed to leave game');
+        }
+      } else {
+        // Join game
+        try {
+          const res = await fetch(`/api/games/${currentGame.id}/join`, {
+            method: 'POST'
+          });
+
+          const data = await res.json();
+
+          if (!res.ok) {
+            alert(data.error || 'Failed to join game');
+            return;
+          }
+
+          currentGame = data.game;
+          renderGameDetail();
+        } catch (err) {
+          console.error('Join game error:', err);
+          alert('Failed to join game');
+        }
+      }
+    });
+
+    // Back to list
+    backToList.addEventListener('click', () => {
+      currentGame = null;
+      gameDetailView.classList.add('hidden');
+      gameListView.classList.remove('hidden');
+      loadGames();
+    });
+
+    // Create game modal
+    createGameBtn.addEventListener('click', () => {
+      createGameModal.classList.remove('hidden');
+      createGameForm.reset();
+      createGameError.classList.add('hidden');
+    });
+
+    cancelCreateGame.addEventListener('click', () => {
+      createGameModal.classList.add('hidden');
+    });
+
+    createGameModal.addEventListener('click', (e) => {
+      if (e.target === createGameModal) {
+        createGameModal.classList.add('hidden');
+      }
+    });
+
+    createGameForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      createGameError.classList.add('hidden');
+
+      const formData = new FormData(createGameForm);
+      const name = formData.get('gameName');
+
+      try {
+        const res = await fetch('/api/games', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          createGameError.textContent = data.error || 'Failed to create game';
+          createGameError.classList.remove('hidden');
+          return;
+        }
+
+        createGameModal.classList.add('hidden');
+        viewGame(data.game.id);
+      } catch (err) {
+        console.error('Create game error:', err);
+        createGameError.textContent = 'Network error';
+        createGameError.classList.remove('hidden');
+      }
+    });
+
+    // Utility: escape HTML
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
     // Check auth status on page load
     async function checkAuth() {
       try {
@@ -413,12 +1130,6 @@
 
     // Initialize
     checkAuth();
-
-    // Check API status
-    fetch('/api/status')
-      .then(res => res.json())
-      .then(data => console.log('Server status:', data))
-      .catch(err => console.error('API error:', err));
   </script>
 </body>
 </html>

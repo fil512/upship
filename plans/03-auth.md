@@ -18,7 +18,7 @@ Implement user authentication using simple username/password. Users register wit
 - [x] Add session middleware to protect routes
 - [x] Create auth migration for sessions table
 - [x] Create frontend login/register UI
-- [ ] Test authentication flow end-to-end
+- [x] Test authentication flow end-to-end
 
 ## Implementation Steps
 
