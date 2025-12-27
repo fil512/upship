@@ -868,6 +868,7 @@
 
     let gameState = null;
     let currentUserId = null;
+    let currentUsername = null;
     let refreshInterval = null;
     let upgradesData = null;
 
@@ -918,6 +919,7 @@
         }
         const authData = await authRes.json();
         currentUserId = authData.user.id;
+        currentUsername = authData.user.username;
       } catch (err) {
         window.location.href = '/';
         return;
@@ -999,7 +1001,7 @@
               ${isMyTurn ? '⚡ Your Turn' : '⏳ Waiting...'}
             </div>
             <div style="color: #aaa; font-size: 0.85rem;">
-              👤 ${currentUserId}
+              👤 ${currentUsername}
             </div>
           </div>
         </div>
