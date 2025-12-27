@@ -1,167 +1,178 @@
 #!/bin/bash
-# Automated playtest script for UP SHIP!
-# Runs the game to completion
+# Autoplay turns for UP SHIP! playtest
+# Usage: ./scripts/autoplay.sh <gameId> [num_turns]
+# Or:    GAME=<gameId> ./scripts/autoplay.sh [num_turns]
+#
+# Runs simple AI logic for all 4 players to exercise game systems.
 
-GAME=$1
-if [ -z "$GAME" ]; then
-  echo "Usage: ./scripts/autoplay.sh <gameId>"
+set -e
+
+GAME_ID="${1:-$GAME}"
+NUM_TURNS="${2:-5}"
+CLI="node cli/upship.js"
+PASSWORD="test123456"
+
+if [ -z "$GAME_ID" ]; then
+  echo "Usage: ./scripts/autoplay.sh <gameId> [num_turns]"
+  echo "   or: GAME=<gameId> ./scripts/autoplay.sh [num_turns]"
   exit 1
 fi
 
-CLI="node cli/upship.js"
+# Player list
+PLAYERS=("playtest_germany" "playtest_britain" "playtest_usa" "playtest_italy")
 
-# Helper function to run a command and show result
-run() {
-  $CLI "$@" 2>/dev/null | grep -E "✓|✗" | head -1
-}
-
-# Get current game state (strip ANSI codes)
-get_phase() {
-  $CLI playtest_italy state $GAME 2>&1 | sed 's/\x1b\[[0-9;]*m//g' | grep -E "Phase:" | grep -oE "Phase: [A-Z]+" | sed 's/Phase: //'
-}
-
-get_age() {
-  $CLI playtest_italy state $GAME 2>&1 | sed 's/\x1b\[[0-9;]*m//g' | grep -oE "Age [0-9]" | head -1 | sed 's/Age //'
-}
-
-get_turn() {
-  $CLI playtest_italy state $GAME 2>&1 | sed 's/\x1b\[[0-9;]*m//g' | grep -oE "Turn [0-9]+" | head -1 | sed 's/Turn //'
-}
-
-# Quick pass for all players through a phase
-pass_all() {
-  run playtest_italy endturn $GAME
-  run playtest_germany endturn $GAME
-  run playtest_usa endturn $GAME
-  run playtest_britain endturn $GAME
-}
-
-# Player takes strategic actions in actions phase
-player_actions() {
-  local PLAYER=$1
-
-  # Check cash (strip ANSI and extract number)
-  local CASH=$($CLI $PLAYER state $GAME 2>&1 | sed 's/\x1b\[[0-9;]*m//g' | grep "Cash:" | grep -oE "£[0-9]+" | grep -oE "[0-9]+" | head -1)
-  CASH=${CASH:-0}
-
-  echo "  $PLAYER has £$CASH"
-
-  # Take loan if low on cash
-  if [ "$CASH" -lt 15 ]; then
-    run $PLAYER loan $GAME
-    CASH=$((CASH + 30))
-  fi
-
-  # Try to acquire any available technology
-  run $PLAYER action $GAME ACQUIRE_TECHNOLOGY techId=improved_propeller
-  run $PLAYER action $GAME ACQUIRE_TECHNOLOGY techId=wooden_framework
-  run $PLAYER action $GAME ACQUIRE_TECHNOLOGY techId=rubberized_cotton
-  run $PLAYER action $GAME ACQUIRE_TECHNOLOGY techId=goldbeater_skin
-  run $PLAYER action $GAME ACQUIRE_TECHNOLOGY techId=diesel_engine
-  run $PLAYER action $GAME ACQUIRE_TECHNOLOGY techId=radio_navigation
-
-  # Buy gas if we have money
-  if [ "$CASH" -gt 20 ]; then
-    run $PLAYER buygas $GAME hydrogen 4
-  fi
-
-  # Build ship
-  run $PLAYER build $GAME 1
-
-  # Load gas
-  run $PLAYER load $GAME hydrogen 0
-  run $PLAYER load $GAME hydrogen 1
-  run $PLAYER load $GAME hydrogen 2
-  run $PLAYER load $GAME hydrogen 3
-
-  # Get ship to launch
-  local SHIP=$($CLI $PLAYER state $GAME 2>&1 | sed 's/\x1b\[[0-9;]*m//g' | grep "HANGAR" | grep -oE "ship_[0-9_]+" | head -1)
-  if [ -n "$SHIP" ]; then
-    run $PLAYER launch $GAME $SHIP
-  fi
-
-  # End turn
-  run $PLAYER endturn $GAME
-}
-
-echo "Starting autoplay for game: $GAME"
-echo "=================================="
-
-# Main game loop
-ITERATIONS=0
-MAX_ITERATIONS=200  # Safety limit
-
-while [ $ITERATIONS -lt $MAX_ITERATIONS ]; do
-  PHASE=$(get_phase)
-  AGE=$(get_age)
-  TURN=$(get_turn)
-
-  echo ""
-  echo "=== Age $AGE | Turn $TURN | Phase: $PHASE ==="
-
-  # Check if game ended
-  if [ -z "$PHASE" ]; then
-    echo "Could not determine phase, checking if game ended..."
-    $CLI playtest_italy state $GAME 2>&1 | head -20
-    break
-  fi
-
-  case $PHASE in
-    PLANNING)
-      echo "-- Planning Phase: Drawing cards --"
-      run playtest_italy draw $GAME 1
-      run playtest_italy endturn $GAME
-      run playtest_germany draw $GAME 1
-      run playtest_germany endturn $GAME
-      run playtest_usa draw $GAME 1
-      run playtest_usa endturn $GAME
-      run playtest_britain draw $GAME 1
-      run playtest_britain endturn $GAME
-      ;;
-    ACTIONS)
-      echo "-- Actions Phase: Strategic actions --"
-      player_actions playtest_italy
-      player_actions playtest_germany
-      player_actions playtest_usa
-      player_actions playtest_britain
-      ;;
-    LAUNCH)
-      echo "-- Launch Phase: Passing --"
-      pass_all
-      ;;
-    INCOME)
-      echo "-- Income Phase: Collecting (auto) --"
-      pass_all
-      ;;
-    CLEANUP)
-      echo "-- Cleanup Phase: End of turn --"
-      pass_all
-      ;;
-    *)
-      echo "Unknown phase: '$PHASE', trying to pass..."
-      pass_all
-      ;;
+# Get gas preference for player
+get_gas() {
+  case "$1" in
+    playtest_usa) echo "helium" ;;
+    *) echo "hydrogen" ;;
   esac
+}
 
-  ITERATIONS=$((ITERATIONS + 1))
+echo "=== UP SHIP! Autoplay ==="
+echo "Game: $GAME_ID"
+echo "Turns: $NUM_TURNS"
+echo ""
 
-  # Check for game end condition (Age 3 and high turn count)
-  if [ "$AGE" = "3" ] && [ "$TURN" -gt 3 ]; then
-    echo "Attempting to calculate final scores..."
-    run playtest_italy action $GAME CALCULATE_SCORES
+# Ensure all players are logged in
+echo ">>> Ensuring all players logged in..."
+for player in "${PLAYERS[@]}"; do
+  $CLI login "$player" "$PASSWORD" 2>&1 | grep -E "✓|already" || true
+done
+echo ""
 
-    # Check if game ended
-    ENDED=$($CLI playtest_italy state $GAME 2>&1 | grep -i "ended\|winner\|game over")
-    if [ -n "$ENDED" ]; then
-      echo "Game ended: $ENDED"
+# Get current player from game state
+get_current_player() {
+  # Parse state output to find who has "YOUR TURN"
+  for player in "${PLAYERS[@]}"; do
+    STATE=$($CLI "$player" state "$GAME_ID" 2>&1)
+    if echo "$STATE" | grep -q "YOUR TURN"; then
+      echo "$player"
+      return
+    fi
+  done
+  echo ""
+}
+
+# Get current phase (strip ANSI codes)
+get_phase() {
+  $CLI playtest_germany state "$GAME_ID" 2>&1 | sed 's/\x1b\[[0-9;]*m//g' | grep -oE "Phase: [A-Z]+" | sed 's/Phase: //' || echo "UNKNOWN"
+}
+
+# Run action for current player only
+run_current() {
+  local cmd="$1"
+  shift
+  local current=$(get_current_player)
+  if [ -n "$current" ]; then
+    $CLI "$current" "$cmd" "$GAME_ID" "$@" 2>&1 | grep -E "✓|✗" || true
+  fi
+}
+
+# Have current player end turn, repeat until phase changes or all done
+advance_phase() {
+  local start_phase=$(get_phase)
+  local attempts=0
+  while [ $attempts -lt 8 ]; do
+    local current=$(get_current_player)
+    if [ -z "$current" ]; then
       break
     fi
+    $CLI "$current" endturn "$GAME_ID" 2>&1 | grep -E "✓|✗" || true
+
+    local new_phase=$(get_phase)
+    if [ "$new_phase" != "$start_phase" ]; then
+      break
+    fi
+    ((attempts++))
+  done
+}
+
+# Show brief status
+show_status() {
+  echo ""
+  $CLI playtest_germany state "$GAME_ID" 2>&1 | grep -E "Age|Turn|Round|Phase|Progress" | head -3
+  echo ""
+}
+
+for turn in $(seq 1 $NUM_TURNS); do
+  echo "========================================="
+  echo "=== TURN $turn ==="
+  echo "========================================="
+  show_status
+
+  # PLANNING PHASE - each player draws and ends turn
+  PHASE=$(get_phase)
+  if [ "$PHASE" = "PLANNING" ]; then
+    echo "--- Planning Phase ---"
+    for i in {1..4}; do
+      current=$(get_current_player)
+      if [ -n "$current" ]; then
+        echo "  $current: drawing cards..."
+        $CLI "$current" draw "$GAME_ID" 2 2>&1 | grep -E "✓|✗" || true
+        $CLI "$current" endturn "$GAME_ID" 2>&1 | grep -E "✓|✗" || true
+      fi
+    done
   fi
+
+  # ACTIONS PHASE - each player buys gas, builds, ends turn
+  PHASE=$(get_phase)
+  if [ "$PHASE" = "ACTIONS" ]; then
+    echo "--- Actions Phase ---"
+    for i in {1..4}; do
+      current=$(get_current_player)
+      if [ -n "$current" ]; then
+        gas=$(get_gas "$current")
+        echo "  $current: buying gas, building..."
+
+        # Buy gas
+        $CLI "$current" buygas "$GAME_ID" "$gas" 4 2>&1 | grep -E "✓|✗" || true
+
+        # Build ship
+        $CLI "$current" build "$GAME_ID" 1 2>&1 | grep -E "✓|✗" || true
+
+        # Try to launch if we have ships in hangar
+        SHIPS=$($CLI "$current" state "$GAME_ID" 2>&1 | grep -E "HANGAR" | grep -oE '[a-z]+_[a-z]+_[0-9]+' || true)
+        for ship in $SHIPS; do
+          echo "  $current: launching $ship..."
+          $CLI "$current" launch "$GAME_ID" "$ship" "$gas" 2>&1 | grep -E "✓|✗" || true
+        done
+
+        $CLI "$current" endturn "$GAME_ID" 2>&1 | grep -E "✓|✗" || true
+      fi
+    done
+  fi
+
+  # LAUNCH PHASE - all end turn
+  PHASE=$(get_phase)
+  if [ "$PHASE" = "LAUNCH" ]; then
+    echo "--- Launch Phase ---"
+    advance_phase
+  fi
+
+  # INCOME PHASE - all end turn
+  PHASE=$(get_phase)
+  if [ "$PHASE" = "INCOME" ]; then
+    echo "--- Income Phase ---"
+    advance_phase
+  fi
+
+  # CLEANUP PHASE - all end turn
+  PHASE=$(get_phase)
+  if [ "$PHASE" = "CLEANUP" ]; then
+    echo "--- Cleanup Phase ---"
+    advance_phase
+  fi
+
+  show_status
 done
 
 echo ""
-echo "=================================="
-echo "Autoplay complete after $ITERATIONS iterations"
+echo "========================================="
+echo "Autoplay complete: $NUM_TURNS turns"
+echo "========================================="
+
+# Final state
 echo ""
-echo "Final state:"
-$CLI playtest_italy state $GAME
+echo "=== FINAL STATE ==="
+$CLI playtest_germany state "$GAME_ID"

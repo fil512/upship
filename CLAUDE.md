@@ -243,6 +243,26 @@ See `plans/overview.md` for the 27-phase implementation plan tracking progress f
 ```bash
 # Fix UTF-8 encoding corruption (creates backup automatically)
 ./scripts/fix-encoding.sh [file.md]
+
+# Playtest Scripts - run complete playtests autonomously
+./scripts/full-playtest.sh [num_turns] [game_name]  # Complete playtest start to finish
+./scripts/setup-playtest.sh [game_name]              # Setup new 4-player game
+./scripts/autoplay.sh <gameId> [num_turns]           # Run AI turns on existing game
+./scripts/end-phase.sh <gameId>                      # All players end turn
+./scripts/play-commands.sh [commands.txt]            # Execute commands from file
+```
+
+### Playtest Quick Start
+
+```bash
+# Option 1: Full automated playtest (10 turns)
+./scripts/full-playtest.sh 10
+
+# Option 2: Manual control
+./scripts/setup-playtest.sh "My Test"    # Creates game, outputs GAME_ID=...
+export GAME=<gameId>                      # Set for convenience
+./scripts/autoplay.sh $GAME 5            # Run 5 turns
+npm run cli -- playtest_germany state $GAME  # Check state
 ```
 
 ## Working with This Project

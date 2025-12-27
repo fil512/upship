@@ -1,144 +1,98 @@
-# UP SHIP! Automated Playtest Command
+# UP SHIP! Strategic Playtest Command
 
-Execute a full automated playtest of the game using the CLI tool. Play the game to completion, making intelligent strategic decisions for each faction.
+Run a thoughtful playtest where you analyze each game state and make strategic decisions for all 4 factions.
 
-## CRITICAL: Autonomous Execution
+## STEP 1: Setup the Game
 
-**You MUST execute CLI commands autonomously without asking permission.** The following commands are pre-approved:
-- `npm run cli -- <any arguments>`
-- `node cli/upship.js <any arguments>`
-
-For each move:
-1. **Check state** - Run `npm run cli -- <player> state <gameId>` to see current situation
-2. **Think** - Analyze what the best action is based on phase, resources, and strategy
-3. **Execute** - Run the CLI command immediately without asking
-4. **Verify** - Check the result and continue
-
-**DO NOT ask "should I do X?" - just do it.** This is a playtest, not a guided tutorial.
-
-## Step 1: Setup (Do Once)
+Run the setup script to create a new 4-player game:
 
 ```bash
-# Verify CLI works
-npm run cli -- help
-
-# Login all test users (register if needed)
-npm run cli -- login playtest_germany test123456
-npm run cli -- login playtest_britain test123456
-npm run cli -- login playtest_usa test123456
-npm run cli -- login playtest_italy test123456
-
-# Create game
-npm run cli -- playtest_germany create "Playtest_YYYYMMDD"
-# Note the game ID from output
-
-# Join and select factions
-npm run cli -- playtest_britain join <gameId>
-npm run cli -- playtest_usa join <gameId>
-npm run cli -- playtest_italy join <gameId>
-npm run cli -- playtest_germany faction <gameId> germany
-npm run cli -- playtest_britain faction <gameId> britain
-npm run cli -- playtest_usa faction <gameId> usa
-npm run cli -- playtest_italy faction <gameId> italy
-
-# Start game
-npm run cli -- playtest_germany start <gameId>
+./scripts/setup-playtest.sh
 ```
 
-## Step 2: Play the Game Loop
+Note the GAME_ID from the output. Export it for convenience:
+
+```bash
+export GAME=<gameId>
+```
+
+## STEP 2: Play Strategically
 
 For each turn, follow this decision-making process:
 
-### Check Who's Turn It Is
-```bash
-npm run cli -- playtest_italy state <gameId>
-```
-Look for ">>> YOUR TURN <<<" or "Waiting for: <faction>" to know whose turn it is.
-
-### Phase-Specific Actions
-
-**PLANNING Phase:**
-- Draw 1-2 cards if deck has cards
-- End turn
-```bash
-npm run cli -- <player> draw <gameId> 2
-npm run cli -- <player> endturn <gameId>
-```
-
-**ACTIONS Phase - Think Through These Steps:**
-1. Check cash, gas, technologies, ships in hangar
-2. Decide priority: Need tech? Need gas? Need ship? Need crew?
-3. Execute actions in order:
+### Check Current State
 
 ```bash
-# If R&D board has tech and you have cash:
-npm run cli -- <player> action <gameId> ACQUIRE_TECHNOLOGY techId=<techId>
-
-# If low on cash (<£15):
-npm run cli -- <player> loan <gameId>
-
-# If need gas and have cash:
-npm run cli -- <player> buygas <gameId> hydrogen 4
-
-# If have gas in reserve, load to blueprint:
-npm run cli -- <player> load <gameId> hydrogen 0
-npm run cli -- <player> load <gameId> hydrogen 1
-npm run cli -- <player> load <gameId> hydrogen 2
-npm run cli -- <player> load <gameId> hydrogen 3
-
-# Build a ship:
-npm run cli -- <player> build <gameId> 1
-
-# If ship in hangar AND blueprint has 4 gas loaded, launch:
-npm run cli -- <player> state <gameId>  # Get ship ID from HANGAR
-npm run cli -- <player> launch <gameId> <shipId>
-
-# End turn:
-npm run cli -- <player> endturn <gameId>
+npm run cli -- playtest_germany state $GAME
 ```
 
-**LAUNCH Phase:**
-- Can claim routes if ships are launched (not yet implemented fully)
-- End turn
+Identify:
+- Whose turn is it? (look for "YOUR TURN" or "Waiting for:")
+- What phase are we in?
+- What resources does the current player have?
+
+### Think Through the Decision
+
+Before executing any action, analyze:
+
+1. **What are the player's goals this turn?**
+   - Need income? Consider building ships to launch
+   - Need capabilities? Look at R&D board for useful tech
+   - Low on cash? Maybe take a loan or skip expensive actions
+
+2. **What's the faction strategy?**
+   - **Germany**: Leverage starting tech advantage, focus on hydrogen efficiency, build larger ships
+   - **Britain**: Balanced growth, steady income, passenger routes
+   - **USA**: Prefer helium when affordable, prioritize safety
+   - **Italy**: Fast and agile, build many small ships quickly
+
+3. **What phase-specific actions make sense?**
+   - **PLANNING**: Draw cards (usually 2), consider hand composition
+   - **ACTIONS**: Buy gas, build ships, acquire tech, recruit crew, launch ships
+   - **LAUNCH**: Claim routes if ships are ready
+   - **INCOME**: Income auto-collects, just end turn
+   - **CLEANUP**: End turn to advance
+
+### Execute with Explanation
+
+Run the command and explain your reasoning:
+
 ```bash
-npm run cli -- <player> endturn <gameId>
+npm run cli -- <player> <action> $GAME [args]
 ```
 
-**INCOME Phase:**
-- Income is auto-collected
-- End turn
+### Common Commands
+
 ```bash
-npm run cli -- <player> endturn <gameId>
+# Check state
+npm run cli -- <player> state $GAME
+npm run cli -- <player> blueprint $GAME
+
+# Planning
+npm run cli -- <player> draw $GAME 2
+
+# Actions
+npm run cli -- <player> buygas $GAME hydrogen 4
+npm run cli -- <player> build $GAME 1
+npm run cli -- <player> tech $GAME <techId>
+npm run cli -- <player> launch $GAME <shipId> hydrogen
+npm run cli -- <player> loan $GAME
+
+# End turn
+npm run cli -- <player> endturn $GAME
 ```
 
-**CLEANUP Phase:**
-- End turn to advance to next turn
-```bash
-npm run cli -- <player> endturn <gameId>
-```
+## STEP 3: Observe and Document
 
-### Faction Strategies
+As you play, note:
+- **Bugs**: Commands that fail unexpectedly
+- **Balance issues**: One faction consistently ahead/behind
+- **UX problems**: Confusing state display, unclear errors
+- **Rule questions**: Situations where intended behavior is unclear
 
-Apply these when making decisions:
+## STEP 4: Write Report
 
-- **Germany:** Has 2 starting techs. Focus on upgrades, hydrogen efficiency, building larger ships.
-- **Britain:** Balanced. Aim for passenger routes and steady income growth.
-- **USA:** Prefers helium (if available). Focus on safety and reliability.
-- **Italy:** Agile and fast. Build many small ships quickly.
-
-## Step 3: Continue Until Game End
-
-Keep playing until one of:
-1. Age 3 completes and game ends naturally
-2. Progress track reaches 30 (triggers game end)
-3. You've played 15+ turns and want to force end with:
-   ```bash
-   npm run cli -- <player> action <gameId> CALCULATE_SCORES
-   ```
-
-## Step 4: Write Playtest Report
-
-After game ends, create `plans/YYYY-MM-DD_PLAYTEST_REPORT.md` with:
+After playing 10+ turns (or reaching a natural stopping point), create a report at `plans/YYYY-MM-DD_PLAYTEST_REPORT.md`:
 
 ```markdown
 # UP SHIP! Playtest Report
@@ -146,49 +100,36 @@ After game ends, create `plans/YYYY-MM-DD_PLAYTEST_REPORT.md` with:
 *Date: [date]*
 *Game ID: [id]*
 *Turns Played: [n]*
-*Winner: [faction] with [n] VP*
 
-## Summary
-[Overall assessment - did the game work? Major issues?]
+## Game Summary
+[What happened? How did each faction perform?]
+
+## Strategic Observations
+[What strategies worked? What felt underpowered/overpowered?]
 
 ## Bugs Found
-[List each bug with severity, steps to reproduce, expected vs actual]
+[List each bug with steps to reproduce]
 
-## Working Features
-[What worked correctly]
-
-## Balance Observations
-[Faction performance comparison]
+## Balance Concerns
+[Faction comparison, resource economy issues]
 
 ## Recommendations
-[Priority fixes needed]
+[Priority fixes and design suggestions]
 ```
 
-## CLI Quick Reference
+## Key Principles
+
+1. **Think before each move** - Don't just execute commands mechanically
+2. **Play each faction authentically** - Use their strengths, work around weaknesses
+3. **Document interesting situations** - Note when something feels off
+4. **Play to learn** - The goal is finding issues, not "winning"
+
+## Quick Setup Scripts (for reference)
+
+If you need to advance quickly through simple phases:
 
 ```bash
-# State
-npm run cli -- <user> state <gameId>
-npm run cli -- <user> blueprint <gameId>
-npm run cli -- <user> log <gameId> 50
-
-# Actions
-npm run cli -- <user> endturn <gameId>
-npm run cli -- <user> draw <gameId> 2
-npm run cli -- <user> buygas <gameId> hydrogen 4
-npm run cli -- <user> loan <gameId>
-npm run cli -- <user> build <gameId> 1
-npm run cli -- <user> recruit <gameId> pilot 1
-npm run cli -- <user> load <gameId> hydrogen 0
-npm run cli -- <user> launch <gameId> <shipId>
-npm run cli -- <user> action <gameId> ACQUIRE_TECHNOLOGY techId=<id>
-npm run cli -- <user> action <gameId> CALCULATE_SCORES
+./scripts/end-phase.sh $GAME  # All 4 players end turn
 ```
 
-## Remember
-
-1. **Think before each move** - Check state, consider options, pick best action
-2. **Execute immediately** - Don't ask permission, just run the command
-3. **Handle failures gracefully** - If a command fails, note it and try something else
-4. **Track bugs** - Note any unexpected behavior for the report
-5. **Play to completion** - Keep going until the game ends or you've tested enough
+But prefer making thoughtful individual moves when testing game mechanics.
