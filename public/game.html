@@ -998,6 +998,9 @@
             <div class="turn-indicator ${isMyTurn ? 'your-turn' : 'waiting'}">
               ${isMyTurn ? '⚡ Your Turn' : '⏳ Waiting...'}
             </div>
+            <div style="color: #aaa; font-size: 0.85rem;">
+              👤 ${currentUser}
+            </div>
           </div>
         </div>
 
@@ -1278,7 +1281,7 @@
               ${myState.hand.length === 0 ? '<div style="color: #666; font-size: 0.8rem;">No cards in hand</div>' : ''}
             </div>
             <div style="margin-top: 10px; font-size: 0.75rem; color: #888;">
-              Deck: ${myState.deck} | Discard: ${myState.discardPile?.length || 0}
+              Deck: ${myState.deck?.length || 0} | Discard: ${myState.discardPile?.length || 0}
             </div>
           </div>
 
