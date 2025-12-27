@@ -31,3 +31,6 @@ temp/
 
 # CLI session storage
 .upship-sessions/
+
+# Cookie files
+cookies*.txt
