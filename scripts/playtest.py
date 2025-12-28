@@ -217,7 +217,7 @@ def get_player_ships(player, game_id):
 
 def get_available_routes(game_id):
     """Get list of unclaimed routes."""
-    output = run_cli("playtest_germany", "routes", game_id)
+    output = strip_ansi(run_cli("playtest_germany", "routes", game_id))
     routes = []
     current_route = None
     for line in output.split('\n'):
@@ -225,12 +225,13 @@ def get_available_routes(game_id):
             match = re.search(r'(route_\d+)', line)
             if match:
                 current_route = {'id': match.group(1)}
-        if current_route and 'distance' in line:
-            # Parse stats: distance X, speed Y, income +Z
-            dist_match = re.search(r'distance (\d+)', line)
-            speed_match = re.search(r'speed (\d+)', line)
-            if dist_match:
-                current_route['distance'] = int(dist_match.group(1))
+        # Route format: "requires Range ≥2, Speed ≥1 → income +3"
+        if current_route and 'Range' in line:
+            # Parse stats from format: Range ≥X, Speed ≥Y
+            range_match = re.search(r'Range\s*[≥>=]+\s*(\d+)', line)
+            speed_match = re.search(r'Speed\s*[≥>=]+\s*(\d+)', line)
+            if range_match:
+                current_route['distance'] = int(range_match.group(1))
             if speed_match:
                 current_route['speed'] = int(speed_match.group(1))
             routes.append(current_route)

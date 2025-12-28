@@ -232,11 +232,15 @@ const PROGRESS_THRESHOLDS = {
 
 // Create technology bag and R&D board together to avoid duplicates
 // Returns { rdBoard: [...], techBag: [...] }
-function createTechBagAndRDBoard(age = 1) {
+// excludeIds: array of tech IDs to exclude (e.g., starting technologies already owned by players)
+function createTechBagAndRDBoard(age = 1, excludeIds = []) {
   const bag = [];
-  // Add all tiles up to current age
+  // Add all tiles up to current age, excluding any already owned
   for (let a = 1; a <= age; a++) {
-    bag.push(...TECHNOLOGY_BAG[a].map(t => ({ ...t, age: a })));
+    const techs = TECHNOLOGY_BAG[a]
+      .filter(t => !excludeIds.includes(t.id))
+      .map(t => ({ ...t, age: a }));
+    bag.push(...techs);
   }
   const shuffledBag = shuffleArray(bag);
 
@@ -313,8 +317,17 @@ async function initializeGameState(gameId, players) {
     // Determine player count for progress thresholds
     const playerCount = Math.min(4, Math.max(2, players.length));
 
+    // Collect all starting technologies from all players to exclude from tech bag
+    const allStartingTechs = new Set();
+    for (const pid of Object.keys(playerStates)) {
+      for (const tech of playerStates[pid].technologies || []) {
+        allStartingTechs.add(tech);
+      }
+    }
+
     // Create tech bag and R&D board together to avoid duplicates
-    const { rdBoard, techBag } = createTechBagAndRDBoard(1);
+    // Exclude starting technologies so they don't appear on R&D board
+    const { rdBoard, techBag } = createTechBagAndRDBoard(1, Array.from(allStartingTechs));
 
     // Create initial game state
     const gameState = {

@@ -968,8 +968,19 @@ const TECHNOLOGY_BAG = {
 function addAgeTechnologies(state, age) {
   const newTechs = TECHNOLOGY_BAG[age] || [];
   if (newTechs.length > 0) {
-    // Add age marker to each tech
-    const techsWithAge = newTechs.map(t => ({ ...t, age }));
+    // Collect all technologies already owned by any player
+    const ownedTechs = new Set();
+    for (const pid of Object.keys(state.players || {})) {
+      for (const tech of state.players[pid].technologies || []) {
+        ownedTechs.add(tech);
+      }
+    }
+
+    // Filter out already-owned technologies and add age marker
+    const techsWithAge = newTechs
+      .filter(t => !ownedTechs.has(t.id))
+      .map(t => ({ ...t, age }));
+
     // Shuffle and add to tech bag
     state.techBag = state.techBag || [];
     state.techBag.push(...shuffleArray(techsWithAge));
