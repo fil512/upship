@@ -175,17 +175,23 @@ router.post('/:gameId/action', async (req, res) => {
     const state = gameState.state;
 
     // Verify it's this player's turn
-    // During worker placement, use workerPlacement.currentPlacerIndex
-    // Otherwise, use currentPlayerIndex
+    // - Worker placement: use workerPlacement.currentPlacerIndex
+    // - Reveal phase: all players can act (simultaneous)
+    // - Other phases: use currentPlayerIndex
     let currentPlayerId;
+    let skipTurnCheck = false;
+
     if (state.phase === 'worker_placement' && state.workerPlacement?.placementOrder) {
       const wpIndex = state.workerPlacement.currentPlacerIndex || 0;
       currentPlayerId = state.workerPlacement.placementOrder[wpIndex];
+    } else if (state.phase === 'reveal') {
+      // Reveal phase allows all players to act simultaneously
+      skipTurnCheck = true;
     } else {
       currentPlayerId = state.playerOrder[state.currentPlayerIndex];
     }
 
-    if (currentPlayerId !== req.session.userId) {
+    if (!skipTurnCheck && currentPlayerId !== req.session.userId) {
       return res.status(403).json({ error: 'Not your turn' });
     }
 
