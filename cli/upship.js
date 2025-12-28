@@ -780,6 +780,46 @@ const commands = {
     return commands.action(username, [gameId, 'INSTALL_UPGRADE', `slotType=${slotType}`, `slotIndex=${slotIndex}`, `upgradeId=${upgradeId}`]);
   },
 
+  async routes(username, args) {
+    const [gameId] = args;
+    if (!gameId) {
+      console.log('Usage: upship <user> routes <gameId>');
+      return;
+    }
+
+    const response = await api(username, 'GET', `/api/state/${gameId}`);
+
+    if (response.status !== 200) {
+      console.log(c(COLORS.red, `✗ Failed: ${response.data.error || 'Unknown error'}`));
+      return;
+    }
+
+    const state = response.data.state;
+    const routes = state.map?.routes || [];
+
+    console.log('');
+    console.log(c(COLORS.bright, `Available Routes (Age ${state.age}):`));
+    console.log('─'.repeat(70));
+
+    for (const route of routes) {
+      const claimed = route.claimed ? c(COLORS.red, ' [CLAIMED]') : c(COLORS.green, ' [OPEN]');
+      const stats = `distance ${route.distance}, speed ${route.speed || 1}, income +${route.income}`;
+      console.log(`  ${c(COLORS.cyan, route.id.padEnd(10))} │ ${route.from} → ${route.to}${claimed}`);
+      console.log(`  ${''.padEnd(10)} │ ${c(COLORS.gray, stats)}`);
+    }
+    console.log('');
+  },
+
+  async claim(username, args) {
+    const [gameId, shipId, routeId] = args;
+    if (!gameId || !shipId || !routeId) {
+      console.log('Usage: upship <user> claim <gameId> <shipId> <routeId>');
+      console.log('  Use "routes" command to see available routes.');
+      return;
+    }
+    return commands.action(username, [gameId, 'CLAIM_ROUTE', `shipId=${shipId}`, `routeId=${routeId}`]);
+  },
+
   // Help
   help() {
     console.log(`
@@ -804,6 +844,7 @@ ${c(COLORS.yellow, 'Game State:')}
   upship <user> state <gameId>      View game state
   upship <user> blueprint <gameId>  View your blueprint slots
   upship <user> upgrades <gameId>   List available upgrades
+  upship <user> routes <gameId>     View available routes
   upship <user> log <gameId> [n]    View action history
 
 ${c(COLORS.yellow, 'Actions (shorthand):')}
@@ -814,6 +855,7 @@ ${c(COLORS.yellow, 'Actions (shorthand):')}
   upship <user> build <gameId> [count]        Build ships
   upship <user> recruit <id> <type> [count]   Recruit crew
   upship <user> launch <gameId> <shipId> [gas] Launch a ship (gas: hydrogen|helium)
+  upship <user> claim <gameId> <shipId> <routeId>  Claim a route with launched ship
   upship <user> tech <gameId> <techId>        Acquire technology from R&D
 
 ${c(COLORS.yellow, 'Actions (generic):')}

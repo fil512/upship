@@ -105,9 +105,13 @@ npm run cli -- <user> start <gameId>
 ```bash
 npm run cli -- <user> state <gameId>      # View full state
 npm run cli -- <user> blueprint <gameId>  # View blueprint
+npm run cli -- <user> routes <gameId>     # View available routes
 npm run cli -- <user> endturn <gameId>    # End turn
 npm run cli -- <user> buygas <id> hydrogen 2
 npm run cli -- <user> build <gameId> 1
+npm run cli -- <user> launch <gameId> <shipId> [hydrogen|helium]
+npm run cli -- <user> claim <gameId> <shipId> <routeId>
+npm run cli -- <user> tech <gameId> <techId>
 npm run cli -- <user> action <gameId> <ACTION_TYPE> [key=value ...]
 ```
 
@@ -243,26 +247,38 @@ See `plans/overview.md` for the 27-phase implementation plan tracking progress f
 ```bash
 # Fix UTF-8 encoding corruption (creates backup automatically)
 ./scripts/fix-encoding.sh [file.md]
+```
 
-# Playtest Scripts - run complete playtests autonomously
+### Python Playtest Tool (Recommended)
+
+The Python playtest tool provides autonomous playtesting with persistent game ID storage:
+
+```bash
+# Setup new 4-player game (saves game ID to .upship-current-game)
+python scripts/playtest.py setup "My Test"
+
+# Run automated turns on current game
+python scripts/playtest.py autoplay 10
+
+# Show current game status
+python scripts/playtest.py status
+
+# All players end turn
+python scripts/playtest.py endphase
+
+# Run single action for a player
+python scripts/playtest.py action playtest_germany state
+python scripts/playtest.py action playtest_germany buygas hydrogen 4
+```
+
+### Legacy Shell Scripts
+
+```bash
 ./scripts/full-playtest.sh [num_turns] [game_name]  # Complete playtest start to finish
 ./scripts/setup-playtest.sh [game_name]              # Setup new 4-player game
 ./scripts/autoplay.sh <gameId> [num_turns]           # Run AI turns on existing game
 ./scripts/end-phase.sh <gameId>                      # All players end turn
 ./scripts/play-commands.sh [commands.txt]            # Execute commands from file
-```
-
-### Playtest Quick Start
-
-```bash
-# Option 1: Full automated playtest (10 turns)
-./scripts/full-playtest.sh 10
-
-# Option 2: Manual control
-./scripts/setup-playtest.sh "My Test"    # Creates game, outputs GAME_ID=...
-export GAME=<gameId>                      # Set for convenience
-./scripts/autoplay.sh $GAME 5            # Run 5 turns
-npm run cli -- playtest_germany state $GAME  # Check state
 ```
 
 ## Working with This Project

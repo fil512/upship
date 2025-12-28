@@ -1299,9 +1299,12 @@ function processClaimRoute(state, playerId, data) {
   }
 
   // Check ship meets route requirements
-  const shipStats = ship.stats || { range: 1 };
+  const shipStats = ship.stats || { range: 1, speed: 1 };
   if (shipStats.range < route.distance) {
     return { error: `Ship range (${shipStats.range}) < route distance (${route.distance})` };
+  }
+  if (route.speed && shipStats.speed < route.speed) {
+    return { error: `Ship speed (${shipStats.speed}) < route requirement (${route.speed})` };
   }
 
   // Claim the route

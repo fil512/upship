@@ -258,18 +258,19 @@ function createMarketCards() {
 }
 
 // Create Age I map routes
+// All routes require minimum speed 1 to ensure ships need propulsion to be useful
 function createAgeIMap() {
   return {
     name: 'Western Europe',
     routes: [
-      { id: 'route_1', from: 'Frankfurt', to: 'Berlin', distance: 1, income: 2, claimed: null },
-      { id: 'route_2', from: 'Frankfurt', to: 'Paris', distance: 2, income: 3, claimed: null },
-      { id: 'route_3', from: 'Berlin', to: 'Copenhagen', distance: 2, income: 3, claimed: null },
-      { id: 'route_4', from: 'Paris', to: 'London', distance: 2, income: 4, claimed: null },
-      { id: 'route_5', from: 'London', to: 'Amsterdam', distance: 1, income: 2, claimed: null },
-      { id: 'route_6', from: 'Amsterdam', to: 'Berlin', distance: 2, income: 3, claimed: null },
-      { id: 'route_7', from: 'Paris', to: 'Rome', distance: 3, income: 5, claimed: null },
-      { id: 'route_8', from: 'Rome', to: 'Vienna', distance: 2, income: 3, claimed: null }
+      { id: 'route_1', from: 'Frankfurt', to: 'Berlin', distance: 1, speed: 1, income: 2, claimed: null },
+      { id: 'route_2', from: 'Frankfurt', to: 'Paris', distance: 2, speed: 1, income: 3, claimed: null },
+      { id: 'route_3', from: 'Berlin', to: 'Copenhagen', distance: 2, speed: 1, income: 3, claimed: null },
+      { id: 'route_4', from: 'Paris', to: 'London', distance: 2, speed: 2, income: 4, claimed: null },
+      { id: 'route_5', from: 'London', to: 'Amsterdam', distance: 1, speed: 1, income: 2, claimed: null },
+      { id: 'route_6', from: 'Amsterdam', to: 'Berlin', distance: 2, speed: 1, income: 3, claimed: null },
+      { id: 'route_7', from: 'Paris', to: 'Rome', distance: 3, speed: 2, income: 5, claimed: null },
+      { id: 'route_8', from: 'Rome', to: 'Vienna', distance: 2, speed: 1, income: 3, claimed: null }
     ],
     cities: {
       'Frankfurt': { type: 'major', homeBase: 'germany' },
