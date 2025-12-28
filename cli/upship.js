@@ -410,6 +410,7 @@ const commands = {
     console.log(c(COLORS.bright, '═══════════════════════════════════════════════════════════════════════'));
     console.log(c(COLORS.bright, `  UP SHIP! - Age ${gs.age} │ Turn ${gs.turn} │ Round ${gs.round} │ Phase: ${formatPhase(gs.phase)}`));
     console.log(c(COLORS.bright, `  Progress: ${progress}/${thresholds.end} (Age ${gs.age + 1 > 3 ? 'End' : gs.age + 1} at ${nextThreshold})`));
+    console.log(c(COLORS.gray, `  → Acquire technology from R&D board to advance progress`));
     console.log(c(COLORS.bright, '═══════════════════════════════════════════════════════════════════════'));
 
     // Turn indicator
