@@ -94,7 +94,7 @@ As you play, note:
 
 ## STEP 4: Write Report
 
-After playing 10+ turns, create a report at `plans/YYYY-MM-DD_PLAYTEST_REPORT.md`:
+After playing 10+ turns, create a report at `plans/YYYY-MM-DD_HHMM_PLAYTEST_REPORT.md` (using 24-hour time):
 
 ```markdown
 # UP SHIP! Playtest Report
