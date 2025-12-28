@@ -127,8 +127,9 @@ The following items require finalization before the game is complete:
    - **RESOLVED:** Cards provide resources when revealed instead of being played reactively
    - Still needs testing: Is card-icon matching too restrictive? Consider Apprentice "Any" cards as wild
 
-3. **Agent Count:** Determine appropriate number of agents per player after finalizing action spaces
-   - Currently set at 3, but may need adjustment based on final action selection design
+3. **Agent Count:** 3 agents per player is the baseline
+   - **Rationale:** With 12 Ground Board locations and 3 agents, players can visit at most 1/4 of available actions per round. This creates meaningful opportunity cost while preventing analysis paralysis from too many options. At 3-4 players, the board becomes moderately contested without being too tight. Card symbol requirements (Wrench/Coin/Propeller) further constrain choices, making each agent placement feel significant.
+   - May need adjustment if playtesting reveals too much or too little competition for key actions
 
 4. **Turn Order:** Define how first player rotates or changes
 
@@ -141,8 +142,9 @@ The following items require finalization before the game is complete:
    - Progress Track threshold
 
 7. **Hindenburg Disaster Tuning:**
-   - Is +3 VP for historical infamy appropriate?
-   - Does the fire roll trigger (rather than hazard check) feel thematically correct?
+   - **Design Intent:** The +3 VP for "historical infamy" is deliberately modest. The player who triggers the disaster loses their ship, Officers, and gas investment, and causes the game to end—potentially denying themselves additional route claims. The +3 VP is consolation, not compensation. The real question is whether triggering the disaster feels like a memorable story moment rather than pure punishment.
+   - Requires playtesting to determine if Germany feels too penalized in Age III Luxury competition, or if the risk/reward creates exciting tension.
+   - Does the fire trigger (Catastrophic Explosion on Luxury Launch) feel thematically correct?
 
 ## A.5 Playtesting Priorities
 

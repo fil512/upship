@@ -4,17 +4,11 @@ Run a thoughtful playtest where you analyze each game state and make strategic d
 
 ## STEP 1: Setup the Game
 
-Run the setup script to create a new 4-player game:
-
 ```bash
-./scripts/setup-playtest.sh
+python scripts/playtest.py setup
 ```
 
-Note the GAME_ID from the output. Export it for convenience:
-
-```bash
-export GAME=<gameId>
-```
+This creates a new 4-player game and saves the game ID to `.upship-current-game`.
 
 ## STEP 2: Play Strategically
 
@@ -23,7 +17,7 @@ For each turn, follow this decision-making process:
 ### Check Current State
 
 ```bash
-npm run cli -- playtest_germany state $GAME
+python scripts/playtest.py status
 ```
 
 Identify:
@@ -58,28 +52,36 @@ Before executing any action, analyze:
 Run the command and explain your reasoning:
 
 ```bash
-npm run cli -- <player> <action> $GAME [args]
+python scripts/playtest.py action <player> <cmd>
 ```
 
 ### Common Commands
 
 ```bash
 # Check state
-npm run cli -- <player> state $GAME
-npm run cli -- <player> blueprint $GAME
+python scripts/playtest.py status
+python scripts/playtest.py action <player> state
+python scripts/playtest.py action <player> blueprint
 
 # Planning
-npm run cli -- <player> draw $GAME 2
+python scripts/playtest.py action <player> draw 2
 
 # Actions
-npm run cli -- <player> buygas $GAME hydrogen 4
-npm run cli -- <player> build $GAME 1
-npm run cli -- <player> tech $GAME <techId>
-npm run cli -- <player> launch $GAME <shipId> hydrogen
-npm run cli -- <player> loan $GAME
+python scripts/playtest.py action <player> buygas hydrogen 4
+python scripts/playtest.py action <player> build 1
+python scripts/playtest.py action <player> tech <techId>
+python scripts/playtest.py action <player> launch <shipId> hydrogen
+python scripts/playtest.py action <player> loan
 
 # End turn
-npm run cli -- <player> endturn $GAME
+python scripts/playtest.py action <player> endturn
+```
+
+### Automated Play
+
+For rapid testing:
+```bash
+python scripts/playtest.py autoplay 10
 ```
 
 ## STEP 3: Observe and Document
@@ -92,7 +94,7 @@ As you play, note:
 
 ## STEP 4: Write Report
 
-After playing 10+ turns (or reaching a natural stopping point), create a report at `plans/YYYY-MM-DD_PLAYTEST_REPORT.md`:
+After playing 10+ turns, create a report at `plans/YYYY-MM-DD_PLAYTEST_REPORT.md`:
 
 ```markdown
 # UP SHIP! Playtest Report
@@ -124,12 +126,12 @@ After playing 10+ turns (or reaching a natural stopping point), create a report 
 3. **Document interesting situations** - Note when something feels off
 4. **Play to learn** - The goal is finding issues, not "winning"
 
-## Quick Setup Scripts (for reference)
+## Quick Advance
 
-If you need to advance quickly through simple phases:
+To advance all players through current phase:
 
 ```bash
-./scripts/end-phase.sh $GAME  # All 4 players end turn
+python scripts/playtest.py endphase
 ```
 
 But prefer making thoughtful individual moves when testing game mechanics.

@@ -523,9 +523,13 @@ When you claim a route, increase your Income Track by the route's Income value. 
 
 **Design Target:** Ships should pay for themselves within 3-5 rounds of operation.
 
-## 5.7 City Bonuses
+## 5.7 City Bonuses (One-Time Rewards)
 
-When you successfully claim a route, in addition to increasing your Income Track, you gain a **one-time bonus** from one of the route's endpoint cities (your choice).
+When you successfully claim a route, you gain two benefits:
+1. **Route Income (Ongoing):** Increase your Income Track by the route's Income value—you'll collect this every round
+2. **City Bonus (One-Time):** Choose one endpoint city and gain its bonus immediately—this is a single reward, not recurring
+
+**Important:** City bonuses showing £ amounts (like "London: +£3") are immediate cash, not Income Track increases. Route Income is ongoing; city bonuses are one-time.
 
 ### Age I Cities (Western Europe)
 
@@ -880,6 +884,8 @@ Every player begins with these basic cards representing primitive but essential 
 | **Purser** | 1 | Coin | Gain £2 | 2 Influence |
 | **Helmsman** | 1 | Propeller | +1 to any ship stat for this launch | 1 Officer |
 
+**Symbol Distribution:** The Starter Deck deliberately emphasizes Wrench (4 cards) and Propeller (3 cards) symbols over Coin (1 card). This is intentional: Coin locations (Academy, Flight School, Bank, Insurance Bureau) are premium actions—powerful but limited. Players must acquire Market cards with Coin symbols or use Apprentice "Any" cards to access these locations frequently. This encourages deck-building and creates meaningful choices about which action spaces to prioritize.
+
 ## 8.4 Market Deck Categories
 
 The Market Row offers more powerful cards in several categories:
@@ -1004,7 +1010,7 @@ Each nation has a unique starting Blueprint configuration, special technology, a
 - *Rubberized Cotton* — Simple, proven envelope material. Unlocks the Cotton Envelope upgrade.
 - *Articulated Keel Design* — Unlocks the Flexible Frame upgrade: Ignore Weather penalties on Hazard cards. When others are grounded by storms, you can fly.
 
-**The Flaw:** *Low Ceiling* — Semi-rigid frames cannot support heavy payloads. Italy's Blueprint overlays have one fewer Payload slot than other factions. They must win on quantity, not quality.
+**The Flaw:** *Compact Design* — Semi-rigid frames cannot support heavy payloads. Italy's Blueprint overlays have one fewer Payload slot than other factions in Ages II and III. They must win on quantity and agility, not raw capacity.
 
 **Home Base (Age II):** Rome
 
@@ -1019,7 +1025,7 @@ Each faction's Blueprint has different slot configurations. Slots are listed as 
 | USA | 1/1/1/1 | 1/1/2/2 | 2/2/2/3 |
 | Italy | 1/1/1/1 | 1/1/2/1 | 2/2/2/2 |
 
-**Note:** Italy's "Low Ceiling" flaw results in fewer Payload slots. Frame slots determine gas cube capacity (and thus Lift potential).
+**Note:** Italy's "Compact Design" flaw results in fewer Payload slots in Ages II and III (1 fewer than other factions). Frame slots determine gas cube capacity (and thus Lift potential).
 
 ---
 

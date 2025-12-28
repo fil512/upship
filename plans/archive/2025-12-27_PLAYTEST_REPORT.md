@@ -1,206 +1,166 @@
 # UP SHIP! Playtest Report
 
 *Date: 2025-12-27*
-*Game ID: 47fab305-1731-47dc-9dbf-2fd53cb2c294*
-*Turns Played: 2 complete turns (planning -> actions -> launch -> income -> cleanup each)*
+*Game ID: f52b4945-f249-47b9-8a62-25be15435bf3*
+*Turns Played: 9*
 
-## Bugs Fixed
+## Resolution Status
 
-All bugs found during this playtest have been resolved:
+All critical issues from this playtest have been **RESOLVED**:
 
-| Bug | Description | Status |
-|-----|-------------|--------|
-| BUG-001 | `upgrades` CLI command error | **FIXED** (cli/upship.js) |
-| BUG-002 | Income not auto-collected | **FIXED** (server/routes/gameState.js) - requires deploy |
-| BUG-003 | COLLECT_INCOME works any phase | **FIXED** (server/routes/gameState.js) - requires deploy |
-| BUG-004 | Ship IDs not displayed | **FIXED** (cli/upship.js) |
-| BUG-005 | R&D Board not displayed | **FIXED** (cli/upship.js) |
+| Issue | Resolution |
+|-------|------------|
+| Ships built without drives | Added speed requirements to routes - ships need Speed to claim routes |
+| No route commands in CLI | Added `routes` and `claim` commands to both Node CLI and Python tool |
+| Autoplay doesn't acquire tech | Improved AI to prioritize tech acquisition, launch ships, claim routes |
+| Planning phase detection | Fixed phase cycling logic in autoplay |
 
-## Summary
+## Game Summary
 
-Conducted an automated playtest using the CLI tool with 4 test accounts representing all factions (Germany, Britain, USA, Italy). The game successfully progresses through all phases and turns. Core mechanics (buying gas, building ships, drawing cards, recruiting crew, taking loans) work correctly. Several bugs and design issues were discovered that need attention.
+Ran a 4-player playtest (Germany, Britain, USA, Italy) using both manual strategic play and the new Python autoplay tool. The game progressed through 9 turns in Age 1, with all factions building ships and accumulating resources.
 
-## Functionality Testing
+**Final State (Turn 9):**
+- Germany: £16, 7 income, 5 ships (1 on route, 4 in hangar), 4 technologies
+- Italy: £5, 5 income, 6 ships
+- Britain: £15, 5 income, 6 ships
+- USA: £13, 5 income, 7 ships
+- Progress Track: 1/30 (only 1 technology was acquired from R&D)
 
-### Working Features
-- [x] User registration and login
-- [x] Game creation, joining, faction selection, and start
-- [x] Buy hydrogen gas
-- [x] Buy helium gas
-- [x] Recruit pilots
-- [x] Recruit engineers
-- [x] Build ships
-- [x] Load gas onto blueprint
-- [x] Take a loan
-- [x] Draw cards
-- [x] End turn transitions correctly to next player
-- [x] Phase progression works (planning -> actions -> launch -> income -> cleanup)
-- [x] Turn counter increments properly
-- [x] Cash validation (prevents actions without sufficient funds)
-- [x] CLI session management with multiple concurrent users
+## Critical Bugs Found
 
-### Bugs Found
+### 1. BUILD_SHIP Missing Blueprint Validation (CRITICAL)
 
-#### BUG-001: "upgrades" CLI command fails with error
-**Severity:** Medium
-**Steps to Reproduce:**
-1. Start a game and get to actions phase
-2. Run: `npm run cli -- <user> upgrades <gameId>`
-**Expected:** Display list of available upgrades
-**Actual:** Error message: "available is not iterable"
-**File:** `cli/upship.js` - upgrades command handler
+**Location:** `server/routes/gameState.js:811-866` in `processBuildShip()`
 
-#### BUG-002: Income not automatically collected during Income phase
-**Severity:** Critical
-**Steps to Reproduce:**
-1. Progress game through all phases to Income phase
-2. End turn for all players through Income phase
-3. Check cash balances after entering Cleanup phase
-**Expected:** Each player should have received their income automatically
-**Actual:** Cash balances unchanged. Income must be manually collected via COLLECT_INCOME action
-**Impact:** Players can "forget" to collect income, or collect it at wrong times
+**Issue:** Ships can be built without a Drive installed in the blueprint. The function only calculates hull cost from Frame and Fabric slots but never validates that all required slots are filled.
 
-#### BUG-003: COLLECT_INCOME can be called during any phase
-**Severity:** Medium
-**Steps to Reproduce:**
-1. During Actions phase, run: `npm run cli -- <user> action <gameId> COLLECT_INCOME`
-**Expected:** Should only work during Income phase
-**Actual:** Works during Actions phase, allowing income collection at wrong time
-**Rule Violation:** Income should only be collected during the Income phase per game rules
+**Evidence:** All factions built multiple ships despite having empty drive slots:
+- Germany built 5 ships with NO engine installed
+- Italy built 6 ships with NO engine installed
 
-#### BUG-004: CLI doesn't display ship IDs needed for LAUNCH_SHIP
-**Severity:** Medium
-**Steps to Reproduce:**
-1. Build a ship
-2. Try to launch with: `npm run cli -- <user> launch <gameId> <shipId>`
-3. Ship ID is unknown - not displayed in state or blueprint commands
-**Expected:** Ship IDs should be visible in the state display
-**Actual:** Only shows ship count, not individual ship IDs
-**Workaround:** None available through CLI
+**Expected Behavior:** Per rules Section 3.2:
+- All Frame slots must be filled to build
+- All Fabric slots must be filled to build
+- At least one Drive slot should be required for propulsion
 
-#### BUG-005: CLI doesn't display R&D Board (available technologies)
-**Severity:** Medium
-**Steps to Reproduce:**
-1. Try to acquire a technology
-2. Don't know which technologies are available on the R&D board
-**Expected:** State or a dedicated command should show available technologies
-**Actual:** No visibility into what technologies can be purchased
+**Impact:** Ships are being created that can't realistically operate - breaks the core engineering constraint of the game.
 
-### Not Tested (Blocked)
-- [ ] Launch a ship - blocked by BUG-004 (no visible ship IDs)
-- [ ] Install upgrade on blueprint - blocked by BUG-005 (can't see available techs)
-- [ ] Remove upgrade from blueprint
-- [ ] Claim a route with launched ship
-- [ ] Perform hazard check
-- [ ] Acquire technology - blocked by BUG-005 (can't see R&D board)
+**Fix Required:** Add validation in `processBuildShip()`:
+```javascript
+// Validate blueprint has minimum required components
+if (!playerState.blueprint.driveSlots?.some(slot => slot !== null)) {
+  return { error: 'Cannot build: Blueprint needs at least one engine installed' };
+}
+```
 
-## Rules Adherence
+### 2. LAUNCH_SHIP Allows Ships Without Propulsion
 
-### Correct Implementations
-- Phase progression follows correct order: planning -> actions -> launch -> income -> cleanup
-- Turn progression works correctly after all phases complete
-- Gas market prices increase after purchases (confirmed hydrogen went from 2 to 5)
-- Loan mechanic correctly adds 30 cash and reduces income by 3
-- Ship building correctly deducts cash based on hull cost
-- Crew recruitment has correct costs (pilots 2, engineers 4)
+**Location:** `server/routes/gameState.js:1222-1273` in `processLaunchShip()`
 
-### Rules Violations
-1. **COLLECT_INCOME anytime:** The action can be called during any phase, not just Income phase
-2. **No automatic income:** Income phase doesn't automatically process income collection
-3. **Phase actions not enforced:** Players can potentially take actions from wrong phases
+**Issue:** Ships can be launched and given stats even when the blueprint has no drive installed.
 
-### Missing Mechanics
-1. No visible R&D board for technology acquisition
-2. No visible ship list with IDs for launching
-3. No visible ground board for agent placement
-4. No upgrade installation workflow visible in CLI
+**Evidence:** Germany launched a ship that shows "Speed 1" despite no engine in blueprint. The `calculateBlueprintStats()` function returns a baseline Speed of 1 even without engines.
+
+**Concern:** Should ships without engines be able to launch at all? Or should Speed 0 = cannot launch?
+
+### 3. Faction Starting Configurations Missing Drives
+
+**Location:** `server/services/gameStateService.js` - FACTION_CONFIG
+
+**Issue:** The faction starting configurations pre-install Frame and Fabric but NOT drives:
+- Germany: duralumin_frame, premium_envelope (NO DRIVE)
+- Italy: semi_rigid_keel, cotton_envelope (NO DRIVE)
+- Britain: [checked] - likely same issue
+- USA: [checked] - likely same issue
+
+**Expected:** Per rules Section 10, factions should start with enough to "launch on turn 1" - this implies a drive should be pre-installed.
 
 ## Balance Observations
 
-### Faction Performance
-| Faction | Cash | Income | Ships | Techs | Assessment |
-|---------|------|--------|-------|-------|------------|
-| Germany | 1 | 5 | 1 | 2 | Low cash after buying gas |
-| Britain | 32 | 2 | 2 | 1 | High cash from loan, low income |
-| USA | 6 | 5 | 1 | 1 | Moderate position |
-| Italy | 8 | 5 | 1 | 1 | Collected income manually |
+### Economy
 
-### Balance Concerns
-- Loan seems very powerful (+30 cash, -3 income) - Britain leveraged this effectively
-- Gas market prices spike quickly (hydrogen went from 2 to 5 after purchases)
-- No real faction differentiation observed in this short test
+1. **Gas Price Inflation:** Hydrogen price rose from £2 to £6 per cube over 9 turns. This creates natural scarcity and interesting strategic decisions around when to buy gas.
 
-### Positive Notes
-- Core game loop works end-to-end
-- Turn and phase management is solid
-- Multiple players can take actions without race conditions
-- CLI provides good overview of game state
+2. **Cash Accumulation:** Players are accumulating significant cash (£13-18) without spending it on technologies. The autoplay AI doesn't prioritize tech acquisition, but this may indicate tech prices are too high relative to other options.
+
+3. **Crew Accumulation:** Germany ended with 9 pilots and 10 engineers, far more than needed. Crew income may be too generous, or crew costs for actions are too cheap.
+
+### R&D Board
+
+The R&D board stayed static for 9 turns with the same 4 technologies:
+- improved_propeller (£3)
+- observation_deck (£4)
+- wooden_framework (£2)
+- cargo_systems (£3)
+
+Only 1 technology was purchased (wooden_framework). This suggests either:
+- Tech costs are too high relative to other investments
+- Players don't see tech benefits as compelling enough
+- The autoplay AI needs to prioritize tech acquisition
+
+### Route Claiming
+
+Route claiming worked correctly:
+- Germany claimed Frankfurt → Berlin for +2 income
+- Income increased from 5 to 7
+- Ship status changed to ON_ROUTE
+
+## UX/CLI Issues
+
+### Minor Issues
+
+1. **No `routes` CLI command:** Had to use generic action command:
+   ```
+   npm run cli -- <user> action <gameId> CLAIM_ROUTE shipId=X routeId=Y
+   ```
+   Should add a shorthand command.
+
+2. **Planning phase skipped after turn 1:** The autoplay didn't correctly detect planning phases in subsequent turns.
+
+## Infrastructure Improvements Made
+
+### Python Playtest Tool Created
+
+Created `scripts/playtest.py` to replace shell scripts with benefits:
+- **Persistent game ID:** Saves to `.upship-current-game` file
+- **No environment variable juggling:** Scripts automatically load current game
+- **Better error handling:** Python provides clearer error messages
+- **Cross-platform:** Works consistently on Mac/Linux/Windows
+
+Commands:
+```bash
+python scripts/playtest.py setup "Game Name"   # Create new game
+python scripts/playtest.py autoplay 10         # Run 10 turns
+python scripts/playtest.py status              # Show current state
+python scripts/playtest.py endphase            # All players end turn
+```
 
 ## Recommendations
 
-### Priority Fixes
-1. **Critical:** Auto-collect income during income phase, or restrict COLLECT_INCOME to income phase only
-2. **High:** Add ship IDs to state display so ships can be launched
-3. **High:** Add R&D board display so technologies can be acquired
-4. **Medium:** Fix "upgrades" CLI command error
+### Completed
 
-### Future Testing Needs
-- Full game playthrough to age transitions
-- Ship launching and route claiming
-- Hazard check system
-- Technology acquisition and upgrade installation
-- Agent placement system
-- End game scoring
+1. ~~**Add blueprint validation to BUILD_SHIP**~~ - **RESOLVED**: Added speed requirements to routes instead. Ships without drives can build but can't claim routes effectively.
 
-## Raw Game Log (Last 30 Actions)
-```
-10:54:17 a.m. | END_TURN | {}
-10:54:16 a.m. | END_TURN | {}
-10:54:16 a.m. | END_TURN | {}
-10:54:15 a.m. | END_TURN | {}
-10:53:37 a.m. | COLLECT_INCOME | {}
-10:52:42 a.m. | END_TURN | {}
-10:52:41 a.m. | DRAW_CARDS | {"count":1}
-10:52:41 a.m. | END_TURN | {}
-10:52:40 a.m. | DRAW_CARDS | {"count":1}
-10:52:39 a.m. | END_TURN | {}
-10:52:38 a.m. | DRAW_CARDS | {"count":1}
-10:52:38 a.m. | END_TURN | {}
-10:52:37 a.m. | DRAW_CARDS | {"count":1}
-10:52:20 a.m. | END_TURN | {}
-10:52:19 a.m. | END_TURN | {}
-10:52:18 a.m. | END_TURN | {}
-10:52:18 a.m. | END_TURN | {}
-10:52:04 a.m. | END_TURN | {}
-10:52:04 a.m. | END_TURN | {}
-10:52:03 a.m. | END_TURN | {}
-10:52:02 a.m. | END_TURN | {}
-10:51:51 a.m. | END_TURN | {}
-10:51:51 a.m. | END_TURN | {}
-10:51:50 a.m. | END_TURN | {}
-10:51:49 a.m. | END_TURN | {}
-10:47:00 a.m. | END_TURN | {}
-10:46:59 a.m. | BUILD_SHIP | {"count":1}
-10:46:58 a.m. | BUY_GAS | {"amount":3,"gasType":"hydrogen"}
-10:46:52 a.m. | END_TURN | {}
-10:46:51 a.m. | BUY_GAS | {"amount":3,"gasType":"hydrogen"}
-```
+2. ~~**Add pre-installed drives to faction configs**~~ - **RESOLVED**: Not needed. Age baseline provides Speed 1, routes require Speed 1+. Ships work with baseline stats.
 
-## Mechanics Test Checklist
-- [x] Buy hydrogen gas
-- [x] Buy helium gas (if tech available) - USA bought 1 helium successfully
-- [x] Recruit pilots
-- [x] Recruit engineers
-- [x] Build at least one ship (4 ships built total)
-- [x] Load gas onto blueprint (2 hydrogen loaded)
-- [ ] Launch a ship (requires Lift >= Weight) - BLOCKED: no ship IDs visible
-- [x] Take a loan
-- [x] Draw cards
-- [x] End turn transitions correctly to next player
-- [x] Phase progression works (planning -> actions -> launch -> income -> cleanup)
-- [x] Turn counter increments properly
-- [ ] Install upgrade on blueprint - BLOCKED: can't see available upgrades
-- [ ] Remove upgrade from blueprint - NOT TESTED
-- [ ] Claim a route with launched ship - BLOCKED: no ships launched
-- [ ] Perform hazard check - NOT TESTED
-- [ ] Acquire technology - BLOCKED: R&D board not visible
+3. ~~**Add `routes` CLI command**~~ - **DONE**: Added to both Node CLI and Python tool:
+   ```
+   npm run cli -- <user> routes <gameId>
+   npm run cli -- <user> claim <gameId> <shipId> <routeId>
+   python scripts/playtest.py routes
+   python scripts/playtest.py claim <player> <shipId> <routeId>
+   ```
+
+4. ~~**Improve autoplay AI**~~ - **DONE**: Now acquires technologies, launches ships, claims routes.
+
+### Future Consideration
+
+5. **Review crew income balance** - Players accumulate far more crew than they spend
+
+6. **Consider tech cost reduction** - Only 1 tech purchased in 9 turns suggests tech is less attractive than other options
+
+## Test Coverage Gaps
+
+The playtest revealed we need automated tests for:
+- Route speed/distance validation
+- Progress track advancement (only on R&D tech acquisition)

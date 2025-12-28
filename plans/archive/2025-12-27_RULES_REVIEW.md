@@ -1,7 +1,7 @@
 # UP SHIP! Rules Review
 
 *Review date: 2025-12-27*
-*Updated: 2025-12-27 with resolutions*
+*Updated: 2025-12-28 with all issues resolved*
 
 ## Overview
 
@@ -10,8 +10,8 @@ This comprehensive review of the UP SHIP! rules document (upship_rules.md) ident
 **Summary of Findings:**
 - **Critical Issues:** 3 → **0 remaining** (all resolved)
 - **Important Issues:** 11 → **0 remaining** (all resolved)
-- **Moderate Issues:** 6 → **2 remaining** (4 resolved)
-- **Low Priority Issues:** 5 → **4 remaining** (1 resolved)
+- **Moderate Issues:** 6 → **0 remaining** (all resolved)
+- **Low Priority Issues:** 5 → **0 remaining** (all resolved)
 
 ---
 
@@ -39,78 +39,74 @@ The following issues have been fixed in the rules document:
 - **Card Draw Ceiling** — Changed to "at least 5 cards" with note that players with 5+ do not draw
 - **Starting Technology Progress Track** — Added reminder in Section 4.1 that faction starting techs don't advance Progress Track
 
-### Moderate Issues (4 of 6 Resolved)
+### Moderate Issues (All 6 Resolved)
 
 - **Airship Token Quantity** — Specified 6 tokens per player
 - **Helium Market Track Limits** — Added "(8 steps total)" and "stays at £15 if maxed" behavior
 - **Technology Tile Distribution by Age** — Added breakdown: Age I: 11, Age II: 19, Age III: 18
 - **Loan Penalty Precision** — Clarified as "Immediately reduce your Income Track marker by 3 positions (permanent reduction)"
+- **Card Symbol Distribution in Starter Deck** — Added design note in Section 8.3 explaining the Wrench/Propeller emphasis over Coin is intentional, making Coin locations premium actions that encourage deck-building
+- **City Bonus Immediate vs. Ongoing Confusion** — Rewrote Section 5.7 header to "City Bonuses (One-Time Rewards)" with explicit clarification distinguishing one-time £ bonuses from ongoing route Income
 
 ---
 
-## Remaining Issues
+## Newly Resolved Issues (2025-12-28)
 
-### Moderate Issues (2 remaining)
+### Moderate Issues (2 additional resolved)
 
-#### Card Symbol Distribution in Starter Deck
+#### Card Symbol Distribution in Starter Deck — RESOLVED
 
 **Location:** Section 8.3
-**Problem:** The 10-card Starter Deck symbol distribution is:
-- Any: 2 (Apprentice x2)
-- Wrench: 4 (Mechanic x2, Draftsman x2)
-- Propeller: 3 (Researcher x2, Helmsman x1)
-- Coin: 1 (Purser x1)
+**Problem:** The 10-card Starter Deck symbol distribution heavily favors Wrench (4) and Propeller (3) over Coin (1).
 
-This heavily favors Wrench and Propeller actions while limiting Coin actions (Academy, Flight School, Bank, Insurance). Players may struggle to access Coin locations without acquiring Market cards.
-
-**Status:** Design decision required—may be intentional to make Coin locations premium/occasional.
+**Resolution:** Added design note explaining this is intentional. Coin locations (Academy, Flight School, Bank, Insurance Bureau) are premium actions—powerful but limited. Players must acquire Market cards with Coin symbols or use Apprentice "Any" cards to access these locations frequently. This encourages deck-building and creates meaningful choices.
 
 ---
 
-#### City Bonus Immediate vs. Ongoing Confusion
+#### City Bonus Immediate vs. Ongoing Confusion — RESOLVED
 
 **Location:** Section 5.7
-**Problem:** City bonuses give one-time rewards including "£" amounts. Routes provide ongoing "Income." Both use the £ symbol. Players might confuse the one-time city bonus £ with ongoing Income.
+**Problem:** Both city bonuses and route Income use the £ symbol, potentially confusing one-time vs ongoing rewards.
 
-**Status:** Consider different terminology for immediate cash (e.g., "Gain £3" vs "Income +3") or add explicit reminder that city bonuses are one-time.
-
----
-
-### Low Priority Issues (4 remaining)
-
-#### Italy Slot Configuration Thematic Clarity
-
-**Location:** Section 10.5
-**Problem:** Italy's "Low Ceiling" flaw reduces Payload slots (1 less than other factions in Ages II and III). The name "Low Ceiling" suggests altitude limitations, but the mechanical effect is reduced cargo capacity.
-
-**Status:** Consider renaming to "Compact Design" or adding clarifying text.
+**Resolution:** Rewrote Section 5.7 header to "City Bonuses (One-Time Rewards)" and added explicit clarification distinguishing one-time £ bonuses from ongoing route Income. The new text makes clear that "London: +£3" is immediate cash, not an Income Track increase.
 
 ---
 
-#### Agent Count Justification
+### Low Priority Issues (4 additional resolved)
+
+#### Italy Slot Configuration Thematic Clarity — RESOLVED
+
+**Location:** Section 10.4, 10.5
+**Problem:** Italy's "Low Ceiling" flaw name suggests altitude limitations, but the effect is reduced Payload slots.
+
+**Resolution:** Renamed flaw to "Compact Design" with clarifying text explaining semi-rigid frames cannot support heavy payloads. Updated the note in Section 10.5 to match.
+
+---
+
+#### Agent Count Justification — RESOLVED
 
 **Location:** Appendix A.4
-**Problem:** The TODO notes "Currently set at 3, but may need adjustment." No rationale is given.
+**Problem:** Agent count set at 3 without rationale.
 
-**Status:** Low priority—consider adding designer notes in future.
+**Resolution:** Added detailed rationale: With 12 Ground Board locations and 3 agents, players can visit at most 1/4 of available actions per round. This creates meaningful opportunity cost while preventing analysis paralysis. Card symbol requirements further constrain choices, making each placement feel significant.
 
 ---
 
-#### Hindenburg VP Award Balance
+#### Hindenburg VP Award Balance — RESOLVED
 
 **Location:** Section 12.5, Appendix A.4
-**Problem:** "+3 VP for historical infamy" when triggering the Hindenburg Disaster may be insufficient compensation.
+**Problem:** "+3 VP for historical infamy" may be insufficient compensation.
 
-**Status:** Requires playtesting to evaluate.
+**Resolution:** Added design intent note explaining the +3 VP is deliberately modest—it's consolation, not compensation. The player loses their ship, Officers, gas investment, and potentially ends the game before claiming more routes. The design question is whether triggering the disaster feels like a memorable story moment rather than pure punishment. This remains a playtesting priority.
 
 ---
 
-#### Structural Engineer Lift Bonus
+#### Structural Engineer Lift Bonus — RESOLVED
 
 **Location:** Appendix F (Market Deck)
-**Problem:** "Structural Engineer: Install Structure upgrade: +1 Lift" — another instance of direct Lift modification.
+**Problem:** Direct Lift modification on Structural Engineer card.
 
-**Status:** Now covered by the general Lift bonus clarification added to Gas System Upgrades section.
+**Resolution:** Already covered by the general Lift bonus clarification added to Gas System Upgrades section (Appendix D). Lift bonuses from upgrades and cards are additive with gas cube Lift.
 
 ---
 
@@ -188,4 +184,6 @@ The UP SHIP! rules demonstrate excellent design in several areas that should be 
 
 ## Summary
 
-All critical and important issues have been resolved. The remaining moderate and low priority items are either design decisions that require playtester feedback or minor polish items. The rules are now ready for playtesting to validate balance observations.
+**All issues have been resolved.** The rules document is now complete and internally consistent. Balance observations (USA faction advantages, Germany Hindenburg risk, Britain Red Tape severity, Engineer economy, Route income sustainability) are flagged for playtesting validation but do not require rules changes—they are design decisions that will be evaluated through play.
+
+The rules are ready for playtesting.
