@@ -426,7 +426,7 @@ const commands = {
     if (myState) {
       console.log(c(COLORS.bright, '┌─ Your Status (' + formatFaction(myState.faction) + ')'));
       console.log(`│ Cash: ${formatCash(myState.cash)}  │  Income: ${c(COLORS.cyan, myState.income + '/turn')}`);
-      console.log(`│ Pilots: ${c(COLORS.magenta, myState.pilots)}  │  Engineers: ${c(COLORS.yellow, myState.engineers)}`);
+      console.log(`│ Officers: ${c(COLORS.magenta, myState.officers)}  │  Engineers: ${c(COLORS.yellow, myState.engineers)}`);
       console.log(`│ Gas: ${c(COLORS.cyan, 'H₂:' + (myState.gasCubes?.hydrogen || 0))} ${c(COLORS.green, 'He:' + (myState.gasCubes?.helium || 0))}`);
       console.log(`│ Hand: ${myState.hand?.length || 0} cards  │  Deck: ${myState.deck?.length || 0}  │  Discard: ${myState.discardPile?.length || 0}`);
       console.log(`│ Ships: ${(myState.ships || []).length} (Hangar: ${(myState.ships || []).filter(s => s.status === 'hangar').length})`);
@@ -648,7 +648,7 @@ const commands = {
       console.log('  COLLECT_INCOME              - Collect your income');
       console.log('  DRAW_CARDS count=2          - Draw cards');
       console.log('  PLAY_CARD idx=0             - Play card from hand');
-      console.log('  RECRUIT_CREW type=pilot n=1 - Recruit crew');
+      console.log('  RECRUIT_CREW type=officer n=1 - Recruit crew');
       console.log('  BUILD_SHIP count=1          - Build ships');
       console.log('  LAUNCH_SHIP shipId=<id> gasType=hydrogen - Launch a ship (spends gas from reserve)');
       console.log('  ACQUIRE_TECHNOLOGY tech=<id> - Buy tech from R&D board');
@@ -741,7 +741,7 @@ const commands = {
   async recruit(username, args) {
     const [gameId, crewType, count] = args;
     if (!gameId || !crewType) {
-      console.log('Usage: upship <user> recruit <gameId> <pilot|engineer> [count]');
+      console.log('Usage: upship <user> recruit <gameId> <officer|engineer> [count]');
       return;
     }
     return commands.action(username, [gameId, 'RECRUIT_CREW', `crewType=${crewType}`, `count=${count || 1}`]);

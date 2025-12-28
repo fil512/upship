@@ -69,9 +69,9 @@ function createPlayerState(faction) {
     faction,
     cash: 15,
     income: 5,
-    pilotIncome: 1,
+    officerIncome: 0,  // Starts at 0 - requires Flight School investment
     engineerIncome: 1,
-    pilots: 1,
+    officers: 1,
     engineers: 2,
     gasCubes: startingGas,
     agents: 3,

@@ -282,8 +282,8 @@ function processAction(state, playerId, actionType, data) {
     case 'BUILD_SHIP':
       return processBuildShip(newState, playerId, data);
 
-    case 'UPGRADE_PILOT_INCOME':
-      return processUpgradePilotIncome(newState, playerId, data);
+    case 'UPGRADE_OFFICER_INCOME':
+      return processUpgradeOfficerIncome(newState, playerId, data);
 
     case 'UPGRADE_ENGINEER_INCOME':
       return processUpgradeEngineerIncome(newState, playerId, data);
@@ -349,16 +349,16 @@ function processEndTurn(state, playerId) {
         for (const pid of state.playerOrder) {
           const playerState = state.players[pid];
           const incomeGained = playerState.income;
-          const pilotsGained = playerState.pilotIncome || 1;
+          const officersGained = playerState.officerIncome || 0;
           const engineersGained = playerState.engineerIncome || 1;
 
           playerState.cash += incomeGained;
-          playerState.pilots += pilotsGained;
+          playerState.officers += officersGained;
           playerState.engineers += engineersGained;
 
           state.log.push({
             timestamp: new Date().toISOString(),
-            message: `${playerState.faction.toUpperCase()} collected income: £${incomeGained}, +${pilotsGained} Pilot(s), +${engineersGained} Engineer(s)`,
+            message: `${playerState.faction.toUpperCase()} collected income: £${incomeGained}, +${officersGained} Officer(s), +${engineersGained} Engineer(s)`,
             playerId: pid,
             type: 'income'
           });
@@ -624,15 +624,15 @@ function processCollectIncome(state, playerId, data) {
   playerState.cash += incomeGained;
 
   // Gain crew from income tracks
-  const pilotsGained = playerState.pilotIncome || 1;
+  const officersGained = playerState.officerIncome || 0;
   const engineersGained = playerState.engineerIncome || 1;
 
-  playerState.pilots += pilotsGained;
+  playerState.officers += officersGained;
   playerState.engineers += engineersGained;
 
   state.log.push({
     timestamp: new Date().toISOString(),
-    message: `Collected income: £${incomeGained}, +${pilotsGained} Pilot(s), +${engineersGained} Engineer(s)`,
+    message: `Collected income: £${incomeGained}, +${officersGained} Officer(s), +${engineersGained} Engineer(s)`,
     playerId,
     type: 'income'
   });
@@ -780,12 +780,12 @@ function processRecruitCrew(state, playerId, data) {
   const playerState = state.players[playerId];
 
   const costs = {
-    pilot: 2,
+    officer: 2,
     engineer: 4
   };
 
   if (!costs[crewType]) {
-    return { error: 'Invalid crew type' };
+    return { error: 'Invalid crew type. Use "officer" or "engineer".' };
   }
 
   const totalCost = costs[crewType] * count;
@@ -796,8 +796,8 @@ function processRecruitCrew(state, playerId, data) {
 
   playerState.cash -= totalCost;
 
-  if (crewType === 'pilot') {
-    playerState.pilots += count;
+  if (crewType === 'officer') {
+    playerState.officers += count;
   } else {
     playerState.engineers += count;
   }
@@ -870,8 +870,8 @@ function processBuildShip(state, playerId, data) {
   return { newState: state };
 }
 
-// Upgrade Pilot Income at Flight School
-function processUpgradePilotIncome(state, playerId, data) {
+// Upgrade Officer Income at Flight School
+function processUpgradeOfficerIncome(state, playerId, data) {
   const playerState = state.players[playerId];
   const cost = 5;
 
@@ -880,11 +880,11 @@ function processUpgradePilotIncome(state, playerId, data) {
   }
 
   playerState.cash -= cost;
-  playerState.pilotIncome = (playerState.pilotIncome || 1) + 1;
+  playerState.officerIncome = (playerState.officerIncome || 0) + 1;
 
   state.log.push({
     timestamp: new Date().toISOString(),
-    message: `Upgraded Pilot Income to ${playerState.pilotIncome}/round for £${cost}`,
+    message: `Upgraded Officer Income to ${playerState.officerIncome}/round for £${cost}`,
     playerId,
     type: 'action'
   });
@@ -1254,6 +1254,14 @@ function processLaunchShip(state, playerId, data) {
     return { error: 'Ship not found in hangar' };
   }
 
+  // Calculate required officers (equal to Age number: 1/2/3)
+  const requiredOfficers = state.age || 1;
+  const availableOfficers = playerState.officers || 0;
+
+  if (availableOfficers < requiredOfficers) {
+    return { error: `Not enough Officers: need ${requiredOfficers} for Age ${state.age}, have ${availableOfficers}` };
+  }
+
   // Calculate required gas cubes
   const requiredCubes = calculateRequiredGasCubes(playerState.blueprint);
   const availableCubes = playerState.gasCubes[gasType] || 0;
@@ -1261,6 +1269,9 @@ function processLaunchShip(state, playerId, data) {
   if (availableCubes < requiredCubes) {
     return { error: `Not enough ${gasType}: need ${requiredCubes}, have ${availableCubes}` };
   }
+
+  // Deduct officers
+  playerState.officers -= requiredOfficers;
 
   // Deduct gas cubes from reserve
   playerState.gasCubes[gasType] -= requiredCubes;
@@ -1282,7 +1293,7 @@ function processLaunchShip(state, playerId, data) {
 
   state.log.push({
     timestamp: new Date().toISOString(),
-    message: `Launched ship with ${requiredCubes} ${gasType}: ${statParts.join(', ')}`,
+    message: `Launched ship (${requiredOfficers} Officer${requiredOfficers > 1 ? 's' : ''}, ${requiredCubes} ${gasType}): ${statParts.join(', ')}`,
     playerId,
     type: 'action'
   });
@@ -1373,11 +1384,11 @@ function processHazardCheck(state, playerId, data) {
   const hazard = playerState.hazardDeck.shift();
 
   // Calculate safety rating
-  // Base reliability from ship stats + crew bonus (1 per pilot)
+  // Base reliability from ship stats + crew bonus (1 per officer)
   // Helium ships get +1 safety (helium is non-flammable, unlike hydrogen)
   const shipStats = ship.stats || { reliability: 0 };
   const heliumBonus = ship.gasType === 'helium' ? 1 : 0;
-  const safetyRating = (shipStats.reliability || 0) + (playerState.pilots || 0) + heliumBonus;
+  const safetyRating = (shipStats.reliability || 0) + (playerState.officers || 0) + heliumBonus;
 
   // Compare to hazard difficulty
   const success = safetyRating >= hazard.difficulty;

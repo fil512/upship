@@ -57,7 +57,7 @@ const GROUND_BOARD_LOCATIONS = {
     description: 'Launch ships from your Launch Hangar',
     action: {
       type: 'LAUNCH_SHIPS',
-      cost: '1 Pilot + Gas',
+      cost: 'Officers (by Age) + Gas',
       effect: 'Launch ships to claim routes'
     }
   },
@@ -70,9 +70,9 @@ const GROUND_BOARD_LOCATIONS = {
     description: 'Recruit crew from the shared supply',
     action: {
       type: 'RECRUIT_CREW',
-      pilotCost: 2,
+      officerCost: 2,
       engineerCost: 4,
-      effect: 'Gain Pilot or Engineer tokens'
+      effect: 'Gain Officer or Engineer tokens'
     }
   },
 
@@ -81,11 +81,11 @@ const GROUND_BOARD_LOCATIONS = {
     name: 'Flight School',
     symbol: 'coin',
     position: 6,
-    description: 'Expand your pilot training program',
+    description: 'Expand your officer training program',
     action: {
-      type: 'UPGRADE_PILOT_INCOME',
+      type: 'UPGRADE_OFFICER_INCOME',
       cost: 5, // £5 per level
-      effect: 'Increase Pilot Income track by 1'
+      effect: 'Increase Officer Income track by 1'
     }
   },
 

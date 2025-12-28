@@ -171,7 +171,7 @@ The entire game state is stored as a single JSONB document in `game_states.state
   turn: 1, round: 1, age: 1,
   players: {
     [userId]: {
-      faction, cash, income, pilots, engineers,
+      faction, cash, income, officers, engineers,
       gasCubes: { hydrogen, helium },
       technologies: [], ships: [], routes: [],
       blueprint: { frameSlots, fabricSlots, driveSlots, componentSlots, gasSockets },
@@ -254,21 +254,11 @@ See `plans/overview.md` for the 27-phase implementation plan tracking progress f
 The Python playtest tool provides autonomous playtesting with persistent game ID storage:
 
 ```bash
-# Setup new 4-player game (saves game ID to .upship-current-game)
-python scripts/playtest.py setup "My Test"
-
-# Run automated turns on current game
-python scripts/playtest.py autoplay 10
-
-# Show current game status
-python scripts/playtest.py status
-
-# All players end turn
-python scripts/playtest.py endphase
-
-# Run single action for a player
-python scripts/playtest.py action playtest_germany state
-python scripts/playtest.py action playtest_germany buygas hydrogen 4
+python scripts/playtest.py setup                     # Setup new 4-player game
+python scripts/playtest.py status                    # Show current game status
+python scripts/playtest.py autoplay 10               # Run 10 automated turns
+python scripts/playtest.py endphase                  # All players end turn
+python scripts/playtest.py action <player> <cmd>     # Run single action for a player
 ```
 
 ### Legacy Shell Scripts
