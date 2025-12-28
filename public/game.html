@@ -853,6 +853,92 @@
       font-size: 0.7rem;
       color: #888;
     }
+
+    /* Ground Board Section */
+    .ground-board-section {
+      background: rgba(0, 0, 0, 0.2);
+      border: 1px solid rgba(196, 163, 90, 0.3);
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 15px;
+    }
+
+    .locations-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+
+    .location {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(196, 163, 90, 0.3);
+      border-radius: 4px;
+      padding: 8px;
+      text-align: center;
+      cursor: default;
+      transition: all 0.2s;
+    }
+
+    .location.available {
+      border-color: #4a9;
+      cursor: pointer;
+    }
+
+    .location.available:hover {
+      background: rgba(68, 170, 153, 0.2);
+      transform: scale(1.02);
+    }
+
+    .location.occupied {
+      opacity: 0.6;
+    }
+
+    .location-symbol {
+      font-size: 1.5rem;
+    }
+
+    .location-name {
+      font-size: 0.7rem;
+      color: #888;
+      margin-top: 4px;
+    }
+
+    .location-occupant {
+      font-size: 1rem;
+      margin-top: 4px;
+    }
+
+    /* Card selection styles */
+    .card.selected {
+      border: 2px solid #4a9;
+      box-shadow: 0 0 10px rgba(68, 170, 153, 0.5);
+    }
+
+    .card.playable {
+      cursor: pointer;
+    }
+
+    .card.playable:hover {
+      transform: translateY(-3px);
+      border-color: #c4a35a;
+    }
+
+    /* Phase info box */
+    .phase-info {
+      background: rgba(196, 163, 90, 0.1);
+      border: 1px solid rgba(196, 163, 90, 0.3);
+      border-radius: 4px;
+      padding: 10px;
+      margin-bottom: 10px;
+      font-size: 0.85rem;
+      color: #c4a35a;
+    }
+
+    /* Placement indicator styling */
+    .placement-indicator,
+    .passed-count {
+      text-align: center;
+    }
   </style>
 </head>
 <body>
@@ -871,6 +957,7 @@
     let currentUsername = null;
     let refreshInterval = null;
     let upgradesData = null;
+    let selectedCardIndex = null; // For worker placement card selection
 
     // Upgrade definitions (loaded from server)
     const SLOT_ICONS = {
@@ -901,6 +988,22 @@
       1: { speed: 1, range: 1, ceiling: 0, reliability: 0 },
       2: { speed: 2, range: 2, ceiling: 1, reliability: 1 },
       3: { speed: 3, range: 3, ceiling: 2, reliability: 2 }
+    };
+
+    // Ground Board locations for worker placement
+    const GROUND_BOARD_LOCATIONS = {
+      'research-institute': { name: 'Research Institute', symbol: 'wrench', description: 'Buy Research for £3 each' },
+      'design-bureau': { name: 'Design Bureau', symbol: 'wrench', description: 'Install upgrade to blueprint' },
+      'construction-hall': { name: 'Construction Hall', symbol: 'wrench', description: 'Build ships' },
+      'launchpad': { name: 'Launchpad', symbol: 'propeller', description: 'Launch ships' },
+      'academy': { name: 'Academy', symbol: 'coin', description: 'Recruit Officers/Engineers' },
+      'flight-school': { name: 'Flight School', symbol: 'coin', description: 'Upgrade Officer income' },
+      'technical-institute': { name: 'Technical Institute', symbol: 'coin', description: 'Upgrade Engineer income' },
+      'the-bank': { name: 'The Bank', symbol: 'coin', description: 'Take loans' },
+      'ministry': { name: 'Ministry', symbol: 'propeller', description: 'Draw 2/discard 1, turn priority' },
+      'gas-depot': { name: 'Gas Depot', symbol: 'propeller', description: 'Buy gas cubes' },
+      'insurance-bureau': { name: 'Insurance Bureau', symbol: 'coin', description: 'Buy insurance' },
+      'weather-bureau': { name: 'Weather Bureau', symbol: 'propeller', description: 'Peek at hazard for £2' }
     };
 
     // Initialize
@@ -995,8 +1098,18 @@
             </div>
             <div class="game-info-item">
               <div class="game-info-label">Phase</div>
-              <div class="game-info-value">${state.phase}</div>
+              <div class="game-info-value">${formatPhase(state.phase)}</div>
             </div>
+            ${state.phase === 'worker_placement' && state.workerPlacement ? `
+              <div class="game-info-item placement-indicator">
+                <div class="game-info-label">Current Placer</div>
+                <div class="game-info-value">${getFactionFlag(getCurrentPlacerFaction(state))} ${getCurrentPlacerFaction(state) || '—'}</div>
+              </div>
+              <div class="game-info-item passed-count">
+                <div class="game-info-label">Passed</div>
+                <div class="game-info-value">${(state.workerPlacement.passedPlayers || []).length}/${state.playerOrder.length}</div>
+              </div>
+            ` : ''}
             <div class="turn-indicator ${isMyTurn ? 'your-turn' : 'waiting'}">
               ${isMyTurn ? '⚡ Your Turn' : '⏳ Waiting...'}
             </div>
@@ -1024,8 +1137,20 @@
           <div class="resource-grid">
             <div class="resource-item">
               <div class="resource-icon">🔬</div>
-              <div class="resource-value">${(myState.research || 0) + myState.engineers}</div>
+              <div class="resource-value">${myState.research || 0}</div>
               <div class="resource-label">Research</div>
+            </div>
+            <div class="resource-item">
+              <div class="resource-icon">⭐</div>
+              <div class="resource-value">${myState.influence || 0}</div>
+              <div class="resource-label">Influence</div>
+            </div>
+          </div>
+          <div class="resource-grid">
+            <div class="resource-item">
+              <div class="resource-icon">🕵️</div>
+              <div class="resource-value">${myState.agentsRemaining ?? myState.agents ?? 3}/${myState.agentsTotal ?? 3}</div>
+              <div class="resource-label">Agents</div>
             </div>
             <div class="resource-item">
               <div class="resource-icon">📊</div>
@@ -1060,13 +1185,6 @@
                 <span class="crew-count">${myState.engineers}</span>
                 <span class="income-badge">+${myState.engineerIncome}/turn</span>
               </div>
-            </div>
-            <div class="crew-item">
-              <div class="crew-name">
-                <span>🕵️</span>
-                <span>Agents</span>
-              </div>
-              <span class="crew-count">${myState.agents}</span>
             </div>
           </div>
 
@@ -1152,6 +1270,8 @@
 
         <!-- Main Area - Blueprint -->
         <div class="main-area">
+          ${state.phase === 'worker_placement' ? renderGroundBoard(state, myState, isMyTurn) : ''}
+
           <div class="blueprint-container">
             <div class="blueprint">
               <div class="blueprint-title">Age ${myState.blueprint.age} Blueprint - ${getFactionName(myState.faction)}</div>
@@ -1273,11 +1393,19 @@
             <div class="section-title">Hand (${(myState.hand || []).length} cards)</div>
             <div class="cards-container">
               ${(myState.hand || []).map((card, i) => `
-                <div class="card" onclick="playCard(${i})">
+                <div class="card ${selectedCardIndex === i ? 'selected' : ''} ${state.phase === 'worker_placement' && isMyTurn ? 'playable' : ''}"
+                     onclick="${state.phase === 'worker_placement' ? `selectCard(${i})` : `playCard(${i})`}"
+                     data-symbol="${card.symbol || 'any'}">
                   <div class="card-name">
                     ${getSymbolIcon(card.symbol)} ${card.name}
                   </div>
                   <div class="card-type">${card.effect || 'No effect'}</div>
+                  ${card.revealBonus ? `
+                    <div class="card-reveal-bonus" style="font-size: 0.65rem; color: #4a9; margin-top: 3px;">
+                      ${card.revealBonus.research ? `+${card.revealBonus.research} Research` : ''}
+                      ${card.revealBonus.influence ? `+${card.revealBonus.influence} Influence` : ''}
+                    </div>
+                  ` : ''}
                 </div>
               `).join('')}
               ${(myState.hand || []).length === 0 ? '<div style="color: #666; font-size: 0.8rem;">No cards in hand</div>' : ''}
@@ -1358,6 +1486,20 @@
           </div>
 
           <div class="actions-section">
+            ${state.phase === 'worker_placement' ? `
+              <div class="phase-info">
+                <strong>Worker Placement Phase:</strong> Select a card from your hand, then click an available location on the Ground Board to place an agent. Pass when done.
+              </div>
+            ` : state.phase === 'reveal' ? `
+              <div class="phase-info">
+                <strong>Reveal & Acquisition Phase:</strong> Spend Research to acquire technologies. Spend Influence to buy Market cards.
+              </div>
+            ` : state.phase === 'income_cleanup' ? `
+              <div class="phase-info">
+                <strong>Income & Cleanup Phase:</strong> Income is collected automatically. Click End Turn when ready to proceed.
+              </div>
+            ` : ''}
+
             <div class="section-title">Ground Board Actions</div>
             <div class="action-buttons" style="margin-bottom: 10px;">
               <button class="action-btn secondary" onclick="recruitCrew('officer')" ${!isMyTurn ? 'disabled' : ''}>
@@ -1399,9 +1541,14 @@
               <button class="action-btn secondary" onclick="collectIncome()" ${!isMyTurn ? 'disabled' : ''}>
                 💵 Collect Income
               </button>
-              <button class="action-btn primary" onclick="endTurn()" ${!isMyTurn ? 'disabled' : ''}>
-                ✅ End Turn
-              </button>
+              ${state.phase === 'worker_placement'
+                ? `<button class="action-btn primary" onclick="passAction()" ${!isMyTurn ? 'disabled' : ''}>
+                     ⏭️ Pass
+                   </button>`
+                : `<button class="action-btn primary" onclick="endTurn()" ${!isMyTurn ? 'disabled' : ''}>
+                     ✅ End Turn
+                   </button>`
+              }
               <button class="action-btn secondary" onclick="calculateScores()" ${!isMyTurn ? 'disabled' : ''} style="margin-top: 10px;">
                 🏆 Calculate Scores
               </button>
@@ -1447,6 +1594,29 @@
     function getFactionName(faction) {
       const names = { germany: 'Germany', britain: 'Britain', usa: 'United States', italy: 'Italy' };
       return names[faction] || faction;
+    }
+
+    function formatPhase(phase) {
+      const names = {
+        worker_placement: 'Worker Placement',
+        reveal: 'Reveal & Acquisition',
+        income_cleanup: 'Income & Cleanup',
+        // Legacy phases
+        planning: 'Planning',
+        actions: 'Actions',
+        launch: 'Launch',
+        income: 'Income',
+        cleanup: 'Cleanup'
+      };
+      return names[phase] || phase;
+    }
+
+    function getCurrentPlacerFaction(state) {
+      if (state.phase !== 'worker_placement' || !state.workerPlacement) return null;
+      const order = state.workerPlacement.placementOrder || [];
+      const index = state.workerPlacement.currentPlacerIndex || 0;
+      const playerId = order[index];
+      return state.players[playerId]?.faction;
     }
 
     function formatTechName(tech) {
@@ -1554,6 +1724,82 @@
 
     function endTurn() {
       performAction('END_TURN');
+    }
+
+    function passAction() {
+      performAction('PASS', {});
+    }
+
+    // Card selection for worker placement
+    function selectCard(index) {
+      if (!gameState?.state) return;
+      const state = gameState.state;
+      const isMyTurn = state.playerOrder[state.currentPlayerIndex] === currentUserId;
+
+      if (state.phase !== 'worker_placement' || !isMyTurn) return;
+
+      if (selectedCardIndex === index) {
+        selectedCardIndex = null; // Deselect
+      } else {
+        selectedCardIndex = index;
+      }
+      renderGame(); // Re-render to show selection
+    }
+
+    async function placeAgent(locationId) {
+      if (selectedCardIndex === null) {
+        alert('Select a card first');
+        return;
+      }
+
+      await performAction('PLACE_AGENT', {
+        locationId: locationId,
+        cardIndex: selectedCardIndex
+      });
+
+      selectedCardIndex = null;
+    }
+
+    function canPlaceAtLocation(cardSymbol, locationId) {
+      const loc = GROUND_BOARD_LOCATIONS[locationId];
+      if (!loc) return false;
+      return cardSymbol === 'any' || cardSymbol === loc.symbol;
+    }
+
+    function renderGroundBoard(state, myState, isMyTurn) {
+      const selectedCard = selectedCardIndex !== null ? (myState.hand || [])[selectedCardIndex] : null;
+      const cardSymbolText = selectedCard ? getSymbolIcon(selectedCard.symbol) : '';
+
+      let locationsHtml = '';
+      for (const [locId, loc] of Object.entries(GROUND_BOARD_LOCATIONS)) {
+        const placement = state.groundBoard?.placements?.[locId];
+        const isOccupied = !!placement;
+        const canPlace = !isOccupied && selectedCard && canPlaceAtLocation(selectedCard.symbol, locId) && isMyTurn;
+
+        let occupantHtml = '';
+        if (isOccupied) {
+          const occupantFaction = state.players[placement.playerId]?.faction;
+          occupantHtml = '<div class="location-occupant">' + getFactionFlag(occupantFaction) + '</div>';
+        }
+
+        const onclickAttr = canPlace ? 'onclick="placeAgent(\'' + locId + '\')"' : '';
+        const classes = 'location' + (isOccupied ? ' occupied' : '') + (canPlace ? ' available' : '');
+
+        locationsHtml += '<div class="' + classes + '" ' + onclickAttr + ' title="' + loc.description + '">' +
+          '<div class="location-symbol">' + getSymbolIcon(loc.symbol) + '</div>' +
+          '<div class="location-name">' + loc.name + '</div>' +
+          occupantHtml +
+          '</div>';
+      }
+
+      const titleText = selectedCardIndex !== null
+        ? 'Ground Board - Card Selected (' + cardSymbolText + ')'
+        : 'Ground Board - Select a card to place';
+
+      return '<div class="ground-board-section">' +
+        '<div class="section-title">' + titleText + '</div>' +
+        '<div class="locations-grid">' + locationsHtml + '</div>' +
+        '</div>';
     }
 
     function buyGas(gasType) {
