@@ -183,13 +183,23 @@ function formatFaction(faction) {
 
 function formatPhase(phase) {
   const phaseColors = {
+    worker_placement: COLORS.yellow,
+    reveal: COLORS.blue,
+    income_cleanup: COLORS.green,
+    // Legacy phases (backwards compatibility)
     planning: COLORS.blue,
     actions: COLORS.yellow,
     launch: COLORS.magenta,
     income: COLORS.green,
     cleanup: COLORS.gray
   };
-  return c(phaseColors[phase] || COLORS.white, phase?.toUpperCase() || 'UNKNOWN');
+  const displayNames = {
+    worker_placement: 'WORKER PLACEMENT',
+    reveal: 'REVEAL',
+    income_cleanup: 'INCOME & CLEANUP'
+  };
+  const displayName = displayNames[phase] || phase?.toUpperCase() || 'UNKNOWN';
+  return c(phaseColors[phase] || COLORS.white, displayName);
 }
 
 // Command implementations
@@ -420,6 +430,26 @@ const commands = {
       const currentPlayer = gs.players?.[currentPlayerId];
       console.log(c(COLORS.yellow, `  Waiting for: ${formatFaction(currentPlayer?.faction)}`));
     }
+
+    // Show worker placement info if in that phase
+    if (gs.phase === 'worker_placement' && gs.workerPlacement) {
+      const placementOrder = gs.workerPlacement.placementOrder || [];
+      const currentPlacerIdx = gs.workerPlacement.currentPlacerIndex || 0;
+      const passedPlayers = gs.workerPlacement.passedPlayers || [];
+
+      console.log('');
+      console.log(c(COLORS.bright, '┌─ Worker Placement'));
+      console.log(`│ Placement Order: ${placementOrder.map((pid, i) => {
+        const pState = gs.players[pid];
+        const passed = passedPlayers.includes(pid);
+        const current = i === currentPlacerIdx;
+        const marker = current ? '►' : ' ';
+        const status = passed ? c(COLORS.gray, '(passed)') : '';
+        return `${marker}${formatFaction(pState?.faction)}${status}`;
+      }).join(', ')}`);
+      console.log(`│ Agents Remaining: ${myState?.agentsRemaining || 0}/3`);
+      console.log('└─────────────────────────────────────');
+    }
     console.log('');
 
     // My resources
@@ -427,6 +457,7 @@ const commands = {
       console.log(c(COLORS.bright, '┌─ Your Status (' + formatFaction(myState.faction) + ')'));
       console.log(`│ Cash: ${formatCash(myState.cash)}  │  Income: ${c(COLORS.cyan, myState.income + '/turn')}`);
       console.log(`│ Officers: ${c(COLORS.magenta, myState.officers)}  │  Engineers: ${c(COLORS.yellow, myState.engineers)}`);
+      console.log(`│ Research: ${c(COLORS.magenta, myState.research || 0)}  │  Influence: ${c(COLORS.cyan, myState.influence || 0)}`);
       console.log(`│ Gas: ${c(COLORS.cyan, 'H₂:' + (myState.gasCubes?.hydrogen || 0))} ${c(COLORS.green, 'He:' + (myState.gasCubes?.helium || 0))}`);
       console.log(`│ Hand: ${myState.hand?.length || 0} cards  │  Deck: ${myState.deck?.length || 0}  │  Discard: ${myState.discardPile?.length || 0}`);
       console.log(`│ Ships: ${(myState.ships || []).length} (Hangar: ${(myState.ships || []).filter(s => s.status === 'hangar').length})`);
@@ -479,6 +510,17 @@ const commands = {
     console.log(`│ Hydrogen: ${c(COLORS.cyan, '£' + (gs.gasMarket?.hydrogen || 2) + '/cube')}`);
     console.log(`│ Helium:   ${c(COLORS.green, '£' + (gs.gasMarket?.helium || 3) + '/cube')}`);
     console.log('└─────────────────────────────────────');
+
+    // Ground Board placements
+    if (gs.groundBoard?.placements && Object.keys(gs.groundBoard.placements).length > 0) {
+      console.log('');
+      console.log(c(COLORS.bright, '┌─ Ground Board (Occupied Locations)'));
+      for (const [locId, placement] of Object.entries(gs.groundBoard.placements)) {
+        const pState = gs.players[placement.playerId];
+        console.log(`│ ${locId}: ${formatFaction(pState?.faction)} (${placement.cardUsed || '?'})`);
+      }
+      console.log('└─────────────────────────────────────');
+    }
 
     // R&D Board (available technologies)
     if ((gs.rdBoard || []).length > 0) {
@@ -643,6 +685,8 @@ const commands = {
       console.log('');
       console.log('Actions:');
       console.log('  END_TURN                    - End your turn');
+      console.log('  PASS                        - Pass (worker placement only)');
+      console.log('  PLACE_AGENT locationId=<id> cardIndex=<n> - Place agent at location');
       console.log('  BUY_GAS type=hydrogen amt=2 - Buy gas cubes');
       console.log('  TAKE_LOAN                   - Take a £30 loan');
       console.log('  COLLECT_INCOME              - Collect your income');
@@ -713,6 +757,24 @@ const commands = {
   // Shorthand actions
   async endturn(username, args) {
     return commands.action(username, [args[0], 'END_TURN']);
+  },
+
+  async pass(username, args) {
+    return commands.action(username, [args[0], 'PASS']);
+  },
+
+  async place(username, args) {
+    const [gameId, locationId, cardIndex] = args;
+    if (!gameId || !locationId || cardIndex === undefined) {
+      console.log('Usage: upship <user> place <gameId> <locationId> <cardIndex>');
+      console.log('');
+      console.log('Locations:');
+      console.log('  research-institute, design-bureau, construction-hall (wrench)');
+      console.log('  launchpad, ministry, gas-depot, weather-bureau (propeller)');
+      console.log('  academy, flight-school, technical-institute, the-bank, insurance-bureau (coin)');
+      return;
+    }
+    return commands.action(username, [gameId, 'PLACE_AGENT', `locationId=${locationId}`, `cardIndex=${cardIndex}`]);
   },
 
   async buygas(username, args) {
@@ -850,6 +912,10 @@ ${c(COLORS.yellow, 'Game State:')}
   upship <user> upgrades <gameId>   List available upgrades
   upship <user> routes <gameId>     View available routes
   upship <user> log <gameId> [n]    View action history
+
+${c(COLORS.yellow, 'Worker Placement:')}
+  upship <user> place <gameId> <locationId> <cardIndex>  Place agent
+  upship <user> pass <gameId>                 Pass this round
 
 ${c(COLORS.yellow, 'Actions (shorthand):')}
   upship <user> endturn <gameId>              End your turn
