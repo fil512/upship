@@ -115,6 +115,18 @@ npm run cli -- <user> tech <gameId> <techId>
 npm run cli -- <user> action <gameId> <ACTION_TYPE> [key=value ...]
 ```
 
+### Worker Placement Phase
+
+```bash
+npm run cli -- <user> place <gameId> <locationId> <cardIndex>  # Place agent
+npm run cli -- <user> pass <gameId>                            # Pass this round
+```
+
+**Location IDs:**
+- Wrench: `research-institute`, `design-bureau`, `construction-hall`
+- Propeller: `launchpad`, `ministry`, `gas-depot`, `weather-bureau`
+- Coin: `academy`, `flight-school`, `technical-institute`, `the-bank`, `insurance-bureau`
+
 Use `npm run cli -- help` for complete command reference.
 
 ## Application Structure
@@ -167,7 +179,7 @@ The entire game state is stored as a single JSONB document in `game_states.state
 {
   playerOrder: [userId, ...],
   currentPlayerIndex: 0,
-  phase: 'planning' | 'actions' | 'launch' | 'income' | 'cleanup',
+  phase: 'worker_placement' | 'reveal' | 'income_cleanup',
   turn: 1, round: 1, age: 1,
   players: {
     [userId]: {
