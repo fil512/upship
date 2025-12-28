@@ -175,7 +175,16 @@ router.post('/:gameId/action', async (req, res) => {
     const state = gameState.state;
 
     // Verify it's this player's turn
-    const currentPlayerId = state.playerOrder[state.currentPlayerIndex];
+    // During worker placement, use workerPlacement.currentPlacerIndex
+    // Otherwise, use currentPlayerIndex
+    let currentPlayerId;
+    if (state.phase === 'worker_placement' && state.workerPlacement?.placementOrder) {
+      const wpIndex = state.workerPlacement.currentPlacerIndex || 0;
+      currentPlayerId = state.workerPlacement.placementOrder[wpIndex];
+    } else {
+      currentPlayerId = state.playerOrder[state.currentPlayerIndex];
+    }
+
     if (currentPlayerId !== req.session.userId) {
       return res.status(403).json({ error: 'Not your turn' });
     }
