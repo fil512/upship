@@ -75,7 +75,10 @@ function createPlayerState(faction) {
     engineers: 2,
     gasCubes: startingGas,
     agents: 3,
-    research: 0, // Saved research tokens
+    research: 0, // Saved research tokens (carries over between rounds)
+    influence: 0, // Influence tokens from revealed cards (resets each round)
+    agentsRemaining: 3, // Agents available to place this round
+    hasPassed: false, // Whether player has passed in worker placement this round
     technologies: config.startingTechnologies || [],
     ships: [],
     routes: [],
@@ -329,16 +332,38 @@ async function initializeGameState(gameId, players) {
     // Exclude starting technologies so they don't appear on R&D board
     const { rdBoard, techBag } = createTechBagAndRDBoard(1, Array.from(allStartingTechs));
 
+    // Calculate initial turn order by income (lowest first)
+    // At game start, all players have income 5, so use original random order
+    const initialPlacementOrder = [...playerOrder];
+
     // Create initial game state
     const gameState = {
       age: 1,
       turn: 1,
       round: 1,
-      phase: 'planning', // planning, actions, launch, income, cleanup
+      phase: 'worker_placement', // worker_placement, reveal, income_cleanup
       currentPlayerIndex: 0,
       playerOrder,
       playerCount,
       players: playerStates,
+      // Worker placement phase tracking
+      workerPlacement: {
+        passedPlayers: [],        // Player IDs who have passed this round
+        ministryVisitors: [],     // Players who visited Ministry last round (go first next round)
+        placementOrder: initialPlacementOrder, // Turn order for placing agents
+        currentPlacerIndex: 0     // Index into placementOrder for current placer
+      },
+      // Reveal phase tracking
+      revealPhase: {
+        revealedHands: {},        // playerId -> array of revealed cards
+        resourcesCollected: {},   // playerId -> boolean
+        techAcquisitionsComplete: {}, // playerId -> boolean
+        marketPurchasesComplete: {}   // playerId -> boolean
+      },
+      // Ground Board for worker placement
+      groundBoard: {
+        placements: {}            // locationId -> { playerId, cardUsed }
+      },
       rdBoard,
       techBag,
       marketCards: createMarketCards(),
@@ -357,7 +382,7 @@ async function initializeGameState(gameId, players) {
     await client.query(
       `INSERT INTO game_states (game_id, current_player_id, phase, turn_number, age, state)
        VALUES ($1, $2, $3, $4, $5, $6)`,
-      [gameId, playerOrder[0], 'planning', 1, 1, JSON.stringify(gameState)]
+      [gameId, playerOrder[0], 'worker_placement', 1, 1, JSON.stringify(gameState)]
     );
 
     await client.query('COMMIT');

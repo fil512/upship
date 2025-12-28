@@ -233,6 +233,88 @@ function filterStateForPlayer(state, playerId) {
   return filtered;
 }
 
+// Calculate turn order for worker placement phase
+// Rules: Lowest income goes first, ties broken by lowest cash, then original player order
+// Ministry visitors from last round get priority (go first)
+function calculateTurnOrder(state) {
+  const players = Object.entries(state.players).map(([playerId, playerState]) => ({
+    playerId,
+    income: playerState.income,
+    cash: playerState.cash,
+    originalIndex: state.playerOrder.indexOf(playerId)
+  }));
+
+  // Get ministry visitors from last round (they go first)
+  const ministryVisitors = state.workerPlacement?.ministryVisitors || [];
+
+  // Sort non-ministry players by income (lowest first), then cash, then original order
+  const nonMinistryPlayers = players.filter(p => !ministryVisitors.includes(p.playerId));
+  nonMinistryPlayers.sort((a, b) => {
+    // Lowest income first
+    if (a.income !== b.income) return a.income - b.income;
+    // Tiebreaker 1: Lowest cash first
+    if (a.cash !== b.cash) return a.cash - b.cash;
+    // Tiebreaker 2: Original player order
+    return a.originalIndex - b.originalIndex;
+  });
+
+  // Ministry visitors go first (in the order they visited), then sorted players
+  const ministryPlayersSorted = ministryVisitors.filter(pid =>
+    players.some(p => p.playerId === pid)
+  );
+
+  return [...ministryPlayersSorted, ...nonMinistryPlayers.map(p => p.playerId)];
+}
+
+// Get the current player who should place an agent (during worker_placement phase)
+function getCurrentPlacer(state) {
+  if (state.phase !== 'worker_placement') {
+    return null;
+  }
+
+  const order = state.workerPlacement?.placementOrder || state.playerOrder;
+  const index = state.workerPlacement?.currentPlacerIndex || 0;
+
+  // Skip passed players
+  while (index < order.length) {
+    const playerId = order[index];
+    if (!state.workerPlacement?.passedPlayers?.includes(playerId)) {
+      return playerId;
+    }
+    // This shouldn't happen during normal play since currentPlacerIndex
+    // should always point to a non-passed player, but handle it gracefully
+    break;
+  }
+
+  return null;
+}
+
+// Advance to the next player who hasn't passed in worker placement
+function advanceToNextPlacer(state) {
+  const order = state.workerPlacement.placementOrder;
+  const passedPlayers = state.workerPlacement.passedPlayers;
+  let index = state.workerPlacement.currentPlacerIndex;
+
+  // Find next non-passed player
+  for (let i = 0; i < order.length; i++) {
+    index = (index + 1) % order.length;
+    const playerId = order[index];
+    if (!passedPlayers.includes(playerId)) {
+      state.workerPlacement.currentPlacerIndex = index;
+      return playerId;
+    }
+  }
+
+  // All players have passed - this shouldn't happen as we check before calling
+  return null;
+}
+
+// Check if all players have passed in worker placement
+function allPlayersPassed(state) {
+  const passedPlayers = state.workerPlacement?.passedPlayers || [];
+  return state.playerOrder.every(pid => passedPlayers.includes(pid));
+}
+
 // Process game actions
 function processAction(state, playerId, actionType, data) {
   const newState = JSON.parse(JSON.stringify(state)); // Deep clone
@@ -272,6 +354,9 @@ function processAction(state, playerId, actionType, data) {
 
     case 'PLACE_AGENT':
       return processPlaceAgent(newState, playerId, data);
+
+    case 'PASS':
+      return processPass(newState, playerId);
 
     case 'RECALL_AGENTS':
       return processRecallAgents(newState, playerId, data);
@@ -323,59 +408,233 @@ function processAction(state, playerId, actionType, data) {
   }
 }
 
-// End turn and move to next player
+// End turn - behavior depends on current phase
 function processEndTurn(state, playerId) {
-  state.currentPlayerIndex = (state.currentPlayerIndex + 1) % state.playerOrder.length;
+  const playerState = state.players[playerId];
 
-  // If we've gone around, advance phase or turn
-  if (state.currentPlayerIndex === 0) {
-    state.round++;
+  switch (state.phase) {
+    case 'worker_placement':
+      // During worker placement, use PASS action instead of END_TURN
+      return { error: 'Use PASS action during worker placement phase' };
 
-    // Simple phase progression for now
-    const phases = ['planning', 'actions', 'launch', 'income', 'cleanup'];
-    const currentPhaseIndex = phases.indexOf(state.phase);
+    case 'reveal':
+      // During reveal phase, END_TURN signals done with tech/market purchases
+      state.revealPhase.techAcquisitionsComplete[playerId] = true;
+      state.revealPhase.marketPurchasesComplete[playerId] = true;
 
-    if (currentPhaseIndex === phases.length - 1) {
-      // End of cleanup, start new turn
-      state.turn++;
-      state.round = 1;
-      state.phase = 'planning';
-    } else {
-      const nextPhase = phases[currentPhaseIndex + 1];
-      state.phase = nextPhase;
+      state.log.push({
+        timestamp: new Date().toISOString(),
+        message: `${playerState.faction.toUpperCase()} finished reveal phase actions`,
+        playerId,
+        type: 'turn'
+      });
 
-      // Auto-collect income when entering income phase
-      if (nextPhase === 'income') {
-        for (const pid of state.playerOrder) {
-          const playerState = state.players[pid];
-          const incomeGained = playerState.income;
-          const officersGained = playerState.officerIncome || 0;
-          const engineersGained = playerState.engineerIncome || 1;
+      // Check if all players are done with reveal phase
+      const allDone = state.playerOrder.every(pid =>
+        state.revealPhase.techAcquisitionsComplete[pid] &&
+        state.revealPhase.marketPurchasesComplete[pid]
+      );
 
-          playerState.cash += incomeGained;
-          playerState.officers += officersGained;
-          playerState.engineers += engineersGained;
+      if (allDone) {
+        transitionToIncomeCleanup(state);
+      }
+      break;
 
-          state.log.push({
-            timestamp: new Date().toISOString(),
-            message: `${playerState.faction.toUpperCase()} collected income: £${incomeGained}, +${officersGained} Officer(s), +${engineersGained} Engineer(s)`,
-            playerId: pid,
-            type: 'income'
-          });
-        }
+    case 'income_cleanup':
+      // During income/cleanup, END_TURN advances to next player
+      // When all players done, start new round
+      state.currentPlayerIndex = (state.currentPlayerIndex + 1) % state.playerOrder.length;
+
+      state.log.push({
+        timestamp: new Date().toISOString(),
+        message: `${playerState.faction.toUpperCase()} ended their turn`,
+        playerId,
+        type: 'turn'
+      });
+
+      if (state.currentPlayerIndex === 0) {
+        // All players have completed income/cleanup, start new round
+        startNewRound(state);
+      }
+      break;
+
+    default:
+      // Fallback for any other phase - advance player
+      state.currentPlayerIndex = (state.currentPlayerIndex + 1) % state.playerOrder.length;
+      state.log.push({
+        timestamp: new Date().toISOString(),
+        message: `Player ended their turn`,
+        playerId,
+        type: 'turn'
+      });
+  }
+
+  return { newState: state };
+}
+
+// Transition from Reveal phase to Income & Cleanup phase
+function transitionToIncomeCleanup(state) {
+  state.phase = 'income_cleanup';
+
+  state.log.push({
+    timestamp: new Date().toISOString(),
+    message: 'Entering Income & Cleanup phase',
+    type: 'phase'
+  });
+
+  // Process income collection for all players simultaneously
+  for (const playerId of state.playerOrder) {
+    const playerState = state.players[playerId];
+
+    // Pay Engineer upkeep (£1 per Engineer)
+    const upkeep = playerState.engineers || 0;
+    if (upkeep > 0 && playerState.cash >= upkeep) {
+      playerState.cash -= upkeep;
+      state.log.push({
+        timestamp: new Date().toISOString(),
+        message: `${playerState.faction.toUpperCase()} paid £${upkeep} Engineer upkeep`,
+        playerId,
+        type: 'income'
+      });
+    }
+
+    // Collect income from track
+    const incomeGained = playerState.income || 0;
+    playerState.cash += incomeGained;
+
+    // Collect Officers and Engineers from their income tracks
+    const officersGained = playerState.officerIncome || 0;
+    const engineersGained = playerState.engineerIncome || 1;
+    playerState.officers += officersGained;
+    playerState.engineers += engineersGained;
+
+    state.log.push({
+      timestamp: new Date().toISOString(),
+      message: `${playerState.faction.toUpperCase()} collected: £${incomeGained}, +${officersGained} Officer(s), +${engineersGained} Engineer(s)`,
+      playerId,
+      type: 'income'
+    });
+
+    // Discard remaining hand
+    if (playerState.hand && playerState.hand.length > 0) {
+      playerState.discardPile.push(...playerState.hand);
+      playerState.hand = [];
+    }
+
+    // Reset influence (it doesn't carry over)
+    playerState.influence = 0;
+  }
+}
+
+// Start a new round (called after Income & Cleanup)
+function startNewRound(state) {
+  state.turn++;
+  state.round = 1;
+  state.phase = 'worker_placement';
+
+  // Check for Age transition (every 10 turns in a 4-player game)
+  const turnsPerAge = 10;
+  if (state.turn > turnsPerAge && state.age < 3) {
+    state.age++;
+    state.turn = 1;
+    state.log.push({
+      timestamp: new Date().toISOString(),
+      message: `Entering Age ${state.age}`,
+      type: 'phase'
+    });
+  }
+
+  // Reset worker placement state for all players
+  for (const playerId of state.playerOrder) {
+    const playerState = state.players[playerId];
+    playerState.agentsRemaining = 3;
+    playerState.hasPassed = false;
+  }
+
+  // Clear Ground Board placements
+  state.groundBoard.placements = {};
+
+  // Calculate new turn order based on income
+  state.workerPlacement = {
+    passedPlayers: [],
+    ministryVisitors: [], // Reset - last round's visitors already got priority
+    placementOrder: calculateTurnOrder(state),
+    currentPlacerIndex: 0
+  };
+
+  // Reset reveal phase tracking
+  state.revealPhase = {
+    revealedHands: {},
+    resourcesCollected: {},
+    techAcquisitionsComplete: {},
+    marketPurchasesComplete: {}
+  };
+
+  // Draw cards to hand size of 5 for each player
+  for (const playerId of state.playerOrder) {
+    const playerState = state.players[playerId];
+    const cardsNeeded = 5 - (playerState.hand?.length || 0);
+
+    for (let i = 0; i < cardsNeeded; i++) {
+      if (playerState.deck.length === 0 && playerState.discardPile.length > 0) {
+        // Reshuffle discard into deck
+        playerState.deck = shuffleArray([...playerState.discardPile]);
+        playerState.discardPile = [];
+      }
+
+      if (playerState.deck.length > 0) {
+        playerState.hand.push(playerState.deck.pop());
       }
     }
   }
 
-  // Add log entry
+  // Refresh R&D Board (replenish technologies)
+  refreshRnDBoard(state);
+
+  // Refill Market Row
+  refreshMarketRow(state);
+
   state.log.push({
     timestamp: new Date().toISOString(),
-    message: `Player ended their turn`,
-    playerId,
-    type: 'turn'
+    message: `Turn ${state.turn} begins. Worker Placement phase started.`,
+    type: 'phase'
   });
+}
 
-  return { newState: state };
+// Shuffle array helper
+function shuffleArray(array) {
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+}
+
+// Refresh R&D Board with new technologies
+function refreshRnDBoard(state) {
+  // Fill empty slots on R&D board from tech bag
+  const rnDBoard = state.rnDBoard || { available: [] };
+  const targetSize = 6; // 6 technologies available
+
+  while (rnDBoard.available.length < targetSize && state.techBag && state.techBag.length > 0) {
+    rnDBoard.available.push(state.techBag.pop());
+  }
+
+  state.rnDBoard = rnDBoard;
+}
+
+// Refresh Market Row with new cards
+function refreshMarketRow(state) {
+  // Fill empty slots in market row from market deck
+  const marketRow = state.marketRow || [];
+  const targetSize = 4; // 4 cards in market row
+
+  while (marketRow.length < targetSize && state.marketDeck && state.marketDeck.length > 0) {
+    marketRow.push(state.marketDeck.pop());
+  }
+
+  state.marketRow = marketRow;
 }
 
 // Buy gas cubes
@@ -693,22 +952,30 @@ function processDrawCards(state, playerId, data) {
 // === GROUND BOARD ACTIONS ===
 
 // Place an agent on a Ground Board location
+// Worker placement: Place agent at a location using a card
+// Rules-compliant version: requires card with matching symbol, executes location action
 function processPlaceAgent(state, playerId, data) {
   const { locationId, cardIndex } = data;
   const playerState = state.players[playerId];
 
-  // Initialize ground board state if needed
-  if (!state.groundBoard) {
-    state.groundBoard = {
-      placements: {} // locationId -> { playerId, cardUsed }
-    };
+  // Validate phase
+  if (state.phase !== 'worker_placement') {
+    return { error: 'Can only place agents during worker placement phase' };
+  }
+
+  // Validate it's this player's turn to place
+  const currentPlacer = getCurrentPlacer(state);
+  if (currentPlacer !== playerId) {
+    return { error: 'Not your turn to place an agent' };
+  }
+
+  // Check if player has passed
+  if (playerState.hasPassed) {
+    return { error: 'You have already passed this round' };
   }
 
   // Check if player has agents available
-  const placedAgents = Object.values(state.groundBoard.placements)
-    .filter(p => p.playerId === playerId).length;
-
-  if (placedAgents >= (playerState.agents || 3)) {
+  if (playerState.agentsRemaining <= 0) {
     return { error: 'No agents available' };
   }
 
@@ -718,45 +985,283 @@ function processPlaceAgent(state, playerId, data) {
     return { error: 'Invalid location' };
   }
 
-  // Check if location is already occupied (for exclusive spots)
-  // Some locations allow multiple agents, but for simplicity we'll allow one per player
+  // Check if location is already occupied (each location allows one agent)
   const existingPlacement = state.groundBoard.placements[locationId];
   if (existingPlacement) {
     return { error: 'Location already occupied this round' };
   }
 
-  // Validate card if provided
-  let cardUsed = null;
-  if (cardIndex !== undefined && cardIndex >= 0) {
-    if (cardIndex >= playerState.hand.length) {
-      return { error: 'Invalid card index' };
-    }
-    const card = playerState.hand[cardIndex];
-    cardUsed = card;
-
-    // Check if card symbol matches location
-    if (!canPlaceAtLocation(card.symbol || 'any', locationId)) {
-      return { error: `Card symbol (${card.symbol}) does not match location (${location.symbol})` };
-    }
-
-    // Discard the card
-    playerState.discardPile.push(playerState.hand.splice(cardIndex, 1)[0]);
+  // Card is REQUIRED in rules-compliant mode
+  if (cardIndex === undefined || cardIndex < 0) {
+    return { error: 'Must play a card to place an agent' };
   }
+
+  if (cardIndex >= playerState.hand.length) {
+    return { error: 'Invalid card index' };
+  }
+
+  const card = playerState.hand[cardIndex];
+
+  // Check if card symbol matches location
+  if (!canPlaceAtLocation(card.symbol || 'any', locationId)) {
+    return { error: `Card symbol (${card.symbol}) does not match location (${location.symbol})` };
+  }
+
+  // Discard the card
+  const discardedCard = playerState.hand.splice(cardIndex, 1)[0];
+  playerState.discardPile.push(discardedCard);
 
   // Place the agent
   state.groundBoard.placements[locationId] = {
     playerId,
-    cardUsed: cardUsed ? cardUsed.name : null
+    cardUsed: discardedCard.name
   };
+
+  // Decrement available agents
+  playerState.agentsRemaining--;
 
   state.log.push({
     timestamp: new Date().toISOString(),
-    message: `Placed agent at ${location.name}`,
+    message: `Placed agent at ${location.name} using ${discardedCard.name}`,
     playerId,
     type: 'action'
   });
 
+  // Execute the location action immediately
+  const actionResult = executeLocationAction(state, playerId, locationId, discardedCard);
+  if (actionResult.error) {
+    // If location action fails, we still placed the agent but log the issue
+    state.log.push({
+      timestamp: new Date().toISOString(),
+      message: `Location action failed: ${actionResult.error}`,
+      playerId,
+      type: 'warning'
+    });
+  }
+
+  // Check if player should auto-pass (no agents left OR no playable cards)
+  const shouldAutoPass = playerState.agentsRemaining <= 0 || !hasPlayableCards(state, playerId);
+
+  if (shouldAutoPass) {
+    // Auto-pass this player
+    playerState.hasPassed = true;
+    state.workerPlacement.passedPlayers.push(playerId);
+    state.log.push({
+      timestamp: new Date().toISOString(),
+      message: `${playerState.faction.toUpperCase()} auto-passes (no agents or playable cards)`,
+      playerId,
+      type: 'system'
+    });
+  }
+
+  // Advance to next placer or transition phase
+  if (allPlayersPassed(state)) {
+    transitionToRevealPhase(state);
+  } else {
+    advanceToNextPlacer(state);
+  }
+
   return { newState: state };
+}
+
+// Pass action: Player chooses to stop placing agents this round
+function processPass(state, playerId) {
+  const playerState = state.players[playerId];
+
+  // Validate phase
+  if (state.phase !== 'worker_placement') {
+    return { error: 'Can only pass during worker placement phase' };
+  }
+
+  // Validate it's this player's turn to place
+  const currentPlacer = getCurrentPlacer(state);
+  if (currentPlacer !== playerId) {
+    return { error: 'Not your turn' };
+  }
+
+  // Check if already passed
+  if (playerState.hasPassed) {
+    return { error: 'Already passed this round' };
+  }
+
+  // Mark as passed
+  playerState.hasPassed = true;
+  state.workerPlacement.passedPlayers.push(playerId);
+
+  state.log.push({
+    timestamp: new Date().toISOString(),
+    message: `${playerState.faction.toUpperCase()} passes`,
+    playerId,
+    type: 'action'
+  });
+
+  // Check if all players have passed
+  if (allPlayersPassed(state)) {
+    transitionToRevealPhase(state);
+  } else {
+    advanceToNextPlacer(state);
+  }
+
+  return { newState: state };
+}
+
+// Check if player has any cards that match available locations
+function hasPlayableCards(state, playerId) {
+  const playerState = state.players[playerId];
+  const hand = playerState.hand || [];
+  const placements = state.groundBoard.placements || {};
+
+  // Get list of unoccupied locations
+  const availableLocations = Object.keys(GROUND_BOARD_LOCATIONS)
+    .filter(locId => !placements[locId]);
+
+  // Check if any card in hand matches any available location
+  for (const card of hand) {
+    const cardSymbol = card.symbol || 'any';
+    for (const locId of availableLocations) {
+      if (canPlaceAtLocation(cardSymbol, locId)) {
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
+
+// Transition from worker placement to reveal phase
+function transitionToRevealPhase(state) {
+  state.phase = 'reveal';
+
+  // Initialize reveal phase tracking
+  state.revealPhase = {
+    revealedHands: {},
+    resourcesCollected: {},
+    techAcquisitionsComplete: {},
+    marketPurchasesComplete: {}
+  };
+
+  // Auto-reveal all hands
+  for (const playerId of state.playerOrder) {
+    const playerState = state.players[playerId];
+    state.revealPhase.revealedHands[playerId] = [...(playerState.hand || [])];
+    state.revealPhase.resourcesCollected[playerId] = false;
+    state.revealPhase.techAcquisitionsComplete[playerId] = false;
+    state.revealPhase.marketPurchasesComplete[playerId] = false;
+  }
+
+  state.log.push({
+    timestamp: new Date().toISOString(),
+    message: 'All players have passed. Entering Reveal phase.',
+    type: 'phase'
+  });
+
+  // Auto-collect resources from revealed cards
+  collectRevealResources(state);
+}
+
+// Collect resources from revealed cards (Research, Influence, Gas)
+function collectRevealResources(state) {
+  for (const playerId of state.playerOrder) {
+    const playerState = state.players[playerId];
+    const revealedCards = state.revealPhase.revealedHands[playerId] || [];
+
+    let researchGained = 0;
+    let influenceGained = 0;
+    let hydrogenGained = 0;
+    let heliumGained = 0;
+
+    for (const card of revealedCards) {
+      // Cards may have reveal icons/bonuses
+      if (card.revealBonus) {
+        researchGained += card.revealBonus.research || 0;
+        influenceGained += card.revealBonus.influence || 0;
+        hydrogenGained += card.revealBonus.hydrogen || 0;
+        heliumGained += card.revealBonus.helium || 0;
+      }
+    }
+
+    // Engineers in barracks generate research
+    researchGained += playerState.engineers || 0;
+
+    // Apply gains
+    playerState.research = (playerState.research || 0) + researchGained;
+    playerState.influence = influenceGained; // Influence resets each round
+    playerState.gasCubes.hydrogen += hydrogenGained;
+    playerState.gasCubes.helium += heliumGained;
+
+    state.revealPhase.resourcesCollected[playerId] = true;
+
+    if (researchGained > 0 || influenceGained > 0 || hydrogenGained > 0 || heliumGained > 0) {
+      state.log.push({
+        timestamp: new Date().toISOString(),
+        message: `${playerState.faction.toUpperCase()} collected: ${researchGained} Research, ${influenceGained} Influence` +
+                 (hydrogenGained > 0 ? `, ${hydrogenGained} Hydrogen` : '') +
+                 (heliumGained > 0 ? `, ${heliumGained} Helium` : ''),
+        playerId,
+        type: 'reveal'
+      });
+    }
+  }
+}
+
+// Execute the action associated with a Ground Board location
+// This is a dispatcher that calls the appropriate handler
+function executeLocationAction(state, playerId, locationId, card) {
+  const playerState = state.players[playerId];
+
+  switch (locationId) {
+    case 'research-institute':
+      // Buy Research tokens for £3 each (handled separately via GAIN_RESEARCH)
+      return { success: true, message: 'May buy Research for £3 each' };
+
+    case 'design-bureau':
+      // Install upgrade to blueprint (handled via INSTALL_UPGRADE)
+      return { success: true, message: 'May install upgrade to blueprint' };
+
+    case 'construction-hall':
+      // Build a ship (handled via BUILD_SHIP)
+      return { success: true, message: 'May build a ship' };
+
+    case 'launchpad':
+      // Launch a ship (handled via LAUNCH_SHIP)
+      return { success: true, message: 'May launch a ship' };
+
+    case 'academy':
+      // Recruit crew (handled via RECRUIT_CREW)
+      return { success: true, message: 'May recruit crew' };
+
+    case 'flight-school':
+      // Upgrade Officer income track (handled via UPGRADE_OFFICER_INCOME)
+      return { success: true, message: 'May upgrade Officer income' };
+
+    case 'technical-institute':
+      // Upgrade Engineer income track (handled via UPGRADE_ENGINEER_INCOME)
+      return { success: true, message: 'May upgrade Engineer income' };
+
+    case 'the-bank':
+      // Take a loan (handled via TAKE_LOAN)
+      return { success: true, message: 'May take a loan' };
+
+    case 'ministry':
+      // Draw 2 cards, discard 1; gain turn priority; -1 helium cost
+      state.workerPlacement.ministryVisitors.push(playerId);
+      return { success: true, message: 'Gained turn priority for next round. May draw 2, discard 1.' };
+
+    case 'gas-depot':
+      // Buy gas (handled via BUY_GAS)
+      return { success: true, message: 'May buy gas' };
+
+    case 'insurance-bureau':
+      // Buy insurance (handled via BUY_INSURANCE)
+      return { success: true, message: 'May buy insurance' };
+
+    case 'weather-bureau':
+      // Peek at hazard deck for £2
+      return { success: true, message: 'May peek at hazard for £2' };
+
+    default:
+      return { error: `Unknown location: ${locationId}` };
+  }
 }
 
 // Recall all agents (end of round)

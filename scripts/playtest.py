@@ -171,18 +171,28 @@ def show_status(game_id=None):
 
 
 def end_phase(game_id=None):
-    """Have all players end their turn."""
+    """Have all players end their turn or pass depending on phase."""
     if game_id is None:
         game_id = get_game_id()
     if not game_id:
         print("No current game. Run 'setup' first.")
         return
 
-    print(">>> All players ending turn...")
-    for player in PLAYERS:
-        output = run_cli(player, "endturn", game_id)
-        if "✓" in output:
-            print(f"  {player}: done")
+    phase = get_phase(game_id)
+    print(f">>> Current phase: {phase}")
+
+    if phase == "WORKER_PLACEMENT":
+        print(">>> All players passing...")
+        for player in PLAYERS:
+            output = run_cli(player, "action", game_id, "PASS")
+            if "✓" in output or "passed" in output.lower():
+                print(f"  {player}: passed")
+    else:
+        print(">>> All players ending turn...")
+        for player in PLAYERS:
+            output = run_cli(player, "endturn", game_id)
+            if "✓" in output:
+                print(f"  {player}: done")
 
 
 def get_player_ships(player, game_id):
@@ -262,8 +272,95 @@ def get_rd_board(game_id):
     return techs
 
 
+def get_current_placer(game_id):
+    """Find which player should place an agent (during worker_placement phase)."""
+    output = strip_ansi(run_cli("playtest_germany", "state", game_id))
+    # Look for "Waiting for: player to place" or similar indicator
+    for line in output.split('\n'):
+        if 'Waiting for' in line or 'Current placer' in line:
+            for player in PLAYERS:
+                faction = player.replace('playtest_', '')
+                if faction in line.lower():
+                    return player
+    # Fallback: find player with YOUR TURN
+    return get_current_player(game_id)
+
+
+def get_player_hand(player, game_id):
+    """Get list of cards in player's hand with their symbols."""
+    output = strip_ansi(run_cli(player, "state", game_id))
+    cards = []
+    in_hand_section = False
+    for line in output.split('\n'):
+        if 'Hand:' in line or 'Your Hand' in line:
+            in_hand_section = True
+            continue
+        if in_hand_section:
+            if line.strip().startswith('│') or line.strip().startswith('-'):
+                # Parse card info
+                # Format might be: "0: Card Name (wrench)"
+                match = re.search(r'(\d+):\s*([^(]+)\s*\((\w+)\)', line)
+                if match:
+                    cards.append({
+                        'index': int(match.group(1)),
+                        'name': match.group(2).strip(),
+                        'symbol': match.group(3).strip()
+                    })
+            elif '└' in line or line.strip() == '' or 'Deck' in line:
+                break
+    return cards
+
+
+def get_available_locations(game_id):
+    """Get list of unoccupied Ground Board locations."""
+    output = strip_ansi(run_cli("playtest_germany", "state", game_id))
+    locations = []
+    # Ground Board locations and their symbols
+    location_symbols = {
+        'research-institute': 'wrench',
+        'design-bureau': 'wrench',
+        'construction-hall': 'wrench',
+        'launchpad': 'propeller',
+        'academy': 'coin',
+        'flight-school': 'coin',
+        'technical-institute': 'coin',
+        'the-bank': 'coin',
+        'ministry': 'propeller',
+        'gas-depot': 'propeller',
+        'insurance-bureau': 'coin',
+        'weather-bureau': 'propeller'
+    }
+
+    # Check which locations are occupied
+    occupied = set()
+    for line in output.split('\n'):
+        if 'placements' in line.lower() or 'agent at' in line.lower():
+            for loc_id in location_symbols:
+                if loc_id in line.lower():
+                    occupied.add(loc_id)
+
+    # Return unoccupied locations
+    for loc_id, symbol in location_symbols.items():
+        if loc_id not in occupied:
+            locations.append({'id': loc_id, 'symbol': symbol})
+
+    return locations
+
+
+def find_playable_card(cards, locations):
+    """Find a card that can be played at an available location."""
+    for card in cards:
+        card_symbol = card.get('symbol', 'any')
+        for loc in locations:
+            loc_symbol = loc.get('symbol', 'any')
+            # Card can play if symbols match or card is 'any'
+            if card_symbol == loc_symbol or card_symbol == 'any':
+                return card, loc
+    return None, None
+
+
 def autoplay(num_turns=5, game_id=None):
-    """Run smart AI for all players - acquires tech, launches ships, claims routes."""
+    """Run smart AI for all players with new worker placement phases."""
     if game_id is None:
         game_id = get_game_id()
     if not game_id:
@@ -283,113 +380,120 @@ def autoplay(num_turns=5, game_id=None):
 
         # Process all phases until we complete a full turn cycle
         phases_seen = set()
-        max_iterations = 20  # Safety limit
+        max_iterations = 50  # Safety limit (more iterations for worker placement)
 
-        for _ in range(max_iterations):
+        for iteration in range(max_iterations):
             phase = get_phase(game_id)
 
             # Check if we've completed a cycle
-            if phase in phases_seen and phase == "PLANNING":
+            if phase in phases_seen and phase == "WORKER_PLACEMENT":
                 break
             phases_seen.add(phase)
 
-            print(f"\n--- {phase.title()} Phase ---")
+            print(f"\n--- {phase.replace('_', ' ').title()} Phase ---")
 
-            if phase == "PLANNING":
-                # Each player draws cards
+            if phase == "WORKER_PLACEMENT":
+                # Worker placement: players take turns placing agents
+                placement_attempts = 0
+                max_placements = 20  # Safety limit for placement round
+
+                while placement_attempts < max_placements:
+                    placement_attempts += 1
+                    current = get_current_placer(game_id)
+
+                    if not current:
+                        # Check if phase changed (all passed)
+                        new_phase = get_phase(game_id)
+                        if new_phase != "WORKER_PLACEMENT":
+                            break
+                        continue
+
+                    # Get player's hand and available locations
+                    hand = get_player_hand(current, game_id)
+                    locations = get_available_locations(game_id)
+
+                    # Find a playable card
+                    card, location = find_playable_card(hand, locations)
+
+                    if card and location:
+                        # Place agent
+                        result = run_cli(current, "action", game_id, "PLACE_AGENT",
+                                       f"locationId={location['id']}", f"cardIndex={card['index']}")
+                        if "✓" in result or "success" in result.lower():
+                            print(f"  {current}: placed agent at {location['id']} using {card['name']}")
+                        elif "error" in result.lower():
+                            # If placement fails, pass
+                            result = run_cli(current, "action", game_id, "PASS")
+                            print(f"  {current}: passed (placement error)")
+                    else:
+                        # No playable cards, pass
+                        result = run_cli(current, "action", game_id, "PASS")
+                        print(f"  {current}: passed (no playable cards)")
+
+                    # Check if phase changed
+                    new_phase = get_phase(game_id)
+                    if new_phase != "WORKER_PLACEMENT":
+                        break
+
+            elif phase == "REVEAL":
+                # Reveal phase: players can acquire tech and buy market cards
+                for player in PLAYERS:
+                    # Try to acquire technology using research
+                    techs = get_rd_board(game_id)
+                    if techs:
+                        cheapest = min(techs, key=lambda t: t['cost'])
+                        result = run_cli(player, "action", game_id, "ACQUIRE_TECHNOLOGY_RESEARCH",
+                                       f"techId={cheapest['id']}")
+                        if "✓" in result:
+                            print(f"  {player}: acquired tech {cheapest['id']} with Research")
+
+                    # End turn for this player
+                    run_cli(player, "endturn", game_id)
+
+            elif phase == "INCOME_CLEANUP":
+                # Income/Cleanup: just end turn for all players
+                for player in PLAYERS:
+                    run_cli(player, "endturn", game_id)
+                print("  All players collected income and cleaned up")
+
+            # Legacy phase handling (for backwards compatibility during transition)
+            elif phase == "PLANNING":
                 for _ in range(4):
                     current = get_current_player(game_id)
                     if current:
-                        print(f"  {current}: drawing cards...")
                         run_cli(current, "draw", game_id, "2")
                         run_cli(current, "endturn", game_id)
 
             elif phase == "ACTIONS":
-                # Each player: buy gas, acquire tech, build, launch
                 for _ in range(4):
                     current = get_current_player(game_id)
                     if not current:
                         break
-
                     gas = get_gas_preference(current, game_id)
-                    print(f"  {current}: taking actions...")
-
-                    # Buy gas (smaller amount to save money for tech)
                     run_cli(current, "buygas", game_id, gas, "2")
-
-                    # Try to acquire a technology (advances progress!)
-                    techs = get_rd_board(game_id)
-                    if techs:
-                        cheapest = min(techs, key=lambda t: t['cost'])
-                        result = run_cli(current, "tech", game_id, cheapest['id'])
-                        if "✓" in result:
-                            print(f"    Acquired tech: {cheapest['id']}")
-
-                    # Try to build a ship
                     result = run_cli(current, "build", game_id, "1")
                     if "✓" in result:
-                        print(f"    Built a ship")
-
-                    # Try to launch ships from hangar
-                    ships = get_player_ships(current, game_id)
-                    for ship in ships['hangar'][:1]:  # Launch up to 1 per turn
-                        ship_id = ship['id'] if isinstance(ship, dict) else ship
-                        result = run_cli(current, "launch", game_id, ship_id, gas)
-                        if "✓" in result:
-                            print(f"    Launched: {ship_id}")
-                            # Refresh ships after launch to get updated stats
-                            ships = get_player_ships(current, game_id)
-
-                    # Also try to claim routes with already-launched ships
-                    routes = get_available_routes(game_id)
-                    for ship in ships['launched']:
-                        for route in routes:
-                            ship_range = ship.get('range', 1)
-                            ship_speed = ship.get('speed', 1)
-                            route_dist = route.get('distance', 1)
-                            route_speed = route.get('speed', 1)
-
-                            if ship_range >= route_dist and ship_speed >= route_speed:
-                                result = run_cli(current, "action", game_id, "CLAIM_ROUTE",
-                                               f"shipId={ship['id']}", f"routeId={route['id']}")
-                                if "✓" in result:
-                                    print(f"    Claimed {route['id']} with {ship['id']}")
-                                    routes.remove(route)
-                                    break
-
+                        print(f"  {current}: built a ship")
                     run_cli(current, "endturn", game_id)
 
             elif phase == "LAUNCH":
-                # Each player tries to claim routes with launched ships
                 for _ in range(4):
                     current = get_current_player(game_id)
                     if not current:
                         break
-
                     ships = get_player_ships(current, game_id)
                     routes = get_available_routes(game_id)
-
-                    # Try to claim routes that match ship capabilities
                     for ship in ships['launched']:
                         for route in routes:
-                            # Check if ship can handle this route
-                            ship_range = ship.get('range', 1)
-                            ship_speed = ship.get('speed', 1)
-                            route_dist = route.get('distance', 1)
-                            route_speed = route.get('speed', 1)
-
-                            if ship_range >= route_dist and ship_speed >= route_speed:
+                            if ship.get('range', 1) >= route.get('distance', 1):
                                 result = run_cli(current, "action", game_id, "CLAIM_ROUTE",
                                                f"shipId={ship['id']}", f"routeId={route['id']}")
                                 if "✓" in result:
-                                    print(f"  {current}: claimed {route['id']} with {ship['id']}")
-                                    routes.remove(route)  # Mark as claimed
-                                    break  # Move to next ship
-
+                                    print(f"  {current}: claimed {route['id']}")
+                                    break
                     run_cli(current, "endturn", game_id)
 
-            else:  # INCOME, CLEANUP
-                # Just advance through these phases
+            else:  # INCOME, CLEANUP, or unknown
                 for _ in range(8):
                     current = get_current_player(game_id)
                     if current:
@@ -399,8 +503,12 @@ def autoplay(num_turns=5, game_id=None):
 
             # Check if phase changed
             new_phase = get_phase(game_id)
-            if new_phase == phase:
-                # Phase didn't change, we might be stuck
+            if new_phase == phase and iteration > 5:
+                # Phase didn't change after multiple attempts, might be stuck
+                print(f"  Warning: Phase stuck at {phase}, forcing advance...")
+                for player in PLAYERS:
+                    run_cli(player, "action", game_id, "PASS")
+                    run_cli(player, "endturn", game_id)
                 break
 
         # Show brief status
