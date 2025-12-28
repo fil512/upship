@@ -18,6 +18,8 @@ import sys
 import re
 import os
 import json
+import urllib.request
+import urllib.error
 from datetime import datetime
 from pathlib import Path
 
@@ -26,6 +28,7 @@ PROJECT_ROOT = Path(__file__).parent.parent
 GAME_FILE = PROJECT_ROOT / ".upship-current-game"
 CLI_CMD = ["node", str(PROJECT_ROOT / "cli" / "upship.js")]
 PASSWORD = "test123456"
+API_BASE = "https://upship-production.up.railway.app"
 
 PLAYERS = ["playtest_germany", "playtest_britain", "playtest_usa", "playtest_italy"]
 FACTIONS = ["germany", "britain", "usa", "italy"]
@@ -579,6 +582,93 @@ def show_routes():
     print("  route_8: Rome → Vienna (distance 2, speed 1, income +3)")
 
 
+def get_session_cookie(player="playtest_germany"):
+    """Load session cookie for a player."""
+    session_file = PROJECT_ROOT / ".upship-sessions" / f"{player}.json"
+    if session_file.exists():
+        with open(session_file) as f:
+            session = json.load(f)
+            return session.get("cookie", "")
+    return ""
+
+
+def show_sessions():
+    """Show all playtest session info."""
+    sessions_dir = PROJECT_ROOT / ".upship-sessions"
+    print("=== Playtest Sessions ===\n")
+    for session_file in sorted(sessions_dir.glob("playtest_*.json")):
+        with open(session_file) as f:
+            session = json.load(f)
+            username = session.get("username", "unknown")
+            user_id = session.get("userId", "unknown")
+            print(f"{username}: {user_id[:8]}...")
+
+
+def debug_state(game_id=None):
+    """Fetch and display raw game state for debugging."""
+    if game_id is None:
+        game_id = get_game_id()
+    if not game_id:
+        print("No current game. Run 'setup' first.")
+        return
+
+    try:
+        url = f"{API_BASE}/api/state/{game_id}"
+        req = urllib.request.Request(url)
+        cookie = get_session_cookie()
+        if cookie:
+            req.add_header("Cookie", cookie)
+        with urllib.request.urlopen(req, timeout=10) as response:
+            data = json.loads(response.read().decode())
+
+        print("=== Raw Game State Debug ===\n")
+        print(f"Game ID: {game_id}")
+
+        # Handle nested state structure (API returns { gameState: { state: { ... } } })
+        gs = data.get('gameState', data)
+        state = gs.get('state', gs)
+
+        print(f"Phase: {gs.get('phase')}")
+        print(f"Age: {gs.get('age')} | Turn: {state.get('turn', gs.get('turnNumber'))} | Round: {state.get('round')}")
+        print(f"Current Player ID: {gs.get('currentPlayerId')}")
+        print(f"Current Player Index: {state.get('currentPlayerIndex')}")
+
+        # Worker placement tracking
+        wp = state.get('workerPlacement', {})
+        print(f"Worker Placement: {wp}")
+        print(f"Player Order: {state.get('playerOrder')}")
+
+        # Map player IDs to factions
+        players = state.get('players', {})
+        print("\nPlayers (id -> faction):")
+        for pid, pdata in players.items():
+            faction = pdata.get('faction', 'unknown')
+            agents = pdata.get('agentsRemaining', '?')
+            passed = pdata.get('passed', False)
+            print(f"  {pid[:8]}... -> {faction.upper()}: agents={agents}, passed={passed}")
+
+        # Ground board placements
+        ground = state.get('groundBoard', {})
+        placements = ground.get('placements', {})
+        if placements:
+            print("\nGround Board Placements:")
+            for loc, info in placements.items():
+                print(f"  {loc}: {info}")
+
+        # Show whose turn it actually is
+        order = state.get('playerOrder', [])
+        wp_idx = state.get('workerPlacementIndex')
+        if wp_idx is not None and order:
+            current_pid = order[wp_idx % len(order)]
+            current_faction = players.get(current_pid, {}).get('faction', 'unknown')
+            print(f"\n>>> Current placer: {current_faction.upper()} (index {wp_idx})")
+
+    except urllib.error.URLError as e:
+        print(f"Error fetching state: {e}")
+    except json.JSONDecodeError as e:
+        print(f"Error parsing response: {e}")
+
+
 def main():
     if len(sys.argv) < 2:
         print(__doc__)
@@ -636,6 +726,12 @@ def main():
 
     elif cmd == "routes":
         show_routes()
+
+    elif cmd == "debug":
+        debug_state()
+
+    elif cmd == "sessions":
+        show_sessions()
 
     else:
         print(f"Unknown command: {cmd}")
