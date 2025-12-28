@@ -78,9 +78,20 @@ def get_phase(game_id):
     return match.group(1) if match else "UNKNOWN"
 
 
-def get_gas_preference(player):
-    """Return preferred gas type for player."""
-    return "helium" if player == "playtest_usa" else "hydrogen"
+def get_gas_preference(player, game_id=None):
+    """Return preferred gas type for player. USA prefers helium, others prefer hydrogen."""
+    preferred = "helium" if player == "playtest_usa" else "hydrogen"
+
+    # If we have game_id, check if player has their preferred gas
+    if game_id:
+        output = strip_ansi(run_cli(player, "state", game_id))
+        # Look for gas reserves in output
+        if preferred == "helium" and "Helium: 0" in output:
+            return "hydrogen"  # Fall back to hydrogen if no helium
+        elif preferred == "hydrogen" and "Hydrogen: 0" in output:
+            return "helium"  # Fall back to helium if no hydrogen
+
+    return preferred
 
 
 def login_all_players():
@@ -175,18 +186,32 @@ def end_phase(game_id=None):
 
 
 def get_player_ships(player, game_id):
-    """Get list of ships for a player with their statuses."""
+    """Get list of ships for a player with their statuses and stats."""
     output = run_cli(player, "state", game_id)
-    ships = {'hangar': [], 'launched': []}
+    ships = {'hangar': [], 'launched': [], 'on_route': []}
+    current_ship = None
+
     for line in output.split('\n'):
         if 'ship_' in line:
             match = re.search(r'(ship_\d+_\d+)', line)
             if match:
                 ship_id = match.group(1)
+                current_ship = {'id': ship_id, 'range': 1, 'speed': 1}
                 if 'HANGAR' in line:
-                    ships['hangar'].append(ship_id)
+                    ships['hangar'].append(current_ship)
                 elif 'LAUNCHED' in line:
-                    ships['launched'].append(ship_id)
+                    ships['launched'].append(current_ship)
+                elif 'ON_ROUTE' in line:
+                    ships['on_route'].append(current_ship)
+        # Parse stats from line like "Range:2 Speed:2"
+        if current_ship and 'Range:' in line:
+            range_match = re.search(r'Range:(\d+)', line)
+            speed_match = re.search(r'Speed:(\d+)', line)
+            if range_match:
+                current_ship['range'] = int(range_match.group(1))
+            if speed_match:
+                current_ship['speed'] = int(speed_match.group(1))
+
     return ships
 
 
@@ -285,7 +310,7 @@ def autoplay(num_turns=5, game_id=None):
                     if not current:
                         break
 
-                    gas = get_gas_preference(current)
+                    gas = get_gas_preference(current, game_id)
                     print(f"  {current}: taking actions...")
 
                     # Buy gas (smaller amount to save money for tech)
@@ -306,10 +331,30 @@ def autoplay(num_turns=5, game_id=None):
 
                     # Try to launch ships from hangar
                     ships = get_player_ships(current, game_id)
-                    for ship_id in ships['hangar'][:1]:  # Launch up to 1 per turn
+                    for ship in ships['hangar'][:1]:  # Launch up to 1 per turn
+                        ship_id = ship['id'] if isinstance(ship, dict) else ship
                         result = run_cli(current, "launch", game_id, ship_id, gas)
                         if "✓" in result:
                             print(f"    Launched: {ship_id}")
+                            # Refresh ships after launch to get updated stats
+                            ships = get_player_ships(current, game_id)
+
+                    # Also try to claim routes with already-launched ships
+                    routes = get_available_routes(game_id)
+                    for ship in ships['launched']:
+                        for route in routes:
+                            ship_range = ship.get('range', 1)
+                            ship_speed = ship.get('speed', 1)
+                            route_dist = route.get('distance', 1)
+                            route_speed = route.get('speed', 1)
+
+                            if ship_range >= route_dist and ship_speed >= route_speed:
+                                result = run_cli(current, "action", game_id, "CLAIM_ROUTE",
+                                               f"shipId={ship['id']}", f"routeId={route['id']}")
+                                if "✓" in result:
+                                    print(f"    Claimed {route['id']} with {ship['id']}")
+                                    routes.remove(route)
+                                    break
 
                     run_cli(current, "endturn", game_id)
 
@@ -323,14 +368,22 @@ def autoplay(num_turns=5, game_id=None):
                     ships = get_player_ships(current, game_id)
                     routes = get_available_routes(game_id)
 
-                    # Try to claim a route with each launched ship
-                    for ship_id in ships['launched']:
+                    # Try to claim routes that match ship capabilities
+                    for ship in ships['launched']:
                         for route in routes:
-                            result = run_cli(current, "action", game_id, "CLAIM_ROUTE",
-                                           f"shipId={ship_id}", f"routeId={route['id']}")
-                            if "✓" in result:
-                                print(f"  {current}: claimed {route['id']}")
-                                break  # Move to next ship
+                            # Check if ship can handle this route
+                            ship_range = ship.get('range', 1)
+                            ship_speed = ship.get('speed', 1)
+                            route_dist = route.get('distance', 1)
+                            route_speed = route.get('speed', 1)
+
+                            if ship_range >= route_dist and ship_speed >= route_speed:
+                                result = run_cli(current, "action", game_id, "CLAIM_ROUTE",
+                                               f"shipId={ship['id']}", f"routeId={route['id']}")
+                                if "✓" in result:
+                                    print(f"  {current}: claimed {route['id']} with {ship['id']}")
+                                    routes.remove(route)  # Mark as claimed
+                                    break  # Move to next ship
 
                     run_cli(current, "endturn", game_id)
 

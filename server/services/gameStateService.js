@@ -60,6 +60,11 @@ const FACTION_CONFIG = {
 function createPlayerState(faction) {
   const config = FACTION_CONFIG[faction] || {};
 
+  // USA starts with helium due to their Helium Monopoly advantage
+  const startingGas = faction === 'usa'
+    ? { hydrogen: 0, helium: 2 }
+    : { hydrogen: 2, helium: 0 };
+
   return {
     faction,
     cash: 15,
@@ -68,7 +73,7 @@ function createPlayerState(faction) {
     engineerIncome: 1,
     pilots: 1,
     engineers: 2,
-    gasCubes: { hydrogen: 2, helium: 0 },
+    gasCubes: startingGas,
     agents: 3,
     research: 0, // Saved research tokens
     technologies: config.startingTechnologies || [],

@@ -397,9 +397,10 @@ function processBuyGas(state, playerId, data) {
   playerState.gasCubes[gasType] += amount;
 
   // Increase market price (unless USA buying helium)
+  // Cap prices at 8 to prevent late-game lockout
   const isUSA = playerState.faction === 'usa';
   if (!(isUSA && gasType === 'helium')) {
-    state.gasMarket[gasType] = Math.min(state.gasMarket[gasType] + 1, 10);
+    state.gasMarket[gasType] = Math.min(state.gasMarket[gasType] + 1, 8);
   }
 
   state.log.push({
@@ -453,6 +454,8 @@ function processAcquireTechnology(state, playerId, data) {
     state.age = 2;
     // Add Age 2 technologies to the tech bag
     addAgeTechnologies(state, 2);
+    // Refill R&D board with new techs
+    refillRDBoard(state);
     // Reset gas market prices for new age
     state.gasMarket = { hydrogen: 2, helium: 5 };
     state.log.push({
@@ -464,6 +467,8 @@ function processAcquireTechnology(state, playerId, data) {
     state.age = 3;
     // Add Age 3 technologies to the tech bag
     addAgeTechnologies(state, 3);
+    // Refill R&D board with new techs
+    refillRDBoard(state);
     // Reset gas market prices for new age
     state.gasMarket = { hydrogen: 2, helium: 5 };
     state.log.push({
@@ -971,6 +976,15 @@ function addAgeTechnologies(state, age) {
   }
 }
 
+// Refill R&D board to 4 slots from tech bag
+function refillRDBoard(state) {
+  state.rdBoard = state.rdBoard || [];
+  state.techBag = state.techBag || [];
+  while (state.rdBoard.length < 4 && state.techBag.length > 0) {
+    state.rdBoard.push(state.techBag.shift());
+  }
+}
+
 // Calculate specialization discount based on techs in same track
 function calculateSpecializationDiscount(playerTechs, techType) {
   const techsInTrack = playerTechs.filter(t => {
@@ -1050,6 +1064,8 @@ function processAcquireTechnologyResearch(state, playerId, data) {
   if (state.age === 1 && state.progressTrack >= thresholds.age2) {
     state.age = 2;
     addAgeTechnologies(state, 2);
+    // Refill R&D board with new techs
+    refillRDBoard(state);
     // Reset gas market prices for new age
     state.gasMarket = { hydrogen: 2, helium: 5 };
     state.log.push({
@@ -1060,6 +1076,8 @@ function processAcquireTechnologyResearch(state, playerId, data) {
   } else if (state.age === 2 && state.progressTrack >= thresholds.age3) {
     state.age = 3;
     addAgeTechnologies(state, 3);
+    // Refill R&D board with new techs
+    refillRDBoard(state);
     // Reset gas market prices for new age
     state.gasMarket = { hydrogen: 2, helium: 5 };
     state.log.push({
@@ -1356,8 +1374,10 @@ function processHazardCheck(state, playerId, data) {
 
   // Calculate safety rating
   // Base reliability from ship stats + crew bonus (1 per pilot)
+  // Helium ships get +1 safety (helium is non-flammable, unlike hydrogen)
   const shipStats = ship.stats || { reliability: 0 };
-  const safetyRating = (shipStats.reliability || 0) + (playerState.pilots || 0);
+  const heliumBonus = ship.gasType === 'helium' ? 1 : 0;
+  const safetyRating = (shipStats.reliability || 0) + (playerState.pilots || 0) + heliumBonus;
 
   // Compare to hazard difficulty
   const success = safetyRating >= hazard.difficulty;
@@ -1373,9 +1393,10 @@ function processHazardCheck(state, playerId, data) {
 
   if (success) {
     // Ship survives
+    const heliumNote = heliumBonus > 0 ? ' (helium +1)' : '';
     state.log.push({
       timestamp: new Date().toISOString(),
-      message: `Hazard check PASSED: ${hazard.type} (${hazard.difficulty}) vs Safety ${safetyRating}`,
+      message: `Hazard check PASSED: ${hazard.type} (${hazard.difficulty}) vs Safety ${safetyRating}${heliumNote}`,
       playerId,
       type: 'hazard'
     });

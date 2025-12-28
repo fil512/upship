@@ -694,7 +694,7 @@ const commands = {
       actionData
     });
 
-    if (response.data.success) {
+    if (response.status >= 200 && response.status < 300 && response.data.success) {
       console.log(c(COLORS.green, `✓ ${actionType} executed successfully`));
 
       // Show latest log entry
@@ -704,7 +704,8 @@ const commands = {
         console.log(`  ${c(COLORS.gray, latest.message)}`);
       }
     } else {
-      console.log(c(COLORS.red, `✗ Failed: ${response.data.error || 'Unknown error'}`));
+      const errorMsg = response.data.error || response.data.rawResponse || `HTTP ${response.status}`;
+      console.log(c(COLORS.red, `✗ Failed: ${errorMsg}`));
     }
   },
 
@@ -794,18 +795,20 @@ const commands = {
       return;
     }
 
-    const state = response.data.state;
+    const state = response.data.gameState.state;
     const routes = state.map?.routes || [];
 
     console.log('');
     console.log(c(COLORS.bright, `Available Routes (Age ${state.age}):`));
+    console.log(c(COLORS.gray, '  Ships must meet minimum Range (≥ distance) and Speed requirements.'));
     console.log('─'.repeat(70));
 
     for (const route of routes) {
       const claimed = route.claimed ? c(COLORS.red, ' [CLAIMED]') : c(COLORS.green, ' [OPEN]');
-      const stats = `distance ${route.distance}, speed ${route.speed || 1}, income +${route.income}`;
+      const speedReq = route.speed || 1;
+      const requirements = `requires Range ≥${route.distance}, Speed ≥${speedReq} → income +${route.income}`;
       console.log(`  ${c(COLORS.cyan, route.id.padEnd(10))} │ ${route.from} → ${route.to}${claimed}`);
-      console.log(`  ${''.padEnd(10)} │ ${c(COLORS.gray, stats)}`);
+      console.log(`  ${''.padEnd(10)} │ ${c(COLORS.gray, requirements)}`);
     }
     console.log('');
   },
