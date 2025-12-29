@@ -62,7 +62,23 @@ npm run migrate          # Run pending database migrations
 npm run migrate:down     # Rollback last migration
 npm run migrate:status   # Check migration status
 npm run cli -- <args>    # Run CLI tool (see below)
+npm run lint             # Run ESLint
+npm test                 # Run Jest tests
 ```
+
+## Pre-Push Validation
+
+**IMPORTANT**: Before pushing any changes to the repository, Claude MUST:
+
+1. **Run linting**: `npm run lint` - Fix all lint errors before committing
+2. **Run tests**: `npm test` - Ensure all tests pass
+
+If either check fails:
+- Fix the issues before proceeding
+- Re-run the checks to confirm the fix
+- Only push once both pass with zero errors
+
+This is mandatory for all code changes, no exceptions.
 
 ## CLI Tool
 
