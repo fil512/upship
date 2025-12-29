@@ -275,7 +275,7 @@ Determine turn order by **Income Track position** (lowest goes first). This crea
 | Symbol | Locations |
 |--------|-----------|
 | **Wrench** | Design Bureau, Construction Hall, Gas Depot, Technical Institute |
-| **Coin** | Academy, Flight School, The Bank, Insurance Bureau |
+| **Coin** | Academy, Flight School, Government Liaison, Insurance Bureau |
 | **Propeller** | Research Institute, Launchpad, Ministry, Weather Bureau |
 | **Any** | Can visit any location |
 
@@ -287,12 +287,19 @@ Players start with 2 Agents. When your **Officer Income Track reaches +3**, imme
 
 After all players have revealed:
 
-1. **Pay Engineer Upkeep:** Deduct £1 per Engineer in Barracks.
-2. **Collect Income:** Gain £ equal to Income Track position.
-3. **Collect Crew Income:** Gain Officers and Engineers per your Income Tracks.
-4. **Check Age Transition:** If Progress Track reached threshold, trigger Age Transition (see Section 12).
-5. **Refresh Agents:** Return all Agents to player supplies.
-6. **Draw Cards:** Draw until you have 5 cards (if fewer).
+1. **Collect Income:** Gain £ equal to your Income Track minus Engineers in Barracks. If this is negative, you must take loans until solvent.
+2. **Collect Crew Income:** Gain Officers and Engineers per your Income Tracks.
+3. **Check Age Transition:** If Progress Track reached threshold, trigger Age Transition (see Section 12).
+4. **Refresh Agents:** Return all Agents to player supplies.
+5. **Draw Cards:** Draw until you have 5 cards (if fewer).
+
+## 5.3 Loans (Free Action)
+
+You may take a loan at any time during your turn—this does not require an Agent or card.
+
+**Effect:** Gain £30 immediately. Reduce your Income Track by 3 positions.
+
+**Debt Limit:** Your Income Track cannot go below −10. If a loan would push you below −10, you cannot take it. If forced below −10 during Income & Cleanup, you are **bankrupt**—immediately lose 10 VP and reset your Income Track to 0.
 
 ---
 
@@ -380,13 +387,13 @@ See **Section 8: Launching Ships** for the complete procedure.
 
 **Effect:** Increase Engineer Income Track by 1 step.
 
-## 6.8 The Bank (Coin)
+## 6.8 Government Liaison (Coin)
 
-**Action:** Take a loan.
+**Action:** Send officers to secure government backing.
 
-**Effect:** Gain £30 immediately.
+**Cost:** 1–3 Officers (from Barracks to shared supply).
 
-**Penalty:** Reduce Income Track by 3 positions permanently.
+**Effect:** Increase your Income Track by 1 step per Officer spent.
 
 ## 6.9 Ministry (Propeller)
 
@@ -545,10 +552,10 @@ Technologies represent patents and manufacturing capability. Acquire them from t
 
 ### The R&D Board
 
-Draw tiles to fill the board at the start of each round:
+Draw tiles to fill the board after each player's Reveal turn:
 
-| Age | Tiles Drawn |
-|-----|-------------|
+| Age | Tiles Available |
+|-----|-----------------|
 | I | 4 |
 | II | 5 |
 | III | 6 |
@@ -609,7 +616,7 @@ The game features three map boards, one per Age.
 
 ## 10.1 Route Requirements
 
-Each route shows minimum stats your Blueprint must meet:
+Each route shows minimum stats your Blueprint must meet. Below are some examples. See [Appendix F](appendix.md#appendix-f-routes) for the full list of routes.
 
 | Example Route | Requirements |
 |---------------|--------------|
@@ -687,6 +694,7 @@ When claiming a route, choose one endpoint city and gain its bonus immediately (
 **Age II — The Great War (Greater Europe)**
 - Scale: Continental
 - Theme: Industrial and military
+- **No Routes:** Instead of claiming routes, players draw and complete **Military Contracts** (bombing runs, reconnaissance, resupply missions). See [Appendix G](appendix.md#appendix-g-military-contracts).
 - Placement: First ship must launch from **Home Base**; subsequent ships connect to your network
 
 **Age III — The Golden Age (The Atlantic)**
@@ -879,9 +887,13 @@ Each nation has unique advantages and constraints.
 | II | Home Base | Must connect |
 | III | Any Major Hub | Must connect |
 
-## 14.4 Loans and Bankruptcy
+## 14.4 Loans
 
-If Income goes negative, pay the difference from Cash. If you cannot pay, discard Technologies (removed from game) until solvent.
+Loans are a free action—take one anytime on your turn without using an Agent or card. Each loan gives £30 but reduces Income by 3.
+
+During Income & Cleanup, if your net income (Income Track − Engineers) is negative, you must take loans until solvent.
+
+**Debt Limit:** Income cannot go below −10. If forced below −10, you are bankrupt: lose 10 VP and reset Income to 0.
 
 ## 14.5 The Hindenburg Disaster
 
@@ -930,8 +942,10 @@ When Catastrophic Explosion occurs during a Luxury Launch in Age III using Hydro
 | **Install** | Place an Upgrade tile on Blueprint | §9.2 |
 | **Launch** | Send a ship to claim a route | §8 |
 | **Lift** | Upward force from gas (5 per cube) | §9.3 |
+| **Loan** | Free action: gain £30, reduce Income by 3 (limit: Income ≥ −10) | §5.3 |
 | **Luxury** | Ship stat for passenger comfort | §4.2 |
-| **Market Deck** | Purchasable crew cards | §11.4 |
+| **Market Deck** | Purchasable crew cards | §11.4, Appendix G |
+| **Military Contract** | Age II mission card replacing routes | §10.5, Appendix F |
 | **Officer** | Crew token required to launch (1/2/3 per Age) | §4.3 |
 | **Payload** | Upgrade type for cargo and passengers | §4.2 |
 | **Physics Check** | Lift ≥ Weight requirement | §4.2 |
@@ -941,7 +955,7 @@ When Catastrophic Explosion occurs during a Luxury Launch in Age III using Hydro
 | **Reliability** | Ship stat for mechanical soundness | §4.2 |
 | **Research** | Resource for acquiring Technologies (Research Level + Engineers + cards) | §9.1 |
 | **Research Level** | Track showing base Research when you Reveal | §4.6 |
-| **Route** | Connection between cities on the map | §10 |
+| **Route** | Connection between cities on the map | §10, Appendix E |
 | **Slot** | Empty space for Upgrade installation | §4.2 |
 | **Speed** | Ship stat for velocity | §4.2 |
 | **Swap** | One installation or removal at Design Bureau | §6.2 |
@@ -959,7 +973,7 @@ When Catastrophic Explosion occurs during a Luxury Launch in Age III using Hydro
 1. **Agent Turns:** On your turn, either:
    - Place an Agent (play matching card, execute action), OR
    - Reveal (show hand, gain resources, acquire Technologies, purchase cards, replenish markets)
-2. **Income & Cleanup:** Pay upkeep, collect income, refresh agents, draw cards
+2. **Income & Cleanup:** Collect income (Income Track − Engineers), collect crew, refresh agents, draw cards
 
 ## Key Formulas
 
@@ -993,7 +1007,7 @@ When Catastrophic Explosion occurs during a Luxury Launch in Age III using Hydro
 | Symbol | Locations |
 |--------|-----------|
 | Wrench | Design Bureau, Construction Hall, Gas Depot, Technical Institute |
-| Coin | Academy, Flight School, The Bank, Insurance Bureau |
+| Coin | Academy, Flight School, Government Liaison, Insurance Bureau |
 | Propeller | Research Institute, Launchpad, Ministry, Weather Bureau |
 
 ## Scoring Summary
@@ -1039,7 +1053,28 @@ Difficulty 4–5 against Speed, Reliability, Ceiling, or Range.
 
 ---
 
-# APPENDIX E: MARKET DECK
+# APPENDIX E: ROUTES
+
+See [Appendix F in the separate Appendix document](appendix.md#appendix-f-routes) for complete route listings:
+
+- **Age I Routes (12):** Regional Western European routes
+- **Age III Routes (16):** Hemispheric Atlantic routes, including 8 Luxury routes
+
+---
+
+# APPENDIX F: MILITARY CONTRACTS
+
+See [Appendix G in the separate Appendix document](appendix.md#appendix-g-military-contracts) for all 20 Military Contract cards:
+
+- **Bombing Runs (6):** Strike missions with high payouts
+- **Reconnaissance (5):** Intelligence gathering missions
+- **Resupply Missions (5):** Logistics and supply deliveries
+- **Naval Patrols (2):** Maritime scouting operations
+- **Artillery Observation (2):** Fire direction support
+
+---
+
+# APPENDIX G: MARKET DECK
 
 The Market Deck contains 30 purchasable crew cards in five categories:
 
@@ -1048,7 +1083,7 @@ The Market Deck contains 30 purchasable crew cards in five categories:
 - **Research Personnel (5):** Technology acquisition support
 - **Organizations (5):** Powerful unique abilities
 
-See separate Appendix document for complete card listings.
+See [Appendix H in the separate Appendix document](appendix.md#appendix-h-market-deck) for complete card listings.
 
 ---
 
