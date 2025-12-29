@@ -1,12 +1,109 @@
 /**
  * Rules Compliance Tests - Routes and City Bonuses
- * Tests for correct implementation of Section 10.4 (City Bonuses)
+ * Tests for correct implementation of Section 10.4 (City Bonuses) and Appendix F (Routes)
  */
 
 const { createTestGameState } = require('../../fixtures/testData');
 const { CITY_BONUSES } = require('../../../server/data/cities');
 
+// We need to access the route creation functions from gameStateService
+let createAgeIMap, createAgeIIIMap;
+try {
+  const gameStateService = require('../../../server/services/gameStateService');
+  createAgeIMap = gameStateService.createAgeIMap;
+  createAgeIIIMap = gameStateService.createAgeIIIMap;
+} catch (e) {
+  // Functions may not be exported yet
+}
+
 describe('Rules Compliance - Routes and City Bonuses', () => {
+
+  describe('GAP-040: Route VP values per Appendix F', () => {
+    it('should have Age I routes with correct VP values', () => {
+      if (!createAgeIMap) {
+        // Test using the function directly if not exported
+        const gameStateService = require('../../../server/services/gameStateService');
+        createAgeIMap = gameStateService.createAgeIMap;
+      }
+      const map = createAgeIMap();
+
+      // Find specific routes and verify VP
+      const rhineValley = map.routes.find(r => r.name === 'Rhine Valley' || (r.from === 'Frankfurt' && r.to === 'Cologne'));
+      const imperialCircuit = map.routes.find(r => r.name === 'Imperial Circuit' || (r.from === 'London' && r.to === 'Berlin'));
+
+      // Per Appendix F: Rhine Valley = 1 VP, Imperial Circuit = 3 VP
+      expect(rhineValley).toBeDefined();
+      expect(rhineValley.vp).toBe(1);
+
+      if (imperialCircuit) {
+        expect(imperialCircuit.vp).toBe(3);
+      }
+    });
+
+    it('should have all Age I routes with vp property', () => {
+      if (!createAgeIMap) {
+        const gameStateService = require('../../../server/services/gameStateService');
+        createAgeIMap = gameStateService.createAgeIMap;
+      }
+      const map = createAgeIMap();
+
+      map.routes.forEach(route => {
+        expect(route).toHaveProperty('vp');
+        expect(typeof route.vp).toBe('number');
+        expect(route.vp).toBeGreaterThanOrEqual(1);
+        expect(route.vp).toBeLessThanOrEqual(6);
+      });
+    });
+  });
+
+  describe('GAP-042: Age III routes per Appendix F', () => {
+    it('should have createAgeIIIMap function', () => {
+      const gameStateService = require('../../../server/services/gameStateService');
+      expect(gameStateService.createAgeIIIMap).toBeDefined();
+    });
+
+    it('should have 16 Age III routes', () => {
+      const gameStateService = require('../../../server/services/gameStateService');
+      const map = gameStateService.createAgeIIIMap();
+      expect(map.routes.length).toBe(16);
+    });
+
+    it('should have correct Hindenburg Route as highest VP route', () => {
+      const gameStateService = require('../../../server/services/gameStateService');
+      const map = gameStateService.createAgeIIIMap();
+
+      const hindenburgRoute = map.routes.find(r => r.name === 'Hindenburg Route');
+      expect(hindenburgRoute).toBeDefined();
+      expect(hindenburgRoute.from).toBe('Frankfurt');
+      expect(hindenburgRoute.to).toBe('Lakehurst');
+      expect(hindenburgRoute.vp).toBe(6);
+      expect(hindenburgRoute.luxury).toBe(2);
+      expect(hindenburgRoute.income).toBe(12);
+    });
+
+    it('should have luxury routes marked with luxury property', () => {
+      const gameStateService = require('../../../server/services/gameStateService');
+      const map = gameStateService.createAgeIIIMap();
+
+      // Per Appendix F, 6 routes have luxury requirements:
+      // Empire State Express (1), Imperial Airship Route (1), California Clipper (1),
+      // Graf Zeppelin Route (1), Transatlantic Luxury (2), Hindenburg Route (2)
+      const luxuryRoutes = map.routes.filter(r => r.luxury && r.luxury > 0);
+      expect(luxuryRoutes.length).toBe(6);
+    });
+
+    it('should have all Age III routes with vp property', () => {
+      const gameStateService = require('../../../server/services/gameStateService');
+      const map = gameStateService.createAgeIIIMap();
+
+      map.routes.forEach(route => {
+        expect(route).toHaveProperty('vp');
+        expect(typeof route.vp).toBe('number');
+        expect(route.vp).toBeGreaterThanOrEqual(2);
+        expect(route.vp).toBeLessThanOrEqual(6);
+      });
+    });
+  });
 
   describe('GAP-022: City Bonuses data per Section 10.4', () => {
     it('should have London bonus of +£3', () => {

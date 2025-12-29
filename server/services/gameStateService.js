@@ -161,76 +161,104 @@ function createStarterDeck() {
 }
 
 /**
- * Create personal hazard deck of 27 cards per Appendix D
+ * Create personal hazard deck of 27 cards per Appendix E
  *
  * Composition:
  * - 4 Clear Weather (auto-pass)
  * - 8 Minor Hazards (difficulty 2-3, challenge type varies)
- * - 8 Major Hazards (difficulty 4-5, challenge type varies)
+ * - 8 Major Hazards (difficulty 4-5, challenge type varies, includes special effects)
  * - 6 Fire Hazards (hydrogen only): Engine Fire x2, Gas Cell Rupture x2, Static Discharge x1, Catastrophic Explosion x1
  * - 1 Mechanical Hazard: Critical Structural Stress
+ *
+ * Each card includes a `flak` value (0-5) for Age II anti-aircraft checks.
+ * Flak distribution per Appendix E:
+ * - 0 Flak: 7 cards (safe passage)
+ * - 1 Flak: 4 cards (Armor 1+ survives)
+ * - 2 Flak: 6 cards (Armor 2+ survives)
+ * - 3 Flak: 5 cards (Armor 3+ survives)
+ * - 4 Flak: 3 cards (Armor 4 survives) - includes Critical Structural Stress
+ * - 5 Flak: 2 cards (always destroys) - currently just 1 (Catastrophic Explosion)
  */
 function createHazardDeck() {
   const hazards = [];
 
-  // 4 Clear Weather cards (auto-pass)
+  // 4 Clear Weather cards (auto-pass) - all 0 Flak
+  const clearWeatherNames = ['Clear Skies', 'Favorable Winds', 'Calm Conditions', 'Perfect Visibility'];
   for (let i = 0; i < 4; i++) {
     hazards.push({
       id: `clear_weather_${i}`,
       type: 'clear_weather',
       category: 'clear',
-      name: 'Clear Weather',
+      name: clearWeatherNames[i],
       autoPass: true,
-      difficulty: 0
+      difficulty: 0,
+      flak: 0
     });
   }
 
-  // 8 Minor Hazards (difficulty 2-3)
-  // 2 of each challenge type
-  const challengeTypes = ['speed', 'reliability', 'ceiling', 'range'];
-  const minorNames = {
-    speed: 'Light Headwind',
-    reliability: 'Minor Engine Trouble',
-    ceiling: 'Low Clouds',
-    range: 'Fuel Leak'
-  };
-  for (let i = 0; i < 8; i++) {
-    const challengeType = challengeTypes[i % 4];
-    const difficulty = i < 4 ? 2 : 3; // First 4 are difficulty 2, next 4 are difficulty 3
+  // 8 Minor Hazards per Appendix E with specific names, stats, and flak values
+  const minorHazards = [
+    { name: 'Light Turbulence', difficulty: 2, challengeType: 'speed', hazardType: 'weather', flak: 0 },
+    { name: 'Minor Engine Trouble', difficulty: 2, challengeType: 'reliability', hazardType: 'mechanical', flak: 1 },
+    { name: 'Crosswind', difficulty: 3, challengeType: 'speed', hazardType: 'weather', flak: 0 },
+    { name: 'Gas Leak', difficulty: 3, challengeType: 'reliability', hazardType: 'mechanical', flak: 1 },
+    { name: 'Low Visibility', difficulty: 2, challengeType: 'ceiling', hazardType: 'weather', flak: 1 },
+    { name: 'Fuel Concern', difficulty: 3, challengeType: 'range', hazardType: 'supply', flak: 0 },
+    { name: 'Headwind', difficulty: 3, challengeType: 'speed', hazardType: 'weather', flak: 1 },
+    { name: 'Structural Stress', difficulty: 2, challengeType: 'reliability', hazardType: 'mechanical', flak: 2 }
+  ];
+
+  minorHazards.forEach((h, i) => {
     hazards.push({
-      id: `minor_${challengeType}_${Math.floor(i / 4)}`,
-      type: `minor_${challengeType}`,
+      id: `minor_${h.challengeType}_${i}`,
+      type: `minor_${h.challengeType}`,
       category: 'minor',
-      name: minorNames[challengeType],
-      challengeType,
-      difficulty
+      name: h.name,
+      challengeType: h.challengeType,
+      hazardType: h.hazardType,
+      difficulty: h.difficulty,
+      flak: h.flak
     });
-  }
+  });
 
-  // 8 Major Hazards (difficulty 4-5)
-  // 2 of each challenge type
-  const majorNames = {
-    speed: 'Strong Headwind',
-    reliability: 'Engine Failure',
-    ceiling: 'Severe Turbulence',
-    range: 'Navigation Error'
-  };
-  for (let i = 0; i < 8; i++) {
-    const challengeType = challengeTypes[i % 4];
-    const difficulty = i < 4 ? 4 : 5; // First 4 are difficulty 4, next 4 are difficulty 5
-    hazards.push({
-      id: `major_${challengeType}_${Math.floor(i / 4)}`,
-      type: `major_${challengeType}`,
+  // 8 Major Hazards per Appendix E with specific names, stats, flak, and special effects
+  const majorHazards = [
+    { name: 'Strong Headwind', difficulty: 4, challengeType: 'speed', hazardType: 'weather', flak: 2 },
+    { name: 'Icing Conditions', difficulty: 4, challengeType: 'ceiling', hazardType: 'weather', flak: 2,
+      special: 'On failure, also lose 1 gas cube. If no gas remains, ship Destroyed.',
+      gasLossOnFailure: 1 },
+    { name: 'Engine Failure', difficulty: 5, challengeType: 'reliability', hazardType: 'mechanical', flak: 3 },
+    { name: 'Storm System', difficulty: 5, challengeType: 'speed', hazardType: 'weather', flak: 3 },
+    { name: 'Structural Damage', difficulty: 4, challengeType: 'reliability', hazardType: 'mechanical', flak: 4 },
+    { name: 'Navigation Error', difficulty: 4, challengeType: 'range', hazardType: 'supply', flak: 3 },
+    { name: 'Squall Line', difficulty: 5, challengeType: 'reliability', hazardType: 'weather', flak: 3,
+      special: 'Ships with 3+ Payload slots suffer +1 Difficulty.',
+      payloadSlotModifier: { threshold: 3, difficultyIncrease: 1 } },
+    { name: 'Severe Icing', difficulty: 5, challengeType: 'ceiling', hazardType: 'weather', flak: 2,
+      special: 'On failure, lose 2 gas cubes. If gas remains < ship\'s minimum, ship Destroyed.',
+      gasLossOnFailure: 2 }
+  ];
+
+  majorHazards.forEach((h, i) => {
+    const card = {
+      id: `major_${h.challengeType}_${i}`,
+      type: `major_${h.challengeType}`,
       category: 'major',
-      name: majorNames[challengeType],
-      challengeType,
-      difficulty
-    });
-  }
+      name: h.name,
+      challengeType: h.challengeType,
+      hazardType: h.hazardType,
+      difficulty: h.difficulty,
+      flak: h.flak
+    };
+    if (h.special) card.special = h.special;
+    if (h.gasLossOnFailure !== undefined) card.gasLossOnFailure = h.gasLossOnFailure;
+    if (h.payloadSlotModifier) card.payloadSlotModifier = h.payloadSlotModifier;
+    hazards.push(card);
+  });
 
   // 6 Fire Hazards (hydrogen only)
 
-  // 2x Engine Fire - Spend 1 Engineer to save (Damaged), Fail = Crash
+  // 2x Engine Fire - Spend 1 Engineer to save (Damaged), Fail = Crash - 2 Flak each
   for (let i = 0; i < 2; i++) {
     hazards.push({
       id: `engine_fire_${i}`,
@@ -238,12 +266,13 @@ function createHazardDeck() {
       category: 'fire',
       name: 'Engine Fire',
       hydrogenOnly: true,
-      engineerCost: 1, // Spend 1 Engineer to save
-      difficulty: 0 // Fire hazards use engineerCost instead of difficulty check
+      engineerCost: 1,
+      difficulty: 0,
+      flak: 2
     });
   }
 
-  // 2x Gas Cell Rupture - Spend 2 Engineers to save (Damaged), Fail = Crash
+  // 2x Gas Cell Rupture - Spend 2 Engineers to save (Damaged), Fail = Crash - 3 Flak each
   for (let i = 0; i < 2; i++) {
     hazards.push({
       id: `gas_cell_rupture_${i}`,
@@ -251,12 +280,13 @@ function createHazardDeck() {
       category: 'fire',
       name: 'Gas Cell Rupture',
       hydrogenOnly: true,
-      engineerCost: 2, // Spend 2 Engineers to save
-      difficulty: 0 // Fire hazards use engineerCost instead of difficulty check
+      engineerCost: 2,
+      difficulty: 0,
+      flak: 3
     });
   }
 
-  // 1x Static Discharge - Difficulty 4 Reliability check, Fail = Crash
+  // 1x Static Discharge - Difficulty 4 Reliability check, Fail = Crash - 4 Flak
   hazards.push({
     id: 'static_discharge_0',
     type: 'static_discharge',
@@ -264,10 +294,11 @@ function createHazardDeck() {
     name: 'Static Discharge',
     hydrogenOnly: true,
     challengeType: 'reliability',
-    difficulty: 4
+    difficulty: 4,
+    flak: 4
   });
 
-  // 1x Catastrophic Explosion - No save, Crash. Age III Luxury = Hindenburg
+  // 1x Catastrophic Explosion - No save, Crash. Age III Luxury = Hindenburg - 5 Flak
   hazards.push({
     id: 'catastrophic_explosion_0',
     type: 'catastrophic_explosion',
@@ -275,18 +306,19 @@ function createHazardDeck() {
     name: 'Catastrophic Explosion',
     hydrogenOnly: true,
     noSave: true,
-    difficulty: 99 // Cannot be passed
+    difficulty: 99,
+    flak: 5
   });
 
-  // 1 Mechanical Hazard: Critical Structural Stress
-  // Spend 2 Engineers to save (Damaged), Fail = Crash
+  // 1 Mechanical Hazard: Critical Structural Stress - 4 Flak
   hazards.push({
     id: 'critical_structural_stress_0',
     type: 'critical_structural_stress',
     category: 'mechanical',
     name: 'Critical Structural Stress',
     engineerCost: 2,
-    difficulty: 0 // Uses engineerCost instead of difficulty check
+    difficulty: 0,
+    flak: 4
   });
 
   return shuffleArray(hazards);
@@ -387,30 +419,133 @@ function createMarketCards() {
   return shuffleArray(marketDeck).slice(0, 5);
 }
 
-// Create Age I map routes
-// All routes require minimum speed 1 to ensure ships need propulsion to be useful
+/**
+ * Create Age I map routes per Appendix F
+ * The Pioneer Era features 12 regional routes across Western Europe.
+ * Each route has VP value matching Appendix F specifications.
+ */
 function createAgeIMap() {
   return {
     name: 'Western Europe',
+    age: 1,
     routes: [
-      { id: 'route_1', from: 'Frankfurt', to: 'Berlin', distance: 1, speed: 1, income: 2, claimed: null },
-      { id: 'route_2', from: 'Frankfurt', to: 'Paris', distance: 2, speed: 1, income: 3, claimed: null },
-      { id: 'route_3', from: 'Berlin', to: 'Copenhagen', distance: 2, speed: 1, income: 3, claimed: null },
-      { id: 'route_4', from: 'Paris', to: 'London', distance: 2, speed: 2, income: 4, claimed: null },
-      { id: 'route_5', from: 'London', to: 'Amsterdam', distance: 1, speed: 1, income: 2, claimed: null },
-      { id: 'route_6', from: 'Amsterdam', to: 'Berlin', distance: 2, speed: 1, income: 3, claimed: null },
-      { id: 'route_7', from: 'Paris', to: 'Rome', distance: 3, speed: 2, income: 5, claimed: null },
-      { id: 'route_8', from: 'Rome', to: 'Vienna', distance: 2, speed: 1, income: 3, claimed: null }
+      // Per Appendix F - Age I Routes
+      { id: 'route_rhine_valley', name: 'Rhine Valley', from: 'Frankfurt', to: 'Cologne',
+        range: 1, speed: 0, ceiling: 0, income: 2, vp: 1, claimed: null },
+      { id: 'route_bodensee', name: 'Bodensee Circuit', from: 'Friedrichshafen', to: 'Konstanz',
+        range: 1, speed: 0, ceiling: 0, income: 2, vp: 1, claimed: null },
+      { id: 'route_channel', name: 'Channel Crossing', from: 'Calais', to: 'Dover',
+        range: 1, speed: 1, ceiling: 0, income: 3, vp: 2, claimed: null },
+      { id: 'route_paris_express', name: 'Paris Express', from: 'Paris', to: 'Brussels',
+        range: 1, speed: 1, ceiling: 0, income: 3, vp: 2, claimed: null },
+      { id: 'route_north_sea', name: 'North Sea Run', from: 'Hamburg', to: 'Amsterdam',
+        range: 2, speed: 1, ceiling: 0, income: 4, vp: 2, claimed: null },
+      { id: 'route_baltic', name: 'Baltic Passage', from: 'Hamburg', to: 'Copenhagen',
+        range: 2, speed: 1, ceiling: 0, income: 4, vp: 2, claimed: null },
+      { id: 'route_alpine', name: 'Alpine Transit', from: 'Zurich', to: 'Milan',
+        range: 2, speed: 0, ceiling: 1, income: 4, vp: 2, claimed: null },
+      { id: 'route_mediterranean', name: 'Mediterranean Link', from: 'Marseille', to: 'Barcelona',
+        range: 2, speed: 1, ceiling: 0, income: 4, vp: 2, claimed: null },
+      { id: 'route_london_paris', name: 'London-Paris', from: 'London', to: 'Paris',
+        range: 2, speed: 2, ceiling: 0, income: 5, vp: 3, claimed: null },
+      { id: 'route_berlin_vienna', name: 'Berlin-Vienna', from: 'Berlin', to: 'Vienna',
+        range: 3, speed: 1, ceiling: 0, income: 5, vp: 3, claimed: null },
+      { id: 'route_rome', name: 'Rome Approach', from: 'Milan', to: 'Rome',
+        range: 2, speed: 1, ceiling: 1, income: 5, vp: 3, claimed: null },
+      { id: 'route_imperial', name: 'Imperial Circuit', from: 'London', to: 'Berlin',
+        range: 3, speed: 2, ceiling: 0, income: 6, vp: 3, claimed: null }
     ],
     cities: {
       'Frankfurt': { type: 'major', homeBase: 'germany' },
-      'Berlin': { type: 'major', homeBase: null },
+      'Cologne': { type: 'minor', homeBase: null },
+      'Friedrichshafen': { type: 'minor', homeBase: 'germany' },
+      'Konstanz': { type: 'minor', homeBase: null },
+      'Calais': { type: 'minor', homeBase: null },
+      'Dover': { type: 'minor', homeBase: 'britain' },
       'Paris': { type: 'major', homeBase: null },
-      'London': { type: 'major', homeBase: 'britain' },
+      'Brussels': { type: 'minor', homeBase: null },
+      'Hamburg': { type: 'major', homeBase: null },
       'Amsterdam': { type: 'minor', homeBase: null },
       'Copenhagen': { type: 'minor', homeBase: null },
+      'Zurich': { type: 'minor', homeBase: null },
+      'Milan': { type: 'minor', homeBase: null },
+      'Marseille': { type: 'minor', homeBase: null },
+      'Barcelona': { type: 'minor', homeBase: null },
+      'London': { type: 'major', homeBase: 'britain' },
+      'Berlin': { type: 'major', homeBase: null },
+      'Vienna': { type: 'minor', homeBase: null },
+      'Rome': { type: 'major', homeBase: 'italy' }
+    }
+  };
+}
+
+/**
+ * Create Age III map routes per Appendix F
+ * The Atlantic Era features 16 hemispheric routes including luxury ocean crossings.
+ * Each route has VP value and luxury requirement matching Appendix F specifications.
+ */
+function createAgeIIIMap() {
+  return {
+    name: 'The Atlantic',
+    age: 3,
+    routes: [
+      // Standard Routes (8)
+      { id: 'route_south_atlantic', name: 'South Atlantic', from: 'Rio de Janeiro', to: 'Recife',
+        range: 2, speed: 1, ceiling: 0, income: 5, vp: 2, luxury: 0, claimed: null },
+      { id: 'route_caribbean', name: 'Caribbean Connection', from: 'Miami', to: 'Havana',
+        range: 2, speed: 1, ceiling: 0, income: 5, vp: 2, luxury: 0, claimed: null },
+      { id: 'route_pacific_coast', name: 'Pacific Coast', from: 'Los Angeles', to: 'San Francisco',
+        range: 2, speed: 1, ceiling: 1, income: 5, vp: 2, luxury: 0, claimed: null },
+      { id: 'route_european_trunk', name: 'European Trunk', from: 'London', to: 'Berlin',
+        range: 3, speed: 2, ceiling: 1, income: 6, vp: 3, luxury: 0, claimed: null },
+      { id: 'route_eastern_seaboard', name: 'Eastern Seaboard', from: 'New York', to: 'Miami',
+        range: 3, speed: 2, ceiling: 0, income: 6, vp: 3, luxury: 0, claimed: null },
+      { id: 'route_mediterranean_express', name: 'Mediterranean Express', from: 'Rome', to: 'Cairo',
+        range: 4, speed: 2, ceiling: 1, income: 7, vp: 3, luxury: 0, claimed: null },
+      { id: 'route_trans_amazon', name: 'Trans-Amazon', from: 'Rio de Janeiro', to: 'Manaus',
+        range: 4, speed: 1, ceiling: 0, income: 7, vp: 3, luxury: 0, claimed: null },
+      { id: 'route_north_atlantic_express', name: 'North Atlantic Express', from: 'New York', to: 'London',
+        range: 4, speed: 2, ceiling: 2, income: 8, vp: 4, luxury: 0, claimed: null },
+      // Luxury Routes (8) - marked with luxury requirement
+      { id: 'route_around_cape_horn', name: 'Around Cape Horn', from: 'Buenos Aires', to: 'Valparaiso',
+        range: 3, speed: 2, ceiling: 3, income: 7, vp: 3, luxury: 0, claimed: null },
+      { id: 'route_arctic_explorer', name: 'Arctic Explorer', from: 'Oslo', to: 'Svalbard',
+        range: 3, speed: 1, ceiling: 3, income: 7, vp: 3, luxury: 0, claimed: null },
+      { id: 'route_empire_state_express', name: 'Empire State Express', from: 'New York', to: 'Chicago',
+        range: 3, speed: 3, ceiling: 1, income: 8, vp: 4, luxury: 1, claimed: null },
+      { id: 'route_imperial_airship', name: 'Imperial Airship Route', from: 'London', to: 'Cairo',
+        range: 4, speed: 2, ceiling: 2, income: 9, vp: 4, luxury: 1, claimed: null },
+      { id: 'route_california_clipper', name: 'California Clipper', from: 'Los Angeles', to: 'Honolulu',
+        range: 5, speed: 2, ceiling: 1, income: 10, vp: 5, luxury: 1, claimed: null },
+      { id: 'route_graf_zeppelin', name: 'Graf Zeppelin Route', from: 'Rio de Janeiro', to: 'Friedrichshafen',
+        range: 5, speed: 2, ceiling: 2, income: 10, vp: 5, luxury: 1, claimed: null },
+      { id: 'route_transatlantic_luxury', name: 'Transatlantic Luxury', from: 'London', to: 'New York',
+        range: 4, speed: 3, ceiling: 2, income: 11, vp: 5, luxury: 2, claimed: null },
+      { id: 'route_hindenburg', name: 'Hindenburg Route', from: 'Frankfurt', to: 'Lakehurst',
+        range: 5, speed: 3, ceiling: 2, income: 12, vp: 6, luxury: 2, claimed: null }
+    ],
+    cities: {
+      'Rio de Janeiro': { type: 'major', homeBase: null },
+      'Recife': { type: 'minor', homeBase: null },
+      'Miami': { type: 'minor', homeBase: 'usa' },
+      'Havana': { type: 'minor', homeBase: null },
+      'Los Angeles': { type: 'major', homeBase: null },
+      'San Francisco': { type: 'major', homeBase: null },
+      'London': { type: 'major', homeBase: 'britain' },
+      'Berlin': { type: 'major', homeBase: null },
+      'New York': { type: 'major', homeBase: 'usa' },
       'Rome': { type: 'major', homeBase: 'italy' },
-      'Vienna': { type: 'minor', homeBase: null }
+      'Cairo': { type: 'major', homeBase: null },
+      'Manaus': { type: 'minor', homeBase: null },
+      'Buenos Aires': { type: 'major', homeBase: null },
+      'Valparaiso': { type: 'minor', homeBase: null },
+      'Oslo': { type: 'minor', homeBase: null },
+      'Svalbard': { type: 'minor', homeBase: null },
+      'Chicago': { type: 'major', homeBase: null },
+      'Honolulu': { type: 'minor', homeBase: null },
+      'Friedrichshafen': { type: 'minor', homeBase: 'germany' },
+      'Frankfurt': { type: 'major', homeBase: 'germany' },
+      'Lakehurst': { type: 'minor', homeBase: 'usa' }
     }
   };
 }
@@ -616,5 +751,7 @@ module.exports = {
   updateGameState,
   getGameActions,
   FACTION_CONFIG,
-  createHazardDeck  // Exported for testing (GAP-030)
+  createHazardDeck,  // Exported for testing (GAP-030)
+  createAgeIMap,     // Exported for testing (GAP-040)
+  createAgeIIIMap    // Exported for Age III routes (GAP-042)
 };

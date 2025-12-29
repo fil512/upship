@@ -145,6 +145,17 @@ function processHazardCheck(state, playerId, data) {
     return resolveHazardSuccess(state, playerId, shipIndex, route, hazard, 'Fire Immunity (Helium) - Auto Pass');
   }
 
+  // Check for Conductive Covering - grants immunity to Static Discharge per Appendix D
+  const playerBlueprint = playerState.blueprint;
+  const hasCondictiveCovering = playerBlueprint?.fabricSlots?.some(
+    fabric => fabric === 'conductive_covering' || fabric?.id === 'conductive_covering'
+  );
+
+  if (hazard.type === 'static_discharge' && hasCondictiveCovering) {
+    return resolveHazardSuccess(state, playerId, shipIndex, route, hazard,
+      'Static Discharge - Auto Pass (Conductive Covering grounds electrical charge)');
+  }
+
   // Step 2: Handle fire hazards specially per Section 8.3
   if (isFireHazard && ship.gasType === 'hydrogen') {
     return resolveFireHazard(state, playerId, shipIndex, ship, hazard, engineersToSpend, route);

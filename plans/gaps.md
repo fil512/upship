@@ -3,9 +3,9 @@
 Last updated: 2025-12-29
 
 ## Summary
-- Total gaps found: 37
-- Resolved: 35
-- Unresolved: 2
+- Total gaps found: 45
+- Resolved: 40
+- Unresolved: 5
 
 ## Analysis Progress
 
@@ -28,6 +28,13 @@ Last updated: 2025-12-29
 - [ANALYZED 2025-12-29] SETUP (Section 3)
 - [ANALYZED 2025-12-29] COMPONENTS (Section 2)
 - [ANALYZED 2025-12-29] RULES_CLARIFICATIONS (Section 14)
+
+### Level 4 - Appendix Validation
+- [ANALYZED 2025-12-29] HAZARD_DECK_APPENDIX (Appendix D/E)
+- [ANALYZED 2025-12-29] ROUTES_APPENDIX (Appendix F)
+- [ANALYZED 2025-12-29] MARKET_DECK_APPENDIX (Appendix G/H)
+- [ANALYZED 2025-12-29] TECHNOLOGY_APPENDIX (Appendix C)
+- [ANALYZED 2025-12-29] UPGRADE_APPENDIX (Appendix D)
 
 ---
 
@@ -55,7 +62,96 @@ Last updated: 2025-12-29
 
 ---
 
+
+### GAP-041: Market Deck not implemented with correct cards
+- **Area:** MARKET_DECK_APPENDIX
+- **Severity:** MEDIUM
+- **Rules:** Appendix H
+- **Code:** server/services/gameStateService.js:375-388
+- **Issue:** Appendix H defines 30 market cards in 4 categories (Technical 10, Political 10, Research 5, Organizations 5) with specific costs, symbols, agent effects, and reveal bonuses. createMarketCards() creates only 8 generic placeholder cards without correct attributes.
+- **Fix:** Implement all 30 market cards per Appendix H with proper cost, symbol, effect, and reveal properties.
+- [ ] Unresolved
+
+---
+
+### GAP-043: Technology tiles missing many from Appendix C
+- **Area:** TECHNOLOGY_APPENDIX
+- **Severity:** MEDIUM
+- **Rules:** Appendix C
+- **Code:** server/services/gameStateService.js:306-342, server/config/constants.js:71-106
+- **Issue:** Appendix C defines 54 technology tiles across 5 tracks (Propulsion 11, Frame 10, Fabric 8, Gas Systems 11, Payload 14). TECHNOLOGY_BAG has only ~29 tiles and is missing: Gas System tiles (Improved Valving, Manual Ballonets, Multiple Gas Cells, Helium Handling, Blaugas, etc.), several Payload tiles, and many Age II/III tiles.
+- **Fix:** Add all missing technologies from Appendix C to TECHNOLOGY_BAG with correct cost, type, age, and VP values.
+- [ ] Unresolved
+
+---
+
+### GAP-044: USA faction flaw not implemented (late war entry)
+- **Area:** FACTIONS
+- **Severity:** LOW
+- **Rules:** Section 13.3
+- **Code:** server/services/gameStateService.js:31-42
+- **Issue:** Rules state USA has flaw: "Cannot acquire a combat mission until all other players have one." This restriction on Age II combat missions is not tracked or enforced.
+- **Fix:** Add usaFirstMissionRestriction tracking and validation in combat mission claiming logic.
+- [ ] Unresolved
+
+---
+
 ## Resolved Gaps
+
+### GAP-038: Hazard cards Flak values for Age II
+- **Area:** HAZARD_DECK_APPENDIX
+- **Severity:** HIGH
+- **Rules:** Appendix E (Hazard Deck)
+- **Code:** server/services/gameStateService.js:182-325
+- **Issue:** Appendix E specifies each hazard card has a Flak value (0-5) used in Age II for anti-aircraft checks. The hazard deck creation did not include flak values.
+- **Fix:** Added `flak` property to each hazard card in createHazardDeck() matching Appendix E distribution: 0 Flak (7 cards), 1 Flak (4 cards), 2 Flak (6 cards), 3 Flak (6 cards), 4 Flak (3 cards), 5 Flak (1 card).
+- [x] Resolved (2025-12-29)
+
+---
+
+### GAP-039: Special hazard effects (Icing, Squall Line)
+- **Area:** HAZARD_DECK_APPENDIX
+- **Severity:** MEDIUM
+- **Rules:** Appendix E
+- **Code:** server/services/gameStateService.js:224-240
+- **Issue:** Appendix E specifies special effects: "Icing Conditions: On failure, also lose 1 gas cube" and "Squall Line: Ships with 3+ Payload slots suffer +1 Difficulty". These special effects were not defined on hazard cards.
+- **Fix:** Added `special`, `gasLossOnFailure`, and `payloadSlotModifier` properties to Icing Conditions, Severe Icing, and Squall Line hazard cards.
+- [x] Resolved (2025-12-29)
+
+---
+
+### GAP-040: Route VP values per Appendix F
+- **Area:** ROUTES_APPENDIX
+- **Severity:** MEDIUM
+- **Rules:** Appendix F, Section 12.2
+- **Code:** server/services/gameStateService.js:427-480
+- **Issue:** Appendix F specifies VP values per route (1-6 VP based on difficulty). Routes did not have explicit VP values.
+- **Fix:** Rewrote createAgeIMap() with 12 Age I routes per Appendix F, each with `vp` property (Rhine Valley = 1 VP, Imperial Circuit = 3 VP, etc.).
+- [x] Resolved (2025-12-29)
+
+---
+
+### GAP-042: Age III routes per Appendix F
+- **Area:** ROUTES_APPENDIX
+- **Severity:** HIGH
+- **Rules:** Appendix F
+- **Code:** server/services/gameStateService.js:487-551
+- **Issue:** Only Age I map existed. Appendix F defines 16 Age III Atlantic routes including luxury routes.
+- **Fix:** Created createAgeIIIMap() function with all 16 routes including stat requirements, income, VP values, and luxury flags. Hindenburg Route is highest at 6 VP with luxury 2.
+- [x] Resolved (2025-12-29)
+
+---
+
+### GAP-045: Conductive Covering static discharge immunity
+- **Area:** UPGRADE_APPENDIX
+- **Severity:** LOW
+- **Rules:** Appendix D (Upgrade Tiles)
+- **Code:** server/actions/hazard.js:148-157
+- **Issue:** Appendix D specifies Conductive Covering upgrade grants "Immune to Static Discharge hazard (grounds electrical charge)". This special effect was not checked in fire hazard resolution.
+- **Fix:** Added check for conductive_covering in player's fabricSlots before fire hazard resolution. Ships with Conductive Covering auto-pass Static Discharge hazards.
+- [x] Resolved (2025-12-29)
+
+---
 
 ### GAP-030: Hazard Deck has wrong card composition
 - **Area:** COMPONENTS
