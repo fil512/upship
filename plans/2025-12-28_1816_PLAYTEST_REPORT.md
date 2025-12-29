@@ -4,6 +4,20 @@
 **Game ID:** 003d2816-bd2c-420b-ba46-4572e4fc9289
 **Turns Played:** 2 complete turns (1 manual, 1 partial with autoplay)
 
+---
+
+## Issue Summary
+
+| # | Issue | Severity | Status |
+|---|-------|----------|--------|
+| 1 | Worker Placement Turn Check | Critical | RESOLVED |
+| 2 | Reveal Phase Turn Check | Critical | RESOLVED |
+| 3 | Location Action Execution | High | **TODO** |
+| 4 | Incorrect "YOUR TURN" Display | Medium | **TODO** |
+| 5 | Autoplay Script Outdated | Medium | **TODO** |
+
+---
+
 ## Game Summary
 
 A 4-player game was set up with Britain, USA, Germany, and Italy. The game progressed through:
@@ -16,9 +30,9 @@ A 4-player game was set up with Britain, USA, Germany, and Italy. The game progr
 - No ships built yet
 - Technologies acquired: 4 total (1 per faction)
 
-## Critical Bugs Found & Fixed
+## Resolved Issues
 
-### Bug #1: Worker Placement Turn Check (FIXED)
+### Bug #1: Worker Placement Turn Check - RESOLVED
 **Severity:** Critical (game-breaking)
 **Location:** `server/routes/gameState.js:177-190`
 
@@ -26,7 +40,7 @@ The action endpoint was checking `currentPlayerIndex` instead of `workerPlacemen
 
 **Fix:** Added phase-specific turn checking that uses `workerPlacement.currentPlacerIndex` during worker placement.
 
-### Bug #2: Reveal Phase Turn Check (FIXED)
+### Bug #2: Reveal Phase Turn Check - RESOLVED
 **Severity:** Critical (game-breaking)
 **Location:** `server/routes/gameState.js:187-189`
 
@@ -34,9 +48,9 @@ The reveal phase is designed for simultaneous play - all players acquire technol
 
 **Fix:** Added `skipTurnCheck = true` for reveal phase to allow simultaneous actions.
 
-## Outstanding Bugs
+## Outstanding Issues (TODO)
 
-### Bug #3: Location Action Execution Failure
+### Bug #3: Location Action Execution Failure - TODO
 **Severity:** High
 **Location:** `server/routes/gameState.js` (executeLocationAction function)
 
@@ -50,13 +64,13 @@ Most location IDs (construction_hall, gas_depot, design_bureau, research_institu
   Location action failed: Unknown location: construction_hall
 ```
 
-### Bug #4: Incorrect "YOUR TURN" Display
+### Bug #4: Incorrect "YOUR TURN" Display - TODO
 **Severity:** Medium
 **Location:** CLI state display
 
 The status display shows ">>> YOUR TURN <<<" for a player even when it's actually another player's turn. The "Waiting for:" indicator is correct, but the "YOUR TURN" banner is misleading.
 
-### Bug #5: Autoplay Script Outdated
+### Bug #5: Autoplay Script Outdated - TODO
 **Severity:** Medium
 **Location:** `scripts/playtest.py` (autoplay function)
 
