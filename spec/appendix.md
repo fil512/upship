@@ -70,11 +70,11 @@ These items are physical component specifications for manufacturing. Rules are c
 
 ## A.2 Card Design (All Resolved)
 
-1. **Personal Hazard Decks (24 cards each):** **RESOLVED** - See Appendix E for final distribution:
+1. **Personal Hazard Decks (27 cards each):** **RESOLVED** - See Appendix E for final distribution:
    - 4 Clear Weather (Auto-pass)
    - 8 Minor Hazards (Difficulty 2-3)
-   - 6 Major Hazards (Difficulty 4-5)
-   - 5 Fire Hazards (Hydrogen ships only)
+   - 8 Major Hazards (Difficulty 4-5)
+   - 6 Fire Hazards (Hydrogen ships only)
    - 1 Mechanical Hazard (Critical Structural Stress)
 
 2. **Market Deck:** Design 30 purchasable crew cards with:
@@ -281,7 +281,7 @@ Technology tiles are acquired from the R&D Board using Research. Each tile shows
 | III | Diesel-Electric Drive | 5 | 2 | 1 | Hybrid Powerplant |
 | III | Variable-Pitch Propeller | 4 | 2 | — | Adaptive Propeller |
 
-## Frame Track (8 tiles)
+## Frame Track (10 tiles)
 
 Frame technologies unlock structural skeleton upgrades. Each Frame slot on the Blueprint shows a gas cube icon indicating the launch cost.
 
@@ -293,8 +293,10 @@ Frame technologies unlock structural skeleton upgrades. Each Frame slot on the B
 | II | Steel Framework | 2 | 1 | 2 | Steel Frame |
 | II | Internal Keel | 3 | 1 | 1 | Semi-Rigid Keel |
 | II | Articulated Keel Design | 3 | 1 | 2 | Flexible Frame |
+| II | Aerodynamic Hull Design | 3 | 1 | 1 | Streamlined Hull |
 | III | Geodetic Structure | 4 | 2 | — | Geodetic Frame |
 | III | Modular Construction | 5 | 2 | 3 | Modular Frame |
+| III | Dynamic Lift Surfaces | 5 | 2 | 2 | Aerodynamic Lift System |
 
 ## Fabric Track (7 tiles)
 
@@ -318,7 +320,7 @@ Fabric technologies unlock outer covering and gas cell material upgrades.
 | I | Manual Ballonets | 1 | 1 | — | Altitude Ballonets |
 | II | Multiple Gas Cells | 3 | 1 | — | Compartmented Gas |
 | II | Helium Handling | 4 | 2 | — | Helium Gas Cell |
-| II | Blaugas Storage | 3 | 2 | 2 | Blaugas Tank |
+| II | Blaugas Fuel System | 3 | 2 | 2 | Blaugas Tank |
 | II | Automatic Valves | 4 | 2 | 1 | Smart Valving |
 | III | Pressure Altitude System | 5 | 3 | 1 | High-Ceiling Gas |
 | III | Triple Gas Cell | 4 | 2 | — | Redundant Cells |
@@ -344,12 +346,12 @@ Fabric technologies unlock outer covering and gas cell material upgrades.
 | III | Sleeping Quarters | 4 | 2 | 1 | Private Berths |
 | III | Smoking Room | 5 | 2 | 3 | Pressurized Lounge |
 
-**Total: 50 Technology Tiles** (Propulsion 11, Frame 8, Fabric 7, Gas Systems 10, Payload 14)
+**Total: 52 Technology Tiles** (Propulsion 11, Frame 10, Fabric 7, Gas Systems 10, Payload 14)
 
 **Tiles by Age:**
 - Age I: 11 tiles (2 Propulsion, 2 Frame, 2 Fabric, 2 Gas, 3 Payload)
-- Age II: 21 tiles (4 Propulsion, 4 Frame, 3 Fabric, 4 Gas, 6 Payload)
-- Age III: 18 tiles (5 Propulsion, 2 Frame, 2 Fabric, 4 Gas, 5 Payload)
+- Age II: 22 tiles (4 Propulsion, 5 Frame, 3 Fabric, 4 Gas, 6 Payload)
+- Age III: 19 tiles (5 Propulsion, 3 Frame, 2 Fabric, 4 Gas, 5 Payload)
 
 **PLAYTESTING NOTE:** Current tile counts may be adjusted based on playtesting. Monitor if certain tracks feel over/under-represented.
 
@@ -388,7 +390,9 @@ Frame tiles go in Frame slots. Each Frame slot shows a gas cube icon—this indi
 | Semi-Rigid Keel | Internal Keel | -2 | +£1 | Reliability +1 | Italy's specialty |
 | Geodetic Frame | Geodetic Structure | -1 | +£3 | Reliability +2, Ceiling +1 | Lightest, most expensive |
 | Modular Frame | Modular Construction | -1 | +£2 | — | +2 tile swaps at Design Bureau |
-| Flexible Frame | Articulated Keel Design | -1 | +£1 | Reliability +1 | Auto-pass Weather-type hazards (Italy specialty) |
+| Flexible Frame | Articulated Keel Design | 0 | +£1 | Ceiling +1 | Semi-rigid: -1 to Reliability checks during Weather hazards (Italy starting tech) |
+| Streamlined Hull | Aerodynamic Hull Design | -1 | +£2 | Lift +2 | Provides lift without gas |
+| Aerodynamic Lift System | Dynamic Lift Surfaces | -2 | +£3 | Lift +4 | Provides lift without gas |
 
 ## Fabric Upgrades
 
@@ -414,7 +418,7 @@ Fabric tiles go in Fabric slots. The **Hull Cost** column shows how much this ti
 | Altitude Ballonets | Manual Ballonets | -1 | Ceiling +1 | — |
 | Compartmented Gas | Multiple Gas Cells | -1 | Lift +2, Reliability +1 | — |
 | Helium Gas Cell | Helium Handling | -1 | — | Safe (immune to Fire hazards); use Helium cubes |
-| Blaugas Tank | Blaugas Storage | 0 | Range +3 | Neutral buoyancy fuel |
+| Blaugas Tank | Blaugas Fuel System | 0 | Range +1 | Neutral buoyancy fuel: Pay £2 when launching to keep gas cubes after mission (Germany starting tech) |
 | Smart Valving | Automatic Valves | -1 | Reliability +1, Ceiling +1 | — |
 | High-Ceiling Gas | Pressure Altitude System | -2 | Lift +3, Ceiling +2 | — |
 | Redundant Cells | Triple Gas Cell | -2 | Lift +4, Reliability +2 | — |
@@ -441,13 +445,13 @@ Fabric tiles go in Fabric slots. The **Hull Cost** column shows how much this ti
 | Pressurized Lounge | Smoking Room | -2 | Income +1, Luxury +2 | Requires Helium Gas Cell installed |
 | Imperial Mast | Imperial Mooring System | -1 | — | British Territories count as Home Base (Britain specialty) |
 
-**Total: 52 Upgrade Tiles** (Propulsion 11, Frame 8, Fabric 7, Gas Systems 10, Payload 16)
+**Total: 54 Upgrade Tiles** (Propulsion 11, Frame 10, Fabric 7, Gas Systems 10, Payload 16)
 
 ---
 
 # APPENDIX E: HAZARD DECK
 
-Each player has an identical Personal Hazard Deck of 24 cards. When launching a ship, draw one card and resolve it.
+Each player has an identical Personal Hazard Deck of 27 cards. When launching a ship, draw one card and resolve it.
 
 **Age II Flak:** Each card shows 0–5 flak guns. In Age II only, if Flak > your ship's Armor, the ship is destroyed (5 Flak always destroys; max Armor is 4).
 
@@ -473,18 +477,20 @@ Each player has an identical Personal Hazard Deck of 24 cards. When launching a 
 | Headwind | 3 | Speed | Weather | 1 |
 | Structural Stress | 2 | Reliability | Mechanical | 2 |
 
-## Major Hazards (6 cards)
+## Major Hazards (8 cards)
 
-| Name | Difficulty | Stat | Type | Flak |
-|------|------------|------|------|------|
-| Strong Headwind | 4 | Speed | Weather | 2 |
-| Icing Conditions | 4 | Ceiling | Weather | 2 |
-| Engine Failure | 5 | Reliability | Mechanical | 3 |
-| Storm System | 5 | Speed | Weather | 3 |
-| Structural Damage | 4 | Reliability | Mechanical | 4 |
-| Navigation Error | 4 | Range | Supply | 3 |
+| Name | Difficulty | Stat | Type | Flak | Special |
+|------|------------|------|------|------|---------|
+| Strong Headwind | 4 | Speed | Weather | 2 | — |
+| Icing Conditions | 4 | Ceiling | Weather | 2 | On failure, also lose 1 gas cube. If no gas remains, ship Destroyed. |
+| Engine Failure | 5 | Reliability | Mechanical | 3 | — |
+| Storm System | 5 | Speed | Weather | 3 | — |
+| Structural Damage | 4 | Reliability | Mechanical | 4 | — |
+| Navigation Error | 4 | Range | Supply | 3 | — |
+| Squall Line | 5 | Reliability | Weather | 3 | Ships with 3+ Payload slots suffer +1 Difficulty. Historical: USS Shenandoah was torn apart by shear forces. |
+| Severe Icing | 5 | Ceiling | Weather | 2 | On failure, lose 2 gas cubes. If gas remains < ship's minimum, ship Destroyed. |
 
-## Fire Hazards (5 cards) — Hydrogen Ships Only
+## Fire Hazards (6 cards) — Hydrogen Ships Only
 
 Helium ships automatically pass all Fire-type hazards.
 
@@ -492,6 +498,7 @@ Helium ships automatically pass all Fire-type hazards.
 |------|-----|------|--------|
 | **Engine Fire** | 2 | 2 | Spend 1 Engineer to control → Ship Damaged (Repair Hangar). Fail → Ship crashes. |
 | **Gas Cell Rupture** | 2 | 3 | Spend 2 Engineers to control → Ship Damaged (Repair Hangar). Fail → Ship crashes. |
+| **Static Discharge** | 1 | 4 | Difficulty 4 Reliability check. Fail → Ship crashes. Historical: Models the Hindenburg's static discharge ignition. |
 | **Catastrophic Explosion** | 1 | 5 | No save possible. Ship crashes. If Luxury Launch in Age III: Hindenburg Disaster triggered. |
 
 ## Mechanical Hazards (1 card)
@@ -511,11 +518,11 @@ Helium ships automatically pass all Fire-type hazards.
 8. **Crash:** Ship destroyed (token to supply, Officers and gas lost)
 9. **Age II Flak Check:** After resolving the hazard (pass or fail), check Flak vs Armor. If mission succeeded and Flak > Armor, ship is destroyed but rewards are still earned.
 
-**Flak Distribution (20 cards):**
+**Flak Distribution (24 cards):**
 - 0 Flak: 7 cards (safe passage)
 - 1 Flak: 4 cards (Armor 1+ survives)
-- 2 Flak: 4 cards (Armor 2+ survives)
-- 3 Flak: 3 cards (Armor 3+ survives)
+- 2 Flak: 6 cards (Armor 2+ survives)
+- 3 Flak: 5 cards (Armor 3+ survives)
 - 4 Flak: 1 card (Armor 4 survives)
 - 5 Flak: 1 card (always destroys)
 

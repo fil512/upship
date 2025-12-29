@@ -63,7 +63,7 @@ When the marker reaches an Age threshold, that Age ends after the current round.
 | 2 | Agent Tokens (workers for placement; 3rd can be earned) |
 | 1 | Income Track Marker |
 | 1 | VP Track Marker |
-| 1 | Personal Hazard Deck (24 cards) |
+| 1 | Personal Hazard Deck (27 cards) |
 | 10 | Starting Deck Cards |
 
 ## 2.2 Shared Components
@@ -609,6 +609,8 @@ Each **Gas Cube** provides **+5 Lift** regardless of type.
 
 **Gas Selection:** Choose one gas type per launch—no mixing.
 
+**Aerodynamic Lift:** Some Frame technologies (Aerodynamic Hull Design, Dynamic Lift Surfaces) provide Lift without requiring gas cubes, representing aerodynamic lift from hull design. This Lift is permanent and stacks with gas cube Lift.
+
 > **Example:** Marco needs 15 Lift (3 cubes). Hydrogen costs £3 total. Helium at £4/cube costs £12—safer but four times the price.
 
 ---
@@ -802,7 +804,7 @@ Each nation has unique advantages and constraints.
 **Starting Technologies:**
 - *Duralumin Framework*
 - *Goldbeater's Skin*
-- *Blaugas Fuel System*
+- *Blaugas Fuel System* — Neutral buoyancy fuel: +1 Range, and pay £2 when launching to keep gas cubes after mission
 
 **The Flaw — Helium Embargo:** Germany cannot acquire Helium Handling. Every Luxury Launch in Age III risks the Hindenburg Disaster.
 
@@ -849,7 +851,7 @@ Each nation has unique advantages and constraints.
 **Starting Technologies:**
 - *Internal Keel*
 - *Rubberized Cotton*
-- *Articulated Keel Design* (ignore Weather hazards)
+- *Articulated Keel Design* — Semi-rigid construction: +1 Ceiling, but -1 to Reliability checks during Weather hazards
 
 **The Flaw — Compact Design:** One fewer Payload slot in Ages II and III.
 
@@ -1044,7 +1046,7 @@ See separate Appendix document for complete tile listings.
 
 # APPENDIX D: HAZARD DECK
 
-Each player has an identical 24-card Personal Hazard Deck:
+Each player has an identical 27-card Personal Hazard Deck:
 
 ## Clear Weather (4 cards)
 Auto-pass. No hazard.
@@ -1052,12 +1054,15 @@ Auto-pass. No hazard.
 ## Minor Hazards (8 cards)
 Difficulty 2–3 against Speed, Reliability, Ceiling, or Range.
 
-## Major Hazards (6 cards)
-Difficulty 4–5 against Speed, Reliability, Ceiling, or Range.
+## Major Hazards (8 cards)
+Difficulty 4–5 against Speed, Reliability, Ceiling, or Range. Includes:
+- **Squall Line:** Ships with 3+ Payload slots suffer +1 Difficulty.
+- **Icing Conditions:** On failure, also lose 1 gas cube.
 
-## Fire Hazards (5 cards) — Hydrogen Only
+## Fire Hazards (6 cards) — Hydrogen Only
 - **Engine Fire (×2):** Spend 1 Engineer → Damaged. Fail → Crash.
 - **Gas Cell Rupture (×2):** Spend 2 Engineers → Damaged. Fail → Crash.
+- **Static Discharge (×1):** Difficulty 4 Reliability check. Fail → Crash.
 - **Catastrophic Explosion (×1):** No save. Crash. Age III Luxury = Hindenburg.
 
 ## Mechanical Hazards (1 card)
