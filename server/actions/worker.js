@@ -13,16 +13,21 @@ const { WEATHER_BUREAU_COST } = require('../config/constants');
 
 /**
  * Process card effects when used for agent placement (Section 8.1)
+ * Handles both starter deck cards and market cards per Appendix H
  */
 function processCardEffect(state, playerId, card, _locationId) {
   const playerState = state.players[playerId];
   const effect = card.effect;
 
-  if (!effect || effect === 'None') {
+  if (!effect || effect === 'None' || effect === 'No action effect') {
     return { success: true };
   }
 
+  // Initialize launchBonuses if needed
+  if (!playerState.launchBonuses) playerState.launchBonuses = {};
+
   switch (effect) {
+    // === STARTER DECK EFFECTS ===
     case '+1 swap':
       // Mechanic: grants +1 swap at Design Bureau
       if (!playerState.bonusSwaps) playerState.bonusSwaps = 0;
@@ -56,7 +61,7 @@ function processCardEffect(state, playerId, card, _locationId) {
       return { success: true, message: '-£2 ship build cost this action' };
 
     case 'Look at top Hazard':
-      // Navigator: Peek at top hazard card (GAP-049)
+      // Navigator (starter): Peek at top hazard card (GAP-049)
       {
         const hazardDeck = playerState.hazardDeck || [];
         if (hazardDeck.length === 0) {
@@ -79,9 +84,165 @@ function processCardEffect(state, playerId, card, _locationId) {
 
     case '+1 ship stat':
       // Helmsman: Temporary ship stat bonus
-      if (!playerState.launchBonuses) playerState.launchBonuses = {};
       playerState.launchBonuses.statBonus = (playerState.launchBonuses.statBonus || 0) + 1;
       return { success: true, message: '+1 ship stat for next launch' };
+
+    // === MARKET CARD EFFECTS (GAP-050) ===
+
+    // Technical Personnel
+    case '+2 tile swaps':
+      // Chief Engineer: +2 tile swaps at Design Bureau
+      if (!playerState.bonusSwaps) playerState.bonusSwaps = 0;
+      playerState.bonusSwaps += 2;
+      return { success: true, message: '+2 tile swaps this action' };
+
+    case '+2 Reliability for this launch':
+      // Test Pilot / Safety Inspector: +2 Reliability for this launch
+      playerState.launchBonuses.reliability = (playerState.launchBonuses.reliability || 0) + 2;
+      return { success: true, message: '+2 Reliability for this launch' };
+
+    case '+1 Range for this launch':
+      // Navigator (market): +1 Range for this launch
+      playerState.launchBonuses.range = (playerState.launchBonuses.range || 0) + 1;
+      return { success: true, message: '+1 Range for this launch' };
+
+    case 'Ignore Weather hazards this launch':
+      // Weather Expert: Ignore Weather hazards this launch
+      playerState.launchBonuses.ignoreWeather = true;
+      return { success: true, message: 'Ignore Weather hazards this launch' };
+
+    case 'Install Gas upgrade: -1 Weight':
+      // Gas Engineer: Gas upgrades cost -1 Weight
+      playerState.launchBonuses.gasWeightReduction = 1;
+      return { success: true, message: 'Gas upgrades -1 Weight' };
+
+    case 'Install Propulsion upgrade: -1 Weight':
+      // Engine Specialist: Propulsion upgrades cost -1 Weight
+      playerState.launchBonuses.propulsionWeightReduction = 1;
+      return { success: true, message: 'Propulsion upgrades -1 Weight' };
+
+    case '-2 Hull Cost':
+      // Ground Crew Chief: -2 Hull Cost
+      if (!playerState.buildDiscount) playerState.buildDiscount = 0;
+      playerState.buildDiscount += 2;
+      return { success: true, message: '-2 Hull Cost' };
+
+    case 'Install Structure upgrade: +1 Lift':
+      // Structural Engineer: Structure upgrades give +1 Lift
+      playerState.launchBonuses.structureLiftBonus = 1;
+      return { success: true, message: 'Structure upgrades +1 Lift' };
+
+    case '-2 Lifting Gas cost':
+      // Fuel Specialist: -2 Lifting Gas cost
+      if (!playerState.gasDiscount) playerState.gasDiscount = 0;
+      playerState.gasDiscount += 2;
+      return { success: true, message: '-2 Lifting Gas cost' };
+
+    // Political/Financial Personnel
+    case 'Gain 5':
+      // The Aristocrat: Gain 5
+      playerState.cash += 5;
+      return { success: true, message: 'Gained 5' };
+
+    case 'Gain 3':
+      // Industrial Magnate: Gain 3
+      playerState.cash += 3;
+      return { success: true, message: 'Gained 3' };
+
+    case 'Gain 8; Combat missions: +2 Income':
+      // Combat Veteran: Gain 8, Combat missions give +2 Income
+      playerState.cash += 8;
+      playerState.launchBonuses.combatIncomeBonus = 2;
+      return { success: true, message: 'Gained 8; +2 Income on combat missions' };
+
+    case 'Take 2 Ministry actions':
+      // Government Minister: Take 2 Ministry actions
+      playerState.ministryActionsRemaining = (playerState.ministryActionsRemaining || 0) + 2;
+      return { success: true, message: 'Take 2 Ministry actions' };
+
+    case '+2 Income from this route':
+      // Shipping Tycoon: +2 Income from this route
+      playerState.launchBonuses.routeIncomeBonus = 2;
+      return { success: true, message: '+2 Income from this route' };
+
+    case 'Loan gives 35 instead of 30':
+      // Foreign Investor: Loans give 35 instead of 30
+      if (!playerState.loanBonus) playerState.loanBonus = 0;
+      playerState.loanBonus += 5;
+      return { success: true, message: 'Loans give 35 instead of 30' };
+
+    case 'Gain 1 Insurance policy':
+      // Insurance Agent: Gain 1 Insurance policy
+      if (!playerState.insurancePolicies) playerState.insurancePolicies = 0;
+      playerState.insurancePolicies += 1;
+      return { success: true, message: 'Gained 1 Insurance policy' };
+
+    case 'Go first in turn order next round':
+      // Bureaucrat: Go first in turn order next round
+      state.nextRoundFirstPlayer = playerId;
+      return { success: true, message: 'Go first in turn order next round' };
+
+    case '-1 per crew recruited this action':
+      // Union Representative: -1 per crew recruited
+      if (!playerState.crewRecruitDiscount) playerState.crewRecruitDiscount = 0;
+      playerState.crewRecruitDiscount += 1;
+      return { success: true, message: '-1 per crew recruited' };
+
+    case 'Claim route even if tied':
+      // Customs Official: Claim route even if tied
+      playerState.launchBonuses.tiebreaker = true;
+      return { success: true, message: 'Claim route even if tied' };
+
+    // Research Personnel
+    case '-2 per Technology this round':
+      // University Partnership: -2 per Technology this round
+      if (!playerState.researchDiscount) playerState.researchDiscount = 0;
+      playerState.researchDiscount += 2;
+      return { success: true, message: '-2 per Technology this round' };
+
+    case '-1 to Technology Research cost':
+      // Patent Attorney: -1 to Technology Research cost
+      if (!playerState.researchDiscount) playerState.researchDiscount = 0;
+      playerState.researchDiscount += 1;
+      return { success: true, message: '-1 to Technology Research cost' };
+
+    case '+1 Research this round':
+      // Research Assistant: +1 Research this round
+      playerState.research = (playerState.research || 0) + 1;
+      return { success: true, message: '+1 Research this round' };
+
+    case 'Look at top 3 R&D tiles; reorder them':
+      // Technical Library: Look at top 3 R&D tiles; reorder them
+      // This sets a flag, the actual reordering happens via separate action
+      playerState.canReorderRD = true;
+      return { success: true, message: 'May reorder top 3 R&D tiles' };
+
+    case 'Acquire Tech another player owns (pay double)':
+      // Foreign Consultant: Acquire Tech from another player (pay double)
+      playerState.canAcquireForeignTech = true;
+      return { success: true, message: 'May acquire Tech from another player (pay double)' };
+
+    // Organizations
+    case 'Install 1 Upgrade ignoring Tech requirement':
+      // Royal Geographic Society: Install 1 Upgrade ignoring Tech requirement
+      playerState.canIgnoreTechRequirement = true;
+      return { success: true, message: 'May install 1 Upgrade ignoring Tech requirement' };
+
+    case '+1 Luxury stat for this launch':
+      // Luxury Travel Agency: +1 Luxury stat for this launch
+      playerState.launchBonuses.luxury = (playerState.launchBonuses.luxury || 0) + 1;
+      return { success: true, message: '+1 Luxury for this launch' };
+
+    case 'Recruit 1 Officer free':
+      // Aviation Club: Recruit 1 Officer free
+      playerState.officers = (playerState.officers || 0) + 1;
+      return { success: true, message: 'Recruited 1 Officer free' };
+
+    case 'Recruit 1 Engineer at -1':
+      // Engineering Guild: Recruit 1 Engineer at -1
+      if (!playerState.engineerRecruitDiscount) playerState.engineerRecruitDiscount = 0;
+      playerState.engineerRecruitDiscount += 1;
+      return { success: true, message: 'Recruit 1 Engineer at -1' };
 
     default:
       return { success: true, message: `Unknown effect: ${effect}` };

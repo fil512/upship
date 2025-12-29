@@ -1,11 +1,14 @@
 # Rules Implementation Gaps
 
-Last updated: 2025-12-29
+Last updated: 2025-12-29 (verified)
 
 ## Summary
 - Total gaps found: 54
-- Resolved: 48
-- Unresolved: 6
+- Resolved: 51
+- Unresolved: 3
+
+## Analysis Status
+All analysis areas are COMPLETE. The following 3 gaps remain to be resolved and represent the complete backlog of known implementation gaps. These require new game systems (Combat Missions, Network Connectivity) that are documented as future work.
 
 ## Analysis Progress
 
@@ -79,28 +82,6 @@ Last updated: 2025-12-29
 ---
 
 
-### GAP-041: Market Deck not implemented with correct cards
-- **Area:** MARKET_DECK_APPENDIX
-- **Severity:** MEDIUM
-- **Rules:** Appendix H
-- **Code:** server/services/gameStateService.js:375-388
-- **Issue:** Appendix H defines 30 market cards in 4 categories (Technical 10, Political 10, Research 5, Organizations 5) with specific costs, symbols, agent effects, and reveal bonuses. createMarketCards() creates only 8 generic placeholder cards without correct attributes.
-- **Fix:** Implement all 30 market cards per Appendix H with proper cost, symbol, effect, and reveal properties.
-- [ ] Unresolved
-
----
-
-### GAP-043: Technology tiles missing many from Appendix C
-- **Area:** TECHNOLOGY_APPENDIX
-- **Severity:** MEDIUM
-- **Rules:** Appendix C
-- **Code:** server/services/gameStateService.js:306-342, server/config/constants.js:71-106
-- **Issue:** Appendix C defines 54 technology tiles across 5 tracks (Propulsion 11, Frame 10, Fabric 8, Gas Systems 11, Payload 14). TECHNOLOGY_BAG has only ~29 tiles and is missing: Gas System tiles (Improved Valving, Manual Ballonets, Multiple Gas Cells, Helium Handling, Blaugas, etc.), several Payload tiles, and many Age II/III tiles.
-- **Fix:** Add all missing technologies from Appendix C to TECHNOLOGY_BAG with correct cost, type, age, and VP values.
-- [ ] Unresolved
-
----
-
 ### GAP-044: USA faction flaw not implemented (late war entry)
 - **Area:** FACTIONS
 - **Severity:** LOW
@@ -108,7 +89,32 @@ Last updated: 2025-12-29
 - **Code:** server/services/gameStateService.js:31-42
 - **Issue:** Rules state USA has flaw: "Cannot acquire a combat mission until all other players have one." This restriction on Age II combat missions is not tracked or enforced.
 - **Fix:** Add usaFirstMissionRestriction tracking and validation in combat mission claiming logic.
+- **Note:** Depends on GAP-028 (Combat Missions system) - should be implemented together.
 - [ ] Unresolved
+
+---
+
+## Resolved Gaps
+
+### GAP-041: Market Deck not implemented with correct cards
+- **Area:** MARKET_DECK_APPENDIX
+- **Severity:** MEDIUM
+- **Rules:** Appendix H
+- **Code:** server/data/marketCards.js (new file), server/services/gameStateService.js
+- **Issue:** Appendix H defines 30 market cards in 4 categories (Technical 10, Political 10, Research 5, Organizations 5) with specific costs, symbols, agent effects, and reveal bonuses. createMarketCards() created only 8 generic placeholder cards without correct attributes.
+- **Fix:** Created server/data/marketCards.js with all 30 market cards per Appendix H including: id, name, category, cost, symbol, effect (Agent Effect), and reveal (Reveal Phase bonus). Updated createMarketCards() to use the new data.
+- [x] Resolved (2025-12-29)
+
+---
+
+### GAP-043: Technology tiles missing many from Appendix C
+- **Area:** TECHNOLOGY_APPENDIX
+- **Severity:** MEDIUM
+- **Rules:** Appendix C
+- **Code:** server/services/gameStateService.js
+- **Issue:** Appendix C defines 54 technology tiles across 5 tracks (Propulsion 11, Frame 10, Fabric 8, Gas Systems 11, Payload 14). TECHNOLOGY_BAG had only ~29 tiles and was missing: Gas System tiles (Improved Valving, Manual Ballonets, Multiple Gas Cells, Helium Handling, Blaugas, etc.), several Payload tiles, and many Age II/III tiles.
+- **Fix:** Rewrote TECHNOLOGY_BAG with all 54 technology tiles per Appendix C table data, organized by age. Age I: 12 tiles, Age II: 23 tiles, Age III: 19 tiles. Each tile has id, name, type, cost, vp, and income properties.
+- [x] Resolved (2025-12-29)
 
 ---
 
@@ -116,14 +122,12 @@ Last updated: 2025-12-29
 - **Area:** MARKET_DECK_APPENDIX
 - **Severity:** HIGH
 - **Rules:** Appendix H
-- **Code:** server/actions/worker.js:17-69
-- **Issue:** Appendix H defines 30 market cards with Agent Effects like "Chief Engineer: +2 tile swaps", "Test Pilot: +2 Reliability for this launch", "Weather Expert: Ignore Weather hazards this launch", etc. processCardEffect() only handles starter card effects, not any market card effects.
-- **Fix:** Add cases in processCardEffect() for all market card Agent Effects, or refactor to use a data-driven approach reading effects from card definitions.
-- [ ] Unresolved
+- **Code:** server/actions/worker.js:processCardEffect()
+- **Issue:** Appendix H defines 30 market cards with Agent Effects like "Chief Engineer: +2 tile swaps", "Test Pilot: +2 Reliability for this launch", "Weather Expert: Ignore Weather hazards this launch", etc. processCardEffect() only handled starter card effects, not any market card effects.
+- **Fix:** Added cases in processCardEffect() for all 30 market card Agent Effects organized by category: Technical Personnel (Chief Engineer, Test Pilot, Navigator, Weather Expert, Gas Engineer, Engine Specialist, Safety Inspector, Ground Crew Chief, Structural Engineer, Fuel Specialist), Political/Financial Personnel (The Aristocrat, Industrial Magnate, Government Minister, Shipping Tycoon, Press Baron, Foreign Investor, Insurance Agent, Bureaucrat, Union Representative, Customs Official), Research Personnel (University Partnership, Patent Attorney, Research Assistant, Technical Library, Foreign Consultant), and Organizations (Royal Geographic Society, Combat Veteran, Luxury Travel Agency, Aviation Club, Engineering Guild).
+- [x] Resolved (2025-12-29)
 
 ---
-
-## Resolved Gaps
 
 ### GAP-054: Grounding Systems fabric upgrade not in UPGRADES data
 - **Area:** UPGRADE_APPENDIX
