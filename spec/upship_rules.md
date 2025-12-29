@@ -71,7 +71,6 @@ When the marker reaches an Age threshold, that Age ends after the current round.
 | 1 | VP Track |
 | 30 | Market Deck Cards |
 | — | Currency Tokens (£) |
-| — | Research Tokens |
 | — | Officer Tokens |
 | — | Engineer Tokens |
 | — | Gas Cubes (Hydrogen and Helium) |
@@ -105,9 +104,10 @@ Each player receives:
 7. **2 Hydrogen Gas Cubes** (placed in Gas Reserve)
 8. **2 Agent Tokens** (3rd can be earned during play)
 9. **Starter Deck** of 10 cards (shuffled)
-10. **Income Track** set to starting position (typically £5)
-11. **Officer Income Track** set to 0
-12. **Engineer Income Track** set to 1
+10. **Income Track** set to £5
+11. **Research Level Track** set to 0
+12. **Officer Income Track** set to 0
+13. **Engineer Income Track** set to 1
 
 Draw an opening hand of 5 cards.
 
@@ -182,7 +182,7 @@ Store crew tokens earned from the shared supply:
 - You voluntarily ground a ship
 
 **Engineers** — Multi-purpose specialists with two functions:
-1. **Research Generation:** When you Reveal, your available Research equals your Engineers plus Research bonuses from revealed cards
+1. **Research Contribution:** When you Reveal, each Engineer in your Barracks adds +1 to your available Research
 2. **Emergency Response:** Spend reactively during Hazard Checks to boost your check (+1 per Engineer)
 
 ## 4.4 The Hangar Bay (Adjacent to Barracks)
@@ -206,11 +206,12 @@ Store purchased **Gas Cubes** here:
 
 ## 4.6 Economy Tracks (Right Edge)
 
-| Track | Function |
-|-------|----------|
-| **Income Track** | £ earned per round from routes |
-| **Officer Income Track** | Free Officers per round (starts at 0); reaching +3 grants your 3rd Agent |
-| **Engineer Income Track** | Free Engineers per round (starts at 1) |
+| Track | Function | Starting Value |
+|-------|----------|----------------|
+| **Income Track** | £ earned per round from routes | £5 |
+| **Research Level Track** | Base Research when you Reveal | 0 |
+| **Officer Income Track** | Free Officers per round; reaching +3 grants your 3rd Agent | 0 |
+| **Engineer Income Track** | Free Engineers per round | 1 |
 
 ## 4.7 Stat Tracks & Lift Calculator
 
@@ -248,13 +249,13 @@ Instead of placing an Agent, you may **Reveal** to end your participation in thi
 | Icon | Effect |
 |------|--------|
 | £ | Gain cash immediately |
-| Research | Add to Research pool |
+| Research | Add to Research for this Reveal |
 | Officer | Gain token to Barracks |
 | Engineer | Gain token to Barracks |
 | Gas | Gain cube to Gas Reserve |
 | Influence | Save for purchasing cards |
 
-3. **Acquire Technologies:** Spend Research (Engineers in Barracks + card bonuses + saved tokens) to acquire Technologies from the R&D Board. Unspent Research carries over to next round.
+3. **Acquire Technologies:** Calculate your Research: Research Level + Engineers in Barracks + card bonuses. Spend Research to acquire Technologies from the R&D Board. Unspent Research is lost.
 4. **Purchase Cards:** Spend Influence to buy cards from the Market Row. Unspent Influence is lost.
 5. **Discard Hand:** Place revealed cards in your discard pile.
 
@@ -302,13 +303,13 @@ The Ground Board has 12 action spaces. Each requires a matching card symbol.
 
 ## 6.1 Research Institute (Propeller)
 
-**Action:** Purchase Research with cash.
+**Action:** Expand your research program.
 
-**Cost:** £3 per Research token.
+**Cost:** £4 per level.
 
-**Effect:** Gain Research tokens spendable when you Reveal.
+**Effect:** Increase your Research Level Track by 1 step.
 
-> **Example:** Marco plays a Propeller card and spends £9 to gain 3 Research tokens.
+> **Example:** Marco plays a Propeller card and spends £8 to increase his Research Level from 0 to 2. He will now have 2 base Research each round when he Reveals.
 
 ## 6.2 Design Bureau (Wrench)
 
@@ -558,10 +559,11 @@ At each Age Transition, new Age tiles are **added** to the bag—all previous Ag
 ### Acquiring Technologies
 
 When you Reveal:
-1. Calculate Research Budget (Engineers + card bonuses + saved tokens).
+1. Calculate Research: Research Level + Engineers in Barracks + card bonuses.
 2. Pay Research equal to tile cost minus specialization discount.
 3. Add tiles to your Drawing Office.
 4. Advance Progress Track by 1 for each tile acquired.
+5. Unspent Research is lost.
 
 ## 9.2 Upgrades
 
@@ -892,9 +894,9 @@ When Catastrophic Explosion occurs during a Luxury Launch in Age III using Hydro
 
 ## 14.6 Engineer Timing
 
-- Generate Research when you Reveal
+- Contribute to Research when you Reveal (+1 each)
 - May spend reactively after seeing Hazard Card
-- Engineers spent on Hazard Checks do not generate Research when you Reveal
+- Engineers spent on Hazard Checks do not contribute Research when you Reveal
 - Upkeep paid based on Barracks count at Income & Cleanup start
 
 ---
@@ -911,7 +913,7 @@ When Catastrophic Explosion occurs during a Luxury Launch in Age III using Hydro
 | **City Bonus** | One-time reward when claiming a route | §10.4 |
 | **Crash** | Ship destruction; token returns to supply | §8.1 |
 | **Drawing Office** | Zone storing acquired Technologies | §4.1 |
-| **Engineer** | Crew token for Research and emergency response | §4.3 |
+| **Engineer** | Crew token contributing +1 Research and emergency response | §4.3 |
 | **Fabric** | Upgrade type for outer covering materials | §4.2 |
 | **Fire Hazard** | Hazard affecting only Hydrogen ships | §8.3 |
 | **Frame** | Upgrade type for structural skeleton | §4.2 |
@@ -938,7 +940,8 @@ When Catastrophic Explosion occurs during a Luxury Launch in Age III using Hydro
 | **Progress Track** | Track advancing toward game end | §1.3 |
 | **Range** | Ship stat for flight distance | §4.2 |
 | **Reliability** | Ship stat for mechanical soundness | §4.2 |
-| **Research** | Resource for acquiring Technologies | §9.1 |
+| **Research** | Resource for acquiring Technologies (Research Level + Engineers + cards) | §9.1 |
+| **Research Level** | Track showing base Research when you Reveal | §4.6 |
 | **Route** | Connection between cities on the map | §10 |
 | **Slot** | Empty space for Upgrade installation | §4.2 |
 | **Speed** | Ship stat for velocity | §4.2 |
@@ -967,7 +970,7 @@ When Catastrophic Explosion occurs during a Luxury Launch in Age III using Hydro
 | Lift | Gas Cubes × 5 |
 | Hull Cost | £2 + Frame cost + Fabric cost |
 | Hazard Check | Ship Stat + Engineers ≥ Difficulty |
-| Research Budget | Engineers + card bonuses + saved |
+| Research | Research Level + Engineers + card bonuses (unspent lost) |
 | Tech Cost | Listed cost − specialization discount |
 | Transition Income | Tech £ values − (£1 × routes lost) |
 

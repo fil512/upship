@@ -93,7 +93,7 @@ The following items require finalization before the game is complete:
    - Age II: 2-4 Research
    - Age III: 4-6 Research
    - Specialization discounts: -1 at 3+ tiles, -2 at 5+ tiles
-   - **Note:** Research tokens can be saved between rounds, allowing players to accumulate for expensive Technologies
+   - **Note:** Unspent Research is lost each round; invest in Research Level Track for consistent output
 
 2. **Engineer Economy:**
    - Starting Engineers: 2
@@ -123,12 +123,12 @@ The following items require finalization before the game is complete:
 
 2. **Action Selection Mechanism:** Partially resolved:
    - Current system requires spending matching cards for worker placement
-   - **RESOLVED:** Research Institute now allows purchasing Research with £ (see Section 6.1)
+   - **RESOLVED:** Research Institute now increases Research Level Track (see Section 6.1)
    - **RESOLVED:** Cards provide resources when revealed instead of being played reactively
    - Still needs testing: Is card-icon matching too restrictive? Consider Apprentice "Any" cards as wild
 
-3. **Agent Count:** 3 agents per player is the baseline
-   - **Rationale:** With 12 Ground Board locations and 3 agents, players can visit at most 1/4 of available actions per round. This creates meaningful opportunity cost while preventing analysis paralysis from too many options. At 3-4 players, the board becomes moderately contested without being too tight. Card symbol requirements (Wrench/Coin/Propeller) further constrain choices, making each agent placement feel significant.
+3. **Agent Count:** 2 agents per player at start, 3rd earned at Officer Income +3
+   - **Rationale:** Starting with 2 agents creates tighter early game. Earning the 3rd via Flight School investment creates meaningful progression. Card symbol requirements (Wrench/Coin/Propeller) further constrain choices, making each agent placement feel significant.
    - May need adjustment if playtesting reveals too much or too little competition for key actions
 
 4. **Turn Order:** Define how first player rotates or changes
@@ -150,7 +150,7 @@ The following items require finalization before the game is complete:
 
 1. **Engineer Economy Test:** Verify the tension between Research generation and emergency spending feels meaningful
 
-2. **Progress Track Pacing:** Does the fixed-wing threshold create appropriate tension? Assess whether players avoid acquiring Technologies to extend the game, causing Analysis Paralysis. With reduced tech costs and saveable Research tokens, verify this doesn't cause runaway tech acquisition that ends the game too quickly.
+2. **Progress Track Pacing:** Does the fixed-wing threshold create appropriate tension? Assess whether players avoid acquiring Technologies to extend the game, causing Analysis Paralysis. Verify tech acquisition pace feels balanced.
 
 3. **Technology/Upgrade Flow:** Is the two-step system (acquire tech → install upgrade) intuitive?
 
@@ -168,7 +168,7 @@ The following items require finalization before the game is complete:
 
 1. **Worker Placement:** Take turns placing Agents (play cards to visit locations)
 2. **Reveal:** Show remaining hands, calculate Influence and Research
-3. **Acquire Technologies:** Spend Research (Engineers + card bonuses + purchased) on Technologies
+3. **Acquire Technologies:** Spend Research (Research Level + Engineers + card bonuses) on Technologies
 4. **Purchase Cards:** Spend Influence on Market cards
 5. **Income:** Pay Engineer upkeep, collect £ from Income Track
 6. **Cleanup:** Refresh R&D Board, check Age transition, refresh Agents, draw cards
@@ -205,7 +205,7 @@ The following items require finalization before the game is complete:
 - **Lift Calculation:** Number of gas cubes × 5 (all gas types provide +5 Lift)
 - **Gas Rule:** Choose Hydrogen or Helium per launch—no mixing within a single launch
 - **Hazard Check:** Ship Stat + Engineers spent ≥ Hazard Difficulty
-- **Research per Round:** Engineers in Barracks + Research icons from revealed cards
+- **Research per Round:** Research Level + Engineers in Barracks + Research icons from revealed cards (unspent lost)
 - **Engineer Upkeep:** £1 per Engineer in Barracks
 - **Tech Cost:** Listed cost − Specialization Discount
 - **Transition Income:** (£ from Tech tiles) − (£1 × routes lost), minimum £0
