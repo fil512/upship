@@ -76,7 +76,7 @@ describe('Rules Compliance - Age Transitions', () => {
 
       // Player 1 has claimed a route worth 2 VP
       state.map.routes[0].claimed = '1';
-      state.map.routes[0].distance = 2;
+      state.map.routes[0].vp = 2;
 
       // Player 1 has technologies with VP values
       // Per constants.js: duralumin_girders = 1 VP, goldbeater_skin = 1 VP
@@ -106,14 +106,14 @@ describe('Rules Compliance - Age Transitions', () => {
       expect(vp).toBe(3); // 0 + 1 + 2 = 3
     });
 
-    it('should score route VP based on route distance per Section 12.2', () => {
+    it('should score route VP based on route.vp property per Section 12.2 and Appendix F', () => {
       const state = createTestGameState();
 
-      // Set up multiple routes for player 1
+      // Set up multiple routes for player 1 with explicit vp property
       state.map.routes = [
-        { id: 'route_1', distance: 1, claimed: '1' },
-        { id: 'route_2', distance: 3, claimed: '1' },
-        { id: 'route_3', distance: 2, claimed: '2' } // Different player
+        { id: 'route_1', vp: 1, claimed: '1' },
+        { id: 'route_2', vp: 3, claimed: '1' },
+        { id: 'route_3', vp: 2, claimed: '2' } // Different player
       ];
 
       const player1VP = scoreAgeVP(state, '1');

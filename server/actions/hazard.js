@@ -123,9 +123,12 @@ function processHazardCheck(state, playerId, data) {
     state.hindenburgDisaster = true;
     state.gameEndReason = 'hindenburg_disaster';
 
+    // Per Section 14.5: Triggering player gains 3 VP (historical infamy)
+    playerState.vp = (playerState.vp || 0) + 3;
+
     state.log.push({
       timestamp: new Date().toISOString(),
-      message: `THE HINDENBURG DISASTER! A Catastrophic Explosion has destroyed a luxury hydrogen airship. The era of airships has ended.`,
+      message: `THE HINDENBURG DISASTER! A Catastrophic Explosion has destroyed a luxury hydrogen airship. The era of airships has ended. Triggering player gains 3 VP (historical infamy).`,
       playerId,
       type: 'game_end'
     });
@@ -220,13 +223,43 @@ function processHazardCheck(state, playerId, data) {
 }
 
 /**
+ * Apply insurance policy to recover crashed ship per Section 6.11
+ * "When a ship crashes, discard a policy to recover the ship to your Launch Hangar"
+ * @returns {boolean} True if insurance was used and ship recovered
+ */
+function applyInsuranceRecovery(state, playerId, shipIndex, hazardName) {
+  const playerState = state.players[playerId];
+  const ships = playerState.ships;
+  const insurancePolicies = playerState.insurance || 0;
+
+  if (insurancePolicies > 0) {
+    // Discard one insurance policy to recover ship
+    playerState.insurance = insurancePolicies - 1;
+    // Recover ship to hangar instead of destroying it
+    ships[shipIndex].status = 'hangar';
+    delete ships[shipIndex].pendingRouteId;
+    delete ships[shipIndex].routeId;
+
+    state.log.push({
+      timestamp: new Date().toISOString(),
+      message: `${hazardName}! Insurance claim: ship recovered to Launch Hangar (${playerState.insurance} policies remaining)`,
+      playerId,
+      type: 'hazard'
+    });
+
+    return true;
+  }
+  return false;
+}
+
+/**
  * Handle fire hazard resolution per Section 8.3
  */
 function resolveFireHazard(state, playerId, shipIndex, ship, hazard, engineersToSpend, route) {
   const playerState = state.players[playerId];
   const ships = playerState.ships;
 
-  // Catastrophic Explosion - no save possible
+  // Catastrophic Explosion - no save possible (insurance cannot help)
   if (hazard.noSave || hazard.type === 'catastrophic_explosion') {
     ships[shipIndex].status = 'destroyed';
 
@@ -255,6 +288,11 @@ function resolveFireHazard(state, playerId, shipIndex, ship, hazard, engineersTo
       return resolveHazardSuccess(state, playerId, shipIndex, route, hazard,
         `Static Discharge Reliability check passed: ${totalCheck} >= ${hazard.difficulty}`);
     } else {
+      // GAP-051: Check for insurance recovery per Section 6.11
+      if (applyInsuranceRecovery(state, playerId, shipIndex, 'STATIC DISCHARGE')) {
+        return { newState: state };
+      }
+
       ships[shipIndex].status = 'destroyed';
 
       state.log.push({
@@ -288,6 +326,11 @@ function resolveFireHazard(state, playerId, shipIndex, ship, hazard, engineersTo
     return { newState: state };
   } else {
     // Insufficient engineers - crash
+    // GAP-051: Check for insurance recovery per Section 6.11
+    if (applyInsuranceRecovery(state, playerId, shipIndex, hazard.name)) {
+      return { newState: state };
+    }
+
     ships[shipIndex].status = 'destroyed';
 
     state.log.push({

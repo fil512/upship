@@ -3,44 +3,54 @@
 Last updated: 2025-12-29
 
 ## Summary
-- Total gaps found: 50
-- Resolved: 44
+- Total gaps found: 54
+- Resolved: 48
 - Unresolved: 6
 
 ## Analysis Progress
 
 ### Level 1 - Core Structure
-- [ANALYZED 2025-12-29] ROUND_STRUCTURE
-- [ANALYZED 2025-12-29] AGE_TRANSITIONS
-- [ANALYZED 2025-12-29] SCORING
+- [COMPLETE] ROUND_STRUCTURE
+- [COMPLETE] AGE_TRANSITIONS
+- [COMPLETE] SCORING
 
 ### Level 2 - Game Systems
-- [ANALYZED 2025-12-29] LAUNCHING
-- [ANALYZED 2025-12-29] GROUND_BOARD
-- [ANALYZED 2025-12-29] FACTIONS
-- [ANALYZED 2025-12-29] ROUTES_AND_MAPS
+- [COMPLETE] LAUNCHING
+- [COMPLETE] GROUND_BOARD
+- [COMPLETE] FACTIONS
+- [COMPLETE] ROUTES_AND_MAPS
 
 ### Level 3 - Detailed Systems
-- [ANALYZED 2025-12-29] TECHNOLOGY_UPGRADES (Section 9)
-- [ANALYZED 2025-12-29] DECK_BUILDING (Section 11)
-- [ANALYZED 2025-12-29] PLAYER_BOARD (Section 4)
-- [ANALYZED 2025-12-29] BUILDING_SHIPS (Section 7)
-- [ANALYZED 2025-12-29] SETUP (Section 3)
-- [ANALYZED 2025-12-29] COMPONENTS (Section 2)
-- [ANALYZED 2025-12-29] RULES_CLARIFICATIONS (Section 14)
+- [COMPLETE] TECHNOLOGY_UPGRADES (Section 9)
+- [COMPLETE] DECK_BUILDING (Section 11)
+- [COMPLETE] PLAYER_BOARD (Section 4)
+- [COMPLETE] BUILDING_SHIPS (Section 7)
+- [COMPLETE] SETUP (Section 3)
+- [COMPLETE] COMPONENTS (Section 2)
+- [COMPLETE] RULES_CLARIFICATIONS (Section 14)
 
 ### Level 4 - Appendix Validation
-- [ANALYZED 2025-12-29] HAZARD_DECK_APPENDIX (Appendix D/E)
-- [ANALYZED 2025-12-29] ROUTES_APPENDIX (Appendix F)
-- [ANALYZED 2025-12-29] MARKET_DECK_APPENDIX (Appendix G/H)
-- [ANALYZED 2025-12-29] TECHNOLOGY_APPENDIX (Appendix C)
-- [ANALYZED 2025-12-29] UPGRADE_APPENDIX (Appendix D)
+- [COMPLETE] HAZARD_DECK_APPENDIX (Appendix D/E)
+- [COMPLETE] ROUTES_APPENDIX (Appendix F)
+- [COMPLETE] MARKET_DECK_APPENDIX (Appendix G/H)
+- [COMPLETE] TECHNOLOGY_APPENDIX (Appendix C)
+- [COMPLETE] UPGRADE_APPENDIX (Appendix D)
 
 ### Level 5 - Deep Dive Analysis
-- [ANALYZED 2025-12-29] WORKER_PLACEMENT_ACTIONS (Ground Board locations, card symbol matching)
-- [ANALYZED 2025-12-29] CARD_AGENT_EFFECTS (Starter deck effects, Market card effects)
-- [ANALYZED 2025-12-29] UPGRADE_SPECIAL_ABILITIES (Fire protection, extra swaps, route bypass)
-- [ANALYZED 2025-12-29] FACTION_SPECIAL_ABILITIES (Trapeze System, Blaugas, Helium Monopoly)
+- [COMPLETE] WORKER_PLACEMENT_ACTIONS (Ground Board locations, card symbol matching)
+- [COMPLETE] CARD_AGENT_EFFECTS (Starter deck effects, Market card effects)
+- [COMPLETE] UPGRADE_SPECIAL_ABILITIES (Fire protection, extra swaps, route bypass)
+- [COMPLETE] FACTION_SPECIAL_ABILITIES (Trapeze System, Blaugas, Helium Monopoly)
+
+### Level 6 - Final Comprehensive Sweep
+- [COMPLETE] INCOME_TRACK_RULES (Section 4.6, 5.2)
+- [COMPLETE] GAS_MARKET_MECHANICS (Section 9.3, 6.10)
+- [COMPLETE] END_GAME_SCORING (Section 1.1, 12.2)
+- [COMPLETE] INSURANCE_MECHANICS (Section 6.11)
+- [COMPLETE] RESEARCH_LEVEL_TRACK (Section 4.6)
+- [COMPLETE] FIRST_PLAYER_TOKEN (Section 6.9)
+- [COMPLETE] HINDENBURG_DISASTER_VP (Section 14.5)
+- [COMPLETE] BANKRUPTCY_RULES (Section 5.3)
 
 ---
 
@@ -114,6 +124,50 @@ Last updated: 2025-12-29
 ---
 
 ## Resolved Gaps
+
+### GAP-054: Grounding Systems fabric upgrade not in UPGRADES data
+- **Area:** UPGRADE_APPENDIX
+- **Severity:** LOW
+- **Rules:** Appendix C, Appendix D
+- **Code:** server/data/upgrades.js
+- **Issue:** Appendix C defines "Grounding Systems" technology that unlocks "Conductive Covering" upgrade (Appendix D). The hazard.js correctly checks for conductive_covering immunity, but the UPGRADES object in upgrades.js does not include this fabric upgrade.
+- **Fix:** Added grounding_systems technology to TECHNOLOGIES and conductive_covering upgrade to UPGRADES with requiredTech: 'grounding_systems', type: 'fabric', special: 'static_immunity'.
+- [x] Resolved (2025-12-29)
+
+---
+
+### GAP-053: Route VP scoring uses route.distance instead of route.vp
+- **Area:** SCORING
+- **Severity:** MEDIUM
+- **Rules:** Section 12.2, Appendix F
+- **Code:** server/actions/scoring.js:104-112, server/actions/helpers/ageTransition.js:42-57, server/services/actionProcessorService.js:1334-1341
+- **Issue:** Routes have explicit `vp` properties per Appendix F. However, calculateRouteVP() and processCalculateScores() used `route.distance` for VP instead of `route.vp`.
+- **Fix:** Changed `totalVP += route.distance || 0` to `totalVP += route.vp || 0` in calculateRouteVP(), processCalculateScores(), and actionProcessorService.
+- [x] Resolved (2025-12-29)
+
+---
+
+### GAP-052: Hindenburg Disaster grants 3 VP to triggering player
+- **Area:** SCORING
+- **Severity:** LOW
+- **Rules:** Section 14.5
+- **Code:** server/actions/hazard.js:119-133
+- **Issue:** Rules state "Triggering player gains 3 VP (historical infamy)" when Hindenburg Disaster occurs. The checkHindenburgDisaster() correctly triggers game end but did not award the 3 VP.
+- **Fix:** Added `playerState.vp = (playerState.vp || 0) + 3` when Hindenburg Disaster is triggered, with log message noting the VP award.
+- [x] Resolved (2025-12-29)
+
+---
+
+### GAP-051: Insurance policy usage on ship crash not implemented
+- **Area:** ECONOMY
+- **Severity:** MEDIUM
+- **Rules:** Section 6.11
+- **Code:** server/actions/hazard.js
+- **Issue:** Rules state insurance policies grant: "When a ship crashes, discard a policy to recover the ship to your Launch Hangar." The hazard.js crash handling never checked for or consumed insurance policies.
+- **Fix:** Added applyInsuranceRecovery() function in hazard.js that checks for insurance policies on crash (except Catastrophic Explosion which has no save). Recovers ship to hangar and consumes one policy.
+- [x] Resolved (2025-12-29)
+
+---
 
 ### GAP-046: Fire-Resistant Fabric special effect
 - **Area:** UPGRADE_APPENDIX

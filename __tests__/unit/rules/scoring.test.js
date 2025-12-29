@@ -119,6 +119,47 @@ describe('Rules Compliance - Scoring', () => {
     });
   });
 
+  describe('GAP-053: Route VP scoring uses route.vp property', () => {
+    it('should use route.vp for VP scoring, not route.distance per Section 12.2 and Appendix F', () => {
+      const state = createTestGameState([1]);
+
+      // Route with vp property (correct) vs distance property (incorrect)
+      // This route has vp: 5 but distance: 2
+      state.map.routes = [
+        { id: 'r1', vp: 5, distance: 2, claimed: '1' },
+        { id: 'r2', vp: 3, distance: 1, claimed: '1' }
+      ];
+
+      state.players['1'].technologies = [];
+      state.progressTrack = 30;
+      state.age = 3;
+
+      const result = processCalculateScores(state, '1', { forceEnd: true });
+
+      // Should use vp (5+3=8), NOT distance (2+1=3)
+      expect(result.newState.scores['1'].breakdown.routes).toBe(8);
+    });
+
+    it('should handle routes that only have vp property', () => {
+      const state = createTestGameState([1]);
+
+      // Routes with only vp, no distance (as per Appendix F)
+      state.map.routes = [
+        { id: 'r1', vp: 4, claimed: '1' },
+        { id: 'r2', vp: 2, claimed: '1' }
+      ];
+
+      state.players['1'].technologies = [];
+      state.progressTrack = 30;
+      state.age = 3;
+
+      const result = processCalculateScores(state, '1', { forceEnd: true });
+
+      // Should sum vp values: 4+2=6
+      expect(result.newState.scores['1'].breakdown.routes).toBe(6);
+    });
+  });
+
   describe('GAP-019: Final scoring VP sources', () => {
     it('should NOT award VP for cash per Section 1.1', () => {
       const state = createTestGameState([1]);
@@ -170,10 +211,10 @@ describe('Rules Compliance - Scoring', () => {
       // 3 VP from technologies
       state.players['1'].technologies = ['duralumin_girders', 'geodetic_structure']; // 1+2=3
 
-      // 5 VP from routes
+      // 5 VP from routes (using vp property per Appendix F)
       state.map.routes = [
-        { id: 'r1', distance: 3, claimed: '1' },
-        { id: 'r2', distance: 2, claimed: '1' }
+        { id: 'r1', vp: 3, claimed: '1' },
+        { id: 'r2', vp: 2, claimed: '1' }
       ];
 
       // These should NOT contribute to VP

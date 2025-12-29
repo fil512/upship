@@ -321,6 +321,18 @@ const UPGRADES = {
     special: 'multi_layer',
     age: 3
   },
+  conductive_covering: {
+    id: 'conductive_covering',
+    name: 'Conductive Covering',
+    type: 'fabric',
+    slotType: 'fabricSlots',
+    requiredTech: 'grounding_systems',
+    weight: 0,
+    hullCost: 1,
+    stats: { reliability: 1 },
+    special: 'static_immunity',
+    age: 2
+  },
 
   // === COMPONENT/PAYLOAD UPGRADES ===
   passenger_gondola: {
@@ -494,6 +506,7 @@ const TECHNOLOGIES = {
   // goldbeater_skin - defined above as Germany starting tech
   fireproof_coating: { id: 'fireproof_coating', name: 'Fireproof Coating', type: 'fabric', cost: 4, age: 2 },
   aluminum_doping: { id: 'aluminum_doping', name: 'Aluminum Doping', type: 'fabric', cost: 3, age: 2 },
+  grounding_systems: { id: 'grounding_systems', name: 'Grounding Systems', type: 'fabric', cost: 3, age: 2, vp: 0 },
   // gelatinized_latex - defined above as USA starting tech
   composite_covering: { id: 'composite_covering', name: 'Composite Covering', type: 'fabric', cost: 5, age: 3 },
 

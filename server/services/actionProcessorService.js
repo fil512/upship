@@ -1331,12 +1331,13 @@ function processCalculateScores(state, playerId, data) {
     let totalVP = 0;
     const breakdown = {};
 
-    // VP from routes (distance = VP value)
+    // VP from routes per Section 12.2 and Appendix F
+    // Routes have explicit `vp` property per Appendix F specifications
     let routeVP = 0;
     const routes = state.map?.routes || [];
     for (const route of routes) {
       if (route.claimed === pid) {
-        routeVP += route.distance;
+        routeVP += route.vp || 0;
       }
     }
     breakdown.routes = routeVP;

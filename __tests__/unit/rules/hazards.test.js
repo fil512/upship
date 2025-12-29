@@ -572,6 +572,257 @@ describe('Rules Compliance - Hazards', () => {
     });
   });
 
+  describe('GAP-052: Hindenburg Disaster grants 3 VP to triggering player', () => {
+    it('should award 3 VP to the triggering player per Section 14.5', () => {
+      const state = createTestGameState();
+      state.age = 3; // Age III
+
+      // Player starts with 0 VP
+      state.players['1'].vp = 0;
+
+      // Set up a ship on a Luxury route using Hydrogen
+      state.players['1'].ships = [{
+        id: 'ship1',
+        status: 'awaiting_hazard',
+        pendingRouteId: 'luxury_route',
+        gasType: 'hydrogen',
+        stats: { reliability: 2 }
+      }];
+
+      // Set up hazard deck with Catastrophic Explosion
+      state.players['1'].hazardDeck = [{
+        type: 'catastrophic_explosion',
+        category: 'fire',
+        hydrogenOnly: true,
+        noSave: true,
+        difficulty: 99,
+        name: 'Catastrophic Explosion'
+      }];
+
+      // The route is a Luxury route
+      state.map.routes = [{
+        id: 'luxury_route',
+        luxury: true,
+        vp: 5,
+        income: 10
+      }];
+
+      const result = processHazardCheck(state, '1', { shipId: 'ship1' });
+
+      // Game should be flagged for ending (Hindenburg Disaster)
+      expect(result.newState.hindenburgDisaster).toBe(true);
+
+      // Triggering player should gain 3 VP per Section 14.5
+      expect(result.newState.players['1'].vp).toBe(3);
+    });
+
+    it('should log the 3 VP award in game log', () => {
+      const state = createTestGameState();
+      state.age = 3;
+      state.players['1'].vp = 5; // Existing VP
+
+      state.players['1'].ships = [{
+        id: 'ship1',
+        status: 'awaiting_hazard',
+        pendingRouteId: 'luxury_route',
+        gasType: 'hydrogen',
+        stats: { reliability: 2 }
+      }];
+
+      state.players['1'].hazardDeck = [{
+        type: 'catastrophic_explosion',
+        category: 'fire',
+        hydrogenOnly: true,
+        noSave: true,
+        difficulty: 99,
+        name: 'Catastrophic Explosion'
+      }];
+
+      state.map.routes = [{
+        id: 'luxury_route',
+        luxury: true,
+        vp: 5,
+        income: 10
+      }];
+
+      const result = processHazardCheck(state, '1', { shipId: 'ship1' });
+
+      // VP should be added to existing (5 + 3 = 8)
+      expect(result.newState.players['1'].vp).toBe(8);
+
+      // Check log contains VP award message
+      const vpLogEntry = result.newState.log.find(entry =>
+        entry.message && entry.message.includes('3 VP')
+      );
+      expect(vpLogEntry).toBeDefined();
+    });
+  });
+
+  describe('GAP-051: Insurance policy usage on ship crash', () => {
+    it('should use insurance policy to recover ship to hangar when fire hazard causes crash', () => {
+      const state = createTestGameState();
+      state.age = 1;
+      state.players['1'].engineers = 0; // No engineers to spend
+      state.players['1'].insurance = 2; // Has 2 insurance policies
+
+      // Hydrogen ship
+      state.players['1'].ships = [{
+        id: 'ship1',
+        status: 'awaiting_hazard',
+        pendingRouteId: 'route_1',
+        gasType: 'hydrogen',
+        stats: { speed: 1, reliability: 0, ceiling: 0, range: 3 }
+      }];
+
+      // Gas Cell Rupture requires 2 Engineers - will crash without them
+      state.players['1'].hazardDeck = [{
+        id: 'gas_cell_rupture_0',
+        type: 'gas_cell_rupture',
+        category: 'fire',
+        name: 'Gas Cell Rupture',
+        hydrogenOnly: true,
+        engineerCost: 2
+      }];
+
+      state.map.routes = [{
+        id: 'route_1',
+        from: 'A',
+        to: 'B',
+        income: 2,
+        claimed: null
+      }];
+
+      const result = processHazardCheck(state, '1', { shipId: 'ship1', engineersToSpend: 0 });
+
+      // Ship should be recovered to hangar (not destroyed) due to insurance
+      expect(result.newState.players['1'].ships[0].status).toBe('hangar');
+      // Insurance policy should be consumed
+      expect(result.newState.players['1'].insurance).toBe(1);
+    });
+
+    it('should NOT use insurance for Catastrophic Explosion (no save possible)', () => {
+      const state = createTestGameState();
+      state.age = 1;
+      state.players['1'].insurance = 3; // Has full insurance
+
+      // Hydrogen ship
+      state.players['1'].ships = [{
+        id: 'ship1',
+        status: 'awaiting_hazard',
+        pendingRouteId: 'route_1',
+        gasType: 'hydrogen',
+        stats: { speed: 10, reliability: 10, ceiling: 10, range: 10 }
+      }];
+
+      // Catastrophic Explosion - no save
+      state.players['1'].hazardDeck = [{
+        id: 'catastrophic_explosion_0',
+        type: 'catastrophic_explosion',
+        category: 'fire',
+        name: 'Catastrophic Explosion',
+        hydrogenOnly: true,
+        noSave: true
+      }];
+
+      state.map.routes = [{
+        id: 'route_1',
+        from: 'A',
+        to: 'B',
+        income: 2,
+        claimed: null,
+        luxury: false
+      }];
+
+      const result = processHazardCheck(state, '1', { shipId: 'ship1' });
+
+      // Ship should be destroyed - insurance doesn't help with catastrophic explosion
+      expect(result.newState.players['1'].ships[0].status).toBe('destroyed');
+      // Insurance should NOT be consumed
+      expect(result.newState.players['1'].insurance).toBe(3);
+    });
+
+    it('should use insurance for Static Discharge failure', () => {
+      const state = createTestGameState();
+      state.age = 1;
+      state.players['1'].engineers = 0;
+      state.players['1'].insurance = 1;
+
+      // Hydrogen ship with low reliability
+      state.players['1'].ships = [{
+        id: 'ship1',
+        status: 'awaiting_hazard',
+        pendingRouteId: 'route_1',
+        gasType: 'hydrogen',
+        stats: { speed: 1, reliability: 0, ceiling: 0, range: 3 }
+      }];
+
+      // Static Discharge - Difficulty 4 Reliability check
+      state.players['1'].hazardDeck = [{
+        id: 'static_discharge_0',
+        type: 'static_discharge',
+        category: 'fire',
+        name: 'Static Discharge',
+        hydrogenOnly: true,
+        difficulty: 4
+      }];
+
+      state.map.routes = [{
+        id: 'route_1',
+        from: 'A',
+        to: 'B',
+        income: 2,
+        claimed: null
+      }];
+
+      // No conductive covering, will fail the check
+      state.players['1'].blueprint.fabricSlots = [];
+
+      const result = processHazardCheck(state, '1', { shipId: 'ship1' });
+
+      // Ship should be recovered to hangar due to insurance
+      expect(result.newState.players['1'].ships[0].status).toBe('hangar');
+      // Insurance should be consumed
+      expect(result.newState.players['1'].insurance).toBe(0);
+    });
+
+    it('should NOT recover ship if no insurance policies available', () => {
+      const state = createTestGameState();
+      state.age = 1;
+      state.players['1'].engineers = 0;
+      state.players['1'].insurance = 0; // No insurance
+
+      state.players['1'].ships = [{
+        id: 'ship1',
+        status: 'awaiting_hazard',
+        pendingRouteId: 'route_1',
+        gasType: 'hydrogen',
+        stats: { speed: 1, reliability: 0, ceiling: 0, range: 3 }
+      }];
+
+      state.players['1'].hazardDeck = [{
+        id: 'gas_cell_rupture_0',
+        type: 'gas_cell_rupture',
+        category: 'fire',
+        name: 'Gas Cell Rupture',
+        hydrogenOnly: true,
+        engineerCost: 2
+      }];
+
+      state.map.routes = [{
+        id: 'route_1',
+        from: 'A',
+        to: 'B',
+        income: 2,
+        claimed: null
+      }];
+
+      const result = processHazardCheck(state, '1', { shipId: 'ship1', engineersToSpend: 0 });
+
+      // Ship should be destroyed - no insurance to save it
+      expect(result.newState.players['1'].ships[0].status).toBe('destroyed');
+    });
+  });
+
   describe('GAP-046: Fire-Resistant Fabric special effect', () => {
     it('should auto-pass first fire hazard per age if player has Fire-Resistant Fabric', () => {
       const state = createTestGameState();

@@ -38,7 +38,8 @@ function calculateTechnologyVP(techIds) {
 }
 
 /**
- * Calculate VP from claimed routes based on distance per Section 12.2
+ * Calculate VP from claimed routes per Section 12.2 and Appendix F
+ * Routes have explicit `vp` property per Appendix F specifications
  * @param {Object} state - Game state
  * @param {string} playerId - Player ID
  * @returns {number} Total VP from routes
@@ -49,7 +50,7 @@ function calculateRouteVP(state, playerId) {
 
   for (const route of routes) {
     if (route.claimed === playerId) {
-      totalVP += route.distance || 0;
+      totalVP += route.vp || 0;
     }
   }
 
