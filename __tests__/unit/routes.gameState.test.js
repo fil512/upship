@@ -1,0 +1,431 @@
+const express = require('express');
+const request = require('supertest');
+
+// Mock dependencies before requiring anything
+jest.mock('../../server/db', () => ({
+  pool: {
+    query: jest.fn(),
+    connect: jest.fn(),
+    on: jest.fn()
+  }
+}));
+
+jest.mock('../../server/auth', () => ({
+  requireAuth: (req, res, next) => {
+    if (!req.session || !req.session.userId) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+    next();
+  }
+}));
+
+jest.mock('../../server/services/gameStateService', () => ({
+  getGameState: jest.fn(),
+  updateGameState: jest.fn(),
+  getGameActions: jest.fn(),
+  FACTION_CONFIG: {
+    germany: { startingTechnologies: [], bannedTechnologies: ['helium_handling'] },
+    britain: { startingTechnologies: [] },
+    usa: { startingTechnologies: ['helium_handling'] },
+    italy: { startingTechnologies: [] }
+  }
+}));
+
+const { pool } = require('../../server/db');
+const gameStateService = require('../../server/services/gameStateService');
+const gameStateRouter = require('../../server/routes/gameState');
+
+function createApp(userId = 1) {
+  const app = express();
+  app.use(express.json());
+  app.use((req, res, next) => {
+    req.session = { userId };
+    next();
+  });
+  app.use('/api/state', gameStateRouter);
+  return app;
+}
+
+function createAppWithNoSession() {
+  const app = express();
+  app.use(express.json());
+  app.use((req, res, next) => {
+    req.session = {};
+    next();
+  });
+  app.use('/api/state', gameStateRouter);
+  return app;
+}
+
+// Create a comprehensive game state that matches what the routes expect
+function createFullGameState() {
+  return {
+    age: 1,
+    turn: 1,
+    round: 1,
+    phase: 'worker_placement',
+    currentPlayerIndex: 0,
+    playerOrder: [1, 2, 3, 4],
+    workerPlacement: {
+      placementOrder: [1, 2, 3, 4],
+      currentPlacerIndex: 0,
+      passedPlayers: []
+    },
+    passedPlayers: [],
+    roundPasses: { '1': 0, '2': 0, '3': 0, '4': 0 },
+    completedCleanup: [],
+    players: {
+      '1': {
+        faction: 'germany',
+        cash: 100,
+        income: 5,
+        officers: 2,
+        engineers: 3,
+        loans: 0,
+        research: 5,
+        gasCubes: { hydrogen: 5, helium: 0 },
+        technologies: ['rigid_frame', 'duralumin_girders'],
+        ships: [],
+        routes: [],
+        blueprint: {
+          frameSlots: [null],
+          fabricSlots: [null],
+          driveSlots: [null],
+          componentSlots: [],
+          gasSockets: []
+        },
+        hand: [{ symbol: 'wrench', id: 'card1' }, { symbol: 'coin', id: 'card2' }],
+        deck: [{ symbol: 'propeller', id: 'card3' }],
+        discardPile: [],
+        hazardDeck: [{ id: 'hazard1', severity: 1 }],
+        pendingActions: {},
+        collectedIncome: false,
+        officerIncomeLevel: 0,
+        engineerIncomeLevel: 0
+      },
+      '2': {
+        faction: 'britain',
+        cash: 80,
+        income: 4,
+        officers: 1,
+        engineers: 2,
+        loans: 0,
+        research: 0,
+        gasCubes: { hydrogen: 3, helium: 0 },
+        technologies: [],
+        ships: [],
+        routes: [],
+        blueprint: { frameSlots: [], fabricSlots: [], driveSlots: [], componentSlots: [], gasSockets: [] },
+        hand: [{ symbol: 'coin', id: 'card4' }],
+        deck: [],
+        discardPile: [],
+        hazardDeck: [],
+        pendingActions: {},
+        collectedIncome: false
+      }
+    },
+    groundBoard: { placements: {} },
+    gasMarket: { hydrogen: 10, helium: 8 },
+    rdBoard: [
+      { id: 'helium_handling', name: 'Helium Handling', cost: 5, type: 'frame' }
+    ],
+    techBag: [],
+    marketRow: [{ id: 'market1', cost: 3, symbol: 'wrench' }],
+    availableRoutes: [
+      { id: 'route-1', distance: 2, victoryPoints: 3, from: 'A', to: 'B' }
+    ],
+    log: []
+  };
+}
+
+describe('GameState Routes', () => {
+  let app;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    app = createApp();
+  });
+
+  describe('GET /:gameId', () => {
+    it('should return game state for valid player', async () => {
+      const gameState = createFullGameState();
+      pool.query.mockResolvedValueOnce({ rows: [{ user_id: 1 }] });
+      gameStateService.getGameState.mockResolvedValue({ state: gameState, version: 1 });
+
+      const res = await request(app).get('/api/state/1');
+
+      expect(res.status).toBe(200);
+      expect(res.body.gameState).toBeDefined();
+      expect(res.body.gameState.state).toBeDefined();
+    });
+
+    it('should return 401 if not authenticated', async () => {
+      const noAuthApp = createAppWithNoSession();
+      const res = await request(noAuthApp).get('/api/state/1');
+      expect(res.status).toBe(401);
+    });
+
+    it('should return 403 if user is not in game', async () => {
+      pool.query.mockResolvedValueOnce({ rows: [] });
+
+      const res = await request(app).get('/api/state/1');
+
+      expect(res.status).toBe(403);
+      expect(res.body.error).toBe('Not a player in this game');
+    });
+
+    it('should return 404 if game state not found', async () => {
+      pool.query.mockResolvedValueOnce({ rows: [{ user_id: 1 }] });
+      gameStateService.getGameState.mockResolvedValue(null);
+
+      const res = await request(app).get('/api/state/1');
+
+      expect(res.status).toBe(404);
+    });
+
+    it('should handle errors gracefully', async () => {
+      pool.query.mockRejectedValueOnce(new Error('Database error'));
+
+      const res = await request(app).get('/api/state/1');
+
+      expect(res.status).toBe(500);
+    });
+  });
+
+  describe('GET /:gameId/upgrades', () => {
+    it('should return available upgrades', async () => {
+      const gameState = createFullGameState();
+      pool.query.mockResolvedValueOnce({ rows: [{ user_id: 1 }] });
+      gameStateService.getGameState.mockResolvedValue({ state: gameState, version: 1 });
+
+      const res = await request(app).get('/api/state/1/upgrades');
+
+      expect(res.status).toBe(200);
+      expect(res.body).toHaveProperty('available');
+      expect(res.body).toHaveProperty('allUpgrades');
+      expect(res.body).toHaveProperty('allTechnologies');
+    });
+
+    it('should return 403 if not in game', async () => {
+      pool.query.mockResolvedValueOnce({ rows: [] });
+
+      const res = await request(app).get('/api/state/1/upgrades');
+
+      expect(res.status).toBe(403);
+    });
+
+    it('should return 404 if game state not found', async () => {
+      pool.query.mockResolvedValueOnce({ rows: [{ user_id: 1 }] });
+      gameStateService.getGameState.mockResolvedValue(null);
+
+      const res = await request(app).get('/api/state/1/upgrades');
+
+      expect(res.status).toBe(404);
+    });
+
+    it('should handle errors gracefully', async () => {
+      pool.query.mockRejectedValueOnce(new Error('Database error'));
+
+      const res = await request(app).get('/api/state/1/upgrades');
+
+      expect(res.status).toBe(500);
+    });
+  });
+
+  describe('GET /:gameId/ground-board', () => {
+    it('should return ground board state', async () => {
+      const gameState = createFullGameState();
+      pool.query.mockResolvedValueOnce({ rows: [{ user_id: 1 }] });
+      gameStateService.getGameState.mockResolvedValue({ state: gameState, version: 1 });
+
+      const res = await request(app).get('/api/state/1/ground-board');
+
+      expect(res.status).toBe(200);
+      expect(res.body).toHaveProperty('locations');
+      expect(res.body).toHaveProperty('placements');
+      expect(res.body).toHaveProperty('symbols');
+    });
+
+    it('should return 403 if not in game', async () => {
+      pool.query.mockResolvedValueOnce({ rows: [] });
+
+      const res = await request(app).get('/api/state/1/ground-board');
+
+      expect(res.status).toBe(403);
+    });
+
+    it('should return 404 if game state not found', async () => {
+      pool.query.mockResolvedValueOnce({ rows: [{ user_id: 1 }] });
+      gameStateService.getGameState.mockResolvedValue(null);
+
+      const res = await request(app).get('/api/state/1/ground-board');
+
+      expect(res.status).toBe(404);
+    });
+
+    it('should handle errors gracefully', async () => {
+      pool.query.mockRejectedValueOnce(new Error('Database error'));
+
+      const res = await request(app).get('/api/state/1/ground-board');
+
+      expect(res.status).toBe(500);
+    });
+  });
+
+  describe('GET /:gameId/actions', () => {
+    it('should return game actions', async () => {
+      pool.query.mockResolvedValueOnce({ rows: [{ user_id: 1 }] });
+      gameStateService.getGameActions.mockResolvedValue([
+        { id: 1, action_type: 'END_TURN', created_at: new Date() }
+      ]);
+
+      const res = await request(app).get('/api/state/1/actions');
+
+      expect(res.status).toBe(200);
+      expect(res.body.actions).toHaveLength(1);
+    });
+
+    it('should return 403 if not in game', async () => {
+      pool.query.mockResolvedValueOnce({ rows: [] });
+
+      const res = await request(app).get('/api/state/1/actions');
+
+      expect(res.status).toBe(403);
+    });
+
+    it('should handle errors gracefully', async () => {
+      pool.query.mockRejectedValueOnce(new Error('Database error'));
+
+      const res = await request(app).get('/api/state/1/actions');
+
+      expect(res.status).toBe(500);
+    });
+  });
+
+  describe('POST /:gameId/action', () => {
+    it('should return 404 if game not found', async () => {
+      gameStateService.getGameState.mockResolvedValue(null);
+
+      const res = await request(app)
+        .post('/api/state/1/action')
+        .send({ actionType: 'PASS' });
+
+      expect(res.status).toBe(404);
+    });
+
+    it('should return 400 for missing action type', async () => {
+      const gameState = createFullGameState();
+      gameStateService.getGameState.mockResolvedValue({ state: gameState, version: 1, id: 1 });
+
+      const res = await request(app)
+        .post('/api/state/1/action')
+        .send({});
+
+      expect(res.status).toBe(400);
+      expect(res.body.error).toContain('Action type is required');
+    });
+
+    it('should return 400 for unknown action type', async () => {
+      const gameState = createFullGameState();
+      gameStateService.getGameState.mockResolvedValue({ state: gameState, version: 1, id: 1 });
+
+      const res = await request(app)
+        .post('/api/state/1/action')
+        .send({ actionType: 'UNKNOWN_ACTION' });
+
+      expect(res.status).toBe(400);
+      expect(res.body.error).toContain('Unknown action');
+    });
+
+    it('should return 403 when not player turn in worker_placement', async () => {
+      const gameState = createFullGameState();
+      gameState.workerPlacement.currentPlacerIndex = 1; // Player 2's turn
+      gameStateService.getGameState.mockResolvedValue({ state: gameState, version: 1, id: 1 });
+
+      const res = await request(app)
+        .post('/api/state/1/action')
+        .send({ actionType: 'PASS' });
+
+      expect(res.status).toBe(403);
+      expect(res.body.error).toContain('Not your turn');
+    });
+
+    it('should process PASS action when player turn', async () => {
+      const gameState = createFullGameState();
+      gameStateService.getGameState.mockResolvedValue({ state: gameState, version: 1, id: 1 });
+      gameStateService.updateGameState.mockResolvedValue({ state: gameState, version: 2 });
+
+      const res = await request(app)
+        .post('/api/state/1/action')
+        .send({ actionType: 'PASS' });
+
+      expect(res.status).toBe(200);
+      expect(gameStateService.updateGameState).toHaveBeenCalled();
+    });
+
+    it('should process END_TURN action in income_cleanup phase', async () => {
+      const gameState = createFullGameState();
+      gameState.phase = 'income_cleanup';
+      gameStateService.getGameState.mockResolvedValue({ state: gameState, version: 1, id: 1 });
+      gameStateService.updateGameState.mockResolvedValue({ state: gameState, version: 2 });
+
+      const res = await request(app)
+        .post('/api/state/1/action')
+        .send({ actionType: 'END_TURN' });
+
+      expect(res.status).toBe(200);
+    });
+
+    it('should process TAKE_LOAN action', async () => {
+      const gameState = createFullGameState();
+      gameState.phase = 'income_cleanup';
+      gameStateService.getGameState.mockResolvedValue({ state: gameState, version: 1, id: 1 });
+      gameStateService.updateGameState.mockResolvedValue({ state: gameState, version: 2 });
+
+      const res = await request(app)
+        .post('/api/state/1/action')
+        .send({ actionType: 'TAKE_LOAN' });
+
+      expect(res.status).toBe(200);
+    });
+
+    it('should reject TAKE_LOAN when max loans reached', async () => {
+      const gameState = createFullGameState();
+      gameState.phase = 'income_cleanup';
+      gameState.players['1'].loans = 3;
+      gameStateService.getGameState.mockResolvedValue({ state: gameState, version: 1, id: 1 });
+
+      const res = await request(app)
+        .post('/api/state/1/action')
+        .send({ actionType: 'TAKE_LOAN' });
+
+      expect(res.status).toBe(400);
+      expect(res.body.error).toContain('Maximum');
+    });
+
+    it('should process RECALL_AGENTS action', async () => {
+      const gameState = createFullGameState();
+      gameState.phase = 'income_cleanup';
+      gameStateService.getGameState.mockResolvedValue({ state: gameState, version: 1, id: 1 });
+      gameStateService.updateGameState.mockResolvedValue({ state: gameState, version: 2 });
+
+      const res = await request(app)
+        .post('/api/state/1/action')
+        .send({ actionType: 'RECALL_AGENTS' });
+
+      expect(res.status).toBe(200);
+    });
+
+    it('should handle action processing errors', async () => {
+      const gameState = createFullGameState();
+      gameStateService.getGameState.mockResolvedValue({ state: gameState, version: 1, id: 1 });
+      gameStateService.updateGameState.mockRejectedValue(new Error('Update failed'));
+
+      const res = await request(app)
+        .post('/api/state/1/action')
+        .send({ actionType: 'PASS' });
+
+      expect(res.status).toBe(500);
+    });
+  });
+});

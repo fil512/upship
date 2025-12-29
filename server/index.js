@@ -69,4 +69,9 @@ async function start() {
   }
 }
 
-start();
+// Only start if run directly (not imported for testing)
+if (require.main === module) {
+  start();
+}
+
+module.exports = app;
