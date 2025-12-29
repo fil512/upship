@@ -721,7 +721,7 @@ const commands = {
       console.log('  PLAY_CARD idx=0             - Play card from hand');
       console.log('  RECRUIT_CREW type=officer n=1 - Recruit crew');
       console.log('  BUILD_SHIP count=1          - Build ships');
-      console.log('  LAUNCH_SHIP shipId=<id> gasType=hydrogen - Launch a ship (spends gas from reserve)');
+      console.log('  LAUNCH_SHIP shipId=<id> routeId=<route> gasType=hydrogen - Launch ship to route');
       console.log('  ACQUIRE_TECHNOLOGY tech=<id> - Buy tech from R&D board');
       console.log('  INSTALL_UPGRADE slot=frame i=0 id=<upgradeId>');
       console.log('  REMOVE_UPGRADE slot=frame i=0');
@@ -839,18 +839,19 @@ const commands = {
   async load(username, args) {
     console.log(`${COLORS.yellow}Note: Gas loading is no longer needed.${COLORS.reset}`);
     console.log('Gas cubes are automatically spent from your reserve when you launch.');
-    console.log('Use: upship <user> launch <gameId> <shipId> [hydrogen|helium]');
+    console.log('Use: upship <user> launch <gameId> <shipId> <routeId> [hydrogen|helium]');
     return;
   },
 
   async launch(username, args) {
-    const [gameId, shipId, gasType = 'hydrogen'] = args;
-    if (!gameId || !shipId) {
-      console.log('Usage: upship <user> launch <gameId> <shipId> [hydrogen|helium]');
-      console.log('  Gas type defaults to hydrogen if not specified.');
+    const [gameId, shipId, routeId, gasType = 'hydrogen'] = args;
+    if (!gameId || !shipId || !routeId) {
+      console.log('Usage: upship <user> launch <gameId> <shipId> <routeId> [hydrogen|helium]');
+      console.log('  Launch a ship to claim a route. Gas type defaults to hydrogen.');
+      console.log('  Use "upship <user> routes <gameId>" to see available routes.');
       return;
     }
-    return commands.action(username, [gameId, 'LAUNCH_SHIP', `shipId=${shipId}`, `gasType=${gasType}`]);
+    return commands.action(username, [gameId, 'LAUNCH_SHIP', `shipId=${shipId}`, `routeId=${routeId}`, `gasType=${gasType}`]);
   },
 
   async tech(username, args) {
@@ -904,13 +905,10 @@ const commands = {
   },
 
   async claim(username, args) {
-    const [gameId, shipId, routeId] = args;
-    if (!gameId || !shipId || !routeId) {
-      console.log('Usage: upship <user> claim <gameId> <shipId> <routeId>');
-      console.log('  Use "routes" command to see available routes.');
-      return;
-    }
-    return commands.action(username, [gameId, 'CLAIM_ROUTE', `shipId=${shipId}`, `routeId=${routeId}`]);
+    console.log(`${COLORS.yellow}Note: Route claiming is now part of the launch action.${COLORS.reset}`);
+    console.log('Use: upship <user> launch <gameId> <shipId> <routeId> [hydrogen|helium]');
+    console.log('Ships are launched directly to routes (per Section 7.2 of the rules).');
+    return;
   },
 
   // Help
@@ -951,8 +949,7 @@ ${c(COLORS.yellow, 'Actions (shorthand):')}
   upship <user> draw <gameId> [count]         Draw cards
   upship <user> build <gameId> [count]        Build ships
   upship <user> recruit <id> <type> [count]   Recruit crew
-  upship <user> launch <gameId> <shipId> [gas] Launch a ship (gas: hydrogen|helium)
-  upship <user> claim <gameId> <shipId> <routeId>  Claim a route with launched ship
+  upship <user> launch <gameId> <shipId> <routeId> [gas]  Launch ship to claim route
   upship <user> tech <gameId> <techId>        Acquire technology from R&D
 
 ${c(COLORS.yellow, 'Actions (generic):')}

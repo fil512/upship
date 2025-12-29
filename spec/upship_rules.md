@@ -617,18 +617,11 @@ The Ground Board has 12 action spaces, each marked with one of three symbols. To
 - **Hull Upgrade Rule:** If you upgrade your Frame or Fabric while ships are in your Launch Hangar, pay the Hull Cost difference for each ship already built. If you downgrade (remove or replace with cheaper tiles), you do not receive a refund
 
 **4. The Launchpad (Propeller)**
-- **Action:** Launch ships from your Launch Hangar
-- **Requirement:** Blueprint must pass Physics Check (Total Lift ≥ Total Weight) AND all Frame/Fabric slots must be filled
-- **Cost per Launch:** Officers (equal to Age number) + Lifting Gas (from Gas Reserve first; deficit at market price)
-- **Effect:** You may launch as many ships from your Launch Hangar as you wish, one after another. Each launch is resolved separately:
-  1. Verify Physics Check passes and all structural slots are filled
-  2. Spend Officers equal to Age (1/2/3) and pay for gas (choose Hydrogen or Helium, no mixing)
-  3. Choose a ship and assign it to a valid route
-  4. Resolve Hazard Check (draw one Hazard Card)
-  5. If successful: Place ship on route, increase Income Track, gain city bonus
-  6. Repeat for additional ships, or stop at any time
-- **Result:** You control pacing—stop after a bad Hazard draw, or press your luck
-- **Strategic Note:** Building is cheap; launching is the commitment. Build ships early, upgrade your Blueprint, then launch when ready
+- **Action:** Launch ships to claim routes on the map (see Section 7.2 for full procedure)
+- **Requirement:** Physics Check must pass AND all Frame/Fabric slots filled
+- **Cost per Launch:** Officers (Age number) + Lifting Gas
+- **Summary:** Choose a target route → pay costs → resolve Hazard Check → place ship on route if successful
+- **Strategic Note:** Build ships early, upgrade your Blueprint, then launch when ready
 
 **5. The Academy (Coin)**
 - **Action:** Recruit crew from the shared supply
@@ -759,24 +752,21 @@ Each Frame and Fabric upgrade tile shows a **Hull Cost modifier** (£0 to £3). 
 
 When you take the **Launchpad Action**, you may launch as many ships from your Launch Hangar as you wish, one after another. Each launch is resolved separately:
 
-1. **Verify Requirements:**
-   - Physics Check must pass (Total Lift ≥ Total Weight)
-   - All Frame and Fabric slots must be filled
-2. **Select a Ship:** Choose one ship from your Launch Hangar
-3. **Pay Launch Costs:**
-   - Spend Officers equal to Age number (1/2/3) from your Barracks (returned to shared supply)
-   - Choose gas type (Hydrogen or Helium—no mixing)
-   - Pay for Lifting Gas (use Gas Reserve first; any deficit at current market price)
-4. **Assign Route:** Declare which route this ship will attempt (must meet route's stat requirements)
-5. **Resolve Hazard Check:** Draw a Hazard Card and resolve it (see 7.3)
-6. **Outcome:**
-   - **Success:** Place ship on route; increase your Income Track; gain city bonus from one endpoint
-   - **Aborted:** Ship returns to your Launch Hangar (Officers and gas lost)
-   - **Damaged:** Ship goes to Repair Hangar (Officers and gas lost)
-   - **Crash:** Ship destroyed, returns to shared supply (Officers and gas lost)
-7. **Continue or Stop:** After resolving each ship, you may launch another ship or stop
+1. **Choose a Target Route:** Select an unclaimed route on the map. Your Blueprint stats must meet the route's requirements (Range ≥ distance, Speed ≥ speed requirement). You cannot launch without a valid destination.
+2. **Verify Launch Requirements:** Physics Check must pass (Total Lift ≥ Total Weight) and all Frame/Fabric slots must be filled.
+3. **Select a Ship and Pay Costs:** Choose a ship from your Launch Hangar. Spend Officers equal to Age (1/2/3). Pay for lifting gas—Hydrogen or Helium, no mixing. Use Gas Reserve first; any deficit at current market price.
+4. **Resolve Hazard Check:** Draw a Hazard Card and resolve it (see Section 7.3).
+5. **Determine Outcome:**
 
-**Strategic Timing:** Building is cheap; launching is the commitment. You can stockpile ships in your Hangar, then upgrade your Blueprint to pass the Physics Check before launching.
+| Outcome | When | Ship | Officers | Gas |
+|---------|------|------|----------|-----|
+| **Success** | Pass hazard check | On route (+income, +city bonus) | Spent | Spent |
+| **Aborted** | Fail non-fire hazard | Returns to Hangar | **Kept** | Spent |
+| **Destroyed** | Crash from fire hazard | Lost (to supply) | Spent | Spent |
+
+6. **Continue or Stop:** You may launch another ship to a different route, or stop at any time.
+
+**Strategic Timing:** Building is cheap; launching is the commitment. You can stockpile ships in your Hangar, then upgrade your Blueprint before launching.
 
 ## 7.3 Resolving Hazard Checks
 
@@ -785,16 +775,13 @@ Each Hazard Card shows a **Challenge Type** and **Difficulty Rating**:
 - *Example:* "Icing Conditions — Requires Ceiling 2"
 - *Example:* "Clear Skies — Auto Pass"
 
-**Check Your Ship Stat:**
-> Compare your Blueprint's relevant stat to the Hazard Difficulty
+**Resolution:** Compare your Blueprint's relevant stat to the Hazard Difficulty. If your stat meets or exceeds the difficulty, you pass. If not, the launch is **Aborted** (see Section 7.2 for outcomes).
 
-**Reactive Engineer Spending:** After seeing the Hazard Card, you may spend Engineer tokens from your Barracks to boost your check. Each Engineer spent adds +1 to your total. Engineers spent now won't generate Research during the Reveal Phase.
+**Reactive Engineer Spending:** After seeing the Hazard Card, you may spend Engineers from your Barracks to boost your check (+1 per Engineer). Engineers spent this way won't generate Research during the Reveal Phase.
 
-**Outcome:**
-- **Pass:** If your ship stat (+ Engineers spent) meets or exceeds the Difficulty, the ship is successfully launched. Place it on the route and increase your Income Track.
-- **Fail:** If your total is less than the Difficulty, the launch fails. The ship returns to your Hangar Bay, but you lose the Officers and gas already spent.
+**Fire Hazards:** Fire-type hazards have special rules—see Section 7.4.
 
-**Hazard Card Discard:** After resolving a Hazard Check, place the drawn card face-up in your Hazard discard pile. When your Hazard deck is empty and you need to draw, shuffle your discard pile to form a new deck.
+**Hazard Card Discard:** After resolving, place the card face-up in your Hazard discard pile. When your deck is empty, shuffle your discard pile to form a new deck.
 
 ## 7.4 Fire Hazards (Hydrogen Ships)
 

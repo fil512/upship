@@ -2037,9 +2037,37 @@ function calculateRequiredGasCubes(blueprint) {
 
 // Launch a ship from hangar
 function processLaunchShip(state, playerId, data) {
-  const { shipId, gasType = 'hydrogen' } = data;
+  const { shipId, routeId, gasType = 'hydrogen' } = data;
   const playerState = state.players[playerId];
 
+  // Step 1: Choose a target route (Section 6.1 Launchpad - must select route first)
+  if (!routeId) {
+    return { error: 'Must specify a route to launch to (routeId required)' };
+  }
+
+  const route = state.map?.routes?.find(r => r.id === routeId);
+  if (!route) {
+    return { error: `Route not found: ${routeId}` };
+  }
+  if (route.claimed) {
+    return { error: `Route ${route.from} → ${route.to} is already claimed` };
+  }
+
+  // Calculate ship stats to validate against route requirements
+  const stats = calculateBlueprintStats(playerState.blueprint, state.age);
+
+  // Validate Range meets route distance requirement
+  if (stats.range < route.distance) {
+    return { error: `Ship Range (${stats.range}) does not meet route distance requirement (${route.distance})` };
+  }
+
+  // Validate Speed meets route speed requirement (if any)
+  const routeSpeed = route.speed || 1;
+  if (stats.speed < routeSpeed) {
+    return { error: `Ship Speed (${stats.speed}) does not meet route speed requirement (${routeSpeed})` };
+  }
+
+  // Step 2: Verify launch requirements
   // Validate gas type
   if (!['hydrogen', 'helium'].includes(gasType)) {
     return { error: 'Gas type must be hydrogen or helium' };
@@ -2059,7 +2087,7 @@ function processLaunchShip(state, playerId, data) {
     return { error: `Cannot launch: ${emptyFabricSlots} Fabric slot(s) must be filled` };
   }
 
-  // Find ship in hangar
+  // Step 3: Select a ship and validate resources
   const ships = playerState.ships || [];
   const shipIndex = ships.findIndex(s => s.id === shipId && s.status === 'hangar');
 
@@ -2083,22 +2111,33 @@ function processLaunchShip(state, playerId, data) {
     return { error: `Not enough ${gasType}: need ${requiredCubes}, have ${availableCubes}` };
   }
 
-  // Deduct officers
+  // Pay launch costs - deduct officers and gas
   playerState.officers -= requiredOfficers;
-
-  // Deduct gas cubes from reserve
   playerState.gasCubes[gasType] -= requiredCubes;
 
-  // Calculate ship stats for the launch
-  const stats = calculateBlueprintStats(playerState.blueprint, state.age);
+  // Step 4: Hazard Check would go here (TODO: implement full hazard system)
+  // For now, launches always succeed
 
-  // Update ship to launched status
-  ships[shipIndex].status = 'launched';
+  // Step 5: Success - place ship on route
+  // Update ship status to on_route (not 'launched' - it goes directly to the route)
+  ships[shipIndex].status = 'on_route';
   ships[shipIndex].stats = stats;
   ships[shipIndex].launchedAge = state.age;
-  ships[shipIndex].gasType = gasType;  // Track which gas was used
+  ships[shipIndex].gasType = gasType;
+  ships[shipIndex].routeId = routeId;
 
-  // Build a stats summary showing all non-baseline stats
+  // Claim the route
+  route.claimed = playerId;
+  route.claimedBy = {
+    playerId,
+    shipId,
+    turn: state.turn
+  };
+
+  // Increase income from the route
+  playerState.income += route.income;
+
+  // Build a stats summary for the log
   const statParts = [`Range ${stats.range}`, `Speed ${stats.speed}`];
   if (stats.ceiling > 0) statParts.push(`Ceiling ${stats.ceiling}`);
   if (stats.reliability > 0) statParts.push(`Reliability ${stats.reliability}`);
@@ -2106,7 +2145,7 @@ function processLaunchShip(state, playerId, data) {
 
   state.log.push({
     timestamp: new Date().toISOString(),
-    message: `Launched ship (${requiredOfficers} Officer${requiredOfficers > 1 ? 's' : ''}, ${requiredCubes} ${gasType}): ${statParts.join(', ')}`,
+    message: `Launched ship to ${route.from} → ${route.to} (${requiredOfficers} Officer${requiredOfficers > 1 ? 's' : ''}, ${requiredCubes} ${gasType}): ${statParts.join(', ')} → +${route.income} income`,
     playerId,
     type: 'action'
   });

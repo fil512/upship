@@ -172,15 +172,23 @@ def setup_game(game_name=None):
     return game_id
 
 
-def show_status(game_id=None):
-    """Show current game status."""
+def show_status(game_id=None, player=None):
+    """Show current game status.
+
+    Args:
+        game_id: Game ID (defaults to current game)
+        player: Player username to view status as (defaults to playtest_germany)
+    """
     if game_id is None:
         game_id = get_game_id()
     if not game_id:
         print("No current game. Run 'setup' first.")
         return
 
-    output = run_cli("playtest_germany", "state", game_id)
+    if player is None:
+        player = "playtest_germany"
+
+    output = run_cli(player, "state", game_id)
     print(output)
 
 
@@ -352,11 +360,22 @@ def get_available_locations(game_id):
     }
 
     # Check which locations are occupied
+    # Format in output: "│ academy: BRITAIN (Purser)" or "│ gas_depot: GERMANY (Mechanic)"
     occupied = set()
+    in_ground_board = False
     for line in output.split('\n'):
-        if 'placements' in line.lower() or 'agent at' in line.lower():
+        if 'Ground Board' in line:
+            in_ground_board = True
+            continue
+        if in_ground_board:
+            # Exit section when we hit the next section
+            if '┌─' in line and 'Ground Board' not in line:
+                break
+            # Check each location for occupation
+            # Lines look like: "│ academy: BRITAIN (Purser)"
             for loc_id in location_symbols:
-                if loc_id in line.lower():
+                # Look for "loc_id:" pattern in the line
+                if f'{loc_id}:' in line.lower():
                     occupied.add(loc_id)
 
     # Return unoccupied locations
@@ -453,8 +472,9 @@ def autoplay(num_turns=5, game_id=None):
                         if "✓" in result or "success" in result.lower():
                             print(f"  {current}: placed agent at {location['id']} using {card['name']}")
                         else:
-                            # If placement fails, pass
-                            print(f"  {current}: placement failed, passing")
+                            # If placement fails, log the error and pass
+                            error_msg = strip_ansi(result).split('\n')[0][:80]
+                            print(f"  {current}: placement failed ({error_msg}), passing")
                             result = run_cli(current, "action", game_id, "PASS")
                     else:
                         # No playable cards, pass
@@ -470,8 +490,46 @@ def autoplay(num_turns=5, game_id=None):
                         break
 
             elif phase == "REVEAL":
-                # Reveal phase: players can acquire tech and buy market cards
+                # Reveal phase: players take location actions in parallel
+                print("  Executing location actions...")
+
                 for player in PLAYERS:
+                    # Check player's status and locations
+                    output = strip_ansi(run_cli(player, "state", game_id))
+
+                    # Get player's cash
+                    cash_match = re.search(r'Cash:\s*£(\d+)', output)
+                    cash = int(cash_match.group(1)) if cash_match else 0
+
+                    # Get player's gas
+                    h2_match = re.search(r'H₂:(\d+)', output)
+                    he_match = re.search(r'He:(\d+)', output)
+                    hydrogen = int(h2_match.group(1)) if h2_match else 0
+                    helium = int(he_match.group(1)) if he_match else 0
+
+                    # Check if player has agent at construction_hall - build ships
+                    if 'construction_hall' in output.lower() and player.replace('playtest_', '').upper() in output:
+                        if cash >= 7:
+                            result = run_cli(player, "build", game_id, "1")
+                            if "✓" in result:
+                                print(f"  {player}: built a ship")
+
+                    # Check if at gas_depot - buy gas
+                    if 'gas_depot' in output.lower() and player.replace('playtest_', '').upper() in output:
+                        gas_type = "helium" if player == "playtest_usa" else "hydrogen"
+                        amount = min(4, cash)
+                        if amount > 0:
+                            result = run_cli(player, "buygas", game_id, gas_type, str(amount))
+                            if "✓" in result:
+                                print(f"  {player}: bought {amount} {gas_type}")
+
+                    # Check if at academy - recruit crew
+                    if 'academy' in output.lower() and player.replace('playtest_', '').upper() in output:
+                        if cash >= 2:
+                            result = run_cli(player, "recruit", game_id, "officer", "1")
+                            if "✓" in result:
+                                print(f"  {player}: recruited an officer")
+
                     # Try to acquire technology using research
                     techs = get_rd_board(game_id)
                     if techs:
@@ -479,7 +537,26 @@ def autoplay(num_turns=5, game_id=None):
                         result = run_cli(player, "action", game_id, "ACQUIRE_TECHNOLOGY_RESEARCH",
                                        f"techId={cheapest['id']}")
                         if "✓" in result:
-                            print(f"  {player}: acquired tech {cheapest['id']} with Research")
+                            print(f"  {player}: acquired tech {cheapest['id']}")
+
+                    # Try to launch ships to claim routes
+                    ships = get_player_ships(player, game_id)
+                    if ships['hangar']:
+                        routes = get_available_routes(game_id)
+                        # Sort routes by easiest first (lowest distance requirement)
+                        routes.sort(key=lambda r: (r.get('distance', 1), r.get('speed', 1)))
+                        gas_type = get_gas_preference(player, game_id)
+                        for ship in ships['hangar']:
+                            launched = False
+                            for route in routes:
+                                result = run_cli(player, "launch", game_id, ship['id'], route['id'], gas_type)
+                                if "✓" in result:
+                                    print(f"  {player}: launched {ship['id']} to {route['id']}")
+                                    routes.remove(route)  # Route now claimed
+                                    launched = True
+                                    break
+                            if launched:
+                                break  # Only launch one ship per player per turn
 
                     # End turn for this player
                     run_cli(player, "endturn", game_id)
@@ -510,24 +587,7 @@ def autoplay(num_turns=5, game_id=None):
                         print(f"  {current}: built a ship")
                     run_cli(current, "endturn", game_id)
 
-            elif phase == "LAUNCH":
-                for _ in range(4):
-                    current = get_current_player(game_id)
-                    if not current:
-                        break
-                    ships = get_player_ships(current, game_id)
-                    routes = get_available_routes(game_id)
-                    for ship in ships['launched']:
-                        for route in routes:
-                            if ship.get('range', 1) >= route.get('distance', 1):
-                                result = run_cli(current, "action", game_id, "CLAIM_ROUTE",
-                                               f"shipId={ship['id']}", f"routeId={route['id']}")
-                                if "✓" in result:
-                                    print(f"  {current}: claimed {route['id']}")
-                                    break
-                    run_cli(current, "endturn", game_id)
-
-            else:  # INCOME, CLEANUP, or unknown
+            else:  # Unknown or legacy phases
                 for _ in range(8):
                     current = get_current_player(game_id)
                     if current:
@@ -560,34 +620,34 @@ def autoplay(num_turns=5, game_id=None):
 
 
 def run_action(player, command, *args, game_id=None):
-    """Run a single action for a player."""
+    """Run a single action for a player.
+
+    Command can be a single word (e.g., "state") or multi-word (e.g., "place gas-depot 3").
+    If command contains spaces, it will be split into command + args.
+    """
     if game_id is None:
         game_id = get_game_id()
     if not game_id:
         print("No current game. Run 'setup' first.")
         return
 
+    # Split command if it contains spaces (e.g., "place gas-depot 3" -> ["place", "gas-depot", "3"])
+    parts = command.split()
+    if len(parts) > 1:
+        command = parts[0]
+        args = tuple(parts[1:]) + args
+
     output = run_cli(player, command, game_id, *args)
     print(output)
 
 
-def launch_ship(player, ship_id, gas_type="hydrogen"):
-    """Launch a ship."""
+def launch_ship(player, ship_id, route_id, gas_type="hydrogen"):
+    """Launch a ship to claim a route (per Section 7.2 of the rules)."""
     game_id = get_game_id()
     if not game_id:
         print("No current game. Run 'setup' first.")
         return
-    output = run_cli(player, "launch", game_id, ship_id, gas_type)
-    print(output)
-
-
-def claim_route(player, ship_id, route_id):
-    """Claim a route with a launched ship."""
-    game_id = get_game_id()
-    if not game_id:
-        print("No current game. Run 'setup' first.")
-        return
-    output = run_cli(player, "action", game_id, "CLAIM_ROUTE", f"shipId={ship_id}", f"routeId={route_id}")
+    output = run_cli(player, "launch", game_id, ship_id, route_id, gas_type)
     print(output)
 
 
@@ -633,6 +693,83 @@ def show_sessions():
             username = session.get("username", "unknown")
             user_id = session.get("userId", "unknown")
             print(f"{username}: {user_id[:8]}...")
+
+
+def show_summary(game_id=None):
+    """Show summary of all players' status."""
+    if game_id is None:
+        game_id = get_game_id()
+    if not game_id:
+        print("No current game. Run 'setup' first.")
+        return
+
+    print("=== UP SHIP! Game Summary ===\n")
+
+    # Get game info from one player
+    output = strip_ansi(run_cli("playtest_germany", "state", game_id))
+    for line in output.split('\n'):
+        if 'Age' in line and 'Turn' in line:
+            print(line.strip())
+            break
+
+    print("\n" + "=" * 60)
+    print(f"{'Player':<12} {'Cash':>6} {'Income':>7} {'Ships':>6} {'H₂':>4} {'He':>4} {'Res':>4} {'Tech':>5}")
+    print("=" * 60)
+
+    for player in PLAYERS:
+        output = strip_ansi(run_cli(player, "state", game_id))
+
+        # Parse status
+        faction = player.replace('playtest_', '').upper()
+        cash = 0
+        income = 0
+        ships = 0
+        hydrogen = 0
+        helium = 0
+        research = 0
+        tech = 0
+
+        cash_match = re.search(r'Cash:\s*£(\d+)', output)
+        if cash_match:
+            cash = int(cash_match.group(1))
+
+        income_match = re.search(r'Income:\s*(\d+)', output)
+        if income_match:
+            income = int(income_match.group(1))
+
+        ships_match = re.search(r'Ships:\s*(\d+)', output)
+        if ships_match:
+            ships = int(ships_match.group(1))
+
+        h2_match = re.search(r'H₂:(\d+)', output)
+        if h2_match:
+            hydrogen = int(h2_match.group(1))
+
+        he_match = re.search(r'He:(\d+)', output)
+        if he_match:
+            helium = int(he_match.group(1))
+
+        res_match = re.search(r'Research:\s*(\d+)', output)
+        if res_match:
+            research = int(res_match.group(1))
+
+        tech_match = re.search(r'Technologies:\s*(\d+)', output)
+        if tech_match:
+            tech = int(tech_match.group(1))
+
+        print(f"{faction:<12} £{cash:>5} {income:>5}/t {ships:>6} {hydrogen:>4} {helium:>4} {research:>4} {tech:>5}")
+
+    print("=" * 60)
+
+    # Show ships breakdown
+    print("\n=== Ships by Player ===")
+    for player in PLAYERS:
+        faction = player.replace('playtest_', '').upper()
+        ships = get_player_ships(player, game_id)
+        hangar = len(ships['hangar'])
+        launched = len(ships['launched'])
+        on_route = len(ships['on_route'])
+        print(f"{faction}: Hangar={hangar}, Launched={launched}, On Route={on_route}")
 
 
 def debug_state(game_id=None):
@@ -716,7 +853,8 @@ def main():
         autoplay(num_turns)
 
     elif cmd == "status":
-        show_status()
+        player = sys.argv[2] if len(sys.argv) > 2 else None
+        show_status(player=player)
 
     elif cmd == "endphase":
         end_phase()
@@ -738,22 +876,19 @@ def main():
             print("No current game")
 
     elif cmd == "launch":
-        if len(sys.argv) < 4:
-            print("Usage: playtest.py launch <player> <shipId> [gasType]")
-            return
-        player = sys.argv[2]
-        ship_id = sys.argv[3]
-        gas_type = sys.argv[4] if len(sys.argv) > 4 else "hydrogen"
-        launch_ship(player, ship_id, gas_type)
-
-    elif cmd == "claim":
         if len(sys.argv) < 5:
-            print("Usage: playtest.py claim <player> <shipId> <routeId>")
+            print("Usage: playtest.py launch <player> <shipId> <routeId> [gasType]")
+            print("  Launch a ship to claim a route (per Section 7.2 of the rules)")
             return
         player = sys.argv[2]
         ship_id = sys.argv[3]
         route_id = sys.argv[4]
-        claim_route(player, ship_id, route_id)
+        gas_type = sys.argv[5] if len(sys.argv) > 5 else "hydrogen"
+        launch_ship(player, ship_id, route_id, gas_type)
+
+    elif cmd == "claim":
+        print("Note: Route claiming is now part of the launch action.")
+        print("Usage: playtest.py launch <player> <shipId> <routeId> [gasType]")
 
     elif cmd == "routes":
         show_routes()
@@ -763,6 +898,9 @@ def main():
 
     elif cmd == "sessions":
         show_sessions()
+
+    elif cmd == "summary":
+        show_summary()
 
     else:
         print(f"Unknown command: {cmd}")
