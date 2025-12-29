@@ -1,64 +1,60 @@
 const express = require('express');
 const router = express.Router();
 const userService = require('../services/userService');
+const { ValidationError, UnauthorizedError, DatabaseError } = require('../errors');
 
 // Register new user
-router.post('/register', async (req, res) => {
-  const { username, password } = req.body;
-
-  if (!username || !password) {
-    return res.status(400).json({ error: 'Username and password required' });
-  }
-
-  if (username.length < 3 || username.length > 50) {
-    return res.status(400).json({ error: 'Username must be 3-50 characters' });
-  }
-
-  if (password.length < 6) {
-    return res.status(400).json({ error: 'Password must be at least 6 characters' });
-  }
-
+router.post('/register', async (req, res, next) => {
   try {
+    const { username, password } = req.body;
+
+    if (!username || !password) {
+      throw new ValidationError('Username and password required');
+    }
+
+    if (username.length < 3 || username.length > 50) {
+      throw new ValidationError('Username must be 3-50 characters');
+    }
+
+    if (password.length < 6) {
+      throw new ValidationError('Password must be at least 6 characters');
+    }
+
     const user = await userService.registerUser(username, password);
     req.session.userId = user.id;
     res.json({ user });
   } catch (error) {
-    if (error.code === '23505') { // Unique violation
-      return res.status(409).json({ error: 'Username already taken' });
-    }
-    console.error('Registration error:', error);
-    res.status(500).json({ error: 'Registration failed' });
+    next(error);
   }
 });
 
 // Login
-router.post('/login', async (req, res) => {
-  const { username, password } = req.body;
-
-  if (!username || !password) {
-    return res.status(400).json({ error: 'Username and password required' });
-  }
-
+router.post('/login', async (req, res, next) => {
   try {
+    const { username, password } = req.body;
+
+    if (!username || !password) {
+      throw new ValidationError('Username and password required');
+    }
+
     const user = await userService.loginUser(username, password);
 
     if (!user) {
-      return res.status(401).json({ error: 'Invalid credentials' });
+      throw new UnauthorizedError('Invalid credentials');
     }
 
     req.session.userId = user.id;
     res.json({ user });
   } catch (error) {
-    console.error('Login error:', error);
-    res.status(500).json({ error: 'Login failed' });
+    next(error);
   }
 });
 
 // Logout
-router.post('/logout', (req, res) => {
+router.post('/logout', (req, res, next) => {
   req.session.destroy((err) => {
     if (err) {
-      return res.status(500).json({ error: 'Logout failed' });
+      return next(new DatabaseError(err));
     }
     res.clearCookie('connect.sid');
     res.json({ success: true });
@@ -66,7 +62,7 @@ router.post('/logout', (req, res) => {
 });
 
 // Get current user
-router.get('/me', async (req, res) => {
+router.get('/me', async (req, res, next) => {
   if (!req.session.userId) {
     return res.json({ user: null });
   }
@@ -85,8 +81,7 @@ router.get('/me', async (req, res) => {
       res.json({ user: null });
     }
   } catch (error) {
-    console.error('Get user error:', error);
-    res.status(500).json({ error: 'Failed to get user' });
+    next(error);
   }
 });
 

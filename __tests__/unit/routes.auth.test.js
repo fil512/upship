@@ -10,6 +10,7 @@ jest.mock('../../server/services/userService', () => ({
 
 const userService = require('../../server/services/userService');
 const authRouter = require('../../server/routes/auth');
+const { errorHandler } = require('../../server/middleware/errorHandler');
 
 describe('Auth Routes', () => {
   let app;
@@ -30,6 +31,7 @@ describe('Auth Routes', () => {
     });
 
     app.use('/api/auth', authRouter);
+    app.use(errorHandler);
   });
 
   describe('POST /api/auth/register', () => {
@@ -96,6 +98,7 @@ describe('Auth Routes', () => {
     });
 
     it('should return 409 for duplicate username', async () => {
+      // PostgreSQL unique violation error
       const error = new Error('duplicate');
       error.code = '23505';
       userService.registerUser.mockRejectedValue(error);
@@ -105,7 +108,7 @@ describe('Auth Routes', () => {
         .send({ username: 'existinguser', password: 'password123' });
 
       expect(res.status).toBe(409);
-      expect(res.body.error).toBe('Username already taken');
+      expect(res.body.error).toBe('Resource already exists');
     });
 
     it('should return 500 for other errors', async () => {
@@ -116,7 +119,7 @@ describe('Auth Routes', () => {
         .send({ username: 'testuser', password: 'password123' });
 
       expect(res.status).toBe(500);
-      expect(res.body.error).toBe('Registration failed');
+      expect(res.body.error).toBe('Internal server error');
     });
   });
 
@@ -174,7 +177,7 @@ describe('Auth Routes', () => {
         .send({ username: 'testuser', password: 'password123' });
 
       expect(res.status).toBe(500);
-      expect(res.body.error).toBe('Login failed');
+      expect(res.body.error).toBe('Internal server error');
     });
   });
 
@@ -197,12 +200,13 @@ describe('Auth Routes', () => {
         next();
       });
       app.use('/api/auth', authRouter);
+      app.use(errorHandler);
 
       const res = await request(app)
         .post('/api/auth/logout');
 
       expect(res.status).toBe(500);
-      expect(res.body.error).toBe('Logout failed');
+      expect(res.body.error).toBe('Database operation failed');
     });
   });
 
@@ -266,12 +270,13 @@ describe('Auth Routes', () => {
         next();
       });
       app.use('/api/auth', authRouter);
+      app.use(errorHandler);
 
       const res = await request(app)
         .get('/api/auth/me');
 
       expect(res.status).toBe(500);
-      expect(res.body.error).toBe('Failed to get user');
+      expect(res.body.error).toBe('Internal server error');
     });
   });
 });

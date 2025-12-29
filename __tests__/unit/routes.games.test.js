@@ -25,6 +25,13 @@ jest.mock('../../server/services/gameService', () => ({
 
 const gameService = require('../../server/services/gameService');
 const gamesRouter = require('../../server/routes/games');
+const { errorHandler } = require('../../server/middleware/errorHandler');
+const {
+  NotFoundError,
+  ValidationError,
+  ForbiddenError,
+  ConflictError
+} = require('../../server/errors');
 
 describe('Games Routes', () => {
   let app;
@@ -42,6 +49,7 @@ describe('Games Routes', () => {
     });
 
     app.use('/api/games', gamesRouter);
+    app.use(errorHandler);
   });
 
   describe('GET /api/games', () => {
@@ -88,7 +96,7 @@ describe('Games Routes', () => {
         .get('/api/games');
 
       expect(res.status).toBe(500);
-      expect(res.body.error).toBe('Failed to get games');
+      expect(res.body.error).toBe('Internal server error');
     });
   });
 
@@ -231,16 +239,17 @@ describe('Games Routes', () => {
     });
 
     it('should return 404 if game not found', async () => {
-      gameService.joinGame.mockRejectedValue(new Error('Game not found'));
+      gameService.joinGame.mockRejectedValue(new NotFoundError('Game'));
 
       const res = await request(app)
         .post('/api/games/999/join');
 
       expect(res.status).toBe(404);
+      expect(res.body.error).toBe('Game not found');
     });
 
-    it('should return 400 for other errors', async () => {
-      gameService.joinGame.mockRejectedValue(new Error('Game is full'));
+    it('should return 400 for validation errors', async () => {
+      gameService.joinGame.mockRejectedValue(new ValidationError('Game is full'));
 
       const res = await request(app)
         .post('/api/games/1/join');
@@ -262,21 +271,23 @@ describe('Games Routes', () => {
     });
 
     it('should return 404 if game not found', async () => {
-      gameService.leaveGame.mockRejectedValue(new Error('Game not found'));
+      gameService.leaveGame.mockRejectedValue(new NotFoundError('Game'));
 
       const res = await request(app)
         .post('/api/games/999/leave');
 
       expect(res.status).toBe(404);
+      expect(res.body.error).toBe('Game not found');
     });
 
-    it('should return 400 for other errors', async () => {
-      gameService.leaveGame.mockRejectedValue(new Error('Cannot leave in progress'));
+    it('should return 400 for validation errors', async () => {
+      gameService.leaveGame.mockRejectedValue(new ValidationError('Cannot leave a game in progress'));
 
       const res = await request(app)
         .post('/api/games/1/leave');
 
       expect(res.status).toBe(400);
+      expect(res.body.error).toBe('Cannot leave a game in progress');
     });
   });
 
@@ -324,9 +335,7 @@ describe('Games Routes', () => {
     });
 
     it('should return 409 for faction already taken', async () => {
-      const error = new Error('duplicate');
-      error.code = '23505';
-      gameService.selectFaction.mockRejectedValue(error);
+      gameService.selectFaction.mockRejectedValue(new ConflictError('Faction already taken'));
 
       const res = await request(app)
         .post('/api/games/1/faction')
@@ -348,14 +357,24 @@ describe('Games Routes', () => {
       expect(gameService.startGame).toHaveBeenCalledWith('1', 1);
     });
 
-    it('should return 400 on error', async () => {
-      gameService.startGame.mockRejectedValue(new Error('Not enough players'));
+    it('should return 400 for validation errors', async () => {
+      gameService.startGame.mockRejectedValue(new ValidationError('Need at least 2 players to start'));
 
       const res = await request(app)
         .post('/api/games/1/start');
 
       expect(res.status).toBe(400);
-      expect(res.body.error).toBe('Not enough players');
+      expect(res.body.error).toBe('Need at least 2 players to start');
+    });
+
+    it('should return 403 if not host', async () => {
+      gameService.startGame.mockRejectedValue(new ForbiddenError('Only the host can start the game'));
+
+      const res = await request(app)
+        .post('/api/games/1/start');
+
+      expect(res.status).toBe(403);
+      expect(res.body.error).toBe('Only the host can start the game');
     });
   });
 

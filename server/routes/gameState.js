@@ -7,8 +7,8 @@
 const express = require('express');
 const router = express.Router();
 const { requireAuth } = require('../auth');
+const { requireGamePlayer } = require('../middleware/gameAccess');
 const gameStateService = require('../services/gameStateService');
-const { pool } = require('../db');
 const {
   UPGRADES,
   TECHNOLOGIES,
@@ -18,6 +18,11 @@ const {
   GROUND_BOARD_LOCATIONS,
   SYMBOL_ICONS
 } = require('../data/groundBoard');
+const {
+  NotFoundError,
+  ForbiddenError,
+  ValidationError
+} = require('../errors');
 
 // Import refactored services
 const { filterStateForPlayer } = require('../services/gameStateHelpers');
@@ -27,24 +32,13 @@ const { processAction } = require('../services/actionProcessorService');
 router.use(requireAuth);
 
 // Get game state
-router.get('/:gameId', async (req, res) => {
+router.get('/:gameId', requireGamePlayer, async (req, res, next) => {
   try {
     const { gameId } = req.params;
-
-    // Verify user is in this game
-    const playerCheck = await pool.query(
-      'SELECT * FROM game_players WHERE game_id = $1 AND user_id = $2',
-      [gameId, req.session.userId]
-    );
-
-    if (playerCheck.rows.length === 0) {
-      return res.status(403).json({ error: 'Not a player in this game' });
-    }
-
     const gameState = await gameStateService.getGameState(gameId);
 
     if (!gameState) {
-      return res.status(404).json({ error: 'Game state not found' });
+      throw new NotFoundError('Game state');
     }
 
     // Filter state to only show what this player should see
@@ -57,35 +51,23 @@ router.get('/:gameId', async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Get game state error:', error);
-    res.status(500).json({ error: 'Failed to get game state' });
+    next(error);
   }
 });
 
 // Get available upgrades for a player
-router.get('/:gameId/upgrades', async (req, res) => {
+router.get('/:gameId/upgrades', requireGamePlayer, async (req, res, next) => {
   try {
     const { gameId } = req.params;
-
-    // Verify user is in this game
-    const playerCheck = await pool.query(
-      'SELECT * FROM game_players WHERE game_id = $1 AND user_id = $2',
-      [gameId, req.session.userId]
-    );
-
-    if (playerCheck.rows.length === 0) {
-      return res.status(403).json({ error: 'Not a player in this game' });
-    }
-
     const gameState = await gameStateService.getGameState(gameId);
 
     if (!gameState) {
-      return res.status(404).json({ error: 'Game state not found' });
+      throw new NotFoundError('Game state');
     }
 
     const playerState = gameState.state.players[req.session.userId];
     if (!playerState) {
-      return res.status(404).json({ error: 'Player state not found' });
+      throw new NotFoundError('Player state');
     }
 
     // Get available upgrades based on owned technologies
@@ -101,30 +83,18 @@ router.get('/:gameId/upgrades', async (req, res) => {
       allTechnologies: TECHNOLOGIES
     });
   } catch (error) {
-    console.error('Get upgrades error:', error);
-    res.status(500).json({ error: 'Failed to get upgrades' });
+    next(error);
   }
 });
 
 // Get Ground Board data
-router.get('/:gameId/ground-board', async (req, res) => {
+router.get('/:gameId/ground-board', requireGamePlayer, async (req, res, next) => {
   try {
     const { gameId } = req.params;
-
-    // Verify user is in this game
-    const playerCheck = await pool.query(
-      'SELECT * FROM game_players WHERE game_id = $1 AND user_id = $2',
-      [gameId, req.session.userId]
-    );
-
-    if (playerCheck.rows.length === 0) {
-      return res.status(403).json({ error: 'Not a player in this game' });
-    }
-
     const gameState = await gameStateService.getGameState(gameId);
 
     if (!gameState) {
-      return res.status(404).json({ error: 'Game state not found' });
+      throw new NotFoundError('Game state');
     }
 
     res.json({
@@ -133,50 +103,38 @@ router.get('/:gameId/ground-board', async (req, res) => {
       placements: gameState.state.groundBoard?.placements || {}
     });
   } catch (error) {
-    console.error('Get ground board error:', error);
-    res.status(500).json({ error: 'Failed to get ground board' });
+    next(error);
   }
 });
 
 // Get action history
-router.get('/:gameId/actions', async (req, res) => {
+router.get('/:gameId/actions', requireGamePlayer, async (req, res, next) => {
   try {
     const { gameId } = req.params;
     const limit = parseInt(req.query.limit) || 50;
 
-    // Verify user is in this game
-    const playerCheck = await pool.query(
-      'SELECT * FROM game_players WHERE game_id = $1 AND user_id = $2',
-      [gameId, req.session.userId]
-    );
-
-    if (playerCheck.rows.length === 0) {
-      return res.status(403).json({ error: 'Not a player in this game' });
-    }
-
     const actions = await gameStateService.getGameActions(gameId, limit);
     res.json({ actions });
   } catch (error) {
-    console.error('Get game actions error:', error);
-    res.status(500).json({ error: 'Failed to get game actions' });
+    next(error);
   }
 });
 
 // Perform a game action
-router.post('/:gameId/action', async (req, res) => {
+router.post('/:gameId/action', requireGamePlayer, async (req, res, next) => {
   try {
     const { gameId } = req.params;
     const { actionType, actionData } = req.body;
 
     if (!actionType) {
-      return res.status(400).json({ error: 'Action type is required' });
+      throw new ValidationError('Action type is required');
     }
 
     // Get current game state
     const gameState = await gameStateService.getGameState(gameId);
 
     if (!gameState) {
-      return res.status(404).json({ error: 'Game not found' });
+      throw new NotFoundError('Game');
     }
 
     const state = gameState.state;
@@ -199,14 +157,14 @@ router.post('/:gameId/action', async (req, res) => {
     }
 
     if (!skipTurnCheck && currentPlayerId !== req.session.userId) {
-      return res.status(403).json({ error: 'Not your turn' });
+      throw new ForbiddenError('Not your turn');
     }
 
     // Process the action using the extracted service
     const result = processAction(state, req.session.userId, actionType, actionData);
 
     if (result.error) {
-      return res.status(400).json({ error: result.error });
+      throw new ValidationError(result.error);
     }
 
     // Save the new state
@@ -224,8 +182,7 @@ router.post('/:gameId/action', async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Game action error:', error);
-    res.status(500).json({ error: 'Failed to process action' });
+    next(error);
   }
 });
 

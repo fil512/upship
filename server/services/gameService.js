@@ -1,5 +1,11 @@
 const { pool } = require('../db');
 const gameStateService = require('./gameStateService');
+const {
+  NotFoundError,
+  ForbiddenError,
+  ValidationError,
+  ConflictError
+} = require('../errors');
 
 // Create a new game
 async function createGame(hostId, name, settings = {}) {
@@ -112,17 +118,17 @@ async function joinGame(gameId, userId) {
     );
 
     if (gameResult.rows.length === 0) {
-      throw new Error('Game not found');
+      throw new NotFoundError('Game');
     }
 
     const game = gameResult.rows[0];
 
     if (game.status !== 'waiting') {
-      throw new Error('Game is not accepting players');
+      throw new ValidationError('Game is not accepting players');
     }
 
     if (game.current_player_count >= game.max_players) {
-      throw new Error('Game is full');
+      throw new ValidationError('Game is full');
     }
 
     // Check if already in game
@@ -132,7 +138,7 @@ async function joinGame(gameId, userId) {
     );
 
     if (existingPlayer.rows.length > 0) {
-      throw new Error('Already in this game');
+      throw new ConflictError('Already in this game');
     }
 
     // Add player
@@ -173,13 +179,13 @@ async function leaveGame(gameId, userId) {
     );
 
     if (gameResult.rows.length === 0) {
-      throw new Error('Game not found');
+      throw new NotFoundError('Game');
     }
 
     const game = gameResult.rows[0];
 
     if (game.status !== 'waiting') {
-      throw new Error('Cannot leave a game in progress');
+      throw new ValidationError('Cannot leave a game in progress');
     }
 
     // Check if host is leaving
@@ -197,7 +203,7 @@ async function leaveGame(gameId, userId) {
       );
 
       if (deleteResult.rowCount === 0) {
-        throw new Error('Not in this game');
+        throw new ForbiddenError('Not in this game');
       }
 
       // Update player count
@@ -231,11 +237,11 @@ async function selectFaction(gameId, userId, faction) {
     );
 
     if (gameResult.rows.length === 0) {
-      throw new Error('Game not found');
+      throw new NotFoundError('Game');
     }
 
     if (gameResult.rows[0].status !== 'waiting') {
-      throw new Error('Cannot change faction after game has started');
+      throw new ValidationError('Cannot change faction after game has started');
     }
 
     // Check if faction is already taken by another player (with lock)
@@ -247,7 +253,7 @@ async function selectFaction(gameId, userId, faction) {
     );
 
     if (existingFaction.rows.length > 0) {
-      throw new Error('Faction already taken');
+      throw new ConflictError('Faction already taken');
     }
 
     // Verify user is in this game
@@ -257,7 +263,7 @@ async function selectFaction(gameId, userId, faction) {
     );
 
     if (playerResult.rows.length === 0) {
-      throw new Error('Not in this game');
+      throw new ForbiddenError('Not in this game');
     }
 
     // Update faction
@@ -289,21 +295,21 @@ async function startGame(gameId, userId) {
     );
 
     if (gameResult.rows.length === 0) {
-      throw new Error('Game not found');
+      throw new NotFoundError('Game');
     }
 
     const game = gameResult.rows[0];
 
     if (game.host_id !== userId) {
-      throw new Error('Only the host can start the game');
+      throw new ForbiddenError('Only the host can start the game');
     }
 
     if (game.status !== 'waiting') {
-      throw new Error('Game already started');
+      throw new ValidationError('Game already started');
     }
 
     if (game.current_player_count < game.min_players) {
-      throw new Error(`Need at least ${game.min_players} players to start`);
+      throw new ValidationError(`Need at least ${game.min_players} players to start`);
     }
 
     // Check all players have selected factions
@@ -314,7 +320,7 @@ async function startGame(gameId, userId) {
 
     const missingFaction = playersResult.rows.some(p => !p.faction);
     if (missingFaction) {
-      throw new Error('All players must select a faction');
+      throw new ValidationError('All players must select a faction');
     }
 
     // Start the game
@@ -340,6 +346,15 @@ async function startGame(gameId, userId) {
   }
 }
 
+// Check if a user is a player in a game
+async function isPlayerInGame(gameId, userId) {
+  const result = await pool.query(
+    'SELECT 1 FROM game_players WHERE game_id = $1 AND user_id = $2',
+    [gameId, userId]
+  );
+  return result.rows.length > 0;
+}
+
 // Get games for a specific user
 async function getUserGames(userId) {
   const result = await pool.query(
@@ -362,5 +377,6 @@ module.exports = {
   leaveGame,
   selectFaction,
   startGame,
-  getUserGames
+  getUserGames,
+  isPlayerInGame
 };

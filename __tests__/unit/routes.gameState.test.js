@@ -10,6 +10,10 @@ jest.mock('../../server/db', () => ({
   }
 }));
 
+jest.mock('../../server/services/gameService', () => ({
+  isPlayerInGame: jest.fn()
+}));
+
 jest.mock('../../server/auth', () => ({
   requireAuth: (req, res, next) => {
     if (!req.session || !req.session.userId) {
@@ -86,8 +90,10 @@ jest.mock('../../server/services/actionProcessorService', () => ({
 }));
 
 const { pool } = require('../../server/db');
+const gameService = require('../../server/services/gameService');
 const gameStateService = require('../../server/services/gameStateService');
 const gameStateRouter = require('../../server/routes/gameState');
+const { errorHandler } = require('../../server/middleware/errorHandler');
 
 function createApp(userId = 1) {
   const app = express();
@@ -97,6 +103,7 @@ function createApp(userId = 1) {
     next();
   });
   app.use('/api/state', gameStateRouter);
+  app.use(errorHandler);
   return app;
 }
 
@@ -108,6 +115,7 @@ function createAppWithNoSession() {
     next();
   });
   app.use('/api/state', gameStateRouter);
+  app.use(errorHandler);
   return app;
 }
 
@@ -198,12 +206,13 @@ describe('GameState Routes', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     app = createApp();
+    // Default: user is in game
+    gameService.isPlayerInGame.mockResolvedValue(true);
   });
 
   describe('GET /:gameId', () => {
     it('should return game state for valid player', async () => {
       const gameState = createFullGameState();
-      pool.query.mockResolvedValueOnce({ rows: [{ user_id: 1 }] });
       gameStateService.getGameState.mockResolvedValue({ state: gameState, version: 1 });
 
       const res = await request(app).get('/api/state/1');
@@ -220,7 +229,7 @@ describe('GameState Routes', () => {
     });
 
     it('should return 403 if user is not in game', async () => {
-      pool.query.mockResolvedValueOnce({ rows: [] });
+      gameService.isPlayerInGame.mockResolvedValue(false);
 
       const res = await request(app).get('/api/state/1');
 
@@ -229,7 +238,6 @@ describe('GameState Routes', () => {
     });
 
     it('should return 404 if game state not found', async () => {
-      pool.query.mockResolvedValueOnce({ rows: [{ user_id: 1 }] });
       gameStateService.getGameState.mockResolvedValue(null);
 
       const res = await request(app).get('/api/state/1');
@@ -238,7 +246,7 @@ describe('GameState Routes', () => {
     });
 
     it('should handle errors gracefully', async () => {
-      pool.query.mockRejectedValueOnce(new Error('Database error'));
+      gameService.isPlayerInGame.mockRejectedValue(new Error('Database error'));
 
       const res = await request(app).get('/api/state/1');
 
@@ -249,7 +257,6 @@ describe('GameState Routes', () => {
   describe('GET /:gameId/upgrades', () => {
     it('should return available upgrades', async () => {
       const gameState = createFullGameState();
-      pool.query.mockResolvedValueOnce({ rows: [{ user_id: 1 }] });
       gameStateService.getGameState.mockResolvedValue({ state: gameState, version: 1 });
 
       const res = await request(app).get('/api/state/1/upgrades');
@@ -261,7 +268,7 @@ describe('GameState Routes', () => {
     });
 
     it('should return 403 if not in game', async () => {
-      pool.query.mockResolvedValueOnce({ rows: [] });
+      gameService.isPlayerInGame.mockResolvedValue(false);
 
       const res = await request(app).get('/api/state/1/upgrades');
 
@@ -269,7 +276,6 @@ describe('GameState Routes', () => {
     });
 
     it('should return 404 if game state not found', async () => {
-      pool.query.mockResolvedValueOnce({ rows: [{ user_id: 1 }] });
       gameStateService.getGameState.mockResolvedValue(null);
 
       const res = await request(app).get('/api/state/1/upgrades');
@@ -278,7 +284,7 @@ describe('GameState Routes', () => {
     });
 
     it('should handle errors gracefully', async () => {
-      pool.query.mockRejectedValueOnce(new Error('Database error'));
+      gameService.isPlayerInGame.mockRejectedValue(new Error('Database error'));
 
       const res = await request(app).get('/api/state/1/upgrades');
 
@@ -289,7 +295,6 @@ describe('GameState Routes', () => {
   describe('GET /:gameId/ground-board', () => {
     it('should return ground board state', async () => {
       const gameState = createFullGameState();
-      pool.query.mockResolvedValueOnce({ rows: [{ user_id: 1 }] });
       gameStateService.getGameState.mockResolvedValue({ state: gameState, version: 1 });
 
       const res = await request(app).get('/api/state/1/ground-board');
@@ -301,7 +306,7 @@ describe('GameState Routes', () => {
     });
 
     it('should return 403 if not in game', async () => {
-      pool.query.mockResolvedValueOnce({ rows: [] });
+      gameService.isPlayerInGame.mockResolvedValue(false);
 
       const res = await request(app).get('/api/state/1/ground-board');
 
@@ -309,7 +314,6 @@ describe('GameState Routes', () => {
     });
 
     it('should return 404 if game state not found', async () => {
-      pool.query.mockResolvedValueOnce({ rows: [{ user_id: 1 }] });
       gameStateService.getGameState.mockResolvedValue(null);
 
       const res = await request(app).get('/api/state/1/ground-board');
@@ -318,7 +322,7 @@ describe('GameState Routes', () => {
     });
 
     it('should handle errors gracefully', async () => {
-      pool.query.mockRejectedValueOnce(new Error('Database error'));
+      gameService.isPlayerInGame.mockRejectedValue(new Error('Database error'));
 
       const res = await request(app).get('/api/state/1/ground-board');
 
@@ -328,7 +332,6 @@ describe('GameState Routes', () => {
 
   describe('GET /:gameId/actions', () => {
     it('should return game actions', async () => {
-      pool.query.mockResolvedValueOnce({ rows: [{ user_id: 1 }] });
       gameStateService.getGameActions.mockResolvedValue([
         { id: 1, action_type: 'END_TURN', created_at: new Date() }
       ]);
@@ -340,7 +343,7 @@ describe('GameState Routes', () => {
     });
 
     it('should return 403 if not in game', async () => {
-      pool.query.mockResolvedValueOnce({ rows: [] });
+      gameService.isPlayerInGame.mockResolvedValue(false);
 
       const res = await request(app).get('/api/state/1/actions');
 
@@ -348,7 +351,7 @@ describe('GameState Routes', () => {
     });
 
     it('should handle errors gracefully', async () => {
-      pool.query.mockRejectedValueOnce(new Error('Database error'));
+      gameService.isPlayerInGame.mockRejectedValue(new Error('Database error'));
 
       const res = await request(app).get('/api/state/1/actions');
 
