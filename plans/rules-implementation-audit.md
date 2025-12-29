@@ -116,7 +116,7 @@ This document tracks the systematic comparison of `spec/upship_rules.md` to the 
 - [x] Track resets to £2 at Age Transitions ✓ **RESOLVED: Fixed reset values**
 
 ### 4.4 Helium Requirement
-- [ ] Requires Helium Handling technology to purchase/use **TODO: Not validated in processBuyGas**
+- [x] Requires Helium Handling technology to purchase/use ✓ **RESOLVED: Added validation in processBuyGas and processLaunchShip**
 
 ---
 

@@ -788,6 +788,14 @@ function processBuyGas(state, playerId, data) {
     return { error: 'Invalid gas type' };
   }
 
+  // Helium requires Helium Handling technology (Section 4.4)
+  if (gasType === 'helium') {
+    const hasHeliumHandling = playerState.technologies?.some(t => t.id === 'HELIUM_HANDLING');
+    if (!hasHeliumHandling) {
+      return { error: 'Cannot purchase Helium without Helium Handling technology' };
+    }
+  }
+
   const price = state.gasMarket[gasType] * amount;
 
   if (playerState.cash < price) {
@@ -2071,6 +2079,14 @@ function processLaunchShip(state, playerId, data) {
   // Validate gas type
   if (!['hydrogen', 'helium'].includes(gasType)) {
     return { error: 'Gas type must be hydrogen or helium' };
+  }
+
+  // Helium requires Helium Handling technology (Section 4.4)
+  if (gasType === 'helium') {
+    const hasHeliumHandling = playerState.technologies?.some(t => t.id === 'HELIUM_HANDLING');
+    if (!hasHeliumHandling) {
+      return { error: 'Cannot use Helium without Helium Handling technology' };
+    }
   }
 
   // Validate structural slots are filled (Section 3.2, 7.2: All Frame and Fabric slots must be filled)
