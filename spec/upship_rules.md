@@ -52,7 +52,7 @@ When the marker reaches an Age threshold, that Age ends after the current round.
 | 1 | Player Board (The Factory Interface) |
 | 3 | Age-Specific Blueprint Overlays |
 | 6 | Airship Tokens (wooden meeples in player color) |
-| 3 | Agent Tokens (workers for placement) |
+| 2 | Agent Tokens (workers for placement; 3rd can be earned) |
 | 1 | Income Track Marker |
 | 1 | VP Track Marker |
 | 1 | Personal Hazard Deck (24 cards) |
@@ -103,7 +103,7 @@ Each player receives:
 5. **1 Officer Token** (placed in Barracks)
 6. **2 Engineer Tokens** (placed in Barracks)
 7. **2 Hydrogen Gas Cubes** (placed in Gas Reserve)
-8. **3 Agent Tokens**
+8. **2 Agent Tokens** (3rd can be earned during play)
 9. **Starter Deck** of 10 cards (shuffled)
 10. **Income Track** set to starting position (typically £5)
 11. **Officer Income Track** set to 0
@@ -182,7 +182,7 @@ Store crew tokens earned from the shared supply:
 - You voluntarily ground a ship
 
 **Engineers** — Multi-purpose specialists with two functions:
-1. **Research Generation:** During the Reveal Phase, your available Research equals your Engineers plus Research bonuses from revealed cards
+1. **Research Generation:** When you Reveal, your available Research equals your Engineers plus Research bonuses from revealed cards
 2. **Emergency Response:** Spend reactively during Hazard Checks to boost your check (+1 per Engineer)
 
 ## 4.4 The Hangar Bay (Adjacent to Barracks)
@@ -209,7 +209,7 @@ Store purchased **Gas Cubes** here:
 | Track | Function |
 |-------|----------|
 | **Income Track** | £ earned per round from routes |
-| **Officer Income Track** | Free Officers per round (starts at 0) |
+| **Officer Income Track** | Free Officers per round (starts at 0); reaching +3 grants your 3rd Agent |
 | **Engineer Income Track** | Free Engineers per round (starts at 1) |
 
 ## 4.7 Stat Tracks & Lift Calculator
@@ -223,24 +223,50 @@ Track your Blueprint's current stats:
 
 # 5. THE GAME ROUND
 
-Play proceeds in **Rounds**. Each round has three phases:
+Play proceeds in **Rounds**. Each round has two phases:
 
-## 5.1 Phase A: Worker Placement
+## 5.1 Phase A: Agent Turns
 
-Take turns placing **Agents** on the **Ground Board** until all players pass.
+Players take turns in order. On your turn, you must do one of the following:
 
-### Turn Order
-Determine turn order by **Income Track position** (lowest goes first). This creates a catch-up mechanism.
+### Option 1: Place an Agent
 
-**Ties:** The player with less Cash goes first. If still tied, closest clockwise to start player goes first.
-
-### Placing an Agent
-1. Choose a Ground Board location that is **unoccupied** (no other Agent present).
+1. Choose a Ground Board location that is **unoccupied**.
 2. Play a **Card** from your hand that matches the location's symbol.
 3. Execute the location's action.
 4. The card goes to your discard pile.
 
-**Exclusive Spaces:** Each location can hold only one Agent at a time. You cannot place an Agent on a space already occupied by another player's Agent.
+**Exclusive Spaces:** Each location holds only one Agent. You cannot place on an occupied space.
+
+### Option 2: Reveal
+
+Instead of placing an Agent, you may **Reveal** to end your participation in this phase:
+
+1. **Reveal Hand:** Show all cards remaining in your hand.
+2. **Gain Reveal Resources:** Collect resources shown on revealed cards:
+
+| Icon | Effect |
+|------|--------|
+| £ | Gain cash immediately |
+| Research | Add to Research pool |
+| Officer | Gain token to Barracks |
+| Engineer | Gain token to Barracks |
+| Gas | Gain cube to Gas Reserve |
+| Influence | Save for purchasing cards |
+
+3. **Acquire Technologies:** Spend Research (Engineers in Barracks + card bonuses + saved tokens) to acquire Technologies from the R&D Board. Unspent Research carries over to next round.
+4. **Purchase Cards:** Spend Influence to buy cards from the Market Row. Unspent Influence is lost.
+5. **Discard Hand:** Place revealed cards in your discard pile.
+
+After revealing, you take no more turns this phase. Other players continue taking turns until all players have revealed.
+
+**Key Point:** You may reveal at any time on your turn, even if you have Agents and cards remaining. This is a strategic choice—place more Agents for actions, or reveal early for resources.
+
+### Turn Order
+
+Determine turn order by **Income Track position** (lowest goes first). This creates a catch-up mechanism.
+
+**Ties:** The player with less Cash goes first. If still tied, closest clockwise to start player goes first.
 
 ### Card Symbols
 
@@ -251,35 +277,13 @@ Determine turn order by **Income Track position** (lowest goes first). This crea
 | **Propeller** | Research Institute, Launchpad, Ministry, Weather Bureau |
 | **Any** | Can visit any location |
 
-### Passing
-If you cannot or choose not to place an Agent, you may pass. After passing, you cannot place additional Agents this round.
+### Earning Your Third Agent
 
-## 5.2 Phase B: Reveal & Acquisition
+Players start with 2 Agents. When your **Officer Income Track reaches +3**, immediately gain your 3rd Agent from the supply. This represents your growing officer corps providing the management capacity to expand operations.
 
-After all players pass:
+## 5.2 Phase B: Income & Cleanup
 
-**Step 1: Reveal Hands**
-All players simultaneously reveal cards remaining in their hands.
-
-**Step 2: Gain Reveal Resources**
-Collect resources shown on revealed cards:
-
-| Icon | Effect |
-|------|--------|
-| £ | Gain cash immediately |
-| Research | Add to Research pool |
-| Officer | Gain token to Barracks |
-| Engineer | Gain token to Barracks |
-| Gas | Gain cube to Gas Reserve |
-| Influence | Save for Step 4 |
-
-**Step 3: Acquire Technologies**
-Spend Research (Engineers + card bonuses + saved tokens) to acquire Technologies from the R&D Board. Unspent Research carries over to next round.
-
-**Step 4: Purchase Cards**
-Spend Influence to buy cards from the Market Row. Unspent Influence is lost.
-
-## 5.3 Phase C: Income & Cleanup
+After all players have revealed:
 
 1. **Pay Engineer Upkeep:** Deduct £1 per Engineer in Barracks.
 2. **Collect Income:** Gain £ equal to Income Track position.
@@ -302,7 +306,7 @@ The Ground Board has 12 action spaces. Each requires a matching card symbol.
 
 **Cost:** £3 per Research token.
 
-**Effect:** Gain Research tokens spendable during the Reveal Phase.
+**Effect:** Gain Research tokens spendable when you Reveal.
 
 > **Example:** Marco plays a Propeller card and spends £9 to gain 3 Research tokens.
 
@@ -365,6 +369,8 @@ See **Section 8: Launching Ships** for the complete procedure.
 **Cost:** £5 per level.
 
 **Effect:** Increase Officer Income Track by 1 step.
+
+**Milestone:** When your Officer Income Track reaches +3, immediately gain your 3rd Agent.
 
 ## 6.7 Technical Institute (Wrench)
 
@@ -527,7 +533,7 @@ The game distinguishes between **Technologies** (knowledge) and **Upgrades** (ph
 
 ## 9.1 Technologies
 
-Technologies represent patents and manufacturing capability. Acquire them from the R&D Board during the Reveal Phase.
+Technologies represent patents and manufacturing capability. Acquire them from the R&D Board when you Reveal.
 
 **Technology Tile Attributes:**
 - **Research Cost:** How much Research to acquire
@@ -551,7 +557,7 @@ At each Age Transition, new Age tiles are **added** to the bag—all previous Ag
 
 ### Acquiring Technologies
 
-During the Reveal Phase:
+When you Reveal:
 1. Calculate Research Budget (Engineers + card bonuses + saved tokens).
 2. Pay Research equal to tile cost minus specialization discount.
 3. Add tiles to your Drawing Office.
@@ -705,7 +711,7 @@ Every card has dual functionality: use for actions OR save for reveal resources.
 
 When drawing a card, decide:
 - **Use for Placement:** Visit a matching location, gain Agent Effect, card discarded
-- **Save for Reveal:** Keep in hand for Reveal Icons at round end
+- **Save for Reveal:** Keep in hand for Reveal Icons when you Reveal
 
 ## 11.3 Starter Deck (10 Cards)
 
@@ -720,7 +726,7 @@ When drawing a card, decide:
 
 ## 11.4 Market Deck
 
-Purchase cards from the Market Row using Influence during the Reveal Phase:
+Purchase cards from the Market Row using Influence when you Reveal:
 
 **Categories:**
 - **Technical Support:** Engineering bonuses
@@ -886,10 +892,10 @@ When Catastrophic Explosion occurs during a Luxury Launch in Age III using Hydro
 
 ## 14.6 Engineer Timing
 
-- Generate Research during Reveal Phase
+- Generate Research when you Reveal
 - May spend reactively after seeing Hazard Card
-- Engineers spent on Hazard Checks do not generate Research that round
-- Upkeep paid based on Barracks count at Income Phase start
+- Engineers spent on Hazard Checks do not generate Research when you Reveal
+- Upkeep paid based on Barracks count at Income & Cleanup start
 
 ---
 
@@ -898,7 +904,7 @@ When Catastrophic Explosion occurs during a Luxury Launch in Age III using Hydro
 | Term | Definition | Section |
 |------|------------|---------|
 | **Age** | One of three historical periods (I: Pioneer, II: War, III: Golden) | §1.3 |
-| **Agent** | Worker token placed on Ground Board locations | §5.1 |
+| **Agent** | Worker token placed on Ground Board locations (start with 2; 3rd earned at Officer Income +3) | §5.1 |
 | **Barracks** | Zone storing Officer and Engineer tokens | §4.3 |
 | **Blueprint** | Age-specific overlay representing your airship design | §4.2 |
 | **Ceiling** | Ship stat for maximum altitude | §4.2 |
@@ -919,7 +925,7 @@ When Catastrophic Explosion occurs during a Luxury Launch in Age III using Hydro
 | **Hull Cost** | £ to build a ship | §7.1 |
 | **Hydrogen** | Standard gas (£1/cube), fire vulnerable | §9.3 |
 | **Income Track** | Track showing £ earned per round | §4.6 |
-| **Influence** | Resource for purchasing Market cards | §5.2 |
+| **Influence** | Resource for purchasing Market cards | §5.1 |
 | **Install** | Place an Upgrade tile on Blueprint | §9.2 |
 | **Launch** | Send a ship to claim a route | §8 |
 | **Lift** | Upward force from gas (5 per cube) | §9.3 |
@@ -948,9 +954,10 @@ When Catastrophic Explosion occurs during a Luxury Launch in Age III using Hydro
 
 ## Round Sequence
 
-1. **Worker Placement:** Place Agents, play matching cards
-2. **Reveal:** Show hands, gain resources, acquire Technologies, purchase cards
-3. **Income & Cleanup:** Pay upkeep, collect income, refresh board
+1. **Agent Turns:** On your turn, either:
+   - Place an Agent (play matching card, execute action), OR
+   - Reveal (show hand, gain resources, acquire Technologies, purchase cards)
+2. **Income & Cleanup:** Pay upkeep, collect income, refresh board
 
 ## Key Formulas
 
