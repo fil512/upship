@@ -837,6 +837,8 @@ Each nation has unique advantages and constraints.
 - *Trapeze Fighter System* (ignore one route requirement per launch)
 - *Helium Handling*
 
+**Synergy — Water Recovery:** The Age III *Water Recovery System* technology pairs well with USA's helium doctrine, reducing helium costs significantly.
+
 **Flaw:** Late to enter war. Cannot acquire a combat mission until all other players have one.
 
 **Home Base (Age II):** Paimboeuf, France

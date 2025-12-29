@@ -298,7 +298,7 @@ Frame technologies unlock structural skeleton upgrades. Each Frame slot on the B
 | III | Modular Construction | 5 | 2 | 3 | Modular Frame |
 | III | Dynamic Lift Surfaces | 5 | 2 | 2 | Aerodynamic Lift System |
 
-## Fabric Track (7 tiles)
+## Fabric Track (8 tiles)
 
 Fabric technologies unlock outer covering and gas cell material upgrades.
 
@@ -309,10 +309,11 @@ Fabric technologies unlock outer covering and gas cell material upgrades.
 | II | Goldbeater's Skin | 4 | 2 | 2 | Premium Envelope |
 | II | Fireproof Coating | 3 | 1 | 2 | Fire-Resistant Fabric |
 | II | Aluminum Doping | 3 | 1 | 1 | Reflective Covering |
+| II | Grounding Systems | 3 | 1 | 1 | Conductive Covering |
 | III | Gelatinized Latex | 4 | 2 | — | Synthetic Envelope |
 | III | Composite Covering | 5 | 2 | 1 | Advanced Fabric |
 
-## Gas Systems Track (10 tiles)
+## Gas Systems Track (11 tiles)
 
 | Age | Name | Cost | £ | VP | Unlocks |
 |-----|------|------|---|----|---------|
@@ -326,6 +327,7 @@ Fabric technologies unlock outer covering and gas cell material upgrades.
 | III | Triple Gas Cell | 4 | 2 | — | Redundant Cells |
 | III | Emergency Venting | 4 | 2 | 2 | Rapid Descent System |
 | III | Gas Recovery | 5 | 2 | 2 | Reclamation System |
+| III | Water Recovery System | 5 | 2 | 1 | Exhaust Condensers |
 
 ## Payload Track (14 tiles)
 
@@ -346,12 +348,12 @@ Fabric technologies unlock outer covering and gas cell material upgrades.
 | III | Sleeping Quarters | 4 | 2 | 1 | Private Berths |
 | III | Smoking Room | 5 | 2 | 3 | Pressurized Lounge |
 
-**Total: 52 Technology Tiles** (Propulsion 11, Frame 10, Fabric 7, Gas Systems 10, Payload 14)
+**Total: 54 Technology Tiles** (Propulsion 11, Frame 10, Fabric 8, Gas Systems 11, Payload 14)
 
 **Tiles by Age:**
 - Age I: 11 tiles (2 Propulsion, 2 Frame, 2 Fabric, 2 Gas, 3 Payload)
-- Age II: 22 tiles (4 Propulsion, 5 Frame, 3 Fabric, 4 Gas, 6 Payload)
-- Age III: 19 tiles (5 Propulsion, 3 Frame, 2 Fabric, 4 Gas, 5 Payload)
+- Age II: 23 tiles (4 Propulsion, 5 Frame, 4 Fabric, 4 Gas, 6 Payload)
+- Age III: 20 tiles (5 Propulsion, 3 Frame, 2 Fabric, 5 Gas, 5 Payload)
 
 **PLAYTESTING NOTE:** Current tile counts may be adjusted based on playtesting. Monitor if certain tracks feel over/under-represented.
 
@@ -405,6 +407,7 @@ Fabric tiles go in Fabric slots. The **Hull Cost** column shows how much this ti
 | Premium Envelope | Goldbeater's Skin | 0 | +£3 | Reliability +1, Range +1 | Best gas-tightness |
 | Fire-Resistant Fabric | Fireproof Coating | -1 | +£2 | Reliability +1 | Once per Age, treat one Fire hazard as auto-pass |
 | Reflective Covering | Aluminum Doping | 0 | +£1 | Reliability +1 | Protects gas from heat |
+| Conductive Covering | Grounding Systems | 0 | +£1 | Reliability +1 | Immune to Static Discharge hazard (grounds electrical charge) |
 | Synthetic Envelope | Gelatinized Latex | 0 | +£2 | Reliability +1, Range +1 | Modern replacement for goldbeater's |
 | Advanced Fabric | Composite Covering | 0 | +£2 | Reliability +2 | Multi-layer protection |
 
@@ -424,6 +427,7 @@ Fabric tiles go in Fabric slots. The **Hull Cost** column shows how much this ti
 | Redundant Cells | Triple Gas Cell | -2 | Lift +4, Reliability +2 | — |
 | Rapid Descent System | Emergency Venting | -1 | Reliability +2 | Auto-pass Weather-type hazards |
 | Reclamation System | Gas Recovery | -1 | Range +2 | -£2 Lifting Gas cost |
+| Exhaust Condensers | Water Recovery System | -2 | — | When using Helium: -£3 Lifting Gas cost. Recovers water from engine exhaust (USA specialty) |
 
 ## Payload Upgrades
 
@@ -445,7 +449,7 @@ Fabric tiles go in Fabric slots. The **Hull Cost** column shows how much this ti
 | Pressurized Lounge | Smoking Room | -2 | Income +1, Luxury +2 | Requires Helium Gas Cell installed |
 | Imperial Mast | Imperial Mooring System | -1 | — | British Territories count as Home Base (Britain specialty) |
 
-**Total: 54 Upgrade Tiles** (Propulsion 11, Frame 10, Fabric 7, Gas Systems 10, Payload 16)
+**Total: 56 Upgrade Tiles** (Propulsion 11, Frame 10, Fabric 8, Gas Systems 11, Payload 16)
 
 ---
 
