@@ -415,12 +415,65 @@ function processAction(state, playerId, actionType, data) {
     case 'BUY_MARKET_CARD':
       return processBuyMarketCard(newState, playerId, data);
 
+    case 'DISCARD_HAZARD':
+      return processDiscardHazard(newState, playerId, data);
+
+    case 'DISCARD_MARKET_CARD':
+      return processDiscardMarketCard(newState, playerId, data);
+
     case 'CALCULATE_SCORES':
       return processCalculateScores(newState, playerId, data);
 
     default:
       return { error: `Unknown action type: ${actionType}` };
   }
+}
+
+// Discard a peeked hazard card (from Weather Bureau)
+function processDiscardHazard(state, playerId, data) {
+  const playerState = state.players[playerId];
+
+  if (!playerState.peekedHazard) {
+    return { error: 'No peeked hazard to discard. Visit Weather Bureau first.' };
+  }
+
+  // Remove the top card from hazard deck
+  const hazardDeck = playerState.hazardDeck || [];
+  if (hazardDeck.length > 0 && hazardDeck[0].id === playerState.peekedHazard.id) {
+    const discarded = hazardDeck.shift();
+    state.log.push({
+      timestamp: new Date().toISOString(),
+      message: `Discarded hazard: ${discarded.type} (difficulty ${discarded.difficulty})`,
+      playerId,
+      type: 'action'
+    });
+  }
+
+  // Clear peeked hazard
+  delete playerState.peekedHazard;
+
+  return { newState: state };
+}
+
+// Discard leftmost Market card (from Academy)
+function processDiscardMarketCard(state, playerId, data) {
+  const marketCards = state.marketCards || [];
+
+  if (marketCards.length === 0) {
+    return { error: 'Market row is empty' };
+  }
+
+  // Remove leftmost card
+  const discarded = marketCards.shift();
+
+  state.log.push({
+    timestamp: new Date().toISOString(),
+    message: `Discarded leftmost Market card: ${discarded.name}`,
+    playerId,
+    type: 'action'
+  });
+
+  return { newState: state };
 }
 
 // End turn - behavior depends on current phase
@@ -503,19 +556,69 @@ function transitionToIncomeCleanup(state) {
 
     // Pay Engineer upkeep (£1 per Engineer)
     const upkeep = playerState.engineers || 0;
-    if (upkeep > 0 && playerState.cash >= upkeep) {
-      playerState.cash -= upkeep;
-      state.log.push({
-        timestamp: new Date().toISOString(),
-        message: `${playerState.faction.toUpperCase()} paid £${upkeep} Engineer upkeep`,
-        playerId,
-        type: 'income'
-      });
+    if (upkeep > 0) {
+      if (playerState.cash >= upkeep) {
+        playerState.cash -= upkeep;
+        state.log.push({
+          timestamp: new Date().toISOString(),
+          message: `${playerState.faction.toUpperCase()} paid £${upkeep} Engineer upkeep`,
+          playerId,
+          type: 'income'
+        });
+      } else {
+        // Cannot afford upkeep - pay what they can
+        const paid = playerState.cash;
+        playerState.cash = 0;
+        state.log.push({
+          timestamp: new Date().toISOString(),
+          message: `${playerState.faction.toUpperCase()} could only pay £${paid} of £${upkeep} Engineer upkeep (bankrupt!)`,
+          playerId,
+          type: 'income'
+        });
+      }
     }
 
-    // Collect income from track
+    // Collect income from track (Section 12.3: handle negative income)
     const incomeGained = playerState.income || 0;
-    playerState.cash += incomeGained;
+    if (incomeGained >= 0) {
+      playerState.cash += incomeGained;
+    } else {
+      // Negative income: must pay the difference from cash
+      const deficit = Math.abs(incomeGained);
+      if (playerState.cash >= deficit) {
+        playerState.cash -= deficit;
+        state.log.push({
+          timestamp: new Date().toISOString(),
+          message: `${playerState.faction.toUpperCase()} paid £${deficit} (negative income penalty)`,
+          playerId,
+          type: 'income'
+        });
+      } else {
+        // Cannot pay - handle bankruptcy (Section 12.3)
+        const canPay = playerState.cash;
+        const stillOwed = deficit - canPay;
+        playerState.cash = 0;
+
+        // Must discard technologies until solvent (each tech worth approx £2-6)
+        // For simplicity, discard techs at £3 value each until debt cleared
+        while (stillOwed > 0 && playerState.technologies.length > 0) {
+          const discardedTech = playerState.technologies.pop();
+          state.log.push({
+            timestamp: new Date().toISOString(),
+            message: `${playerState.faction.toUpperCase()} forced to sell technology: ${discardedTech}`,
+            playerId,
+            type: 'income'
+          });
+        }
+
+        state.log.push({
+          timestamp: new Date().toISOString(),
+          message: `${playerState.faction.toUpperCase()} BANKRUPT: paid £${canPay}, still owes £${stillOwed}`,
+          playerId,
+          type: 'income'
+        });
+      }
+    }
 
     // Collect Officers and Engineers from their income tracks
     const officersGained = playerState.officerIncome || 0;
@@ -652,6 +755,30 @@ function refreshMarketRow(state) {
   state.marketRow = marketRow;
 }
 
+// Helium market track: stepped progression (Section 4.4)
+// £2 → £3 → £4 → £5 → £6 → £8 → £10 → £15
+const HELIUM_PRICE_TRACK = [2, 3, 4, 5, 6, 8, 10, 15];
+
+// Get current helium price step index
+function getHeliumPriceIndex(price) {
+  const idx = HELIUM_PRICE_TRACK.indexOf(price);
+  return idx >= 0 ? idx : 0;
+}
+
+// Advance helium market by N steps
+function advanceHeliumMarket(state, steps = 1) {
+  const currentIdx = getHeliumPriceIndex(state.gasMarket.helium);
+  const newIdx = Math.min(currentIdx + steps, HELIUM_PRICE_TRACK.length - 1);
+  state.gasMarket.helium = HELIUM_PRICE_TRACK[newIdx];
+}
+
+// Reduce helium market by N steps
+function reduceHeliumMarket(state, steps = 1) {
+  const currentIdx = getHeliumPriceIndex(state.gasMarket.helium);
+  const newIdx = Math.max(currentIdx - steps, 0);
+  state.gasMarket.helium = HELIUM_PRICE_TRACK[newIdx];
+}
+
 // Buy gas cubes
 function processBuyGas(state, playerId, data) {
   const { gasType, amount } = data;
@@ -670,12 +797,13 @@ function processBuyGas(state, playerId, data) {
   playerState.cash -= price;
   playerState.gasCubes[gasType] += amount;
 
-  // Increase market price (unless USA buying helium)
-  // Cap prices at 8 to prevent late-game lockout
+  // Advance market price (unless USA buying helium)
   const isUSA = playerState.faction === 'usa';
-  if (!(isUSA && gasType === 'helium')) {
-    state.gasMarket[gasType] = Math.min(state.gasMarket[gasType] + 1, 8);
+  if (gasType === 'helium' && !isUSA) {
+    // Helium uses stepped progression: advance 1 step per cube purchased
+    advanceHeliumMarket(state, amount);
   }
+  // Note: Hydrogen price is fixed at £1 per Section 4.4
 
   state.log.push({
     timestamp: new Date().toISOString(),
@@ -730,8 +858,8 @@ function processAcquireTechnology(state, playerId, data) {
     addAgeTechnologies(state, 2);
     // Refill R&D board with new techs
     refillRDBoard(state);
-    // Reset gas market prices for new age
-    state.gasMarket = { hydrogen: 2, helium: 5 };
+    // Reset gas market prices for new age (Section 4.4: Helium resets to £2 at Age Transitions)
+    state.gasMarket = { hydrogen: 1, helium: 2 };
     state.log.push({
       timestamp: new Date().toISOString(),
       message: `Age II begins! New technologies available. Gas market reset.`,
@@ -743,8 +871,8 @@ function processAcquireTechnology(state, playerId, data) {
     addAgeTechnologies(state, 3);
     // Refill R&D board with new techs
     refillRDBoard(state);
-    // Reset gas market prices for new age
-    state.gasMarket = { hydrogen: 2, helium: 5 };
+    // Reset gas market prices for new age (Section 4.4: Helium resets to £2 at Age Transitions)
+    state.gasMarket = { hydrogen: 1, helium: 2 };
     state.log.push({
       timestamp: new Date().toISOString(),
       message: `Age III begins! Final era technologies unlocked. Gas market reset.`,
@@ -1042,6 +1170,17 @@ function processPlaceAgent(state, playerId, data) {
     type: 'action'
   });
 
+  // Process card effects (Section 8.1)
+  const cardEffectResult = processCardEffect(state, playerId, discardedCard, locationId);
+  if (cardEffectResult.message) {
+    state.log.push({
+      timestamp: new Date().toISOString(),
+      message: `Card effect: ${cardEffectResult.message}`,
+      playerId,
+      type: 'action'
+    });
+  }
+
   // Execute the location action immediately
   const actionResult = executeLocationAction(state, playerId, locationId, discardedCard);
   if (actionResult.error) {
@@ -1219,6 +1358,61 @@ function collectRevealResources(state) {
   }
 }
 
+// Process card effects when used for agent placement (Section 8.1)
+function processCardEffect(state, playerId, card, locationId) {
+  const playerState = state.players[playerId];
+  const effect = card.effect;
+
+  if (!effect || effect === 'None') {
+    return { success: true };
+  }
+
+  switch (effect) {
+    case '+1 swap':
+      // Mechanic: grants +1 swap at Design Bureau
+      // Track bonus swaps for this placement
+      if (!playerState.bonusSwaps) playerState.bonusSwaps = 0;
+      playerState.bonusSwaps += 1;
+      return { success: true, message: '+1 swap this action' };
+
+    case 'Draw 1 card':
+      // Draftsman: Draw 1 card immediately
+      if (playerState.deck.length === 0 && playerState.discardPile.length > 0) {
+        playerState.deck = shuffleArray([...playerState.discardPile]);
+        playerState.discardPile = [];
+      }
+      if (playerState.deck.length > 0) {
+        const drawn = playerState.deck.pop();
+        playerState.hand.push(drawn);
+        return { success: true, message: `Drew ${drawn.name}` };
+      }
+      return { success: true, message: 'No cards to draw' };
+
+    case '-£1 Research cost':
+      // Researcher: Research cost reduction
+      // Track discount for this placement
+      if (!playerState.researchDiscount) playerState.researchDiscount = 0;
+      playerState.researchDiscount += 1;
+      return { success: true, message: '-£1 Research cost this action' };
+
+    case 'Gain £2':
+      // Purser: Immediate cash gain
+      playerState.cash += 2;
+      return { success: true, message: 'Gained £2' };
+
+    case '+1 ship stat':
+      // Helmsman: Temporary ship stat bonus
+      // This would apply to the next launch
+      if (!playerState.launchBonuses) playerState.launchBonuses = {};
+      playerState.launchBonuses.statBonus = (playerState.launchBonuses.statBonus || 0) + 1;
+      return { success: true, message: '+1 ship stat for next launch' };
+
+    default:
+      // Log unknown effects for debugging
+      return { success: true, message: `Unknown effect: ${effect}` };
+  }
+}
+
 // Execute the action associated with a Ground Board location
 // This is a dispatcher that calls the appropriate handler
 function executeLocationAction(state, playerId, locationId, card) {
@@ -1243,7 +1437,8 @@ function executeLocationAction(state, playerId, locationId, card) {
 
     case 'academy':
       // Recruit crew (handled via RECRUIT_CREW)
-      return { success: true, message: 'May recruit crew' };
+      // Also: May discard leftmost Market card (Section 6.3)
+      return { success: true, message: 'May recruit crew. May also discard leftmost Market card.' };
 
     case 'flight_school':
       // Upgrade Officer income track (handled via UPGRADE_OFFICER_INCOME)
@@ -1257,10 +1452,49 @@ function executeLocationAction(state, playerId, locationId, card) {
       // Take a loan (handled via TAKE_LOAN)
       return { success: true, message: 'May take a loan' };
 
-    case 'ministry':
-      // Draw 2 cards, discard 1; gain turn priority; -1 helium cost
+    case 'ministry': {
+      // Ministry action (Section 6.3):
+      // 1. Draw 2 cards, discard 1
+      // 2. Gain turn priority for next round
+      // 3. Reduce Helium Market Track by 1 step
       state.workerPlacement.ministryVisitors.push(playerId);
-      return { success: true, message: 'Gained turn priority for next round. May draw 2, discard 1.' };
+
+      // Draw 2 cards
+      const cardsToDraw = 2;
+      for (let i = 0; i < cardsToDraw; i++) {
+        if (playerState.deck.length === 0 && playerState.discardPile.length > 0) {
+          playerState.deck = shuffleArray([...playerState.discardPile]);
+          playerState.discardPile = [];
+        }
+        if (playerState.deck.length > 0) {
+          playerState.hand.push(playerState.deck.pop());
+        }
+      }
+
+      // Must discard 1 card - for now, auto-discard the last card drawn
+      // (Player should choose via separate action, but auto-discard for simplicity)
+      if (playerState.hand.length > 0) {
+        const discarded = playerState.hand.pop();
+        playerState.discardPile.push(discarded);
+        state.log.push({
+          timestamp: new Date().toISOString(),
+          message: `Drew 2 cards, discarded ${discarded.name}`,
+          playerId,
+          type: 'action'
+        });
+      }
+
+      // Reduce Helium Market Track by 1 step
+      reduceHeliumMarket(state, 1);
+      state.log.push({
+        timestamp: new Date().toISOString(),
+        message: `Ministry: Helium price reduced to £${state.gasMarket.helium}`,
+        playerId,
+        type: 'action'
+      });
+
+      return { success: true, message: 'Gained turn priority. Drew 2, discarded 1. Helium market reduced.' };
+    }
 
     case 'gas_depot':
       // Buy gas (handled via BUY_GAS)
@@ -1270,9 +1504,33 @@ function executeLocationAction(state, playerId, locationId, card) {
       // Buy insurance (handled via BUY_INSURANCE)
       return { success: true, message: 'May buy insurance' };
 
-    case 'weather_bureau':
-      // Peek at hazard deck for £2
-      return { success: true, message: 'May peek at hazard for £2' };
+    case 'weather_bureau': {
+      // Peek at hazard deck for £2 (Section 6.3)
+      const cost = 2;
+      if (playerState.cash < cost) {
+        return { success: false, message: 'Not enough cash for Weather Bureau (need £2)' };
+      }
+
+      playerState.cash -= cost;
+
+      // Peek at top hazard card
+      const hazardDeck = playerState.hazardDeck || [];
+      if (hazardDeck.length > 0) {
+        const topHazard = hazardDeck[0];
+        // Store peeked card so player can decide to discard
+        playerState.peekedHazard = { ...topHazard };
+
+        state.log.push({
+          timestamp: new Date().toISOString(),
+          message: `Weather Bureau: Peeked at top hazard (${topHazard.type}, difficulty ${topHazard.difficulty}). May discard with DISCARD_HAZARD action.`,
+          playerId,
+          type: 'action'
+        });
+
+        return { success: true, message: `Peeked: ${topHazard.type} (difficulty ${topHazard.difficulty}). Use DISCARD_HAZARD to discard it.` };
+      }
+      return { success: true, message: 'Hazard deck is empty' };
+    }
 
     default:
       return { error: `Unknown location: ${locationId}` };
@@ -1507,11 +1765,21 @@ function addAgeTechnologies(state, age) {
   }
 }
 
-// Refill R&D board to 4 slots from tech bag
+// Refill R&D board from tech bag (Section 4.1)
+// Age I: 4 tiles, Age II: 5 tiles, Age III: 6 tiles
 function refillRDBoard(state) {
   state.rdBoard = state.rdBoard || [];
   state.techBag = state.techBag || [];
-  while (state.rdBoard.length < 4 && state.techBag.length > 0) {
+
+  // R&D Board size scales by Age
+  const rdBoardSize = {
+    1: 4,
+    2: 5,
+    3: 6
+  };
+  const targetSize = rdBoardSize[state.age] || 4;
+
+  while (state.rdBoard.length < targetSize && state.techBag.length > 0) {
     state.rdBoard.push(state.techBag.shift());
   }
 }
@@ -1597,8 +1865,8 @@ function processAcquireTechnologyResearch(state, playerId, data) {
     addAgeTechnologies(state, 2);
     // Refill R&D board with new techs
     refillRDBoard(state);
-    // Reset gas market prices for new age
-    state.gasMarket = { hydrogen: 2, helium: 5 };
+    // Reset gas market prices for new age (Section 4.4: Helium resets to £2 at Age Transitions)
+    state.gasMarket = { hydrogen: 1, helium: 2 };
     state.log.push({
       timestamp: new Date().toISOString(),
       message: `Age II begins! New technologies available. Gas market reset.`,
@@ -1609,8 +1877,8 @@ function processAcquireTechnologyResearch(state, playerId, data) {
     addAgeTechnologies(state, 3);
     // Refill R&D board with new techs
     refillRDBoard(state);
-    // Reset gas market prices for new age
-    state.gasMarket = { hydrogen: 2, helium: 5 };
+    // Reset gas market prices for new age (Section 4.4: Helium resets to £2 at Age Transitions)
+    state.gasMarket = { hydrogen: 1, helium: 2 };
     state.log.push({
       timestamp: new Date().toISOString(),
       message: `Age III begins! Final era technologies unlocked. Gas market reset.`,
@@ -1775,6 +2043,20 @@ function processLaunchShip(state, playerId, data) {
   // Validate gas type
   if (!['hydrogen', 'helium'].includes(gasType)) {
     return { error: 'Gas type must be hydrogen or helium' };
+  }
+
+  // Validate structural slots are filled (Section 3.2, 7.2: All Frame and Fabric slots must be filled)
+  const frameSlots = playerState.blueprint.frameSlots || [];
+  const fabricSlots = playerState.blueprint.fabricSlots || [];
+
+  const emptyFrameSlots = frameSlots.filter(s => s === null).length;
+  const emptyFabricSlots = fabricSlots.filter(s => s === null).length;
+
+  if (emptyFrameSlots > 0) {
+    return { error: `Cannot launch: ${emptyFrameSlots} Frame slot(s) must be filled` };
+  }
+  if (emptyFabricSlots > 0) {
+    return { error: `Cannot launch: ${emptyFabricSlots} Fabric slot(s) must be filled` };
   }
 
   // Find ship in hangar
@@ -1958,13 +2240,17 @@ function processHazardCheck(state, playerId, data) {
         route.claimedBy = null;
       }
 
-      // Insurance mitigation
+      // Insurance mitigation (Section 12.7: Discard policy to recover ship to Launch Hangar)
       const insurancePolicies = playerState.insurance || 0;
       if (insurancePolicies > 0) {
-        playerState.cash += 10 * insurancePolicies;
+        // Discard one insurance policy to recover ship
+        playerState.insurance = insurancePolicies - 1;
+        // Recover ship to hangar instead of destroying it
+        ships[shipIndex].status = 'hangar';
+        ships[shipIndex].damaged = false;
         state.log.push({
           timestamp: new Date().toISOString(),
-          message: `Insurance payout: £${10 * insurancePolicies}`,
+          message: `Insurance claim: ship recovered to Launch Hangar (${playerState.insurance} policies remaining)`,
           playerId,
           type: 'action'
         });
@@ -2082,10 +2368,16 @@ function processCalculateScores(state, playerId, data) {
   return { newState: state };
 }
 
-// Buy a card from the market
+// Buy a card from the market using Influence (Section 6.2, 8.3)
+// Influence is spent during Reveal Phase; unspent Influence is lost at end of round
 function processBuyMarketCard(state, playerId, data) {
   const { cardId } = data;
   const playerState = state.players[playerId];
+
+  // Can only buy market cards during reveal phase
+  if (state.phase !== 'reveal') {
+    return { error: 'Can only buy market cards during reveal phase' };
+  }
 
   // Find card in market
   const marketCards = state.marketCards || [];
@@ -2096,14 +2388,18 @@ function processBuyMarketCard(state, playerId, data) {
   }
 
   const card = marketCards[cardIndex];
-  const cost = card.value || 3; // Default cost is 3
+  const cost = card.value || 3; // Default cost is 3 Influence
 
-  if (playerState.cash < cost) {
-    return { error: `Not enough cash (need £${cost})` };
+  // Market cards cost Influence, not cash (Section 8.3)
+  const availableInfluence = playerState.influence || 0;
+  if (availableInfluence < cost) {
+    return { error: `Not enough Influence (need ${cost}, have ${availableInfluence})` };
   }
 
-  // Buy the card
-  playerState.cash -= cost;
+  // Spend Influence
+  playerState.influence -= cost;
+
+  // Card goes to discard pile (Section 8.3)
   playerState.discardPile.push(card);
 
   // Remove from market
@@ -2111,7 +2407,7 @@ function processBuyMarketCard(state, playerId, data) {
 
   state.log.push({
     timestamp: new Date().toISOString(),
-    message: `Bought ${card.name} for £${cost}`,
+    message: `Bought ${card.name} for ${cost} Influence`,
     playerId,
     type: 'action'
   });

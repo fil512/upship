@@ -103,16 +103,17 @@ function createInitialBlueprint(faction) {
   const config = FACTION_CONFIG[faction] || {};
   const startingUpgrades = config.startingUpgrades || {};
 
-  // Age I has 1 Frame, 1 Fabric, 1 Drive, 1 Payload slot per rules Section 3.2
-  // But the code uses 4 frame slots, 2 fabric, 2 drive, 3 component
-  // We'll pre-install in the first slot of each type as specified
+  // Blueprint Configuration by Age (Section 3.2):
+  // Age I: 1 Frame, 1 Fabric, 1 Drive, 1 Payload slot
+  // Age II: 1 Frame, 1 Fabric, 2 Drive, 2 Payload slots
+  // Age III: 2 Frame, 2 Fabric, 2 Drive, 3 Payload slots
 
   const blueprint = {
     age: 1,
-    frameSlots: [null, null, null, null],   // 4 frame slots
-    fabricSlots: [null, null],              // 2 fabric slots
-    driveSlots: [null, null],               // 2 drive slots
-    componentSlots: [null, null, null]      // 3 component slots (Italy has fewer per lowCeiling)
+    frameSlots: [null],      // Age I: 1 frame slot
+    fabricSlots: [null],     // Age I: 1 fabric slot
+    driveSlots: [null],      // Age I: 1 drive slot
+    componentSlots: [null]   // Age I: 1 payload slot (Italy: -1 in Ages II & III)
     // Note: Gas sockets removed - gas is spent directly from reserve when launching
   };
 
@@ -130,16 +131,20 @@ function createInitialBlueprint(faction) {
     blueprint.componentSlots[0] = startingUpgrades.component;
   }
 
-  // Italy's "Low Ceiling" flaw: fewer payload slots
-  if (config.lowCeiling) {
-    blueprint.componentSlots = [null, null];  // Only 2 instead of 3
-  }
+  // Italy's "Low Ceiling" flaw affects Ages II & III, not Age I
+  // Age I: all factions have 1 payload slot
+  // Italy will get -1 in blueprint transitions (Age II: 1 instead of 2, Age III: 2 instead of 3)
 
   return blueprint;
 }
 
-// Create starter deck of 10 cards
-// Based on rules: Apprentice, Mechanic, Draftsman, Researcher, Clerk
+// Create starter deck of 10 cards (Section 8.3)
+// 2x Apprentice (Any symbol, reveal: 1 Influence)
+// 2x Mechanic (Wrench, +1 swap, reveal: £1)
+// 2x Draftsman (Wrench, draw 1, reveal: 1 Influence)
+// 2x Researcher (Propeller, -£1 Research cost, reveal: 1 Research)
+// 1x Purser (Coin, gain £2, reveal: 2 Influence)
+// 1x Helmsman (Propeller, +1 ship stat, reveal: 1 Officer)
 function createStarterDeck() {
   return [
     { id: 'starter_1', name: 'Apprentice', symbol: 'any', reveal: { influence: 1 } },
@@ -150,8 +155,8 @@ function createStarterDeck() {
     { id: 'starter_6', name: 'Draftsman', symbol: 'wrench', reveal: { influence: 1 }, effect: 'Draw 1 card' },
     { id: 'starter_7', name: 'Researcher', symbol: 'propeller', reveal: { research: 1 }, effect: '-£1 Research cost' },
     { id: 'starter_8', name: 'Researcher', symbol: 'propeller', reveal: { research: 1 }, effect: '-£1 Research cost' },
-    { id: 'starter_9', name: 'Clerk', symbol: 'coin', reveal: { cash: 1 }, effect: 'None' },
-    { id: 'starter_10', name: 'Clerk', symbol: 'coin', reveal: { cash: 1 }, effect: 'None' }
+    { id: 'starter_9', name: 'Purser', symbol: 'coin', reveal: { influence: 2 }, effect: 'Gain £2' },
+    { id: 'starter_10', name: 'Helmsman', symbol: 'propeller', reveal: { officers: 1 }, effect: '+1 ship stat' }
   ];
 }
 
@@ -226,11 +231,14 @@ const TECHNOLOGY_BAG = {
   ]
 };
 
-// Progress Track thresholds by player count
+// Progress Track thresholds by player count (Section 1.3)
+// 2 Players: Age I ends at 8, Age II at 16, Game at 20
+// 3 Players: Age I ends at 10, Age II at 20, Game at 25
+// 4 Players: Age I ends at 12, Age II at 24, Game at 30
 const PROGRESS_THRESHOLDS = {
-  2: { age2: 6, age3: 12, end: 18 },
-  3: { age2: 8, age3: 16, end: 24 },
-  4: { age2: 10, age3: 20, end: 30 }
+  2: { age2: 8, age3: 16, end: 20 },
+  3: { age2: 10, age3: 20, end: 25 },
+  4: { age2: 12, age3: 24, end: 30 }
 };
 
 // Create technology bag and R&D board together to avoid duplicates
@@ -369,7 +377,7 @@ async function initializeGameState(gameId, players) {
       marketCards: createMarketCards(),
       progressTrack: 0,
       progressThresholds: PROGRESS_THRESHOLDS[playerCount],
-      gasMarket: { hydrogen: 2, helium: 5 }, // Prices per cube
+      gasMarket: { hydrogen: 1, helium: 2 }, // Prices per cube (Section 4.4: H₂ fixed at £1, He starts at £2)
       map: createAgeIMap(),
       log: [{
         timestamp: new Date().toISOString(),
