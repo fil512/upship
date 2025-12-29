@@ -68,17 +68,7 @@ npm test                 # Run Jest tests
 
 ## Pre-Push Validation
 
-**IMPORTANT**: Before pushing any changes to the repository, Claude MUST:
-
-1. **Run linting**: `npm run lint` - Fix all lint errors before committing
-2. **Run tests**: `npm test` - Ensure all tests pass
-
-If either check fails:
-- Fix the issues before proceeding
-- Re-run the checks to confirm the fix
-- Only push once both pass with zero errors
-
-This is mandatory for all code changes, no exceptions.
+**IMPORTANT**: Claude must NEVER call `git push` directly. Always use the `/push` command instead, which runs lint and tests before pushing.
 
 ## CLI Tool
 
