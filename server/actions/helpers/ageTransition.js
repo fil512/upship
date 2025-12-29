@@ -100,7 +100,6 @@ function scoreAllPlayersVP(state) {
  */
 function recoverShipsAndOfficers(state) {
   const currentAge = state.age;
-  const officersPerShip = currentAge === 1 ? 1 : 2; // Age I ships = 1, Age II ships = 2
   const MAX_HANGAR_CAPACITY = 3;
 
   for (const playerId of Object.keys(state.players)) {
