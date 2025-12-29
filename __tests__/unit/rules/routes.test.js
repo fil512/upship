@@ -159,4 +159,153 @@ describe('Rules Compliance - Routes and City Bonuses', () => {
       expect(CITY_BONUSES.Bombay.influence).toBe(1);
     });
   });
+
+  describe('GAP-029: Age III Network Connectivity per Section 14.3', () => {
+    // Per rules: "A network is a group of your routes that share at least one city."
+    // Age III: First ship may claim any route from a Major Hub.
+    // Subsequent ships must connect to existing network OR pay £X for new network
+    // where X = number of networks you already have.
+
+    const { countPlayerNetworksById, validateNetworkConnectivity } = require('../../../server/actions/launch');
+
+    describe('countPlayerNetworksById', () => {
+      it('should count 0 networks when player has no routes', () => {
+        const state = createTestGameState();
+        state.age = 3;
+        state.map = { routes: [] };
+
+        const networkCount = countPlayerNetworksById(state.map, '1');
+        expect(networkCount).toBe(0);
+      });
+
+      it('should count 1 network when player has connected routes', () => {
+        const state = createTestGameState();
+        state.age = 3;
+        state.map = { routes: [
+          { id: 'r1', from: 'London', to: 'Paris', claimed: '1' },
+          { id: 'r2', from: 'Paris', to: 'Berlin', claimed: '1' }
+        ]};
+
+        const networkCount = countPlayerNetworksById(state.map, '1');
+        expect(networkCount).toBe(1);
+      });
+
+      it('should count 2 networks when player has disconnected route groups', () => {
+        const state = createTestGameState();
+        state.age = 3;
+        state.map = { routes: [
+          { id: 'r1', from: 'London', to: 'Paris', claimed: '1' },
+          { id: 'r2', from: 'New York', to: 'Rio de Janeiro', claimed: '1' }
+        ]};
+
+        const networkCount = countPlayerNetworksById(state.map, '1');
+        expect(networkCount).toBe(2);
+      });
+    });
+
+    describe('validateNetworkConnectivity', () => {
+      it('should allow first ship to claim any route from Major Hub in Age III', () => {
+        const state = createTestGameState();
+        state.age = 3;
+        const gameStateService = require('../../../server/services/gameStateService');
+        state.map = gameStateService.createAgeIIIMap();
+
+        // Player has no routes yet
+        state.map.routes.forEach(r => r.claimed = null);
+
+        const route = state.map.routes.find(r => r.from === 'London' || r.to === 'London');
+        const result = validateNetworkConnectivity(state, '1', route);
+
+        expect(result.valid).toBe(true);
+        expect(result.networkFee).toBe(0);
+      });
+
+      it('should allow connecting to existing network without fee', () => {
+        const state = createTestGameState();
+        state.age = 3;
+        const gameStateService = require('../../../server/services/gameStateService');
+        state.map = gameStateService.createAgeIIIMap();
+
+        // Player has a route from London to Paris
+        const existingRoute = state.map.routes.find(r =>
+          (r.from === 'London' && r.to === 'Paris') || (r.from === 'Paris' && r.to === 'London')
+        );
+        if (existingRoute) existingRoute.claimed = '1';
+
+        // Try to claim a route connected to Paris
+        const connectedRoute = state.map.routes.find(r =>
+          r.claimed !== '1' && (r.from === 'Paris' || r.to === 'Paris')
+        );
+
+        if (connectedRoute) {
+          const result = validateNetworkConnectivity(state, '1', connectedRoute);
+          expect(result.valid).toBe(true);
+          expect(result.networkFee).toBe(0);
+        }
+      });
+
+      it('should require £1 fee to start second network', () => {
+        const state = createTestGameState();
+        state.age = 3;
+        const gameStateService = require('../../../server/services/gameStateService');
+        state.map = gameStateService.createAgeIIIMap();
+
+        // Player has connected routes in Europe
+        const londonParis = state.map.routes.find(r => r.from === 'London');
+        if (londonParis) londonParis.claimed = '1';
+
+        // Try to claim disconnected route in Americas
+        const americasRoute = state.map.routes.find(r =>
+          r.claimed !== '1' &&
+          (r.from === 'New York' || r.to === 'New York') &&
+          r.from !== 'London' && r.to !== 'London'
+        );
+
+        if (americasRoute) {
+          const result = validateNetworkConnectivity(state, '1', americasRoute);
+          expect(result.valid).toBe(true);
+          expect(result.networkFee).toBe(1); // £1 for second network
+        }
+      });
+
+      it('should require £2 fee to start third network', () => {
+        const state = createTestGameState();
+        state.age = 3;
+        // Create a custom map with clearly disconnected routes
+        state.map = { routes: [
+          // Network 1: Europe
+          { id: 'r1', from: 'London', to: 'Paris', claimed: '1' },
+          { id: 'r2', from: 'Paris', to: 'Berlin', claimed: null },
+          // Network 2: Americas
+          { id: 'r3', from: 'New York', to: 'Miami', claimed: '1' },
+          { id: 'r4', from: 'Miami', to: 'Havana', claimed: null },
+          // Network 3: Pacific (disconnected from Europe and Americas)
+          { id: 'r5', from: 'Tokyo', to: 'Sydney', claimed: null },
+          { id: 'r6', from: 'Sydney', to: 'Auckland', claimed: null }
+        ]};
+
+        // Player has 2 networks (London-Paris and New York-Miami)
+        // Try to claim Tokyo-Sydney (3rd network)
+        const thirdRoute = state.map.routes.find(r => r.id === 'r5');
+        const result = validateNetworkConnectivity(state, '1', thirdRoute);
+        expect(result.valid).toBe(true);
+        expect(result.networkFee).toBe(2); // £2 for third network
+      });
+
+      it('should not apply network rules in Age I', () => {
+        const state = createTestGameState();
+        state.age = 1;
+        state.map = { routes: [
+          { id: 'r1', from: 'London', to: 'Paris', claimed: '1' },
+          { id: 'r2', from: 'Frankfurt', to: 'Berlin' }
+        ]};
+
+        const route = state.map.routes[1];
+        const result = validateNetworkConnectivity(state, '1', route);
+
+        expect(result.valid).toBe(true);
+        expect(result.networkFee).toBe(0); // No fee in Age I
+      });
+    });
+  });
 });

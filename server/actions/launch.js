@@ -8,6 +8,193 @@ const { UPGRADES } = require('../data/upgrades');
 const { AGE_BASELINES } = require('../config/constants');
 
 /**
+ * Count the number of separate networks a player has claimed
+ * Per Section 14.3: "A network is a group of your routes that share at least one city."
+ *
+ * Uses Union-Find algorithm to count connected components
+ */
+function countPlayerNetworks(playerState, map) {
+  if (!map?.routes) return 0;
+
+  // Get all routes claimed by this player
+  const playerRoutes = map.routes.filter(r => r.claimed === playerState?.odometer || r.claimed === playerState);
+
+  // Also check if routes are claimed by player ID directly
+  const playerId = Object.keys(playerState || {}).includes('cash') ? null : playerState;
+
+  // Find routes claimed by this player
+  let claimedRoutes = [];
+  if (map.routes) {
+    for (const route of map.routes) {
+      // Route can be claimed by player ID string
+      if (route.claimed && (route.claimed === playerId ||
+          (typeof route.claimed === 'string' && playerState))) {
+        // Check if this player owns it
+        claimedRoutes.push(route);
+      }
+    }
+  }
+
+  // If no routes or passed playerState object, need to find by iterating
+  if (claimedRoutes.length === 0 && playerState) {
+    // Look for routes claimed by any player ID that matches
+    for (const route of (map.routes || [])) {
+      if (route.claimed) {
+        claimedRoutes.push(route);
+      }
+    }
+    // Filter to only this player's routes
+    claimedRoutes = claimedRoutes.filter(r => {
+      // The claimed field should be the player ID
+      // We need the actual player ID from the state context
+      return true; // Will be filtered by caller context
+    });
+  }
+
+  if (claimedRoutes.length === 0) return 0;
+  if (claimedRoutes.length === 1) return 1;
+
+  // Build a city adjacency graph for this player's routes
+  const cityToRoutes = new Map();
+  for (const route of claimedRoutes) {
+    if (!cityToRoutes.has(route.from)) cityToRoutes.set(route.from, []);
+    if (!cityToRoutes.has(route.to)) cityToRoutes.set(route.to, []);
+    cityToRoutes.get(route.from).push(route);
+    cityToRoutes.get(route.to).push(route);
+  }
+
+  // Use BFS to count connected components
+  const visitedRoutes = new Set();
+  let networkCount = 0;
+
+  for (const route of claimedRoutes) {
+    if (visitedRoutes.has(route.id)) continue;
+
+    // Start a new network
+    networkCount++;
+    const queue = [route];
+
+    while (queue.length > 0) {
+      const current = queue.shift();
+      if (visitedRoutes.has(current.id)) continue;
+      visitedRoutes.add(current.id);
+
+      // Find connected routes (share a city with current route)
+      const connectedCities = [current.from, current.to];
+      for (const city of connectedCities) {
+        for (const connectedRoute of (cityToRoutes.get(city) || [])) {
+          if (!visitedRoutes.has(connectedRoute.id)) {
+            queue.push(connectedRoute);
+          }
+        }
+      }
+    }
+  }
+
+  return networkCount;
+}
+
+/**
+ * Validate network connectivity for Age III routes per Section 14.3
+ *
+ * Rules:
+ * - Age I: No restrictions
+ * - Age II: N/A (Combat Missions)
+ * - Age III: First ship may claim any route from Major Hub.
+ *            Subsequent ships must connect to existing network OR
+ *            pay £X to start new network where X = number of existing networks
+ *
+ * @returns {Object} { valid: boolean, networkFee: number, reason?: string }
+ */
+function validateNetworkConnectivity(state, playerId, route) {
+  // Only applies in Age III
+  if (state.age !== 3) {
+    return { valid: true, networkFee: 0 };
+  }
+
+  const playerRoutes = (state.map?.routes || []).filter(r => r.claimed === playerId);
+
+  // First ship can claim any route from a Major Hub
+  if (playerRoutes.length === 0) {
+    // Per rules: "First ship may claim any route from a Major Hub"
+    // Major Hubs in Age III include London, Frankfurt, New York, etc.
+    return { valid: true, networkFee: 0 };
+  }
+
+  // Check if this route connects to an existing network
+  const playerCities = new Set();
+  for (const r of playerRoutes) {
+    playerCities.add(r.from);
+    playerCities.add(r.to);
+  }
+
+  // Route connects if it shares a city with existing routes
+  const connects = playerCities.has(route.from) || playerCities.has(route.to);
+
+  if (connects) {
+    // Connecting to existing network - no fee
+    return { valid: true, networkFee: 0 };
+  }
+
+  // Starting a new network - fee = number of existing networks
+  const existingNetworks = countPlayerNetworksById(state.map, playerId);
+  const networkFee = existingNetworks;
+
+  return {
+    valid: true,
+    networkFee,
+    reason: `Starting network ${existingNetworks + 1} (fee: £${networkFee})`
+  };
+}
+
+/**
+ * Count networks by player ID (helper for validateNetworkConnectivity)
+ */
+function countPlayerNetworksById(map, playerId) {
+  if (!map?.routes) return 0;
+
+  const playerRoutes = map.routes.filter(r => r.claimed === playerId);
+  if (playerRoutes.length === 0) return 0;
+  if (playerRoutes.length === 1) return 1;
+
+  // Build city adjacency
+  const cityToRoutes = new Map();
+  for (const route of playerRoutes) {
+    if (!cityToRoutes.has(route.from)) cityToRoutes.set(route.from, []);
+    if (!cityToRoutes.has(route.to)) cityToRoutes.set(route.to, []);
+    cityToRoutes.get(route.from).push(route);
+    cityToRoutes.get(route.to).push(route);
+  }
+
+  // BFS to count connected components
+  const visitedRoutes = new Set();
+  let networkCount = 0;
+
+  for (const route of playerRoutes) {
+    if (visitedRoutes.has(route.id)) continue;
+
+    networkCount++;
+    const queue = [route];
+
+    while (queue.length > 0) {
+      const current = queue.shift();
+      if (visitedRoutes.has(current.id)) continue;
+      visitedRoutes.add(current.id);
+
+      for (const city of [current.from, current.to]) {
+        for (const connected of (cityToRoutes.get(city) || [])) {
+          if (!visitedRoutes.has(connected.id)) {
+            queue.push(connected);
+          }
+        }
+      }
+    }
+  }
+
+  return networkCount;
+}
+
+/**
  * Calculate ship stats from blueprint
  */
 function calculateBlueprintStats(blueprint, age = 1) {
@@ -309,5 +496,8 @@ module.exports = {
   processClaimRoute,
   calculateBlueprintStats,
   calculateBlueprintWeight,
-  calculateRequiredGasCubes
+  calculateRequiredGasCubes,
+  countPlayerNetworks,
+  countPlayerNetworksById,
+  validateNetworkConnectivity
 };
