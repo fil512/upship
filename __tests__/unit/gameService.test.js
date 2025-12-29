@@ -278,22 +278,67 @@ describe('GameService', () => {
 
   describe('selectFaction', () => {
     it('should update player faction', async () => {
-      pool.query.mockResolvedValueOnce({ rows: [{ faction: 'germany' }] });
-      pool.query.mockResolvedValueOnce({ rows: [{ id: 1, players: [] }] });
+      // Now uses transaction with pool.connect
+      mockClient.query
+        .mockResolvedValueOnce({}) // BEGIN
+        .mockResolvedValueOnce({ rows: [{ status: 'waiting' }] }) // SELECT game FOR UPDATE
+        .mockResolvedValueOnce({ rows: [] }) // SELECT faction check (none taken)
+        .mockResolvedValueOnce({ rows: [{ id: 1 }] }) // SELECT player exists
+        .mockResolvedValueOnce({}) // UPDATE faction
+        .mockResolvedValueOnce({}); // COMMIT
+
+      pool.query.mockResolvedValue({ rows: [{ id: 1, players: [] }] }); // getGameById
 
       const result = await selectFaction(1, 1, 'germany');
 
-      expect(pool.query).toHaveBeenCalledWith(
-        expect.stringContaining('UPDATE game_players'),
+      expect(mockClient.query).toHaveBeenCalledWith('BEGIN');
+      expect(mockClient.query).toHaveBeenCalledWith(
+        expect.stringContaining('UPDATE game_players SET faction'),
         ['germany', 1, 1]
       );
+      expect(mockClient.query).toHaveBeenCalledWith('COMMIT');
+      expect(mockClient.release).toHaveBeenCalled();
       expect(result).toBeDefined();
     });
 
     it('should throw error if not in game', async () => {
-      pool.query.mockResolvedValue({ rows: [] });
+      mockClient.query
+        .mockResolvedValueOnce({}) // BEGIN
+        .mockResolvedValueOnce({ rows: [{ status: 'waiting' }] }) // SELECT game
+        .mockResolvedValueOnce({ rows: [] }) // SELECT faction check
+        .mockResolvedValueOnce({ rows: [] }); // SELECT player exists - NOT FOUND
 
       await expect(selectFaction(1, 99, 'germany')).rejects.toThrow('Not in this game');
+      expect(mockClient.query).toHaveBeenCalledWith('ROLLBACK');
+      expect(mockClient.release).toHaveBeenCalled();
+    });
+
+    it('should throw error if faction already taken', async () => {
+      mockClient.query
+        .mockResolvedValueOnce({}) // BEGIN
+        .mockResolvedValueOnce({ rows: [{ status: 'waiting' }] }) // SELECT game
+        .mockResolvedValueOnce({ rows: [{ user_id: 2 }] }); // SELECT faction - TAKEN by user 2
+
+      await expect(selectFaction(1, 1, 'germany')).rejects.toThrow('Faction already taken');
+      expect(mockClient.query).toHaveBeenCalledWith('ROLLBACK');
+    });
+
+    it('should throw error if game not found', async () => {
+      mockClient.query
+        .mockResolvedValueOnce({}) // BEGIN
+        .mockResolvedValueOnce({ rows: [] }); // SELECT game - NOT FOUND
+
+      await expect(selectFaction(999, 1, 'germany')).rejects.toThrow('Game not found');
+      expect(mockClient.query).toHaveBeenCalledWith('ROLLBACK');
+    });
+
+    it('should throw error if game already started', async () => {
+      mockClient.query
+        .mockResolvedValueOnce({}) // BEGIN
+        .mockResolvedValueOnce({ rows: [{ status: 'in_progress' }] }); // SELECT game - STARTED
+
+      await expect(selectFaction(1, 1, 'germany')).rejects.toThrow('Cannot change faction after game has started');
+      expect(mockClient.query).toHaveBeenCalledWith('ROLLBACK');
     });
   });
 

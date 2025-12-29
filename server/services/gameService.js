@@ -218,21 +218,63 @@ async function leaveGame(gameId, userId) {
   }
 }
 
-// Select faction
+// Select faction (with transaction to prevent race conditions)
 async function selectFaction(gameId, userId, faction) {
-  const result = await pool.query(
-    `UPDATE game_players
-     SET faction = $1
-     WHERE game_id = $2 AND user_id = $3
-     RETURNING *`,
-    [faction, gameId, userId]
-  );
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
 
-  if (result.rows.length === 0) {
-    throw new Error('Not in this game');
+    // Lock the game and check status
+    const gameResult = await client.query(
+      'SELECT status FROM games WHERE id = $1 FOR UPDATE',
+      [gameId]
+    );
+
+    if (gameResult.rows.length === 0) {
+      throw new Error('Game not found');
+    }
+
+    if (gameResult.rows[0].status !== 'waiting') {
+      throw new Error('Cannot change faction after game has started');
+    }
+
+    // Check if faction is already taken by another player (with lock)
+    const existingFaction = await client.query(
+      `SELECT user_id FROM game_players
+       WHERE game_id = $1 AND faction = $2 AND user_id != $3
+       FOR UPDATE`,
+      [gameId, faction, userId]
+    );
+
+    if (existingFaction.rows.length > 0) {
+      throw new Error('Faction already taken');
+    }
+
+    // Verify user is in this game
+    const playerResult = await client.query(
+      'SELECT id FROM game_players WHERE game_id = $1 AND user_id = $2',
+      [gameId, userId]
+    );
+
+    if (playerResult.rows.length === 0) {
+      throw new Error('Not in this game');
+    }
+
+    // Update faction
+    await client.query(
+      'UPDATE game_players SET faction = $1 WHERE game_id = $2 AND user_id = $3',
+      [faction, gameId, userId]
+    );
+
+    await client.query('COMMIT');
+    client.release();
+
+    return getGameById(gameId);
+  } catch (error) {
+    await client.query('ROLLBACK');
+    client.release();
+    throw error;
   }
-
-  return getGameById(gameId);
 }
 
 // Start game (host only)

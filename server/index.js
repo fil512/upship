@@ -8,6 +8,8 @@ const { createSessionMiddleware } = require('./auth');
 const authRoutes = require('./routes/auth');
 const gameRoutes = require('./routes/games');
 const gameStateRoutes = require('./routes/gameState');
+const requestLogger = require('./middleware/requestLogger');
+const { errorHandler, notFoundHandler } = require('./middleware/errorHandler');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -17,6 +19,7 @@ app.set('trust proxy', 1);
 
 // Middleware
 app.use(express.json());
+app.use(requestLogger());
 app.use(createSessionMiddleware());
 app.use(express.static(path.join(__dirname, '..', 'public')));
 
@@ -52,6 +55,9 @@ app.get('/api/status', (req, res) => {
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '..', 'public', 'index.html'));
 });
+
+// Error handling middleware (must be last)
+app.use(errorHandler);
 
 // Run migrations then start server
 async function start() {
