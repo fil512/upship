@@ -35,3 +35,10 @@ temp/
 
 # Cookie files
 cookies*.txt
+
+# Test coverage
+coverage/
+
+# Python cache
+__pycache__/
+*.pyc
