@@ -49,7 +49,11 @@ function processBuildShip(state, playerId, data) {
     }
   }
 
-  const totalCost = hullCost * count;
+  // GAP-049: Apply Rigger card discount per ship (if any)
+  const buildDiscount = playerState.buildDiscount || 0;
+  const effectiveHullCost = Math.max(0, hullCost - buildDiscount);
+
+  const totalCost = effectiveHullCost * count;
 
   if (playerState.cash < totalCost) {
     throw new InsufficientFundsError(totalCost, playerState.cash);
@@ -75,9 +79,14 @@ function processBuildShip(state, playerId, data) {
     });
   }
 
+  // Clear buildDiscount after use (it's a per-action bonus)
+  playerState.buildDiscount = 0;
+
   state.log.push({
     timestamp: new Date().toISOString(),
-    message: `Built ${count} ship(s) for £${totalCost} (£${hullCost}/ship)`,
+    message: buildDiscount > 0
+      ? `Built ${count} ship(s) for £${totalCost} (£${effectiveHullCost}/ship, £${buildDiscount} Rigger discount applied)`
+      : `Built ${count} ship(s) for £${totalCost} (£${effectiveHullCost}/ship)`,
     playerId,
     type: 'action'
   });

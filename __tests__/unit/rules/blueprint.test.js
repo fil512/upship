@@ -194,4 +194,78 @@ describe('Rules Compliance - Blueprint System', () => {
       }).toThrow(/swap limit|limit reached|maximum/i);
     });
   });
+
+  describe('GAP-047: Modular Frame extra swaps', () => {
+    it('should grant +2 swaps when Modular Frame is installed in frameSlots', () => {
+      const state = createTestGameState();
+      state.age = 3; // Age III for modular frame
+
+      // Germany with standard 2 swaps
+      state.players['1'].faction = 'germany';
+      state.players['1'].technologies = ['modular_construction', 'daimler_engine', 'improved_propeller', 'dual_engine_mount'];
+      state.players['1'].upgradeSwaps = 2;  // Base swaps
+      state.players['1'].swapsUsedThisVisit = 0;
+
+      // Modular Frame installed - should get +2 swaps
+      state.players['1'].blueprint.frameSlots = ['modular_frame', null];
+      state.players['1'].blueprint.driveSlots = [null, null];
+
+      // First swap
+      processInstallUpgrade(state, '1', { slotType: 'drive', slotIndex: 0, upgradeId: 'basic_engine' });
+      expect(state.players['1'].swapsUsedThisVisit).toBe(1);
+
+      // Second swap
+      processInstallUpgrade(state, '1', { slotType: 'drive', slotIndex: 1, upgradeId: 'efficient_propeller' });
+      expect(state.players['1'].swapsUsedThisVisit).toBe(2);
+
+      // Third swap - would normally fail, but modular frame grants +2
+      // Need to clear and reinstall for third swap
+      processRemoveUpgrade(state, '1', { slotType: 'drive', slotIndex: 0 });
+      expect(state.players['1'].swapsUsedThisVisit).toBe(3);
+
+      // Fourth swap - still within limit (2 + 2 = 4)
+      processInstallUpgrade(state, '1', { slotType: 'drive', slotIndex: 0, upgradeId: 'twin_engine' });
+      expect(state.players['1'].swapsUsedThisVisit).toBe(4);
+    });
+
+    it('should reject fifth swap when base is 2 and Modular Frame adds 2', () => {
+      const state = createTestGameState();
+      state.age = 3;
+
+      // Germany with standard 2 swaps + 2 from modular frame = 4 total
+      state.players['1'].faction = 'germany';
+      state.players['1'].technologies = ['modular_construction', 'daimler_engine'];
+      state.players['1'].upgradeSwaps = 2;
+      state.players['1'].swapsUsedThisVisit = 4;  // Already used all 4 swaps
+
+      // Modular Frame installed
+      state.players['1'].blueprint.frameSlots = ['modular_frame', null];
+      state.players['1'].blueprint.driveSlots = [null, null];
+
+      // Fifth swap should fail
+      expect(() => {
+        processInstallUpgrade(state, '1', { slotType: 'drive', slotIndex: 0, upgradeId: 'basic_engine' });
+      }).toThrow(/swap limit|limit reached|maximum/i);
+    });
+
+    it('should NOT grant extra swaps if Modular Frame is not installed', () => {
+      const state = createTestGameState();
+      state.age = 3;
+
+      // Germany with standard 2 swaps, no modular frame
+      state.players['1'].faction = 'germany';
+      state.players['1'].technologies = ['duralumin_girders', 'daimler_engine', 'improved_propeller'];
+      state.players['1'].upgradeSwaps = 2;
+      state.players['1'].swapsUsedThisVisit = 2;  // Already used 2 swaps
+
+      // No Modular Frame - just regular frame
+      state.players['1'].blueprint.frameSlots = ['duralumin_frame', null];
+      state.players['1'].blueprint.driveSlots = [null, null];
+
+      // Third swap should fail without modular frame
+      expect(() => {
+        processInstallUpgrade(state, '1', { slotType: 'drive', slotIndex: 0, upgradeId: 'basic_engine' });
+      }).toThrow(/swap limit|limit reached|maximum/i);
+    });
+  });
 });

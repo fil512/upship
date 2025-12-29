@@ -156,6 +156,27 @@ function processHazardCheck(state, playerId, data) {
       'Static Discharge - Auto Pass (Conductive Covering grounds electrical charge)');
   }
 
+  // GAP-046: Check for Fire-Resistant Fabric - once per Age, auto-pass fire hazard per Appendix D
+  const hasFireResistantFabric = playerBlueprint?.fabricSlots?.some(
+    fabric => fabric === 'fire_resistant_fabric' || fabric?.id === 'fire_resistant_fabric'
+  );
+  const fireProtectionAvailable = hasFireResistantFabric && !playerState.fireProtectionUsedThisAge;
+
+  if (isFireHazard && fireProtectionAvailable) {
+    // Use the fire protection - mark as used this age
+    playerState.fireProtectionUsedThisAge = true;
+
+    state.log.push({
+      timestamp: new Date().toISOString(),
+      message: `Fire-Resistant Fabric activated! Auto-passing ${hazard.name}.`,
+      playerId,
+      type: 'action'
+    });
+
+    return resolveHazardSuccess(state, playerId, shipIndex, route, hazard,
+      'Fire Hazard - Auto Pass (Fire-Resistant Fabric, once per Age)');
+  }
+
   // Step 2: Handle fire hazards specially per Section 8.3
   if (isFireHazard && ship.gasType === 'hydrogen') {
     return resolveFireHazard(state, playerId, shipIndex, ship, hazard, engineersToSpend, route);

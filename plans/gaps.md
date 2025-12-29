@@ -3,9 +3,9 @@
 Last updated: 2025-12-29
 
 ## Summary
-- Total gaps found: 45
-- Resolved: 40
-- Unresolved: 5
+- Total gaps found: 50
+- Resolved: 44
+- Unresolved: 6
 
 ## Analysis Progress
 
@@ -35,6 +35,12 @@ Last updated: 2025-12-29
 - [ANALYZED 2025-12-29] MARKET_DECK_APPENDIX (Appendix G/H)
 - [ANALYZED 2025-12-29] TECHNOLOGY_APPENDIX (Appendix C)
 - [ANALYZED 2025-12-29] UPGRADE_APPENDIX (Appendix D)
+
+### Level 5 - Deep Dive Analysis
+- [ANALYZED 2025-12-29] WORKER_PLACEMENT_ACTIONS (Ground Board locations, card symbol matching)
+- [ANALYZED 2025-12-29] CARD_AGENT_EFFECTS (Starter deck effects, Market card effects)
+- [ANALYZED 2025-12-29] UPGRADE_SPECIAL_ABILITIES (Fire protection, extra swaps, route bypass)
+- [ANALYZED 2025-12-29] FACTION_SPECIAL_ABILITIES (Trapeze System, Blaugas, Helium Monopoly)
 
 ---
 
@@ -96,7 +102,65 @@ Last updated: 2025-12-29
 
 ---
 
+### GAP-050: Market card Agent Effects not implemented
+- **Area:** MARKET_DECK_APPENDIX
+- **Severity:** HIGH
+- **Rules:** Appendix H
+- **Code:** server/actions/worker.js:17-69
+- **Issue:** Appendix H defines 30 market cards with Agent Effects like "Chief Engineer: +2 tile swaps", "Test Pilot: +2 Reliability for this launch", "Weather Expert: Ignore Weather hazards this launch", etc. processCardEffect() only handles starter card effects, not any market card effects.
+- **Fix:** Add cases in processCardEffect() for all market card Agent Effects, or refactor to use a data-driven approach reading effects from card definitions.
+- [ ] Unresolved
+
+---
+
 ## Resolved Gaps
+
+### GAP-046: Fire-Resistant Fabric special effect
+- **Area:** UPGRADE_APPENDIX
+- **Severity:** MEDIUM
+- **Rules:** Appendix D (Upgrade Tiles)
+- **Code:** server/actions/hazard.js:159-178, server/actions/helpers/ageTransition.js:247-251
+- **Issue:** Appendix D specifies Fire-Resistant Fabric upgrade grants "Once per Age, treat one Fire hazard as auto-pass." The upgrade exists with `special: 'fire_protection'` but the hazard.js code did not check for or apply this special effect.
+- **Fix:** Added check in processHazardCheck() for fire_resistant_fabric in player's fabricSlots. Tracks `fireProtectionUsedThisAge` state and auto-passes first fire hazard each age. Added resetFireProtection() in ageTransition.js to reset at age transitions.
+- [x] Resolved (2025-12-29)
+
+---
+
+### GAP-047: Modular Frame extra swaps
+- **Area:** UPGRADE_APPENDIX
+- **Severity:** LOW
+- **Rules:** Appendix D (Upgrade Tiles)
+- **Code:** server/actions/blueprint.js:10-24
+- **Issue:** Appendix D specifies Modular Frame grants "+2 tile swaps at Design Bureau." The upgrade exists with `special: 'extra_swaps'` but blueprint.js only checked `playerState.upgradeSwaps` (faction-based).
+- **Fix:** Added getEffectiveSwapLimit() function that adds 2 to base swap limit if player has modular_frame installed in frameSlots. Updated both processInstallUpgrade and processRemoveUpgrade to use this function.
+- [x] Resolved (2025-12-29)
+
+---
+
+### GAP-048: Trapeze System (USA) route requirement bypass
+- **Area:** FACTIONS
+- **Severity:** MEDIUM
+- **Rules:** Section 13.3, Appendix D
+- **Code:** server/actions/launch.js:70-130
+- **Issue:** Rules state USA has "Trapeze Fighter System (ignore one route requirement per launch)." The technology exists but launch.js validated all route requirements without checking for this special ability.
+- **Fix:** Added hasTrapezeSytem() check and bypassRequirement parameter to processLaunchShip(). USA players with trapeze_system can now pass bypassRequirement='range'|'speed'|'ceiling'|'luxury' to ignore one requirement.
+- [x] Resolved (2025-12-29)
+
+---
+
+### GAP-049: Starter card effects (Navigator, Rigger, Researcher)
+- **Area:** DECK_BUILDING
+- **Severity:** MEDIUM
+- **Rules:** Section 11.3
+- **Code:** server/actions/worker.js:45-68, server/actions/building.js:52-56
+- **Issue:** Several starter card Agent Effects were not implemented in processCardEffect().
+- **Fix:** Added cases for:
+  - Navigator "Look at top Hazard": Peeks at hazard deck top card, stores in peekedHazard
+  - Rigger "-£2 ship build cost": Sets buildDiscount, applied in processBuildShip()
+  - Researcher "-£1 per Research": Sets researchDiscount (already had case, just needed alias)
+- [x] Resolved (2025-12-29)
+
+---
 
 ### GAP-038: Hazard cards Flak values for Age II
 - **Area:** HAZARD_DECK_APPENDIX

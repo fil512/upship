@@ -43,10 +43,29 @@ function processCardEffect(state, playerId, card, _locationId) {
       return { success: true, message: 'No cards to draw' };
 
     case '-£1 Research cost':
-      // Researcher: Research cost reduction
+    case '-£1 per Research':
+      // Researcher: Research cost reduction (GAP-049)
       if (!playerState.researchDiscount) playerState.researchDiscount = 0;
       playerState.researchDiscount += 1;
       return { success: true, message: '-£1 Research cost this action' };
+
+    case '-£2 ship build cost':
+      // Rigger: Ship build cost reduction (GAP-049)
+      if (!playerState.buildDiscount) playerState.buildDiscount = 0;
+      playerState.buildDiscount += 2;
+      return { success: true, message: '-£2 ship build cost this action' };
+
+    case 'Look at top Hazard':
+      // Navigator: Peek at top hazard card (GAP-049)
+      {
+        const hazardDeck = playerState.hazardDeck || [];
+        if (hazardDeck.length === 0) {
+          return { success: true, message: 'Hazard deck is empty' };
+        }
+        const topHazard = hazardDeck[0];
+        playerState.peekedHazard = { ...topHazard };
+        return { success: true, message: `Peeked at hazard: ${topHazard.name || topHazard.type}` };
+      }
 
     case 'Gain £1':
       // Clerk: Immediate cash gain (GAP-035)

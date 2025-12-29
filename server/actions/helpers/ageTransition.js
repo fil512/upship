@@ -240,6 +240,17 @@ function expandBlueprintSlots(state, newAge) {
 }
 
 /**
+ * Reset Fire-Resistant Fabric protection for new age per GAP-046
+ * Per Appendix D: Fire-Resistant Fabric grants "Once per Age, treat one Fire hazard as auto-pass"
+ * @param {Object} state - Game state (mutated)
+ */
+function resetFireProtection(state) {
+  for (const playerId of Object.keys(state.players)) {
+    state.players[playerId].fireProtectionUsedThisAge = false;
+  }
+}
+
+/**
  * Apply Britain's Red Tape flaw per Section 13.2
  * Reduce income by 1 at each age transition
  * @param {Object} state - Game state (mutated)
@@ -282,6 +293,9 @@ function performAgeTransition(state, newAge) {
   // Apply faction-specific flaws
   applyBritainRedTape(state);
 
+  // GAP-046: Reset Fire-Resistant Fabric protection for new age
+  resetFireProtection(state);
+
   // Update game age
   state.age = newAge;
 
@@ -308,6 +322,7 @@ module.exports = {
   calculateTransitionIncome,
   expandBlueprintSlots,
   applyBritainRedTape,
+  resetFireProtection,
   performAgeTransition,
   getBlueprintSlotsForFaction,
   BLUEPRINT_SLOTS

@@ -67,8 +67,18 @@ function calculateRequiredGasCubes(blueprint) {
  * @param {Object} data - Action data { shipId, routeId, gasType }
  * @returns {Object} { newState } or throws error
  */
+/**
+ * Check if player has Trapeze System technology (USA faction ability)
+ * Per Section 13.3: "Trapeze Fighter System (ignore one route requirement per launch)"
+ */
+function hasTrapezeSytem(playerState) {
+  return playerState.technologies?.some(t =>
+    (typeof t === 'string' ? t : t.id) === 'trapeze_system'
+  );
+}
+
 function processLaunchShip(state, playerId, data) {
-  const { shipId, routeId, gasType = 'hydrogen', retainGas = false } = data;
+  const { shipId, routeId, gasType = 'hydrogen', retainGas = false, bypassRequirement = null } = data;
   const playerState = state.players[playerId];
   const BLAUGAS_COST = 2; // £2 to retain gas cubes per Section 13.1
 
@@ -88,15 +98,35 @@ function processLaunchShip(state, playerId, data) {
   // Calculate ship stats to validate against route requirements
   const stats = calculateBlueprintStats(playerState.blueprint, state.age);
 
-  // Validate Range meets route distance requirement
-  if (stats.range < route.distance) {
+  // GAP-048: Check if player has Trapeze System for bypassing one requirement
+  const canBypassRequirement = hasTrapezeSytem(playerState);
+  const validBypassTypes = ['range', 'speed', 'ceiling', 'luxury'];
+
+  // Validate bypassRequirement parameter if provided
+  if (bypassRequirement) {
+    if (!canBypassRequirement) {
+      throw new GameRuleError('Cannot bypass route requirement without Trapeze Fighter System technology');
+    }
+    if (!validBypassTypes.includes(bypassRequirement)) {
+      throw new GameRuleError(`Invalid bypass requirement type: ${bypassRequirement}. Must be one of: ${validBypassTypes.join(', ')}`);
+    }
+  }
+
+  // Validate Range meets route distance requirement (unless bypassed)
+  if (bypassRequirement !== 'range' && stats.range < route.distance) {
     throw new GameRuleError(`Ship Range (${stats.range}) does not meet route distance requirement (${route.distance})`);
   }
 
-  // Validate Speed meets route speed requirement (if any)
+  // Validate Speed meets route speed requirement (unless bypassed)
   const routeSpeed = route.speed || 1;
-  if (stats.speed < routeSpeed) {
+  if (bypassRequirement !== 'speed' && stats.speed < routeSpeed) {
     throw new GameRuleError(`Ship Speed (${stats.speed}) does not meet route speed requirement (${routeSpeed})`);
+  }
+
+  // Validate Ceiling meets route ceiling requirement (unless bypassed)
+  const routeCeiling = route.ceiling || 0;
+  if (bypassRequirement !== 'ceiling' && routeCeiling > 0 && stats.ceiling < routeCeiling) {
+    throw new GameRuleError(`Ship Ceiling (${stats.ceiling}) does not meet route ceiling requirement (${routeCeiling})`);
   }
 
   // Step 2: Verify launch requirements

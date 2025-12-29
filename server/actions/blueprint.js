@@ -8,6 +8,22 @@ const { GameRuleError, InsufficientFundsError } = require('../errors');
 const { UPGRADES, TECHNOLOGIES } = require('../data/upgrades');
 
 /**
+ * Calculate effective swap limit for player per Section 6.2 and Appendix D
+ * Base swaps: Germany/USA 2, Britain 1, Italy 4
+ * Modular Frame upgrade grants +2 swaps per Appendix D
+ */
+function getEffectiveSwapLimit(playerState) {
+  const baseSwaps = playerState.upgradeSwaps || 2;
+
+  // GAP-047: Check if Modular Frame is installed, granting +2 swaps
+  const hasModularFrame = playerState.blueprint?.frameSlots?.some(
+    frame => frame === 'modular_frame' || frame?.id === 'modular_frame'
+  );
+
+  return baseSwaps + (hasModularFrame ? 2 : 0);
+}
+
+/**
  * Calculate hull cost for an upgrade
  * Only Frame and Fabric upgrades contribute to hull cost per Section 7.1
  */
@@ -52,8 +68,8 @@ function processInstallUpgrade(state, playerId, data) {
   const { slotType, slotIndex, upgradeId } = data;
   const playerState = state.players[playerId];
 
-  // GAP-033: Check swap limit
-  const swapLimit = playerState.upgradeSwaps || 2; // Default to 2 if not set
+  // GAP-033 & GAP-047: Check swap limit (including Modular Frame bonus)
+  const swapLimit = getEffectiveSwapLimit(playerState);
   const swapsUsed = playerState.swapsUsedThisVisit || 0;
 
   if (swapsUsed >= swapLimit) {
@@ -154,8 +170,8 @@ function processRemoveUpgrade(state, playerId, data) {
   const { slotType, slotIndex } = data;
   const playerState = state.players[playerId];
 
-  // GAP-033: Check swap limit
-  const swapLimit = playerState.upgradeSwaps || 2;
+  // GAP-033 & GAP-047: Check swap limit (including Modular Frame bonus)
+  const swapLimit = getEffectiveSwapLimit(playerState);
   const swapsUsed = playerState.swapsUsedThisVisit || 0;
 
   if (swapsUsed >= swapLimit) {

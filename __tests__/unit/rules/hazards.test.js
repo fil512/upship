@@ -571,4 +571,148 @@ describe('Rules Compliance - Hazards', () => {
       expect(checkHindenburgDisaster({ ...conditions, hazardType: 'strong_wind' })).toBe(false);
     });
   });
+
+  describe('GAP-046: Fire-Resistant Fabric special effect', () => {
+    it('should auto-pass first fire hazard per age if player has Fire-Resistant Fabric', () => {
+      const state = createTestGameState();
+      state.age = 2;
+
+      // Hydrogen ship - would normally fail fire hazard
+      state.players['1'].ships = [{
+        id: 'ship1',
+        status: 'awaiting_hazard',
+        pendingRouteId: 'route_1',
+        gasType: 'hydrogen',
+        stats: { speed: 1, reliability: 0, ceiling: 0, range: 3 }
+      }];
+      state.players['1'].engineers = 0; // No engineers to spend
+
+      // Fire-Resistant Fabric installed
+      state.players['1'].blueprint.fabricSlots = ['fire_resistant_fabric'];
+      state.players['1'].fireProtectionUsedThisAge = false;
+
+      // Engine Fire - would normally require 1 Engineer
+      state.players['1'].hazardDeck = [{
+        id: 'engine_fire_0',
+        type: 'engine_fire',
+        category: 'fire',
+        name: 'Engine Fire',
+        hydrogenOnly: true,
+        engineerCost: 1
+      }];
+
+      state.map.routes = [{
+        id: 'route_1',
+        from: 'A',
+        to: 'B',
+        income: 2,
+        claimed: null
+      }];
+
+      const result = processHazardCheck(state, '1', { shipId: 'ship1' });
+
+      // Should auto-pass due to Fire-Resistant Fabric
+      expect(result.newState.players['1'].ships[0].status).toBe('on_route');
+      // Should mark protection as used this age
+      expect(result.newState.players['1'].fireProtectionUsedThisAge).toBe(true);
+    });
+
+    it('should NOT auto-pass second fire hazard in same age with Fire-Resistant Fabric', () => {
+      const state = createTestGameState();
+      state.age = 2;
+
+      // Hydrogen ship
+      state.players['1'].ships = [{
+        id: 'ship1',
+        status: 'awaiting_hazard',
+        pendingRouteId: 'route_1',
+        gasType: 'hydrogen',
+        stats: { speed: 1, reliability: 0, ceiling: 0, range: 3 }
+      }];
+      state.players['1'].engineers = 0; // No engineers to spend
+
+      // Fire-Resistant Fabric installed but already used this age
+      state.players['1'].blueprint.fabricSlots = ['fire_resistant_fabric'];
+      state.players['1'].fireProtectionUsedThisAge = true;
+
+      // Engine Fire - would normally require 1 Engineer
+      state.players['1'].hazardDeck = [{
+        id: 'engine_fire_0',
+        type: 'engine_fire',
+        category: 'fire',
+        name: 'Engine Fire',
+        hydrogenOnly: true,
+        engineerCost: 1
+      }];
+
+      state.map.routes = [{
+        id: 'route_1',
+        from: 'A',
+        to: 'B',
+        income: 2,
+        claimed: null
+      }];
+
+      const result = processHazardCheck(state, '1', { shipId: 'ship1' });
+
+      // Should NOT auto-pass - protection already used
+      expect(result.newState.players['1'].ships[0].status).toBe('destroyed');
+    });
+
+    it('should reset fireProtectionUsedThisAge at age transition', () => {
+      const state = createTestGameState();
+      state.age = 1;
+      state.players['1'].fireProtectionUsedThisAge = true;
+
+      // Use the age transition helper to test reset
+      const { performAgeTransition } = require('../../../server/actions/helpers/ageTransition');
+      performAgeTransition(state, 2);
+
+      // Should reset for next age
+      expect(state.players['1'].fireProtectionUsedThisAge).toBe(false);
+    });
+  });
+
+  describe('GAP-045: Conductive Covering static discharge immunity', () => {
+    it('should auto-pass Static Discharge with Conductive Covering', () => {
+      const state = createTestGameState();
+      state.age = 1;
+
+      // Hydrogen ship
+      state.players['1'].ships = [{
+        id: 'ship1',
+        status: 'awaiting_hazard',
+        pendingRouteId: 'route_1',
+        gasType: 'hydrogen',
+        stats: { speed: 1, reliability: 0, ceiling: 0, range: 3 }
+      }];
+      state.players['1'].engineers = 0;
+
+      // Conductive Covering installed
+      state.players['1'].blueprint.fabricSlots = ['conductive_covering'];
+
+      // Static Discharge hazard
+      state.players['1'].hazardDeck = [{
+        id: 'static_discharge_0',
+        type: 'static_discharge',
+        category: 'fire',
+        name: 'Static Discharge',
+        hydrogenOnly: true,
+        difficulty: 4
+      }];
+
+      state.map.routes = [{
+        id: 'route_1',
+        from: 'A',
+        to: 'B',
+        income: 2,
+        claimed: null
+      }];
+
+      const result = processHazardCheck(state, '1', { shipId: 'ship1' });
+
+      // Should auto-pass due to Conductive Covering
+      expect(result.newState.players['1'].ships[0].status).toBe('on_route');
+    });
+  });
 });
