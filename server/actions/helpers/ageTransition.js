@@ -1,0 +1,295 @@
+/**
+ * Age Transition Helpers
+ * Implementation of Section 12 - Age Transitions
+ */
+
+const { TECHNOLOGY_BAG } = require('../../config/constants');
+
+/**
+ * Get all technology definitions flattened from all ages
+ */
+function getAllTechnologyDefinitions() {
+  const allTechs = {};
+  for (const age of [1, 2, 3]) {
+    for (const tech of (TECHNOLOGY_BAG[age] || [])) {
+      allTechs[tech.id] = tech;
+    }
+  }
+  return allTechs;
+}
+
+/**
+ * Calculate VP from technologies based on their VP values per Section 12.2
+ * @param {string[]} techIds - Array of technology IDs
+ * @returns {number} Total VP from technologies
+ */
+function calculateTechnologyVP(techIds) {
+  const techDefs = getAllTechnologyDefinitions();
+  let totalVP = 0;
+
+  for (const techId of techIds) {
+    const tech = techDefs[techId];
+    if (tech && typeof tech.vp === 'number') {
+      totalVP += tech.vp;
+    }
+  }
+
+  return totalVP;
+}
+
+/**
+ * Calculate VP from claimed routes based on distance per Section 12.2
+ * @param {Object} state - Game state
+ * @param {string} playerId - Player ID
+ * @returns {number} Total VP from routes
+ */
+function calculateRouteVP(state, playerId) {
+  const routes = state.map?.routes || [];
+  let totalVP = 0;
+
+  for (const route of routes) {
+    if (route.claimed === playerId) {
+      totalVP += route.distance || 0;
+    }
+  }
+
+  return totalVP;
+}
+
+/**
+ * Score VP for a player at age transition per Section 12.1 and 12.2
+ * @param {Object} state - Game state
+ * @param {string} playerId - Player ID
+ * @returns {Object} VP breakdown { routes, technologies, total }
+ */
+function scoreAgeVP(state, playerId) {
+  const playerState = state.players[playerId];
+
+  const routeVP = calculateRouteVP(state, playerId);
+  const techVP = calculateTechnologyVP(playerState.technologies || []);
+
+  return {
+    routes: routeVP,
+    technologies: techVP,
+    total: routeVP + techVP
+  };
+}
+
+/**
+ * Score VP for all players during age transition
+ * @param {Object} state - Game state (mutated)
+ */
+function scoreAllPlayersVP(state) {
+  for (const playerId of Object.keys(state.players)) {
+    const vpScored = scoreAgeVP(state, playerId);
+    state.players[playerId].vp = (state.players[playerId].vp || 0) + vpScored.total;
+
+    state.log.push({
+      timestamp: new Date().toISOString(),
+      message: `Age ${state.age} scoring: ${vpScored.routes} VP from routes, ${vpScored.technologies} VP from technologies`,
+      playerId,
+      type: 'scoring'
+    });
+  }
+}
+
+/**
+ * Recover ships and officers at age transition per Section 12.1 step 2
+ * Ships return to hangar (max 3), officers return based on age
+ * @param {Object} state - Game state (mutated)
+ */
+function recoverShipsAndOfficers(state) {
+  const currentAge = state.age;
+  const officersPerShip = currentAge === 1 ? 1 : 2; // Age I ships = 1, Age II ships = 2
+  const MAX_HANGAR_CAPACITY = 3;
+
+  for (const playerId of Object.keys(state.players)) {
+    const playerState = state.players[playerId];
+    const shipsOnRoutes = (playerState.ships || []).filter(s => s.status === 'on_route');
+
+    let shipsRecovered = 0;
+    let officersRecovered = 0;
+
+    for (const ship of shipsOnRoutes) {
+      if (shipsRecovered >= MAX_HANGAR_CAPACITY) {
+        // Ship is lost - remove from player's ships
+        ship.status = 'lost';
+      } else {
+        // Return ship to hangar
+        ship.status = 'in_hangar';
+        ship.routeId = null;
+        shipsRecovered++;
+
+        // Recover officers based on ship's age
+        const shipAge = ship.age || currentAge;
+        officersRecovered += shipAge === 1 ? 1 : 2;
+      }
+    }
+
+    playerState.officers = (playerState.officers || 0) + officersRecovered;
+
+    if (shipsRecovered > 0 || officersRecovered > 0) {
+      state.log.push({
+        timestamp: new Date().toISOString(),
+        message: `Recovered ${shipsRecovered} ships and ${officersRecovered} officers`,
+        playerId,
+        type: 'age_transition'
+      });
+    }
+  }
+}
+
+/**
+ * Calculate transition income per Section 12.1 step 3
+ * New Income = Tech income - £1 per route lost, minimum 0
+ * @param {Object} state - Game state (mutated)
+ */
+function calculateTransitionIncome(state) {
+  for (const playerId of Object.keys(state.players)) {
+    const playerState = state.players[playerId];
+
+    // Count routes being lost
+    const routes = state.map?.routes || [];
+    const routesLost = routes.filter(r => r.claimed === playerId).length;
+
+    // Calculate income from technologies (if they grant income)
+    // Note: Most technologies don't grant income, so this is primarily the penalty
+    let techIncome = 0;
+    // Technologies that grant income would add to techIncome here
+    // For now, starting income is the base
+    const baseIncome = 5; // Starting income per Section 3.2
+
+    // Apply route loss penalty
+    const newIncome = Math.max(0, baseIncome + techIncome - routesLost);
+
+    // Don't reduce below current level if already lower
+    playerState.income = Math.max(0, Math.min(playerState.income, newIncome + playerState.income - baseIncome));
+
+    state.log.push({
+      timestamp: new Date().toISOString(),
+      message: `Income adjusted: lost ${routesLost} routes`,
+      playerId,
+      type: 'age_transition'
+    });
+  }
+}
+
+/**
+ * Blueprint slot configurations by age per Section 4.2
+ */
+const BLUEPRINT_SLOTS = {
+  1: { frameSlots: 1, fabricSlots: 1, driveSlots: 1, componentSlots: 1 },
+  2: { frameSlots: 1, fabricSlots: 1, driveSlots: 2, componentSlots: 2 },
+  3: { frameSlots: 2, fabricSlots: 2, driveSlots: 2, componentSlots: 3 }
+};
+
+/**
+ * Expand blueprint slots for new age per Section 12.1 step 4
+ * @param {Object} state - Game state (mutated)
+ * @param {number} newAge - The age transitioning to
+ */
+function expandBlueprintSlots(state, newAge) {
+  const slotConfig = BLUEPRINT_SLOTS[newAge];
+  if (!slotConfig) return;
+
+  for (const playerId of Object.keys(state.players)) {
+    const playerState = state.players[playerId];
+    const blueprint = playerState.blueprint;
+
+    // Update age
+    blueprint.age = newAge;
+
+    // Expand each slot type while preserving existing upgrades
+    for (const slotType of ['frameSlots', 'fabricSlots', 'driveSlots', 'componentSlots']) {
+      const targetSize = slotConfig[slotType];
+      const currentSlots = blueprint[slotType] || [];
+
+      // Add null slots to reach target size
+      while (currentSlots.length < targetSize) {
+        currentSlots.push(null);
+      }
+
+      blueprint[slotType] = currentSlots;
+    }
+
+    state.log.push({
+      timestamp: new Date().toISOString(),
+      message: `Blueprint upgraded to Age ${newAge}`,
+      playerId,
+      type: 'age_transition'
+    });
+  }
+}
+
+/**
+ * Apply Britain's Red Tape flaw per Section 13.2
+ * Reduce income by 1 at each age transition
+ * @param {Object} state - Game state (mutated)
+ */
+function applyBritainRedTape(state) {
+  for (const playerId of Object.keys(state.players)) {
+    const playerState = state.players[playerId];
+
+    if (playerState.faction === 'britain') {
+      playerState.income = Math.max(0, playerState.income - 1);
+
+      state.log.push({
+        timestamp: new Date().toISOString(),
+        message: `Red Tape: Income reduced by 1 (bureaucratic overhead)`,
+        playerId,
+        type: 'faction_flaw'
+      });
+    }
+  }
+}
+
+/**
+ * Perform full age transition per Section 12.1
+ * @param {Object} state - Game state (mutated)
+ * @param {number} newAge - The age to transition to
+ */
+function performAgeTransition(state, newAge) {
+  // Step 1: Score VP for routes and technologies
+  scoreAllPlayersVP(state);
+
+  // Step 2: Recover ships and officers
+  recoverShipsAndOfficers(state);
+
+  // Step 3: Calculate transition income
+  calculateTransitionIncome(state);
+
+  // Step 4: Replace Blueprint (expand slots)
+  expandBlueprintSlots(state, newAge);
+
+  // Apply faction-specific flaws
+  applyBritainRedTape(state);
+
+  // Update game age
+  state.age = newAge;
+
+  // Clear map routes (they're lost at age transition)
+  if (state.map && state.map.routes) {
+    for (const route of state.map.routes) {
+      route.claimed = null;
+    }
+  }
+
+  state.log.push({
+    timestamp: new Date().toISOString(),
+    message: `=== Age ${newAge} begins! ===`,
+    type: 'system'
+  });
+}
+
+module.exports = {
+  calculateTechnologyVP,
+  calculateRouteVP,
+  scoreAgeVP,
+  scoreAllPlayersVP,
+  recoverShipsAndOfficers,
+  calculateTransitionIncome,
+  expandBlueprintSlots,
+  applyBritainRedTape,
+  performAgeTransition,
+  BLUEPRINT_SLOTS
+};

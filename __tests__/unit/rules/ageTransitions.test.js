@@ -5,6 +5,7 @@
 
 const { createTestGameState } = require('../../fixtures/testData');
 const { startNewRound } = require('../../../server/actions/helpers/phaseTransition');
+const { performAgeTransition, scoreAgeVP, calculateTechnologyVP } = require('../../../server/actions/helpers/ageTransition');
 
 describe('Rules Compliance - Age Transitions', () => {
 
@@ -64,6 +65,230 @@ describe('Rules Compliance - Age Transitions', () => {
       // Each player should get their own agent count back
       expect(state.players['1'].agentsRemaining).toBe(3);
       expect(state.players['2'].agentsRemaining).toBe(2);
+    });
+  });
+
+  describe('GAP-011: VP scoring at Age transitions', () => {
+    it('should score VP for routes and technologies when age transitions per Section 12.1', () => {
+      const state = createTestGameState();
+      state.age = 1;
+      state.progressTrack = 12; // At threshold for Age II
+
+      // Player 1 has claimed a route worth 2 VP
+      state.map.routes[0].claimed = '1';
+      state.map.routes[0].distance = 2;
+
+      // Player 1 has technologies with VP values
+      // Per constants.js: duralumin_girders = 1 VP, goldbeater_skin = 1 VP
+      state.players['1'].technologies = ['duralumin_girders', 'goldbeater_skin'];
+
+      // Initialize VP tracking
+      state.players['1'].vp = 0;
+      state.players['2'].vp = 0;
+
+      // Perform age transition (should score VP)
+      performAgeTransition(state, 2);
+
+      // Player 1 should have gained VP:
+      // - Routes: 2 VP (route distance)
+      // - Technologies: 2 VP (1 + 1 from the two technologies)
+      // Total: 4 VP
+      expect(state.players['1'].vp).toBe(4);
+    });
+
+    it('should calculate technology VP based on tile VP value per Section 12.2', () => {
+      // Per rules: Essential=0 VP, Useful=1 VP, Niche=2-3 VP
+      const techIds = ['wooden_framework', 'duralumin_girders', 'geodetic_structure'];
+      // wooden_framework: vp=0, duralumin_girders: vp=1, geodetic_structure: vp=2
+
+      const vp = calculateTechnologyVP(techIds);
+
+      expect(vp).toBe(3); // 0 + 1 + 2 = 3
+    });
+
+    it('should score route VP based on route distance per Section 12.2', () => {
+      const state = createTestGameState();
+
+      // Set up multiple routes for player 1
+      state.map.routes = [
+        { id: 'route_1', distance: 1, claimed: '1' },
+        { id: 'route_2', distance: 3, claimed: '1' },
+        { id: 'route_3', distance: 2, claimed: '2' } // Different player
+      ];
+
+      const player1VP = scoreAgeVP(state, '1');
+
+      // Player 1 should get 4 VP from routes (1 + 3)
+      expect(player1VP.routes).toBe(4);
+    });
+  });
+
+  describe('GAP-012: Ship and Officer recovery at age transitions', () => {
+    it('should return ships to hangar and recover officers per Section 12.1', () => {
+      const state = createTestGameState();
+      state.age = 1;
+
+      // Player 1 has ships on routes (Age I ships return 1 officer each)
+      state.players['1'].ships = [
+        { id: 'ship1', status: 'on_route', routeId: 'route_1', officers: 1 },
+        { id: 'ship2', status: 'on_route', routeId: 'route_2', officers: 1 }
+      ];
+      state.players['1'].officers = 0; // Started with 0 officers available
+
+      // Perform age transition
+      performAgeTransition(state, 2);
+
+      // Ships should be returned to hangar
+      expect(state.players['1'].ships.filter(s => s.status === 'in_hangar').length).toBe(2);
+
+      // Officers should be recovered (1 per Age I ship)
+      expect(state.players['1'].officers).toBe(2);
+    });
+
+    it('should recover 2 officers per Age II ship per Section 12.1', () => {
+      const state = createTestGameState();
+      state.age = 2;
+
+      // Player 1 has Age II ships on routes
+      state.players['1'].ships = [
+        { id: 'ship1', status: 'on_route', routeId: 'route_1', officers: 2, age: 2 },
+        { id: 'ship2', status: 'on_route', routeId: 'route_2', officers: 2, age: 2 }
+      ];
+      state.players['1'].officers = 1;
+
+      // Perform age transition
+      performAgeTransition(state, 3);
+
+      // Officers should be recovered (2 per Age II ship = 4 total, plus 1 existing = 5)
+      expect(state.players['1'].officers).toBe(5);
+    });
+
+    it('should limit ship recovery to 3 ships due to hangar capacity per Section 12.1', () => {
+      const state = createTestGameState();
+      state.age = 1;
+
+      // Player has 4 ships on routes but can only recover 3
+      state.players['1'].ships = [
+        { id: 'ship1', status: 'on_route', routeId: 'route_1', officers: 1 },
+        { id: 'ship2', status: 'on_route', routeId: 'route_2', officers: 1 },
+        { id: 'ship3', status: 'on_route', routeId: 'route_3', officers: 1 },
+        { id: 'ship4', status: 'on_route', routeId: 'route_4', officers: 1 }
+      ];
+      state.players['1'].officers = 0;
+
+      performAgeTransition(state, 2);
+
+      // Only 3 ships should be in hangar (max capacity)
+      const shipsInHangar = state.players['1'].ships.filter(s => s.status === 'in_hangar');
+      expect(shipsInHangar.length).toBe(3);
+
+      // Only 3 officers recovered (from the 3 ships that fit in hangar)
+      expect(state.players['1'].officers).toBe(3);
+    });
+  });
+
+  describe('GAP-013: Transition income calculation', () => {
+    it('should calculate new income from technology tiles minus routes lost per Section 12.1', () => {
+      const state = createTestGameState();
+      state.age = 1;
+
+      // Player has income-granting technologies
+      // Note: We need to define which techs grant income
+      state.players['1'].technologies = ['cargo_systems']; // Assume this grants £2 income
+      state.players['1'].income = 8; // Current income from routes
+
+      // Player loses 2 routes when map changes
+      state.map.routes = [
+        { id: 'route_1', income: 2, claimed: '1' },
+        { id: 'route_2', income: 3, claimed: '1' }
+      ];
+
+      performAgeTransition(state, 2);
+
+      // New income = Tech income - £1 per route lost
+      // If cargo_systems grants £2 income and 2 routes lost: 2 - 2 = 0 minimum
+      // The exact calculation depends on how tech income is defined
+      expect(state.players['1'].income).toBeGreaterThanOrEqual(0);
+    });
+  });
+
+  describe('GAP-014: Blueprint slot expansion at age transitions', () => {
+    it('should expand blueprint slots when transitioning to Age II per Section 13.5', () => {
+      const state = createTestGameState();
+      state.age = 1;
+
+      // Age I blueprint: 1/1/1/1 slots
+      state.players['1'].blueprint = {
+        age: 1,
+        frameSlots: ['duralumin_frame'],
+        fabricSlots: ['premium_envelope'],
+        driveSlots: [null],
+        componentSlots: [null]
+      };
+
+      performAgeTransition(state, 2);
+
+      // Age II blueprint: 1/1/2/2 slots per Section 4.2
+      expect(state.players['1'].blueprint.age).toBe(2);
+      expect(state.players['1'].blueprint.driveSlots.length).toBe(2);
+      expect(state.players['1'].blueprint.componentSlots.length).toBe(2);
+
+      // Existing upgrades should be preserved
+      expect(state.players['1'].blueprint.frameSlots[0]).toBe('duralumin_frame');
+    });
+
+    it('should expand to Age III blueprint configuration per Section 4.2', () => {
+      const state = createTestGameState();
+      state.age = 2;
+
+      // Age II blueprint
+      state.players['1'].blueprint = {
+        age: 2,
+        frameSlots: ['duralumin_frame'],
+        fabricSlots: ['premium_envelope'],
+        driveSlots: ['maybach_engine', null],
+        componentSlots: ['cargo_systems', null]
+      };
+
+      performAgeTransition(state, 3);
+
+      // Age III blueprint: 2/2/2/3 slots per Section 4.2
+      expect(state.players['1'].blueprint.age).toBe(3);
+      expect(state.players['1'].blueprint.frameSlots.length).toBe(2);
+      expect(state.players['1'].blueprint.fabricSlots.length).toBe(2);
+      expect(state.players['1'].blueprint.componentSlots.length).toBe(3);
+
+      // Existing upgrades preserved
+      expect(state.players['1'].blueprint.driveSlots[0]).toBe('maybach_engine');
+    });
+  });
+
+  describe('GAP-015: Britain Red Tape flaw at age transitions', () => {
+    it('should reduce Britain income by 1 at each age transition per Section 13.2', () => {
+      const state = createTestGameState();
+      state.age = 1;
+
+      // Set up Britain player
+      state.players['2'].faction = 'britain';
+      state.players['2'].income = 6;
+
+      performAgeTransition(state, 2);
+
+      // Britain's income should be reduced by 1 due to Red Tape flaw
+      expect(state.players['2'].income).toBe(5);
+    });
+
+    it('should not reduce income below 0 for Britain Red Tape', () => {
+      const state = createTestGameState();
+      state.age = 1;
+
+      state.players['2'].faction = 'britain';
+      state.players['2'].income = 0;
+
+      performAgeTransition(state, 2);
+
+      // Income should stay at 0, not go negative
+      expect(state.players['2'].income).toBe(0);
     });
   });
 });

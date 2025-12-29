@@ -5,8 +5,10 @@
 
 /**
  * Calculate turn order for worker placement phase
- * Rules: Lowest income goes first, ties broken by lowest cash, then original player order
- * Ministry visitors from last round get priority (go first)
+ * Rules per Section 5.1:
+ * 1. The player with the First Player pawn goes first
+ * 2. Ministry visitors this round claim the First Player token (for next turn order calculation)
+ * 3. Remaining players go in lowest income order (ties broken by lowest cash, then original order)
  *
  * @param {Object} state - Game state
  * @returns {string[]} Array of player IDs in turn order
@@ -19,12 +21,19 @@ function calculateTurnOrder(state) {
     originalIndex: state.playerOrder.indexOf(playerId)
   }));
 
-  // Get ministry visitors from last round (they go first)
+  // Get ministry visitors from this round (they claim First Player token)
   const ministryVisitors = state.workerPlacement?.ministryVisitors || [];
 
-  // Sort non-ministry players by income (lowest first), then cash, then original order
-  const nonMinistryPlayers = players.filter(p => !ministryVisitors.includes(p.playerId));
-  nonMinistryPlayers.sort((a, b) => {
+  // Determine who has the First Player token
+  // If someone visited Ministry this round, they get the token
+  // Otherwise, the persistent firstPlayer holder has it
+  const firstPlayerHolder = ministryVisitors.length > 0
+    ? ministryVisitors[ministryVisitors.length - 1] // Most recent Ministry visitor gets token
+    : state.firstPlayer;
+
+  // Sort all players by income (lowest first), then cash, then original order
+  const sortedPlayers = [...players];
+  sortedPlayers.sort((a, b) => {
     // Lowest income first
     if (a.income !== b.income) return a.income - b.income;
     // Tiebreaker 1: Lowest cash first
@@ -33,12 +42,15 @@ function calculateTurnOrder(state) {
     return a.originalIndex - b.originalIndex;
   });
 
-  // Ministry visitors go first (in the order they visited), then sorted players
-  const ministryPlayersSorted = ministryVisitors.filter(pid =>
-    players.some(p => p.playerId === pid)
-  );
+  // If there's a First Player token holder, they go first
+  if (firstPlayerHolder && players.some(p => p.playerId === firstPlayerHolder)) {
+    // Remove First Player from sorted list and prepend them
+    const otherPlayers = sortedPlayers.filter(p => p.playerId !== firstPlayerHolder);
+    return [firstPlayerHolder, ...otherPlayers.map(p => p.playerId)];
+  }
 
-  return [...ministryPlayersSorted, ...nonMinistryPlayers.map(p => p.playerId)];
+  // No First Player token - pure income-based order
+  return sortedPlayers.map(p => p.playerId);
 }
 
 /**

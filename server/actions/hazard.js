@@ -1,9 +1,32 @@
 /**
  * Hazard Actions
  * PERFORM_HAZARD_CHECK action processor
+ * Implements hazard checks and Hindenburg Disaster (Section 1.2)
  */
 
 const { GameRuleError } = require('../errors');
+
+/**
+ * Check if Hindenburg Disaster conditions are met per Section 1.2
+ * All conditions must be true:
+ * - Age III
+ * - Hydrogen gas
+ * - Luxury route
+ * - Catastrophic Explosion hazard
+ *
+ * @param {Object} conditions - { age, gasType, isLuxuryRoute, hazardType }
+ * @returns {boolean} True if Hindenburg Disaster triggered
+ */
+function checkHindenburgDisaster(conditions) {
+  const { age, gasType, isLuxuryRoute, hazardType } = conditions;
+
+  return (
+    age === 3 &&
+    gasType === 'hydrogen' &&
+    isLuxuryRoute === true &&
+    hazardType === 'catastrophic_explosion'
+  );
+}
 
 /**
  * Perform a hazard check for a ship on a route
@@ -53,7 +76,41 @@ function processHazardCheck(state, playerId, data) {
     timestamp: new Date().toISOString()
   };
 
-  if (success) {
+  // Check for route details to determine if it's a Luxury route
+  const route = state.map?.routes?.find(r => r.id === ship.routeId);
+  const isLuxuryRoute = route?.luxury === true;
+
+  // Check for Hindenburg Disaster per Section 1.2
+  // Must be: Age III + Hydrogen + Luxury route + Catastrophic Explosion
+  const hindenburgConditions = {
+    age: state.age,
+    gasType: ship.gasType,
+    isLuxuryRoute,
+    hazardType: hazard.type
+  };
+
+  const isHindenburgDisaster = checkHindenburgDisaster(hindenburgConditions);
+
+  if (isHindenburgDisaster) {
+    // THE HINDENBURG DISASTER - Game ends immediately per Section 1.2
+    ships[shipIndex].status = 'destroyed';
+
+    state.hindenburgDisaster = true;
+    state.gameEndReason = 'hindenburg_disaster';
+
+    state.log.push({
+      timestamp: new Date().toISOString(),
+      message: `THE HINDENBURG DISASTER! A Catastrophic Explosion has destroyed a luxury hydrogen airship. The era of airships has ended.`,
+      playerId,
+      type: 'game_end'
+    });
+
+    // The game should end after current round - mark state
+    if (route) {
+      playerState.income = Math.max(0, playerState.income - (route.income || 0));
+      route.claimed = null;
+    }
+  } else if (success) {
     // Ship survives
     const heliumNote = heliumBonus > 0 ? ' (helium +1)' : '';
     state.log.push({
@@ -66,12 +123,11 @@ function processHazardCheck(state, playerId, data) {
     // Ship takes damage or crashes
     const crashSeverity = hazard.difficulty - safetyRating;
 
-    if (crashSeverity >= 3 || hazard.type === 'critical') {
+    if (crashSeverity >= 3 || hazard.type === 'critical' || hazard.type === 'catastrophic_explosion') {
       // Ship destroyed
       ships[shipIndex].status = 'destroyed';
 
       // Remove income from the route
-      const route = state.map?.routes?.find(r => r.id === ship.routeId);
       if (route) {
         playerState.income = Math.max(0, playerState.income - (route.income || 0));
         route.claimed = null;
@@ -122,4 +178,4 @@ function processHazardCheck(state, playerId, data) {
   return { newState: state };
 }
 
-module.exports = { processHazardCheck };
+module.exports = { processHazardCheck, checkHindenburgDisaster };

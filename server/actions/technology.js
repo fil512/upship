@@ -7,6 +7,7 @@ const { GameRuleError, InsufficientFundsError } = require('../errors');
 const { shuffleArray } = require('../utils/random');
 const { refillRDBoard } = require('./helpers/marketHelpers');
 const { TECHNOLOGY_BAG } = require('../config/constants');
+const { performAgeTransition } = require('./helpers/ageTransition');
 
 /**
  * Add new age technologies to the tech bag
@@ -38,6 +39,7 @@ function addAgeTechnologies(state, age) {
 
 /**
  * Check and handle age transition based on progress track
+ * Per Section 12.1, this triggers all age transition steps when threshold reached
  *
  * @param {Object} state - Game state (mutated)
  */
@@ -45,25 +47,35 @@ function checkAgeTransition(state) {
   const thresholds = state.progressThresholds || { age2: 10, age3: 20, end: 30 };
 
   if (state.age === 1 && state.progressTrack >= thresholds.age2) {
-    state.age = 2;
+    // Perform full age transition per Section 12.1
+    performAgeTransition(state, 2);
+
+    // Add new age technologies to bag
     addAgeTechnologies(state, 2);
     refillRDBoard(state);
+
     // Reset gas market prices for new age (Section 4.4: Helium resets to £2 at Age Transitions)
     state.gasMarket = { hydrogen: 1, helium: 2 };
+
     state.log.push({
       timestamp: new Date().toISOString(),
-      message: `Age II begins! New technologies available. Gas market reset.`,
+      message: `New technologies available. Gas market reset.`,
       type: 'system'
     });
   } else if (state.age === 2 && state.progressTrack >= thresholds.age3) {
-    state.age = 3;
+    // Perform full age transition per Section 12.1
+    performAgeTransition(state, 3);
+
+    // Add new age technologies to bag
     addAgeTechnologies(state, 3);
     refillRDBoard(state);
+
     // Reset gas market prices for new age (Section 4.4: Helium resets to £2 at Age Transitions)
     state.gasMarket = { hydrogen: 1, helium: 2 };
+
     state.log.push({
       timestamp: new Date().toISOString(),
-      message: `Age III begins! Final era technologies unlocked. Gas market reset.`,
+      message: `Final era technologies unlocked. Gas market reset.`,
       type: 'system'
     });
   }
