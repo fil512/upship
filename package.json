@@ -12,7 +12,9 @@
     "cli": "node cli/upship.js",
     "test": "jest",
     "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage"
+    "test:coverage": "jest --coverage",
+    "lint": "eslint server/ cli/ --ext .js",
+    "lint:fix": "eslint server/ cli/ --ext .js --fix"
   },
   "bin": {
     "upship": "./cli/upship.js"
@@ -35,6 +37,7 @@
     "node": ">=18.0.0"
   },
   "devDependencies": {
+    "eslint": "^9.39.2",
     "jest": "^29.7.0",
     "supertest": "^7.1.4"
   }

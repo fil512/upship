@@ -4,8 +4,7 @@
  */
 
 const {
-  UPGRADES,
-  TECHNOLOGIES
+  UPGRADES
 } = require('../data/upgrades');
 const {
   GROUND_BOARD_LOCATIONS,
@@ -484,7 +483,7 @@ function startNewRound(state) {
 }
 
 // Process card effects when used for agent placement (Section 8.1)
-function processCardEffect(state, playerId, card, locationId) {
+function processCardEffect(state, playerId, card, _locationId) {
   const playerState = state.players[playerId];
   const effect = card.effect;
 
@@ -540,7 +539,7 @@ function processCardEffect(state, playerId, card, locationId) {
 
 // Execute the action associated with a Ground Board location
 // This is a dispatcher that calls the appropriate handler
-function executeLocationAction(state, playerId, locationId, card) {
+function executeLocationAction(state, playerId, locationId, _card) {
   const playerState = state.players[playerId];
 
   switch (locationId) {

@@ -108,7 +108,7 @@ function makeRequest(method, urlPath, body, cookie) {
         let parsed;
         try {
           parsed = data ? JSON.parse(data) : {};
-        } catch (e) {
+        } catch (_e) {
           parsed = { rawResponse: data };
         }
 
@@ -640,7 +640,7 @@ const commands = {
       return;
     }
 
-    const { available, allUpgrades } = response.data;
+    const { available } = response.data;
 
     console.log('');
     console.log(c(COLORS.bright, 'Available Upgrades (based on your technologies):'));
@@ -836,7 +836,7 @@ const commands = {
     return commands.action(username, [gameId, 'RECRUIT_CREW', `crewType=${crewType}`, `count=${count || 1}`]);
   },
 
-  async load(username, args) {
+  async load(_username, _args) {
     console.log(`${COLORS.yellow}Note: Gas loading is no longer needed.${COLORS.reset}`);
     console.log('Gas cubes are automatically spent from your reserve when you launch.');
     console.log('Use: upship <user> launch <gameId> <shipId> <routeId> [hydrogen|helium]');
@@ -904,7 +904,7 @@ const commands = {
     console.log('');
   },
 
-  async claim(username, args) {
+  async claim(_username, _args) {
     console.log(`${COLORS.yellow}Note: Route claiming is now part of the launch action.${COLORS.reset}`);
     console.log('Use: upship <user> launch <gameId> <shipId> <routeId> [hydrogen|helium]');
     console.log('Ships are launched directly to routes (per Section 7.2 of the rules).');

@@ -4,7 +4,6 @@
  */
 
 const {
-  AppError,
   isAppError,
   isPostgresError,
   fromPostgresError
@@ -71,7 +70,7 @@ function errorHandler(err, req, res, next) {
  * 404 handler for unmatched routes
  * Register before error handler: app.use(notFoundHandler)
  */
-function notFoundHandler(req, res, next) {
+function notFoundHandler(req, res, _next) {
   res.status(404).json({
     error: 'Route not found',
     code: 'ROUTE_NOT_FOUND'

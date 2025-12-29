@@ -14,7 +14,7 @@ const { WEATHER_BUREAU_COST } = require('../config/constants');
 /**
  * Process card effects when used for agent placement (Section 8.1)
  */
-function processCardEffect(state, playerId, card, locationId) {
+function processCardEffect(state, playerId, card, _locationId) {
   const playerState = state.players[playerId];
   const effect = card.effect;
 
@@ -67,7 +67,7 @@ function processCardEffect(state, playerId, card, locationId) {
 /**
  * Execute the action associated with a Ground Board location
  */
-function executeLocationAction(state, playerId, locationId, card) {
+function executeLocationAction(state, playerId, locationId, _card) {
   const playerState = state.players[playerId];
 
   switch (locationId) {
@@ -376,7 +376,7 @@ function processPass(state, playerId) {
  * @param {Object} data - Action data (unused)
  * @returns {Object} { newState } or throws error
  */
-function processRecallAgents(state, playerId, data) {
+function processRecallAgents(state, _playerId, _data) {
   if (state.groundBoard) {
     state.groundBoard.placements = {};
   }

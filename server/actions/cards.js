@@ -131,7 +131,7 @@ function processBuyMarketCard(state, playerId, data) {
  * @param {Object} data - Action data (unused)
  * @returns {Object} { newState } or throws error
  */
-function processDiscardHazard(state, playerId, data) {
+function processDiscardHazard(state, playerId, _data) {
   const playerState = state.players[playerId];
 
   if (!playerState.peekedHazard) {
@@ -164,7 +164,7 @@ function processDiscardHazard(state, playerId, data) {
  * @param {Object} data - Action data (unused)
  * @returns {Object} { newState } or throws error
  */
-function processDiscardMarketCard(state, playerId, data) {
+function processDiscardMarketCard(state, playerId, _data) {
   const marketCards = state.marketCards || [];
 
   if (marketCards.length === 0) {

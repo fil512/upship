@@ -6,7 +6,7 @@
 const { shuffleArray } = require('../../utils/random');
 const { calculateTurnOrder } = require('./turnOrder');
 const { refreshRnDBoard, refreshMarketRow } = require('./marketHelpers');
-const { HAND_SIZE, INITIAL_AGENTS, TURNS_PER_AGE } = require('../../config/constants');
+const { HAND_SIZE, INITIAL_AGENTS } = require('../../config/constants');
 
 /**
  * Transition from worker placement to reveal phase

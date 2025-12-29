@@ -14,7 +14,7 @@ const { MAX_LOANS, LOAN_AMOUNT, LOAN_INCOME_PENALTY, MAX_INSURANCE_POLICIES } = 
  * @param {Object} data - Action data (unused)
  * @returns {Object} { newState } or throws error
  */
-function processTakeLoan(state, playerId, data) {
+function processTakeLoan(state, playerId, _data) {
   const playerState = state.players[playerId];
 
   // Limit maximum loans to 2
@@ -50,7 +50,7 @@ function processTakeLoan(state, playerId, data) {
  * @param {Object} data - Action data (unused)
  * @returns {Object} { newState } or throws error
  */
-function processBuyInsurance(state, playerId, data) {
+function processBuyInsurance(state, playerId, _data) {
   const playerState = state.players[playerId];
 
   // Track insurance policies
@@ -83,7 +83,7 @@ function processBuyInsurance(state, playerId, data) {
  * @param {Object} data - Action data (unused)
  * @returns {Object} { newState } or throws error
  */
-function processCollectIncome(state, playerId, data) {
+function processCollectIncome(state, playerId, _data) {
   // Income is now auto-collected when entering income phase
   // This action is kept for backwards compatibility but restricted to income phase
   if (state.phase !== 'income') {

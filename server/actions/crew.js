@@ -65,7 +65,7 @@ function processRecruitCrew(state, playerId, data) {
  * @param {Object} data - Action data (unused)
  * @returns {Object} { newState } or throws error
  */
-function processUpgradeOfficerIncome(state, playerId, data) {
+function processUpgradeOfficerIncome(state, playerId, _data) {
   const playerState = state.players[playerId];
 
   if (playerState.cash < FLIGHT_SCHOOL_COST) {
@@ -104,7 +104,7 @@ function processUpgradeOfficerIncome(state, playerId, data) {
  * @param {Object} data - Action data (unused)
  * @returns {Object} { newState } or throws error
  */
-function processUpgradeEngineerIncome(state, playerId, data) {
+function processUpgradeEngineerIncome(state, playerId, _data) {
   const playerState = state.players[playerId];
 
   if (playerState.cash < TECHNICAL_INSTITUTE_COST) {

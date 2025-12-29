@@ -22,7 +22,6 @@ const {
   transitionToIncomeCleanup,
   startNewRound,
   advanceHeliumMarket,
-  reduceHeliumMarket,
   hasPlayableCards,
   processCardEffect,
   executeLocationAction,
@@ -133,7 +132,7 @@ function processAction(state, playerId, actionType, data) {
 }
 
 // Discard a peeked hazard card (from Weather Bureau)
-function processDiscardHazard(state, playerId, data) {
+function processDiscardHazard(state, playerId, _data) {
   const playerState = state.players[playerId];
 
   if (!playerState.peekedHazard) {
@@ -159,7 +158,7 @@ function processDiscardHazard(state, playerId, data) {
 }
 
 // Discard leftmost Market card (from Academy)
-function processDiscardMarketCard(state, playerId, data) {
+function processDiscardMarketCard(state, playerId, _data) {
   const marketCards = state.marketCards || [];
 
   if (marketCards.length === 0) {
@@ -188,7 +187,7 @@ function processEndTurn(state, playerId) {
       // During worker placement, use PASS action instead of END_TURN
       return { error: 'Use PASS action during worker placement phase' };
 
-    case 'reveal':
+    case 'reveal': {
       // During reveal phase, END_TURN signals done with tech/market purchases
       state.revealPhase.techAcquisitionsComplete[playerId] = true;
       state.revealPhase.marketPurchasesComplete[playerId] = true;
@@ -210,6 +209,7 @@ function processEndTurn(state, playerId) {
         transitionToIncomeCleanup(state);
       }
       break;
+    }
 
     case 'income_cleanup':
       // During income/cleanup, END_TURN advances to next player
@@ -452,7 +452,7 @@ function processRemoveUpgrade(state, playerId, data) {
 }
 
 // Take a loan at The Bank
-function processTakeLoan(state, playerId, data) {
+function processTakeLoan(state, playerId, _data) {
   const playerState = state.players[playerId];
 
   // Limit maximum loans to 2
@@ -484,7 +484,7 @@ function processTakeLoan(state, playerId, data) {
 }
 
 // Collect income at end of round
-function processCollectIncome(state, playerId, data) {
+function processCollectIncome(state, playerId, _data) {
   // Income is now auto-collected when entering income phase
   // This action is kept for backwards compatibility but restricted to income phase
   if (state.phase !== 'income') {
@@ -728,7 +728,7 @@ function processPass(state, playerId) {
 }
 
 // Recall all agents (end of round)
-function processRecallAgents(state, playerId, data) {
+function processRecallAgents(state, _playerId, _data) {
   if (state.groundBoard) {
     state.groundBoard.placements = {};
   }
@@ -839,7 +839,7 @@ function processBuildShip(state, playerId, data) {
 }
 
 // Upgrade Officer Income at Flight School
-function processUpgradeOfficerIncome(state, playerId, data) {
+function processUpgradeOfficerIncome(state, playerId, _data) {
   const playerState = state.players[playerId];
   const cost = 5;
 
@@ -861,7 +861,7 @@ function processUpgradeOfficerIncome(state, playerId, data) {
 }
 
 // Upgrade Engineer Income at Technical Institute
-function processUpgradeEngineerIncome(state, playerId, data) {
+function processUpgradeEngineerIncome(state, playerId, _data) {
   const playerState = state.players[playerId];
   const cost = 6;
 
@@ -883,7 +883,7 @@ function processUpgradeEngineerIncome(state, playerId, data) {
 }
 
 // Buy insurance at Insurance Bureau
-function processBuyInsurance(state, playerId, data) {
+function processBuyInsurance(state, playerId, _data) {
   const playerState = state.players[playerId];
 
   // Track insurance policies

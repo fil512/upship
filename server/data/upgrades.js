@@ -562,7 +562,7 @@ function getAvailableUpgrades(playerTechnologies, currentAge) {
     componentSlots: []
   };
 
-  for (const [id, upgrade] of Object.entries(UPGRADES)) {
+  for (const [_id, upgrade] of Object.entries(UPGRADES)) {
     // Check if player owns required technology
     if (!playerTechnologies.includes(upgrade.requiredTech)) continue;
 

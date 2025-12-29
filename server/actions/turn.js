@@ -21,7 +21,7 @@ function processEndTurn(state, playerId) {
       // During worker placement, use PASS action instead of END_TURN
       throw new GameRuleError('Use PASS action during worker placement phase');
 
-    case 'reveal':
+    case 'reveal': {
       // During reveal phase, END_TURN signals done with tech/market purchases
       state.revealPhase.techAcquisitionsComplete[playerId] = true;
       state.revealPhase.marketPurchasesComplete[playerId] = true;
@@ -43,6 +43,7 @@ function processEndTurn(state, playerId) {
         transitionToIncomeCleanup(state);
       }
       break;
+    }
 
     case 'income_cleanup':
       // During income/cleanup, END_TURN advances to next player
