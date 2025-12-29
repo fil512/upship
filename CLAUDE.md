@@ -240,6 +240,7 @@ See `plans/overview.md` for the 27-phase implementation plan tracking progress f
 ## Available Commands
 
 - `/go-upship` - Continue implementation by working on the next unfinished phase
+- `/fix-rules-gap` - Fix the next implementation gap from `plans/rules-implementation-audit.md`, update the audit, commit and push
 - `/review-rules` - Conducts a comprehensive rules review using the boardgame-design skill
 - `/playtest` - Run a full automated playtest using the CLI to validate functionality, rules adherence, and faction balance
 
