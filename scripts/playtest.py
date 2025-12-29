@@ -77,8 +77,19 @@ def get_current_player(game_id):
 def get_phase(game_id):
     """Get current game phase."""
     output = strip_ansi(run_cli("playtest_germany", "state", game_id))
-    match = re.search(r'Phase:\s*(\w+)', output)
-    return match.group(1) if match else "UNKNOWN"
+    # Phase display can be multi-word, e.g., "WORKER PLACEMENT", "INCOME & CLEANUP"
+    match = re.search(r'Phase:\s*([A-Z][A-Z &]+)', output)
+    if match:
+        phase_text = match.group(1).strip()
+        # Normalize to internal phase names
+        if 'WORKER' in phase_text:
+            return 'WORKER_PLACEMENT'
+        elif 'REVEAL' in phase_text:
+            return 'REVEAL'
+        elif 'INCOME' in phase_text or 'CLEANUP' in phase_text:
+            return 'INCOME_CLEANUP'
+        return phase_text.replace(' ', '_').replace('&', '_')
+    return "UNKNOWN"
 
 
 def get_gas_preference(player, game_id=None):
@@ -277,16 +288,23 @@ def get_rd_board(game_id):
 
 def get_current_placer(game_id):
     """Find which player should place an agent (during worker_placement phase)."""
+    # Check each player's view to find who has "YOUR TURN" during worker placement
+    for player in PLAYERS:
+        output = strip_ansi(run_cli(player, "state", game_id))
+        # Look for ">>> YOUR TURN <<<" without "simultaneous" or "ended"
+        if 'YOUR TURN' in output and 'simultaneous' not in output and 'ended your turn' not in output.lower():
+            return player
+
+    # Secondary check: look at Germany's view for "Waiting for"
     output = strip_ansi(run_cli("playtest_germany", "state", game_id))
-    # Look for "Waiting for: player to place" or similar indicator
     for line in output.split('\n'):
-        if 'Waiting for' in line or 'Current placer' in line:
+        if 'Waiting for' in line:
             for player in PLAYERS:
                 faction = player.replace('playtest_', '')
-                if faction in line.lower():
+                if faction.upper() in line.upper():
                     return player
-    # Fallback: find player with YOUR TURN
-    return get_current_player(game_id)
+
+    return None
 
 
 def get_player_hand(player, game_id):
@@ -295,21 +313,20 @@ def get_player_hand(player, game_id):
     cards = []
     in_hand_section = False
     for line in output.split('\n'):
-        if 'Hand:' in line or 'Your Hand' in line:
+        if 'Your Hand' in line:
             in_hand_section = True
             continue
         if in_hand_section:
             if line.strip().startswith('│') or line.strip().startswith('-'):
-                # Parse card info
-                # Format might be: "0: Card Name (wrench)"
-                match = re.search(r'(\d+):\s*([^(]+)\s*\((\w+)\)', line)
+                # Parse card info - format is: "│ [0] Card Name (symbol)"
+                match = re.search(r'\[(\d+)\]\s*([^(]+)\s*\((\w+)\)', line)
                 if match:
                     cards.append({
                         'index': int(match.group(1)),
                         'name': match.group(2).strip(),
                         'symbol': match.group(3).strip()
                     })
-            elif '└' in line or line.strip() == '' or 'Deck' in line:
+            elif '└' in line:
                 break
     return cards
 
@@ -318,20 +335,20 @@ def get_available_locations(game_id):
     """Get list of unoccupied Ground Board locations."""
     output = strip_ansi(run_cli("playtest_germany", "state", game_id))
     locations = []
-    # Ground Board locations and their symbols
+    # Ground Board locations and their symbols (using underscores to match server IDs)
     location_symbols = {
-        'research-institute': 'wrench',
-        'design-bureau': 'wrench',
-        'construction-hall': 'wrench',
+        'research_institute': 'propeller',
+        'design_bureau': 'wrench',
+        'construction_hall': 'wrench',
         'launchpad': 'propeller',
         'academy': 'coin',
-        'flight-school': 'coin',
-        'technical-institute': 'coin',
-        'the-bank': 'coin',
+        'flight_school': 'coin',
+        'technical_institute': 'wrench',
+        'the_bank': 'coin',
         'ministry': 'propeller',
-        'gas-depot': 'propeller',
-        'insurance-bureau': 'coin',
-        'weather-bureau': 'propeller'
+        'gas_depot': 'wrench',
+        'insurance_bureau': 'coin',
+        'weather_bureau': 'propeller'
     }
 
     # Check which locations are occupied
@@ -398,6 +415,7 @@ def autoplay(num_turns=5, game_id=None):
             if phase == "WORKER_PLACEMENT":
                 # Worker placement: players take turns placing agents
                 placement_attempts = 0
+                no_placer_count = 0
                 max_placements = 20  # Safety limit for placement round
 
                 while placement_attempts < max_placements:
@@ -405,15 +423,25 @@ def autoplay(num_turns=5, game_id=None):
                     current = get_current_placer(game_id)
 
                     if not current:
+                        no_placer_count += 1
                         # Check if phase changed (all passed)
                         new_phase = get_phase(game_id)
                         if new_phase != "WORKER_PLACEMENT":
+                            print(f"  Phase changed to {new_phase}")
+                            break
+                        # If no placer found 3 times in a row, all players likely passed
+                        if no_placer_count >= 3:
+                            print("  All players appear to have passed")
                             break
                         continue
+                    else:
+                        no_placer_count = 0  # Reset counter
 
                     # Get player's hand and available locations
                     hand = get_player_hand(current, game_id)
                     locations = get_available_locations(game_id)
+
+                    print(f"  {current}: hand={len(hand)} cards, locations={len(locations)} available")
 
                     # Find a playable card
                     card, location = find_playable_card(hand, locations)
@@ -424,14 +452,17 @@ def autoplay(num_turns=5, game_id=None):
                                        f"locationId={location['id']}", f"cardIndex={card['index']}")
                         if "✓" in result or "success" in result.lower():
                             print(f"  {current}: placed agent at {location['id']} using {card['name']}")
-                        elif "error" in result.lower():
+                        else:
                             # If placement fails, pass
+                            print(f"  {current}: placement failed, passing")
                             result = run_cli(current, "action", game_id, "PASS")
-                            print(f"  {current}: passed (placement error)")
                     else:
                         # No playable cards, pass
                         result = run_cli(current, "action", game_id, "PASS")
-                        print(f"  {current}: passed (no playable cards)")
+                        if "✓" in result or "passed" in result.lower():
+                            print(f"  {current}: passed (no playable cards)")
+                        else:
+                            print(f"  {current}: pass result: {strip_ansi(result)[:60]}")
 
                     # Check if phase changed
                     new_phase = get_phase(game_id)

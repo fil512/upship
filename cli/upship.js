@@ -409,8 +409,29 @@ const commands = {
     const gs = response.data.gameState.state;
     const myId = session.userId;
     const myState = gs.players?.[myId];
-    const currentPlayerId = gs.playerOrder?.[gs.currentPlayerIndex];
-    const isMyTurn = currentPlayerId === myId;
+
+    // Determine whose turn it is based on phase
+    let currentPlayerId;
+    let isMyTurn = false;
+    let isSimultaneous = false;
+
+    if (gs.phase === 'worker_placement' && gs.workerPlacement) {
+      // Worker placement uses workerPlacement.currentPlacerIndex
+      const placementOrder = gs.workerPlacement.placementOrder || [];
+      const currentPlacerIdx = gs.workerPlacement.currentPlacerIndex || 0;
+      currentPlayerId = placementOrder[currentPlacerIdx];
+      isMyTurn = currentPlayerId === myId;
+    } else if (gs.phase === 'reveal') {
+      // Reveal phase is simultaneous - check if we've already ended turn
+      isSimultaneous = true;
+      const playersEndedTurn = gs.playersEndedTurn || [];
+      isMyTurn = !playersEndedTurn.includes(myId);
+      currentPlayerId = null;
+    } else {
+      // Default: use currentPlayerIndex
+      currentPlayerId = gs.playerOrder?.[gs.currentPlayerIndex];
+      isMyTurn = currentPlayerId === myId;
+    }
 
     // Header
     const progress = gs.progressTrack || 0;
@@ -424,7 +445,13 @@ const commands = {
     console.log(c(COLORS.bright, '═══════════════════════════════════════════════════════════════════════'));
 
     // Turn indicator
-    if (isMyTurn) {
+    if (isSimultaneous) {
+      if (isMyTurn) {
+        console.log(c(COLORS.green + COLORS.bright, '  >>> YOUR TURN <<< (simultaneous phase)'));
+      } else {
+        console.log(c(COLORS.gray, '  You have ended your turn. Waiting for others...'));
+      }
+    } else if (isMyTurn) {
       console.log(c(COLORS.green + COLORS.bright, '  >>> YOUR TURN <<<'));
     } else {
       const currentPlayer = gs.players?.[currentPlayerId];

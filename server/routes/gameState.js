@@ -1225,15 +1225,15 @@ function executeLocationAction(state, playerId, locationId, card) {
   const playerState = state.players[playerId];
 
   switch (locationId) {
-    case 'research-institute':
+    case 'research_institute':
       // Buy Research tokens for £3 each (handled separately via GAIN_RESEARCH)
       return { success: true, message: 'May buy Research for £3 each' };
 
-    case 'design-bureau':
+    case 'design_bureau':
       // Install upgrade to blueprint (handled via INSTALL_UPGRADE)
       return { success: true, message: 'May install upgrade to blueprint' };
 
-    case 'construction-hall':
+    case 'construction_hall':
       // Build a ship (handled via BUILD_SHIP)
       return { success: true, message: 'May build a ship' };
 
@@ -1245,15 +1245,15 @@ function executeLocationAction(state, playerId, locationId, card) {
       // Recruit crew (handled via RECRUIT_CREW)
       return { success: true, message: 'May recruit crew' };
 
-    case 'flight-school':
+    case 'flight_school':
       // Upgrade Officer income track (handled via UPGRADE_OFFICER_INCOME)
       return { success: true, message: 'May upgrade Officer income' };
 
-    case 'technical-institute':
+    case 'technical_institute':
       // Upgrade Engineer income track (handled via UPGRADE_ENGINEER_INCOME)
       return { success: true, message: 'May upgrade Engineer income' };
 
-    case 'the-bank':
+    case 'the_bank':
       // Take a loan (handled via TAKE_LOAN)
       return { success: true, message: 'May take a loan' };
 
@@ -1262,15 +1262,15 @@ function executeLocationAction(state, playerId, locationId, card) {
       state.workerPlacement.ministryVisitors.push(playerId);
       return { success: true, message: 'Gained turn priority for next round. May draw 2, discard 1.' };
 
-    case 'gas-depot':
+    case 'gas_depot':
       // Buy gas (handled via BUY_GAS)
       return { success: true, message: 'May buy gas' };
 
-    case 'insurance-bureau':
+    case 'insurance_bureau':
       // Buy insurance (handled via BUY_INSURANCE)
       return { success: true, message: 'May buy insurance' };
 
-    case 'weather-bureau':
+    case 'weather_bureau':
       // Peek at hazard deck for £2
       return { success: true, message: 'May peek at hazard for £2' };
 

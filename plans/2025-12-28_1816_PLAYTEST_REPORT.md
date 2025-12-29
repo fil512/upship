@@ -12,9 +12,9 @@
 |---|-------|----------|--------|
 | 1 | Worker Placement Turn Check | Critical | RESOLVED |
 | 2 | Reveal Phase Turn Check | Critical | RESOLVED |
-| 3 | Location Action Execution | High | **TODO** |
-| 4 | Incorrect "YOUR TURN" Display | Medium | **TODO** |
-| 5 | Autoplay Script Outdated | Medium | **TODO** |
+| 3 | Location Action Execution | High | RESOLVED |
+| 4 | Incorrect "YOUR TURN" Display | Medium | RESOLVED |
+| 5 | Autoplay Script Outdated | Medium | RESOLVED |
 
 ---
 
@@ -48,38 +48,43 @@ The reveal phase is designed for simultaneous play - all players acquire technol
 
 **Fix:** Added `skipTurnCheck = true` for reveal phase to allow simultaneous actions.
 
-## Outstanding Issues (TODO)
+## Previously Outstanding Issues (Now Resolved)
 
-### Bug #3: Location Action Execution Failure - TODO
+### Bug #3: Location Action Execution Failure - RESOLVED
 **Severity:** High
-**Location:** `server/routes/gameState.js` (executeLocationAction function)
+**Location:** `server/routes/gameState.js:1227-1279` (executeLocationAction function)
 
-Most location IDs (construction_hall, gas_depot, design_bureau, research_institute, technical_institute) fail with "Unknown location" error when executing the location action. The agent placement succeeds, but the location-specific action (e.g., building ships at Construction Hall) doesn't fire.
+The `executeLocationAction` function used hyphenated location IDs (`construction-hall`) but `groundBoard.js` uses underscored IDs (`construction_hall`). This mismatch caused all location actions to fail with "Unknown location" errors.
 
-**Impact:** Players can place agents but can't actually execute the actions at those locations.
+**Fix:** Updated all case statements in `executeLocationAction` to use underscored IDs matching `groundBoard.js`.
 
-**Example log:**
-```
-✓ PLACE_AGENT executed successfully
-  Location action failed: Unknown location: construction_hall
-```
-
-### Bug #4: Incorrect "YOUR TURN" Display - TODO
+### Bug #4: Incorrect "YOUR TURN" Display - RESOLVED
 **Severity:** Medium
-**Location:** CLI state display
+**Location:** `cli/upship.js:413-459`
 
-The status display shows ">>> YOUR TURN <<<" for a player even when it's actually another player's turn. The "Waiting for:" indicator is correct, but the "YOUR TURN" banner is misleading.
+The CLI was using `currentPlayerIndex` for turn detection regardless of phase. During worker placement, it should use `workerPlacement.currentPlacerIndex`, and during reveal phase it's simultaneous.
 
-### Bug #5: Autoplay Script Outdated - TODO
+**Fix:** Added phase-aware turn detection:
+- Worker placement: Uses `workerPlacement.currentPlacerIndex`
+- Reveal phase: Shows simultaneous turn status based on `playersEndedTurn`
+- Other phases: Uses `currentPlayerIndex`
+
+### Bug #5: Autoplay Script Outdated - RESOLVED
 **Severity:** Medium
-**Location:** `scripts/playtest.py` (autoplay function)
+**Location:** `scripts/playtest.py`
 
-The autoplay script was written for an older game loop and doesn't properly:
-- Detect the current placer during worker placement
-- Handle the 3-phase structure correctly
-- Parse the new status output format
+The autoplay script had several issues:
+1. `get_phase()` regex only captured first word of multi-word phases like "WORKER PLACEMENT"
+2. Location IDs used hyphens instead of underscores
+3. `get_player_hand()` regex didn't match the actual card format `[0] Name (symbol)`
+4. `get_current_placer()` wasn't properly detecting whose turn it was
 
-The script gets stuck in "Phase stuck at WORKER" loops.
+**Fixes:**
+- Updated `get_phase()` to normalize multi-word phase names
+- Updated location symbols dict to use underscored IDs
+- Fixed `get_player_hand()` regex to match `[N] Name (symbol)` format
+- Improved `get_current_placer()` to check each player's view for "YOUR TURN"
+- Added debugging output and better loop termination in worker placement phase
 
 ## Balance Observations
 
@@ -110,30 +115,25 @@ The script gets stuck in "Phase stuck at WORKER" loops.
 - Hazard checks
 - Age advancement
 
-## Recommendations
+## Next Steps
 
-### Priority 1: Fix Location Action Execution
-The `executeLocationAction` function needs to recognize all location IDs. This is blocking core gameplay (building, launching, recruiting).
+All blocking issues have been resolved. Recommended next actions:
 
-### Priority 2: Update Autoplay Script
-Refactor `scripts/playtest.py` to:
-- Use `workerPlacement.currentPlacerIndex` for turn detection
-- Handle the 3-phase game loop properly
-- Parse the new status output format
-
-### Priority 3: Fix Display Bugs
-- Remove or fix the misleading "YOUR TURN" banner
-- Ensure UI correctly reflects whose turn it is
+1. **Run a new playtest** to verify all fixes work correctly
+2. **Test ship building flow** - now that location actions work, verify ships can be built at Construction Hall
+3. **Test launching and route claiming** - verify the full airship lifecycle works
+4. **Complete a full game** through Age 2 to validate progression mechanics
 
 ## Code Changes Made This Session
 
 1. **Commit 2a7d141:** Fix worker placement turn check bug
 2. **Commit 1e397a1:** Allow simultaneous actions during reveal phase
 3. **playtest.py updates:** Added `debug`, `sessions` commands for debugging
-
-## Next Steps
-
-1. Investigate `executeLocationAction` to find why location IDs aren't recognized
-2. Test ship building once location actions work
-3. Complete a full game through Age 2 to validate progression
-4. Stress test the autoplay once script is updated
+4. **server/routes/gameState.js:** Fixed location IDs in `executeLocationAction` (hyphens → underscores)
+5. **cli/upship.js:** Added phase-aware turn detection for correct "YOUR TURN" display
+6. **scripts/playtest.py:** Multiple fixes for autoplay:
+   - Fixed phase name parsing for multi-word phases
+   - Fixed location IDs to use underscores
+   - Fixed card parsing regex
+   - Improved current placer detection
+   - Added debugging output
