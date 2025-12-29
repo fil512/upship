@@ -16,7 +16,7 @@ In **UP SHIP!**, you are the Director of an Airship Conglomerate representing on
 
 **Age I — The Cradle (1900–1914):** Build primitive airships and place them on regional routes across Western Europe. These early pioneers establish your conglomerate's reputation and generate income for future expansion.
 
-**Age II — The Great War (1914–1918):** War consumes Europe. Your fleet is repurposed for military missions—bombing runs, reconnaissance, and resupply operations. Ships are assigned to contracts from a shared Contract Row rather than claiming map routes. Anti-aircraft flak takes a devastating toll; many ships and officers are lost in the conflict.
+**Age II — The Great War (1914–1918):** War consumes Europe. Your fleet is repurposed for combat missions—bombing runs, reconnaissance, and resupply operations. Ships are assigned to missions from a shared Mission Row rather than claiming map routes. Anti-aircraft flak takes a devastating toll; many ships and officers are lost in the conflict.
 
 **Age III — The Golden Age (1919–1937):** The survivors rebuild. Massive luxury airships now span vast distances across the Atlantic, connecting continents in style. Place ships on prestigious intercontinental routes—but the shadow of the Hindenburg Disaster looms over every Hydrogen launch.
 
@@ -70,8 +70,8 @@ When the marker reaches an Age threshold, that Age ends after the current round.
 
 | Quantity | Component |
 |----------|-----------|
-| 2 | Map Boards (Age I: Western Europe, Age III: The Atlantic) |
-| 1 | Military Contract Deck (20 cards for Age II) |
+| 2 | Map Boards (Age I: Western Europe, Age III: The Atlantic; Age II uses Combat Missions instead) |
+| 1 | Combat Mission Deck (20 cards for Age II) |
 | 1 | Ground Board (Worker Placement locations) |
 | 1 | R&D Board (Technology display) |
 | 48 | Technology Tiles (sorted by Age) |
@@ -187,7 +187,7 @@ This is the fundamental rule of airship flight. If your Blueprint violates this 
 Store crew tokens earned from the shared supply:
 
 **Officers** — Required to launch ships. Spend Officers equal to the current Age number (1/2/3) when launching. Officers return to your Barracks when:
-- An Age ends (all ships removed from map or contract cards)
+- An Age ends (all ships removed from map or mission cards)
 - You voluntarily ground a ship
 
 **Engineers** — Multi-purpose specialists with two functions:
@@ -219,7 +219,7 @@ Store purchased **Gas Cubes** here:
 |-------|----------|----------------|
 | **Income Track** | £ earned per round from routes | £5 |
 | **Research Level Track** | Base Research when you Reveal | 0 |
-| **Officer Income Track** | Free Officers per round; reaching +3 grants your 3rd Agent | 0 |
+| **Officer Income Track** | Free Officers per round; reaching +3 grants your 3rd Agent | 0 (no free Officers initially) |
 | **Engineer Income Track** | Free Engineers per round | 1 |
 
 ## 4.7 Stat Tracks & Lift Calculator
@@ -294,7 +294,7 @@ Players start with 2 Agents. When your **Officer Income Track reaches +3**, imme
 
 After all players have revealed:
 
-1. **Collect Income:** Gain £ equal to your Income Track minus Engineers in Barracks. If this is negative, you must take loans until solvent (see Loans below).
+1. **Collect Income:** Gain £ equal to your Income Track minus Engineers in Barracks (each Engineer costs £1 upkeep). If this is negative, you must take loans until solvent (see Loans below).
 2. **Collect Crew Income:** Gain Officers and Engineers per your Income Tracks.
 3. **Check Age Transition:** If Progress Track reached threshold, trigger Age Transition (see Section 12).
 4. **Refresh Agents:** Return all Agents to player supplies.
@@ -306,7 +306,9 @@ You may take a loan at any time during your turn—this does not require an Agen
 
 **Effect:** Gain £30 immediately. Reduce your Income Track by 3 positions.
 
-**Debt Limit:** Your Income Track cannot go below −10. If a loan would push you below −10, you cannot take it. If forced below −10 during Income & Cleanup, you are **bankrupt**—immediately lose 10 VP and reset your Income Track to 0.
+**Debt Limit:** Your Income Track cannot go below −10. If a loan would push you below −10, you cannot take it.
+
+**Bankruptcy:** If during Income & Cleanup you have negative net income and cannot take loans to cover it (because doing so would exceed the −10 limit), you are **bankrupt**—immediately lose 10 VP and reset your Income Track to 0.
 
 ---
 
@@ -330,11 +332,11 @@ The Ground Board has 12 action spaces. Each requires a matching card symbol.
 
 **Cost:** Free.
 
-**Limit:** install or remove any number of tech tiles on your blueprint.
+**Limit:** 2 swaps per visit. Each swap is one installation or removal. (Italy gets 4 swaps; Modular Frame grants +2; Mechanic cards grant +1 each.)
 
 **Constraint:** Only install Upgrades for Technologies you own.
 
-> **Example:** Anna visits the Design Bureau and replaces her old  her old Basic Engine with a Maybach Engine. The new upgrade tile is taken from supply and the old upgrade returned to supply.
+> **Example:** Anna visits the Design Bureau and replaces her old Basic Engine with a Maybach Engine. The new upgrade tile is taken from supply and the old upgrade returned to supply.
 
 **Hull Upgrade Rule:** If you upgrade Frame or Fabric while ships are in your Launch Hangar, pay the Hull Cost difference for each ship.
 
@@ -357,7 +359,7 @@ The Ground Board has 12 action spaces. Each requires a matching card symbol.
 
 ## 6.4 Launchpad (Propeller)
 
-**Action:** Launch ships to claim routes or military contracts.
+**Action:** Launch ships to claim routes or combat missions.
 
 See **Section 8: Launching Ships** for the complete procedure.
 
@@ -484,9 +486,9 @@ Draw a Hazard Card from your Personal Hazard Deck and resolve it (see Section 8.
 
 | Outcome | When | Ship | Officers | Gas |
 |---------|------|------|----------|-----|
-| **Success** | Pass Hazard Check | On route / Contract | Spent | Spent |
+| **Success** | Pass Hazard Check | On route / Mission | Spent | Spent |
 | **Aborted** | Fail non-fire hazard | Returns to Hangar | Kept | Spent |
-| **Damaged** | Control fire | Repair Hangar | Kept | Spent |
+| **Damaged** | Control fire | Repair Hangar | Spent | Spent |
 | **Destroyed** | Crash | To supply | Spent | Spent |
 
 **Step 6: Continue or Stop**
@@ -545,7 +547,7 @@ Technologies represent patents and manufacturing capability. Acquire them from t
 
 **Technology Tile Attributes:**
 - **Research Cost:** How much Research to acquire
-- **Track:** Which Drawing Office track (Propulsion/Structure/Gas/Payload)
+- **Track:** Which Drawing Office track (Propulsion, Frame, Fabric, Gas Systems, or Payload)
 - **Age:** Minimum Age when available
 - **Unlocks:** Which Upgrade tiles you can install
 - **£ Value:** Income during Age Transitions
@@ -635,7 +637,7 @@ Each route shows minimum stats your Blueprint must meet. Below are some examples
 
 ## 10.3 Route Income
 
-When you claim a route, increase your Income Track by the value printed on the route or military contract. (TODO: verify appendex includes income gained for every route and contract.)
+When you claim a route, increase your Income Track by the value printed on the route or combat mission. See Appendix F (Routes) and Appendix G (Combat Missions) for all Income values.
 
 ## 10.4 City Bonuses
 
@@ -684,11 +686,11 @@ When claiming a route, choose one endpoint city and gain its bonus immediately (
 **Age II — The Great War (Greater Europe)**
 - Scale: Continental
 - Theme: Industrial and military
-- **No Map Routes:** Instead of placing ships on routes, players select from a **Contract Row** of 6 face-up **Military Contracts**. See [Appendix G](appendix.md#appendix-g-military-contracts).
-- **Contract Flow:** Resolve Hazard Check first. If successful, take the contract card, gain Income, and spend Officers/gas to supply. Then check Flak—ship may be destroyed but rewards are already earned.
+- **No Map Routes:** Instead of placing ships on routes, players select from a **Mission Row** of 6 face-up **Combat Missions**. See [Appendix G](appendix.md#appendix-g-combat-missions).
+- **Mission Flow:** Resolve Hazard Check first. If successful, take the mission card, gain Income, and spend Officers/gas to supply. Then check Flak—ship may be destroyed but rewards are already earned.
 - **Flak Guns:** Each Hazard card shows 0–5 flak (checked after mission success). If Flak > Armor, ship is destroyed. Max Armor is 4; 5 Flak always destroys.
 - **Armor Upgrades:** Light Armor Plating (+1 Armor) and Heavy Armor Plating (+2 Armor) are Payload upgrades unlocked by Age II technologies.
-- **One-Time Missions:** Completed contracts are placed in front of you with your ship on them. Contracts provide ongoing income like routes.
+- **One-Time Missions:** Completed missions are placed in front of you with your ship on them. Missions provide ongoing income like routes.
 - First ship must launch from **Home Base**; subsequent ships may launch from any city where you have a ship.
 
 **Age III — The Golden Age (The Atlantic)**
@@ -710,6 +712,8 @@ Every card has dual functionality: use for actions OR save for reveal resources.
 | **Agent Effect** | Middle | Bonus when used for worker placement |
 | **Reveal Icons** | Bottom | Resources gained when revealed |
 
+**Action Symbols:** Wrench (tool icon), Coin (currency symbol), Propeller (spinning blade), Any (star/wildcard).
+
 ## 11.2 The Core Decision
 
 When drawing a card, decide:
@@ -718,14 +722,20 @@ When drawing a card, decide:
 
 ## 11.3 Starter Deck (10 Cards)
 
-| Card | Qty | Symbol | Agent Effect | Reveal |
-|------|-----|--------|--------------|--------|
-| Apprentice | 2 | Any | None | 1 Influence |
-| Mechanic | 2 | Wrench | +1 tile swap | 1 £ |
-| Draftsman | 2 | Wrench | Draw 1 card | 1 Influence |
-| Researcher | 2 | Propeller | −£1 per Research | 1 Research |
-| Purser | 1 | Coin | Gain £2 | 2 Influence |
-| Helmsman | 1 | Propeller | +1 ship stat this launch | 1 Officer |
+Distribution: 3 Wrench, 3 Coin, 3 Propeller, 1 Any.
+
+| Card | Symbol | Agent Effect | Reveal |
+|------|--------|--------------|--------|
+| Apprentice | Any | None | 1 Influence |
+| Mechanic | Wrench | +1 tile swap | 1 £ |
+| Draftsman | Wrench | Draw 1 card | 1 Influence |
+| Rigger | Wrench | −£2 ship build cost | 1 Research |
+| Purser | Coin | Gain £2 | 2 Influence |
+| Clerk | Coin | Gain £1 | 1 £ |
+| Investor | Coin | None | 3 Influence |
+| Researcher | Propeller | −£1 per Research | 1 Research |
+| Helmsman | Propeller | +1 ship stat this launch | 1 Officer |
+| Navigator | Propeller | Look at top Hazard card | 1 Influence |
 
 ## 11.4 Market Deck
 
@@ -762,7 +772,12 @@ When the Progress Track reaches the Age threshold (checked during Income & Clean
 
 Score at the **end of each Age**:
 
-TODO: VP for route is printed on map / Military Contract. Ensure appendix covers this.
+### Route and Mission VP
+
+Score VP for each route you have claimed and each combat mission you have completed:
+- **Age I Routes:** 1–3 VP based on difficulty (see Appendix F)
+- **Age II Combat Missions:** 1–5 VP based on difficulty, plus any bonus VP (see Appendix G)
+- **Age III Routes:** 2–6 VP based on difficulty (see Appendix F)
 
 ### Technology VP
 
@@ -804,7 +819,7 @@ Each nation has unique advantages and constraints.
 - *Doped Canvas*
 - *Imperial Mooring System* (British Territories count as Home Base)
 
-**The Flaw **— Red Tape: TODO TBD flaw
+**The Flaw** — Red Tape: At each Age Transition, reduce your Income Track by 1.
 
 **Home Base (Age II):** Cardington
 
@@ -820,7 +835,7 @@ Each nation has unique advantages and constraints.
 - *Trapeze Fighter System* (ignore one route requirement per launch)
 - *Helium Handling*
 
-**Flaw:** Late to enter war. Cannot acquire war contract until all other players have one
+**Flaw:** Late to enter war. Cannot acquire a combat mission until all other players have one.
 
 **Home Base (Age II):** Paimboeuf, France
 **Home Base (Age III):** Lakehurst, New Jersey
@@ -871,11 +886,15 @@ Each nation has unique advantages and constraints.
 
 ## 14.3 Network Connectivity
 
-| Age | First Ship | Subsequent Ships |
-|-----|------------|------------------|
-| I | Any route | Any route, but pay extra for new network |
-| II | N/A | N/A |
-| III | Any Major Hub | Must connect |
+A **network** is a group of your routes that share at least one city.
+
+| Age | Rule |
+|-----|------|
+| I | No restrictions. Place ships on any available route. |
+| II | N/A (Combat Missions replace map routes) |
+| III | First ship may claim any route from a Major Hub. Subsequent ships must either connect to an existing network OR pay £X to start a new network, where X = number of networks you already have. |
+
+**Age III Example:** You have routes London–Paris and Paris–Berlin (1 network). You want to claim New York–Rio (disconnected). Pay £1 to start your second network. Later, claiming Tokyo–Sydney would cost £2 (you now have 2 networks).
 
 ## 14.4 Loans
 
@@ -913,7 +932,7 @@ When Catastrophic Explosion occurs during a Luxury Launch in Age III using Hydro
 | **Blueprint** | Age-specific overlay representing your airship design | §4.2 |
 | **Ceiling** | Ship stat for maximum altitude | §4.2 |
 | **City Bonus** | One-time reward when claiming a route | §10.4 |
-| **Contract Row** | 6 face-up Military Contracts available in Age II | §10.5, Appendix F |
+| **Mission Row** | 6 face-up Combat Missions available in Age II | §10.5, Appendix G |
 | **Crash** | Ship destruction; token returns to supply | §8.1 |
 | **Drawing Office** | Zone storing acquired Technologies | §4.1 |
 | **Engineer** | Crew token contributing +1 Research and emergency response | §4.3 |
@@ -938,7 +957,7 @@ When Catastrophic Explosion occurs during a Luxury Launch in Age III using Hydro
 | **Loan** | Free action: gain £30, reduce Income by 3 (limit: Income ≥ −10) | §5.3 |
 | **Luxury** | Ship stat for passenger comfort | §4.2 |
 | **Market Deck** | Purchasable crew cards | §11.4, Appendix G |
-| **Military Contract** | Age II mission card replacing routes | §10.5, Appendix F |
+| **Combat Mission** | Age II mission card replacing routes | §10.5, Appendix G |
 | **Officer** | Crew token required to launch (1/2/3 per Age) | §4.3 |
 | **Payload** | Upgrade type for cargo and passengers | §4.2 |
 | **Physics Check** | Lift ≥ Weight requirement | §4.2 |
@@ -1055,9 +1074,9 @@ See [Appendix F in the separate Appendix document](appendix.md#appendix-f-routes
 
 ---
 
-# APPENDIX F: MILITARY CONTRACTS
+# APPENDIX F: COMBAT MISSIONS
 
-See [Appendix G in the separate Appendix document](appendix.md#appendix-g-military-contracts) for all 20 Military Contract cards:
+See [Appendix G in the separate Appendix document](appendix.md#appendix-g-combat-missions) for all 20 Combat Mission cards:
 
 - **Bombing Runs (6):** Strike missions with high payouts
 - **Reconnaissance (5):** Intelligence gathering missions

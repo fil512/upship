@@ -1,9 +1,11 @@
 
-# APPENDIX A: TODO LIST — Design Work Remaining
+# APPENDIX A: DESIGN STATUS
 
-The following items require finalization before the game is complete:
+This appendix tracks design decisions and their resolution status. Items marked **RESOLVED** have complete rules coverage. Items marked **PLAYTESTING NOTE** or **DESIGN NOTE** require validation through play.
 
-## A.1 Component Design
+## A.1 Component Design (Production Phase)
+
+These items are physical component specifications for manufacturing. Rules are complete; artwork and production remain.
 
 1. **The 3 Maps:** Create vector artwork for Age I (Western Europe), Age II (Europe at War), Age III (The Atlantic). Include:
    - Route lines with stat requirements printed
@@ -66,9 +68,9 @@ The following items require finalization before the game is complete:
    - Flammable (Flame warning)
    - Safe (Helium symbol)
 
-## A.2 Card Design
+## A.2 Card Design (All Resolved)
 
-1. **Personal Hazard Decks (24 cards each):** Each player gets identical deck. **RESOLVED** - See Appendix E for final distribution:
+1. **Personal Hazard Decks (24 cards each):** **RESOLVED** - See Appendix E for final distribution:
    - 4 Clear Weather (Auto-pass)
    - 8 Minor Hazards (Difficulty 2-3)
    - 6 Major Hazards (Difficulty 4-5)
@@ -81,72 +83,74 @@ The following items require finalization before the game is complete:
    - Cards that provide resources you can't easily get elsewhere
    - **RESOLVED:** Cards provide resources when revealed (see Section 8)
 
-3. **Starter Deck Review:** Verify the 10-card starter deck provides:
-   - Access to all Ground Board locations (mix of symbols)
-   - Variety of reveal resources
-   - Enough Influence to occasionally buy Market cards
+3. **Starter Deck Review:** **RESOLVED** - See Section 11.3 for final deck:
+   - 3 Wrench, 3 Coin, 3 Propeller, 1 Any — balanced access to all locations
+   - Variety of reveal resources (£, Influence, Research, Officer)
+   - Investor card provides 3 Influence for Market purchases
 
-## A.3 Economy Balancing
+## A.3 Economy Balancing (All Resolved)
 
-1. **Research Costs:** Balance Technology prices:
+1. **Research Costs:** **RESOLVED** - See Appendix C for all Technology costs:
    - Age I: 1-2 Research
    - Age II: 2-4 Research
    - Age III: 4-6 Research
-   - Specialization discounts: -1 at 3+ tiles, -2 at 5+ tiles
-   - **Note:** Unspent Research is lost each round; invest in Research Level Track for consistent output
+   - Specialization discounts: -1 at 3+ tiles, -2 at 5+ tiles (Section 9.1)
 
-2. **Engineer Economy:**
-   - Starting Engineers: 2
-   - Recruit cost: £4 per Engineer (see Section 6.1)
-   - Upkeep cost: £1 per Engineer per round
-   - Research generation: 1 per Engineer at Reveal
-   - **Note:** Officers cost £2 to recruit (cheaper because consumed on launch)
+2. **Engineer Economy:** **RESOLVED** - See Sections 5.2, 6.5, 6.7:
+   - Starting Engineers: 2 (Section 3.2)
+   - Recruit cost: £4 per Engineer at Academy (Section 6.5)
+   - Upkeep cost: £1 per Engineer per round (Section 5.2)
+   - Research generation: 1 per Engineer at Reveal (Section 5.1)
+   - Officers cost £2 to recruit (Section 6.5)
 
-3. **Route Income Values:** Determine £ values for routes based on:
-   - Distance/difficulty
-   - Age
-   - Strategic importance
-   - Target: Ships should pay for themselves in ~3-5 turns
+3. **Route Income Values:** **RESOLVED** - See Appendix F (Routes) and Appendix G (Combat Missions):
+   - Age I routes: £2-£6 based on difficulty
+   - Age III routes: £5-£12 based on difficulty and Luxury status
+   - Combat Missions: £5-£14 based on mission type
 
 4. **Progress Track Thresholds:** **RESOLVED** - See Section 1.3 for complete table including Age transitions:
    - Age transitions at 8/16/20 (2P), 10/20/25 (3P), 12/24/30 (4P)
-   - Test: Does game pacing feel appropriate across all Ages?
 
-5. **Lifting Gas Market:** Set price scaling and:
-   - Starting supply per Age
-   - Replenishment rules
-   - Faction-specific access (USA Helium monopoly)
+5. **Lifting Gas Market:** **RESOLVED** - See Sections 6.8 and 9.3:
+   - Hydrogen: £1/cube (unlimited supply)
+   - Helium: £2-£15/cube (market track, Section 9.3)
+   - USA doesn't advance Helium track (domestic monopoly)
+   - Market resets to £2 at Age Transitions
 
-## A.4 Gameplay Polish
+## A.4 Gameplay Polish (All Resolved)
 
 1. **Age End Triggers:** **RESOLVED** - Progress Track milestones trigger Age transitions (see Section 1.3 and 9.1)
 
-2. **Action Selection Mechanism:** Partially resolved:
-   - Current system requires spending matching cards for worker placement
-   - **RESOLVED:** Research Institute now increases Research Level Track (see Section 6.1)
-   - **RESOLVED:** Cards provide resources when revealed instead of being played reactively
-   - Still needs testing: Is card-icon matching too restrictive? Consider Apprentice "Any" cards as wild
+2. **Action Selection Mechanism:** **RESOLVED** - See Sections 5.1 and 11:
+   - Cards have symbols (Wrench/Coin/Propeller/Any) determining valid locations
+   - Cards provide resources when revealed
+   - Starter deck includes 1 "Any" card for flexibility
+   - Playtesting note: Monitor if card-icon matching feels too restrictive
 
-3. **Agent Count:** 2 agents per player at start, 3rd earned at Officer Income +3
-   - **Rationale:** Starting with 2 agents creates tighter early game. Earning the 3rd via Flight School investment creates meaningful progression. Card symbol requirements (Wrench/Coin/Propeller) further constrain choices, making each agent placement feel significant.
-   - May need adjustment if playtesting reveals too much or too little competition for key actions
+3. **Agent Count:** **RESOLVED** - See Sections 3.2 and 5.1:
+   - 2 agents per player at start
+   - 3rd earned when Officer Income Track reaches +3
+   - Playtesting note: Adjust if competition for actions feels too tight/loose
 
-4. **Turn Order:** Define how first player rotates or changes
+4. **Turn Order:** **RESOLVED** - See Sections 3.3 and 6.9:
+   - First player determined randomly at game start
+   - Ministry action grants First Player Token for next round
 
-5. **Tie-Breakers:** Establish rules for ties in route claiming
+5. **Tie-Breakers:** **RESOLVED** - Turn order handles route claiming (first to claim gets the route). Victory tie-breakers in Section 1.1.
 
-6. **Player Count Scaling:** Adjust for 2, 3, and 4 players:
-   - Available routes
-   - Technology tile supply
-   - R&D Board size
-   - Progress Track threshold
+6. **Player Count Scaling:** **RESOLVED** - See Section 1.3:
+   - Progress Track thresholds scale by player count
+   - R&D Board size scales by Age (4/5/6 tiles)
+   - Routes: All available (competition varies by player count)
 
-7. **Hindenburg Disaster Tuning:**
-   - **Design Intent:** The +3 VP for "historical infamy" is deliberately modest. The player who triggers the disaster loses their ship, Officers, and gas investment, and causes the game to end—potentially denying themselves additional route claims. The +3 VP is consolation, not compensation. The real question is whether triggering the disaster feels like a memorable story moment rather than pure punishment.
-   - Requires playtesting to determine if Germany feels too penalized in Age III Luxury competition, or if the risk/reward creates exciting tension.
-   - Does the fire trigger (Catastrophic Explosion on Luxury Launch) feel thematically correct?
+7. **Hindenburg Disaster Tuning:** **DESIGN NOTE** - See Section 1.2:
+   - +3 VP for triggering player is consolation, not compensation
+   - Germany cannot use Helium, creating meaningful Age III risk
+   - Playtesting will determine if risk/reward balance feels right
 
-## A.5 Playtesting Priorities
+## A.5 Playtesting Priorities (Validation Phase)
+
+These items require playtesting validation. Rules are complete but balance may need adjustment.
 
 1. **Engineer Economy Test:** Verify the tension between Research generation and emergency spending feels meaningful
 
@@ -200,9 +204,9 @@ On your turn, either:
 9. ✓ If Fire hazard and using Hydrogen: Spend required Engineers or crash
 10. ✓ If Catastrophic Explosion on Luxury Launch in Age III: Hindenburg Disaster triggered
 11. ✓ **Success:** Place ship on route, increase Income, gain city bonus
-12. ✓ **Aborted:** Ship returns to Launch Hangar (Officers and gas lost)
-13. ✓ **Damaged:** Ship goes to Repair Hangar (Officers and gas lost)
-14. ✓ **Crash:** Ship destroyed (token to supply, Officers and gas lost)
+12. ✓ **Aborted:** Ship returns to Launch Hangar (Officers kept, gas spent)
+13. ✓ **Damaged:** Ship goes to Repair Hangar (Officers and gas spent)
+14. ✓ **Crash:** Ship destroyed (token to supply, Officers and gas spent)
 15. ✓ Continue launching more ships or stop
 
 ## Key Formulas
@@ -347,7 +351,7 @@ Fabric technologies unlock outer covering and gas cell material upgrades.
 - Age II: 21 tiles (4 Propulsion, 4 Frame, 3 Fabric, 4 Gas, 6 Payload)
 - Age III: 18 tiles (5 Propulsion, 2 Frame, 2 Fabric, 4 Gas, 5 Payload)
 
-**TODO:** Expand each track to balance the game for final production.
+**PLAYTESTING NOTE:** Current tile counts may be adjusted based on playtesting. Monitor if certain tracks feel over/under-represented.
 
 ---
 
@@ -425,7 +429,7 @@ Fabric tiles go in Fabric slots. The **Hull Cost** column shows how much this ti
 | Postal Service | Mail Compartment | -1 | Income +2 | — |
 | External Cargo | Cargo Nets | -2 | Income +2 | — |
 | Basic Cabin | Passenger Gondola | -2 | Income +2, Luxury +1 | — |
-| Bombing Equipment | Bomb Bay Design | -3 | — | Military Contracts: +£3 Income |
+| Bombing Equipment | Bomb Bay Design | -3 | — | Combat Missions: +£3 Income |
 | Sparrowhawk Hangar | Trapeze System | -3 | — | Ignore one route requirement |
 | Communications Suite | Radio Equipment | -1 | Reliability +1 | +1 to Navigation hazards |
 | Light Armor Plating | Armored Gondola | -2 | Armor +1 | Age II: Survive flak ≤ Armor |
@@ -443,7 +447,7 @@ Fabric tiles go in Fabric slots. The **Hull Cost** column shows how much this ti
 
 # APPENDIX E: HAZARD DECK
 
-Each player has an identical Personal Hazard Deck of 20 cards. When launching a ship, draw one card and resolve it.
+Each player has an identical Personal Hazard Deck of 24 cards. When launching a ship, draw one card and resolve it.
 
 **Age II Flak:** Each card shows 0–5 flak guns. In Age II only, if Flak > your ship's Armor, the ship is destroyed (5 Flak always destroys; max Armor is 4).
 
@@ -501,7 +505,7 @@ Helium ships automatically pass all Fire-type hazards.
 2. Check if auto-pass (Clear Weather cards, or Helium ship vs Fire hazards)
 3. For standard hazards: Compare Ship's relevant stat vs Difficulty. Spend Engineers (+1 each) to boost if needed.
 4. For Fire/Structural hazards: Spend required Engineers or face consequences.
-5. **Pass:** Ship reaches route/completes contract successfully
+5. **Pass:** Ship reaches route/completes mission successfully
 6. **Fail (standard):** Ship returns to Launch Hangar (Officers kept, gas lost)
 7. **Damaged:** Ship goes to Repair Hangar (Officers and gas lost)
 8. **Crash:** Ship destroyed (token to supply, Officers and gas lost)
@@ -527,20 +531,20 @@ Routes connect cities on the map boards. Each route has stat requirements that y
 
 The Pioneer Era features 12 regional routes across Western Europe. Early airship technology limits range and reliability.
 
-| Route | From | To | Range | Speed | Other | Income | Notes |
-|-------|------|-----|-------|-------|-------|--------|-------|
-| Rhine Valley | Frankfurt | Cologne | 1 | — | — | £2 | Starter route |
-| Bodensee Circuit | Friedrichshafen | Konstanz | 1 | — | — | £2 | Germany's home |
-| Channel Crossing | Calais | Dover | 1 | 1 | — | £3 | First international |
-| Paris Express | Paris | Brussels | 1 | 1 | — | £3 | — |
-| North Sea Run | Hamburg | Amsterdam | 2 | 1 | — | £4 | — |
-| Baltic Passage | Hamburg | Copenhagen | 2 | 1 | — | £4 | — |
-| Alpine Transit | Zurich | Milan | 2 | — | Ceiling 1 | £4 | Mountain crossing |
-| Mediterranean Link | Marseille | Barcelona | 2 | 1 | — | £4 | — |
-| London–Paris | London | Paris | 2 | 2 | — | £5 | Double track |
-| Berlin–Vienna | Berlin | Vienna | 3 | 1 | — | £5 | — |
-| Rome Approach | Milan | Rome | 2 | 1 | Ceiling 1 | £5 | Italy's home |
-| Imperial Circuit | London | Berlin | 3 | 2 | — | £6 | Prestige route |
+| Route | From | To | Range | Speed | Other | Income | VP | Notes |
+|-------|------|-----|-------|-------|-------|--------|-----|-------|
+| Rhine Valley | Frankfurt | Cologne | 1 | — | — | £2 | 1 | Starter route |
+| Bodensee Circuit | Friedrichshafen | Konstanz | 1 | — | — | £2 | 1 | Germany's home |
+| Channel Crossing | Calais | Dover | 1 | 1 | — | £3 | 2 | First international |
+| Paris Express | Paris | Brussels | 1 | 1 | — | £3 | 2 | — |
+| North Sea Run | Hamburg | Amsterdam | 2 | 1 | — | £4 | 2 | — |
+| Baltic Passage | Hamburg | Copenhagen | 2 | 1 | — | £4 | 2 | — |
+| Alpine Transit | Zurich | Milan | 2 | — | Ceiling 1 | £4 | 2 | Mountain crossing |
+| Mediterranean Link | Marseille | Barcelona | 2 | 1 | — | £4 | 2 | — |
+| London–Paris | London | Paris | 2 | 2 | — | £5 | 3 | Double track |
+| Berlin–Vienna | Berlin | Vienna | 3 | 1 | — | £5 | 3 | — |
+| Rome Approach | Milan | Rome | 2 | 1 | Ceiling 1 | £5 | 3 | Italy's home |
+| Imperial Circuit | London | Berlin | 3 | 2 | — | £6 | 3 | Prestige route |
 
 **Age I Route Summary:**
 - Range 1: 2 routes
@@ -551,24 +555,24 @@ The Pioneer Era features 12 regional routes across Western Europe. Early airship
 
 The Atlantic Era features 16 hemispheric routes including luxury ocean crossings. Advanced technology enables intercontinental travel.
 
-| Route | From | To | Range | Speed | Ceiling | Luxury | Income | Notes |
-|-------|------|-----|-------|-------|---------|--------|--------|-------|
-| North Atlantic Express | New York | London | 4 | 2 | 2 | — | £8 | Double track |
-| South Atlantic | Rio de Janeiro | Recife | 2 | 1 | — | — | £5 | Brazil domestic |
-| Caribbean Connection | Miami | Havana | 2 | 1 | — | — | £5 | — |
-| European Trunk | London | Berlin | 3 | 2 | 1 | — | £6 | — |
-| Mediterranean Express | Rome | Cairo | 4 | 2 | 1 | — | £7 | — |
-| Pacific Coast | Los Angeles | San Francisco | 2 | 1 | 1 | — | £5 | — |
-| Eastern Seaboard | New York | Miami | 3 | 2 | — | — | £6 | — |
-| Trans-Amazon | Rio de Janeiro | Manaus | 4 | 1 | — | — | £7 | Jungle route |
-| **Hindenburg Route** | Frankfurt | Lakehurst | 5 | 3 | 2 | 2 | £12 | Luxury; Hydrogen risk |
-| **Graf Zeppelin Route** | Rio de Janeiro | Friedrichshafen | 5 | 2 | 2 | 1 | £10 | Luxury |
-| **Imperial Airship Route** | London | Cairo | 4 | 2 | 2 | 1 | £9 | Luxury; British specialty |
-| **Transatlantic Luxury** | London | New York | 4 | 3 | 2 | 2 | £11 | Luxury; Double track |
-| **Around Cape Horn** | Buenos Aires | Valparaíso | 3 | 2 | 3 | — | £7 | High altitude |
-| **Arctic Explorer** | Oslo | Svalbard | 3 | 1 | 3 | — | £7 | Extreme conditions |
-| **California Clipper** | Los Angeles | Honolulu | 5 | 2 | 1 | 1 | £10 | Luxury; Pacific crossing |
-| **Empire State Express** | New York | Chicago | 3 | 3 | 1 | 1 | £8 | Luxury; American prestige |
+| Route | From | To | Range | Speed | Ceiling | Luxury | Income | VP | Notes |
+|-------|------|-----|-------|-------|---------|--------|--------|-----|-------|
+| South Atlantic | Rio de Janeiro | Recife | 2 | 1 | — | — | £5 | 2 | Brazil domestic |
+| Caribbean Connection | Miami | Havana | 2 | 1 | — | — | £5 | 2 | — |
+| Pacific Coast | Los Angeles | San Francisco | 2 | 1 | 1 | — | £5 | 2 | — |
+| European Trunk | London | Berlin | 3 | 2 | 1 | — | £6 | 3 | — |
+| Eastern Seaboard | New York | Miami | 3 | 2 | — | — | £6 | 3 | — |
+| Mediterranean Express | Rome | Cairo | 4 | 2 | 1 | — | £7 | 3 | — |
+| Trans-Amazon | Rio de Janeiro | Manaus | 4 | 1 | — | — | £7 | 3 | Jungle route |
+| **Around Cape Horn** | Buenos Aires | Valparaíso | 3 | 2 | 3 | — | £7 | 3 | High altitude |
+| **Arctic Explorer** | Oslo | Svalbard | 3 | 1 | 3 | — | £7 | 3 | Extreme conditions |
+| North Atlantic Express | New York | London | 4 | 2 | 2 | — | £8 | 4 | Double track |
+| **Empire State Express** | New York | Chicago | 3 | 3 | 1 | 1 | £8 | 4 | Luxury; American prestige |
+| **Imperial Airship Route** | London | Cairo | 4 | 2 | 2 | 1 | £9 | 4 | Luxury; British specialty |
+| **California Clipper** | Los Angeles | Honolulu | 5 | 2 | 1 | 1 | £10 | 5 | Luxury; Pacific crossing |
+| **Graf Zeppelin Route** | Rio de Janeiro | Friedrichshafen | 5 | 2 | 2 | 1 | £10 | 5 | Luxury |
+| **Transatlantic Luxury** | London | New York | 4 | 3 | 2 | 2 | £11 | 5 | Luxury; Double track |
+| **Hindenburg Route** | Frankfurt | Lakehurst | 5 | 3 | 2 | 2 | £12 | 6 | Luxury; Hydrogen risk |
 
 **Age III Route Summary:**
 - Standard routes: 8
@@ -581,11 +585,11 @@ The Atlantic Era features 16 hemispheric routes including luxury ocean crossings
 
 ---
 
-# APPENDIX G: MILITARY CONTRACTS
+# APPENDIX G: COMBAT MISSIONS
 
-During Age II (The Great War), routes are replaced by Military Contracts. Draw contracts from this deck when launching ships.
+During Age II (The Great War), routes are replaced by Combat Missions. Draw missions from this deck when launching ships.
 
-## Contract Types
+## Mission Types
 
 | Type | Icon | Description |
 |------|------|-------------|
@@ -595,76 +599,76 @@ During Age II (The Great War), routes are replaced by Military Contracts. Draw c
 | **Naval Patrol** | Anchor | Scout for enemy ships and submarines |
 | **Artillery Observation** | Target | Direct artillery fire from above |
 
-## Military Contract Cards (20 total)
+## Combat Mission Cards (20 total)
 
 ### Bombing Runs (6 cards)
 
-| Name | Range | Ceiling | Reliability | Income | Special |
-|------|-------|---------|-------------|--------|---------|
-| Railway Bombardment | 2 | 1 | 2 | £6 | — |
-| Factory Strike | 3 | 2 | 2 | £8 | — |
-| Port Assault | 3 | 1 | 3 | £8 | — |
-| Deep Strike Mission | 4 | 2 | 2 | £10 | +£2 with Bombing Equipment |
-| Strategic Bombardment | 4 | 2 | 3 | £11 | +£3 with Bombing Equipment |
-| Capital Raid | 5 | 3 | 3 | £14 | Prestige: +2 VP |
+| Name | Range | Ceiling | Reliability | Income | VP | Special |
+|------|-------|---------|-------------|--------|-----|---------|
+| Railway Bombardment | 2 | 1 | 2 | £6 | 1 | — |
+| Factory Strike | 3 | 2 | 2 | £8 | 2 | — |
+| Port Assault | 3 | 1 | 3 | £8 | 2 | — |
+| Deep Strike Mission | 4 | 2 | 2 | £10 | 3 | +£2 with Bombing Equipment |
+| Strategic Bombardment | 4 | 2 | 3 | £11 | 4 | +£3 with Bombing Equipment |
+| Capital Raid | 5 | 3 | 3 | £14 | 5 | Prestige: +1 bonus VP |
 
 ### Reconnaissance (5 cards)
 
-| Name | Range | Speed | Ceiling | Income | Special |
-|------|-------|-------|---------|--------|---------|
-| Front Line Survey | 2 | 2 | 1 | £5 | — |
-| Enemy Position Mapping | 3 | 2 | 2 | £7 | — |
-| Artillery Spotting | 2 | 1 | 2 | £5 | — |
-| Strategic Photography | 4 | 2 | 3 | £9 | +1 VP |
-| Deep Reconnaissance | 4 | 3 | 2 | £10 | Draw 2 Hazard cards, choose 1 |
+| Name | Range | Speed | Ceiling | Income | VP | Special |
+|------|-------|-------|---------|--------|-----|---------|
+| Front Line Survey | 2 | 2 | 1 | £5 | 1 | — |
+| Artillery Spotting | 2 | 1 | 2 | £5 | 1 | — |
+| Enemy Position Mapping | 3 | 2 | 2 | £7 | 2 | — |
+| Strategic Photography | 4 | 2 | 3 | £9 | 3 | +1 bonus VP |
+| Deep Reconnaissance | 4 | 3 | 2 | £10 | 3 | Draw 2 Hazard cards, choose 1 |
 
 ### Resupply Missions (5 cards)
 
-| Name | Range | Speed | Reliability | Income | Special |
-|------|-------|-------|-------------|--------|---------|
-| Field Hospital Supply | 2 | 1 | 2 | £5 | — |
-| Ammunition Delivery | 3 | 2 | 2 | £7 | — |
-| Forward Base Resupply | 3 | 1 | 3 | £7 | — |
-| Emergency Provisions | 4 | 3 | 2 | £9 | — |
-| Siege Relief | 4 | 2 | 3 | £10 | +1 VP |
+| Name | Range | Speed | Reliability | Income | VP | Special |
+|------|-------|-------|-------------|--------|-----|---------|
+| Field Hospital Supply | 2 | 1 | 2 | £5 | 1 | — |
+| Ammunition Delivery | 3 | 2 | 2 | £7 | 2 | — |
+| Forward Base Resupply | 3 | 1 | 3 | £7 | 2 | — |
+| Emergency Provisions | 4 | 3 | 2 | £9 | 3 | — |
+| Siege Relief | 4 | 2 | 3 | £10 | 3 | +1 bonus VP |
 
 ### Naval Patrols (2 cards)
 
-| Name | Range | Speed | Reliability | Income | Special |
-|------|-------|-------|-------------|--------|---------|
-| Coastal Patrol | 3 | 2 | 2 | £6 | Ignore 1 Weather hazard |
-| Submarine Hunter | 4 | 2 | 3 | £9 | +£2 with Communications Suite |
+| Name | Range | Speed | Reliability | Income | VP | Special |
+|------|-------|-------|-------------|--------|-----|---------|
+| Coastal Patrol | 3 | 2 | 2 | £6 | 1 | Ignore 1 Weather hazard |
+| Submarine Hunter | 4 | 2 | 3 | £9 | 3 | +£2 with Communications Suite |
 
 ### Artillery Observation (2 cards)
 
-| Name | Range | Ceiling | Reliability | Income | Special |
-|------|-------|---------|-------------|--------|---------|
-| Battery Direction | 2 | 2 | 2 | £6 | — |
-| Long-Range Observation | 3 | 3 | 2 | £8 | +1 Range with Spotter Gondola |
+| Name | Range | Ceiling | Reliability | Income | VP | Special |
+|------|-------|---------|-------------|--------|-----|---------|
+| Battery Direction | 2 | 2 | 2 | £6 | 1 | — |
+| Long-Range Observation | 3 | 3 | 2 | £8 | 2 | +1 Range with Spotter Gondola |
 
-## Contract Mechanics
+## Mission Mechanics
 
-**Contract Row Setup:**
-At the start of Age II, shuffle the 20-card Military Contract deck and deal 6 contracts face-up to form the **Contract Row**.
+**Mission Row Setup:**
+At the start of Age II, shuffle the 20-card Combat Mission deck and deal 6 missions face-up to form the **Mission Row**.
 
-**Selecting Contracts:**
-1. When you take a Launch action in Age II, choose one visible contract from the Contract Row.
+**Selecting Missions:**
+1. When you take a Launch action in Age II, choose one visible mission from the Mission Row.
 2. Verify your Blueprint meets all listed stat requirements.
-3. If you cannot meet requirements, you may choose a different contract or pass.
+3. If you cannot meet requirements, you may choose a different mission or pass.
 
-**Completing Contracts:**
+**Completing Missions:**
 1. **Hazard Check:** Draw a Hazard card and resolve it normally (same as Age I and III).
-2. **If Aborted:** Contract remains in the row (like an unclaimed route). Ship returns to Hangar. Officers kept, gas spent.
-3. **If Successful:** Take the contract card and place it in front of you. Gain the listed Income (increase Income Track) and any special bonuses. Spend Officers and gas to supply.
-4. **Flak Check:** Compare the Hazard card's Flak value to your ship's Armor. If Flak > Armor, ship is destroyed (return to supply). Otherwise, place ship on your contract card.
+2. **If Aborted:** Mission remains in the row (like an unclaimed route). Ship returns to Hangar. Officers kept, gas spent.
+3. **If Successful:** Take the mission card and place it in front of you. Gain the listed Income (increase Income Track) and any special bonuses. Spend Officers and gas to supply.
+4. **Flak Check:** Compare the Hazard card's Flak value to your ship's Armor. If Flak > Armor, ship is destroyed (return to supply). Otherwise, place ship on your mission card.
 
 **Key Differences from Routes:**
-- Contracts are one-time missions—ships do not remain on the map generating ongoing income.
+- Missions are one-time—ships do not remain on the map generating ongoing income.
 - You earn rewards as long as the mission succeeds, even if flak destroys your ship afterward.
-- Completed contracts score VP at game end (printed on card).
+- Completed missions score VP at game end (printed on card).
 
-**Contract Row Refill:**
-After each successful contract (removed from row), refill the Contract Row to 6 cards. If the deck is empty, shuffle completed contracts to form a new deck.
+**Mission Row Refill:**
+After each successful mission (removed from row), refill the Mission Row to 6 cards. If the deck is empty, shuffle completed missions to form a new deck.
 
 **Home Base Requirement:** Your first ship in Age II must launch from your faction's Home Base. Subsequent ships may launch from any city where you have a ship.
 
@@ -719,7 +723,7 @@ The Market Deck contains 30 purchasable crew cards. Five are displayed in the Ma
 | Name | Cost | Symbol | Agent Effect | Reveal |
 |------|------|--------|--------------|--------|
 | Royal Geographic Society | 6 | Wrench | Install 1 Upgrade ignoring Tech requirement | 1 Engineer, 2 Influence |
-| Military Contract | 5 | Propeller | Gain £8; Military routes: +£2 Income | 1 Officer, 1 £ |
+| Combat Veteran | 5 | Propeller | Gain £8; Combat missions: +£2 Income | 1 Officer, 1 £ |
 | Luxury Travel Agency | 5 | Propeller | +1 Luxury stat for this launch | 3 Influence |
 | Aviation Club | 4 | Coin | Recruit 1 Officer free | 2 Influence, 1 Officer |
 | Engineering Guild | 4 | Coin | Recruit 1 Engineer at -£1 | 1 Influence, 1 Engineer |
