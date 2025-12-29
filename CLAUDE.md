@@ -255,6 +255,7 @@ See `plans/overview.md` for the 27-phase implementation plan tracking progress f
 
 ## Available Commands
 
+- `/push` - Safe git push that runs lint and tests first; blocks push if either fails
 - `/go-upship` - Continue implementation by working on the next unfinished phase
 - `/fix-gaps` - Fix up to 10 gaps from `plans/gaps.md` using TDD (write failing test, verify fail, fix, verify pass)
 - `/find-gaps` - Systematically analyze spec vs server code to find implementation gaps; stops at 10 gaps; tracks progress in `plans/gaps.md`
