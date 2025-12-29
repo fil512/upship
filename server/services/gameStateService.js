@@ -160,25 +160,135 @@ function createStarterDeck() {
   ];
 }
 
-// Create personal hazard deck of 20 cards
+/**
+ * Create personal hazard deck of 27 cards per Appendix D
+ *
+ * Composition:
+ * - 4 Clear Weather (auto-pass)
+ * - 8 Minor Hazards (difficulty 2-3, challenge type varies)
+ * - 8 Major Hazards (difficulty 4-5, challenge type varies)
+ * - 6 Fire Hazards (hydrogen only): Engine Fire x2, Gas Cell Rupture x2, Static Discharge x1, Catastrophic Explosion x1
+ * - 1 Mechanical Hazard: Critical Structural Stress
+ */
 function createHazardDeck() {
   const hazards = [];
-  // Add various hazard types
-  for (let i = 0; i < 5; i++) {
-    hazards.push({ id: `weather_${i}`, type: 'weather', difficulty: 2 + Math.floor(i / 2) });
-  }
-  for (let i = 0; i < 5; i++) {
-    hazards.push({ id: `mechanical_${i}`, type: 'mechanical', difficulty: 3 + Math.floor(i / 2) });
-  }
+
+  // 4 Clear Weather cards (auto-pass)
   for (let i = 0; i < 4; i++) {
-    hazards.push({ id: `fire_${i}`, type: 'fire', difficulty: 4 + Math.floor(i / 2) });
+    hazards.push({
+      id: `clear_weather_${i}`,
+      type: 'clear_weather',
+      category: 'clear',
+      name: 'Clear Weather',
+      autoPass: true,
+      difficulty: 0
+    });
   }
-  for (let i = 0; i < 4; i++) {
-    hazards.push({ id: `structural_${i}`, type: 'structural', difficulty: 3 + Math.floor(i / 2) });
+
+  // 8 Minor Hazards (difficulty 2-3)
+  // 2 of each challenge type
+  const challengeTypes = ['speed', 'reliability', 'ceiling', 'range'];
+  const minorNames = {
+    speed: 'Light Headwind',
+    reliability: 'Minor Engine Trouble',
+    ceiling: 'Low Clouds',
+    range: 'Fuel Leak'
+  };
+  for (let i = 0; i < 8; i++) {
+    const challengeType = challengeTypes[i % 4];
+    const difficulty = i < 4 ? 2 : 3; // First 4 are difficulty 2, next 4 are difficulty 3
+    hazards.push({
+      id: `minor_${challengeType}_${Math.floor(i / 4)}`,
+      type: `minor_${challengeType}`,
+      category: 'minor',
+      name: minorNames[challengeType],
+      challengeType,
+      difficulty
+    });
   }
+
+  // 8 Major Hazards (difficulty 4-5)
+  // 2 of each challenge type
+  const majorNames = {
+    speed: 'Strong Headwind',
+    reliability: 'Engine Failure',
+    ceiling: 'Severe Turbulence',
+    range: 'Navigation Error'
+  };
+  for (let i = 0; i < 8; i++) {
+    const challengeType = challengeTypes[i % 4];
+    const difficulty = i < 4 ? 4 : 5; // First 4 are difficulty 4, next 4 are difficulty 5
+    hazards.push({
+      id: `major_${challengeType}_${Math.floor(i / 4)}`,
+      type: `major_${challengeType}`,
+      category: 'major',
+      name: majorNames[challengeType],
+      challengeType,
+      difficulty
+    });
+  }
+
+  // 6 Fire Hazards (hydrogen only)
+
+  // 2x Engine Fire - Spend 1 Engineer to save (Damaged), Fail = Crash
   for (let i = 0; i < 2; i++) {
-    hazards.push({ id: `critical_${i}`, type: 'critical', difficulty: 6 });
+    hazards.push({
+      id: `engine_fire_${i}`,
+      type: 'engine_fire',
+      category: 'fire',
+      name: 'Engine Fire',
+      hydrogenOnly: true,
+      engineerCost: 1, // Spend 1 Engineer to save
+      difficulty: 0 // Fire hazards use engineerCost instead of difficulty check
+    });
   }
+
+  // 2x Gas Cell Rupture - Spend 2 Engineers to save (Damaged), Fail = Crash
+  for (let i = 0; i < 2; i++) {
+    hazards.push({
+      id: `gas_cell_rupture_${i}`,
+      type: 'gas_cell_rupture',
+      category: 'fire',
+      name: 'Gas Cell Rupture',
+      hydrogenOnly: true,
+      engineerCost: 2, // Spend 2 Engineers to save
+      difficulty: 0 // Fire hazards use engineerCost instead of difficulty check
+    });
+  }
+
+  // 1x Static Discharge - Difficulty 4 Reliability check, Fail = Crash
+  hazards.push({
+    id: 'static_discharge_0',
+    type: 'static_discharge',
+    category: 'fire',
+    name: 'Static Discharge',
+    hydrogenOnly: true,
+    challengeType: 'reliability',
+    difficulty: 4
+  });
+
+  // 1x Catastrophic Explosion - No save, Crash. Age III Luxury = Hindenburg
+  hazards.push({
+    id: 'catastrophic_explosion_0',
+    type: 'catastrophic_explosion',
+    category: 'fire',
+    name: 'Catastrophic Explosion',
+    hydrogenOnly: true,
+    noSave: true,
+    difficulty: 99 // Cannot be passed
+  });
+
+  // 1 Mechanical Hazard: Critical Structural Stress
+  // Spend 2 Engineers to save (Damaged), Fail = Crash
+  hazards.push({
+    id: 'critical_structural_stress_0',
+    type: 'critical_structural_stress',
+    category: 'mechanical',
+    name: 'Critical Structural Stress',
+    engineerCost: 2,
+    difficulty: 0 // Uses engineerCost instead of difficulty check
+  });
+
   return shuffleArray(hazards);
 }
 
@@ -505,5 +615,6 @@ module.exports = {
   getGameState,
   updateGameState,
   getGameActions,
-  FACTION_CONFIG
+  FACTION_CONFIG,
+  createHazardDeck  // Exported for testing (GAP-030)
 };

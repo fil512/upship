@@ -3,8 +3,8 @@
 Last updated: 2025-12-29
 
 ## Summary
-- Total gaps found: 29
-- Resolved: 27
+- Total gaps found: 37
+- Resolved: 35
 - Unresolved: 2
 
 ## Analysis Progress
@@ -19,6 +19,15 @@ Last updated: 2025-12-29
 - [ANALYZED 2025-12-29] GROUND_BOARD
 - [ANALYZED 2025-12-29] FACTIONS
 - [ANALYZED 2025-12-29] ROUTES_AND_MAPS
+
+### Level 3 - Detailed Systems
+- [ANALYZED 2025-12-29] TECHNOLOGY_UPGRADES (Section 9)
+- [ANALYZED 2025-12-29] DECK_BUILDING (Section 11)
+- [ANALYZED 2025-12-29] PLAYER_BOARD (Section 4)
+- [ANALYZED 2025-12-29] BUILDING_SHIPS (Section 7)
+- [ANALYZED 2025-12-29] SETUP (Section 3)
+- [ANALYZED 2025-12-29] COMPONENTS (Section 2)
+- [ANALYZED 2025-12-29] RULES_CLARIFICATIONS (Section 14)
 
 ---
 
@@ -48,6 +57,94 @@ Last updated: 2025-12-29
 
 ## Resolved Gaps
 
+### GAP-030: Hazard Deck has wrong card composition
+- **Area:** COMPONENTS
+- **Severity:** HIGH
+- **Rules:** Appendix D (Section 14)
+- **Code:** server/services/gameStateService.js:163-293
+- **Issue:** Rules specify 27 cards per player with specific composition. Code created only 20 cards with generic types.
+- **Fix:** Rewrote createHazardDeck() to create exactly 27 cards matching Appendix D: 4 Clear Weather (auto-pass), 8 Minor Hazards (difficulty 2-3, challenge types), 8 Major Hazards (difficulty 4-5, challenge types), 6 Fire Hazards (Engine Fire x2, Gas Cell Rupture x2, Static Discharge x1, Catastrophic Explosion x1), 1 Mechanical Hazard.
+- [x] Resolved (2025-12-29)
+
+---
+
+### GAP-031: Hazard check uses wrong stat (reliability vs specific challenge type)
+- **Area:** LAUNCHING
+- **Severity:** HIGH
+- **Rules:** Section 8.2
+- **Code:** server/actions/hazard.js:39-53
+- **Issue:** Rules state "Compare your Blueprint's relevant stat to the Difficulty" - the challenge type (Speed, Reliability, Ceiling, or Range) determines which ship stat to compare. Code always used reliability.
+- **Fix:** Added getRelevantStat() function that maps challenge type to ship stat. Updated processHazardCheck() to use the hazard's challengeType to determine which stat to check.
+- [x] Resolved (2025-12-29)
+
+---
+
+### GAP-032: Hull Upgrade Rule not implemented
+- **Area:** BUILDING_SHIPS
+- **Severity:** MEDIUM
+- **Rules:** Section 6.2, 6.3
+- **Code:** server/actions/blueprint.js:99-126
+- **Issue:** Rules state "If you upgrade Frame or Fabric while ships are in your Launch Hangar, pay the Hull Cost difference for each ship."
+- **Fix:** Added hull cost difference calculation in processInstallUpgrade(). When upgrading Frame/Fabric slots, counts ships in hangar and charges (newHullCost - oldHullCost) * hangarShipCount. Throws InsufficientFundsError if player can't afford.
+- [x] Resolved (2025-12-29)
+
+---
+
+### GAP-033: Design Bureau swap limit not enforced
+- **Area:** TECHNOLOGY_UPGRADES
+- **Severity:** MEDIUM
+- **Rules:** Section 6.2
+- **Code:** server/actions/blueprint.js:55-61, 157-163
+- **Issue:** Rules state "Limit: 2 swaps per visit. Each swap is one installation or removal." Code allowed unlimited install/remove actions.
+- **Fix:** Added swap limit enforcement using upgradeSwaps property (default 2, Italy 4, Britain 1). Tracks swapsUsedThisVisit on each install/remove. Throws GameRuleError when limit reached.
+- [x] Resolved (2025-12-29)
+
+---
+
+### GAP-034: Hangar capacity limit not enforced during build
+- **Area:** BUILDING_SHIPS
+- **Severity:** MEDIUM
+- **Rules:** Section 6.3, 4.4
+- **Code:** server/actions/building.js:23-33
+- **Issue:** Rules state "Limit: You may never have more than 3 ships in your Hangar at any time". Code only checked per-action count, not total.
+- **Fix:** Added check before building to count existing ships with status='hangar'. Throws GameRuleError if (existing + count) > 3.
+- [x] Resolved (2025-12-29)
+
+---
+
+### GAP-035: Clerk card Agent Effect not implemented
+- **Area:** DECK_BUILDING
+- **Severity:** LOW
+- **Rules:** Section 11.3
+- **Code:** server/actions/worker.js:51-54
+- **Issue:** Rules show Clerk card Agent Effect as "Gain £1". processCardEffect() didn't handle 'Gain £1' effect.
+- **Fix:** Added case 'Gain £1' to processCardEffect() that adds £1 to player cash.
+- [x] Resolved (2025-12-29)
+
+---
+
+### GAP-036: Specialization discount track mapping incomplete
+- **Area:** TECHNOLOGY_UPGRADES
+- **Severity:** LOW
+- **Rules:** Section 4.1, 9.1
+- **Code:** server/actions/technology.js:147-189
+- **Issue:** calculateSpecializationDiscount() used hardcoded techTypeMap that was redundant with TECHNOLOGY_BAG types.
+- **Fix:** Rewrote to use buildTechTypeMap() that reads types directly from TECHNOLOGY_BAG, plus explicit mappings for faction starting technologies. Cleaner, more maintainable code.
+- [x] Resolved (2025-12-29)
+
+---
+
+### GAP-037: Fire Hazard resolution lacks Engineer spend mechanic
+- **Area:** LAUNCHING
+- **Severity:** HIGH
+- **Rules:** Section 8.3
+- **Code:** server/actions/hazard.js:190-270
+- **Issue:** Rules specify fire hazards require spending Engineers: "Engine Fire: Spend 1 Engineer -> Damaged" and "Gas Cell Rupture: Spend 2 Engineers -> Damaged". Code treated all fire hazards the same.
+- **Fix:** Added resolveFireHazard() function that handles each fire hazard type differently: Engine Fire (1 Engineer), Gas Cell Rupture (2 Engineers), Static Discharge (difficulty 4 Reliability check), Catastrophic Explosion (no save). Properly handles insufficient engineers = crash, successful spend = damaged (not destroyed).
+- [x] Resolved (2025-12-29)
+
+---
+
 ### GAP-020: Launch procedure skips Hazard Check step
 - **Area:** LAUNCHING
 - **Severity:** HIGH
@@ -75,7 +172,7 @@ Last updated: 2025-12-29
 - **Severity:** MEDIUM
 - **Rules:** Section 10.4
 - **Code:** server/actions/launch.js:163-173, server/services/gameStateService.js:282-305
-- **Issue:** Rules state "When claiming a route, choose one endpoint city and gain its bonus immediately." Section 10.4 lists bonuses like London (+£3), Paris (+1 Influence), Berlin (+1 Research). The code only awards route income, not city bonuses.
+- **Issue:** Rules state "When claiming a route, choose one endpoint city and gain its bonus immediately." Section 10.4 lists bonuses like London (+£3), Paris (+1 Influence), Berlin (+1 Research). The code only awarded route income, not city bonuses.
 - **Fix:** Created new server/data/cities.js with CITY_BONUSES constant containing all Age I/II/III city bonuses. Added applyCityBonus() function to apply bonuses when claiming routes.
 - [x] Resolved (2025-12-29)
 

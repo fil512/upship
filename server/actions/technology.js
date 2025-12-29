@@ -137,26 +137,50 @@ function processAcquireTechnology(state, playerId, data) {
 }
 
 /**
+ * Build a lookup map of tech ID -> type from TECHNOLOGY_BAG
+ * Per Section 4.1: Technologies are organized into four Drawing Office tracks:
+ * - Propulsion (drive): Engine and drive technologies
+ * - Structure: Frame, hull, and safety systems
+ * - Gas Systems (gas): Lifting gas and fuel technologies
+ * - Payload (component): Passenger, cargo, and mission equipment
+ * - Fabric: Outer covering materials (treated as a separate track)
+ */
+function buildTechTypeMap() {
+  const map = {};
+  for (const age of [1, 2, 3]) {
+    for (const tech of TECHNOLOGY_BAG[age] || []) {
+      map[tech.id] = tech.type;
+    }
+  }
+  // Add faction starting technologies that may not be in TECHNOLOGY_BAG
+  // These are mapped to their logical tracks
+  map['blaugas_storage'] = 'gas';
+  map['helium_handling'] = 'gas';
+  map['imperial_mooring'] = 'structure';
+  map['trapeze_system'] = 'component';
+  map['articulated_keel'] = 'structure';
+  map['gelatinized_latex'] = 'fabric';
+  return map;
+}
+
+const TECH_TYPE_MAP = buildTechTypeMap();
+
+/**
  * Calculate specialization discount based on techs in same track
+ * Per Section 4.1 Specialization Discount:
+ * - 1-2 techs in track: No discount
+ * - 3-4 techs in track: -1 Research discount
+ * - 5+ techs in track: -2 Research discount
  *
  * @param {string[]} playerTechs - Array of technology IDs player owns
  * @param {string} techType - Type of technology being acquired
  * @returns {number} Discount amount
  */
 function calculateSpecializationDiscount(playerTechs, techType) {
-  const techTypeMap = {
-    structure: ['rigid_frame', 'duralumin_girders', 'wooden_framework', 'wire_bracing', 'steel_framework', 'internal_keel', 'geodetic_structure', 'modular_construction'],
-    fabric: ['dining_saloon', 'rubberized_cotton', 'doped_canvas', 'goldbeater_skin', 'fireproof_coating', 'aluminum_doping', 'composite_covering'],
-    drive: ['maybach_engine', 'daimler_engine', 'improved_propeller', 'dual_engine_mount', 'diesel_powerplant', 'streamlined_nacelle', 'supercharged_engine'],
-    component: ['passenger_gondola', 'observation_deck', 'cargo_systems', 'radio_equipment', 'sleeping_quarters', 'mail_systems', 'luxury_fittings', 'advanced_navigation', 'pressurization'],
-    gas: ['helium_handling']
-  };
-
-  const techsInTrack = playerTechs.filter(t => {
-    for (const [type, ids] of Object.entries(techTypeMap)) {
-      if (ids.includes(t) && type === techType) return true;
-    }
-    return false;
+  // Count player's technologies that match the target type
+  const techsInTrack = playerTechs.filter(techId => {
+    const existingType = TECH_TYPE_MAP[techId];
+    return existingType === techType;
   }).length;
 
   if (techsInTrack >= 5) return 2;

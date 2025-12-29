@@ -1,13 +1,47 @@
 /**
  * Blueprint Actions
  * INSTALL_UPGRADE, REMOVE_UPGRADE action processors
+ * Implements Section 6.2 (Design Bureau) including Hull Upgrade Rule and swap limits
  */
 
-const { GameRuleError } = require('../errors');
+const { GameRuleError, InsufficientFundsError } = require('../errors');
 const { UPGRADES, TECHNOLOGIES } = require('../data/upgrades');
 
 /**
+ * Calculate hull cost for an upgrade
+ * Only Frame and Fabric upgrades contribute to hull cost per Section 7.1
+ */
+function getUpgradeHullCost(upgradeId) {
+  if (!upgradeId) return 0;
+  const upgrade = UPGRADES[upgradeId];
+  return upgrade?.hullCost || 0;
+}
+
+/**
+ * Calculate total hull cost for a blueprint
+ */
+function calculateHullCost(blueprint) {
+  let cost = 2; // Base cost per Section 7.1
+
+  // Add Frame hull costs
+  for (const upgradeId of blueprint.frameSlots || []) {
+    cost += getUpgradeHullCost(upgradeId);
+  }
+
+  // Add Fabric hull costs
+  for (const upgradeId of blueprint.fabricSlots || []) {
+    cost += getUpgradeHullCost(upgradeId);
+  }
+
+  return cost;
+}
+
+/**
  * Install upgrade on blueprint
+ * Per Section 6.2:
+ * - Each install or removal counts as 1 swap
+ * - Swap limit per visit: Britain 1, Germany/USA 2, Italy 4
+ * - Hull Upgrade Rule: When upgrading Frame/Fabric, pay hull cost difference per ship in hangar
  *
  * @param {Object} state - Game state (mutated)
  * @param {string} playerId - Acting player ID
@@ -17,6 +51,14 @@ const { UPGRADES, TECHNOLOGIES } = require('../data/upgrades');
 function processInstallUpgrade(state, playerId, data) {
   const { slotType, slotIndex, upgradeId } = data;
   const playerState = state.players[playerId];
+
+  // GAP-033: Check swap limit
+  const swapLimit = playerState.upgradeSwaps || 2; // Default to 2 if not set
+  const swapsUsed = playerState.swapsUsedThisVisit || 0;
+
+  if (swapsUsed >= swapLimit) {
+    throw new GameRuleError(`Design Bureau swap limit reached (${swapLimit}). Cannot install more upgrades this visit.`);
+  }
 
   const slotKey = `${slotType}Slots`;
   if (!playerState.blueprint[slotKey]) {
@@ -54,8 +96,40 @@ function processInstallUpgrade(state, playerId, data) {
     throw new GameRuleError(`Requires ${tech ? tech.name : upgrade.requiredTech} technology`);
   }
 
+  // GAP-032: Hull Upgrade Rule - charge hull cost difference for ships in hangar
+  // Only applies to Frame and Fabric slots per Section 6.2
+  const isStructuralSlot = slotKey === 'frameSlots' || slotKey === 'fabricSlots';
+  const shipsInHangar = (playerState.ships || []).filter(s => s.status === 'hangar').length;
+
+  if (isStructuralSlot && shipsInHangar > 0) {
+    const oldHullCost = getUpgradeHullCost(playerState.blueprint[slotKey][slotIndex]);
+    const newHullCost = getUpgradeHullCost(upgradeId);
+    const hullCostIncrease = Math.max(0, newHullCost - oldHullCost);
+
+    if (hullCostIncrease > 0) {
+      const totalCharge = hullCostIncrease * shipsInHangar;
+
+      if (playerState.cash < totalCharge) {
+        throw new InsufficientFundsError(totalCharge, playerState.cash,
+          `Hull Upgrade Rule: £${hullCostIncrease} per ship × ${shipsInHangar} ships in hangar`);
+      }
+
+      playerState.cash -= totalCharge;
+
+      state.log.push({
+        timestamp: new Date().toISOString(),
+        message: `Hull Upgrade Rule: Paid £${totalCharge} (£${hullCostIncrease} × ${shipsInHangar} ships)`,
+        playerId,
+        type: 'action'
+      });
+    }
+  }
+
   // Install the upgrade
   playerState.blueprint[slotKey][slotIndex] = upgradeId;
+
+  // Track swap used (GAP-033)
+  playerState.swapsUsedThisVisit = (playerState.swapsUsedThisVisit || 0) + 1;
 
   state.log.push({
     timestamp: new Date().toISOString(),
@@ -69,6 +143,7 @@ function processInstallUpgrade(state, playerId, data) {
 
 /**
  * Remove upgrade from blueprint
+ * Per Section 6.2: Each removal counts as 1 swap
  *
  * @param {Object} state - Game state (mutated)
  * @param {string} playerId - Acting player ID
@@ -78,6 +153,14 @@ function processInstallUpgrade(state, playerId, data) {
 function processRemoveUpgrade(state, playerId, data) {
   const { slotType, slotIndex } = data;
   const playerState = state.players[playerId];
+
+  // GAP-033: Check swap limit
+  const swapLimit = playerState.upgradeSwaps || 2;
+  const swapsUsed = playerState.swapsUsedThisVisit || 0;
+
+  if (swapsUsed >= swapLimit) {
+    throw new GameRuleError(`Design Bureau swap limit reached (${swapLimit}). Cannot remove more upgrades this visit.`);
+  }
 
   const slotKey = `${slotType}Slots`;
   if (!playerState.blueprint[slotKey]) {
@@ -99,6 +182,9 @@ function processRemoveUpgrade(state, playerId, data) {
   // Remove the upgrade
   playerState.blueprint[slotKey][slotIndex] = null;
 
+  // Track swap used (GAP-033)
+  playerState.swapsUsedThisVisit = (playerState.swapsUsedThisVisit || 0) + 1;
+
   state.log.push({
     timestamp: new Date().toISOString(),
     message: `Removed ${upgradeName} from ${slotType} slot ${slotIndex + 1}`,
@@ -111,5 +197,6 @@ function processRemoveUpgrade(state, playerId, data) {
 
 module.exports = {
   processInstallUpgrade,
-  processRemoveUpgrade
+  processRemoveUpgrade,
+  calculateHullCost  // Exported for testing
 };

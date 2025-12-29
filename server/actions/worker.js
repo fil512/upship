@@ -48,6 +48,11 @@ function processCardEffect(state, playerId, card, _locationId) {
       playerState.researchDiscount += 1;
       return { success: true, message: '-£1 Research cost this action' };
 
+    case 'Gain £1':
+      // Clerk: Immediate cash gain (GAP-035)
+      playerState.cash += 1;
+      return { success: true, message: 'Gained £1' };
+
     case 'Gain £2':
       // Purser: Immediate cash gain
       playerState.cash += 2;

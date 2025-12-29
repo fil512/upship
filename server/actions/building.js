@@ -18,6 +18,19 @@ const { generateId } = require('../utils/random');
 function processBuildShip(state, playerId, data) {
   const { count = 1 } = data;
   const playerState = state.players[playerId];
+  const HANGAR_CAPACITY = 3; // Per Section 4.4 and 6.3
+
+  // Per Section 6.3: "Limit: You may never have more than 3 ships in your Hangar at any time"
+  // Count ships currently in Launch Hangar (status === 'hangar')
+  const ships = playerState.ships || [];
+  const currentHangarCount = ships.filter(s => s.status === 'hangar').length;
+
+  if (currentHangarCount + count > HANGAR_CAPACITY) {
+    throw new GameRuleError(
+      `Cannot build ${count} ship(s): would exceed hangar capacity of ${HANGAR_CAPACITY}. ` +
+      `Current hangar: ${currentHangarCount} ships. Max you can build: ${HANGAR_CAPACITY - currentHangarCount}`
+    );
+  }
 
   // Calculate hull cost from installed upgrades
   let hullCost = 2; // Base cost
