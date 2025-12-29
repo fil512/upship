@@ -60,3 +60,63 @@ Original file backed up to: upship_rules.md.backup
 
 To remove backup after verification: rm upship_rules.md.backup
 ```
+
+## railway.py
+
+Python client for managing Railway deployments via the GraphQL API. Requires a `RAILWAY_TOKEN` environment variable (create one at https://railway.com/account/tokens).
+
+### Quick Reference
+
+```bash
+python scripts/railway.py status              # Check deployment status + health
+python scripts/railway.py logs [-n 50]        # View deployment logs
+python scripts/railway.py deployments         # List recent deployments
+python scripts/railway.py setvar KEY VALUE    # Set environment variable
+python scripts/railway.py getvar              # List all environment variables
+python scripts/railway.py getvar KEY          # Get specific variable
+python scripts/railway.py delvar KEY          # Delete environment variable
+python scripts/railway.py redeploy            # Trigger new deployment
+python scripts/railway.py health              # Check health endpoint
+python scripts/railway.py projects            # List all Railway projects
+python scripts/railway.py raw 'query {...}'   # Execute raw GraphQL query
+python scripts/railway.py schema TypeName     # Inspect GraphQL schema type
+```
+
+### Common Tasks
+
+**Check if deployment is healthy:**
+```bash
+python scripts/railway.py status
+# Output:
+# Upship Production: ✓ SUCCESS
+#   Deployment: 27592886...
+#   Created: 2025-12-29 21:30:19 UTC
+#   Health: ✓ healthy (db: connected)
+```
+
+**View logs for a failing deployment:**
+```bash
+python scripts/railway.py logs -n 50
+```
+
+**Set an environment variable:**
+```bash
+python scripts/railway.py setvar SESSION_SECRET "mysecret"
+# This automatically triggers a new deployment
+```
+
+**List all environment variables:**
+```bash
+python scripts/railway.py getvar
+# Sensitive values (containing "secret", "password", "token", "key") are masked
+```
+
+### Project Configuration
+
+The script has Upship project IDs hardcoded:
+- Project: `3eb48405-c292-4c4e-a1a0-59f42a94fcfb`
+- Environment (production): `b33bbf9d-05a8-451d-a2b6-16f6d56b4d81`
+- Service (upship): `22fd253c-5243-4a50-a0b7-06efe95373c3`
+- Service (postgres): `67603638-0da9-43b8-bc59-08416ed7ea27`
+
+Uses Bearer authentication by default (account token).

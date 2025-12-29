@@ -37,6 +37,16 @@ Use the Claude in Chrome MCP browser automation tools to test the production sit
 - **Read page structure**: `mcp__claude-in-chrome__read_page` for accessibility tree
 
 ### Troubleshooting Deployments
+
+**Using the Railway CLI script (preferred):**
+```bash
+python scripts/railway.py status        # Quick status check with health
+python scripts/railway.py logs -n 100   # View recent deployment logs
+python scripts/railway.py deployments   # List recent deployments
+python scripts/railway.py getvar        # Check environment variables
+```
+
+**Via Railway Dashboard:**
 1. Navigate to https://railway.com/ and log in
 2. Go to the Upship project dashboard
 3. Click "Logs" tab to check for errors
@@ -265,6 +275,23 @@ See `plans/overview.md` for the 27-phase implementation plan tracking progress f
 - `board-game-ui` - SVG boards, drag-drop, responsive layouts, animations
 
 ## Utility Scripts
+
+### Railway Management
+
+Requires `RAILWAY_TOKEN` environment variable (create at https://railway.com/account/tokens):
+
+```bash
+python scripts/railway.py status              # Check deployment status + health
+python scripts/railway.py logs [-n 50]        # View deployment logs
+python scripts/railway.py deployments         # List recent deployments
+python scripts/railway.py setvar KEY VALUE    # Set environment variable (triggers deploy)
+python scripts/railway.py getvar              # List all environment variables
+python scripts/railway.py delvar KEY          # Delete environment variable
+python scripts/railway.py redeploy            # Trigger new deployment
+python scripts/railway.py health              # Check health endpoint
+```
+
+### Encoding Fix
 
 ```bash
 # Fix UTF-8 encoding corruption (creates backup automatically)
