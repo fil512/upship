@@ -3,9 +3,9 @@
 Last updated: 2025-12-29
 
 ## Summary
-- Total gaps found: 19
-- Resolved: 19
-- Unresolved: 0
+- Total gaps found: 29
+- Resolved: 27
+- Unresolved: 2
 
 ## Analysis Progress
 
@@ -14,9 +14,127 @@ Last updated: 2025-12-29
 - [ANALYZED 2025-12-29] AGE_TRANSITIONS
 - [ANALYZED 2025-12-29] SCORING
 
+### Level 2 - Game Systems
+- [ANALYZED 2025-12-29] LAUNCHING
+- [ANALYZED 2025-12-29] GROUND_BOARD
+- [ANALYZED 2025-12-29] FACTIONS
+- [ANALYZED 2025-12-29] ROUTES_AND_MAPS
+
+---
+
+## Unresolved Gaps
+
+### GAP-028: Age II Combat Missions system not implemented
+- **Area:** ROUTES_AND_MAPS
+- **Severity:** HIGH
+- **Rules:** Section 10.5
+- **Code:** N/A
+- **Issue:** Rules state Age II uses Combat Missions instead of map routes: "Mission Row of 6 face-up Combat Missions... Resolve Hazard Check first. If successful, take the mission card... Then check Flak—ship may be destroyed." No Mission Row, Combat Mission cards, or Flak mechanics exist.
+- **Fix:** Implement Combat Mission system including: mission deck, mission row, flak checks after success, Armor stat handling.
+- [ ] Unresolved
+
+---
+
+### GAP-029: Age III Network Connectivity rules not implemented
+- **Area:** ROUTES_AND_MAPS
+- **Severity:** MEDIUM
+- **Rules:** Section 14.3
+- **Code:** server/actions/launch.js
+- **Issue:** Rules state "Age III: First ship may claim any route from a Major Hub. Subsequent ships must either connect to an existing network OR pay £X to start a new network." No network tracking or connectivity validation exists.
+- **Fix:** Track player networks, validate new routes connect to existing network or charge network start fee.
+- [ ] Unresolved
+
 ---
 
 ## Resolved Gaps
+
+### GAP-020: Launch procedure skips Hazard Check step
+- **Area:** LAUNCHING
+- **Severity:** HIGH
+- **Rules:** Section 8.1 Step 4
+- **Code:** server/actions/launch.js:70-188
+- **Issue:** Rules state "Step 4: Resolve Hazard Check - Draw a Hazard Card from your Personal Hazard Deck and resolve it." The `processLaunchShip` function doesn't integrate hazard checks - it directly places ships on routes without drawing/resolving hazards. Hazard check exists as a separate action but isn't called during launch.
+- **Fix:** Modified launch to set ship status to 'awaiting_hazard' with pendingRouteId instead of directly claiming route. Route is not claimed and income is not increased until hazard check is performed.
+- [x] Resolved (2025-12-29)
+
+---
+
+### GAP-021: Helium Handling technology ID case mismatch
+- **Area:** FACTIONS
+- **Severity:** HIGH
+- **Rules:** Section 13.3
+- **Code:** server/actions/launch.js:108, server/actions/gas.js:27
+- **Issue:** Code checks `t.id === 'HELIUM_HANDLING'` (uppercase) but the technology ID is `'helium_handling'` (lowercase). This prevents USA from using helium despite starting with the technology.
+- **Fix:** Changed checks to use lowercase `'helium_handling'` to match TECHNOLOGY_BAG and FACTION_CONFIG definitions. Also handles both string IDs and object IDs in technologies array.
+- [x] Resolved (2025-12-29)
+
+---
+
+### GAP-022: City Bonuses not implemented
+- **Area:** ROUTES_AND_MAPS
+- **Severity:** MEDIUM
+- **Rules:** Section 10.4
+- **Code:** server/actions/launch.js:163-173, server/services/gameStateService.js:282-305
+- **Issue:** Rules state "When claiming a route, choose one endpoint city and gain its bonus immediately." Section 10.4 lists bonuses like London (+£3), Paris (+1 Influence), Berlin (+1 Research). The code only awards route income, not city bonuses.
+- **Fix:** Created new server/data/cities.js with CITY_BONUSES constant containing all Age I/II/III city bonuses. Added applyCityBonus() function to apply bonuses when claiming routes.
+- [x] Resolved (2025-12-29)
+
+---
+
+### GAP-023: Government Liaison location missing from Ground Board
+- **Area:** GROUND_BOARD
+- **Severity:** MEDIUM
+- **Rules:** Section 6.8
+- **Code:** server/data/groundBoard.js
+- **Issue:** Rules define "Government Liaison (Coin)" - spend 1-3 Officers to increase Income Track by 1 per Officer. This location doesn't exist in groundBoard.js. Instead there's "The Bank" which isn't a standard Ground Board location per rules.
+- **Fix:** Added Government Liaison location with GOVERNMENT_LIAISON action type. Removed The Bank from Ground Board (loans are free actions per Section 5.3).
+- [x] Resolved (2025-12-29)
+
+---
+
+### GAP-024: Loans as Ground Board location instead of Free Action
+- **Area:** GROUND_BOARD
+- **Severity:** MEDIUM
+- **Rules:** Section 5.3
+- **Code:** server/data/groundBoard.js:105-117
+- **Issue:** Rules state "You may take a loan at any time during your turn—this does not require an Agent or card." But groundBoard.js has "the_bank" as a worker placement location requiring an agent. This incorrectly restricts loan access.
+- **Fix:** Removed The Bank from Ground Board locations. TAKE_LOAN action is available as free action without agent placement.
+- [x] Resolved (2025-12-29)
+
+---
+
+### GAP-025: Italy's Compact Design flaw not applied in Age transitions
+- **Area:** FACTIONS
+- **Severity:** MEDIUM
+- **Rules:** Section 13.4, 13.5
+- **Code:** server/actions/helpers/ageTransition.js:179-183
+- **Issue:** Rules state Italy has "One fewer Payload slot in Ages II and III" and Section 13.5 shows Italy: Age II 1/1/2/1, Age III 2/2/2/2. The BLUEPRINT_SLOTS constant uses generic values (2/2 and 3/3 for componentSlots) without faction-specific reduction for Italy.
+- **Fix:** Added getBlueprintSlotsForFaction() function that returns faction-specific slot configurations. Italy gets -1 componentSlots in Ages II and III. expandBlueprintSlots() now uses this function.
+- [x] Resolved (2025-12-29)
+
+---
+
+### GAP-026: Germany's Blaugas Fuel System effect not implemented
+- **Area:** FACTIONS
+- **Severity:** MEDIUM
+- **Rules:** Section 13.1
+- **Code:** server/actions/launch.js, server/data/upgrades.js:447
+- **Issue:** Rules say Blaugas grants "+1 Range, and pay £2 when launching to keep gas cubes after mission." The technology exists in upgrades.js but provides no effect - launch.js always consumes gas cubes without option to retain them.
+- **Fix:** Added retainGas parameter to processLaunchShip(). If player has blaugas_storage technology and sets retainGas=true, pays £2 and gas cubes are not consumed. Non-Germany factions without the technology cannot use this option.
+- [x] Resolved (2025-12-29)
+
+---
+
+### GAP-027: Ship repair cost not implemented
+- **Area:** LAUNCHING
+- **Severity:** MEDIUM
+- **Rules:** Section 4.4
+- **Code:** server/actions/hazard.js:159-169
+- **Issue:** Rules state "Repair Cost: £3 per ship to move to Launch Hangar" from Repair Hangar. Ships can become damaged but there's no REPAIR_SHIP action to pay £3 and move them from Repair Hangar to Launch Hangar.
+- **Fix:** Added processRepairShip() function in server/actions/building.js that costs £3 and changes ship status from 'damaged' to 'hangar'. Validates ship exists, is damaged, and player has sufficient cash.
+- [x] Resolved (2025-12-29)
+
+---
 
 ### GAP-001: Research Level Track not implemented
 - **Area:** ROUND_STRUCTURE

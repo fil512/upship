@@ -72,4 +72,55 @@ function processBuildShip(state, playerId, data) {
   return { newState: state };
 }
 
-module.exports = { processBuildShip };
+/**
+ * Repair a damaged ship
+ * Per Section 4.4: Repair Cost: £3 per ship to move from Repair Hangar to Launch Hangar
+ *
+ * @param {Object} state - Game state (mutated)
+ * @param {string} playerId - Acting player ID
+ * @param {Object} data - Action data { shipId }
+ * @returns {Object} { newState } or throws error
+ */
+function processRepairShip(state, playerId, data) {
+  const { shipId } = data;
+  const playerState = state.players[playerId];
+  const REPAIR_COST = 3; // £3 per Section 4.4
+
+  // Find the ship
+  const ships = playerState.ships || [];
+  const shipIndex = ships.findIndex(s => s.id === shipId);
+
+  if (shipIndex === -1) {
+    throw new GameRuleError(`Ship not found: ${shipId}`);
+  }
+
+  const ship = ships[shipIndex];
+
+  // Check if ship is damaged
+  if (ship.status !== 'damaged') {
+    throw new GameRuleError('Ship is not damaged and does not need repair');
+  }
+
+  // Check if player can afford repair
+  if (playerState.cash < REPAIR_COST) {
+    throw new InsufficientFundsError(REPAIR_COST, playerState.cash);
+  }
+
+  // Pay repair cost
+  playerState.cash -= REPAIR_COST;
+
+  // Move ship from Repair Hangar to Launch Hangar
+  ship.status = 'hangar';
+  ship.damaged = false;
+
+  state.log.push({
+    timestamp: new Date().toISOString(),
+    message: `Repaired ship for £${REPAIR_COST}`,
+    playerId,
+    type: 'action'
+  });
+
+  return { newState: state };
+}
+
+module.exports = { processBuildShip, processRepairShip };

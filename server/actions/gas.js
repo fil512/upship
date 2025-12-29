@@ -22,9 +22,13 @@ function processBuyGas(state, playerId, data) {
     throw new GameRuleError('Invalid gas type');
   }
 
-  // Helium requires Helium Handling technology (Section 4.4)
+  // Helium requires Helium Handling technology (Section 9.3)
   if (gasType === 'helium') {
-    const hasHeliumHandling = playerState.technologies?.some(t => t.id === 'HELIUM_HANDLING');
+    // Technology IDs are lowercase (e.g., 'helium_handling')
+    // Technologies array may contain strings (IDs) or objects with id property
+    const hasHeliumHandling = playerState.technologies?.some(t =>
+      (typeof t === 'string' ? t : t.id) === 'helium_handling'
+    );
     if (!hasHeliumHandling) {
       throw new GameRuleError('Cannot purchase Helium without Helium Handling technology');
     }

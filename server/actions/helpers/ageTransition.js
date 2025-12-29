@@ -175,6 +175,7 @@ function calculateTransitionIncome(state) {
 
 /**
  * Blueprint slot configurations by age per Section 4.2
+ * Note: Italy has -1 componentSlots in Ages II and III (Section 13.4)
  */
 const BLUEPRINT_SLOTS = {
   1: { frameSlots: 1, fabricSlots: 1, driveSlots: 1, componentSlots: 1 },
@@ -183,17 +184,35 @@ const BLUEPRINT_SLOTS = {
 };
 
 /**
+ * Get blueprint slot configuration for a faction at a given age
+ * Applies Italy's "Compact Design" flaw: -1 Payload slot in Ages II and III
+ * Per Section 13.4 and Section 13.5
+ */
+function getBlueprintSlotsForFaction(age, faction) {
+  const baseSlots = { ...BLUEPRINT_SLOTS[age] };
+
+  // Italy's Compact Design flaw: one fewer Payload slot in Ages II and III
+  if (faction === 'italy' && age >= 2) {
+    baseSlots.componentSlots -= 1;
+  }
+
+  return baseSlots;
+}
+
+/**
  * Expand blueprint slots for new age per Section 12.1 step 4
  * @param {Object} state - Game state (mutated)
  * @param {number} newAge - The age transitioning to
  */
 function expandBlueprintSlots(state, newAge) {
-  const slotConfig = BLUEPRINT_SLOTS[newAge];
-  if (!slotConfig) return;
+  if (!BLUEPRINT_SLOTS[newAge]) return;
 
   for (const playerId of Object.keys(state.players)) {
     const playerState = state.players[playerId];
     const blueprint = playerState.blueprint;
+
+    // Get faction-specific slot configuration (handles Italy's Compact Design flaw)
+    const slotConfig = getBlueprintSlotsForFaction(newAge, playerState.faction);
 
     // Update age
     blueprint.age = newAge;
@@ -290,5 +309,6 @@ module.exports = {
   expandBlueprintSlots,
   applyBritainRedTape,
   performAgeTransition,
+  getBlueprintSlotsForFaction,
   BLUEPRINT_SLOTS
 };

@@ -68,8 +68,9 @@ function calculateRequiredGasCubes(blueprint) {
  * @returns {Object} { newState } or throws error
  */
 function processLaunchShip(state, playerId, data) {
-  const { shipId, routeId, gasType = 'hydrogen' } = data;
+  const { shipId, routeId, gasType = 'hydrogen', retainGas = false } = data;
   const playerState = state.players[playerId];
+  const BLAUGAS_COST = 2; // £2 to retain gas cubes per Section 13.1
 
   // Step 1: Choose a target route
   if (!routeId) {
@@ -103,9 +104,13 @@ function processLaunchShip(state, playerId, data) {
     throw new GameRuleError('Gas type must be hydrogen or helium');
   }
 
-  // Helium requires Helium Handling technology
+  // Helium requires Helium Handling technology (Section 9.3)
   if (gasType === 'helium') {
-    const hasHeliumHandling = playerState.technologies?.some(t => t.id === 'HELIUM_HANDLING');
+    // Technology IDs are lowercase (e.g., 'helium_handling')
+    // Technologies array may contain strings (IDs) or objects with id property
+    const hasHeliumHandling = playerState.technologies?.some(t =>
+      (typeof t === 'string' ? t : t.id) === 'helium_handling'
+    );
     if (!hasHeliumHandling) {
       throw new GameRuleError('Cannot use Helium without Helium Handling technology');
     }
@@ -149,27 +154,42 @@ function processLaunchShip(state, playerId, data) {
     throw new InsufficientFundsError(requiredCubes, availableCubes, gasType);
   }
 
+  // Check Blaugas option (Germany only, per Section 13.1)
+  if (retainGas) {
+    // Blaugas Fuel System requires blaugas_storage technology
+    const hasBlaugas = playerState.technologies?.some(t =>
+      (typeof t === 'string' ? t : t.id) === 'blaugas_storage'
+    );
+    if (!hasBlaugas) {
+      throw new GameRuleError('Cannot use retainGas without Blaugas Fuel System technology');
+    }
+
+    // Must have enough cash to pay Blaugas cost
+    if (playerState.cash < BLAUGAS_COST) {
+      throw new InsufficientFundsError(BLAUGAS_COST, playerState.cash, '£ for Blaugas');
+    }
+  }
+
   // Pay launch costs
   playerState.officers -= requiredOfficers;
-  playerState.gasCubes[gasType] -= requiredCubes;
 
-  // Step 4: Place ship on route
-  ships[shipIndex].status = 'on_route';
+  // Gas handling: consume gas unless using Blaugas to retain
+  if (retainGas) {
+    // Pay Blaugas cost to retain gas cubes
+    playerState.cash -= BLAUGAS_COST;
+    // Gas cubes are NOT consumed
+  } else {
+    // Normal launch: consume gas cubes
+    playerState.gasCubes[gasType] -= requiredCubes;
+  }
+
+  // Step 4: Set ship to awaiting hazard check per Section 8.3
+  // Route is NOT claimed until hazard check is performed
+  ships[shipIndex].status = 'awaiting_hazard';
   ships[shipIndex].stats = stats;
   ships[shipIndex].launchedAge = state.age;
   ships[shipIndex].gasType = gasType;
-  ships[shipIndex].routeId = routeId;
-
-  // Claim the route
-  route.claimed = playerId;
-  route.claimedBy = {
-    playerId,
-    shipId,
-    turn: state.turn
-  };
-
-  // Increase income from the route
-  playerState.income += route.income;
+  ships[shipIndex].pendingRouteId = routeId;  // Route to claim if hazard check succeeds
 
   // Build stats summary for log
   const statParts = [`Range ${stats.range}`, `Speed ${stats.speed}`];
@@ -179,12 +199,12 @@ function processLaunchShip(state, playerId, data) {
 
   state.log.push({
     timestamp: new Date().toISOString(),
-    message: `Launched ship to ${route.from} → ${route.to} (${requiredOfficers} Officer${requiredOfficers > 1 ? 's' : ''}, ${requiredCubes} ${gasType}): ${statParts.join(', ')} → +${route.income} income`,
+    message: `Launched ship toward ${route.from} → ${route.to} (${requiredOfficers} Officer${requiredOfficers > 1 ? 's' : ''}, ${requiredCubes} ${gasType}): ${statParts.join(', ')} - HAZARD CHECK REQUIRED`,
     playerId,
     type: 'action'
   });
 
-  return { newState: state };
+  return { newState: state, requiresHazardCheck: true };
 }
 
 /**

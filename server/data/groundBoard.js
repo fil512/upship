@@ -102,17 +102,17 @@ const GROUND_BOARD_LOCATIONS = {
     }
   },
 
-  the_bank: {
-    id: 'the_bank',
-    name: 'The Bank',
+  government_liaison: {
+    id: 'government_liaison',
+    name: 'Government Liaison',
     symbol: 'coin',
     position: 8,
-    description: 'Take a loan',
+    description: 'Send officers to secure government backing',
     action: {
-      type: 'TAKE_LOAN',
-      amount: 30,
-      penalty: 3, // -3 Income
-      effect: 'Gain £30, reduce Income by 3'
+      type: 'GOVERNMENT_LIAISON',
+      minOfficers: 1,
+      maxOfficers: 3,
+      effect: 'Spend 1-3 Officers to increase Income Track by 1 per Officer'
     }
   },
 

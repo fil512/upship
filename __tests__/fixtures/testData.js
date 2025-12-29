@@ -140,7 +140,8 @@ const createTestPlayerState = (faction = 'germany') => ({
   technologies: getFactionStartingTech(faction),
   ships: [],
   routes: [],
-  blueprint: testBlueprint,
+  // Deep copy testBlueprint to avoid shared reference mutation
+  blueprint: JSON.parse(JSON.stringify(testBlueprint)),
   hand: [],
   deck: [],
   discardPile: [],
