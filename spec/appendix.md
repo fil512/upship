@@ -321,7 +321,7 @@ Fabric technologies unlock outer covering and gas cell material upgrades.
 | III | Emergency Venting | 4 | 2 | 2 | Rapid Descent System |
 | III | Gas Recovery | 5 | 2 | 2 | Reclamation System |
 
-## Payload Track (12 tiles)
+## Payload Track (14 tiles)
 
 | Age | Name | Cost | £ | VP | Unlocks |
 |-----|------|------|---|----|---------|
@@ -332,17 +332,19 @@ Fabric technologies unlock outer covering and gas cell material upgrades.
 | II | Bomb Bay Design | 4 | 2 | 3 | Bombing Equipment |
 | II | Trapeze System | 4 | 2 | 2 | Sparrowhawk Hangar |
 | II | Radio Equipment | 3 | 1 | 1 | Communications Suite |
+| II | Armored Gondola | 3 | 1 | 1 | Light Armor Plating |
+| II | Reinforced Hull | 4 | 2 | 2 | Heavy Armor Plating |
 | III | Luxury Accommodation | 4 | 2 | — | Luxury Cabin |
 | III | Dining Saloon | 5 | 3 | — | Restaurant |
 | III | Promenade Deck | 6 | 3 | 2 | Observation Lounge |
 | III | Sleeping Quarters | 4 | 2 | 1 | Private Berths |
 | III | Smoking Room | 5 | 2 | 3 | Pressurized Lounge |
 
-**Total: 48 Technology Tiles** (Propulsion 11, Frame 8, Fabric 7, Gas Systems 10, Payload 12)
+**Total: 50 Technology Tiles** (Propulsion 11, Frame 8, Fabric 7, Gas Systems 10, Payload 14)
 
 **Tiles by Age:**
 - Age I: 11 tiles (2 Propulsion, 2 Frame, 2 Fabric, 2 Gas, 3 Payload)
-- Age II: 19 tiles (4 Propulsion, 4 Frame, 3 Fabric, 4 Gas, 4 Payload)
+- Age II: 21 tiles (4 Propulsion, 4 Frame, 3 Fabric, 4 Gas, 6 Payload)
 - Age III: 18 tiles (5 Propulsion, 2 Frame, 2 Fabric, 4 Gas, 5 Payload)
 
 **TODO:** Expand each track to balance the game for final production.
@@ -423,9 +425,11 @@ Fabric tiles go in Fabric slots. The **Hull Cost** column shows how much this ti
 | Postal Service | Mail Compartment | -1 | Income +2 | — |
 | External Cargo | Cargo Nets | -2 | Income +2 | — |
 | Basic Cabin | Passenger Gondola | -2 | Income +2, Luxury +1 | — |
-| Bombing Equipment | Bomb Bay Design | -3 | — | Military routes: +£3 Income |
+| Bombing Equipment | Bomb Bay Design | -3 | — | Military Contracts: +£3 Income |
 | Sparrowhawk Hangar | Trapeze System | -3 | — | Ignore one route requirement |
 | Communications Suite | Radio Equipment | -1 | Reliability +1 | +1 to Navigation hazards |
+| Light Armor Plating | Armored Gondola | -2 | Armor +1 | Age II: Survive flak ≤ Armor |
+| Heavy Armor Plating | Reinforced Hull | -3 | Armor +2 | Age II: Survive flak ≤ Armor |
 | Luxury Cabin | Luxury Accommodation | -3 | Income +3, Luxury +2 | — |
 | Restaurant | Dining Saloon | -2 | Income +2, Luxury +2 | — |
 | Observation Lounge | Promenade Deck | -2 | Income +1, Luxury +3 | — |
@@ -433,7 +437,7 @@ Fabric tiles go in Fabric slots. The **Hull Cost** column shows how much this ti
 | Pressurized Lounge | Smoking Room | -2 | Income +1, Luxury +2 | Requires Helium Gas Cell installed |
 | Imperial Mast | Imperial Mooring System | -1 | — | British Territories count as Home Base (Britain specialty) |
 
-**Total: 50 Upgrade Tiles** (Propulsion 11, Frame 8, Fabric 7, Gas Systems 10, Payload 14)
+**Total: 52 Upgrade Tiles** (Propulsion 11, Frame 8, Fabric 7, Gas Systems 10, Payload 16)
 
 ---
 
@@ -441,64 +445,75 @@ Fabric tiles go in Fabric slots. The **Hull Cost** column shows how much this ti
 
 Each player has an identical Personal Hazard Deck of 20 cards. When launching a ship, draw one card and resolve it.
 
+**Age II Flak:** Each card shows 0–5 flak guns. In Age II only, if Flak > your ship's Armor, the ship is destroyed (5 Flak always destroys; max Armor is 4).
+
 ## Clear Weather (4 cards)
 
-| Name | Effect |
-|------|--------|
-| Clear Skies | Auto-pass. No hazard. |
-| Favorable Winds | Auto-pass. No hazard. |
-| Calm Conditions | Auto-pass. No hazard. |
-| Perfect Visibility | Auto-pass. No hazard. |
+| Name | Flak | Effect |
+|------|------|--------|
+| Clear Skies | 0 | Auto-pass. No hazard. |
+| Favorable Winds | 0 | Auto-pass. No hazard. |
+| Calm Conditions | 0 | Auto-pass. No hazard. |
+| Perfect Visibility | 0 | Auto-pass. No hazard. |
 
 ## Minor Hazards (8 cards)
 
-| Name | Difficulty | Stat | Type |
-|------|------------|------|------|
-| Light Turbulence | 2 | Speed | Weather |
-| Minor Engine Trouble | 2 | Reliability | Mechanical |
-| Crosswind | 3 | Speed | Weather |
-| Gas Leak | 3 | Reliability | Mechanical |
-| Low Visibility | 2 | Ceiling | Weather |
-| Fuel Concern | 3 | Range | Supply |
-| Headwind | 3 | Speed | Weather |
-| Structural Stress | 2 | Reliability | Mechanical |
+| Name | Difficulty | Stat | Type | Flak |
+|------|------------|------|------|------|
+| Light Turbulence | 2 | Speed | Weather | 0 |
+| Minor Engine Trouble | 2 | Reliability | Mechanical | 1 |
+| Crosswind | 3 | Speed | Weather | 0 |
+| Gas Leak | 3 | Reliability | Mechanical | 1 |
+| Low Visibility | 2 | Ceiling | Weather | 1 |
+| Fuel Concern | 3 | Range | Supply | 0 |
+| Headwind | 3 | Speed | Weather | 1 |
+| Structural Stress | 2 | Reliability | Mechanical | 2 |
 
 ## Major Hazards (6 cards)
 
-| Name | Difficulty | Stat | Type |
-|------|------------|------|------|
-| Strong Headwind | 4 | Speed | Weather |
-| Icing Conditions | 4 | Ceiling | Weather |
-| Engine Failure | 5 | Reliability | Mechanical |
-| Storm System | 5 | Speed | Weather |
-| Structural Damage | 4 | Reliability | Mechanical |
-| Navigation Error | 4 | Range | Supply |
+| Name | Difficulty | Stat | Type | Flak |
+|------|------------|------|------|------|
+| Strong Headwind | 4 | Speed | Weather | 2 |
+| Icing Conditions | 4 | Ceiling | Weather | 2 |
+| Engine Failure | 5 | Reliability | Mechanical | 3 |
+| Storm System | 5 | Speed | Weather | 3 |
+| Structural Damage | 4 | Reliability | Mechanical | 4 |
+| Navigation Error | 4 | Range | Supply | 3 |
 
 ## Fire Hazards (5 cards) — Hydrogen Ships Only
 
 Helium ships automatically pass all Fire-type hazards.
 
-| Name | Qty | Effect |
-|------|-----|--------|
-| **Engine Fire** | 2 | Spend 1 Engineer to control → Ship Damaged (Repair Hangar). Fail → Ship crashes. |
-| **Gas Cell Rupture** | 2 | Spend 2 Engineers to control → Ship Damaged (Repair Hangar). Fail → Ship crashes. |
-| **Catastrophic Explosion** | 1 | No save possible. Ship crashes. If Luxury Launch in Age III: Hindenburg Disaster triggered. |
+| Name | Qty | Flak | Effect |
+|------|-----|------|--------|
+| **Engine Fire** | 2 | 2 | Spend 1 Engineer to control → Ship Damaged (Repair Hangar). Fail → Ship crashes. |
+| **Gas Cell Rupture** | 2 | 3 | Spend 2 Engineers to control → Ship Damaged (Repair Hangar). Fail → Ship crashes. |
+| **Catastrophic Explosion** | 1 | 5 | No save possible. Ship crashes. If Luxury Launch in Age III: Hindenburg Disaster triggered. |
 
 ## Mechanical Hazards (1 card)
 
-| Name | Qty | Effect |
-|------|-----|--------|
-| **Critical Structural Stress** | 1 | Spend 2 Engineers to stabilize → Ship Damaged (Repair Hangar). Fail → Ship crashes. |
+| Name | Qty | Flak | Effect |
+|------|-----|------|--------|
+| **Critical Structural Stress** | 1 | 4 | Spend 2 Engineers to stabilize → Ship Damaged (Repair Hangar). Fail → Ship crashes. |
 
 **Resolving Hazards:**
 1. Draw card from your Personal Hazard Deck
 2. Check if auto-pass (Clear Weather cards, or Helium ship vs Fire hazards)
 3. For standard hazards: Compare Ship's relevant stat vs Difficulty. Spend Engineers (+1 each) to boost if needed.
 4. For Fire/Structural hazards: Spend required Engineers or face consequences.
-5. **Pass:** Ship reaches route successfully
-6. **Fail (standard):** Ship returns to Launch Hangar (Officers and gas lost)
+5. **Pass:** Ship reaches route/completes contract successfully
+6. **Fail (standard):** Ship returns to Launch Hangar (Officers kept, gas lost)
 7. **Damaged:** Ship goes to Repair Hangar (Officers and gas lost)
 8. **Crash:** Ship destroyed (token to supply, Officers and gas lost)
+9. **Age II Flak Check:** After resolving the hazard (pass or fail), check Flak vs Armor. If mission succeeded and Flak > Armor, ship is destroyed but rewards are still earned.
+
+**Flak Distribution (20 cards):**
+- 0 Flak: 7 cards (safe passage)
+- 1 Flak: 4 cards (Armor 1+ survives)
+- 2 Flak: 4 cards (Armor 2+ survives)
+- 3 Flak: 3 cards (Armor 3+ survives)
+- 4 Flak: 1 card (Armor 4 survives)
+- 5 Flak: 1 card (always destroys)
 
 **Deck Management:** Shuffle your discard pile back into your Hazard Deck when the deck is empty.
 
@@ -629,21 +644,27 @@ During Age II (The Great War), routes are replaced by Military Contracts. Draw c
 
 ## Contract Mechanics
 
-**Drawing Contracts:**
-1. When you take a Launch action in Age II, draw the top card from the Military Contract deck.
-2. You may decline the contract (ship returns to Hangar, gas spent, no penalty).
-3. If you accept, attempt to complete it by meeting all stat requirements and passing the Hazard Check.
+**Contract Row Setup:**
+At the start of Age II, shuffle the 20-card Military Contract deck and deal 6 contracts face-up to form the **Contract Row**.
+
+**Selecting Contracts:**
+1. When you take a Launch action in Age II, choose one visible contract from the Contract Row.
+2. Verify your Blueprint meets all listed stat requirements.
+3. If you cannot meet requirements, you may choose a different contract or pass.
 
 **Completing Contracts:**
-1. Verify your Blueprint meets all listed stat requirements.
-2. Perform a standard Hazard Check.
-3. On success: Gain listed Income and any special bonuses. Discard the contract.
-4. On failure: Ship handles failure normally (returns to Hangar, Damaged, or Crashes depending on severity).
+1. **Hazard Check:** Draw a Hazard card and resolve it normally (same as Age I and III).
+2. **If Aborted:** Contract remains in the row (like an unclaimed route). Ship returns to Hangar. Officers kept, gas spent.
+3. **If Successful:** Take the contract card and place it in front of you. Gain the listed Income (increase Income Track) and any special bonuses. Spend Officers and gas to supply.
+4. **Flak Check:** Compare the Hazard card's Flak value to your ship's Armor. If Flak > Armor, ship is destroyed (return to supply). Otherwise, place ship on your contract card.
 
-**Contract Deck Management:**
-- Shuffle the 20-card deck at the start of Age II.
-- Discard completed contracts face-up next to the deck.
-- If the deck runs out, shuffle the discard pile to form a new deck.
+**Key Differences from Routes:**
+- Contracts are one-time missions—ships do not remain on the map generating ongoing income.
+- You earn rewards as long as the mission succeeds, even if flak destroys your ship afterward.
+- Completed contracts score VP at game end (printed on card).
+
+**Contract Row Refill:**
+After each successful contract (removed from row), refill the Contract Row to 6 cards. If the deck is empty, shuffle completed contracts to form a new deck.
 
 **Home Base Requirement:** Your first ship in Age II must launch from your faction's Home Base. Subsequent ships may launch from any city where you have a ship.
 
