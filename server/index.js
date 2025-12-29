@@ -30,15 +30,24 @@ app.use('/api/state', gameStateRoutes);
 
 // Health check endpoint for Railway (includes database status)
 app.get('/health', async (req, res) => {
-  const dbHealthy = await db.healthCheck();
+  try {
+    const dbHealthy = await db.healthCheck();
 
-  const status = {
-    status: dbHealthy ? 'healthy' : 'degraded',
-    timestamp: new Date().toISOString(),
-    database: dbHealthy ? 'connected' : 'disconnected'
-  };
+    const status = {
+      status: dbHealthy ? 'healthy' : 'degraded',
+      timestamp: new Date().toISOString(),
+      database: dbHealthy ? 'connected' : 'disconnected'
+    };
 
-  res.status(dbHealthy ? 200 : 503).json(status);
+    res.status(dbHealthy ? 200 : 503).json(status);
+  } catch (error) {
+    console.error('Health check error:', error);
+    res.status(503).json({
+      status: 'error',
+      timestamp: new Date().toISOString(),
+      database: 'error'
+    });
+  }
 });
 
 // API endpoint placeholder
@@ -57,6 +66,7 @@ app.get('*', (req, res) => {
 });
 
 // Error handling middleware (must be last)
+app.use(notFoundHandler);
 app.use(errorHandler);
 
 // Run migrations then start server

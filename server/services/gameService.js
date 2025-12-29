@@ -150,13 +150,13 @@ async function joinGame(gameId, userId) {
     );
 
     await client.query('COMMIT');
-
-    client.release();
-    return getGameById(gameId);
+    const result = await getGameById(gameId);
+    return result;
   } catch (error) {
     await client.query('ROLLBACK');
-    client.release();
     throw error;
+  } finally {
+    client.release();
   }
 }
 
@@ -208,13 +208,13 @@ async function leaveGame(gameId, userId) {
     }
 
     await client.query('COMMIT');
-
-    client.release();
-    return getGameById(gameId);
+    const result = await getGameById(gameId);
+    return result;
   } catch (error) {
     await client.query('ROLLBACK');
-    client.release();
     throw error;
+  } finally {
+    client.release();
   }
 }
 
@@ -267,13 +267,13 @@ async function selectFaction(gameId, userId, faction) {
     );
 
     await client.query('COMMIT');
-    client.release();
-
-    return getGameById(gameId);
+    const result = await getGameById(gameId);
+    return result;
   } catch (error) {
     await client.query('ROLLBACK');
-    client.release();
     throw error;
+  } finally {
+    client.release();
   }
 }
 
@@ -326,16 +326,17 @@ async function startGame(gameId, userId) {
     );
 
     await client.query('COMMIT');
-    client.release();
 
     // Initialize game state (after transaction commits)
     await gameStateService.initializeGameState(gameId, playersResult.rows);
 
-    return getGameById(gameId);
+    const result = await getGameById(gameId);
+    return result;
   } catch (error) {
     await client.query('ROLLBACK');
-    client.release();
     throw error;
+  } finally {
+    client.release();
   }
 }
 

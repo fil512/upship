@@ -12,7 +12,9 @@ function createSessionMiddleware() {
       pool: pool,
       tableName: 'session'
     }),
-    secret: process.env.SESSION_SECRET || 'dev-secret-change-in-production',
+    secret: process.env.SESSION_SECRET || (process.env.NODE_ENV === 'production'
+      ? (() => { throw new Error('SESSION_SECRET environment variable is required in production'); })()
+      : 'dev-secret-only'),
     resave: false,
     saveUninitialized: false,
     cookie: {

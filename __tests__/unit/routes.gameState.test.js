@@ -31,6 +31,60 @@ jest.mock('../../server/services/gameStateService', () => ({
   }
 }));
 
+// Mock the extracted services
+jest.mock('../../server/services/gameStateHelpers', () => ({
+  filterStateForPlayer: jest.fn((state, playerId) => state),
+  calculateTurnOrder: jest.fn(),
+  getCurrentPlacer: jest.fn(),
+  advanceToNextPlacer: jest.fn(),
+  allPlayersPassed: jest.fn(),
+  shuffleArray: jest.fn(arr => arr),
+  transitionToRevealPhase: jest.fn(),
+  transitionToIncomeCleanup: jest.fn(),
+  startNewRound: jest.fn(),
+  hasPlayableCards: jest.fn()
+}));
+
+jest.mock('../../server/services/actionProcessorService', () => ({
+  processAction: jest.fn((state, playerId, actionType, data) => {
+    // Default mock implementation that returns newState
+    if (actionType === 'UNKNOWN_ACTION') {
+      return { error: 'Unknown action type: UNKNOWN_ACTION' };
+    }
+    if (actionType === 'TAKE_LOAN') {
+      const playerState = state.players[playerId];
+      if (playerState.loans >= 2) {
+        return { error: 'Maximum 2 loans allowed. Pay off existing debt first.' };
+      }
+      const newState = JSON.parse(JSON.stringify(state));
+      newState.players[playerId].cash += 30;
+      newState.players[playerId].income -= 3;
+      newState.players[playerId].loans = (newState.players[playerId].loans || 0) + 1;
+      return { newState };
+    }
+    if (actionType === 'PASS') {
+      const newState = JSON.parse(JSON.stringify(state));
+      newState.players[playerId].hasPassed = true;
+      newState.workerPlacement.passedPlayers.push(playerId);
+      return { newState };
+    }
+    if (actionType === 'RECALL_AGENTS') {
+      const newState = JSON.parse(JSON.stringify(state));
+      newState.groundBoard.placements = {};
+      return { newState };
+    }
+    if (actionType === 'END_TURN') {
+      if (state.phase === 'worker_placement') {
+        return { error: 'Use PASS action during worker placement phase' };
+      }
+      const newState = JSON.parse(JSON.stringify(state));
+      newState.currentPlayerIndex = (newState.currentPlayerIndex + 1) % newState.playerOrder.length;
+      return { newState };
+    }
+    return { newState: state };
+  })
+}));
+
 const { pool } = require('../../server/db');
 const gameStateService = require('../../server/services/gameStateService');
 const gameStateRouter = require('../../server/routes/gameState');
