@@ -14,11 +14,11 @@ const GROUND_BOARD_LOCATIONS = {
     name: 'Research Institute',
     symbol: 'propeller',
     position: 1,
-    description: 'Purchase Research with money',
+    description: 'Expand your research program',
     action: {
-      type: 'BUY_RESEARCH',
-      cost: 3, // £3 per Research point
-      effect: 'Gain Research tokens for Technology acquisition'
+      type: 'UPGRADE_RESEARCH_LEVEL',
+      cost: 4, // Per Section 6.1: £4 per level
+      effect: 'Increase your Research Level Track by 1 step'
     }
   },
 

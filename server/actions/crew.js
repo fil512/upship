@@ -58,6 +58,7 @@ function processRecruitCrew(state, playerId, data) {
 
 /**
  * Upgrade Officer Income at Flight School
+ * Per Section 6.6: When Officer Income Track reaches +3, gain 3rd Agent
  *
  * @param {Object} state - Game state (mutated)
  * @param {string} playerId - Acting player ID
@@ -80,6 +81,17 @@ function processUpgradeOfficerIncome(state, playerId, data) {
     playerId,
     type: 'action'
   });
+
+  // Per Section 6.6: "When your Officer Income Track reaches +3, immediately gain your 3rd Agent."
+  if (playerState.officerIncome >= 3 && playerState.agents < 3) {
+    playerState.agents = 3;
+    state.log.push({
+      timestamp: new Date().toISOString(),
+      message: `${playerState.faction.toUpperCase()} earned their 3rd Agent from Officer training!`,
+      playerId,
+      type: 'milestone'
+    });
+  }
 
   return { newState: state };
 }

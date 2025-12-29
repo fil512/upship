@@ -15,7 +15,7 @@ const LOAN_INCOME_PENALTY = 3;
 // Game Progression
 const TURNS_PER_AGE = 10;
 const HAND_SIZE = 5;
-const INITIAL_AGENTS = 3;
+const INITIAL_AGENTS = 2;  // Per rules Section 2.1: Start with 2 agents, 3rd earned at Officer Income +3
 
 // R&D Board sizes by age
 const RD_BOARD_SIZE = { 1: 4, 2: 5, 3: 6 };

@@ -131,10 +131,11 @@ const createTestPlayerState = (faction = 'germany') => ({
   officers: 1,
   engineers: 2,
   gasCubes: faction === 'usa' ? { hydrogen: 0, helium: 2 } : { hydrogen: 2, helium: 0 },
-  agents: 3,
+  agents: 2,  // Per rules Section 2.1: Start with 2 agents, 3rd earned at Officer Income +3
   research: 0,
+  researchLevel: 0,  // Per rules Section 4.6: Research Level Track starts at 0
   influence: 0,
-  agentsRemaining: 3,
+  agentsRemaining: 2,  // Per rules Section 2.1
   hasPassed: false,
   technologies: getFactionStartingTech(faction),
   ships: [],
@@ -171,7 +172,7 @@ const createTestGameState = (playerIds = [1, 2, 3, 4]) => ({
   playerCount: playerIds.length,
   players: playerIds.reduce((acc, id, idx) => {
     const factions = ['germany', 'britain', 'usa', 'italy'];
-    acc[id] = createTestPlayerState(factions[idx]);
+    acc[id] = createTestPlayerState(factions[idx % 4]);
     return acc;
   }, {}),
   workerPlacement: {

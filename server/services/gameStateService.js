@@ -74,10 +74,11 @@ function createPlayerState(faction) {
     officers: 1,
     engineers: 2,
     gasCubes: startingGas,
-    agents: 3,
+    agents: 2,  // Per rules Section 2.1: Start with 2 agents, 3rd earned at Officer Income +3
     research: 0, // Saved research tokens (carries over between rounds)
+    researchLevel: 0, // Per rules Section 4.6: Research Level Track starts at 0
     influence: 0, // Influence tokens from revealed cards (resets each round)
-    agentsRemaining: 3, // Agents available to place this round
+    agentsRemaining: 2, // Per rules Section 2.1: Start with 2 agents
     hasPassed: false, // Whether player has passed in worker placement this round
     technologies: config.startingTechnologies || [],
     ships: [],
@@ -138,25 +139,24 @@ function createInitialBlueprint(faction) {
   return blueprint;
 }
 
-// Create starter deck of 10 cards (Section 8.3)
-// 2x Apprentice (Any symbol, reveal: 1 Influence)
-// 2x Mechanic (Wrench, +1 swap, reveal: £1)
-// 2x Draftsman (Wrench, draw 1, reveal: 1 Influence)
-// 2x Researcher (Propeller, -£1 Research cost, reveal: 1 Research)
-// 1x Purser (Coin, gain £2, reveal: 2 Influence)
-// 1x Helmsman (Propeller, +1 ship stat, reveal: 1 Officer)
+// Create starter deck of 10 cards (Section 11.3)
+// Distribution: 3 Wrench, 3 Coin, 3 Propeller, 1 Any
 function createStarterDeck() {
   return [
-    { id: 'starter_1', name: 'Apprentice', symbol: 'any', reveal: { influence: 1 } },
-    { id: 'starter_2', name: 'Apprentice', symbol: 'any', reveal: { influence: 1 } },
-    { id: 'starter_3', name: 'Mechanic', symbol: 'wrench', reveal: { cash: 1 }, effect: '+1 swap' },
-    { id: 'starter_4', name: 'Mechanic', symbol: 'wrench', reveal: { cash: 1 }, effect: '+1 swap' },
-    { id: 'starter_5', name: 'Draftsman', symbol: 'wrench', reveal: { influence: 1 }, effect: 'Draw 1 card' },
-    { id: 'starter_6', name: 'Draftsman', symbol: 'wrench', reveal: { influence: 1 }, effect: 'Draw 1 card' },
-    { id: 'starter_7', name: 'Researcher', symbol: 'propeller', reveal: { research: 1 }, effect: '-£1 Research cost' },
-    { id: 'starter_8', name: 'Researcher', symbol: 'propeller', reveal: { research: 1 }, effect: '-£1 Research cost' },
-    { id: 'starter_9', name: 'Purser', symbol: 'coin', reveal: { influence: 2 }, effect: 'Gain £2' },
-    { id: 'starter_10', name: 'Helmsman', symbol: 'propeller', reveal: { officers: 1 }, effect: '+1 ship stat' }
+    // 1 Any card
+    { id: 'starter_1', name: 'Apprentice', symbol: 'any', reveal: { influence: 1 }, effect: 'None' },
+    // 3 Wrench cards
+    { id: 'starter_2', name: 'Mechanic', symbol: 'wrench', reveal: { cash: 1 }, effect: '+1 swap' },
+    { id: 'starter_3', name: 'Draftsman', symbol: 'wrench', reveal: { influence: 1 }, effect: 'Draw 1 card' },
+    { id: 'starter_4', name: 'Rigger', symbol: 'wrench', reveal: { research: 1 }, effect: '-£2 ship build cost' },
+    // 3 Coin cards
+    { id: 'starter_5', name: 'Purser', symbol: 'coin', reveal: { influence: 2 }, effect: 'Gain £2' },
+    { id: 'starter_6', name: 'Clerk', symbol: 'coin', reveal: { cash: 1 }, effect: 'Gain £1' },
+    { id: 'starter_7', name: 'Investor', symbol: 'coin', reveal: { influence: 3 }, effect: 'None' },
+    // 3 Propeller cards
+    { id: 'starter_8', name: 'Researcher', symbol: 'propeller', reveal: { research: 1 }, effect: '-£1 per Research' },
+    { id: 'starter_9', name: 'Helmsman', symbol: 'propeller', reveal: { officers: 1 }, effect: '+1 ship stat' },
+    { id: 'starter_10', name: 'Navigator', symbol: 'propeller', reveal: { influence: 1 }, effect: 'Look at top Hazard' }
   ];
 }
 
