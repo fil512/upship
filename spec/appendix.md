@@ -166,12 +166,20 @@ The following items require finalization before the game is complete:
 
 ## Phase Order (Each Round)
 
-1. **Worker Placement:** Take turns placing Agents (play cards to visit locations)
-2. **Reveal:** Show remaining hands, calculate Influence and Research
-3. **Acquire Technologies:** Spend Research (Research Level + Engineers + card bonuses) on Technologies
-4. **Purchase Cards:** Spend Influence on Market cards
-5. **Income:** Pay Engineer upkeep, collect £ from Income Track
-6. **Cleanup:** Refresh R&D Board, check Age transition, refresh Agents, draw cards
+**Phase A: Agent Turns** (take turns until all players Reveal)
+
+On your turn, either:
+- **Place an Agent:** Play matching card, execute location action
+- **Reveal:** Show hand → gain resources → acquire Technologies → purchase cards → replenish R&D Board and Market Row → discard hand
+
+**Phase B: Income & Cleanup**
+
+1. Pay Engineer upkeep (£1 each)
+2. Collect £ from Income Track
+3. Collect Officers/Engineers from Income Tracks
+4. Check Age transition
+5. Refresh Agents
+6. Draw to 5 cards
 
 ## Build Checklist (Construction Hall Action)
 

@@ -257,7 +257,8 @@ Instead of placing an Agent, you may **Reveal** to end your participation in thi
 
 3. **Acquire Technologies:** Calculate your Research: Research Level + Engineers in Barracks + card bonuses. Spend Research to acquire Technologies from the R&D Board. Unspent Research is lost.
 4. **Purchase Cards:** Spend Influence to buy cards from the Market Row. Unspent Influence is lost.
-5. **Discard Hand:** Place revealed cards in your discard pile.
+5. **Replenish Markets:** Refill the R&D Board and Market Row to their full capacity. The next player to Reveal will have complete options.
+6. **Discard Hand:** Place revealed cards in your discard pile.
 
 After revealing, you take no more turns this phase. Other players continue taking turns until all players have revealed.
 
@@ -289,11 +290,9 @@ After all players have revealed:
 1. **Pay Engineer Upkeep:** Deduct £1 per Engineer in Barracks.
 2. **Collect Income:** Gain £ equal to Income Track position.
 3. **Collect Crew Income:** Gain Officers and Engineers per your Income Tracks.
-4. **Refresh R&D Board:** Draw tiles to fill empty spaces.
-5. **Check Age Transition:** If Progress Track reached threshold, trigger Age Transition (see Section 12).
-6. **Refresh Agents:** Return all Agents to player supplies.
-7. **Draw Cards:** Draw until you have 5 cards (if fewer).
-8. **Refill Market Row:** Add cards to the right until 5 total.
+4. **Check Age Transition:** If Progress Track reached threshold, trigger Age Transition (see Section 12).
+5. **Refresh Agents:** Return all Agents to player supplies.
+6. **Draw Cards:** Draw until you have 5 cards (if fewer).
 
 ---
 
@@ -959,8 +958,8 @@ When Catastrophic Explosion occurs during a Luxury Launch in Age III using Hydro
 
 1. **Agent Turns:** On your turn, either:
    - Place an Agent (play matching card, execute action), OR
-   - Reveal (show hand, gain resources, acquire Technologies, purchase cards)
-2. **Income & Cleanup:** Pay upkeep, collect income, refresh board
+   - Reveal (show hand, gain resources, acquire Technologies, purchase cards, replenish markets)
+2. **Income & Cleanup:** Pay upkeep, collect income, refresh agents, draw cards
 
 ## Key Formulas
 
