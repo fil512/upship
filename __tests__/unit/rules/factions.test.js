@@ -41,8 +41,8 @@ describe('Rules Compliance - Factions', () => {
         _internal: true
       });
 
-      // Ship goes to awaiting_hazard per GAP-020 fix (hazard check required)
-      expect(result.newState.players['3'].ships[0].status).toBe('awaiting_hazard');
+      // Ship on_route after automatic hazard check passes
+      expect(result.newState.players['3'].ships[0].status).toBe('on_route');
     });
 
     it('should allow USA to buy helium with helium_handling technology (lowercase)', () => {

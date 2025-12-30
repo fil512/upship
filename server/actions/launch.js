@@ -6,6 +6,7 @@
 const { GameRuleError, InsufficientFundsError } = require('../errors');
 const { UPGRADES } = require('../data/upgrades');
 const { AGE_BASELINES } = require('../config/constants');
+const { processHazardCheck } = require('./hazard');
 
 /**
  * Count the number of separate networks a player has claimed
@@ -409,7 +410,6 @@ function processLaunchShip(state, playerId, data) {
   }
 
   // Step 4: Set ship to awaiting hazard check per Section 8.3
-  // Route is NOT claimed until hazard check is performed
   ships[shipIndex].status = 'awaiting_hazard';
   ships[shipIndex].stats = stats;
   ships[shipIndex].launchedAge = state.age;
@@ -424,12 +424,14 @@ function processLaunchShip(state, playerId, data) {
 
   state.log.push({
     timestamp: new Date().toISOString(),
-    message: `Launched ship toward ${route.from} → ${route.to} (${requiredOfficers} Officer${requiredOfficers > 1 ? 's' : ''}, ${requiredCubes} ${gasType}): ${statParts.join(', ')} - HAZARD CHECK REQUIRED`,
+    message: `Launched ship toward ${route.from} → ${route.to} (${requiredOfficers} Officer${requiredOfficers > 1 ? 's' : ''}, ${requiredCubes} ${gasType}): ${statParts.join(', ')}`,
     playerId,
     type: 'action'
   });
 
-  return { newState: state, requiresHazardCheck: true };
+  // Step 5: Automatically perform hazard check
+  // Hazard check happens immediately upon launch - no client action needed
+  return processHazardCheck(state, playerId, { shipId, engineersToSpend: 0 });
 }
 
 /**

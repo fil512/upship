@@ -70,8 +70,8 @@ describe('Rules Compliance - Launching and Repair', () => {
     });
   });
 
-  describe('GAP-020: Launch procedure requires Hazard Check', () => {
-    it('should set ship to awaiting_hazard status per Section 8.3', () => {
+  describe('GAP-020: Launch procedure with automatic Hazard Check', () => {
+    it('should automatically perform hazard check and claim route on success', () => {
       const state = createTestGameState();
       const playerState = state.players['1'];
 
@@ -90,12 +90,12 @@ describe('Rules Compliance - Launching and Repair', () => {
         _internal: true
       });
 
-      // Ship should be awaiting hazard check, not directly on route
-      expect(result.newState.players['1'].ships[0].status).toBe('awaiting_hazard');
-      expect(result.newState.players['1'].ships[0].pendingRouteId).toBe('route_1');
+      // Ship should be on_route after automatic hazard check passes (clear weather)
+      expect(result.newState.players['1'].ships[0].status).toBe('on_route');
+      expect(result.newState.players['1'].ships[0].routeId).toBe('route_1');
     });
 
-    it('should NOT claim route until hazard check completes', () => {
+    it('should claim route after hazard check passes', () => {
       const state = createTestGameState();
       const playerState = state.players['1'];
 
@@ -114,11 +114,11 @@ describe('Rules Compliance - Launching and Repair', () => {
         _internal: true
       });
 
-      // Route should NOT be claimed yet
-      expect(result.newState.map.routes[0].claimed).toBe(null);
+      // Route should be claimed after hazard check passes
+      expect(result.newState.map.routes[0].claimed).toBe('1');
     });
 
-    it('should NOT increase income until hazard check completes', () => {
+    it('should increase income after hazard check passes', () => {
       const state = createTestGameState();
       const playerState = state.players['1'];
 
@@ -128,6 +128,7 @@ describe('Rules Compliance - Launching and Repair', () => {
       playerState.ships = [{ id: 'ship1', status: 'hangar' }];
 
       state.map.routes[0].claimed = null;
+      const routeIncome = state.map.routes[0].income;
 
       const { processLaunchShip } = require('../../../server/actions/launch');
 
@@ -138,8 +139,8 @@ describe('Rules Compliance - Launching and Repair', () => {
         _internal: true
       });
 
-      // Income should NOT change until hazard check succeeds
-      expect(result.newState.players['1'].income).toBe(initialIncome);
+      // Income should increase after hazard check passes
+      expect(result.newState.players['1'].income).toBe(initialIncome + routeIncome);
     });
   });
 
@@ -182,9 +183,9 @@ describe('Rules Compliance - Launching and Repair', () => {
         _internal: true
       });
 
-      // Should succeed - ship in awaiting_hazard status
-      expect(result.newState.players['3'].ships[0].status).toBe('awaiting_hazard');
-      expect(result.newState.players['3'].ships[0].pendingRouteId).toBe('route_speed');
+      // Should succeed - ship on_route after automatic hazard check passes
+      expect(result.newState.players['3'].ships[0].status).toBe('on_route');
+      expect(result.newState.players['3'].ships[0].routeId).toBe('route_speed');
     });
 
     it('should NOT allow non-USA player to bypass route requirements', () => {

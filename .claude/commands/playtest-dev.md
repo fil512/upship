@@ -2,11 +2,25 @@
 
 Run a playtest against the **local development server** (http://localhost:3000) using the Python automation tool. The goal is to play the game until it either **finishes** or gets **stuck** (revealing design flaws).
 
-**Prerequisites**: The local server must be running (`npm run dev`).
-
 ## Quick Start: Automated Full Game
 
-For a complete playtest that runs until the game ends:
+**Step 1: Rebuild and restart the local server**
+
+```bash
+# Kill any existing server on port 3000
+lsof -ti:3000 | xargs kill -9 2>/dev/null || true
+
+# Run database migrations
+npm run migrate:local
+
+# Start the server in background
+npm run dev:local &
+
+# Wait for server to be healthy (up to 30 seconds)
+for i in {1..30}; do curl -s http://localhost:3000/health && break || sleep 1; done
+```
+
+**Step 2: Run the playtest**
 
 ```bash
 UPSHIP_LOCAL=1 python scripts/playtest.py setup

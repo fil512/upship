@@ -16,7 +16,6 @@ const { processTakeLoan, processBuyInsurance, processCollectIncome } = require('
 const { processRecruitCrew, processUpgradeOfficerIncome, processUpgradeEngineerIncome } = require('./crew');
 const { processPlayCard, processDrawCards, processBuyMarketCard, processDiscardHazard, processDiscardMarketCard } = require('./cards');
 const { processEndTurn } = require('./turn');
-const { processHazardCheck } = require('./hazard');
 const { processCalculateScores } = require('./scoring');
 const { processReveal } = require('./reveal');
 
@@ -72,9 +71,6 @@ const ACTION_HANDLERS = {
   BUY_MARKET_CARD: processBuyMarketCard,
   DISCARD_HAZARD: processDiscardHazard,
   DISCARD_MARKET_CARD: processDiscardMarketCard,
-
-  // Hazards
-  PERFORM_HAZARD_CHECK: processHazardCheck,
 
   // Scoring
   CALCULATE_SCORES: processCalculateScores,

@@ -145,7 +145,13 @@ const createTestPlayerState = (faction = 'germany') => ({
   hand: [],
   deck: [],
   discardPile: [],
-  hazardDeck: [],
+  hazardDeck: [
+    // Default hazard deck with clear weather cards for test compatibility
+    { id: 'clear_weather_1', type: 'clear_weather', name: 'Clear Weather', autoPass: true },
+    { id: 'clear_weather_2', type: 'clear_weather', name: 'Clear Weather', autoPass: true },
+    { id: 'clear_weather_3', type: 'clear_weather', name: 'Clear Weather', autoPass: true }
+  ],
+  hazardDiscardPile: [],
   bonuses: {},
   upgradeSwaps: faction === 'italy' ? 4 : (faction === 'britain' ? 1 : 2),
   heliumMonopoly: faction === 'usa',

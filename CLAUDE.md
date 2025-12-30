@@ -222,7 +222,7 @@ Actions are processed in `server/routes/gameState.js` via `processAction()`:
 4. Persist new state + action record
 5. Return filtered state (hides opponent hands/decks)
 
-Action types include: `END_TURN`, `BUY_GAS`, `INSTALL_UPGRADE`, `BUILD_SHIP`, `LAUNCH_SHIP`, `PLACE_AGENT`, `CLAIM_ROUTE`, `PERFORM_HAZARD_CHECK`, etc.
+Action types include: `END_TURN`, `BUY_GAS`, `INSTALL_UPGRADE`, `BUILD_SHIP`, `LAUNCH_SHIP`, `PLACE_AGENT`, `CLAIM_ROUTE`, etc. Note: Hazard checks happen automatically when a ship is launched.
 
 ### Database Patterns
 

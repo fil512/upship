@@ -7,7 +7,7 @@ Stores current game ID in .upship-current-game for persistence.
 
 Usage:
     python scripts/playtest.py setup [game_name]     # Create new 4-player game
-    python scripts/playtest.py autoplay              # Run AI until game ends or gets stuck
+    python scripts/playtest.py autoplay              # Run AI until game ends (max 50 turns)
     python scripts/playtest.py autoplay [num_turns]  # Run AI for N turns
     python scripts/playtest.py status [player]       # Show current game status
     python scripts/playtest.py summary               # Show all players' status table
@@ -57,8 +57,7 @@ def init_log_file(game_id, game_name=None):
     LOGS_DIR.mkdir(exist_ok=True)
 
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-    name_part = f"_{game_name}" if game_name else ""
-    filename = f"playtest_{timestamp}{name_part}.log"
+    filename = f"playtest_{timestamp}.log"
     _current_log_file = LOGS_DIR / filename
     _current_turn = 0
 
@@ -842,11 +841,14 @@ def handle_income_cleanup_phase(game_id):
         time.sleep(0.3)
 
 
+DEFAULT_MAX_TURNS = 50  # Auto-stop after this many turns if game hasn't ended
+
+
 def autoplay(num_turns=None, game_id=None):
     """Run AI for all players until game ends or gets stuck.
 
     Args:
-        num_turns: Maximum turns to play (None = play until game ends)
+        num_turns: Maximum turns to play (None = use DEFAULT_MAX_TURNS)
         game_id: Game ID (uses current game if None)
     """
     if game_id is None:
@@ -855,9 +857,13 @@ def autoplay(num_turns=None, game_id=None):
         print("No current game. Run 'setup' first.")
         return
 
+    # Default to max turns if not specified
+    if num_turns is None:
+        num_turns = DEFAULT_MAX_TURNS
+
     print(f"=== UP SHIP! Autoplay ===")
     print(f"Game: {game_id}")
-    print(f"Target: {'Game completion' if num_turns is None else f'{num_turns} turns'}\n")
+    print(f"Target: {num_turns} turns (max)\n")
 
     # Load existing log file or create new one
     global _current_log_file

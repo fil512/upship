@@ -6,6 +6,7 @@
 
 const { GameRuleError } = require('../errors');
 const { applyCityBonus, CITY_BONUSES } = require('../data/cities');
+const { shuffleArray } = require('../utils/random');
 
 /**
  * Check if Hindenburg Disaster conditions are met per Section 1.2
@@ -94,16 +95,34 @@ function processHazardCheck(state, playerId, data) {
   const ship = ships[shipIndex];
   const shipStats = ship.stats || { speed: 0, reliability: 0, ceiling: 0, range: 0 };
 
+  // Get pending route or current route
+  const pendingRouteId = ship.pendingRouteId || ship.routeId;
+  const route = state.map?.routes?.find(r => r.id === pendingRouteId);
+
   // Draw from hazard deck
+  // If deck is empty, shuffle discard pile to create new deck
   if (!playerState.hazardDeck || playerState.hazardDeck.length === 0) {
-    throw new GameRuleError('No hazard cards remaining');
+    const discardPile = playerState.hazardDiscardPile || [];
+    if (discardPile.length === 0) {
+      throw new GameRuleError('No hazard cards remaining (deck and discard pile both empty)');
+    }
+    // Shuffle discard pile to create new deck
+    playerState.hazardDeck = shuffleArray([...discardPile]);
+    playerState.hazardDiscardPile = [];
+
+    state.log.push({
+      timestamp: new Date().toISOString(),
+      message: 'Hazard deck exhausted - shuffled discard pile to create new deck',
+      playerId,
+      type: 'deck'
+    });
   }
 
   const hazard = playerState.hazardDeck.shift();
 
-  // Get pending route or current route
-  const pendingRouteId = ship.pendingRouteId || ship.routeId;
-  const route = state.map?.routes?.find(r => r.id === pendingRouteId);
+  // Add drawn hazard to discard pile
+  playerState.hazardDiscardPile = playerState.hazardDiscardPile || [];
+  playerState.hazardDiscardPile.push(hazard);
   const isLuxuryRoute = route?.luxury === true;
 
   // Check for Hindenburg Disaster conditions first
