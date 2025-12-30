@@ -50,6 +50,13 @@ FACTIONS = ["germany", "britain", "usa", "italy"]
 _current_log_file = None
 _current_turn = 0
 
+# Early reveal mode: when enabled, players cycle through revealing with 0, 1, or 2 agents remaining
+EARLY_REVEAL_MODE = os.environ.get("UPSHIP_EARLY_REVEAL") == "1" or "--early-reveal" in sys.argv
+_early_reveal_counter = 0  # Cycles through 0, 1, 2
+
+if "--early-reveal" in sys.argv:
+    sys.argv = [a for a in sys.argv if a != "--early-reveal"]
+
 
 def init_log_file(game_id, game_name=None):
     """Initialize a new log file for this game."""
@@ -671,7 +678,17 @@ def handle_worker_placement_round(game_id):
 
         # Check if player has agents remaining
         agents = get_player_agents(current, game_id)
-        if agents <= 0:
+
+        # Early reveal mode: cycle through revealing with 0, 1, or 2 agents remaining
+        if EARLY_REVEAL_MODE:
+            global _early_reveal_counter
+            reveal_threshold = _early_reveal_counter % 3  # 0, 1, or 2
+            _early_reveal_counter += 1
+            if agents <= reveal_threshold:
+                reason = f"(early reveal with {agents} agents, threshold={reveal_threshold})"
+                submit_reveal(current, game_id, reason)
+                continue
+        elif agents <= 0:
             # No agents left - reveal to exit worker placement
             submit_reveal(current, game_id, "(out of agents)")
             continue
