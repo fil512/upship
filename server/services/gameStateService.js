@@ -76,7 +76,7 @@ function createPlayerState(faction) {
     engineers: 2,
     gasCubes: startingGas,
     agents: 2,  // Per rules Section 2.1: Start with 2 agents, 3rd earned at Officer Income +3
-    research: 0, // Saved research tokens (carries over between rounds)
+    research: 0, // Research tokens from reveal phase (unspent is lost per Section 5.1)
     researchLevel: 0, // Per rules Section 4.6: Research Level Track starts at 0
     influence: 0, // Influence tokens from revealed cards (resets each round)
     agentsRemaining: 2, // Per rules Section 2.1: Start with 2 agents
@@ -339,13 +339,11 @@ function shuffleArray(array) {
 // See constants.js for the full 54-tile definition per Appendix C
 
 // Progress Track thresholds by player count (Section 1.3)
-// 2 Players: Age I ends at 8, Age II at 16, Game at 20
-// 3 Players: Age I ends at 10, Age II at 20, Game at 25
-// 4 Players: Age I ends at 12, Age II at 24, Game at 30
+// Scaled for ~15 round games (Age 1: ~5 rounds, Age 2: ~5 rounds, Age 3: ~5 rounds)
 const PROGRESS_THRESHOLDS = {
-  2: { age2: 8, age3: 16, end: 20 },
-  3: { age2: 10, age3: 20, end: 25 },
-  4: { age2: 12, age3: 24, end: 30 }
+  2: { age2: 2, age3: 4, end: 6 },
+  3: { age2: 3, age3: 6, end: 9 },
+  4: { age2: 4, age3: 8, end: 12 }
 };
 
 // Create technology bag and R&D board together to avoid duplicates

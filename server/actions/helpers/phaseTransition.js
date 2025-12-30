@@ -81,9 +81,9 @@ function collectRevealResources(state) {
     const engineersInBarracks = playerState.engineers || 0;
     researchGained += researchLevel + engineersInBarracks;
 
-    // Apply gains
-    playerState.research = (playerState.research || 0) + researchGained;
-    playerState.influence = influenceGained; // Influence resets each round
+    // Apply gains - both Research and Influence reset each round (unspent is lost per Section 5.1)
+    playerState.research = researchGained;
+    playerState.influence = influenceGained;
     playerState.gasCubes.hydrogen += hydrogenGained;
     playerState.gasCubes.helium += heliumGained;
     playerState.cash += cashGained;
@@ -204,7 +204,7 @@ function transitionToIncomeCleanup(state) {
  * @param {Object} state - Game state (mutated)
  */
 function checkAgeTransitionByProgressTrack(state) {
-  const thresholds = state.progressThresholds || { age2: 12, age3: 24, end: 30 };
+  const thresholds = state.progressThresholds || { age2: 4, age3: 8, end: 12 };
 
   if (state.age === 1 && state.progressTrack >= thresholds.age2) {
     state.age = 2;
