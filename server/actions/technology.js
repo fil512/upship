@@ -257,9 +257,10 @@ function processAcquireTechnologyResearch(state, playerId, data) {
   // Check for age transition
   checkAgeTransition(state);
 
+  const discountNote = discount > 0 ? ` (${discount} discount)` : '';
   state.log.push({
     timestamp: new Date().toISOString(),
-    message: `Acquired ${tech.name} for ${cost} research${discount > 0 ? ` (${discount} discount)` : ''}. Progress: ${state.progressTrack}`,
+    message: `Acquired ${tech.name} for ${cost} research${discountNote}. Progress: ${state.progressTrack}`,
     playerId,
     type: 'action'
   });

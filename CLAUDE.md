@@ -73,6 +73,7 @@ npm run migrate:down     # Rollback last migration
 npm run migrate:status   # Check migration status
 npm run cli -- <args>    # Run CLI tool (see below)
 npm run lint             # Run ESLint
+npm run code-cleanup     # Find duplicate functions, code smells (SonarJS)
 npm test                 # Run Jest tests
 ```
 

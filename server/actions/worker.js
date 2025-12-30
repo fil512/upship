@@ -33,6 +33,7 @@ function processCardEffect(state, playerId, card, _locationId) {
   // Initialize launchBonuses if needed
   if (!playerState.launchBonuses) playerState.launchBonuses = {};
 
+  // eslint-disable-next-line sonarjs/max-switch-cases -- Game has many card effect types
   switch (effect) {
     // === STARTER DECK EFFECTS ===
     case '+1 swap':
@@ -302,7 +303,7 @@ function executeLocationAction(state, playerId, locationId, _card, options = {})
       let swapsArray;
       try {
         swapsArray = typeof swapsJson === 'string' ? JSON.parse(swapsJson) : swapsJson;
-      } catch (_e) {
+      } catch (_e) { // eslint-disable-line sonarjs/no-ignored-exceptions -- User-facing error returned
         return { success: false, error: 'Invalid swaps format - expected JSON array' };
       }
 

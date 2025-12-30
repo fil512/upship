@@ -111,14 +111,7 @@ class DatabaseError extends AppError {
     super('Database operation failed', 500, 'DATABASE_ERROR');
     this.originalError = originalError;
     // Never expose the original error to clients
-  }
-
-  toJSON() {
-    // Don't include originalError in JSON serialization
-    return {
-      error: this.message,
-      code: this.code
-    };
+    // Note: toJSON() inherited from AppError already excludes originalError
   }
 }
 
@@ -133,7 +126,7 @@ function isAppError(error) {
  * Check if an error is a PostgreSQL error
  */
 function isPostgresError(error) {
-  return error && typeof error.code === 'string' && /^[0-9]{2}[A-Z0-9]{3}$/.test(error.code);
+  return error && typeof error.code === 'string' && /^\d{2}[A-Z\d]{3}$/.test(error.code);
 }
 
 /**

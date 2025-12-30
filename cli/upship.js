@@ -108,7 +108,7 @@ function makeRequest(method, urlPath, body, cookie) {
         let parsed;
         try {
           parsed = data ? JSON.parse(data) : {};
-        } catch (_e) {
+        } catch (_e) { // eslint-disable-line sonarjs/no-ignored-exceptions -- Expected for non-JSON responses
           parsed = { rawResponse: data };
         }
 
@@ -166,6 +166,18 @@ const FACTION_COLORS = {
   britain: COLORS.blue,
   usa: COLORS.cyan,
   italy: COLORS.green
+};
+
+const GAME_STATUS_COLORS = {
+  waiting: COLORS.yellow,
+  active: COLORS.green,
+  finished: COLORS.gray
+};
+
+const SHIP_STATUS_COLORS = {
+  hangar: COLORS.yellow,
+  launched: COLORS.green,
+  crashed: COLORS.red
 };
 
 function c(color, text) {
@@ -308,8 +320,7 @@ const commands = {
     console.log('─'.repeat(70));
 
     for (const game of games) {
-      const statusColor = game.status === 'waiting' ? COLORS.yellow :
-                         game.status === 'active' ? COLORS.green : COLORS.gray;
+      const statusColor = GAME_STATUS_COLORS[game.status] || COLORS.gray;
       console.log(`${c(COLORS.cyan, game.id.slice(0, 8))} │ ${game.name.padEnd(30)} │ ${c(statusColor, game.status.padEnd(8))} │ ${game.player_count || 0}/4 players`);
     }
   },
@@ -436,7 +447,8 @@ const commands = {
     // Header
     const progress = gs.progressTrack || 0;
     const thresholds = gs.progressThresholds || { age2: 10, age3: 20, end: 30 };
-    const nextThreshold = gs.age === 1 ? thresholds.age2 : gs.age === 2 ? thresholds.age3 : thresholds.end;
+    const thresholdByAge = [null, thresholds.age2, thresholds.age3, thresholds.end];
+    const nextThreshold = thresholdByAge[gs.age] || thresholds.end;
     console.log('');
     console.log(c(COLORS.bright, '═══════════════════════════════════════════════════════════════════════'));
     console.log(c(COLORS.bright, `  UP SHIP! - Age ${gs.age} │ Turn ${gs.turn} │ Round ${gs.round} │ Phase: ${formatPhase(gs.phase)}`));
@@ -506,7 +518,7 @@ const commands = {
         console.log('');
         console.log(c(COLORS.bright, '┌─ Your Ships'));
         for (const ship of myState.ships) {
-          const statusColor = ship.status === 'hangar' ? COLORS.yellow : ship.status === 'launched' ? COLORS.green : COLORS.red;
+          const statusColor = SHIP_STATUS_COLORS[ship.status] || COLORS.red;
           let shipInfo = `│ ${c(COLORS.cyan, ship.id)} │ ${c(statusColor, ship.status.toUpperCase())}`;
           if (ship.stats) {
             shipInfo += ` │ Range:${ship.stats.range} Speed:${ship.stats.speed}`;
@@ -897,7 +909,6 @@ const commands = {
     console.log(`${COLORS.yellow}Note: Gas loading is no longer needed.${COLORS.reset}`);
     console.log('Gas cubes are automatically spent from your reserve when you launch.');
     console.log('Use: upship <user> launch <gameId> <shipId> <routeId> [hydrogen|helium]');
-    return;
   },
 
   async launch(username, args) {
@@ -965,7 +976,6 @@ const commands = {
     console.log(`${COLORS.yellow}Note: Route claiming is now part of the launch action.${COLORS.reset}`);
     console.log('Use: upship <user> launch <gameId> <shipId> <routeId> [hydrogen|helium]');
     console.log('Ships are launched directly to routes (per Section 7.2 of the rules).');
-    return;
   },
 
   // Help

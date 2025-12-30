@@ -15,6 +15,9 @@ const { errorHandler, notFoundHandler } = require('./middleware/errorHandler');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Security: disable X-Powered-By header to avoid revealing framework info
+app.disable('x-powered-by');
+
 // Trust proxy for Railway (SSL terminated at load balancer)
 app.set('trust proxy', 1);
 

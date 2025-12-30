@@ -986,9 +986,10 @@ function processAcquireTechnologyResearch(state, playerId, data) {
     });
   }
 
+  const discountNote = discount > 0 ? ` (${discount} discount)` : '';
   state.log.push({
     timestamp: new Date().toISOString(),
-    message: `Acquired ${tech.name} for ${cost} research${discount > 0 ? ` (${discount} discount)` : ''}. Progress: ${state.progressTrack}`,
+    message: `Acquired ${tech.name} for ${cost} research${discountNote}. Progress: ${state.progressTrack}`,
     playerId,
     type: 'action'
   });
@@ -1101,7 +1102,7 @@ function processLaunchShip(state, playerId, data) {
   playerState.officers -= requiredOfficers;
   playerState.gasCubes[gasType] -= requiredCubes;
 
-  // Step 4: Hazard Check would go here (TODO: implement full hazard system)
+  // Step 4: Hazard Check would go here (see plans/overview.md for implementation status)
   // For now, launches always succeed
 
   // Step 5: Success - place ship on route

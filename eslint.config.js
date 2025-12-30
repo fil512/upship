@@ -1,7 +1,9 @@
 const js = require('@eslint/js');
+const sonarjs = require('eslint-plugin-sonarjs');
 
 module.exports = [
   js.configs.recommended,
+  sonarjs.configs.recommended,
   {
     languageOptions: {
       ecmaVersion: 2022,
@@ -35,6 +37,8 @@ module.exports = [
     },
     rules: {
       'no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_', caughtErrorsIgnorePattern: '^_' }],
+      // Cognitive complexity is checked by code-cleanup with stricter threshold
+      'sonarjs/cognitive-complexity': 'off',
     },
   },
   {

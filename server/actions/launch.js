@@ -16,9 +16,6 @@ const { AGE_BASELINES } = require('../config/constants');
 function countPlayerNetworks(playerState, map) {
   if (!map?.routes) return 0;
 
-  // Get all routes claimed by this player (used for ID-based lookup)
-  const _playerRoutes = map.routes.filter(r => r.claimed === playerState?.odometer || r.claimed === playerState);
-
   // Also check if routes are claimed by player ID directly
   const playerId = Object.keys(playerState || {}).includes('cash') ? null : playerState;
 

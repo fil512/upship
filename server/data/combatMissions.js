@@ -254,9 +254,9 @@ const COMBAT_MISSIONS = [
  */
 function createCombatMissionDeck() {
   const deck = [...COMBAT_MISSIONS];
-  // Fisher-Yates shuffle
+  // Fisher-Yates shuffle (Math.random() is appropriate for game card shuffling)
   for (let i = deck.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
+    const j = Math.floor(Math.random() * (i + 1)); // eslint-disable-line sonarjs/pseudo-random
     [deck[i], deck[j]] = [deck[j], deck[i]];
   }
   return deck;
@@ -300,7 +300,7 @@ function refillMissionRow(state) {
     if (completedMissions.length > 0) {
       // Shuffle completed missions
       for (let i = completedMissions.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
+        const j = Math.floor(Math.random() * (i + 1)); // eslint-disable-line sonarjs/pseudo-random
         [completedMissions[i], completedMissions[j]] = [completedMissions[j], completedMissions[i]];
       }
       state.missionDeck = completedMissions;

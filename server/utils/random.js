@@ -1,7 +1,12 @@
 /**
  * Random Utilities
  * Shared random/shuffle functions used across the application
+ *
+ * Note: Math.random() is intentionally used for game card shuffling.
+ * Cryptographic randomness is not required for this use case.
  */
+
+/* eslint-disable sonarjs/pseudo-random */
 
 /**
  * Fisher-Yates shuffle algorithm

@@ -324,11 +324,11 @@ function createHazardDeck() {
   return shuffleArray(hazards);
 }
 
-// Shuffle array helper
+// Shuffle array helper (Math.random() is appropriate for game card shuffling)
 function shuffleArray(array) {
   const shuffled = [...array];
   for (let i = shuffled.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
+    const j = Math.floor(Math.random() * (i + 1)); // eslint-disable-line sonarjs/pseudo-random
     [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
   }
   return shuffled;
