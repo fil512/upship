@@ -579,19 +579,30 @@ def handle_worker_placement_round(game_id):
         card, location = find_strategic_placement(current, hand, locations, game_id)
 
         if card and location:
-            # For construction_hall, include buildCount to build ship immediately (Section 5.1)
+            # Build action args for PLACE_AGENT
             action_args = [current, "action", game_id, "PLACE_AGENT",
                           f"locationId={location['id']}", f"cardIndex={card['index']}"]
+
+            # Per Section 5.1: Actions execute immediately when placing agent
+            # Add location-specific parameters
+            action_desc = f"placed at {location['id']} using {card['name']}"
+
             if location['id'] == 'construction_hall':
                 action_args.append("buildCount=1")  # Build 1 ship when placing
+                action_desc = f"placed at {location['id']} and built ship"
+
+            elif location['id'] == 'gas_depot':
+                # Determine gas type and amount
+                gas_type = "helium" if current == "playtest_usa" else "hydrogen"
+                gas_amount = 3  # Buy 3 gas when placing
+                action_args.append(f"gasType={gas_type}")
+                action_args.append(f"gasAmount={gas_amount}")
+                action_desc = f"placed at {location['id']} and bought {gas_amount} {gas_type}"
+
             result = run_cli(*action_args)
             if "✓" in result or "success" in result.lower():
-                if location['id'] == 'construction_hall':
-                    print(f"  {current}: placed at {location['id']} and built ship")
-                    log_action(current, f"placed at {location['id']} and built ship", "worker_placement")
-                else:
-                    print(f"  {current}: placed at {location['id']} using {card['name']}")
-                    log_action(current, f"placed at {location['id']} using {card['name']}", "worker_placement")
+                print(f"  {current}: {action_desc}")
+                log_action(current, action_desc, "worker_placement")
             else:
                 # Placement failed - pass instead
                 run_cli(current, "action", game_id, "PASS")
@@ -620,14 +631,8 @@ def take_reveal_actions(player, game_id):
     # Note: construction_hall building now happens immediately when placing agent (Section 5.1)
     # No need to build during reveal phase
 
-    # If at gas_depot - buy gas
-    if 'gas_depot' in placements and cash >= 2:
-        gas_type = "helium" if player == "playtest_usa" else "hydrogen"
-        amount = min(3, cash)  # Buy up to 3 gas
-        result = run_cli(player, "buygas", game_id, gas_type, str(amount))
-        if "✓" in result:
-            print(f"  {player}: bought {amount} {gas_type}")
-            log_action(player, f"bought {amount} {gas_type}", "reveal")
+    # Note: gas_depot buying now happens immediately when placing agent (Section 5.1)
+    # No need to buy gas during reveal phase
 
     # If at academy - recruit crew
     if 'academy' in placements and cash >= 2:

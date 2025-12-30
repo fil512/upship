@@ -11,6 +11,7 @@ const { transitionToRevealPhase } = require('./helpers/phaseTransition');
 const { reduceHeliumMarket } = require('./helpers/marketHelpers');
 const { WEATHER_BUREAU_COST } = require('../config/constants');
 const { processBuildShip } = require('./building');
+const { processBuyGas } = require('./gas');
 
 /**
  * Process card effects when used for agent placement (Section 8.1)
@@ -337,8 +338,19 @@ function executeLocationAction(state, playerId, locationId, _card, options = {})
       return { success: true, message: 'Gained turn priority. Drew 2, discarded 1. Helium market reduced.' };
     }
 
-    case 'gas_depot':
-      return { success: true, message: 'May buy gas' };
+    case 'gas_depot': {
+      // Per Section 5.1: Execute action immediately when placing agent
+      const { gasType, gasAmount } = options;
+      if (!gasType || !gasAmount) {
+        return { success: false, error: 'Gas Depot requires gasType and gasAmount parameters' };
+      }
+      try {
+        processBuyGas(state, playerId, { gasType, amount: gasAmount, _internal: true });
+        return { success: true, message: `Bought ${gasAmount} ${gasType}` };
+      } catch (error) {
+        return { success: false, error: error.message };
+      }
+    }
 
     case 'insurance_bureau':
       return { success: true, message: 'May buy insurance' };
@@ -406,7 +418,7 @@ function hasPlayableCards(state, playerId) {
  * @returns {Object} { newState } or throws error
  */
 function processPlaceAgent(state, playerId, data) {
-  const { locationId, cardIndex, buildCount } = data;
+  const { locationId, cardIndex, buildCount, gasType, gasAmount } = data;
   const playerState = state.players[playerId];
 
   // Validate phase
@@ -490,7 +502,7 @@ function processPlaceAgent(state, playerId, data) {
   }
 
   // Execute the location action immediately (Section 5.1)
-  const actionResult = executeLocationAction(state, playerId, locationId, discardedCard, { buildCount });
+  const actionResult = executeLocationAction(state, playerId, locationId, discardedCard, { buildCount, gasType, gasAmount });
   if (actionResult.error) {
     state.log.push({
       timestamp: new Date().toISOString(),

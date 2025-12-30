@@ -9,14 +9,41 @@ const { advanceHeliumMarket } = require('./helpers/marketHelpers');
 /**
  * Buy gas cubes from the gas depot
  *
+ * Per Section 5.1: Actions execute IMMEDIATELY when placing an agent.
+ * This action should only be called:
+ * 1. Internally from processPlaceAgent when placing at gas_depot
+ * 2. NOT directly during reveal phase or without proper agent placement
+ *
  * @param {Object} state - Game state (mutated)
  * @param {string} playerId - Acting player ID
- * @param {Object} data - Action data { gasType, amount }
+ * @param {Object} data - Action data { gasType, amount, _internal }
  * @returns {Object} { newState } or throws error
  */
 function processBuyGas(state, playerId, data) {
-  const { gasType, amount } = data;
+  const { gasType, amount, _internal = false } = data;
   const playerState = state.players[playerId];
+
+  // Per Section 5.1: Actions execute when placing agent, not separately
+  // Only allow direct calls during worker_placement when player has agent at gas_depot
+  // Internal calls (from processPlaceAgent) bypass this check
+  if (!_internal) {
+    // Validate phase - gas buying only happens during worker_placement via agent placement
+    if (state.phase !== 'worker_placement') {
+      throw new GameRuleError(
+        'BUY_GAS not allowed: Actions execute immediately when placing an agent (Section 5.1). ' +
+        'Place an agent at Gas Depot during worker placement phase to buy gas.'
+      );
+    }
+
+    // Validate the player has an agent at gas_depot
+    const placement = state.groundBoard?.placements?.gas_depot;
+    if (!placement || placement.playerId !== playerId) {
+      throw new GameRuleError(
+        'BUY_GAS not allowed: You must place an agent at Gas Depot to buy gas. ' +
+        'Use PLACE_AGENT with locationId "gas_depot" and gasType/gasAmount parameters.'
+      );
+    }
+  }
 
   if (!['hydrogen', 'helium'].includes(gasType)) {
     throw new GameRuleError('Invalid gas type');

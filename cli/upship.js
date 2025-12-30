@@ -791,22 +791,27 @@ const commands = {
   },
 
   async place(username, args) {
-    const [gameId, locationId, cardIndex, buildCount] = args;
+    const [gameId, locationId, cardIndex, ...extraParams] = args;
     if (!gameId || !locationId || cardIndex === undefined) {
-      console.log('Usage: upship <user> place <gameId> <locationId> <cardIndex> [buildCount]');
+      console.log('Usage: upship <user> place <gameId> <locationId> <cardIndex> [params...]');
       console.log('');
       console.log('Locations:');
       console.log('  research-institute, design-bureau, construction-hall (wrench)');
       console.log('  launchpad, ministry, gas-depot, weather-bureau (propeller)');
       console.log('  academy, flight-school, technical-institute, the-bank, insurance-bureau (coin)');
       console.log('');
-      console.log('For construction-hall, specify buildCount (1-3) to build ships immediately.');
+      console.log('Location-specific parameters (Section 5.1 - actions execute immediately):');
+      console.log('  construction-hall: buildCount=N (1-3 ships)');
+      console.log('  gas-depot: gasType=hydrogen|helium gasAmount=N');
+      console.log('  academy: crewType=officer|engineer crewCount=N');
       return;
     }
     const actionArgs = [gameId, 'PLACE_AGENT', `locationId=${locationId}`, `cardIndex=${cardIndex}`];
-    // Add buildCount for construction-hall
-    if (buildCount && locationId === 'construction-hall') {
-      actionArgs.push(`buildCount=${buildCount}`);
+    // Add any extra key=value parameters
+    for (const param of extraParams) {
+      if (param.includes('=')) {
+        actionArgs.push(param);
+      }
     }
     return commands.action(username, actionArgs);
   },

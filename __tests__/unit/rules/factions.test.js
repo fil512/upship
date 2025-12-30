@@ -57,9 +57,11 @@ describe('Rules Compliance - Factions', () => {
       usaPlayer.gasCubes = { hydrogen: 0, helium: 0 };
 
       // USA should be able to buy helium
+      // Use _internal: true since gas buying now goes through PLACE_AGENT
       const result = processBuyGas(state, '3', {
         gasType: 'helium',
-        amount: 2
+        amount: 2,
+        _internal: true
       });
 
       expect(result.newState.players['3'].gasCubes.helium).toBe(2);
