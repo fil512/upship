@@ -186,8 +186,72 @@ function processUpgradeEngineerIncome(state, playerId, data) {
   return { newState: state };
 }
 
+/**
+ * Government Liaison - Spend officers for income boost
+ *
+ * Per Section 6.8:
+ * Cost: 1-3 Officers (from Barracks to shared supply)
+ * Effect: Increase your Income Track by 1 step per Officer spent
+ *
+ * Per Section 5.1: Location actions execute IMMEDIATELY when placing an agent.
+ *
+ * @param {Object} state - Game state (mutated)
+ * @param {string} playerId - Acting player ID
+ * @param {Object} data - Action data { officerCount, _internal }
+ * @returns {Object} { newState } or throws error
+ */
+function processGovernmentLiaison(state, playerId, data) {
+  const { officerCount, _internal = false } = data || {};
+  const playerState = state.players[playerId];
+
+  // Validate that this is called through PLACE_AGENT (Section 5.1)
+  if (!_internal) {
+    if (state.phase !== 'worker_placement') {
+      throw new GameRuleError(
+        'GOVERNMENT_LIAISON not allowed: Actions execute immediately when placing an agent (Section 5.1). ' +
+        'Place an agent at Government Liaison during worker placement phase.'
+      );
+    }
+    const placement = state.groundBoard?.placements?.government_liaison;
+    if (!placement || placement.playerId !== playerId) {
+      throw new GameRuleError(
+        'GOVERNMENT_LIAISON not allowed: You must place an agent at Government Liaison. ' +
+        'Use PLACE_AGENT with locationId "government_liaison" and officerCount parameter.'
+      );
+    }
+  }
+
+  // Validate officer count (must be 1-3 per Section 6.8)
+  if (!officerCount || officerCount < 1 || officerCount > 3) {
+    throw new GameRuleError(
+      'Government Liaison requires officerCount between 1 and 3. You must spend 1-3 officers.'
+    );
+  }
+
+  // Check if player has enough officers
+  if ((playerState.officers || 0) < officerCount) {
+    throw new GameRuleError(
+      `Not enough officers. Have ${playerState.officers || 0}, need ${officerCount}.`
+    );
+  }
+
+  // Spend officers and gain income
+  playerState.officers -= officerCount;
+  playerState.income = (playerState.income || 0) + officerCount;
+
+  state.log.push({
+    timestamp: new Date().toISOString(),
+    message: `Government Liaison: Spent ${officerCount} officer(s) to increase income to ${playerState.income}`,
+    playerId,
+    type: 'action'
+  });
+
+  return { newState: state };
+}
+
 module.exports = {
   processRecruitCrew,
   processUpgradeOfficerIncome,
-  processUpgradeEngineerIncome
+  processUpgradeEngineerIncome,
+  processGovernmentLiaison
 };

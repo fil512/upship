@@ -16,7 +16,7 @@ Per Section 5.1 of the rules, location actions should execute **immediately** wh
 - [x] `flight_school` - UPGRADE_OFFICER_INCOME executes immediately
 - [x] `technical_institute` - UPGRADE_ENGINEER_INCOME executes immediately
 - [x] `insurance_bureau` - BUY_INSURANCE executes immediately
-- [ ] `government_liaison` - New processor needed
+- [x] `government_liaison` - processGovernmentLiaison executes immediately
 - [ ] `research_institute` - New processor needed
 - [ ] `design_bureau` - Array of swaps
 - [ ] `launchpad` - Multi-step with NO_MORE_LAUNCHES

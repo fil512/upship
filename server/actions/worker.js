@@ -12,7 +12,7 @@ const { reduceHeliumMarket } = require('./helpers/marketHelpers');
 const { WEATHER_BUREAU_COST } = require('../config/constants');
 const { processBuildShip } = require('./building');
 const { processBuyGas } = require('./gas');
-const { processRecruitCrew, processUpgradeOfficerIncome, processUpgradeEngineerIncome } = require('./crew');
+const { processRecruitCrew, processUpgradeOfficerIncome, processUpgradeEngineerIncome, processGovernmentLiaison } = require('./crew');
 const { processBuyInsurance } = require('./economy');
 
 /**
@@ -328,6 +328,20 @@ function executeLocationAction(state, playerId, locationId, _card, options = {})
     case 'the_bank':
       return { success: true, message: 'May take a loan' };
 
+    case 'government_liaison': {
+      // Per Section 6.8: Spend 1-3 Officers to increase Income Track
+      const { officerCount } = options;
+      if (!officerCount) {
+        return { success: false, error: 'Government Liaison requires officerCount parameter (1-3)' };
+      }
+      try {
+        processGovernmentLiaison(state, playerId, { officerCount, _internal: true });
+        return { success: true, message: `Spent ${officerCount} officer(s) for +${officerCount} income` };
+      } catch (error) {
+        return { success: false, error: error.message };
+      }
+    }
+
     case 'ministry': {
       state.workerPlacement.ministryVisitors.push(playerId);
 
@@ -455,7 +469,7 @@ function hasPlayableCards(state, playerId) {
  * @returns {Object} { newState } or throws error
  */
 function processPlaceAgent(state, playerId, data) {
-  const { locationId, cardIndex, buildCount, gasType, gasAmount, crewType, crewCount, levels, policyCount } = data;
+  const { locationId, cardIndex, buildCount, gasType, gasAmount, crewType, crewCount, levels, policyCount, officerCount } = data;
   const playerState = state.players[playerId];
 
   // Validate phase
@@ -539,7 +553,7 @@ function processPlaceAgent(state, playerId, data) {
   }
 
   // Execute the location action immediately (Section 5.1)
-  const actionResult = executeLocationAction(state, playerId, locationId, discardedCard, { buildCount, gasType, gasAmount, crewType, crewCount, levels, policyCount });
+  const actionResult = executeLocationAction(state, playerId, locationId, discardedCard, { buildCount, gasType, gasAmount, crewType, crewCount, levels, policyCount, officerCount });
   if (actionResult.error) {
     state.log.push({
       timestamp: new Date().toISOString(),
