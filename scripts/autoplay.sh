@@ -1,9 +1,29 @@
 #!/bin/bash
-# Autoplay turns for UP SHIP! playtest
-# Usage: ./scripts/autoplay.sh <gameId> [num_turns]
-# Or:    GAME=<gameId> ./scripts/autoplay.sh [num_turns]
+# DEPRECATED: Use 'python scripts/playtest.py autoplay' instead
+# This script uses outdated phase names and will be removed.
 #
-# Runs simple AI logic for all 4 players to exercise game systems.
+# The Python playtest tool has:
+#   - Correct phase handling (worker_placement, reveal, income_cleanup)
+#   - Game end detection (plays until game finishes)
+#   - Stuck detection with verbose diagnostics
+#   - Strategic bot logic
+#
+# Migration:
+#   python scripts/playtest.py setup [game_name]  # Create new game
+#   python scripts/playtest.py autoplay           # Run until completion
+#   python scripts/playtest.py autoplay 10        # Run for 10 turns
+
+echo "=========================================="
+echo "DEPRECATED: This script is no longer maintained."
+echo ""
+echo "Use the Python playtest tool instead:"
+echo "  python scripts/playtest.py autoplay"
+echo ""
+echo "For help: python scripts/playtest.py"
+echo "=========================================="
+exit 1
+
+# --- LEGACY CODE BELOW (not executed) ---
 
 set -e
 

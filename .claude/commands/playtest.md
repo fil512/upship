@@ -1,137 +1,145 @@
 # UP SHIP! Strategic Playtest Command
 
-Run a thoughtful playtest where you analyze each game state and make strategic decisions for all 4 factions.
+Run a playtest using the Python automation tool. The goal is to play the game until it either **finishes** or gets **stuck** (revealing design flaws).
 
-## STEP 1: Setup the Game
+## Quick Start: Automated Full Game
+
+For a complete playtest that runs until the game ends:
+
+```bash
+python scripts/playtest.py setup
+python scripts/playtest.py autoplay
+```
+
+This will:
+- Create a 4-player game with strategic bot players
+- Play through all phases automatically
+- Stop when the game ends (showing winner and scores) OR when stuck (showing diagnostic report)
+
+## Option A: Fully Automated Playtest
+
+Let the bots play the entire game:
+
+```bash
+# Setup new game
+python scripts/playtest.py setup
+
+# Run until game ends or gets stuck
+python scripts/playtest.py autoplay
+
+# Or limit to N turns
+python scripts/playtest.py autoplay 20
+```
+
+After completion, review the output for:
+- **Game ended**: Winner and final scores shown
+- **Game stuck**: Verbose diagnostic report with possible causes
+
+## Option B: Interactive Strategic Playtest
+
+For manual analysis of each turn:
+
+### 1. Setup
 
 ```bash
 python scripts/playtest.py setup
 ```
 
-This creates a new 4-player game and saves the game ID to `.upship-current-game`.
-
-## STEP 2: Play Strategically
-
-For each turn, follow this decision-making process:
-
-### Check Current State
+### 2. Check State
 
 ```bash
-python scripts/playtest.py status
+python scripts/playtest.py status              # Current player's view
+python scripts/playtest.py status playtest_usa # Specific player's view
+python scripts/playtest.py summary             # All players comparison table
+python scripts/playtest.py debug               # Raw game state
 ```
 
-Identify:
-- Whose turn is it? (look for "YOUR TURN" or "Waiting for:")
-- What phase are we in?
-- What resources does the current player have?
+### 3. Make Strategic Decisions
 
-### Think Through the Decision
+**Current Game Phases:**
+- **WORKER PLACEMENT**: Players take turns placing agents on Ground Board locations using cards from hand. Pass when done.
+- **REVEAL**: Simultaneous phase - all players take location actions (build ships, buy gas, recruit crew, launch ships)
+- **INCOME & CLEANUP**: Collect income, draw cards, advance to next turn
 
-Before executing any action, analyze:
+**Faction Strategies:**
+- **Germany**: Hydrogen efficiency, large ships, starting tech advantage
+- **Britain**: Balanced growth, steady income, passenger routes
+- **USA**: Helium preference (monopoly discount), prioritize safety
+- **Italy**: Fast and agile, many small ships, extra upgrade flexibility
 
-1. **What are the player's goals this turn?**
-   - Need income? Consider building ships to launch
-   - Need capabilities? Look at R&D board for useful tech
-   - Low on cash? Maybe take a loan or skip expensive actions
-
-2. **What's the faction strategy?**
-   - **Germany**: Leverage starting tech advantage, focus on hydrogen efficiency, build larger ships
-   - **Britain**: Balanced growth, steady income, passenger routes
-   - **USA**: Prefer helium when affordable, prioritize safety
-   - **Italy**: Fast and agile, build many small ships quickly
-
-3. **What phase-specific actions make sense?**
-   - **PLANNING**: Draw cards (usually 2), consider hand composition
-   - **ACTIONS**: Buy gas, build ships, acquire tech, recruit crew, launch ships
-   - **LAUNCH**: Claim routes if ships are ready
-   - **INCOME**: Income auto-collects, just end turn
-   - **CLEANUP**: End turn to advance
-
-### Execute with Explanation
-
-Run the command and explain your reasoning:
+### 4. Execute Actions
 
 ```bash
-python scripts/playtest.py action <player> <cmd>
+# Single action for a player
+python scripts/playtest.py action <player> <command>
+
+# Examples:
+python scripts/playtest.py action playtest_germany state
+python scripts/playtest.py action playtest_germany build 1
+python scripts/playtest.py action playtest_usa buygas helium 3
+python scripts/playtest.py action playtest_britain endturn
+
+# Advance all players through current phase
+python scripts/playtest.py endphase
 ```
 
-### Common Commands
+### 5. Launch Ships
 
 ```bash
-# Check state
-python scripts/playtest.py status
-python scripts/playtest.py action <player> state
-python scripts/playtest.py action <player> blueprint
+# Check available routes
+python scripts/playtest.py routes
 
-# Planning
-python scripts/playtest.py action <player> draw 2
-
-# Actions
-python scripts/playtest.py action <player> buygas hydrogen 4
-python scripts/playtest.py action <player> build 1
-python scripts/playtest.py action <player> tech <techId>
-python scripts/playtest.py action <player> launch <shipId> hydrogen
-python scripts/playtest.py action <player> loan
-
-# End turn
-python scripts/playtest.py action <player> endturn
+# Launch a ship to claim a route
+python scripts/playtest.py launch <player> <shipId> <routeId> [hydrogen|helium]
 ```
 
-### Automated Play
+## Extending playtest.py
 
-For rapid testing:
-```bash
-python scripts/playtest.py autoplay 10
-```
+**IMPORTANT**: If you need functionality that isn't available in playtest.py, extend the Python script rather than calling `npm run cli` directly. The playtest.py tool is the single interface for all playtesting.
 
-## STEP 3: Observe and Document
+To add new capabilities:
+1. Add a new function in `scripts/playtest.py`
+2. Add a new command handler in `main()`
+3. Document in the docstring at the top of the file
 
-As you play, note:
-- **Bugs**: Commands that fail unexpectedly
-- **Balance issues**: One faction consistently ahead/behind
-- **UX problems**: Confusing state display, unclear errors
-- **Rule questions**: Situations where intended behavior is unclear
+## Document Findings
 
-## STEP 4: Write Report
-
-After playing 10+ turns, create a report at `plans/YYYY-MM-DD_HHMM_PLAYTEST_REPORT.md` (using 24-hour time):
+After playtesting, create a report at `plans/YYYY-MM-DD_playtest_report.md`:
 
 ```markdown
 # UP SHIP! Playtest Report
 
-*Date: [date]*
-*Game ID: [id]*
-*Turns Played: [n]*
+**Date**: [date]
+**Game ID**: [from python scripts/playtest.py gameid]
+**Outcome**: [Game completed / Game stuck at phase X]
 
 ## Game Summary
-[What happened? How did each faction perform?]
+- Turns played: [N]
+- Winner: [faction] with [X] VP
+- Final scores: [breakdown]
 
-## Strategic Observations
-[What strategies worked? What felt underpowered/overpowered?]
+## Issues Found
 
-## Bugs Found
-[List each bug with steps to reproduce]
+### Bugs
+[Commands that failed, unexpected behavior]
 
-## Balance Concerns
-[Faction comparison, resource economy issues]
+### Design Flaws
+[If game got stuck, what was the diagnostic report? What caused it?]
+
+### Balance Concerns
+[Faction imbalances, resource economy issues]
 
 ## Recommendations
-[Priority fixes and design suggestions]
+[Priority fixes]
 ```
 
-## Key Principles
+## Troubleshooting
 
-1. **Think before each move** - Don't just execute commands mechanically
-2. **Play each faction authentically** - Use their strengths, work around weaknesses
-3. **Document interesting situations** - Note when something feels off
-4. **Play to learn** - The goal is finding issues, not "winning"
+If the game gets stuck, the autoplay tool provides verbose diagnostics:
+- State fingerprint (phase, turn, age, progress)
+- All player resources
+- Ground board placements
+- Available routes
+- Possible causes
 
-## Quick Advance
-
-To advance all players through current phase:
-
-```bash
-python scripts/playtest.py endphase
-```
-
-But prefer making thoughtful individual moves when testing game mechanics.
+Use this information to identify and fix the design flaw, then run another playtest.
