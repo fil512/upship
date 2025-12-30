@@ -717,6 +717,17 @@ def handle_launchpad_launches(player, game_id):
                         spend_engineers = False
                         hazard_decision = f"ABORT (need {engineers_needed} engineers, have {available_engineers})"
 
+                    # Log hazard response with Y/N decision BEFORE calling RESPOND_TO_HAZARD
+                    # This ensures we always see what hazard was drawn, even if response fails
+                    yn_decision = "Y" if spend_engineers else "N"
+                    if engineer_cost is not None:
+                        eng_info = f"cost={engineer_cost}, have={available_engineers}"
+                    elif engineers_needed > 0:
+                        eng_info = f"need={engineers_needed}, have={available_engineers}"
+                    else:
+                        eng_info = "none needed"
+                    log_action(None, f"  └─ Hazard: {hazard_name} (engineers: {eng_info}) → {yn_decision} → {hazard_decision}", "worker_placement")
+
                     # Call RESPOND_TO_HAZARD
                     hazard_result = strip_ansi(run_cli(player, "action", game_id, "RESPOND_TO_HAZARD",
                                                        f"shipId={ship['id']}", f"spendEngineers={str(spend_engineers).lower()}"))
@@ -727,16 +738,10 @@ def handle_launchpad_launches(player, game_id):
                     final_player_data = final_state.get('players', {}).get(final_player_id, {}) if final_state and final_player_id else {}
                     final_ship = next((s for s in final_player_data.get('ships', []) if s.get('id') == ship['id']), None)
                     ship_status = final_ship.get('status', 'unknown') if final_ship else 'unknown'
-
-                    # Log hazard response with Y/N decision
-                    yn_decision = "Y" if spend_engineers else "N"
-                    if engineer_cost is not None:
-                        eng_info = f"cost={engineer_cost}, have={available_engineers}"
-                    elif engineers_needed > 0:
-                        eng_info = f"need={engineers_needed}, have={available_engineers}"
-                    else:
-                        eng_info = "none needed"
-                    log_action(None, f"  └─ Hazard: {hazard_name} (engineers: {eng_info}) → {yn_decision} → {hazard_decision}", "worker_placement")
+                else:
+                    # Edge case: ship not in awaiting_hazard state after launch
+                    # Log this so we can debug why the two-step flow wasn't used
+                    log_action(None, f"  └─ Hazard: (unexpected state: {ship_status}, pendingHazard={pending_hazard is not None})", "worker_placement")
 
                 # Extract hazard info from game log
                 log_entries = get_last_log_entries(post_state, count=10) if post_state else []
