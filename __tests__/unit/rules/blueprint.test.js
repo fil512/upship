@@ -27,7 +27,7 @@ describe('Rules Compliance - Blueprint System', () => {
       ];
 
       // Install a frame upgrade that costs £2
-      processInstallUpgrade(state, '1', { slotType: 'frame', slotIndex: 0, upgradeId: 'duralumin_frame' });
+      processInstallUpgrade(state, '1', { slotType: 'frame', slotIndex: 0, upgradeId: 'duralumin_frame', _internal: true });
 
       // Hull cost increase is 2 (new frame cost) - 0 (old frame cost) = 2
       // With 2 ships in hangar: 2 * 2 = 4
@@ -49,7 +49,7 @@ describe('Rules Compliance - Blueprint System', () => {
         { id: 'ship1', status: 'on_route' }  // On route, not hangar
       ];
 
-      processInstallUpgrade(state, '1', { slotType: 'frame', slotIndex: 0, upgradeId: 'duralumin_frame' });
+      processInstallUpgrade(state, '1', { slotType: 'frame', slotIndex: 0, upgradeId: 'duralumin_frame', _internal: true });
 
       // Should not charge extra - cash unchanged (installing upgrade is free at Design Bureau)
       expect(state.players['1'].cash).toBe(100);
@@ -70,7 +70,7 @@ describe('Rules Compliance - Blueprint System', () => {
       ];
 
       // Drive slot upgrade - should NOT trigger hull cost charge
-      processInstallUpgrade(state, '1', { slotType: 'drive', slotIndex: 0, upgradeId: 'basic_engine' });
+      processInstallUpgrade(state, '1', { slotType: 'drive', slotIndex: 0, upgradeId: 'basic_engine', _internal: true });
 
       // No hull cost charge for drive upgrades
       expect(state.players['1'].cash).toBe(100);
@@ -94,7 +94,7 @@ describe('Rules Compliance - Blueprint System', () => {
       ];
 
       // Install fabric upgrade
-      processInstallUpgrade(state, '1', { slotType: 'fabric', slotIndex: 0, upgradeId: 'premium_envelope' });
+      processInstallUpgrade(state, '1', { slotType: 'fabric', slotIndex: 0, upgradeId: 'premium_envelope', _internal: true });
 
       // Hull cost increase is 3, with 1 ship: 3 * 1 = 3
       // Cash should be 100 - 3 = 97
@@ -118,7 +118,7 @@ describe('Rules Compliance - Blueprint System', () => {
 
       // The InsufficientFundsError includes "Not enough" which matches our pattern
       expect(() => {
-        processInstallUpgrade(state, '1', { slotType: 'frame', slotIndex: 0, upgradeId: 'duralumin_frame' });
+        processInstallUpgrade(state, '1', { slotType: 'frame', slotIndex: 0, upgradeId: 'duralumin_frame', _internal: true });
       }).toThrow(/Not enough|insufficient|afford|cash/i);
     });
   });
@@ -136,11 +136,11 @@ describe('Rules Compliance - Blueprint System', () => {
       state.players['1'].blueprint.driveSlots = [null];
 
       // First swap
-      processInstallUpgrade(state, '1', { slotType: 'frame', slotIndex: 0, upgradeId: 'duralumin_frame' });
+      processInstallUpgrade(state, '1', { slotType: 'frame', slotIndex: 0, upgradeId: 'duralumin_frame', _internal: true });
       expect(state.players['1'].swapsUsedThisVisit).toBe(1);
 
       // Second swap
-      processInstallUpgrade(state, '1', { slotType: 'drive', slotIndex: 0, upgradeId: 'basic_engine' });
+      processInstallUpgrade(state, '1', { slotType: 'drive', slotIndex: 0, upgradeId: 'basic_engine', _internal: true });
       expect(state.players['1'].swapsUsedThisVisit).toBe(2);
     });
 
@@ -157,7 +157,7 @@ describe('Rules Compliance - Blueprint System', () => {
 
       // Third swap should fail
       expect(() => {
-        processInstallUpgrade(state, '1', { slotType: 'fabric', slotIndex: 0, upgradeId: 'premium_envelope' });
+        processInstallUpgrade(state, '1', { slotType: 'fabric', slotIndex: 0, upgradeId: 'premium_envelope', _internal: true });
       }).toThrow(/swap limit|limit reached|maximum/i);
     });
 
@@ -173,7 +173,7 @@ describe('Rules Compliance - Blueprint System', () => {
       state.players['4'].blueprint.driveSlots = [null];
 
       // Fourth swap should succeed for Italy
-      const result = processInstallUpgrade(state, '4', { slotType: 'drive', slotIndex: 0, upgradeId: 'basic_engine' });
+      const result = processInstallUpgrade(state, '4', { slotType: 'drive', slotIndex: 0, upgradeId: 'basic_engine', _internal: true });
       expect(result.newState.players['4'].swapsUsedThisVisit).toBe(4);
     });
 
@@ -190,7 +190,7 @@ describe('Rules Compliance - Blueprint System', () => {
 
       // Second swap should fail for Britain
       expect(() => {
-        processInstallUpgrade(state, '2', { slotType: 'fabric', slotIndex: 0, upgradeId: 'doped_covering' });
+        processInstallUpgrade(state, '2', { slotType: 'fabric', slotIndex: 0, upgradeId: 'doped_covering', _internal: true });
       }).toThrow(/swap limit|limit reached|maximum/i);
     });
   });
@@ -211,20 +211,20 @@ describe('Rules Compliance - Blueprint System', () => {
       state.players['1'].blueprint.driveSlots = [null, null];
 
       // First swap
-      processInstallUpgrade(state, '1', { slotType: 'drive', slotIndex: 0, upgradeId: 'basic_engine' });
+      processInstallUpgrade(state, '1', { slotType: 'drive', slotIndex: 0, upgradeId: 'basic_engine', _internal: true });
       expect(state.players['1'].swapsUsedThisVisit).toBe(1);
 
       // Second swap
-      processInstallUpgrade(state, '1', { slotType: 'drive', slotIndex: 1, upgradeId: 'efficient_propeller' });
+      processInstallUpgrade(state, '1', { slotType: 'drive', slotIndex: 1, upgradeId: 'efficient_propeller', _internal: true });
       expect(state.players['1'].swapsUsedThisVisit).toBe(2);
 
       // Third swap - would normally fail, but modular frame grants +2
       // Need to clear and reinstall for third swap
-      processRemoveUpgrade(state, '1', { slotType: 'drive', slotIndex: 0 });
+      processRemoveUpgrade(state, '1', { slotType: 'drive', slotIndex: 0, _internal: true });
       expect(state.players['1'].swapsUsedThisVisit).toBe(3);
 
       // Fourth swap - still within limit (2 + 2 = 4)
-      processInstallUpgrade(state, '1', { slotType: 'drive', slotIndex: 0, upgradeId: 'twin_engine' });
+      processInstallUpgrade(state, '1', { slotType: 'drive', slotIndex: 0, upgradeId: 'twin_engine', _internal: true });
       expect(state.players['1'].swapsUsedThisVisit).toBe(4);
     });
 
@@ -244,7 +244,7 @@ describe('Rules Compliance - Blueprint System', () => {
 
       // Fifth swap should fail
       expect(() => {
-        processInstallUpgrade(state, '1', { slotType: 'drive', slotIndex: 0, upgradeId: 'basic_engine' });
+        processInstallUpgrade(state, '1', { slotType: 'drive', slotIndex: 0, upgradeId: 'basic_engine', _internal: true });
       }).toThrow(/swap limit|limit reached|maximum/i);
     });
 
@@ -264,7 +264,7 @@ describe('Rules Compliance - Blueprint System', () => {
 
       // Third swap should fail without modular frame
       expect(() => {
-        processInstallUpgrade(state, '1', { slotType: 'drive', slotIndex: 0, upgradeId: 'basic_engine' });
+        processInstallUpgrade(state, '1', { slotType: 'drive', slotIndex: 0, upgradeId: 'basic_engine', _internal: true });
       }).toThrow(/swap limit|limit reached|maximum/i);
     });
   });

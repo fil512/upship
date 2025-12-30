@@ -15,6 +15,7 @@ const { processBuyGas } = require('./gas');
 const { processRecruitCrew, processUpgradeOfficerIncome, processUpgradeEngineerIncome, processGovernmentLiaison } = require('./crew');
 const { processBuyInsurance } = require('./economy');
 const { processUpgradeResearchLevel } = require('./technology');
+const { processInstallUpgrade, processRemoveUpgrade } = require('./blueprint');
 
 /**
  * Process card effects when used for agent placement (Section 8.1)
@@ -281,8 +282,64 @@ function executeLocationAction(state, playerId, locationId, _card, options = {})
       }
     }
 
-    case 'design_bureau':
-      return { success: true, message: 'May install upgrade to blueprint' };
+    case 'design_bureau': {
+      const { swaps: swapsJson } = options;
+
+      // Handle no swaps - just visiting
+      if (!swapsJson) {
+        return { success: true, message: 'Visited Design Bureau (no modifications)' };
+      }
+
+      let swapsArray;
+      try {
+        swapsArray = typeof swapsJson === 'string' ? JSON.parse(swapsJson) : swapsJson;
+      } catch (e) {
+        return { success: false, error: 'Invalid swaps format - expected JSON array' };
+      }
+
+      if (!Array.isArray(swapsArray) || swapsArray.length === 0) {
+        return { success: true, message: 'Visited Design Bureau (no modifications)' };
+      }
+
+      // Reset swaps counter for this visit
+      playerState.swapsUsedThisVisit = 0;
+
+      const results = [];
+      for (const swap of swapsArray) {
+        try {
+          if (swap.action === 'install') {
+            processInstallUpgrade(state, playerId, {
+              slotType: swap.slotType,
+              slotIndex: swap.slotIndex,
+              upgradeId: swap.upgradeId,
+              _internal: true
+            });
+            results.push(`Installed ${swap.upgradeId}`);
+          } else if (swap.action === 'remove') {
+            processRemoveUpgrade(state, playerId, {
+              slotType: swap.slotType,
+              slotIndex: swap.slotIndex,
+              _internal: true
+            });
+            results.push(`Removed from ${swap.slotType} slot ${swap.slotIndex}`);
+          } else {
+            results.push(`Unknown action: ${swap.action}`);
+          }
+        } catch (error) {
+          // Log the error but continue with remaining swaps
+          state.log.push({
+            timestamp: new Date().toISOString(),
+            message: `Design Bureau swap failed: ${error.message}`,
+            playerId,
+            type: 'warning'
+          });
+          results.push(`Failed: ${error.message}`);
+          break; // Stop processing on first failure (swap limit reached or other error)
+        }
+      }
+
+      return { success: true, message: results.join('; ') };
+    }
 
     case 'construction_hall': {
       // Per Section 5.1: Execute action immediately when placing agent
@@ -480,7 +537,7 @@ function hasPlayableCards(state, playerId) {
  * @returns {Object} { newState } or throws error
  */
 function processPlaceAgent(state, playerId, data) {
-  const { locationId, cardIndex, buildCount, gasType, gasAmount, crewType, crewCount, levels, policyCount, officerCount } = data;
+  const { locationId, cardIndex, buildCount, gasType, gasAmount, crewType, crewCount, levels, policyCount, officerCount, swaps } = data;
   const playerState = state.players[playerId];
 
   // Validate phase
@@ -564,7 +621,7 @@ function processPlaceAgent(state, playerId, data) {
   }
 
   // Execute the location action immediately (Section 5.1)
-  const actionResult = executeLocationAction(state, playerId, locationId, discardedCard, { buildCount, gasType, gasAmount, crewType, crewCount, levels, policyCount, officerCount });
+  const actionResult = executeLocationAction(state, playerId, locationId, discardedCard, { buildCount, gasType, gasAmount, crewType, crewCount, levels, policyCount, officerCount, swaps });
   if (actionResult.error) {
     state.log.push({
       timestamp: new Date().toISOString(),

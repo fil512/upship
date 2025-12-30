@@ -18,7 +18,7 @@ Per Section 5.1 of the rules, location actions should execute **immediately** wh
 - [x] `insurance_bureau` - BUY_INSURANCE executes immediately
 - [x] `government_liaison` - processGovernmentLiaison executes immediately
 - [x] `research_institute` - processUpgradeResearchLevel executes immediately
-- [ ] `design_bureau` - Array of swaps
+- [x] `design_bureau` - Array of swaps executes immediately
 - [ ] `launchpad` - Multi-step with NO_MORE_LAUNCHES
 - [ ] Atomic REVEAL action
 - [ ] CLI cleanup

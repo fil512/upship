@@ -59,14 +59,34 @@ function calculateHullCost(blueprint) {
  * - Swap limit per visit: Britain 1, Germany/USA 2, Italy 4
  * - Hull Upgrade Rule: When upgrading Frame/Fabric, pay hull cost difference per ship in hangar
  *
+ * Per Section 5.1: Location actions execute IMMEDIATELY when placing an agent.
+ * Direct API calls are rejected - must go through PLACE_AGENT with swaps param.
+ *
  * @param {Object} state - Game state (mutated)
  * @param {string} playerId - Acting player ID
- * @param {Object} data - Action data { slotType, slotIndex, upgradeId }
+ * @param {Object} data - Action data { slotType, slotIndex, upgradeId, _internal }
  * @returns {Object} { newState } or throws error
  */
 function processInstallUpgrade(state, playerId, data) {
-  const { slotType, slotIndex, upgradeId } = data;
+  const { slotType, slotIndex, upgradeId, _internal = false } = data;
   const playerState = state.players[playerId];
+
+  // Validate that this is called through PLACE_AGENT (Section 5.1)
+  if (!_internal) {
+    if (state.phase !== 'worker_placement') {
+      throw new GameRuleError(
+        'INSTALL_UPGRADE not allowed: Actions execute immediately when placing an agent (Section 5.1). ' +
+        'Place an agent at Design Bureau during worker placement phase to modify blueprint.'
+      );
+    }
+    const placement = state.groundBoard?.placements?.design_bureau;
+    if (!placement || placement.playerId !== playerId) {
+      throw new GameRuleError(
+        'INSTALL_UPGRADE not allowed: You must place an agent at Design Bureau to modify blueprint. ' +
+        'Use PLACE_AGENT with locationId "design_bureau" and swaps parameter.'
+      );
+    }
+  }
 
   // GAP-033 & GAP-047: Check swap limit (including Modular Frame bonus)
   const swapLimit = getEffectiveSwapLimit(playerState);
@@ -161,14 +181,34 @@ function processInstallUpgrade(state, playerId, data) {
  * Remove upgrade from blueprint
  * Per Section 6.2: Each removal counts as 1 swap
  *
+ * Per Section 5.1: Location actions execute IMMEDIATELY when placing an agent.
+ * Direct API calls are rejected - must go through PLACE_AGENT with swaps param.
+ *
  * @param {Object} state - Game state (mutated)
  * @param {string} playerId - Acting player ID
- * @param {Object} data - Action data { slotType, slotIndex }
+ * @param {Object} data - Action data { slotType, slotIndex, _internal }
  * @returns {Object} { newState } or throws error
  */
 function processRemoveUpgrade(state, playerId, data) {
-  const { slotType, slotIndex } = data;
+  const { slotType, slotIndex, _internal = false } = data;
   const playerState = state.players[playerId];
+
+  // Validate that this is called through PLACE_AGENT (Section 5.1)
+  if (!_internal) {
+    if (state.phase !== 'worker_placement') {
+      throw new GameRuleError(
+        'REMOVE_UPGRADE not allowed: Actions execute immediately when placing an agent (Section 5.1). ' +
+        'Place an agent at Design Bureau during worker placement phase to modify blueprint.'
+      );
+    }
+    const placement = state.groundBoard?.placements?.design_bureau;
+    if (!placement || placement.playerId !== playerId) {
+      throw new GameRuleError(
+        'REMOVE_UPGRADE not allowed: You must place an agent at Design Bureau to modify blueprint. ' +
+        'Use PLACE_AGENT with locationId "design_bureau" and swaps parameter.'
+      );
+    }
+  }
 
   // GAP-033 & GAP-047: Check swap limit (including Modular Frame bonus)
   const swapLimit = getEffectiveSwapLimit(playerState);
