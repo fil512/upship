@@ -14,6 +14,7 @@ const { processBuildShip } = require('./building');
 const { processBuyGas } = require('./gas');
 const { processRecruitCrew, processUpgradeOfficerIncome, processUpgradeEngineerIncome, processGovernmentLiaison } = require('./crew');
 const { processBuyInsurance } = require('./economy');
+const { processUpgradeResearchLevel } = require('./technology');
 
 /**
  * Process card effects when used for agent placement (Section 8.1)
@@ -267,8 +268,18 @@ function executeLocationAction(state, playerId, locationId, _card, options = {})
   const playerState = state.players[playerId];
 
   switch (locationId) {
-    case 'research_institute':
-      return { success: true, message: 'May buy Research for £3 each' };
+    case 'research_institute': {
+      const { levels = 1 } = options;
+      if (levels === 0) {
+        return { success: true, message: 'Visited Research Institute (no upgrade)' };
+      }
+      try {
+        processUpgradeResearchLevel(state, playerId, { levels, _internal: true });
+        return { success: true, message: `Upgraded Research Level by ${levels}` };
+      } catch (error) {
+        return { success: false, error: error.message };
+      }
+    }
 
     case 'design_bureau':
       return { success: true, message: 'May install upgrade to blueprint' };

@@ -6,7 +6,7 @@
 const { GameRuleError, InsufficientFundsError } = require('../errors');
 const { shuffleArray } = require('../utils/random');
 const { refillRDBoard } = require('./helpers/marketHelpers');
-const { TECHNOLOGY_BAG } = require('../config/constants');
+const { TECHNOLOGY_BAG, RESEARCH_INSTITUTE_COST } = require('../config/constants');
 const { performAgeTransition } = require('./helpers/ageTransition');
 
 /**
@@ -260,7 +260,7 @@ function processAcquireTechnologyResearch(state, playerId, data) {
 }
 
 /**
- * Gain research points (from Research Institute or card effects)
+ * Gain research points (from card effects)
  *
  * @param {Object} state - Game state (mutated)
  * @param {string} playerId - Acting player ID
@@ -283,10 +283,71 @@ function processGainResearch(state, playerId, data) {
   return { newState: state };
 }
 
+/**
+ * Upgrade Research Level Track at Research Institute
+ *
+ * Per Section 6.1:
+ * Cost: £4 per level.
+ * Effect: Increase your Research Level Track by 1 step.
+ *
+ * Per Section 5.1: Location actions execute IMMEDIATELY when placing an agent.
+ * Direct API calls are rejected - must go through PLACE_AGENT with levels param.
+ *
+ * @param {Object} state - Game state (mutated)
+ * @param {string} playerId - Acting player ID
+ * @param {Object} data - Action data { levels, _internal }
+ * @returns {Object} { newState } or throws error
+ */
+function processUpgradeResearchLevel(state, playerId, data) {
+  const { levels = 1, _internal = false } = data || {};
+  const playerState = state.players[playerId];
+
+  // Validate that this is called through PLACE_AGENT (Section 5.1)
+  if (!_internal) {
+    if (state.phase !== 'worker_placement') {
+      throw new GameRuleError(
+        'UPGRADE_RESEARCH_LEVEL not allowed: Actions execute immediately when placing an agent (Section 5.1). ' +
+        'Place an agent at Research Institute during worker placement phase to upgrade research level.'
+      );
+    }
+    const placement = state.groundBoard?.placements?.research_institute;
+    if (!placement || placement.playerId !== playerId) {
+      throw new GameRuleError(
+        'UPGRADE_RESEARCH_LEVEL not allowed: You must place an agent at Research Institute to upgrade research level. ' +
+        'Use PLACE_AGENT with locationId "research_institute" and levels parameter.'
+      );
+    }
+  }
+
+  // Handle levels=0 as a no-op (just visiting the location)
+  if (levels === 0) {
+    return { newState: state };
+  }
+
+  const totalCost = RESEARCH_INSTITUTE_COST * levels;
+
+  if (playerState.cash < totalCost) {
+    throw new InsufficientFundsError(totalCost, playerState.cash);
+  }
+
+  playerState.cash -= totalCost;
+  playerState.researchLevel = (playerState.researchLevel || 0) + levels;
+
+  state.log.push({
+    timestamp: new Date().toISOString(),
+    message: `Upgraded Research Level to ${playerState.researchLevel} for £${totalCost}`,
+    playerId,
+    type: 'action'
+  });
+
+  return { newState: state };
+}
+
 module.exports = {
   processAcquireTechnology,
   processAcquireTechnologyResearch,
   processGainResearch,
+  processUpgradeResearchLevel,
   addAgeTechnologies,
   calculateSpecializationDiscount
 };

@@ -625,6 +625,11 @@ def handle_worker_placement_round(game_id):
                 action_args.append("officerCount=1")
                 action_desc = f"placed at {location['id']} and spent 1 officer for income"
 
+            elif location['id'] == 'research_institute':
+                # Upgrade research level when placing (Section 6.1)
+                action_args.append("levels=1")
+                action_desc = f"placed at {location['id']} and upgraded research level"
+
             result = run_cli(*action_args)
             if "✓" in result or "success" in result.lower():
                 print(f"  {current}: {action_desc}")
