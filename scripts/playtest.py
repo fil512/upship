@@ -548,66 +548,203 @@ def get_player_placements(player, game_id):
     return placements
 
 
-def find_strategic_placement(player, hand, locations, game_id):
-    """Find a strategic card/location combination.
+def evaluate_launch_readiness(player_data, routes):
+    """Evaluate what a player needs to be able to launch a ship.
 
-    Priority order:
-    1. construction_hall (if have cash to build)
-    2. launchpad (if have ships in hangar)
-    3. gas_depot (if low on gas)
-    4. design_bureau (if have tech to install)
-    5. Any valid placement
+    Returns dict with:
+        - can_launch: bool - whether player can launch right now
+        - missing: list of strings describing what's missing
+        - priorities: ordered list of location IDs to address missing items
     """
-    # Get player state for strategic decisions
-    output = strip_ansi(run_cli(player, "state", game_id))
-    cash_match = re.search(r'Cash:\s*£(\d+)', output)
-    cash = int(cash_match.group(1)) if cash_match else 0
+    # Get ships in hangar
+    hangar_ships = [s for s in player_data.get('ships', []) if s.get('status') == 'hangar']
 
-    ships = get_player_ships(player, game_id)
-    hangar_count = len(ships.get('hangar', []))
+    # Get resources
+    gas_cubes = player_data.get('gasCubes', {})
+    hydrogen = gas_cubes.get('hydrogen', 0)
+    helium = gas_cubes.get('helium', 0)
+    total_gas = hydrogen + helium
+    engineers = player_data.get('engineers', 0)
+    officers = player_data.get('officers', 0)
+    cash = player_data.get('cash', 0)
 
-    # Check gas levels
-    h2_match = re.search(r'H₂:(\d+)', output)
-    he_match = re.search(r'He:(\d+)', output)
-    hydrogen = int(h2_match.group(1)) if h2_match else 0
-    helium = int(he_match.group(1)) if he_match else 0
+    missing = []
+    priorities = []
+
+    # Check 1: Do we have a ship?
+    if not hangar_ships:
+        missing.append('no ship in hangar')
+        if cash >= 5:
+            priorities.append('construction_hall')
+        else:
+            # Need money to build
+            priorities.append('government_liaison')  # Quick income from officers
+            priorities.append('construction_hall')
+        return {'can_launch': False, 'missing': missing, 'priorities': priorities}
+
+    # Check 2: Do we have gas?
+    # Ships need at least 1 gas cube to launch (more for heavier ships)
+    # Estimate gas needed based on blueprint weight
+    blueprint = player_data.get('blueprint', {})
+    # Simple heuristic: most ships need 1-2 gas
+    gas_needed = 1
+    if total_gas < gas_needed:
+        missing.append(f'need {gas_needed - total_gas} more gas')
+        priorities.append('gas_depot')
+
+    # Check 3: Do we have routes we can reach?
+    # Get ship stats to match against routes
+    if hangar_ships and routes:
+        # Check if any ship can reach any route
+        can_reach_route = False
+        best_ship = hangar_ships[0]
+        ship_range = best_ship.get('stats', {}).get('range', 1)
+        ship_speed = best_ship.get('stats', {}).get('speed', 1)
+
+        for route in routes:
+            route_dist = route.get('distance', 1)
+            route_speed = route.get('speed', 0)
+            if ship_range >= route_dist and ship_speed >= route_speed:
+                can_reach_route = True
+                break
+
+        if not can_reach_route:
+            missing.append('no reachable routes (need better ship stats)')
+            priorities.append('design_bureau')  # Upgrade blueprint
+
+    # Check 4: Do we have engineers for hazard mitigation?
+    # Having 2+ engineers is very helpful for surviving hazards
+    if engineers < 2:
+        missing.append(f'low engineers ({engineers}/2 recommended)')
+        # technical_institute gives engineers
+        priorities.append('technical_institute')
+
+    # If we have ship + gas, we can attempt a launch
+    can_launch = len(hangar_ships) > 0 and total_gas >= gas_needed
+
+    return {
+        'can_launch': can_launch,
+        'missing': missing,
+        'priorities': priorities,
+        'hangar_ships': hangar_ships,
+        'total_gas': total_gas,
+        'engineers': engineers
+    }
+
+
+def find_strategic_placement(player, hand, locations, game_id):
+    """Find a strategic card/location combination using intelligent evaluation.
+
+    Strategy:
+    1. Evaluate what's needed to launch (ships, gas, route access, engineers)
+    2. Prioritize getting missing requirements
+    3. If launch-ready, go to launchpad
+    4. Fall back through sensible strategic options
+    5. Find first available location from priority list that has a matching card
+    """
+    # Get player state from API for accurate strategic decisions
+    state, _ = get_full_state(game_id, player)
+    player_id = get_player_id(player, state) if state else None
+    player_data = state.get('players', {}).get(player_id, {}) if state and player_id else {}
+
+    if not player_data:
+        # Fallback if we can't get state
+        return find_playable_card(hand, locations)
+
+    cash = player_data.get('cash', 0)
+    engineers = player_data.get('engineers', 0)
+    officers = player_data.get('officers', 0)
+    gas_cubes = player_data.get('gasCubes', {})
+    hydrogen = gas_cubes.get('hydrogen', 0)
+    helium = gas_cubes.get('helium', 0)
     total_gas = hydrogen + helium
 
-    # Prioritized locations
+    # Count ships by status
+    ships = player_data.get('ships', [])
+    hangar_count = sum(1 for s in ships if s.get('status') == 'hangar')
+    on_route_count = sum(1 for s in ships if s.get('status') == 'on_route')
+
+    # Get available routes
+    routes = get_available_routes(game_id)
+
+    # Evaluate launch readiness
+    launch_eval = evaluate_launch_readiness(player_data, routes)
+
+    # Build priority list
     priority_locations = []
 
-    # Priority 1: Build ships if we can afford it and have room
-    if cash >= 5 and hangar_count < 3:
-        priority_locations.append('construction_hall')
-
-    # Priority 2: Launch ships if we have any in hangar
-    if hangar_count > 0 and total_gas > 0:
+    # === PHASE 1: Address launch requirements ===
+    if launch_eval['can_launch'] and routes:
+        # We're ready to launch! Launchpad is top priority
         priority_locations.append('launchpad')
 
-    # Priority 3: Get gas if we're low
+    # Add priorities for missing launch requirements
+    priority_locations.extend(launch_eval['priorities'])
+
+    # === PHASE 2: Strategic investments based on game state ===
+
+    # If we have ships on routes, we're doing well - diversify
+    if on_route_count >= 2:
+        # Focus on tech and income upgrades
+        priority_locations.append('research_institute')
+        priority_locations.append('flight_school')
+        priority_locations.append('technical_institute')
+
+    # Build more ships if we have capacity and money
+    if hangar_count < 2 and cash >= 5:
+        priority_locations.append('construction_hall')
+
+    # Stock up on gas if running low
     if total_gas < 3:
         priority_locations.append('gas_depot')
 
-    # Priority 4: Design bureau for blueprint modifications
-    priority_locations.append('design_bureau')
-
-    # Priority 5: Research institute for tech research
-    priority_locations.append('research_institute')
-
-    # Priority 6: Academy for crew
-    if cash >= 2:
+    # Get officers if we have few (useful for government_liaison income)
+    if officers < 2 and cash >= 2:
         priority_locations.append('academy')
 
-    # Try priority locations first
-    for loc_id in priority_locations:
-        loc = next((l for l in locations if l['id'] == loc_id), None)
-        if loc:
-            for card in hand:
-                card_symbol = card.get('symbol', 'any')
-                if card_symbol == loc['symbol'] or card_symbol == 'any':
-                    return card, loc
+    # Insurance is valuable if we have ships
+    if hangar_count > 0 or on_route_count > 0:
+        priority_locations.append('insurance_bureau')
 
-    # Fallback: any valid placement
+    # === PHASE 3: General fallback priorities ===
+    # These are always reasonable if nothing else is available
+    fallback_priorities = [
+        'design_bureau',       # Improve blueprint
+        'research_institute',  # Get tech
+        'construction_hall',   # Build ships
+        'gas_depot',           # Stock gas
+        'academy',             # Recruit officers
+        'technical_institute', # Get engineers
+        'ministry',            # Government contracts
+        'flight_school',       # Upgrade officer income
+        'weather_bureau',      # Weather info
+        'government_liaison',  # Spend officers for cash
+        'insurance_bureau',    # Insurance
+        'launchpad',           # Can always check launchpad
+    ]
+
+    for loc in fallback_priorities:
+        if loc not in priority_locations:
+            priority_locations.append(loc)
+
+    # === PHASE 4: Find first available location with matching card ===
+    available_loc_ids = {loc['id'] for loc in locations}
+
+    for loc_id in priority_locations:
+        if loc_id not in available_loc_ids:
+            continue  # Location is occupied
+
+        loc = next((l for l in locations if l['id'] == loc_id), None)
+        if not loc:
+            continue
+
+        # Find a card that can play at this location
+        for card in hand:
+            card_symbol = card.get('symbol', 'any')
+            if card_symbol == loc['symbol'] or card_symbol == 'any':
+                return card, loc
+
+    # Fallback: any valid placement we can make
     return find_playable_card(hand, locations)
 
 
@@ -619,13 +756,20 @@ def handle_launchpad_launches(player, game_id):
     - Player launches ships (can be multiple)
     - Player calls NO_MORE_LAUNCHES to signal completion
     """
-    # Get pre-launch state for detailed logging
+    # Get pre-launch state for detailed logging - use API for accuracy
     pre_state, _ = get_full_state(game_id, player)
     player_id = get_player_id(player, pre_state) if pre_state else None
     player_data = pre_state.get('players', {}).get(player_id, {}) if pre_state and player_id else {}
 
-    ships = get_player_ships(player, game_id)
-    hangar_ships = ships.get('hangar', [])
+    # Get ships from API state (more reliable than CLI parsing)
+    hangar_ships = []
+    for ship in player_data.get('ships', []):
+        if ship.get('status') == 'hangar':
+            hangar_ships.append({
+                'id': ship.get('id'),
+                'range': ship.get('stats', {}).get('range', 1),
+                'speed': ship.get('stats', {}).get('speed', 1)
+            })
 
     if not hangar_ships:
         # No ships to launch, just call NO_MORE_LAUNCHES
