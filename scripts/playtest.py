@@ -30,6 +30,7 @@ from pathlib import Path
 # Configuration
 PROJECT_ROOT = Path(__file__).parent.parent
 GAME_FILE = PROJECT_ROOT / ".upship-current-game"
+LOG_FILE_TRACKER = PROJECT_ROOT / ".upship-current-log"
 LOGS_DIR = PROJECT_ROOT / "logs"
 CLI_CMD = ["node", str(PROJECT_ROOT / "cli" / "upship.js")]
 PASSWORD = "test123456"
@@ -63,8 +64,22 @@ def init_log_file(game_id, game_name=None):
         f.write(f"{'turn':<8} {'phase':<20} {'player':<18} {'action'}\n")
         f.write(f"{'-'*8} {'-'*20} {'-'*18} {'-'*40}\n")
 
+    # Save log file path for persistence across invocations
+    LOG_FILE_TRACKER.write_text(str(_current_log_file))
+
     print(f"Log file: {_current_log_file}")
     return _current_log_file
+
+
+def load_log_file():
+    """Load existing log file path from tracker."""
+    global _current_log_file
+    if LOG_FILE_TRACKER.exists():
+        log_path = Path(LOG_FILE_TRACKER.read_text().strip())
+        if log_path.exists():
+            _current_log_file = log_path
+            return _current_log_file
+    return None
 
 
 def log_action(player, action, phase=None):
@@ -823,10 +838,11 @@ def autoplay(num_turns=None, game_id=None):
     print(f"Game: {game_id}")
     print(f"Target: {'Game completion' if num_turns is None else f'{num_turns} turns'}\n")
 
-    # Initialize log file if not already set
+    # Load existing log file or create new one
     global _current_log_file
     if not _current_log_file:
-        init_log_file(game_id)
+        if not load_log_file():
+            init_log_file(game_id)
         log_action(None, "Autoplay started", "setup")
 
     login_all_players()
