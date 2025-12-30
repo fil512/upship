@@ -7,10 +7,13 @@ Stores current game ID in .upship-current-game for persistence.
 
 Usage:
     python scripts/playtest.py setup [game_name]     # Create new 4-player game
-    python scripts/playtest.py autoplay [num_turns]  # Run AI for current game
-    python scripts/playtest.py status                # Show current game status
+    python scripts/playtest.py autoplay              # Run AI until game ends or gets stuck
+    python scripts/playtest.py autoplay [num_turns]  # Run AI for N turns
+    python scripts/playtest.py status [player]       # Show current game status
+    python scripts/playtest.py summary               # Show all players' status table
     python scripts/playtest.py action <player> <cmd> # Run single command
     python scripts/playtest.py endphase              # All players end turn
+    python scripts/playtest.py debug                 # Show raw game state
 """
 
 import subprocess
@@ -18,6 +21,7 @@ import sys
 import re
 import os
 import json
+import time
 import urllib.request
 import urllib.error
 from datetime import datetime
@@ -26,12 +30,60 @@ from pathlib import Path
 # Configuration
 PROJECT_ROOT = Path(__file__).parent.parent
 GAME_FILE = PROJECT_ROOT / ".upship-current-game"
+LOGS_DIR = PROJECT_ROOT / "logs"
 CLI_CMD = ["node", str(PROJECT_ROOT / "cli" / "upship.js")]
 PASSWORD = "test123456"
 API_BASE = "https://upship-production.up.railway.app"
 
 PLAYERS = ["playtest_germany", "playtest_britain", "playtest_usa", "playtest_italy"]
 FACTIONS = ["germany", "britain", "usa", "italy"]
+
+# Current log file (set when game starts)
+_current_log_file = None
+_current_turn = 0
+
+
+def init_log_file(game_id, game_name=None):
+    """Initialize a new log file for this game."""
+    global _current_log_file, _current_turn
+    LOGS_DIR.mkdir(exist_ok=True)
+
+    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    name_part = f"_{game_name}" if game_name else ""
+    filename = f"playtest_{timestamp}{name_part}.log"
+    _current_log_file = LOGS_DIR / filename
+    _current_turn = 0
+
+    # Write header
+    with open(_current_log_file, 'w') as f:
+        f.write(f"# UP SHIP! Playtest Log\n")
+        f.write(f"# Game ID: {game_id}\n")
+        f.write(f"# Started: {datetime.now().isoformat()}\n")
+        f.write(f"#\n")
+        f.write(f"{'turn':<8} {'phase':<20} {'player':<18} {'action'}\n")
+        f.write(f"{'-'*8} {'-'*20} {'-'*18} {'-'*40}\n")
+
+    print(f"Log file: {_current_log_file}")
+    return _current_log_file
+
+
+def log_action(player, action, phase=None):
+    """Log an action to the current log file."""
+    global _current_log_file, _current_turn
+    if not _current_log_file:
+        return
+
+    faction = player.replace('playtest_', '') if player else 'system'
+    phase_str = phase or ''
+
+    with open(_current_log_file, 'a') as f:
+        f.write(f"{_current_turn:<8} {phase_str:<20} {faction:<18} {action}\n")
+
+
+def log_turn_start(turn_num):
+    """Record that a new turn has started."""
+    global _current_turn
+    _current_turn = turn_num
 
 
 def run_cli(*args, capture=True):
@@ -163,6 +215,8 @@ def setup_game(game_name=None):
         print(f"Start failed: {output}")
 
     save_game_id(game_id)
+    init_log_file(game_id, game_name)
+    log_action(None, "Game created and started", "setup")
 
     print(f"\n{'='*45}")
     print("Playtest ready!")
@@ -248,27 +302,36 @@ def get_player_ships(player, game_id):
 
 
 def get_available_routes(game_id):
-    """Get list of unclaimed routes."""
-    output = strip_ansi(run_cli("playtest_germany", "routes", game_id))
-    routes = []
-    current_route = None
-    for line in output.split('\n'):
-        if 'route_' in line and 'OPEN' in line:
-            match = re.search(r'(route_\d+)', line)
-            if match:
-                current_route = {'id': match.group(1)}
-        # Route format: "requires Range ≥2, Speed ≥1 → income +3"
-        if current_route and 'Range' in line:
-            # Parse stats from format: Range ≥X, Speed ≥Y
-            range_match = re.search(r'Range\s*[≥>=]+\s*(\d+)', line)
-            speed_match = re.search(r'Speed\s*[≥>=]+\s*(\d+)', line)
-            if range_match:
-                current_route['distance'] = int(range_match.group(1))
-            if speed_match:
-                current_route['speed'] = int(speed_match.group(1))
-            routes.append(current_route)
-            current_route = None
-    return routes
+    """Get list of unclaimed routes with requirements via API."""
+    try:
+        url = f"{API_BASE}/api/state/{game_id}"
+        req = urllib.request.Request(url)
+        cookie = get_session_cookie()
+        if cookie:
+            req.add_header("Cookie", cookie)
+        with urllib.request.urlopen(req, timeout=10) as response:
+            data = json.loads(response.read().decode())
+
+        gs = data.get('gameState', data)
+        state = gs.get('state', gs)
+        routes = state.get('map', {}).get('routes', [])
+
+        available = []
+        for route in routes:
+            if not route.get('claimed'):
+                available.append({
+                    'id': route.get('id'),
+                    'name': route.get('name', route.get('id', 'unknown')),
+                    'distance': route.get('range', 1),  # 'range' is the field name
+                    'speed': route.get('speed', 0),
+                    'ceiling': route.get('ceiling', 0),
+                    'income': route.get('income', 0),
+                    'vp': route.get('vp', 0)
+                })
+        return available
+    except Exception as e:
+        print(f"Error getting routes: {e}")
+        return []
 
 
 def get_rd_board(game_id):
@@ -343,20 +406,23 @@ def get_available_locations(game_id):
     """Get list of unoccupied Ground Board locations."""
     output = strip_ansi(run_cli("playtest_germany", "state", game_id))
     locations = []
-    # Ground Board locations and their symbols (using underscores to match server IDs)
+    # Ground Board locations and their symbols (from server/data/groundBoard.js)
     location_symbols = {
+        # Propeller locations
         'research_institute': 'propeller',
+        'launchpad': 'propeller',
+        'ministry': 'propeller',
+        'weather_bureau': 'propeller',
+        # Wrench locations
         'design_bureau': 'wrench',
         'construction_hall': 'wrench',
-        'launchpad': 'propeller',
+        'technical_institute': 'wrench',
+        'gas_depot': 'wrench',
+        # Coin locations
         'academy': 'coin',
         'flight_school': 'coin',
-        'technical_institute': 'wrench',
-        'the_bank': 'coin',
-        'ministry': 'propeller',
-        'gas_depot': 'wrench',
+        'government_liaison': 'coin',
         'insurance_bureau': 'coin',
-        'weather_bureau': 'propeller'
     }
 
     # Check which locations are occupied
@@ -398,8 +464,243 @@ def find_playable_card(cards, locations):
     return None, None
 
 
-def autoplay(num_turns=5, game_id=None):
-    """Run smart AI for all players with new worker placement phases."""
+def get_player_placements(player, game_id):
+    """Get list of locations where this player has placed agents."""
+    output = strip_ansi(run_cli(player, "state", game_id))
+    placements = []
+    faction = player.replace('playtest_', '').upper()
+
+    in_ground_board = False
+    for line in output.split('\n'):
+        if 'Ground Board' in line:
+            in_ground_board = True
+            continue
+        if in_ground_board:
+            if '┌─' in line and 'Ground Board' not in line:
+                break
+            if faction in line:
+                for loc_id in ['research_institute', 'design_bureau', 'construction_hall',
+                              'launchpad', 'academy', 'flight_school', 'technical_institute',
+                              'government_liaison', 'ministry', 'gas_depot', 'insurance_bureau',
+                              'weather_bureau']:
+                    if loc_id in line.lower():
+                        placements.append(loc_id)
+    return placements
+
+
+def find_strategic_placement(player, hand, locations, game_id):
+    """Find a strategic card/location combination.
+
+    Priority order:
+    1. construction_hall (if have cash to build)
+    2. launchpad (if have ships in hangar)
+    3. gas_depot (if low on gas)
+    4. design_bureau (if have tech to install)
+    5. Any valid placement
+    """
+    # Get player state for strategic decisions
+    output = strip_ansi(run_cli(player, "state", game_id))
+    cash_match = re.search(r'Cash:\s*£(\d+)', output)
+    cash = int(cash_match.group(1)) if cash_match else 0
+
+    ships = get_player_ships(player, game_id)
+    hangar_count = len(ships.get('hangar', []))
+
+    # Check gas levels
+    h2_match = re.search(r'H₂:(\d+)', output)
+    he_match = re.search(r'He:(\d+)', output)
+    hydrogen = int(h2_match.group(1)) if h2_match else 0
+    helium = int(he_match.group(1)) if he_match else 0
+    total_gas = hydrogen + helium
+
+    # Prioritized locations
+    priority_locations = []
+
+    # Priority 1: Build ships if we can afford it and have room
+    if cash >= 5 and hangar_count < 3:
+        priority_locations.append('construction_hall')
+
+    # Priority 2: Launch ships if we have any in hangar
+    if hangar_count > 0 and total_gas > 0:
+        priority_locations.append('launchpad')
+
+    # Priority 3: Get gas if we're low
+    if total_gas < 3:
+        priority_locations.append('gas_depot')
+
+    # Priority 4: Design bureau for blueprint modifications
+    priority_locations.append('design_bureau')
+
+    # Priority 5: Research institute for tech research
+    priority_locations.append('research_institute')
+
+    # Priority 6: Academy for crew
+    if cash >= 2:
+        priority_locations.append('academy')
+
+    # Try priority locations first
+    for loc_id in priority_locations:
+        loc = next((l for l in locations if l['id'] == loc_id), None)
+        if loc:
+            for card in hand:
+                card_symbol = card.get('symbol', 'any')
+                if card_symbol == loc['symbol'] or card_symbol == 'any':
+                    return card, loc
+
+    # Fallback: any valid placement
+    return find_playable_card(hand, locations)
+
+
+def handle_worker_placement_round(game_id):
+    """Handle a complete worker placement round. Returns True if phase changed."""
+    initial_phase = get_phase(game_id)
+    attempts = 0
+    max_attempts = 30  # Allow more attempts for 4 players
+
+    while attempts < max_attempts:
+        attempts += 1
+        current_phase = get_phase(game_id)
+        if current_phase != "WORKER_PLACEMENT":
+            return True  # Phase changed
+
+        current = get_current_placer(game_id)
+        if not current:
+            # No current placer - check if phase changed
+            time.sleep(0.3)
+            if get_phase(game_id) != "WORKER_PLACEMENT":
+                return True
+            continue
+
+        # Get player's hand and available locations
+        hand = get_player_hand(current, game_id)
+        locations = get_available_locations(game_id)
+
+        # Find a strategic placement
+        card, location = find_strategic_placement(current, hand, locations, game_id)
+
+        if card and location:
+            result = run_cli(current, "action", game_id, "PLACE_AGENT",
+                           f"locationId={location['id']}", f"cardIndex={card['index']}")
+            if "✓" in result or "success" in result.lower():
+                print(f"  {current}: placed at {location['id']} using {card['name']}")
+                log_action(current, f"placed at {location['id']} using {card['name']}", "worker_placement")
+            else:
+                # Placement failed - pass instead
+                run_cli(current, "action", game_id, "PASS")
+                print(f"  {current}: passed (placement failed)")
+                log_action(current, "passed (placement failed)", "worker_placement")
+        else:
+            # No playable cards - pass
+            run_cli(current, "action", game_id, "PASS")
+            print(f"  {current}: passed")
+            log_action(current, "passed (no playable cards)", "worker_placement")
+
+    return get_phase(game_id) != initial_phase
+
+
+def take_reveal_actions(player, game_id):
+    """Take strategic actions during reveal phase."""
+    output = strip_ansi(run_cli(player, "state", game_id))
+
+    # Check cash
+    cash_match = re.search(r'Cash:\s*£(\d+)', output)
+    cash = int(cash_match.group(1)) if cash_match else 0
+
+    # Check placements to see what actions are available
+    placements = get_player_placements(player, game_id)
+
+    # If at construction_hall - build a ship
+    if 'construction_hall' in placements and cash >= 5:
+        result = run_cli(player, "build", game_id, "1")
+        if "✓" in result:
+            print(f"  {player}: built ship")
+            log_action(player, "built ship", "reveal")
+            cash -= 5  # Update local cash tracking
+
+    # If at gas_depot - buy gas
+    if 'gas_depot' in placements and cash >= 2:
+        gas_type = "helium" if player == "playtest_usa" else "hydrogen"
+        amount = min(3, cash)  # Buy up to 3 gas
+        result = run_cli(player, "buygas", game_id, gas_type, str(amount))
+        if "✓" in result:
+            print(f"  {player}: bought {amount} {gas_type}")
+            log_action(player, f"bought {amount} {gas_type}", "reveal")
+
+    # If at academy - recruit crew
+    if 'academy' in placements and cash >= 2:
+        result = run_cli(player, "recruit", game_id, "officer", "1")
+        if "✓" in result:
+            print(f"  {player}: recruited officer")
+            log_action(player, "recruited officer", "reveal")
+
+    # Try to acquire technology using research (if at research_institute)
+    if 'research_institute' in placements:
+        techs = get_rd_board(game_id)
+        if techs:
+            cheapest = min(techs, key=lambda t: t['cost'])
+            result = run_cli(player, "action", game_id, "ACQUIRE_TECHNOLOGY_RESEARCH",
+                           f"techId={cheapest['id']}")
+            if "✓" in result:
+                print(f"  {player}: acquired tech {cheapest['id']}")
+                log_action(player, f"acquired tech {cheapest['id']}", "reveal")
+
+    # Try to launch ships to routes (if at launchpad)
+    if 'launchpad' in placements:
+        ships = get_player_ships(player, game_id)
+        if ships.get('hangar'):
+            routes = get_available_routes(game_id)
+            # Sort routes by easiest first (lowest distance/speed requirement)
+            routes.sort(key=lambda r: (r.get('distance', 1), r.get('speed', 1)))
+            for ship in ships['hangar']:
+                for route in routes:
+                    gas_type = get_gas_preference(player, game_id)
+                    result = run_cli(player, "launch", game_id, ship['id'], route['id'], gas_type)
+                    if "✓" in result:
+                        print(f"  {player}: launched {ship['id']} to {route['id']}")
+                        log_action(player, f"launched {ship['id']} to {route['id']} ({gas_type})", "reveal")
+                        routes.remove(route)  # Route now claimed
+                        break
+
+
+def handle_reveal_phase(game_id):
+    """Handle the reveal phase - all players take actions and end turn."""
+    print("--- Reveal Phase ---")
+
+    for player in PLAYERS:
+        # Try strategic actions first
+        take_reveal_actions(player, game_id)
+
+        # End turn for this player
+        run_cli(player, "endturn", game_id)
+
+    # Wait for phase to change
+    for _ in range(10):
+        if get_phase(game_id) != "REVEAL":
+            break
+        time.sleep(0.3)
+
+
+def handle_income_cleanup_phase(game_id):
+    """Handle income and cleanup - all players end turn."""
+    print("--- Income & Cleanup Phase ---")
+    for player in PLAYERS:
+        run_cli(player, "endturn", game_id)
+    print("  All players collected income")
+
+    # Wait for phase to change
+    for _ in range(10):
+        if get_phase(game_id) != "INCOME_CLEANUP":
+            break
+        time.sleep(0.3)
+
+
+def autoplay(num_turns=None, game_id=None):
+    """Run AI for all players until game ends or gets stuck.
+
+    Args:
+        num_turns: Maximum turns to play (None = play until game ends)
+        game_id: Game ID (uses current game if None)
+    """
     if game_id is None:
         game_id = get_game_id()
     if not game_id:
@@ -408,215 +709,99 @@ def autoplay(num_turns=5, game_id=None):
 
     print(f"=== UP SHIP! Autoplay ===")
     print(f"Game: {game_id}")
-    print(f"Turns: {num_turns}\n")
+    print(f"Target: {'Game completion' if num_turns is None else f'{num_turns} turns'}\n")
+
+    # Initialize log file if not already set
+    global _current_log_file
+    if not _current_log_file:
+        init_log_file(game_id)
+        log_action(None, "Autoplay started", "setup")
 
     login_all_players()
 
-    for turn in range(1, num_turns + 1):
-        print(f"\n{'='*45}")
-        print(f"=== TURN {turn} ===")
-        print(f"{'='*45}")
+    stuck_detector = StuckDetector(threshold=10)
+    turn_count = 0
+    max_iterations = 1000  # Safety limit
+    iteration = 0
+    last_phase = None
 
-        # Process all phases until we complete a full turn cycle
-        phases_seen = set()
-        max_iterations = 50  # Safety limit (more iterations for worker placement)
+    while iteration < max_iterations:
+        iteration += 1
 
-        for iteration in range(max_iterations):
-            phase = get_phase(game_id)
+        # Check for game end
+        end_status = check_game_ended(game_id)
+        if end_status['ended']:
+            print(f"\n{'='*60}")
+            print(f"GAME ENDED!")
+            print(f"Winner: {end_status['winner']}")
+            print(f"Reason: {end_status['reason']}")
+            log_action(None, f"GAME ENDED - Winner: {end_status['winner']}", "end")
+            if end_status['scores']:
+                print("\nFinal Scores:")
+                for pid, score_data in end_status['scores'].items():
+                    faction = score_data.get('faction', 'unknown').upper()
+                    total = score_data.get('total', 0)
+                    print(f"  {faction}: {total} VP")
+                    log_action(None, f"Final score: {faction} = {total} VP", "end")
+            print(f"{'='*60}")
+            return
 
-            # Check if we've completed a cycle
-            if phase in phases_seen and phase == "WORKER_PLACEMENT":
-                break
-            phases_seen.add(phase)
+        # Check for stuck state
+        is_stuck, stuck_details = stuck_detector.check(game_id)
+        if is_stuck:
+            print(stuck_details)
+            log_action(None, "GAME STUCK - see console for details", "error")
+            return
 
+        phase = get_phase(game_id)
+
+        # Print phase header when phase changes
+        if phase != last_phase:
             print(f"\n--- {phase.replace('_', ' ').title()} Phase ---")
+            last_phase = phase
 
-            if phase == "WORKER_PLACEMENT":
-                # Worker placement: players take turns placing agents
-                placement_attempts = 0
-                no_placer_count = 0
-                max_placements = 20  # Safety limit for placement round
+        if phase == "WORKER_PLACEMENT":
+            if handle_worker_placement_round(game_id):
+                stuck_detector.reset()  # Reset on successful phase change
 
-                while placement_attempts < max_placements:
-                    placement_attempts += 1
-                    current = get_current_placer(game_id)
+        elif phase == "REVEAL":
+            handle_reveal_phase(game_id)
+            stuck_detector.reset()
 
-                    if not current:
-                        no_placer_count += 1
-                        # Check if phase changed (all passed)
-                        new_phase = get_phase(game_id)
-                        if new_phase != "WORKER_PLACEMENT":
-                            print(f"  Phase changed to {new_phase}")
-                            break
-                        # If no placer found 3 times in a row, all players likely passed
-                        if no_placer_count >= 3:
-                            print("  All players appear to have passed")
-                            break
-                        continue
-                    else:
-                        no_placer_count = 0  # Reset counter
+        elif phase == "INCOME_CLEANUP":
+            handle_income_cleanup_phase(game_id)
+            turn_count += 1
+            log_turn_start(turn_count)
+            stuck_detector.reset()
 
-                    # Get player's hand and available locations
-                    hand = get_player_hand(current, game_id)
-                    locations = get_available_locations(game_id)
+            # Show progress after each turn
+            print(f"\n  Turn {turn_count} complete")
+            log_action(None, f"Turn {turn_count} complete", "income_cleanup")
+            output = strip_ansi(run_cli("playtest_germany", "state", game_id))
+            for line in output.split('\n'):
+                if any(x in line for x in ['Age', 'Turn', 'Progress']):
+                    print(f"  {line.strip()}")
+                    break
 
-                    print(f"  {current}: hand={len(hand)} cards, locations={len(locations)} available")
-
-                    # Find a playable card
-                    card, location = find_playable_card(hand, locations)
-
-                    if card and location:
-                        # Place agent
-                        result = run_cli(current, "action", game_id, "PLACE_AGENT",
-                                       f"locationId={location['id']}", f"cardIndex={card['index']}")
-                        if "✓" in result or "success" in result.lower():
-                            print(f"  {current}: placed agent at {location['id']} using {card['name']}")
-                        else:
-                            # If placement fails, log the error and pass
-                            error_msg = strip_ansi(result).split('\n')[0][:80]
-                            print(f"  {current}: placement failed ({error_msg}), passing")
-                            result = run_cli(current, "action", game_id, "PASS")
-                    else:
-                        # No playable cards, pass
-                        result = run_cli(current, "action", game_id, "PASS")
-                        if "✓" in result or "passed" in result.lower():
-                            print(f"  {current}: passed (no playable cards)")
-                        else:
-                            print(f"  {current}: pass result: {strip_ansi(result)[:60]}")
-
-                    # Check if phase changed
-                    new_phase = get_phase(game_id)
-                    if new_phase != "WORKER_PLACEMENT":
-                        break
-
-            elif phase == "REVEAL":
-                # Reveal phase: players take location actions in parallel
-                print("  Executing location actions...")
-
-                for player in PLAYERS:
-                    # Check player's status and locations
-                    output = strip_ansi(run_cli(player, "state", game_id))
-
-                    # Get player's cash
-                    cash_match = re.search(r'Cash:\s*£(\d+)', output)
-                    cash = int(cash_match.group(1)) if cash_match else 0
-
-                    # Get player's gas
-                    h2_match = re.search(r'H₂:(\d+)', output)
-                    he_match = re.search(r'He:(\d+)', output)
-                    hydrogen = int(h2_match.group(1)) if h2_match else 0
-                    helium = int(he_match.group(1)) if he_match else 0
-
-                    # Check if player has agent at construction_hall - build ships
-                    if 'construction_hall' in output.lower() and player.replace('playtest_', '').upper() in output:
-                        if cash >= 7:
-                            result = run_cli(player, "build", game_id, "1")
-                            if "✓" in result:
-                                print(f"  {player}: built a ship")
-
-                    # Check if at gas_depot - buy gas
-                    if 'gas_depot' in output.lower() and player.replace('playtest_', '').upper() in output:
-                        gas_type = "helium" if player == "playtest_usa" else "hydrogen"
-                        amount = min(4, cash)
-                        if amount > 0:
-                            result = run_cli(player, "buygas", game_id, gas_type, str(amount))
-                            if "✓" in result:
-                                print(f"  {player}: bought {amount} {gas_type}")
-
-                    # Check if at academy - recruit crew
-                    if 'academy' in output.lower() and player.replace('playtest_', '').upper() in output:
-                        if cash >= 2:
-                            result = run_cli(player, "recruit", game_id, "officer", "1")
-                            if "✓" in result:
-                                print(f"  {player}: recruited an officer")
-
-                    # Try to acquire technology using research
-                    techs = get_rd_board(game_id)
-                    if techs:
-                        cheapest = min(techs, key=lambda t: t['cost'])
-                        result = run_cli(player, "action", game_id, "ACQUIRE_TECHNOLOGY_RESEARCH",
-                                       f"techId={cheapest['id']}")
-                        if "✓" in result:
-                            print(f"  {player}: acquired tech {cheapest['id']}")
-
-                    # Try to launch ships to claim routes
-                    ships = get_player_ships(player, game_id)
-                    if ships['hangar']:
-                        routes = get_available_routes(game_id)
-                        # Sort routes by easiest first (lowest distance requirement)
-                        routes.sort(key=lambda r: (r.get('distance', 1), r.get('speed', 1)))
-                        gas_type = get_gas_preference(player, game_id)
-                        for ship in ships['hangar']:
-                            launched = False
-                            for route in routes:
-                                result = run_cli(player, "launch", game_id, ship['id'], route['id'], gas_type)
-                                if "✓" in result:
-                                    print(f"  {player}: launched {ship['id']} to {route['id']}")
-                                    routes.remove(route)  # Route now claimed
-                                    launched = True
-                                    break
-                            if launched:
-                                break  # Only launch one ship per player per turn
-
-                    # End turn for this player
-                    run_cli(player, "endturn", game_id)
-
-            elif phase == "INCOME_CLEANUP":
-                # Income/Cleanup: just end turn for all players
-                for player in PLAYERS:
-                    run_cli(player, "endturn", game_id)
-                print("  All players collected income and cleaned up")
-
-            # Legacy phase handling (for backwards compatibility during transition)
-            elif phase == "PLANNING":
-                for _ in range(4):
-                    current = get_current_player(game_id)
-                    if current:
-                        run_cli(current, "draw", game_id, "2")
-                        run_cli(current, "endturn", game_id)
-
-            elif phase == "ACTIONS":
-                for _ in range(4):
-                    current = get_current_player(game_id)
-                    if not current:
-                        break
-                    gas = get_gas_preference(current, game_id)
-                    run_cli(current, "buygas", game_id, gas, "2")
-                    result = run_cli(current, "build", game_id, "1")
-                    if "✓" in result:
-                        print(f"  {current}: built a ship")
-                    run_cli(current, "endturn", game_id)
-
-            else:  # Unknown or legacy phases
-                for _ in range(8):
-                    current = get_current_player(game_id)
-                    if current:
-                        run_cli(current, "endturn", game_id)
-                    else:
-                        break
-
-            # Check if phase changed
-            new_phase = get_phase(game_id)
-            if new_phase == phase and iteration > 5:
-                # Phase didn't change after multiple attempts, might be stuck
-                print(f"  Warning: Phase stuck at {phase}, forcing advance...")
-                for player in PLAYERS:
-                    run_cli(player, "action", game_id, "PASS")
-                    run_cli(player, "endturn", game_id)
+            if num_turns and turn_count >= num_turns:
+                print(f"\n{'='*60}")
+                print(f"Completed {turn_count} turns (target reached)")
+                print(f"{'='*60}")
                 break
 
-        # Show brief status
-        output = strip_ansi(run_cli("playtest_germany", "state", game_id))
-        for line in output.split('\n'):
-            if any(x in line for x in ['Age', 'Turn', 'Round', 'Phase', 'Progress']):
-                print(line.strip())
-                break
+        else:
+            # Unknown phase - try to advance
+            print(f"  Unknown phase: {phase}, attempting to advance...")
+            for player in PLAYERS:
+                run_cli(player, "endturn", game_id)
 
-    print(f"\n{'='*45}")
-    print(f"Autoplay complete: {num_turns} turns")
-    print(f"{'='*45}\n")
+    if iteration >= max_iterations:
+        print(f"\nReached max iterations ({max_iterations})")
 
-    show_status(game_id)
+    print(f"\n{'='*60}")
+    print(f"Autoplay Summary")
+    print(f"{'='*60}")
+    show_summary(game_id)
 
 
 def run_action(player, command, *args, game_id=None):
@@ -681,6 +866,161 @@ def get_session_cookie(player="playtest_germany"):
             session = json.load(f)
             return session.get("cookie", "")
     return ""
+
+
+def check_game_ended(game_id):
+    """Check if the game has ended and return winner info if so.
+
+    Returns:
+        dict with keys: ended (bool), winner (faction or None),
+        reason (str or None), scores (dict or None)
+    """
+    try:
+        url = f"{API_BASE}/api/state/{game_id}"
+        req = urllib.request.Request(url)
+        cookie = get_session_cookie()
+        if cookie:
+            req.add_header("Cookie", cookie)
+        with urllib.request.urlopen(req, timeout=10) as response:
+            data = json.loads(response.read().decode())
+
+        gs = data.get('gameState', data)
+        state = gs.get('state', gs)
+
+        winner_id = state.get('winner')
+        if winner_id:
+            winner_player = state.get('players', {}).get(winner_id, {})
+            scores = state.get('scores', {})
+            reason = state.get('gameEndReason', 'progress_complete')
+            return {
+                'ended': True,
+                'winner': winner_player.get('faction', 'unknown').upper(),
+                'reason': reason,
+                'scores': scores
+            }
+        return {'ended': False, 'winner': None, 'reason': None, 'scores': None}
+    except Exception as e:
+        print(f"Error checking game end: {e}")
+        return {'ended': False, 'winner': None, 'reason': None, 'scores': None}
+
+
+def get_state_fingerprint(game_id):
+    """Get a fingerprint of the current game state for stuck detection."""
+    try:
+        url = f"{API_BASE}/api/state/{game_id}"
+        req = urllib.request.Request(url)
+        cookie = get_session_cookie()
+        if cookie:
+            req.add_header("Cookie", cookie)
+        with urllib.request.urlopen(req, timeout=10) as response:
+            data = json.loads(response.read().decode())
+
+        gs = data.get('gameState', data)
+        state = gs.get('state', gs)
+
+        # Create fingerprint from key state elements
+        fingerprint = {
+            'phase': state.get('phase'),
+            'turn': state.get('turn'),
+            'round': state.get('round'),
+            'age': state.get('age', gs.get('age')),
+            'progress': state.get('progressTrack', 0),
+            'placements': len(state.get('groundBoard', {}).get('placements', {})),
+            'passed_count': len(state.get('workerPlacement', {}).get('passedPlayers', []))
+        }
+        return json.dumps(fingerprint, sort_keys=True), state
+    except Exception as e:
+        return str(e), None
+
+
+class StuckDetector:
+    """Detects when the game is stuck in the same state."""
+
+    def __init__(self, threshold=10):
+        self.threshold = threshold
+        self.fingerprints = []
+
+    def check(self, game_id):
+        """Check if game appears stuck. Returns (is_stuck, details)."""
+        fingerprint, state = get_state_fingerprint(game_id)
+        self.fingerprints.append(fingerprint)
+
+        # Keep only last N fingerprints
+        if len(self.fingerprints) > self.threshold:
+            self.fingerprints = self.fingerprints[-self.threshold:]
+
+        # Check if all recent fingerprints are identical
+        if len(self.fingerprints) >= self.threshold:
+            if len(set(self.fingerprints)) == 1:
+                details = self._build_verbose_report(game_id, state, fingerprint)
+                return True, details
+        return False, None
+
+    def reset(self):
+        """Reset the stuck detector after successful phase change."""
+        self.fingerprints = []
+
+    def _build_verbose_report(self, game_id, state, fingerprint):
+        """Build a verbose diagnostic report when stuck."""
+        lines = []
+        lines.append(f"\n{'='*60}")
+        lines.append("GAME STUCK - VERBOSE DIAGNOSTIC REPORT")
+        lines.append(f"{'='*60}")
+        lines.append(f"\nState fingerprint: {fingerprint}")
+
+        if state:
+            lines.append(f"\nPhase: {state.get('phase', 'unknown')}")
+            lines.append(f"Age: {state.get('age', '?')} | Turn: {state.get('turn', '?')} | Round: {state.get('round', '?')}")
+            lines.append(f"Progress Track: {state.get('progressTrack', 0)}")
+
+            # Worker placement status
+            wp = state.get('workerPlacement', {})
+            if wp:
+                lines.append(f"\nWorker Placement Status:")
+                lines.append(f"  Current Placer Index: {wp.get('currentPlacerIndex', '?')}")
+                lines.append(f"  Passed Players: {len(wp.get('passedPlayers', []))}")
+                lines.append(f"  Placement Order: {wp.get('placementOrder', [])[:4]}...")
+
+            # Player resources
+            players = state.get('players', {})
+            lines.append(f"\nPlayer Resources:")
+            for pid, pdata in players.items():
+                faction = pdata.get('faction', 'unknown').upper()
+                cash = pdata.get('cash', 0)
+                income = pdata.get('income', 0)
+                agents = pdata.get('agentsRemaining', 0)
+                h2 = pdata.get('gasCubes', {}).get('hydrogen', 0)
+                he = pdata.get('gasCubes', {}).get('helium', 0)
+                ships = len(pdata.get('ships', []))
+                hand = len(pdata.get('hand', []))
+                passed = pdata.get('hasPassed', False)
+                lines.append(f"  {faction}: £{cash}, Income:{income}, Agents:{agents}, H2:{h2}, He:{he}, Ships:{ships}, Hand:{hand}, Passed:{passed}")
+
+            # Ground board placements
+            placements = state.get('groundBoard', {}).get('placements', {})
+            if placements:
+                lines.append(f"\nGround Board Placements ({len(placements)}):")
+                for loc, info in placements.items():
+                    lines.append(f"  {loc}: {info}")
+            else:
+                lines.append("\nGround Board: No placements")
+
+            # Available routes
+            routes = state.get('map', {}).get('routes', [])
+            available_routes = [r for r in routes if not r.get('claimed')]
+            lines.append(f"\nAvailable Routes ({len(available_routes)}):")
+            for route in available_routes[:5]:  # Show first 5
+                lines.append(f"  {route.get('id')}: Range>={route.get('range', 0)}, Speed>={route.get('speed', 0)}")
+
+        lines.append(f"\n{'='*60}")
+        lines.append("POSSIBLE CAUSES:")
+        lines.append("  - No player can make a valid move (check hand/locations)")
+        lines.append("  - All players passed but phase didn't advance")
+        lines.append("  - Action validation blocking all moves")
+        lines.append("  - Phase transition logic bug")
+        lines.append(f"{'='*60}")
+
+        return '\n'.join(lines)
 
 
 def show_sessions():
@@ -849,7 +1189,11 @@ def main():
         setup_game(game_name)
 
     elif cmd == "autoplay":
-        num_turns = int(sys.argv[2]) if len(sys.argv) > 2 else 5
+        # If no arg, run until game ends. If arg is a number, limit turns.
+        if len(sys.argv) > 2:
+            num_turns = int(sys.argv[2])
+        else:
+            num_turns = None  # Run until game ends
         autoplay(num_turns)
 
     elif cmd == "status":
