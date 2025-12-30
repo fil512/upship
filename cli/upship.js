@@ -713,6 +713,8 @@ const commands = {
       console.log('Actions:');
       console.log('  END_TURN                    - End your turn');
       console.log('  PASS                        - Pass (worker placement only)');
+      console.log('  REVEAL techAcquisitions=a,b marketPurchases=c - Atomic pass + acquire');
+      console.log('  NO_MORE_LAUNCHES            - Signal done launching at launchpad');
       console.log('  PLACE_AGENT locationId=<id> cardIndex=<n> - Place agent at location');
       console.log('  BUY_GAS type=hydrogen amt=2 - Buy gas cubes');
       console.log('  TAKE_LOAN                   - Take a £30 loan');
@@ -730,11 +732,18 @@ const commands = {
 
     // Parse key=value pairs into actionData
     const actionData = {};
+    // Keys that should be parsed as arrays (comma-separated)
+    const arrayKeys = ['techAcquisitions', 'marketPurchases', 'swaps'];
+
     for (const arg of rest) {
       const [key, value] = arg.split('=');
       if (key && value !== undefined) {
+        // Handle array keys (comma-separated values)
+        if (arrayKeys.includes(key)) {
+          actionData[key] = value.split(',').filter(v => v.trim());
+        }
         // Try to parse as number or boolean
-        if (value === 'true') actionData[key] = true;
+        else if (value === 'true') actionData[key] = true;
         else if (value === 'false') actionData[key] = false;
         else if (!isNaN(value)) actionData[key] = parseInt(value);
         else actionData[key] = value;
@@ -788,6 +797,42 @@ const commands = {
 
   async pass(username, args) {
     return commands.action(username, [args[0], 'PASS']);
+  },
+
+  async reveal(username, args) {
+    const [gameId, techList, cardList] = args;
+    if (!gameId) {
+      console.log('Usage: upship <user> reveal <gameId> [techId1,techId2,...] [cardId1,cardId2,...]');
+      console.log('');
+      console.log('Atomic reveal: pass worker placement AND acquire technologies/market cards.');
+      console.log('Tech acquisitions use Research, market purchases use Influence.');
+      console.log('');
+      console.log('Examples:');
+      console.log('  upship alice reveal abc123                     # Just pass');
+      console.log('  upship alice reveal abc123 diesel_engine       # Pass and acquire 1 tech');
+      console.log('  upship alice reveal abc123 tech1,tech2 card1   # Acquire techs and card');
+      return;
+    }
+    const actionArgs = [gameId, 'REVEAL'];
+    if (techList && techList.trim()) {
+      actionArgs.push(`techAcquisitions=${techList}`);
+    }
+    if (cardList && cardList.trim()) {
+      actionArgs.push(`marketPurchases=${cardList}`);
+    }
+    return commands.action(username, actionArgs);
+  },
+
+  async nolaunches(username, args) {
+    const [gameId] = args;
+    if (!gameId) {
+      console.log('Usage: upship <user> nolaunches <gameId>');
+      console.log('');
+      console.log('Signal you are done launching ships at the launchpad.');
+      console.log('This advances the turn to the next player.');
+      return;
+    }
+    return commands.action(username, [gameId, 'NO_MORE_LAUNCHES']);
   },
 
   async place(username, args) {
@@ -953,6 +998,8 @@ ${c(COLORS.yellow, 'Game State:')}
 ${c(COLORS.yellow, 'Worker Placement:')}
   upship <user> place <gameId> <locationId> <cardIndex>  Place agent
   upship <user> pass <gameId>                 Pass this round
+  upship <user> reveal <gameId> [techs] [cards]  Atomic pass + acquire (Section 5.1)
+  upship <user> nolaunches <gameId>           Signal done launching at launchpad
 
 ${c(COLORS.yellow, 'Actions (shorthand):')}
   upship <user> endturn <gameId>              End your turn
