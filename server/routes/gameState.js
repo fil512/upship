@@ -26,7 +26,7 @@ const {
 
 // Import refactored services
 const { filterStateForPlayer } = require('../services/gameStateHelpers');
-const { processAction } = require('../services/actionProcessorService');
+const { processAction } = require('../actions');
 
 // All game state routes require authentication
 router.use(requireAuth);

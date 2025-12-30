@@ -2,13 +2,14 @@ require('dotenv').config();
 
 const express = require('express');
 const path = require('path');
+const pinoHttp = require('pino-http');
+const logger = require('./logger');
 const db = require('./db');
 const { runMigrations } = require('./db/migrate');
 const { createSessionMiddleware } = require('./auth');
 const authRoutes = require('./routes/auth');
 const gameRoutes = require('./routes/games');
 const gameStateRoutes = require('./routes/gameState');
-const requestLogger = require('./middleware/requestLogger');
 const { errorHandler, notFoundHandler } = require('./middleware/errorHandler');
 
 const app = express();
@@ -19,7 +20,17 @@ app.set('trust proxy', 1);
 
 // Middleware
 app.use(express.json());
-app.use(requestLogger());
+app.use(pinoHttp({
+  logger,
+  // Customize logged request properties
+  customProps: (req) => ({
+    userId: req.session?.userId || 'anonymous'
+  }),
+  // Skip logging for health checks in production
+  autoLogging: {
+    ignore: (req) => req.url === '/health' && process.env.NODE_ENV === 'production'
+  }
+}));
 app.use(createSessionMiddleware());
 app.use(express.static(path.join(__dirname, '..', 'public')));
 
@@ -41,7 +52,7 @@ app.get('/health', async (req, res) => {
 
     res.status(dbHealthy ? 200 : 503).json(status);
   } catch (error) {
-    console.error('Health check error:', error);
+    logger.error({ err: error }, 'Health check error');
     res.status(503).json({
       status: 'error',
       timestamp: new Date().toISOString(),
@@ -72,15 +83,15 @@ app.use(errorHandler);
 // Run migrations then start server
 async function start() {
   try {
-    console.log('Running database migrations...');
+    logger.info('Running database migrations...');
     await runMigrations();
 
     app.listen(PORT, () => {
-      console.log(`UP SHIP! server running on port ${PORT}`);
-      console.log(`Health check available at http://localhost:${PORT}/health`);
+      logger.info({ port: PORT }, 'UP SHIP! server running');
+      logger.info({ url: `http://localhost:${PORT}/health` }, 'Health check available');
     });
   } catch (err) {
-    console.error('Failed to start server:', err);
+    logger.fatal({ err }, 'Failed to start server');
     process.exit(1);
   }
 }

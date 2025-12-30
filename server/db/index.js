@@ -1,4 +1,8 @@
 const { Pool } = require('pg');
+const logger = require('../logger');
+
+// Child logger for database operations
+const dbLogger = logger.child({ component: 'db' });
 
 // Connection pool configuration
 const pool = new Pool({
@@ -13,7 +17,7 @@ const pool = new Pool({
 
 // Log pool errors
 pool.on('error', (err) => {
-  console.error('Unexpected database pool error:', err);
+  dbLogger.error({ err }, 'Unexpected database pool error');
 });
 
 /**
@@ -27,7 +31,7 @@ async function healthCheck() {
     await client.query('SELECT 1');
     return true;
   } catch (err) {
-    console.error('Database health check failed:', err.message);
+    dbLogger.error({ err }, 'Database health check failed');
     return false;
   } finally {
     if (client) client.release();
@@ -45,9 +49,12 @@ async function query(text, params) {
   const result = await pool.query(text, params);
   const duration = Date.now() - start;
 
-  if (process.env.NODE_ENV === 'development') {
-    console.log('Executed query', { text: text.substring(0, 50), duration, rows: result.rowCount });
-  }
+  // Log at debug level (controlled by LOG_LEVEL env var)
+  dbLogger.debug({
+    query: text.substring(0, 80),
+    duration,
+    rows: result.rowCount
+  }, 'Executed query');
 
   return result;
 }

@@ -14,6 +14,10 @@ require('dotenv').config();
 const fs = require('fs');
 const path = require('path');
 const { pool } = require('./index');
+const logger = require('../logger');
+
+// Child logger for migrations
+const migrateLogger = logger.child({ component: 'migrate' });
 
 const MIGRATIONS_DIR = path.join(__dirname, 'migrations');
 
@@ -59,10 +63,10 @@ async function runMigration(client, filename) {
   // Split on -- DOWN marker to get UP migration only
   const upMigration = sql.split('-- DOWN')[0].trim();
 
-  console.log(`Running migration: ${filename}`);
+  migrateLogger.info({ migration: filename }, 'Running migration');
   await client.query(upMigration);
   await client.query('INSERT INTO migrations (name) VALUES ($1)', [filename]);
-  console.log(`Completed: ${filename}`);
+  migrateLogger.info({ migration: filename }, 'Completed migration');
 }
 
 /**
@@ -74,7 +78,7 @@ async function rollbackMigration(client) {
   );
 
   if (result.rows.length === 0) {
-    console.log('No migrations to rollback');
+    migrateLogger.info('No migrations to rollback');
     return;
   }
 
@@ -85,16 +89,16 @@ async function rollbackMigration(client) {
   // Get DOWN migration (after -- DOWN marker)
   const parts = sql.split('-- DOWN');
   if (parts.length < 2) {
-    console.error(`No DOWN migration found in ${filename}`);
+    migrateLogger.error({ migration: filename }, 'No DOWN migration found');
     process.exit(1);
   }
 
   const downMigration = parts[1].trim();
 
-  console.log(`Rolling back: ${filename}`);
+  migrateLogger.info({ migration: filename }, 'Rolling back migration');
   await client.query(downMigration);
   await client.query('DELETE FROM migrations WHERE name = $1', [filename]);
-  console.log(`Rolled back: ${filename}`);
+  migrateLogger.info({ migration: filename }, 'Rolled back migration');
 }
 
 /**
@@ -104,25 +108,15 @@ async function showStatus(client) {
   const applied = await getAppliedMigrations(client);
   const pending = await getPendingMigrations(applied);
 
-  console.log('\n=== Migration Status ===\n');
+  migrateLogger.info({ applied: applied.length, pending: pending.length }, 'Migration status');
 
-  if (applied.length === 0) {
-    console.log('Applied: (none)');
-  } else {
-    console.log('Applied:');
-    applied.forEach(m => console.log(`  [x] ${m}`));
+  if (applied.length > 0) {
+    applied.forEach(m => migrateLogger.info({ migration: m, status: 'applied' }, 'Applied'));
   }
 
-  console.log('');
-
-  if (pending.length === 0) {
-    console.log('Pending: (none)');
-  } else {
-    console.log('Pending:');
-    pending.forEach(m => console.log(`  [ ] ${m}`));
+  if (pending.length > 0) {
+    pending.forEach(m => migrateLogger.info({ migration: m, status: 'pending' }, 'Pending'));
   }
-
-  console.log('');
 }
 
 /**
@@ -139,11 +133,11 @@ async function runMigrations() {
     const pending = await getPendingMigrations(applied);
 
     if (pending.length === 0) {
-      console.log('All migrations are up to date');
+      migrateLogger.info('All migrations are up to date');
       return;
     }
 
-    console.log(`Running ${pending.length} migration(s)...\n`);
+    migrateLogger.info({ count: pending.length }, 'Running migrations');
 
     for (const migration of pending) {
       await client.query('BEGIN');
@@ -156,7 +150,7 @@ async function runMigrations() {
       }
     }
 
-    console.log('\nAll migrations completed successfully');
+    migrateLogger.info('All migrations completed successfully');
   } finally {
     if (client) client.release();
   }
@@ -195,12 +189,12 @@ async function main() {
         break;
 
       default:
-        console.error(`Unknown command: ${command}`);
-        console.error('Usage: migrate.js [up|down|status]');
+        migrateLogger.error({ command }, 'Unknown command');
+        migrateLogger.info('Usage: migrate.js [up|down|status]');
         process.exit(1);
     }
   } catch (err) {
-    console.error('Migration failed:', err.message);
+    migrateLogger.error({ err }, 'Migration failed');
     process.exit(1);
   } finally {
     if (client) client.release();

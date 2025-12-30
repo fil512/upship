@@ -3,6 +3,7 @@
  * Handles all errors and returns appropriate HTTP responses
  */
 
+const logger = require('../logger');
 const {
   isAppError,
   isPostgresError,
@@ -24,20 +25,21 @@ function errorHandler(err, req, res, next) {
     return next(err);
   }
 
-  // Log error for debugging (with request context)
+  // Log error with request context
+  // Use req.log if available (from pino-http), otherwise fall back to main logger
+  const log = req.log || logger;
   const logContext = {
     method: req.method,
     path: req.path,
     userId: req.session?.userId || 'anonymous',
-    error: err.message,
-    stack: process.env.NODE_ENV !== 'production' ? err.stack : undefined
+    err // Pino serializes error objects automatically
   };
 
   // Log at appropriate level based on error type
   if (err.statusCode >= 500 || !isAppError(err)) {
-    console.error('[ERROR]', logContext);
+    log.error(logContext, err.message);
   } else if (process.env.NODE_ENV !== 'production') {
-    console.warn('[WARN]', logContext);
+    log.warn(logContext, err.message);
   }
 
   // Handle custom application errors

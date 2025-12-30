@@ -3,6 +3,7 @@
  * PLACE_AGENT, PASS, RECALL_AGENTS action processors
  */
 
+const logger = require('../logger');
 const { GameRuleError } = require('../errors');
 const { shuffleArray } = require('../utils/random');
 const { GROUND_BOARD_LOCATIONS, canPlaceAtLocation } = require('../data/groundBoard');
@@ -267,6 +268,14 @@ function processCardEffect(state, playerId, card, _locationId) {
  */
 function executeLocationAction(state, playerId, locationId, _card, options = {}) {
   const playerState = state.players[playerId];
+
+  // Debug: Log what locationId we received
+  state.log.push({
+    timestamp: new Date().toISOString(),
+    message: `[DEBUG] executeLocationAction called with locationId="${locationId}" (type: ${typeof locationId})`,
+    playerId,
+    type: 'debug'
+  });
 
   switch (locationId) {
     case 'research_institute': {
@@ -649,7 +658,20 @@ function processPlaceAgent(state, playerId, data) {
   }
 
   // Execute the location action immediately (Section 5.1)
+  logger.debug({ locationId, playerId }, 'executeLocationAction will be called');
+  state.log.push({
+    timestamp: new Date().toISOString(),
+    message: `[DEBUG-BEFORE] About to call executeLocationAction with locationId="${locationId}"`,
+    playerId,
+    type: 'debug'
+  });
   const actionResult = executeLocationAction(state, playerId, locationId, discardedCard, { buildCount, gasType, gasAmount, crewType, crewCount, levels, policyCount, officerCount, swaps });
+  state.log.push({
+    timestamp: new Date().toISOString(),
+    message: `[DEBUG-AFTER] executeLocationAction returned: ${JSON.stringify(actionResult)}`,
+    playerId,
+    type: 'debug'
+  });
   if (actionResult.error) {
     state.log.push({
       timestamp: new Date().toISOString(),
