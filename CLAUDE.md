@@ -300,29 +300,37 @@ python scripts/railway.py health              # Check health endpoint
 
 ### Python Playtest Tool (Recommended)
 
-The Python playtest tool provides autonomous playtesting with persistent game ID storage:
+The Python playtest tool provides autonomous playtesting with 4 strategic bot players.
+It runs until the game **finishes** or gets **stuck** (detecting design flaws).
 
 ```bash
 python scripts/playtest.py setup [game_name]         # Setup new 4-player game
-python scripts/playtest.py status [player]           # Show game status (optional: as specific player)
-python scripts/playtest.py summary                   # Show all players' status comparison table
-python scripts/playtest.py autoplay [num_turns]      # Run automated turns (default: 5)
+python scripts/playtest.py autoplay                  # Run until game ends or gets stuck
+python scripts/playtest.py autoplay [num_turns]      # Run for N turns max
+python scripts/playtest.py status [player]           # Show game status
+python scripts/playtest.py summary                   # Show all players' status table
 python scripts/playtest.py endphase                  # All players end turn/pass
-python scripts/playtest.py action <player> <cmd>     # Run single action for a player
-python scripts/playtest.py debug                     # Show raw game state for debugging
+python scripts/playtest.py action <player> <cmd>     # Run single action
+python scripts/playtest.py debug                     # Show raw game state
 python scripts/playtest.py gameid                    # Print current game ID
 python scripts/playtest.py routes                    # Show available routes
-python scripts/playtest.py launch <player> <shipId> <routeId> [gas]  # Launch ship to route
+python scripts/playtest.py launch <player> <shipId> <routeId> [gas]  # Launch ship
 ```
 
-### Legacy Shell Scripts
+**Features:**
+- Game end detection (winner/scores when game finishes)
+- Stuck detection with verbose diagnostics (identifies design flaws)
+- Strategic bot logic (prioritizes building, launching, resources)
+- Correct phase handling (worker_placement, reveal, income_cleanup)
+
+### Legacy Shell Scripts (Deprecated)
+
+The shell scripts are deprecated. Use the Python tool instead:
 
 ```bash
-./scripts/full-playtest.sh [num_turns] [game_name]  # Complete playtest start to finish
-./scripts/setup-playtest.sh [game_name]              # Setup new 4-player game
-./scripts/autoplay.sh <gameId> [num_turns]           # Run AI turns on existing game
-./scripts/end-phase.sh <gameId>                      # All players end turn
-./scripts/play-commands.sh [commands.txt]            # Execute commands from file
+./scripts/autoplay.sh                               # DEPRECATED - shows migration message
+./scripts/setup-playtest.sh [game_name]              # Still works - creates 4-player game
+./scripts/full-playtest.sh [num_turns] [game_name]  # Still works - setup + autoplay
 ```
 
 ## Working with This Project
