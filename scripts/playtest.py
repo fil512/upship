@@ -728,8 +728,15 @@ def handle_launchpad_launches(player, game_id):
                     final_ship = next((s for s in final_player_data.get('ships', []) if s.get('id') == ship['id']), None)
                     ship_status = final_ship.get('status', 'unknown') if final_ship else 'unknown'
 
-                    # Log hazard response
-                    log_action(None, f"  └─ Hazard: {hazard_name} → {hazard_decision}", "worker_placement")
+                    # Log hazard response with Y/N decision
+                    yn_decision = "Y" if spend_engineers else "N"
+                    if engineer_cost is not None:
+                        eng_info = f"cost={engineer_cost}, have={available_engineers}"
+                    elif engineers_needed > 0:
+                        eng_info = f"need={engineers_needed}, have={available_engineers}"
+                    else:
+                        eng_info = "none needed"
+                    log_action(None, f"  └─ Hazard: {hazard_name} (engineers: {eng_info}) → {yn_decision} → {hazard_decision}", "worker_placement")
 
                 # Extract hazard info from game log
                 log_entries = get_last_log_entries(post_state, count=10) if post_state else []
