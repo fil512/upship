@@ -12,6 +12,7 @@ const { reduceHeliumMarket } = require('./helpers/marketHelpers');
 const { WEATHER_BUREAU_COST } = require('../config/constants');
 const { processBuildShip } = require('./building');
 const { processBuyGas } = require('./gas');
+const { processRecruitCrew } = require('./crew');
 
 /**
  * Process card effects when used for agent placement (Section 8.1)
@@ -287,8 +288,19 @@ function executeLocationAction(state, playerId, locationId, _card, options = {})
     case 'launchpad':
       return { success: true, message: 'May launch a ship' };
 
-    case 'academy':
-      return { success: true, message: 'May recruit crew. May also discard leftmost Market card.' };
+    case 'academy': {
+      // Per Section 5.1: Execute action immediately when placing agent
+      const { crewType, crewCount } = options;
+      if (!crewType || !crewCount) {
+        return { success: false, error: 'Academy requires crewType and crewCount parameters' };
+      }
+      try {
+        processRecruitCrew(state, playerId, { crewType, count: crewCount, _internal: true });
+        return { success: true, message: `Recruited ${crewCount} ${crewType}(s)` };
+      } catch (error) {
+        return { success: false, error: error.message };
+      }
+    }
 
     case 'flight_school':
       return { success: true, message: 'May upgrade Officer income' };
@@ -418,7 +430,7 @@ function hasPlayableCards(state, playerId) {
  * @returns {Object} { newState } or throws error
  */
 function processPlaceAgent(state, playerId, data) {
-  const { locationId, cardIndex, buildCount, gasType, gasAmount } = data;
+  const { locationId, cardIndex, buildCount, gasType, gasAmount, crewType, crewCount } = data;
   const playerState = state.players[playerId];
 
   // Validate phase
@@ -502,7 +514,7 @@ function processPlaceAgent(state, playerId, data) {
   }
 
   // Execute the location action immediately (Section 5.1)
-  const actionResult = executeLocationAction(state, playerId, locationId, discardedCard, { buildCount, gasType, gasAmount });
+  const actionResult = executeLocationAction(state, playerId, locationId, discardedCard, { buildCount, gasType, gasAmount, crewType, crewCount });
   if (actionResult.error) {
     state.log.push({
       timestamp: new Date().toISOString(),

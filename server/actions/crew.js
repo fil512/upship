@@ -14,14 +14,34 @@ const {
 /**
  * Recruit crew at the Academy
  *
+ * Per Section 5.1: Location actions execute IMMEDIATELY when placing an agent.
+ * Direct API calls are rejected - must go through PLACE_AGENT with crewType/crewCount params.
+ *
  * @param {Object} state - Game state (mutated)
  * @param {string} playerId - Acting player ID
- * @param {Object} data - Action data { crewType, count }
+ * @param {Object} data - Action data { crewType, count, _internal }
  * @returns {Object} { newState } or throws error
  */
 function processRecruitCrew(state, playerId, data) {
-  const { crewType, count = 1 } = data;
+  const { crewType, count = 1, _internal = false } = data;
   const playerState = state.players[playerId];
+
+  // Validate that this is called through PLACE_AGENT (Section 5.1)
+  if (!_internal) {
+    if (state.phase !== 'worker_placement') {
+      throw new GameRuleError(
+        'RECRUIT_CREW not allowed: Actions execute immediately when placing an agent (Section 5.1). ' +
+        'Place an agent at Academy during worker placement phase to recruit crew.'
+      );
+    }
+    const placement = state.groundBoard?.placements?.academy;
+    if (!placement || placement.playerId !== playerId) {
+      throw new GameRuleError(
+        'RECRUIT_CREW not allowed: You must place an agent at Academy to recruit crew. ' +
+        'Use PLACE_AGENT with locationId "academy" and crewType/crewCount parameters.'
+      );
+    }
+  }
 
   const costs = {
     officer: OFFICER_RECRUIT_COST,

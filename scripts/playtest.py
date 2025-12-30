@@ -599,6 +599,12 @@ def handle_worker_placement_round(game_id):
                 action_args.append(f"gasAmount={gas_amount}")
                 action_desc = f"placed at {location['id']} and bought {gas_amount} {gas_type}"
 
+            elif location['id'] == 'academy':
+                # Recruit crew when placing (Section 5.1)
+                action_args.append("crewType=officer")
+                action_args.append("crewCount=1")  # Recruit 1 officer
+                action_desc = f"placed at {location['id']} and recruited 1 officer"
+
             result = run_cli(*action_args)
             if "✓" in result or "success" in result.lower():
                 print(f"  {current}: {action_desc}")
@@ -634,12 +640,8 @@ def take_reveal_actions(player, game_id):
     # Note: gas_depot buying now happens immediately when placing agent (Section 5.1)
     # No need to buy gas during reveal phase
 
-    # If at academy - recruit crew
-    if 'academy' in placements and cash >= 2:
-        result = run_cli(player, "recruit", game_id, "officer", "1")
-        if "✓" in result:
-            print(f"  {player}: recruited officer")
-            log_action(player, "recruited officer", "reveal")
+    # Note: academy crew recruitment now happens immediately when placing agent (Section 5.1)
+    # No need to recruit crew during reveal phase
 
     # Try to acquire technology using research (if at research_institute)
     if 'research_institute' in placements:
