@@ -438,6 +438,21 @@ def get_player_hand(player, game_id):
     return cards
 
 
+def get_player_agents(player, game_id):
+    """Get the number of agents remaining for a player."""
+    output = strip_ansi(run_cli(player, "state", game_id))
+    # Look for "Agents Remaining: X/3" pattern from CLI
+    match = re.search(r'Agents Remaining:\s*(\d+)', output, re.IGNORECASE)
+    if match:
+        return int(match.group(1))
+    # Fallback: if not in worker placement, agents info won't be shown
+    # Check if we're in worker placement phase
+    if 'Worker Placement' not in output and 'WORKER' not in output:
+        # Not in worker placement, can't determine agents - assume 0 to trigger reveal
+        return 0
+    return 2  # Default starting agents
+
+
 def get_available_locations(game_id):
     """Get list of unoccupied Ground Board locations."""
     output = strip_ansi(run_cli("playtest_germany", "state", game_id))
@@ -652,6 +667,13 @@ def handle_worker_placement_round(game_id):
             time.sleep(0.3)
             if get_phase(game_id) != "WORKER_PLACEMENT":
                 return True
+            continue
+
+        # Check if player has agents remaining
+        agents = get_player_agents(current, game_id)
+        if agents <= 0:
+            # No agents left - reveal to exit worker placement
+            submit_reveal(current, game_id, "(out of agents)")
             continue
 
         # Get player's hand and available locations

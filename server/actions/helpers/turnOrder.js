@@ -88,15 +88,19 @@ function getCurrentPlacer(state) {
  * @returns {string|null} Next player ID or null if all have passed
  */
 function advanceToNextPlacer(state) {
-  const order = state.workerPlacement.placementOrder;
-  const passedPlayers = state.workerPlacement.passedPlayers;
-  let index = state.workerPlacement.currentPlacerIndex;
+  const order = state.workerPlacement?.placementOrder || state.playerOrder;
+  const passedPlayers = state.workerPlacement?.passedPlayers || [];
+  let index = state.workerPlacement?.currentPlacerIndex || 0;
 
   // Find next non-passed player
   for (let i = 0; i < order.length; i++) {
     index = (index + 1) % order.length;
     const playerId = order[index];
     if (!passedPlayers.includes(playerId)) {
+      // Ensure workerPlacement exists before updating
+      if (!state.workerPlacement) {
+        state.workerPlacement = { placementOrder: order, passedPlayers: [], currentPlacerIndex: 0 };
+      }
       state.workerPlacement.currentPlacerIndex = index;
       return playerId;
     }

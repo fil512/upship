@@ -694,21 +694,11 @@ function processPlaceAgent(state, playerId, data) {
     return { newState: state };
   }
 
-  // Check if player should auto-pass (no agents left OR no playable cards)
-  const shouldAutoPass = playerState.agentsRemaining <= 0 || !hasPlayableCards(state, playerId);
+  // NOTE: Auto-pass was removed - players must explicitly call REVEAL to exit worker placement
+  // This ensures all players declare their tech/market acquisitions via the atomic REVEAL action.
+  // If a player runs out of agents or playable cards, they must still call REVEAL.
 
-  if (shouldAutoPass) {
-    playerState.hasPassed = true;
-    state.workerPlacement.passedPlayers.push(playerId);
-    state.log.push({
-      timestamp: new Date().toISOString(),
-      message: `${playerState.faction.toUpperCase()} auto-passes (no agents or playable cards)`,
-      playerId,
-      type: 'system'
-    });
-  }
-
-  // Advance to next placer or transition phase
+  // Advance to next placer or transition phase (if all have explicitly REVEALed)
   if (allPlayersPassed(state)) {
     transitionToRevealPhase(state);
   } else {
