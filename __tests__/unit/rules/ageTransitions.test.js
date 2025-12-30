@@ -98,8 +98,9 @@ describe('Rules Compliance - Age Transitions', () => {
 
     it('should calculate technology VP based on tile VP value per Section 12.2', () => {
       // Per rules: Essential=0 VP, Useful=1 VP, Niche=2-3 VP
-      const techIds = ['wooden_framework', 'duralumin_girders', 'geodetic_structure'];
-      // wooden_framework: vp=0, duralumin_girders: vp=1, geodetic_structure: vp=2
+      // Using correct IDs from constants.js:
+      // wooden_framework (vp: 0), wire_bracing (vp: 1), steel_framework (vp: 2)
+      const techIds = ['wooden_framework', 'wire_bracing', 'steel_framework'];
 
       const vp = calculateTechnologyVP(techIds);
 

@@ -9,8 +9,8 @@ describe('Rules Compliance - Technology System', () => {
 
   describe('GAP-036: Specialization discount track mapping', () => {
     it('should give no discount with 0-2 technologies in same track', () => {
-      // Player has 2 structure technologies
-      const playerTechs = ['duralumin_girders', 'wire_bracing'];
+      // Player has 2 structure technologies (using correct IDs from constants.js)
+      const playerTechs = ['wooden_framework', 'wire_bracing'];
 
       // New structure tech should get no discount
       const discount = calculateSpecializationDiscount(playerTechs, 'structure');
@@ -18,8 +18,8 @@ describe('Rules Compliance - Technology System', () => {
     });
 
     it('should give -1 Research discount with 3-4 technologies in same track per Section 4.1', () => {
-      // Player has 3 drive technologies
-      const playerTechs = ['daimler_engine', 'improved_propeller', 'maybach_engine'];
+      // Player has 3 drive technologies (using correct IDs from constants.js)
+      const playerTechs = ['daimler_engine', 'improved_propeller', 'dual_engine_mount'];
 
       // New drive tech should get -1 discount
       const discount = calculateSpecializationDiscount(playerTechs, 'drive');
@@ -27,13 +27,13 @@ describe('Rules Compliance - Technology System', () => {
     });
 
     it('should give -2 Research discount with 5+ technologies in same track per Section 4.1', () => {
-      // Player has 5 component technologies
+      // Player has 5 component technologies (using correct IDs from constants.js)
       const playerTechs = [
-        'passenger_gondola',
-        'observation_deck',
-        'cargo_systems',
-        'radio_equipment',
-        'sleeping_quarters'
+        'observation_platform',  // Age I component
+        'mail_compartment',      // Age I component
+        'cargo_nets',            // Age I component
+        'passenger_gondola',     // Age II component
+        'radio_equipment'        // Age II component
       ];
 
       // New component tech should get -2 discount
@@ -42,8 +42,8 @@ describe('Rules Compliance - Technology System', () => {
     });
 
     it('should count technologies by matching type, not by ID list', () => {
-      // Player has 3 structure technologies
-      const playerTechs = ['duralumin_girders', 'wire_bracing', 'steel_framework'];
+      // Player has 3 structure technologies (using correct IDs from constants.js)
+      const playerTechs = ['wooden_framework', 'wire_bracing', 'duralumin_framework'];
 
       // Acquiring a new structure tech should use the count of 3
       const discount = calculateSpecializationDiscount(playerTechs, 'structure');
@@ -51,13 +51,13 @@ describe('Rules Compliance - Technology System', () => {
     });
 
     it('should not give discount for unrelated technology tracks', () => {
-      // Player has 5 structure technologies
+      // Player has 5 structure technologies (using correct IDs from constants.js)
       const playerTechs = [
-        'duralumin_girders',
+        'wooden_framework',
         'wire_bracing',
+        'duralumin_framework',
         'steel_framework',
-        'geodetic_structure',
-        'modular_construction'
+        'geodetic_structure'
       ];
 
       // But acquiring a drive tech should get no discount
@@ -66,7 +66,8 @@ describe('Rules Compliance - Technology System', () => {
     });
 
     it('should map drive technologies to Propulsion track per Section 4.1', () => {
-      const playerTechs = ['daimler_engine', 'improved_propeller', 'maybach_engine', 'dual_engine_mount'];
+      // Using correct IDs from constants.js (maybach_engine is Age II)
+      const playerTechs = ['daimler_engine', 'improved_propeller', 'dual_engine_mount', 'maybach_engine'];
 
       // 4 drive techs = -1 discount for new drive tech
       const discount = calculateSpecializationDiscount(playerTechs, 'drive');
@@ -74,7 +75,8 @@ describe('Rules Compliance - Technology System', () => {
     });
 
     it('should map component technologies to Payload track per Section 4.1', () => {
-      const playerTechs = ['passenger_gondola', 'observation_deck', 'cargo_systems'];
+      // Using correct IDs from constants.js
+      const playerTechs = ['observation_platform', 'mail_compartment', 'cargo_nets'];
 
       // 3 component techs = -1 discount for new component tech
       const discount = calculateSpecializationDiscount(playerTechs, 'component');

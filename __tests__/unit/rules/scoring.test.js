@@ -12,8 +12,8 @@ describe('Rules Compliance - Scoring', () => {
     it('should calculate VP based on tile VP values, not formula per Section 12.2', () => {
       const state = createTestGameState();
 
-      // Per constants.js: wooden_framework=0, duralumin_girders=1, geodetic_structure=2
-      state.players['1'].technologies = ['wooden_framework', 'duralumin_girders', 'geodetic_structure'];
+      // Per constants.js: wooden_framework=0, wire_bracing=1, steel_framework=2
+      state.players['1'].technologies = ['wooden_framework', 'wire_bracing', 'steel_framework'];
 
       // Force end for testing
       state.progressTrack = 30;
@@ -27,13 +27,14 @@ describe('Rules Compliance - Scoring', () => {
     });
 
     it('should use VP values: Essential=0, Useful=1, Niche=2-3 per Section 12.2', () => {
-      // Essential (0 VP): wooden_framework, wire_bracing, rubberized_cotton, doped_canvas, etc.
-      // Useful (1 VP): duralumin_girders, goldbeater_skin, maybach_engine, etc.
-      // Niche (2-3 VP): geodetic_structure, composite_covering, etc.
+      // Using correct IDs from constants.js:
+      // Essential (0 VP): wooden_framework (Age I, vp: 0)
+      // Useful (1 VP): wire_bracing (Age I, vp: 1)
+      // Niche (2-3 VP): steel_framework (Age II, vp: 2)
 
       const essentialTechs = ['wooden_framework'];
-      const usefulTechs = ['duralumin_girders'];
-      const nicheTechs = ['geodetic_structure'];
+      const usefulTechs = ['wire_bracing'];
+      const nicheTechs = ['steel_framework'];
 
       expect(calculateTechnologyVPForScoring(essentialTechs)).toBe(0);
       expect(calculateTechnologyVPForScoring(usefulTechs)).toBe(1);
@@ -208,8 +209,9 @@ describe('Rules Compliance - Scoring', () => {
     it('should only award VP from routes and technologies per Section 12.2', () => {
       const state = createTestGameState([1]);
 
-      // 3 VP from technologies
-      state.players['1'].technologies = ['duralumin_girders', 'geodetic_structure']; // 1+2=3
+      // 3 VP from technologies (using correct IDs from constants.js)
+      // wire_bracing (vp: 1) + steel_framework (vp: 2) = 3 VP
+      state.players['1'].technologies = ['wire_bracing', 'steel_framework'];
 
       // 5 VP from routes (using vp property per Appendix F)
       state.map.routes = [

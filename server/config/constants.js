@@ -68,42 +68,84 @@ const AGE_BASELINES = {
   3: { speed: 3, range: 3, ceiling: 2, reliability: 2 }
 };
 
-// Technology Bag organized by Age
+// Technology Bag organized by Age (54 total tiles per Appendix C)
+// IMPORTANT: This is the single source of truth for all technology definitions
+// All other files should import from here, not define their own versions
 const TECHNOLOGY_BAG = {
-  1: [ // Age I Technologies
-    { id: 'wooden_framework', name: 'Wooden Framework', type: 'structure', cost: 2, vp: 0 },
-    { id: 'wire_bracing', name: 'Wire Bracing', type: 'structure', cost: 2, vp: 0 },
-    { id: 'duralumin_girders', name: 'Duralumin Girders', type: 'structure', cost: 4, vp: 1 },
-    { id: 'rubberized_cotton', name: 'Rubberized Cotton', type: 'fabric', cost: 2, vp: 0 },
-    { id: 'doped_canvas', name: 'Doped Canvas', type: 'fabric', cost: 3, vp: 0 },
-    { id: 'goldbeater_skin', name: "Goldbeater's Skin", type: 'fabric', cost: 3, vp: 1 },
-    { id: 'daimler_engine', name: 'Daimler Engine', type: 'drive', cost: 2, vp: 0 },
-    { id: 'improved_propeller', name: 'Improved Propeller', type: 'drive', cost: 3, vp: 0 },
-    { id: 'maybach_engine', name: 'Maybach Engine', type: 'drive', cost: 4, vp: 1 },
-    { id: 'passenger_gondola', name: 'Passenger Gondola', type: 'component', cost: 3, vp: 0 },
-    { id: 'observation_deck', name: 'Observation Deck', type: 'component', cost: 4, vp: 1 },
-    { id: 'cargo_systems', name: 'Cargo Systems', type: 'component', cost: 3, vp: 0 }
+  1: [ // Age I Technologies (12 tiles)
+    // Propulsion (3 tiles)
+    { id: 'daimler_engine', name: 'Daimler Petrol Engine', type: 'drive', cost: 1, vp: 0, income: 1 },
+    { id: 'improved_propeller', name: 'Improved Propeller', type: 'drive', cost: 1, vp: 0, income: 1 },
+    { id: 'dual_engine_mount', name: 'Dual Engine Mount', type: 'drive', cost: 2, vp: 1, income: 1 },
+    // Frame (2 tiles)
+    { id: 'wooden_framework', name: 'Wooden Framework', type: 'structure', cost: 1, vp: 0, income: 1 },
+    { id: 'wire_bracing', name: 'Wire Bracing', type: 'structure', cost: 2, vp: 1, income: 1 },
+    // Fabric (2 tiles)
+    { id: 'rubberized_cotton', name: 'Rubberized Cotton', type: 'fabric', cost: 1, vp: 0, income: 1 },
+    { id: 'doped_canvas', name: 'Doped Canvas', type: 'fabric', cost: 2, vp: 0, income: 1 },
+    // Gas Systems (2 tiles)
+    { id: 'improved_valving', name: 'Improved Valving', type: 'gas', cost: 1, vp: 0, income: 1 },
+    { id: 'manual_ballonets', name: 'Manual Ballonets', type: 'gas', cost: 1, vp: 0, income: 1 },
+    // Payload (3 tiles)
+    { id: 'observation_platform', name: 'Observation Platform', type: 'component', cost: 1, vp: 0, income: 1 },
+    { id: 'mail_compartment', name: 'Mail Compartment', type: 'component', cost: 1, vp: 0, income: 1 },
+    { id: 'cargo_nets', name: 'Cargo Nets', type: 'component', cost: 2, vp: 1, income: 1 }
   ],
-  2: [ // Age II Technologies
-    { id: 'steel_framework', name: 'Steel Framework', type: 'structure', cost: 4, vp: 1 },
-    { id: 'internal_keel', name: 'Internal Keel', type: 'structure', cost: 3, vp: 0 },
-    { id: 'fireproof_coating', name: 'Fireproof Coating', type: 'fabric', cost: 4, vp: 1 },
-    { id: 'aluminum_doping', name: 'Aluminum Doping', type: 'fabric', cost: 3, vp: 0 },
-    { id: 'dual_engine_mount', name: 'Dual Engine Mount', type: 'drive', cost: 4, vp: 1 },
-    { id: 'diesel_powerplant', name: 'Diesel Powerplant', type: 'drive', cost: 5, vp: 1 },
-    { id: 'radio_equipment', name: 'Radio Equipment', type: 'component', cost: 3, vp: 0 },
-    { id: 'sleeping_quarters', name: 'Sleeping Quarters', type: 'component', cost: 4, vp: 1 },
-    { id: 'mail_systems', name: 'Mail Systems', type: 'component', cost: 3, vp: 0 }
+  2: [ // Age II Technologies (23 tiles)
+    // Propulsion (4 tiles)
+    { id: 'maybach_engine', name: 'Maybach Engine Design', type: 'drive', cost: 3, vp: 0, income: 2 },
+    { id: 'diesel_powerplant', name: 'Diesel Powerplant', type: 'drive', cost: 3, vp: 1, income: 1 },
+    { id: 'swiveling_propeller', name: 'Swiveling Propeller', type: 'drive', cost: 4, vp: 1, income: 2 },
+    { id: 'contra_rotating', name: 'Contra-Rotating Props', type: 'drive', cost: 4, vp: 0, income: 2 },
+    // Frame (5 tiles)
+    { id: 'duralumin_framework', name: 'Duralumin Framework', type: 'structure', cost: 3, vp: 0, income: 2 },
+    { id: 'steel_framework', name: 'Steel Framework', type: 'structure', cost: 2, vp: 2, income: 1 },
+    { id: 'internal_keel', name: 'Internal Keel', type: 'structure', cost: 3, vp: 1, income: 1 },
+    { id: 'articulated_keel', name: 'Articulated Keel Design', type: 'structure', cost: 3, vp: 2, income: 1 },
+    { id: 'aerodynamic_hull', name: 'Aerodynamic Hull Design', type: 'structure', cost: 3, vp: 1, income: 1 },
+    // Fabric (4 tiles)
+    { id: 'goldbeater_skin', name: "Goldbeater's Skin", type: 'fabric', cost: 4, vp: 2, income: 2 },
+    { id: 'fireproof_coating', name: 'Fireproof Coating', type: 'fabric', cost: 3, vp: 2, income: 1 },
+    { id: 'aluminum_doping', name: 'Aluminum Doping', type: 'fabric', cost: 3, vp: 1, income: 1 },
+    { id: 'grounding_systems', name: 'Grounding Systems', type: 'fabric', cost: 3, vp: 1, income: 1 },
+    // Gas Systems (4 tiles)
+    { id: 'multiple_gas_cells', name: 'Multiple Gas Cells', type: 'gas', cost: 3, vp: 0, income: 1 },
+    { id: 'helium_handling', name: 'Helium Handling', type: 'gas', cost: 4, vp: 0, income: 2 },
+    { id: 'blaugas_system', name: 'Blaugas Fuel System', type: 'gas', cost: 3, vp: 2, income: 2 },
+    { id: 'automatic_valves', name: 'Automatic Valves', type: 'gas', cost: 4, vp: 1, income: 2 },
+    // Payload (6 tiles)
+    { id: 'passenger_gondola', name: 'Passenger Gondola', type: 'component', cost: 3, vp: 0, income: 1 },
+    { id: 'bomb_bay', name: 'Bomb Bay Design', type: 'component', cost: 4, vp: 3, income: 2 },
+    { id: 'trapeze_system', name: 'Trapeze System', type: 'component', cost: 4, vp: 2, income: 2 },
+    { id: 'radio_equipment', name: 'Radio Equipment', type: 'component', cost: 3, vp: 1, income: 1 },
+    { id: 'armored_gondola', name: 'Armored Gondola', type: 'component', cost: 3, vp: 1, income: 1 },
+    { id: 'reinforced_hull', name: 'Reinforced Hull', type: 'component', cost: 4, vp: 2, income: 2 }
   ],
-  3: [ // Age III Technologies
-    { id: 'geodetic_structure', name: 'Geodetic Structure', type: 'structure', cost: 6, vp: 2 },
-    { id: 'modular_construction', name: 'Modular Construction', type: 'structure', cost: 4, vp: 1 },
-    { id: 'composite_covering', name: 'Composite Covering', type: 'fabric', cost: 5, vp: 2 },
-    { id: 'streamlined_nacelle', name: 'Streamlined Nacelle', type: 'drive', cost: 5, vp: 1 },
-    { id: 'supercharged_engine', name: 'Supercharged Engine', type: 'drive', cost: 6, vp: 2 },
-    { id: 'luxury_fittings', name: 'Luxury Fittings', type: 'component', cost: 6, vp: 2 },
-    { id: 'advanced_navigation', name: 'Advanced Navigation', type: 'component', cost: 5, vp: 1 },
-    { id: 'pressurization', name: 'Pressurization', type: 'component', cost: 5, vp: 1 }
+  3: [ // Age III Technologies (20 tiles)
+    // Propulsion (4 tiles)
+    { id: 'streamlined_nacelle', name: 'Streamlined Nacelle', type: 'drive', cost: 4, vp: 0, income: 2 },
+    { id: 'supercharged_engine', name: 'Supercharged Engine', type: 'drive', cost: 5, vp: 1, income: 3 },
+    { id: 'diesel_electric', name: 'Diesel-Electric Drive', type: 'drive', cost: 5, vp: 1, income: 2 },
+    { id: 'variable_pitch', name: 'Variable-Pitch Propeller', type: 'drive', cost: 4, vp: 0, income: 2 },
+    // Frame (3 tiles)
+    { id: 'geodetic_structure', name: 'Geodetic Structure', type: 'structure', cost: 4, vp: 0, income: 2 },
+    { id: 'modular_construction', name: 'Modular Construction', type: 'structure', cost: 5, vp: 3, income: 2 },
+    { id: 'dynamic_lift', name: 'Dynamic Lift Surfaces', type: 'structure', cost: 5, vp: 2, income: 2 },
+    // Fabric (2 tiles)
+    { id: 'gelatinized_latex', name: 'Gelatinized Latex', type: 'fabric', cost: 4, vp: 0, income: 2 },
+    { id: 'composite_covering', name: 'Composite Covering', type: 'fabric', cost: 5, vp: 1, income: 2 },
+    // Gas Systems (5 tiles)
+    { id: 'pressure_altitude', name: 'Pressure Altitude System', type: 'gas', cost: 5, vp: 1, income: 3 },
+    { id: 'triple_gas_cell', name: 'Triple Gas Cell', type: 'gas', cost: 4, vp: 0, income: 2 },
+    { id: 'emergency_venting', name: 'Emergency Venting', type: 'gas', cost: 4, vp: 2, income: 2 },
+    { id: 'gas_recovery', name: 'Gas Recovery', type: 'gas', cost: 5, vp: 2, income: 2 },
+    { id: 'water_recovery', name: 'Water Recovery System', type: 'gas', cost: 5, vp: 1, income: 2 },
+    // Payload (6 tiles)
+    { id: 'luxury_accommodation', name: 'Luxury Accommodation', type: 'component', cost: 4, vp: 0, income: 2 },
+    { id: 'dining_saloon', name: 'Dining Saloon', type: 'component', cost: 5, vp: 0, income: 3 },
+    { id: 'promenade_deck', name: 'Promenade Deck', type: 'component', cost: 6, vp: 2, income: 3 },
+    { id: 'sleeping_quarters', name: 'Sleeping Quarters', type: 'component', cost: 4, vp: 1, income: 2 },
+    { id: 'smoking_room', name: 'Smoking Room', type: 'component', cost: 5, vp: 3, income: 2 }
   ]
 };
 

@@ -10,35 +10,16 @@ const {
   GROUND_BOARD_LOCATIONS,
   canPlaceAtLocation
 } = require('../data/groundBoard');
+const {
+  TECHNOLOGY_BAG
+} = require('../config/constants');
 
 // Helium market track: stepped progression (Section 4.4)
 // £2 → £3 → £4 → £5 → £6 → £8 → £10 → £15
 const HELIUM_PRICE_TRACK = [2, 3, 4, 5, 6, 8, 10, 15];
 
-// Technology Bag organized by Age (for adding new techs on age transition)
-const TECHNOLOGY_BAG = {
-  2: [ // Age II Technologies
-    { id: 'steel_framework', name: 'Steel Framework', type: 'structure', cost: 4, vp: 1 },
-    { id: 'internal_keel', name: 'Internal Keel', type: 'structure', cost: 3, vp: 0 },
-    { id: 'fireproof_coating', name: 'Fireproof Coating', type: 'fabric', cost: 4, vp: 1 },
-    { id: 'aluminum_doping', name: 'Aluminum Doping', type: 'fabric', cost: 3, vp: 0 },
-    { id: 'dual_engine_mount', name: 'Dual Engine Mount', type: 'drive', cost: 4, vp: 1 },
-    { id: 'diesel_powerplant', name: 'Diesel Powerplant', type: 'drive', cost: 5, vp: 1 },
-    { id: 'radio_equipment', name: 'Radio Equipment', type: 'component', cost: 3, vp: 0 },
-    { id: 'sleeping_quarters', name: 'Sleeping Quarters', type: 'component', cost: 4, vp: 1 },
-    { id: 'mail_systems', name: 'Mail Systems', type: 'component', cost: 3, vp: 0 }
-  ],
-  3: [ // Age III Technologies
-    { id: 'geodetic_structure', name: 'Geodetic Structure', type: 'structure', cost: 6, vp: 2 },
-    { id: 'modular_construction', name: 'Modular Construction', type: 'structure', cost: 4, vp: 1 },
-    { id: 'composite_covering', name: 'Composite Covering', type: 'fabric', cost: 5, vp: 2 },
-    { id: 'streamlined_nacelle', name: 'Streamlined Nacelle', type: 'drive', cost: 5, vp: 1 },
-    { id: 'supercharged_engine', name: 'Supercharged Engine', type: 'drive', cost: 6, vp: 2 },
-    { id: 'luxury_fittings', name: 'Luxury Fittings', type: 'component', cost: 6, vp: 2 },
-    { id: 'advanced_navigation', name: 'Advanced Navigation', type: 'component', cost: 5, vp: 1 },
-    { id: 'pressurization', name: 'Pressurization', type: 'component', cost: 5, vp: 1 }
-  ]
-};
+// TECHNOLOGY_BAG is imported from ../config/constants.js (single source of truth)
+// See constants.js for the full 54-tile definition per Appendix C
 
 // Filter state to hide other players' private information
 function filterStateForPlayer(state, playerId) {
