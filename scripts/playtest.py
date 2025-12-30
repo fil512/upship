@@ -169,6 +169,16 @@ def get_phase(game_id):
     return "UNKNOWN"
 
 
+def get_age(game_id):
+    """Get current game age (1, 2, or 3)."""
+    output = strip_ansi(run_cli("playtest_germany", "state", game_id))
+    # Look for "Age: N" pattern
+    match = re.search(r'Age:\s*(\d+)', output)
+    if match:
+        return int(match.group(1))
+    return 1  # Default to Age 1
+
+
 def get_gas_preference(player, game_id=None):
     """Return preferred gas type for player. USA prefers helium, others prefer hydrogen."""
     preferred = "helium" if player == "playtest_usa" else "hydrogen"
@@ -189,12 +199,12 @@ def login_all_players():
     """Ensure all players are logged in."""
     print(">>> Logging in players...")
     for player in PLAYERS:
-        output = run_cli("login", player, PASSWORD)
+        output = strip_ansi(run_cli("login", player, PASSWORD))
         if "✓" in output or "already" in output.lower():
             print(f"  {player}: logged in")
         else:
             # Try register
-            output = run_cli("register", player, PASSWORD)
+            output = strip_ansi(run_cli("register", player, PASSWORD))
             if "✓" in output:
                 print(f"  {player}: registered")
             else:
@@ -223,18 +233,18 @@ def setup_game(game_name=None):
 
     print("\n>>> Joining other players...")
     for player in PLAYERS[1:]:
-        output = run_cli(player, "join", game_id)
+        output = strip_ansi(run_cli(player, "join", game_id))
         status = "✓" if "✓" in output else "✗"
         print(f"  {player}: {status}")
 
     print("\n>>> Selecting factions...")
     for player, faction in zip(PLAYERS, FACTIONS):
-        output = run_cli(player, "faction", game_id, faction)
+        output = strip_ansi(run_cli(player, "faction", game_id, faction))
         status = "✓" if "✓" in output else "✗"
         print(f"  {player} -> {faction}: {status}")
 
     print("\n>>> Starting game...")
-    output = run_cli("playtest_germany", "start", game_id)
+    output = strip_ansi(run_cli("playtest_germany", "start", game_id))
     if "✓" in output:
         print("Game started!")
     else:
@@ -287,13 +297,13 @@ def end_phase(game_id=None):
         print(">>> All players revealing (atomic pass + acquisitions)...")
         for player in PLAYERS:
             # Use atomic REVEAL action instead of PASS
-            output = run_cli(player, "reveal", game_id)
+            output = strip_ansi(run_cli(player, "reveal", game_id))
             if "✓" in output or "passed" in output.lower() or "reveal" in output.lower():
                 print(f"  {player}: revealed")
     else:
         print(">>> All players ending turn...")
         for player in PLAYERS:
-            output = run_cli(player, "endturn", game_id)
+            output = strip_ansi(run_cli(player, "endturn", game_id))
             if "✓" in output:
                 print(f"  {player}: done")
 
@@ -611,7 +621,7 @@ def handle_launchpad_launches(player, game_id):
     for ship in hangar_ships[:]:  # Copy to avoid mutation during iteration
         for route in routes[:]:
             gas_type = get_gas_preference(player, game_id)
-            result = run_cli(player, "launch", game_id, ship['id'], route['id'], gas_type)
+            result = strip_ansi(run_cli(player, "launch", game_id, ship['id'], route['id'], gas_type))
             if "✓" in result or "success" in result.lower():
                 print(f"    {player}: launched {ship['id']} to {route['id']}")
                 log_action(player, f"launched {ship['id']} to {route['id']} ({gas_type})", "worker_placement")
@@ -709,7 +719,7 @@ def handle_worker_placement_round(game_id):
                 # We'll handle launches after placement
                 action_desc = f"placed at {location['id']} (launching ships next)"
 
-            result = run_cli(*action_args)
+            result = strip_ansi(run_cli(*action_args))
             if "✓" in result or "success" in result.lower():
                 print(f"  {current}: {action_desc}")
                 log_action(current, action_desc, "worker_placement")
@@ -772,7 +782,7 @@ def submit_reveal(player, game_id, reason=""):
     if card_ids:
         reveal_args.append(",".join(card_ids))
 
-    result = run_cli(*reveal_args)
+    result = strip_ansi(run_cli(*reveal_args))
 
     # Log the action
     if tech_ids or card_ids:
@@ -863,6 +873,7 @@ def autoplay(num_turns=None, game_id=None):
     max_iterations = 1000  # Safety limit
     iteration = 0
     last_phase = None
+    last_age = get_age(game_id)
 
     while iteration < max_iterations:
         iteration += 1
@@ -915,6 +926,13 @@ def autoplay(num_turns=None, game_id=None):
                 turn_count += 1
                 log_turn_start(turn_count)
                 stuck_detector.reset()
+
+                # Check for age advancement
+                current_age = get_age(game_id)
+                if current_age != last_age:
+                    print(f"\n  *** AGE {current_age} BEGINS! ***")
+                    log_action(None, f"Age {last_age} -> Age {current_age} transition", "age_transition")
+                    last_age = current_age
 
                 # Show progress after each turn
                 print(f"\n  Turn {turn_count} complete")
