@@ -48,9 +48,37 @@ if USE_LOCAL:
 PLAYERS = ["playtest_germany", "playtest_britain", "playtest_usa", "playtest_italy"]
 FACTIONS = ["germany", "britain", "usa", "italy"]
 
+# Technology -> Upgrade mapping for Design Bureau
+# Frame and Fabric upgrades are required to launch ships (Section 3.2, 7.2)
+TECH_TO_UPGRADE = {
+    # Frame upgrades (required for launch)
+    'wooden_framework': {'id': 'wooden_frame', 'slotType': 'frame'},
+    'wire_bracing': {'id': 'tensioned_frame', 'slotType': 'frame'},
+    'duralumin_girders': {'id': 'duralumin_frame', 'slotType': 'frame'},
+    'steel_framework': {'id': 'steel_frame', 'slotType': 'frame'},
+    'internal_keel': {'id': 'semi_rigid_keel', 'slotType': 'frame'},
+    'geodetic_structure': {'id': 'geodetic_frame', 'slotType': 'frame'},
+    'modular_construction': {'id': 'modular_frame', 'slotType': 'frame'},
+    'articulated_keel': {'id': 'flexible_frame', 'slotType': 'frame'},
+    # Fabric upgrades (required for launch)
+    'rubberized_cotton': {'id': 'cotton_envelope', 'slotType': 'fabric'},
+    'doped_canvas': {'id': 'doped_covering', 'slotType': 'fabric'},
+    'goldbeaters_skin': {'id': 'goldbeater_envelope', 'slotType': 'fabric'},
+    'aluminized_fabric': {'id': 'reflective_covering', 'slotType': 'fabric'},
+    'synthetic_fabric': {'id': 'synthetic_envelope', 'slotType': 'fabric'},
+    # Drive upgrades (optional but useful)
+    'daimler_engine': {'id': 'basic_engine', 'slotType': 'drive'},
+    'improved_propeller': {'id': 'efficient_propeller', 'slotType': 'drive'},
+    'dual_engine_mount': {'id': 'twin_engine', 'slotType': 'drive'},
+    'maybach_engine': {'id': 'maybach_cx', 'slotType': 'drive'},
+    'diesel_powerplant': {'id': 'diesel_engine', 'slotType': 'drive'},
+}
+
 # Current log file (set when game starts)
 _current_log_file = None
-_current_turn = 0
+_current_age = 1        # Current game age (1, 2, or 3)
+_current_round = 0      # Game round/turn number
+_current_player_turn = 0  # Player turn within the round (1, 2, 3, ... resets each round)
 
 # Early reveal mode: when enabled, players cycle through revealing with 0, 1, or 2 agents remaining
 EARLY_REVEAL_MODE = os.environ.get("UPSHIP_EARLY_REVEAL") == "1" or "--early-reveal" in sys.argv
@@ -62,22 +90,25 @@ if "--early-reveal" in sys.argv:
 
 def init_log_file(game_id, game_name=None):
     """Initialize a new log file for this game."""
-    global _current_log_file, _current_turn
+    global _current_log_file, _current_age, _current_round, _current_player_turn
     LOGS_DIR.mkdir(exist_ok=True)
 
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
     filename = f"playtest_{timestamp}.log"
     _current_log_file = LOGS_DIR / filename
-    _current_turn = 0
+    _current_age = 1
+    _current_round = 0
+    _current_player_turn = 0
 
     # Write header
     with open(_current_log_file, 'w') as f:
         f.write(f"# UP SHIP! Playtest Log\n")
         f.write(f"# Game ID: {game_id}\n")
         f.write(f"# Started: {datetime.now().isoformat()}\n")
+        f.write(f"# Format: age round-turn (e.g., I 1-3 = Age 1, round 1, player turn 3)\n")
         f.write(f"#\n")
-        f.write(f"{'turn':<8} {'phase':<20} {'player':<18} {'action'}\n")
-        f.write(f"{'-'*8} {'-'*20} {'-'*18} {'-'*40}\n")
+        f.write(f"{'a r-t':<10} {'phase':<20} {'player':<18} {'action'}\n")
+        f.write(f"{'-'*10} {'-'*20} {'-'*18} {'-'*40}\n")
 
     # Save log file path for persistence across invocations
     LOG_FILE_TRACKER.write_text(str(_current_log_file))
@@ -97,23 +128,54 @@ def load_log_file():
     return None
 
 
-def log_action(player, action, phase=None):
-    """Log an action to the current log file."""
-    global _current_log_file, _current_turn
+def log_action(player, action, phase=None, is_phase_transition=False):
+    """Log an action to the current log file.
+
+    Args:
+        player: Player username (or None for system messages)
+        action: Action description
+        phase: Phase name (worker_placement, reveal, income_cleanup)
+        is_phase_transition: If True, show just round number (e.g., "I 1 income_cleanup")
+    """
+    global _current_log_file, _current_age, _current_round, _current_player_turn
     if not _current_log_file:
         return
 
     faction = player.replace('playtest_', '') if player else 'system'
     phase_str = phase or ''
 
+    # Convert age to Roman numeral
+    age_roman = ['I', 'II', 'III'][_current_age - 1] if 1 <= _current_age <= 3 else str(_current_age)
+
+    # Format the age round-turn column
+    if is_phase_transition or _current_player_turn == 0:
+        # Phase transition or system message: just show age and round
+        art_str = f"{age_roman} {_current_round}"
+    else:
+        # Player action: show age round-turn
+        art_str = f"{age_roman} {_current_round}-{_current_player_turn}"
+
     with open(_current_log_file, 'a') as f:
-        f.write(f"{_current_turn:<8} {phase_str:<20} {faction:<18} {action}\n")
+        f.write(f"{art_str:<10} {phase_str:<20} {faction:<18} {action}\n")
 
 
-def log_turn_start(turn_num):
-    """Record that a new turn has started."""
-    global _current_turn
-    _current_turn = turn_num
+def log_round_start(round_num):
+    """Record that a new round has started."""
+    global _current_round, _current_player_turn
+    _current_round = round_num
+    _current_player_turn = 0  # Reset player turn counter for new round
+
+
+def log_age_change(new_age):
+    """Record that the age has changed."""
+    global _current_age
+    _current_age = new_age
+
+
+def log_player_turn():
+    """Increment the player turn counter within the current round."""
+    global _current_player_turn
+    _current_player_turn += 1
 
 
 def run_cli(*args, capture=True):
@@ -548,8 +610,95 @@ def get_player_placements(player, game_id):
     return placements
 
 
-def evaluate_launch_readiness(player_data, routes):
+def get_design_bureau_swaps(player_data):
+    """Determine which upgrades to install at Design Bureau.
+
+    Prioritizes Frame and Fabric slots (required for launch) over Drive slots.
+    Returns a list of swap actions to pass to the PLACE_AGENT action.
+
+    Args:
+        player_data: Player state dict with blueprint and technologies
+
+    Returns:
+        List of swap dicts: [{'action': 'install', 'slotType': str, 'slotIndex': int, 'upgradeId': str}]
+    """
+    swaps = []
+    blueprint = player_data.get('blueprint', {})
+    technologies = player_data.get('technologies', [])
+
+    if not technologies:
+        return swaps
+
+    # Check which slots have empty positions
+    frame_slots = blueprint.get('frameSlots', [])
+    fabric_slots = blueprint.get('fabricSlots', [])
+    drive_slots = blueprint.get('driveSlots', [])
+
+    # Find empty slot indices
+    empty_frame_indices = [i for i, s in enumerate(frame_slots) if s is None]
+    empty_fabric_indices = [i for i, s in enumerate(fabric_slots) if s is None]
+    empty_drive_indices = [i for i, s in enumerate(drive_slots) if s is None]
+
+    # Find which upgrades we can install based on our technologies
+    available_upgrades = []
+    for tech_id in technologies:
+        if tech_id in TECH_TO_UPGRADE:
+            upgrade_info = TECH_TO_UPGRADE[tech_id]
+            available_upgrades.append({
+                'upgradeId': upgrade_info['id'],
+                'slotType': upgrade_info['slotType']
+            })
+
+    # Prioritize: Frame > Fabric > Drive (Frame and Fabric required for launch)
+    # Try to fill Frame slots first
+    for upgrade in available_upgrades:
+        if upgrade['slotType'] == 'frame' and empty_frame_indices:
+            slot_index = empty_frame_indices.pop(0)
+            swaps.append({
+                'action': 'install',
+                'slotType': 'frame',
+                'slotIndex': slot_index,
+                'upgradeId': upgrade['upgradeId']
+            })
+            if len(swaps) >= 2:  # Max 2 swaps per visit (for most factions)
+                return swaps
+
+    # Then Fabric slots
+    for upgrade in available_upgrades:
+        if upgrade['slotType'] == 'fabric' and empty_fabric_indices:
+            slot_index = empty_fabric_indices.pop(0)
+            swaps.append({
+                'action': 'install',
+                'slotType': 'fabric',
+                'slotIndex': slot_index,
+                'upgradeId': upgrade['upgradeId']
+            })
+            if len(swaps) >= 2:
+                return swaps
+
+    # Finally Drive slots (optional)
+    for upgrade in available_upgrades:
+        if upgrade['slotType'] == 'drive' and empty_drive_indices:
+            slot_index = empty_drive_indices.pop(0)
+            swaps.append({
+                'action': 'install',
+                'slotType': 'drive',
+                'slotIndex': slot_index,
+                'upgradeId': upgrade['upgradeId']
+            })
+            if len(swaps) >= 2:
+                return swaps
+
+    return swaps
+
+
+def evaluate_launch_readiness(player_data, routes, current_age=1):
     """Evaluate what a player needs to be able to launch a ship.
+
+    Args:
+        player_data: Player state dict
+        routes: List of available routes
+        current_age: Current game age (1, 2, or 3) - determines officer requirement
 
     Returns dict with:
         - can_launch: bool - whether player can launch right now
@@ -582,7 +731,31 @@ def evaluate_launch_readiness(player_data, routes):
             priorities.append('construction_hall')
         return {'can_launch': False, 'missing': missing, 'priorities': priorities}
 
-    # Check 2: Do we have gas?
+    # Check 2: Are all frame and fabric slots filled? (Required per Section 3.2, 7.2)
+    blueprint = player_data.get('blueprint', {})
+    frame_slots = blueprint.get('frameSlots', [])
+    fabric_slots = blueprint.get('fabricSlots', [])
+    empty_frame = sum(1 for s in frame_slots if s is None)
+    empty_fabric = sum(1 for s in fabric_slots if s is None)
+
+    slots_ready = True
+    if empty_frame > 0:
+        missing.append(f'{empty_frame} empty Frame slot(s)')
+        priorities.append('design_bureau')  # Need to fill slots
+        slots_ready = False
+    if empty_fabric > 0:
+        missing.append(f'{empty_fabric} empty Fabric slot(s)')
+        priorities.append('design_bureau')  # Need to fill slots
+        slots_ready = False
+
+    # Check 3: Do we have enough officers?
+    # Officers required = Age number (1 in Age I, 2 in Age II, 3 in Age III)
+    officers_needed = current_age
+    if officers < officers_needed:
+        missing.append(f'need {officers_needed - officers} more officer(s) for Age {current_age}')
+        priorities.append('academy')  # Recruit officers
+
+    # Check 3: Do we have gas?
     # Ships need at least 1 gas cube to launch (more for heavier ships)
     # Estimate gas needed based on blueprint weight
     blueprint = player_data.get('blueprint', {})
@@ -592,7 +765,7 @@ def evaluate_launch_readiness(player_data, routes):
         missing.append(f'need {gas_needed - total_gas} more gas')
         priorities.append('gas_depot')
 
-    # Check 3: Do we have routes we can reach?
+    # Check 4: Do we have routes we can reach?
     # Get ship stats to match against routes
     if hangar_ships and routes:
         # Check if any ship can reach any route
@@ -612,15 +785,16 @@ def evaluate_launch_readiness(player_data, routes):
             missing.append('no reachable routes (need better ship stats)')
             priorities.append('design_bureau')  # Upgrade blueprint
 
-    # Check 4: Do we have engineers for hazard mitigation?
+    # Check 5: Do we have engineers for hazard mitigation?
     # Having 2+ engineers is very helpful for surviving hazards
     if engineers < 2:
         missing.append(f'low engineers ({engineers}/2 recommended)')
         # technical_institute gives engineers
         priorities.append('technical_institute')
 
-    # If we have ship + gas, we can attempt a launch
-    can_launch = len(hangar_ships) > 0 and total_gas >= gas_needed
+    # Can only launch if we have: ship + filled slots + enough officers + gas
+    can_launch = (len(hangar_ships) > 0 and slots_ready and
+                  officers >= officers_needed and total_gas >= gas_needed)
 
     return {
         'can_launch': can_launch,
@@ -667,8 +841,11 @@ def find_strategic_placement(player, hand, locations, game_id):
     # Get available routes
     routes = get_available_routes(game_id)
 
+    # Get current age for officer requirements
+    current_age = state.get('age', 1) if state else 1
+
     # Evaluate launch readiness
-    launch_eval = evaluate_launch_readiness(player_data, routes)
+    launch_eval = evaluate_launch_readiness(player_data, routes, current_age)
 
     # Build priority list
     priority_locations = []
@@ -784,6 +961,50 @@ def handle_launchpad_launches(player, game_id):
         run_cli(player, "nolaunches", game_id)
         print(f"    {player}: no launches (no routes available)")
         log_action(player, "no launches (no routes available)", "worker_placement")
+        return
+
+    # Check blueprint slot requirements - all frame and fabric slots must be filled
+    blueprint = player_data.get('blueprint', {})
+    frame_slots = blueprint.get('frameSlots', [])
+    fabric_slots = blueprint.get('fabricSlots', [])
+    empty_frame = sum(1 for s in frame_slots if s is None)
+    empty_fabric = sum(1 for s in fabric_slots if s is None)
+
+    if empty_frame > 0 or empty_fabric > 0:
+        # Slots not filled - can't launch
+        run_cli(player, "nolaunches", game_id)
+        slot_msg = []
+        if empty_frame > 0:
+            slot_msg.append(f"{empty_frame} Frame")
+        if empty_fabric > 0:
+            slot_msg.append(f"{empty_fabric} Fabric")
+        print(f"    {player}: no launches ({' and '.join(slot_msg)} slot(s) empty)")
+        log_action(player, f"no launches ({' and '.join(slot_msg)} slot(s) empty)", "worker_placement")
+        return
+
+    # Check officer requirements - launches require officers equal to Age number
+    current_age = pre_state.get('age', 1) if pre_state else 1
+    officers_needed = current_age
+    available_officers = player_data.get('officers', 0)
+
+    if available_officers < officers_needed:
+        # Not enough officers to launch
+        run_cli(player, "nolaunches", game_id)
+        print(f"    {player}: no launches (need {officers_needed} officer(s) for Age {current_age}, have {available_officers})")
+        log_action(player, f"no launches (need {officers_needed} officer(s), have {available_officers})", "worker_placement")
+        return
+
+    # Check gas availability
+    gas_cubes = player_data.get('gasCubes', {})
+    hydrogen = gas_cubes.get('hydrogen', 0)
+    helium = gas_cubes.get('helium', 0)
+    total_gas = hydrogen + helium
+
+    if total_gas < 1:
+        # No gas to launch
+        run_cli(player, "nolaunches", game_id)
+        print(f"    {player}: no launches (no gas available)")
+        log_action(player, "no launches (no gas available)", "worker_placement")
         return
 
     # Sort routes by easiest first (lowest distance/speed requirement)
@@ -942,6 +1163,16 @@ def handle_launchpad_launches(player, game_id):
                 if launch_outcome == "SUCCESS" or ship_status == 'on_route':
                     routes.remove(route)  # Route now claimed
                     launched += 1
+
+                    # Check if we have officers for another launch
+                    post_officers = post_player_data.get('officers', 0)
+                    if post_officers < officers_needed:
+                        # Not enough officers for another launch - exit outer loop
+                        print(f"    {player}: stopping launches (only {post_officers} officer(s) left, need {officers_needed} for Age {current_age})")
+                        # Call nolaunches before returning
+                        run_cli(player, "nolaunches", game_id)
+                        print(f"    {player}: done launching ({launched} ships)")
+                        return
                 break  # Move to next ship
             else:
                 # Launch failed - log why
@@ -1022,6 +1253,18 @@ def handle_worker_placement_round(game_id):
                 action_args.append("buildCount=1")  # Build 1 ship when placing
                 action_desc = f"placed at {location['id']} and built ship"
 
+            elif location['id'] == 'design_bureau':
+                # Determine which upgrades to install based on technologies owned
+                swaps = get_design_bureau_swaps(pre_player_data)
+                if swaps:
+                    # Pass swaps as JSON array
+                    swaps_json = json.dumps(swaps)
+                    action_args.append(f"swaps={swaps_json}")
+                    upgrade_names = [s['upgradeId'] for s in swaps]
+                    action_desc = f"placed at {location['id']} and installed {', '.join(upgrade_names)}"
+                else:
+                    action_desc = f"placed at {location['id']} using {card['name']}"
+
             elif location['id'] == 'gas_depot':
                 # Determine gas type and amount
                 gas_type = "helium" if current == "playtest_usa" else "hydrogen"
@@ -1068,6 +1311,7 @@ def handle_worker_placement_round(game_id):
 
             result = strip_ansi(run_cli(*action_args))
             if "✓" in result or "success" in result.lower():
+                log_player_turn()  # Increment player turn counter
                 print(f"  {current}: {action_desc}")
                 log_action(current, action_desc, "worker_placement")
 
@@ -1196,8 +1440,8 @@ def submit_reveal(player, game_id, reason=""):
         # New technologies acquired
         new_techs = post_techs - pre_techs
 
-        # Extract reveal resources from game log
-        log_entries = get_last_log_entries(post_state, count=10) if post_state else []
+        # Extract reveal resources from game log (filter by type='reveal' to avoid income logs)
+        log_entries = get_last_log_entries(post_state, count=20, entry_type='reveal') if post_state else []
         resources_collected = None
         for entry in reversed(log_entries):
             msg = entry.get('message', '')
@@ -1207,13 +1451,15 @@ def submit_reveal(player, game_id, reason=""):
                 break
 
         # Build detailed log entry
+        log_player_turn()  # Increment player turn counter for reveal action
         action_desc = f"REVEAL {reason}".strip()
         print(f"  {player}: {action_desc}")
         log_action(player, action_desc, "reveal")
 
-        # Log resources collected
+        # Log resources collected (from server's reveal log)
         if resources_collected:
             log_action(None, f"  └─ {resources_collected}", "reveal")
+            print(f"    └─ {resources_collected}")
 
         # Log new technologies
         if new_techs:
@@ -1221,8 +1467,9 @@ def submit_reveal(player, game_id, reason=""):
             log_action(None, f"  └─ Tech acquired: {tech_list}", "reveal")
             print(f"    └─ Tech acquired: {tech_list}")
 
-        # Log current research/influence totals
-        log_action(None, f"  └─ Resources: Research={post_research} Influence={post_influence} Cash=£{post_cash}", "reveal")
+        # Log remaining research (after acquisitions) - influence is always 0 after income_cleanup
+        if post_research > 0:
+            log_action(None, f"  └─ Research remaining: {post_research}", "reveal")
 
         # Log hand changes (new cards acquired)
         post_hand = post_player_data.get('hand', [])
@@ -1362,19 +1609,20 @@ def autoplay(num_turns=None, game_id=None):
             # Only count as complete turn if phase actually transitioned
             if get_phase(game_id) != "INCOME_CLEANUP":
                 turn_count += 1
-                log_turn_start(turn_count)
+                log_round_start(turn_count)
                 stuck_detector.reset()
 
                 # Check for age advancement
                 current_age = get_age(game_id)
                 if current_age != last_age:
+                    log_age_change(current_age)
                     print(f"\n  *** AGE {current_age} BEGINS! ***")
-                    log_action(None, f"Age {last_age} -> Age {current_age} transition", "age_transition")
+                    log_action(None, f"Age {last_age} -> Age {current_age} transition", "age_transition", is_phase_transition=True)
                     last_age = current_age
 
                 # Show progress after each turn
                 print(f"\n  Turn {turn_count} complete")
-                log_action(None, f"Turn {turn_count} complete", "income_cleanup")
+                log_action(None, f"Turn {turn_count} complete", "income_cleanup", is_phase_transition=True)
                 output = strip_ansi(run_cli("playtest_germany", "state", game_id))
                 for line in output.split('\n'):
                     if any(x in line for x in ['Age', 'Turn', 'Progress']):
