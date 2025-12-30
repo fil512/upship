@@ -718,52 +718,8 @@ function processPlaceAgent(state, playerId, data) {
   return { newState: state };
 }
 
-/**
- * Pass action: Player chooses to stop placing agents this round
- *
- * @param {Object} state - Game state (mutated)
- * @param {string} playerId - Acting player ID
- * @returns {Object} { newState } or throws error
- */
-function processPass(state, playerId) {
-  const playerState = state.players[playerId];
-
-  // Validate phase
-  if (state.phase !== 'worker_placement') {
-    throw new GameRuleError('Can only pass during worker placement phase');
-  }
-
-  // Validate it's this player's turn to place
-  const currentPlacer = getCurrentPlacer(state);
-  if (currentPlacer !== playerId) {
-    throw new GameRuleError('Not your turn');
-  }
-
-  // Check if already passed
-  if (playerState.hasPassed) {
-    throw new GameRuleError('Already passed this round');
-  }
-
-  // Mark as passed
-  playerState.hasPassed = true;
-  state.workerPlacement.passedPlayers.push(playerId);
-
-  state.log.push({
-    timestamp: new Date().toISOString(),
-    message: `${playerState.faction.toUpperCase()} passes`,
-    playerId,
-    type: 'action'
-  });
-
-  // Check if all players have passed
-  if (allPlayersPassed(state)) {
-    transitionToRevealPhase(state);
-  } else {
-    advanceToNextPlacer(state);
-  }
-
-  return { newState: state };
-}
+// Note: processPass was removed - players must use REVEAL action to exit worker placement
+// This ensures all players declare their tech/market acquisitions explicitly
 
 /**
  * Recall all agents (end of round)
@@ -789,7 +745,7 @@ function processRecallAgents(state, _playerId, _data) {
 
 module.exports = {
   processPlaceAgent,
-  processPass,
+  // Note: processPass removed - players must use REVEAL to exit worker placement
   processRecallAgents,
   processCardEffect,
   executeLocationAction,

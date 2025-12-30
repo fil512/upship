@@ -397,24 +397,17 @@ describe('Rules Compliance - Atomic Reveal Action', () => {
     });
   });
 
-  describe('PASS Action Backward Compatibility', () => {
-    it('should still allow PASS action as shorthand for REVEAL with no acquisitions', () => {
-      // PASS becomes equivalent to REVEAL with empty arrays
-      // This maintains backward compatibility
-      const state = createTestGameState();
-      state.phase = 'worker_placement';
-      state.workerPlacement = {
-        currentPlacerIndex: 0,
-        placementOrder: ['1', '2'],
-        passedPlayers: []
-      };
-      state.players['1'].hasPassed = false;
+  describe('PASS Action Removed', () => {
+    it('should NOT export processPass - players must use REVEAL', () => {
+      // PASS action was removed - players must explicitly use REVEAL
+      // This ensures all players declare their tech/market acquisitions
+      const worker = require('../../../server/actions/worker');
 
-      const { processPass } = require('../../../server/actions/worker');
-      const result = processPass(state, '1');
+      // processPass should not be exported
+      expect(worker.processPass).toBeUndefined();
 
-      // Player should be marked as passed
-      expect(result.newState.players['1'].hasPassed).toBe(true);
+      // processPlaceAgent should still be exported
+      expect(worker.processPlaceAgent).toBeDefined();
     });
   });
 });

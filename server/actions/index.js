@@ -11,7 +11,7 @@ const { processAcquireTechnology, processAcquireTechnologyResearch, processGainR
 const { processInstallUpgrade, processRemoveUpgrade } = require('./blueprint');
 const { processBuildShip } = require('./building');
 const { processLaunchShip, processClaimRoute, processNoMoreLaunches } = require('./launch');
-const { processPlaceAgent, processPass, processRecallAgents } = require('./worker');
+const { processPlaceAgent, processRecallAgents } = require('./worker');
 const { processTakeLoan, processBuyInsurance, processCollectIncome } = require('./economy');
 const { processRecruitCrew, processUpgradeOfficerIncome, processUpgradeEngineerIncome } = require('./crew');
 const { processPlayCard, processDrawCards, processBuyMarketCard, processDiscardHazard, processDiscardMarketCard } = require('./cards');
@@ -48,9 +48,9 @@ const ACTION_HANDLERS = {
 
   // Worker placement
   PLACE_AGENT: processPlaceAgent,
-  PASS: processPass,
   RECALL_AGENTS: processRecallAgents,
   NO_MORE_LAUNCHES: processNoMoreLaunches,
+  // Note: PASS action removed - players must use REVEAL to exit worker placement
 
   // Reveal
   REVEAL: processReveal,

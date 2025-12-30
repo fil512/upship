@@ -407,14 +407,14 @@ describe('GameState Routes', () => {
       expect(res.body.error).toContain('Not your turn');
     });
 
-    it('should process PASS action when player turn', async () => {
+    it('should process REVEAL action when player turn', async () => {
       const gameState = createFullGameState();
       gameStateService.getGameState.mockResolvedValue({ state: gameState, version: 1, id: 1 });
       gameStateService.updateGameState.mockResolvedValue({ state: gameState, version: 2 });
 
       const res = await request(app)
         .post('/api/state/1/action')
-        .send({ actionType: 'PASS' });
+        .send({ actionType: 'REVEAL', actionData: { techAcquisitions: [], marketPurchases: [] } });
 
       expect(res.status).toBe(200);
       expect(gameStateService.updateGameState).toHaveBeenCalled();
@@ -480,7 +480,7 @@ describe('GameState Routes', () => {
 
       const res = await request(app)
         .post('/api/state/1/action')
-        .send({ actionType: 'PASS' });
+        .send({ actionType: 'REVEAL', actionData: { techAcquisitions: [], marketPurchases: [] } });
 
       expect(res.status).toBe(500);
     });

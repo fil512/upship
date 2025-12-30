@@ -793,38 +793,33 @@ def submit_reveal(player, game_id, reason=""):
 
     if "✓" in result or "success" in result.lower():
         print(f"  {player}: {action_desc}")
-        log_action(player, action_desc, "worker_placement")
+        log_action(player, action_desc, "reveal")
     else:
-        # Fall back to PASS if REVEAL fails
-        print(f"  {player}: reveal failed, using PASS")
-        run_cli(player, "pass", game_id)
-        log_action(player, f"passed {reason}", "worker_placement")
+        # REVEAL failed - log error (PASS action no longer available)
+        print(f"  {player}: reveal failed - {result}")
+        log_action(player, f"reveal failed {reason}: {result[:50]}", "reveal")
 
 
 def handle_reveal_phase(game_id):
-    """Handle the reveal phase using atomic REVEAL action.
+    """Handle the reveal phase.
 
     Per Section 5.1, reveal is atomic:
-    - Player submits REVEAL with techAcquisitions[] and marketPurchases[]
     - Resources are collected from revealed cards
     - Acquisitions are processed using collected resources
     - If acquisition fails (not enough resources), it's skipped with a log message
+
+    Note: The server automatically processes reveal when all players have submitted
+    REVEAL actions during worker_placement. This function just logs and waits.
     """
     print("--- Reveal Phase ---")
+    log_action(None, "Reveal phase - collecting resources and processing acquisitions", "reveal")
 
-    # Note: With atomic reveal, we don't take separate actions.
-    # Everything is bundled into the REVEAL action during worker_placement.
-    # If we're in reveal phase, all players should have already submitted REVEAL.
-    # Just need to wait for the phase to transition.
-
-    # Wait for phase to change (reveal should auto-complete if all submitted)
+    # Wait for phase to change (reveal should auto-complete when all REVEAL actions submitted)
     for _ in range(10):
         if get_phase(game_id) != "REVEAL":
+            log_action(None, "Reveal phase complete", "reveal")
             break
         time.sleep(0.3)
-        # If stuck in reveal, all players end turn
-        for player in PLAYERS:
-            run_cli(player, "endturn", game_id)
 
 
 def handle_income_cleanup_phase(game_id):

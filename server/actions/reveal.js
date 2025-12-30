@@ -157,14 +157,15 @@ function executeAllReveals(state) {
     // Mark player as done with reveal
     state.revealPhase.techAcquisitionsComplete[playerId] = true;
     state.revealPhase.marketPurchasesComplete[playerId] = true;
+
+    // Replenish R&D Board and Market AFTER this player's purchases
+    // This allows later players to see freshly drawn tiles/cards
+    refillRDBoard(state);
+    refreshMarketRow(state);
   }
 
   // Clear pending reveals
   delete state.pendingReveals;
-
-  // Replenish R&D Board and Market after all reveals processed
-  refillRDBoard(state);
-  refreshMarketRow(state);
 
   // Transition to income/cleanup since all reveals are now complete
   transitionToIncomeCleanup(state);

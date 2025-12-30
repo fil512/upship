@@ -534,22 +534,12 @@ function processNoMoreLaunches(state, playerId) {
   // Import here to avoid circular dependency
   const { advanceToNextPlacer, allPlayersPassed } = require('./helpers/turnOrder');
   const { transitionToRevealPhase } = require('./helpers/phaseTransition');
-  const playerState = state.players[playerId];
 
-  // Check if player should auto-pass (no agents left OR no playable cards)
-  // We need to import hasPlayableCards or calculate it
-  const hasCards = playerState.hand && playerState.hand.length > 0;
-  const hasAgents = playerState.agentsRemaining > 0;
+  // IMPORTANT: Do NOT auto-pass players here.
+  // Players must explicitly call REVEAL to exit worker placement phase.
+  // This ensures all players have a chance to declare their tech/market acquisitions.
 
-  if (!hasAgents || !hasCards) {
-    playerState.hasPassed = true;
-    state.workerPlacement.passedPlayers = state.workerPlacement.passedPlayers || [];
-    if (!state.workerPlacement.passedPlayers.includes(playerId)) {
-      state.workerPlacement.passedPlayers.push(playerId);
-    }
-  }
-
-  // Advance turn or transition phase
+  // Advance turn or transition phase (if somehow all have revealed)
   if (allPlayersPassed(state)) {
     transitionToRevealPhase(state);
   } else {
