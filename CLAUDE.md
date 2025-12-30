@@ -20,23 +20,17 @@ For testing the production site:
 - **Username**: testpilot42
 - **Password**: airship123
 
-## Testing with Claude in Chrome
+## Browser Testing (MCP)
 
-Use the Claude in Chrome MCP browser automation tools to test the production site:
+When using Claude in Chrome MCP tools for browser automation testing:
+1. `mcp__claude-in-chrome__tabs_context_mcp` - See available tabs
+2. `mcp__claude-in-chrome__navigate` - Navigate to production URL
+3. `mcp__claude-in-chrome__computer` with `action: "screenshot"` - Take screenshots
+4. `mcp__claude-in-chrome__find` - Find elements with natural language
+5. `mcp__claude-in-chrome__form_input` - Fill forms
+6. `mcp__claude-in-chrome__read_page` - Read accessibility tree
 
-### Getting Started
-1. Call `mcp__claude-in-chrome__tabs_context_mcp` first to see available tabs
-2. Create a new tab with `mcp__claude-in-chrome__tabs_create_mcp` if needed
-3. Navigate to the production URL with `mcp__claude-in-chrome__navigate`
-
-### Common Testing Tasks
-- **Take screenshots**: `mcp__claude-in-chrome__computer` with `action: "screenshot"`
-- **Find elements**: `mcp__claude-in-chrome__find` with natural language queries
-- **Fill forms**: `mcp__claude-in-chrome__form_input` with element ref from find/read_page
-- **Click buttons**: `mcp__claude-in-chrome__computer` with `action: "left_click"` or use ref
-- **Read page structure**: `mcp__claude-in-chrome__read_page` for accessibility tree
-
-### Troubleshooting Deployments
+## Troubleshooting Deployments
 
 **Using the Railway CLI script (preferred):**
 ```bash
@@ -68,14 +62,57 @@ python scripts/railway.py getvar        # Check environment variables
 npm install              # Install dependencies
 npm start                # Production server on port 3000
 npm run dev              # Development with auto-reload (--watch)
+npm run dev:local        # Development with local .env.development
 npm run migrate          # Run pending database migrations
 npm run migrate:down     # Rollback last migration
 npm run migrate:status   # Check migration status
+npm run migrate:local    # Run migrations against local DB
 npm run cli -- <args>    # Run CLI tool (see below)
+npm run cli:local -- <args>  # CLI against local server
 npm run lint             # Run ESLint
+npm run lint:fix         # Auto-fix lint issues
 npm run code-cleanup     # Find duplicate functions, code smells (SonarJS)
 npm test                 # Run Jest tests
+npm run test:watch       # Jest in watch mode
+npm run test:coverage    # Jest with coverage report
 ```
+
+## Local Development Setup
+
+Quick start (one command):
+```bash
+npm run dev:setup        # Starts DB, runs migrations, starts dev server
+```
+
+Or step-by-step:
+```bash
+npm run db:up            # Start PostgreSQL in Docker
+npm run migrate:local    # Run migrations against local DB
+npm run dev:local        # Start server with local env (auto-reload)
+```
+
+Stop the database:
+```bash
+npm run db:down          # Stop and remove PostgreSQL container
+```
+
+## Testing
+
+```bash
+npm test                                    # Run all tests
+npm test -- --watch                         # Watch mode
+npm test -- __tests__/unit/rules/hazards.test.js  # Run single file
+npm test -- --testNamePattern="hazard"      # Run tests matching pattern
+npm test -- --coverage                      # With coverage report
+```
+
+Tests are in `__tests__/unit/` with fixtures in `__tests__/fixtures/`.
+
+Global test helpers (defined in `__tests__/setup.js`):
+- `createMockPool()` - Mock PostgreSQL pool
+- `createMockClient()` - Mock client for transactions
+- `createMockRequest(overrides)` - Mock Express request
+- `createMockResponse()` - Mock Express response
 
 ## Pre-Push Validation
 
@@ -327,13 +364,7 @@ python scripts/playtest.py launch <player> <shipId> <routeId> [gas]  # Launch sh
 
 ### Legacy Shell Scripts (Deprecated)
 
-The shell scripts are deprecated. Use the Python tool instead:
-
-```bash
-./scripts/autoplay.sh                               # DEPRECATED - shows migration message
-./scripts/setup-playtest.sh [game_name]              # Still works - creates 4-player game
-./scripts/full-playtest.sh [num_turns] [game_name]  # Still works - setup + autoplay
-```
+Use the Python playtest tool instead. Legacy scripts `./scripts/autoplay.sh`, `./scripts/setup-playtest.sh`, and `./scripts/full-playtest.sh` still work but are deprecated.
 
 ## Working with This Project
 
