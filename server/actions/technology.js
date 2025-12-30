@@ -197,8 +197,16 @@ function calculateSpecializationDiscount(playerTechs, techType) {
  * @returns {Object} { newState } or throws error
  */
 function processAcquireTechnologyResearch(state, playerId, data) {
-  const { techId } = data;
+  const { techId, _internal = false } = data || {};
   const playerState = state.players[playerId];
+
+  // Per Section 5.1: Tech acquisitions during reveal must go through atomic REVEAL action
+  if (!_internal) {
+    throw new GameRuleError(
+      'ACQUIRE_TECHNOLOGY_RESEARCH not allowed: Use the atomic REVEAL action to acquire technologies (Section 5.1). ' +
+      'Submit your techAcquisitions[] when calling REVEAL.'
+    );
+  }
 
   const techIndex = state.rdBoard.findIndex(t => t.id === techId);
   if (techIndex === -1) {

@@ -79,8 +79,16 @@ function processDrawCards(state, playerId, data) {
  * @returns {Object} { newState } or throws error
  */
 function processBuyMarketCard(state, playerId, data) {
-  const { cardId } = data;
+  const { cardId, _internal = false } = data || {};
   const playerState = state.players[playerId];
+
+  // Per Section 5.1: Market purchases during reveal must go through atomic REVEAL action
+  if (!_internal) {
+    throw new GameRuleError(
+      'BUY_MARKET_CARD not allowed: Use the atomic REVEAL action to buy market cards (Section 5.1). ' +
+      'Submit your marketPurchases[] when calling REVEAL.'
+    );
+  }
 
   // Can only buy market cards during reveal phase
   if (state.phase !== 'reveal') {

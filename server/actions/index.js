@@ -10,7 +10,7 @@ const { processBuyGas } = require('./gas');
 const { processAcquireTechnology, processAcquireTechnologyResearch, processGainResearch } = require('./technology');
 const { processInstallUpgrade, processRemoveUpgrade } = require('./blueprint');
 const { processBuildShip } = require('./building');
-const { processLaunchShip, processClaimRoute } = require('./launch');
+const { processLaunchShip, processClaimRoute, processNoMoreLaunches } = require('./launch');
 const { processPlaceAgent, processPass, processRecallAgents } = require('./worker');
 const { processTakeLoan, processBuyInsurance, processCollectIncome } = require('./economy');
 const { processRecruitCrew, processUpgradeOfficerIncome, processUpgradeEngineerIncome } = require('./crew');
@@ -18,6 +18,7 @@ const { processPlayCard, processDrawCards, processBuyMarketCard, processDiscardH
 const { processEndTurn } = require('./turn');
 const { processHazardCheck } = require('./hazard');
 const { processCalculateScores } = require('./scoring');
+const { processReveal } = require('./reveal');
 
 /**
  * Action handler registry
@@ -50,6 +51,10 @@ const ACTION_HANDLERS = {
   PLACE_AGENT: processPlaceAgent,
   PASS: processPass,
   RECALL_AGENTS: processRecallAgents,
+  NO_MORE_LAUNCHES: processNoMoreLaunches,
+
+  // Reveal
+  REVEAL: processReveal,
 
   // Economy
   TAKE_LOAN: processTakeLoan,
