@@ -37,7 +37,8 @@ describe('Rules Compliance - Factions', () => {
       const result = processLaunchShip(state, '3', {
         shipId: 'ship1',
         routeId: 'route_1',
-        gasType: 'helium'
+        gasType: 'helium',
+        _internal: true
       });
 
       // Ship goes to awaiting_hazard per GAP-020 fix (hazard check required)
@@ -87,7 +88,8 @@ describe('Rules Compliance - Factions', () => {
         processLaunchShip(state, '1', {
           shipId: 'ship1',
           routeId: 'route_1',
-          gasType: 'helium'
+          gasType: 'helium',
+          _internal: true
         });
       }).toThrow(/Helium Handling technology/);
     });
@@ -200,7 +202,8 @@ describe('Rules Compliance - Factions', () => {
         shipId: 'ship1',
         routeId: 'route_1',
         gasType: 'hydrogen',
-        retainGas: true // Germany can use Blaugas to retain gas
+        retainGas: true, // Germany can use Blaugas to retain gas
+        _internal: true
       });
 
       // Gas cubes should be retained (started with 3, used ~1, paid £2 to keep)
@@ -239,7 +242,8 @@ describe('Rules Compliance - Factions', () => {
           shipId: 'ship1',
           routeId: 'route_1',
           gasType: 'hydrogen',
-          retainGas: true
+          retainGas: true,
+          _internal: true
         });
       }).toThrow(/Blaugas|retainGas/i);
     });
@@ -262,7 +266,8 @@ describe('Rules Compliance - Factions', () => {
       const result = processLaunchShip(state, '1', {
         shipId: 'ship1',
         routeId: 'route_1',
-        gasType: 'hydrogen'
+        gasType: 'hydrogen',
+        _internal: true
         // retainGas NOT specified - default behavior
       });
 

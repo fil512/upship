@@ -354,8 +354,18 @@ function executeLocationAction(state, playerId, locationId, _card, options = {})
       }
     }
 
-    case 'launchpad':
-      return { success: true, message: 'May launch a ship' };
+    case 'launchpad': {
+      // Launchpad is a multi-step location - enables multiple launches
+      // Set launchpadActive and DON'T advance turn until NO_MORE_LAUNCHES is called
+      state.launchpadActive = state.launchpadActive || {};
+      state.launchpadActive[playerId] = true;
+
+      return {
+        success: true,
+        message: 'Launchpad activated - may launch ships. Call NO_MORE_LAUNCHES when done.',
+        skipTurnAdvance: true  // Signal to processPlaceAgent not to advance turn
+      };
+    }
 
     case 'academy': {
       // Per Section 5.1: Execute action immediately when placing agent
@@ -629,6 +639,18 @@ function processPlaceAgent(state, playerId, data) {
       playerId,
       type: 'warning'
     });
+  }
+
+  // Special handling for launchpad - don't advance turn until NO_MORE_LAUNCHES is called
+  if (actionResult.skipTurnAdvance) {
+    // Launchpad is a multi-step location - player remains active
+    state.log.push({
+      timestamp: new Date().toISOString(),
+      message: 'Ready to launch ships. Call LAUNCH_SHIP or NO_MORE_LAUNCHES.',
+      playerId,
+      type: 'system'
+    });
+    return { newState: state };
   }
 
   // Check if player should auto-pass (no agents left OR no playable cards)

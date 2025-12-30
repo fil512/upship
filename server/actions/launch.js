@@ -265,9 +265,20 @@ function hasTrapezeSytem(playerState) {
 }
 
 function processLaunchShip(state, playerId, data) {
-  const { shipId, routeId, gasType = 'hydrogen', retainGas = false, bypassRequirement = null } = data;
+  const { shipId, routeId, gasType = 'hydrogen', retainGas = false, bypassRequirement = null, _internal = false } = data;
   const playerState = state.players[playerId];
   const BLAUGAS_COST = 2; // £2 to retain gas cubes per Section 13.1
+
+  // Validate that this is called through PLACE_AGENT at launchpad (Section 5.1)
+  if (!_internal) {
+    // Check if launchpad is active for this player
+    if (!state.launchpadActive?.[playerId]) {
+      throw new GameRuleError(
+        'LAUNCH_SHIP not allowed: You must place an agent at Launchpad to launch ships (Section 5.1). ' +
+        'Use PLACE_AGENT with locationId "launchpad" first.'
+      );
+    }
+  }
 
   // Step 1: Choose a target route
   if (!routeId) {
@@ -491,9 +502,68 @@ function processClaimRoute(state, playerId, data) {
   return { newState: state };
 }
 
+/**
+ * Signal completion of launches at launchpad
+ * Per Section 6.4: Launchpad is a multi-step location
+ * - Place agent to enable launching
+ * - Can launch multiple ships while at launchpad
+ * - Call NO_MORE_LAUNCHES to signal completion and advance turn
+ *
+ * @param {Object} state - Game state (mutated)
+ * @param {string} playerId - Acting player ID
+ * @returns {Object} { newState } or throws error
+ */
+function processNoMoreLaunches(state, playerId) {
+  // Validate launchpad is active for this player
+  if (!state.launchpadActive?.[playerId]) {
+    throw new GameRuleError(
+      'NO_MORE_LAUNCHES not allowed: You are not at the Launchpad. ' +
+      'Place an agent at Launchpad first using PLACE_AGENT.'
+    );
+  }
+
+  // Deactivate launchpad
+  state.launchpadActive[playerId] = false;
+
+  state.log.push({
+    timestamp: new Date().toISOString(),
+    message: 'Finished launching ships at Launchpad',
+    playerId,
+    type: 'action'
+  });
+
+  // Import here to avoid circular dependency
+  const { advanceToNextPlacer, allPlayersPassed } = require('./helpers/turnOrder');
+  const { transitionToRevealPhase } = require('./helpers/phaseTransition');
+  const playerState = state.players[playerId];
+
+  // Check if player should auto-pass (no agents left OR no playable cards)
+  // We need to import hasPlayableCards or calculate it
+  const hasCards = playerState.hand && playerState.hand.length > 0;
+  const hasAgents = playerState.agentsRemaining > 0;
+
+  if (!hasAgents || !hasCards) {
+    playerState.hasPassed = true;
+    state.workerPlacement.passedPlayers = state.workerPlacement.passedPlayers || [];
+    if (!state.workerPlacement.passedPlayers.includes(playerId)) {
+      state.workerPlacement.passedPlayers.push(playerId);
+    }
+  }
+
+  // Advance turn or transition phase
+  if (allPlayersPassed(state)) {
+    transitionToRevealPhase(state);
+  } else {
+    advanceToNextPlacer(state);
+  }
+
+  return { newState: state };
+}
+
 module.exports = {
   processLaunchShip,
   processClaimRoute,
+  processNoMoreLaunches,
   calculateBlueprintStats,
   calculateBlueprintWeight,
   calculateRequiredGasCubes,

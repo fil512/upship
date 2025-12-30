@@ -86,7 +86,8 @@ describe('Rules Compliance - Launching and Repair', () => {
       const result = processLaunchShip(state, '1', {
         shipId: 'ship1',
         routeId: 'route_1',
-        gasType: 'hydrogen'
+        gasType: 'hydrogen',
+        _internal: true
       });
 
       // Ship should be awaiting hazard check, not directly on route
@@ -109,7 +110,8 @@ describe('Rules Compliance - Launching and Repair', () => {
       const result = processLaunchShip(state, '1', {
         shipId: 'ship1',
         routeId: 'route_1',
-        gasType: 'hydrogen'
+        gasType: 'hydrogen',
+        _internal: true
       });
 
       // Route should NOT be claimed yet
@@ -132,7 +134,8 @@ describe('Rules Compliance - Launching and Repair', () => {
       const result = processLaunchShip(state, '1', {
         shipId: 'ship1',
         routeId: 'route_1',
-        gasType: 'hydrogen'
+        gasType: 'hydrogen',
+        _internal: true
       });
 
       // Income should NOT change until hazard check succeeds
@@ -175,7 +178,8 @@ describe('Rules Compliance - Launching and Repair', () => {
         shipId: 'ship1',
         routeId: 'route_speed',
         gasType: 'helium',
-        bypassRequirement: 'speed'  // Use Trapeze System to bypass speed
+        bypassRequirement: 'speed',  // Use Trapeze System to bypass speed
+        _internal: true
       });
 
       // Should succeed - ship in awaiting_hazard status
@@ -214,7 +218,8 @@ describe('Rules Compliance - Launching and Repair', () => {
           shipId: 'ship1',
           routeId: 'route_speed',
           gasType: 'hydrogen',
-          bypassRequirement: 'speed'
+          bypassRequirement: 'speed',
+          _internal: true
         });
       }).toThrow(/trapeze|speed|requirement/i);
     });
@@ -247,7 +252,8 @@ describe('Rules Compliance - Launching and Repair', () => {
           shipId: 'ship1',
           routeId: 'route_hard',
           gasType: 'helium',
-          bypassRequirement: 'speed'  // Bypass speed, but ceiling still fails
+          bypassRequirement: 'speed',  // Bypass speed, but ceiling still fails
+          _internal: true
         });
       }).toThrow(/ceiling|requirement/i);
     });
