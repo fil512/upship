@@ -323,7 +323,7 @@ function processAcquireTechnology(state, playerId, data) {
   state.progressTrack = (state.progressTrack || 0) + 1;
 
   // Check for age transition
-  const thresholds = state.progressThresholds || { age2: 10, age3: 20, end: 30 };
+  const thresholds = state.progressThresholds || { age2: 4, age3: 8, end: 12 };
   if (state.age === 1 && state.progressTrack >= thresholds.age2) {
     state.age = 2;
     // Add Age 2 technologies to the tech bag
@@ -959,7 +959,7 @@ function processAcquireTechnologyResearch(state, playerId, data) {
   state.progressTrack = (state.progressTrack || 0) + 1;
 
   // Check for age transition
-  const thresholds = state.progressThresholds || { age2: 10, age3: 20, end: 30 };
+  const thresholds = state.progressThresholds || { age2: 4, age3: 8, end: 12 };
   if (state.age === 1 && state.progressTrack >= thresholds.age2) {
     state.age = 2;
     addAgeTechnologies(state, 2);
@@ -1313,7 +1313,7 @@ function processHazardCheck(state, playerId, data) {
 // Calculate scores for all players
 function processCalculateScores(state, playerId, data) {
   // Check if game end conditions are met
-  const thresholds = state.progressThresholds || { age2: 10, age3: 20, end: 30 };
+  const thresholds = state.progressThresholds || { age2: 4, age3: 8, end: 12 };
   const progressTrack = state.progressTrack || 0;
   const forceEnd = data?.forceEnd === true; // Allow admin/debug override
 

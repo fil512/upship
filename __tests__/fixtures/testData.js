@@ -201,7 +201,7 @@ const createTestGameState = (playerIds = [1, 2, 3, 4]) => ({
   techBag: [],
   marketCards: [],
   progressTrack: 0,
-  progressThresholds: { age2: 12, age3: 24, end: 30 },
+  progressThresholds: { age2: 4, age3: 8, end: 12 },
   gasMarket: { hydrogen: 1, helium: 2 },
   map: {
     name: 'Western Europe',

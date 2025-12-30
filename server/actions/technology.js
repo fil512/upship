@@ -54,7 +54,7 @@ function addAgeTechnologies(state, age) {
  * @param {Object} state - Game state (mutated)
  */
 function checkAgeTransition(state) {
-  const thresholds = state.progressThresholds || { age2: 10, age3: 20, end: 30 };
+  const thresholds = state.progressThresholds || { age2: 4, age3: 8, end: 12 };
 
   if (state.age === 1 && state.progressTrack >= thresholds.age2) {
     // Perform full age transition per Section 12.1

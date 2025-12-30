@@ -1,0 +1,604 @@
+"""Main client class for the UP SHIP! API."""
+
+from typing import Any
+
+from .api import APIClient
+from .exceptions import SessionNotFoundError, APIError, InvalidActionError
+from .models import (
+    Session, Game, GameState, Blueprint, Route, ActionResult, Player
+)
+from .session import load_session, save_session, delete_session
+
+
+class UpshipClient:
+    """Client for interacting with the UP SHIP! game server.
+
+    This client provides methods for authentication, game lobby operations,
+    and in-game actions. Sessions are automatically persisted to disk for
+    interoperability with the JavaScript CLI.
+
+    Example:
+        client = UpshipClient()
+        session = client.login('testpilot42', 'airship123')
+        games = client.list_games('testpilot42')
+        state = client.get_state('testpilot42', game_id)
+        result = client.place_agent('testpilot42', game_id, 'design-bureau', 0)
+    """
+
+    def __init__(self, base_url: str | None = None):
+        """Initialize the client.
+
+        Args:
+            base_url: The base URL of the UP SHIP! server.
+                     Defaults to UPSHIP_URL env var or production URL.
+        """
+        self.api = APIClient(base_url)
+
+    def _get_cookie(self, username: str) -> str:
+        """Get the session cookie for a user."""
+        try:
+            session = load_session(username)
+            return session.cookie
+        except SessionNotFoundError:
+            raise SessionNotFoundError(
+                f"No session found for '{username}'. Please login first."
+            )
+
+    def _update_session_cookie(self, username: str, new_cookie: str | None) -> None:
+        """Update the session cookie if the server sent a new one."""
+        if new_cookie:
+            try:
+                session = load_session(username)
+                session.cookie = new_cookie
+                save_session(username, session)
+            except SessionNotFoundError:
+                pass
+
+    def _api_get(self, username: str, path: str) -> dict[str, Any]:
+        """Make an authenticated GET request."""
+        cookie = self._get_cookie(username)
+        data, new_cookie = self.api.get(path, cookie=cookie)
+        self._update_session_cookie(username, new_cookie)
+        return data
+
+    def _api_post(
+        self,
+        username: str,
+        path: str,
+        body: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        """Make an authenticated POST request."""
+        cookie = self._get_cookie(username)
+        data, new_cookie = self.api.post(path, body=body, cookie=cookie)
+        self._update_session_cookie(username, new_cookie)
+        return data
+
+    # =========================================================================
+    # Authentication
+    # =========================================================================
+
+    def login(self, username: str, password: str) -> Session:
+        """Login and store the session.
+
+        Args:
+            username: The username to login with.
+            password: The password.
+
+        Returns:
+            The Session object with user ID and session cookie.
+        """
+        data, new_cookie = self.api.post(
+            '/api/auth/login',
+            body={'username': username, 'password': password},
+        )
+
+        user_id = data.get('userId', data.get('user', {}).get('id', ''))
+        cookie = new_cookie or ''
+
+        session = Session(
+            user_id=user_id,
+            username=username,
+            cookie=cookie,
+        )
+        save_session(username, session)
+        return session
+
+    def register(self, username: str, password: str) -> Session:
+        """Register a new account and login.
+
+        Args:
+            username: The username for the new account.
+            password: The password for the new account.
+
+        Returns:
+            The Session object with user ID and session cookie.
+        """
+        data, new_cookie = self.api.post(
+            '/api/auth/register',
+            body={'username': username, 'password': password},
+        )
+
+        user_id = data.get('userId', data.get('user', {}).get('id', ''))
+        cookie = new_cookie or ''
+
+        session = Session(
+            user_id=user_id,
+            username=username,
+            cookie=cookie,
+        )
+        save_session(username, session)
+        return session
+
+    def logout(self, username: str) -> None:
+        """Logout and delete the session.
+
+        Args:
+            username: The username to logout.
+        """
+        try:
+            self._api_post(username, '/api/auth/logout')
+        except (APIError, SessionNotFoundError):
+            pass  # Ignore errors, just delete local session
+
+        delete_session(username)
+
+    def whoami(self, username: str) -> dict[str, Any]:
+        """Get the current user info.
+
+        Args:
+            username: The username to check.
+
+        Returns:
+            User info dictionary with 'id' and 'username'.
+        """
+        return self._api_get(username, '/api/auth/me')
+
+    # =========================================================================
+    # Game Lobby
+    # =========================================================================
+
+    def list_games(self, username: str, status: str = 'all') -> list[Game]:
+        """List games in the lobby.
+
+        Args:
+            username: The authenticated username.
+            status: Filter by status ('waiting', 'active', 'finished', 'mine', 'all').
+
+        Returns:
+            List of Game objects.
+        """
+        if status == 'mine':
+            data = self._api_get(username, '/api/games/mine')
+        elif status == 'all':
+            data = self._api_get(username, '/api/games')
+        else:
+            data = self._api_get(username, f'/api/games?status={status}')
+
+        games = data.get('games', data if isinstance(data, list) else [])
+        return [Game.from_dict(g) for g in games]
+
+    def create_game(self, username: str, name: str) -> Game:
+        """Create a new game.
+
+        Args:
+            username: The authenticated username (will be the host).
+            name: The name for the new game.
+
+        Returns:
+            The created Game object.
+        """
+        data = self._api_post(username, '/api/games', body={'name': name})
+        game_data = data.get('game', data)
+        return Game.from_dict(game_data)
+
+    def join_game(self, username: str, game_id: str) -> Game:
+        """Join an existing game.
+
+        Args:
+            username: The authenticated username.
+            game_id: The ID of the game to join.
+
+        Returns:
+            The updated Game object.
+        """
+        data = self._api_post(username, f'/api/games/{game_id}/join')
+        game_data = data.get('game', data)
+        return Game.from_dict(game_data)
+
+    def leave_game(self, username: str, game_id: str) -> None:
+        """Leave a game.
+
+        Args:
+            username: The authenticated username.
+            game_id: The ID of the game to leave.
+        """
+        self._api_post(username, f'/api/games/{game_id}/leave')
+
+    def select_faction(self, username: str, game_id: str, faction: str) -> Game:
+        """Select a faction for the game.
+
+        Args:
+            username: The authenticated username.
+            game_id: The ID of the game.
+            faction: The faction to select ('germany', 'britain', 'usa', 'italy').
+
+        Returns:
+            The updated Game object.
+        """
+        data = self._api_post(
+            username,
+            f'/api/games/{game_id}/faction',
+            body={'faction': faction},
+        )
+        game_data = data.get('game', data)
+        return Game.from_dict(game_data)
+
+    def start_game(self, username: str, game_id: str) -> GameState:
+        """Start a game (host only).
+
+        Args:
+            username: The authenticated username (must be host).
+            game_id: The ID of the game to start.
+
+        Returns:
+            The initial GameState.
+        """
+        data = self._api_post(username, f'/api/games/{game_id}/start')
+        state_data = data.get('state', data.get('gameState', data))
+        return GameState.from_dict(game_id, state_data)
+
+    # =========================================================================
+    # Game State
+    # =========================================================================
+
+    def get_state(self, username: str, game_id: str) -> GameState:
+        """Get the current game state.
+
+        Args:
+            username: The authenticated username.
+            game_id: The ID of the game.
+
+        Returns:
+            The current GameState.
+        """
+        data = self._api_get(username, f'/api/state/{game_id}')
+        state_data = data.get('state', data)
+        return GameState.from_dict(game_id, state_data)
+
+    def get_blueprint(self, username: str, game_id: str) -> Blueprint:
+        """Get the player's blueprint.
+
+        Args:
+            username: The authenticated username.
+            game_id: The ID of the game.
+
+        Returns:
+            The player's Blueprint.
+        """
+        state = self.get_state(username, game_id)
+        session = load_session(username)
+
+        player = state.get_player(session.user_id)
+        if player and player.blueprint:
+            return player.blueprint
+
+        return Blueprint()
+
+    def get_routes(self, username: str, game_id: str) -> list[Route]:
+        """Get available routes.
+
+        Args:
+            username: The authenticated username.
+            game_id: The ID of the game.
+
+        Returns:
+            List of available Route objects.
+        """
+        state = self.get_state(username, game_id)
+        return state.available_routes or state.routes
+
+    def get_upgrades(self, username: str, game_id: str) -> list[dict[str, Any]]:
+        """Get available upgrades for the player's technologies.
+
+        Args:
+            username: The authenticated username.
+            game_id: The ID of the game.
+
+        Returns:
+            List of upgrade dictionaries.
+        """
+        data = self._api_get(username, f'/api/state/{game_id}/upgrades')
+        return data.get('upgrades', data if isinstance(data, list) else [])
+
+    def get_log(self, username: str, game_id: str, limit: int = 20) -> list[dict[str, Any]]:
+        """Get the game action log.
+
+        Args:
+            username: The authenticated username.
+            game_id: The ID of the game.
+            limit: Maximum number of log entries to return.
+
+        Returns:
+            List of log entry dictionaries.
+        """
+        data = self._api_get(username, f'/api/state/{game_id}/actions?limit={limit}')
+        return data.get('actions', data if isinstance(data, list) else [])
+
+    def get_player(self, username: str, game_id: str) -> Player:
+        """Get the current player's data.
+
+        Args:
+            username: The authenticated username.
+            game_id: The ID of the game.
+
+        Returns:
+            The Player object for the authenticated user.
+        """
+        state = self.get_state(username, game_id)
+        session = load_session(username)
+        player = state.get_player(session.user_id)
+        if not player:
+            raise APIError(f"Player not found in game {game_id}")
+        return player
+
+    # =========================================================================
+    # Actions
+    # =========================================================================
+
+    def action(
+        self,
+        username: str,
+        game_id: str,
+        action_type: str,
+        **kwargs: Any,
+    ) -> ActionResult:
+        """Execute a generic game action.
+
+        Args:
+            username: The authenticated username.
+            game_id: The ID of the game.
+            action_type: The action type (e.g., 'END_TURN', 'BUY_GAS').
+            **kwargs: Additional action parameters.
+
+        Returns:
+            ActionResult with success status and updated game state.
+        """
+        body = {'type': action_type, **kwargs}
+        data = self._api_post(username, f'/api/state/{game_id}/action', body=body)
+        return ActionResult.from_response(game_id, data)
+
+    def end_turn(self, username: str, game_id: str) -> ActionResult:
+        """End the current turn."""
+        return self.action(username, game_id, 'END_TURN')
+
+    def pass_turn(self, username: str, game_id: str) -> ActionResult:
+        """Pass in the worker placement phase."""
+        return self.action(username, game_id, 'PASS')
+
+    def place_agent(
+        self,
+        username: str,
+        game_id: str,
+        location_id: str,
+        card_index: int,
+        **kwargs: Any,
+    ) -> ActionResult:
+        """Place an agent at a location.
+
+        Args:
+            username: The authenticated username.
+            game_id: The ID of the game.
+            location_id: The location to place at (e.g., 'design-bureau').
+            card_index: Index of the card in hand to use.
+            **kwargs: Location-specific parameters (buildCount, gasType, etc.).
+
+        Returns:
+            ActionResult with success status and updated game state.
+        """
+        return self.action(
+            username,
+            game_id,
+            'PLACE_AGENT',
+            locationId=location_id,
+            cardIndex=card_index,
+            **kwargs,
+        )
+
+    def reveal(
+        self,
+        username: str,
+        game_id: str,
+        tech_acquisitions: list[str] | None = None,
+        market_purchases: list[int] | None = None,
+        swaps: list[dict[str, Any]] | None = None,
+    ) -> ActionResult:
+        """Complete the reveal phase actions.
+
+        Args:
+            username: The authenticated username.
+            game_id: The ID of the game.
+            tech_acquisitions: List of technology IDs to acquire.
+            market_purchases: List of market card indices to purchase.
+            swaps: List of upgrade swap operations.
+
+        Returns:
+            ActionResult with success status and updated game state.
+        """
+        kwargs: dict[str, Any] = {}
+        if tech_acquisitions:
+            kwargs['techAcquisitions'] = tech_acquisitions
+        if market_purchases:
+            kwargs['marketPurchases'] = market_purchases
+        if swaps:
+            kwargs['swaps'] = swaps
+        return self.action(username, game_id, 'REVEAL', **kwargs)
+
+    def no_more_launches(self, username: str, game_id: str) -> ActionResult:
+        """Signal done launching ships at the launchpad."""
+        return self.action(username, game_id, 'NO_MORE_LAUNCHES')
+
+    def buy_gas(
+        self,
+        username: str,
+        game_id: str,
+        gas_type: str,
+        amount: int = 1,
+    ) -> ActionResult:
+        """Buy gas from the market.
+
+        Args:
+            username: The authenticated username.
+            game_id: The ID of the game.
+            gas_type: Type of gas ('hydrogen' or 'helium').
+            amount: Number of cubes to buy.
+
+        Returns:
+            ActionResult with success status and updated game state.
+        """
+        return self.action(username, game_id, 'BUY_GAS', gasType=gas_type, amount=amount)
+
+    def take_loan(self, username: str, game_id: str) -> ActionResult:
+        """Take a loan (gain cash, lose income)."""
+        return self.action(username, game_id, 'TAKE_LOAN')
+
+    def draw_cards(self, username: str, game_id: str, count: int = 1) -> ActionResult:
+        """Draw cards from the deck."""
+        return self.action(username, game_id, 'DRAW_CARDS', count=count)
+
+    def recruit_crew(
+        self,
+        username: str,
+        game_id: str,
+        crew_type: str,
+        count: int = 1,
+    ) -> ActionResult:
+        """Recruit crew members.
+
+        Args:
+            username: The authenticated username.
+            game_id: The ID of the game.
+            crew_type: Type of crew ('officer' or 'engineer').
+            count: Number to recruit.
+
+        Returns:
+            ActionResult with success status and updated game state.
+        """
+        return self.action(username, game_id, 'RECRUIT_CREW', crewType=crew_type, count=count)
+
+    def build_ship(self, username: str, game_id: str, count: int = 1) -> ActionResult:
+        """Build ships in the hangar.
+
+        Args:
+            username: The authenticated username.
+            game_id: The ID of the game.
+            count: Number of ships to build.
+
+        Returns:
+            ActionResult with success status and updated game state.
+        """
+        return self.action(username, game_id, 'BUILD_SHIP', count=count)
+
+    def launch_ship(
+        self,
+        username: str,
+        game_id: str,
+        ship_id: str,
+        route_id: str,
+        gas_type: str = 'hydrogen',
+    ) -> ActionResult:
+        """Launch a ship on a route.
+
+        Args:
+            username: The authenticated username.
+            game_id: The ID of the game.
+            ship_id: The ID of the ship to launch.
+            route_id: The ID of the route to claim.
+            gas_type: Type of gas to use ('hydrogen' or 'helium').
+
+        Returns:
+            ActionResult with success status and updated game state.
+        """
+        return self.action(
+            username,
+            game_id,
+            'LAUNCH_SHIP',
+            shipId=ship_id,
+            routeId=route_id,
+            gasType=gas_type,
+        )
+
+    def acquire_technology(self, username: str, game_id: str, tech_id: str) -> ActionResult:
+        """Acquire a technology from the R&D board.
+
+        Args:
+            username: The authenticated username.
+            game_id: The ID of the game.
+            tech_id: The ID of the technology to acquire.
+
+        Returns:
+            ActionResult with success status and updated game state.
+        """
+        return self.action(username, game_id, 'ACQUIRE_TECHNOLOGY', techId=tech_id)
+
+    def install_upgrade(
+        self,
+        username: str,
+        game_id: str,
+        slot_type: str,
+        slot_index: int,
+        upgrade_id: str,
+    ) -> ActionResult:
+        """Install an upgrade in the blueprint.
+
+        Args:
+            username: The authenticated username.
+            game_id: The ID of the game.
+            slot_type: The slot type ('frame', 'fabric', 'drive', 'component').
+            slot_index: The slot index (0-based).
+            upgrade_id: The ID of the upgrade to install.
+
+        Returns:
+            ActionResult with success status and updated game state.
+        """
+        return self.action(
+            username,
+            game_id,
+            'INSTALL_UPGRADE',
+            slotType=slot_type,
+            slotIndex=slot_index,
+            upgradeId=upgrade_id,
+        )
+
+    def remove_upgrade(
+        self,
+        username: str,
+        game_id: str,
+        slot_type: str,
+        slot_index: int,
+    ) -> ActionResult:
+        """Remove an upgrade from the blueprint.
+
+        Args:
+            username: The authenticated username.
+            game_id: The ID of the game.
+            slot_type: The slot type ('frame', 'fabric', 'drive', 'component').
+            slot_index: The slot index (0-based).
+
+        Returns:
+            ActionResult with success status and updated game state.
+        """
+        return self.action(
+            username,
+            game_id,
+            'REMOVE_UPGRADE',
+            slotType=slot_type,
+            slotIndex=slot_index,
+        )
+
+    def collect_income(self, username: str, game_id: str) -> ActionResult:
+        """Collect income during the income phase."""
+        return self.action(username, game_id, 'COLLECT_INCOME')
+
+    def play_card(self, username: str, game_id: str, card_index: int) -> ActionResult:
+        """Play a card from hand."""
+        return self.action(username, game_id, 'PLAY_CARD', cardIndex=card_index)

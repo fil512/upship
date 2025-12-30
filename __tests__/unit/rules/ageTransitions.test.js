@@ -16,8 +16,8 @@ describe('Rules Compliance - Age Transitions', () => {
       // Set turn to 11 (past TURNS_PER_AGE of 10) but progress track at 0
       state.turn = 10;
       state.age = 1;
-      state.progressTrack = 5; // Well below threshold of 12 for 4 players
-      state.progressThresholds = { age2: 12, age3: 24, end: 30 };
+      state.progressTrack = 2; // Well below threshold of 4 for 4 players
+      state.progressThresholds = { age2: 4, age3: 8, end: 12 };
 
       // Start new round should increment turn but NOT change age
       startNewRound(state);
@@ -33,8 +33,8 @@ describe('Rules Compliance - Age Transitions', () => {
 
       state.turn = 5;
       state.age = 1;
-      state.progressTrack = 12; // Exactly at Age II threshold for 4 players
-      state.progressThresholds = { age2: 12, age3: 24, end: 30 };
+      state.progressTrack = 4; // Exactly at Age II threshold for 4 players
+      state.progressThresholds = { age2: 4, age3: 8, end: 12 };
 
       // Age should transition when progress track reaches threshold
       // The transition happens in technology.js checkAgeTransition

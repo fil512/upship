@@ -33,10 +33,11 @@ const RESEARCH_INSTITUTE_COST = 4; // £4 per level per Section 6.1
 const MAX_INSURANCE_POLICIES = 3;
 
 // Progress Track Thresholds by player count
+// Scaled for ~15 round games (Age 1: ~5 rounds, Age 2: ~5 rounds, Age 3: ~5 rounds)
 const PROGRESS_THRESHOLDS = {
-  2: { age2: 8, age3: 16, end: 20 },
-  3: { age2: 10, age3: 20, end: 25 },
-  4: { age2: 12, age3: 24, end: 30 }
+  2: { age2: 2, age3: 4, end: 6 },
+  3: { age2: 3, age3: 6, end: 9 },
+  4: { age2: 4, age3: 8, end: 12 }
 };
 
 // Valid game phases

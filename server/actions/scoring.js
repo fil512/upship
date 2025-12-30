@@ -79,7 +79,7 @@ function applyTiebreakers(sortedPlayers) {
  */
 function processCalculateScores(state, playerId, data) {
   // Check if game end conditions are met
-  const thresholds = state.progressThresholds || { age2: 10, age3: 20, end: 30 };
+  const thresholds = state.progressThresholds || { age2: 4, age3: 8, end: 12 };
   const progressTrack = state.progressTrack || 0;
   const forceEnd = data?.forceEnd === true; // Allow admin/debug override
 

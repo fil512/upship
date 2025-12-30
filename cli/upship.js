@@ -446,7 +446,7 @@ const commands = {
 
     // Header
     const progress = gs.progressTrack || 0;
-    const thresholds = gs.progressThresholds || { age2: 10, age3: 20, end: 30 };
+    const thresholds = gs.progressThresholds || { age2: 4, age3: 8, end: 12 };
     const thresholdByAge = [null, thresholds.age2, thresholds.age3, thresholds.end];
     const nextThreshold = thresholdByAge[gs.age] || thresholds.end;
     console.log('');
