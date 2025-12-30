@@ -19,10 +19,10 @@ Per Section 5.1 of the rules, location actions should execute **immediately** wh
 - [x] `government_liaison` - processGovernmentLiaison executes immediately
 - [x] `research_institute` - processUpgradeResearchLevel executes immediately
 - [x] `design_bureau` - Array of swaps executes immediately
-- [ ] `launchpad` - Multi-step with NO_MORE_LAUNCHES
-- [ ] Atomic REVEAL action
-- [ ] CLI cleanup
-- [ ] Playtest bot cleanup
+- [x] `launchpad` - Multi-step with NO_MORE_LAUNCHES (commit af4c76f)
+- [x] Atomic REVEAL action (commit 589203e)
+- [x] CLI cleanup (commit ca30d5f)
+- [x] Playtest bot cleanup (commit 3081cd3)
 
 ## Key Design Decisions
 
