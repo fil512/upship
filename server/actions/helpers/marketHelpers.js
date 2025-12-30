@@ -77,18 +77,12 @@ function refreshMarketRow(state) {
 
 /**
  * Refill R&D board from tech bag (used during age transitions)
+ * Note: This is an alias for refreshRnDBoard - they do the same thing.
  *
  * @param {Object} state - Game state (mutated)
  */
 function refillRDBoard(state) {
-  state.rdBoard = state.rdBoard || [];
-  state.techBag = state.techBag || [];
-
-  const targetSize = RD_BOARD_SIZE[state.age] || 4;
-
-  while (state.rdBoard.length < targetSize && state.techBag.length > 0) {
-    state.rdBoard.push(state.techBag.shift());
-  }
+  refreshRnDBoard(state);
 }
 
 module.exports = {
