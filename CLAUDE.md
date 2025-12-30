@@ -262,7 +262,8 @@ See `plans/overview.md` for the 27-phase implementation plan tracking progress f
 - `/find-gaps` - Systematically analyze spec vs server code to find implementation gaps; stops at 10 gaps; tracks progress in `plans/gaps.md`
 - `/resolve-gaps` - Continuously loop between `/find-gaps` and `/fix-gaps` in subcontexts until all gaps are resolved
 - `/review-rules` - Conducts a comprehensive rules review using the boardgame-design skill
-- `/playtest` - Run a full automated playtest using the CLI to validate functionality, rules adherence, and faction balance
+- `/playtest-dev` - Run a full automated playtest against the local dev server (http://localhost:3000)
+- `/playtest-prod` - Run a full automated playtest against the production server
 
 ## Available Skills
 
