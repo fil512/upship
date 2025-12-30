@@ -605,6 +605,11 @@ def handle_worker_placement_round(game_id):
                 action_args.append("crewCount=1")  # Recruit 1 officer
                 action_desc = f"placed at {location['id']} and recruited 1 officer"
 
+            elif location['id'] == 'flight_school':
+                # Upgrade officer income when placing (Section 5.1)
+                action_args.append("levels=1")
+                action_desc = f"placed at {location['id']} and upgraded officer income"
+
             result = run_cli(*action_args)
             if "✓" in result or "success" in result.lower():
                 print(f"  {current}: {action_desc}")

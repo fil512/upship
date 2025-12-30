@@ -13,7 +13,7 @@ Per Section 5.1 of the rules, location actions should execute **immediately** wh
 - [x] `construction_hall` - BUILD_SHIP executes immediately (commit 9a71777)
 - [x] `gas_depot` - BUY_GAS executes immediately (commit 735e797)
 - [x] `academy` - RECRUIT_CREW executes immediately
-- [ ] `flight_school` - UPGRADE_OFFICER_INCOME
+- [x] `flight_school` - UPGRADE_OFFICER_INCOME executes immediately
 - [ ] `technical_institute` - UPGRADE_ENGINEER_INCOME
 - [ ] `insurance_bureau` - BUY_INSURANCE
 - [ ] `government_liaison` - New processor needed

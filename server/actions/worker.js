@@ -12,7 +12,7 @@ const { reduceHeliumMarket } = require('./helpers/marketHelpers');
 const { WEATHER_BUREAU_COST } = require('../config/constants');
 const { processBuildShip } = require('./building');
 const { processBuyGas } = require('./gas');
-const { processRecruitCrew } = require('./crew');
+const { processRecruitCrew, processUpgradeOfficerIncome } = require('./crew');
 
 /**
  * Process card effects when used for agent placement (Section 8.1)
@@ -302,8 +302,16 @@ function executeLocationAction(state, playerId, locationId, _card, options = {})
       }
     }
 
-    case 'flight_school':
-      return { success: true, message: 'May upgrade Officer income' };
+    case 'flight_school': {
+      // Per Section 5.1: Execute action immediately when placing agent
+      try {
+        processUpgradeOfficerIncome(state, playerId, { _internal: true });
+        const newOfficerIncome = playerState.officerIncome || 0;
+        return { success: true, message: `Upgraded Officer Income to ${newOfficerIncome}/round` };
+      } catch (error) {
+        return { success: false, error: error.message };
+      }
+    }
 
     case 'technical_institute':
       return { success: true, message: 'May upgrade Engineer income' };
@@ -430,7 +438,7 @@ function hasPlayableCards(state, playerId) {
  * @returns {Object} { newState } or throws error
  */
 function processPlaceAgent(state, playerId, data) {
-  const { locationId, cardIndex, buildCount, gasType, gasAmount, crewType, crewCount } = data;
+  const { locationId, cardIndex, buildCount, gasType, gasAmount, crewType, crewCount, levels } = data;
   const playerState = state.players[playerId];
 
   // Validate phase
@@ -514,7 +522,7 @@ function processPlaceAgent(state, playerId, data) {
   }
 
   // Execute the location action immediately (Section 5.1)
-  const actionResult = executeLocationAction(state, playerId, locationId, discardedCard, { buildCount, gasType, gasAmount, crewType, crewCount });
+  const actionResult = executeLocationAction(state, playerId, locationId, discardedCard, { buildCount, gasType, gasAmount, crewType, crewCount, levels });
   if (actionResult.error) {
     state.log.push({
       timestamp: new Date().toISOString(),

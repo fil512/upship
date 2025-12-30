@@ -80,13 +80,34 @@ function processRecruitCrew(state, playerId, data) {
  * Upgrade Officer Income at Flight School
  * Per Section 6.6: When Officer Income Track reaches +3, gain 3rd Agent
  *
+ * Per Section 5.1: Location actions execute IMMEDIATELY when placing an agent.
+ * Direct API calls are rejected - must go through PLACE_AGENT with levels param.
+ *
  * @param {Object} state - Game state (mutated)
  * @param {string} playerId - Acting player ID
- * @param {Object} data - Action data (unused)
+ * @param {Object} data - Action data { levels, _internal }
  * @returns {Object} { newState } or throws error
  */
-function processUpgradeOfficerIncome(state, playerId, _data) {
+function processUpgradeOfficerIncome(state, playerId, data) {
+  const { _internal = false } = data || {};
   const playerState = state.players[playerId];
+
+  // Validate that this is called through PLACE_AGENT (Section 5.1)
+  if (!_internal) {
+    if (state.phase !== 'worker_placement') {
+      throw new GameRuleError(
+        'UPGRADE_OFFICER_INCOME not allowed: Actions execute immediately when placing an agent (Section 5.1). ' +
+        'Place an agent at Flight School during worker placement phase to upgrade officer income.'
+      );
+    }
+    const placement = state.groundBoard?.placements?.flight_school;
+    if (!placement || placement.playerId !== playerId) {
+      throw new GameRuleError(
+        'UPGRADE_OFFICER_INCOME not allowed: You must place an agent at Flight School to upgrade officer income. ' +
+        'Use PLACE_AGENT with locationId "flight_school".'
+      );
+    }
+  }
 
   if (playerState.cash < FLIGHT_SCHOOL_COST) {
     throw new InsufficientFundsError(FLIGHT_SCHOOL_COST, playerState.cash);
