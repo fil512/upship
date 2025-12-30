@@ -34,7 +34,14 @@ LOG_FILE_TRACKER = PROJECT_ROOT / ".upship-current-log"
 LOGS_DIR = PROJECT_ROOT / "logs"
 CLI_CMD = ["node", str(PROJECT_ROOT / "cli" / "upship.js")]
 PASSWORD = "test123456"
-API_BASE = "https://upship-production.up.railway.app"
+
+# Use local server if UPSHIP_LOCAL=1 or --local flag
+USE_LOCAL = os.environ.get("UPSHIP_LOCAL") == "1" or "--local" in sys.argv
+API_BASE = "http://localhost:3000" if USE_LOCAL else "https://upship-production.up.railway.app"
+
+if USE_LOCAL:
+    # Remove --local from argv so it doesn't interfere with other arg parsing
+    sys.argv = [a for a in sys.argv if a != "--local"]
 
 PLAYERS = ["playtest_germany", "playtest_britain", "playtest_usa", "playtest_italy"]
 FACTIONS = ["germany", "britain", "usa", "italy"]
@@ -104,7 +111,10 @@ def log_turn_start(turn_num):
 def run_cli(*args, capture=True):
     """Run a CLI command and return output."""
     cmd = CLI_CMD + list(args)
-    result = subprocess.run(cmd, capture_output=capture, text=True, cwd=PROJECT_ROOT)
+    env = os.environ.copy()
+    if USE_LOCAL:
+        env["UPSHIP_URL"] = API_BASE
+    result = subprocess.run(cmd, capture_output=capture, text=True, cwd=PROJECT_ROOT, env=env)
     return result.stdout + result.stderr if capture else ""
 
 
@@ -196,7 +206,8 @@ def setup_game(game_name=None):
     if game_name is None:
         game_name = f"Playtest_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
 
-    print("=== UP SHIP! Playtest Setup ===\n")
+    print("=== UP SHIP! Playtest Setup ===")
+    print(f"Server: {API_BASE} {'(LOCAL)' if USE_LOCAL else '(PRODUCTION)'}\n")
 
     login_all_players()
 
