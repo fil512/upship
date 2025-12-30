@@ -675,6 +675,62 @@ def handle_launchpad_launches(player, game_id):
                 post_ship = next((s for s in post_player_data.get('ships', []) if s.get('id') == ship['id']), None)
                 ship_status = post_ship.get('status', 'unknown') if post_ship else 'unknown'
 
+                # Check if ship is awaiting hazard response (new two-step flow)
+                pending_hazard = post_ship.get('pendingHazard') if post_ship else None
+                if ship_status == 'awaiting_hazard' and pending_hazard:
+                    # Need to respond to hazard
+                    hazard_name = pending_hazard.get('name', 'Unknown')
+                    engineers_needed = pending_hazard.get('engineersNeeded', 0)
+                    engineer_cost = pending_hazard.get('engineerCost')  # for fire hazards
+                    auto_pass_reason = pending_hazard.get('autoPassReason')
+                    no_save = pending_hazard.get('noSave', False)
+                    available_engineers = post_player_data.get('engineers', 0)
+
+                    # Determine whether to spend engineers
+                    spend_engineers = False
+                    if auto_pass_reason:
+                        # Auto-pass - just continue
+                        spend_engineers = True
+                        hazard_decision = f"AUTO-PASS ({auto_pass_reason})"
+                    elif no_save:
+                        # No save possible (Catastrophic Explosion)
+                        spend_engineers = False
+                        hazard_decision = "NO SAVE POSSIBLE"
+                    elif engineer_cost is not None:
+                        # Fire hazard - spend if we have enough engineers
+                        if available_engineers >= engineer_cost:
+                            spend_engineers = True
+                            hazard_decision = f"CONTROL FIRE (spend {engineer_cost} engineers)"
+                        else:
+                            spend_engineers = False
+                            hazard_decision = f"CRASH (need {engineer_cost} engineers, have {available_engineers})"
+                    elif engineers_needed == 0:
+                        # Ship stat passes on its own
+                        spend_engineers = True
+                        hazard_decision = "PASS (stat sufficient)"
+                    elif available_engineers >= engineers_needed:
+                        # Can afford to spend engineers to pass
+                        spend_engineers = True
+                        hazard_decision = f"SPEND {engineers_needed} ENGINEERS"
+                    else:
+                        # Can't afford - abort
+                        spend_engineers = False
+                        hazard_decision = f"ABORT (need {engineers_needed} engineers, have {available_engineers})"
+
+                    # Call RESPOND_TO_HAZARD
+                    hazard_result = strip_ansi(run_cli(player, "action", game_id, "RESPOND_TO_HAZARD",
+                                                       f"shipId={ship['id']}", f"spendEngineers={str(spend_engineers).lower()}"))
+
+                    # Get final state after hazard response
+                    final_state, _ = get_full_state(game_id, player)
+                    final_player_id = get_player_id(player, final_state) if final_state else None
+                    final_player_data = final_state.get('players', {}).get(final_player_id, {}) if final_state and final_player_id else {}
+                    final_ship = next((s for s in final_player_data.get('ships', []) if s.get('id') == ship['id']), None)
+                    ship_status = final_ship.get('status', 'unknown') if final_ship else 'unknown'
+
+                    # Log hazard response
+                    log_action(None, f"  └─ Hazard: {hazard_name} → {hazard_decision}", "worker_placement")
+
                 # Extract hazard info from game log
                 log_entries = get_last_log_entries(post_state, count=10) if post_state else []
                 hazard_info = None
@@ -708,6 +764,8 @@ def handle_launchpad_launches(player, game_id):
                     elif ship_status == 'hangar':
                         # Ship returned to hangar - likely failed hazard
                         launch_outcome = "ABORTED"
+                    elif ship_status == 'damaged':
+                        launch_outcome = "DAMAGED"
                     elif ship_status == 'awaiting_hazard':
                         launch_outcome = "AWAITING_HAZARD"
 
@@ -718,12 +776,14 @@ def handle_launchpad_launches(player, game_id):
                 log_action(player, action_str, "worker_placement")
                 log_action(None, f"  └─ {stats_str}", "worker_placement")
                 log_action(None, f"  └─ {route_str}", "worker_placement")
-                if hazard_info:
+                if hazard_info and not pending_hazard:  # Don't duplicate if we already logged hazard
                     log_action(None, f"  └─ Hazard: {hazard_info}", "worker_placement")
                 log_action(None, f"  └─ Outcome: {launch_outcome} (status={ship_status})", "worker_placement")
 
-                routes.remove(route)  # Route now claimed
-                launched += 1
+                # Only count as launched if successfully on route
+                if launch_outcome == "SUCCESS" or ship_status == 'on_route':
+                    routes.remove(route)  # Route now claimed
+                    launched += 1
                 break  # Move to next ship
             else:
                 # Launch failed - log why

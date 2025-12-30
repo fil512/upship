@@ -93,8 +93,9 @@ describe('Rules Compliance - Launchpad (Section 6.4)', () => {
         _internal: true
       });
 
-      // Ship should be on_route (hazard check runs automatically and passes with clear weather)
-      expect(result.newState.players[playerId].ships[0].status).toBe('on_route');
+      // Ship should be awaiting_hazard (two-step flow: LAUNCH_SHIP then RESPOND_TO_HAZARD)
+      expect(result.newState.players[playerId].ships[0].status).toBe('awaiting_hazard');
+      expect(result.newState.players[playerId].ships[0].pendingHazard).toBeDefined();
     });
   });
 
@@ -215,8 +216,9 @@ describe('Rules Compliance - Launchpad (Section 6.4)', () => {
         _internal: true
       });
 
-      // Ship should be on_route (hazard check runs automatically and passes with clear weather)
-      expect(result.newState.players[playerId].ships[0].status).toBe('on_route');
+      // Ship should be awaiting_hazard (two-step flow: LAUNCH_SHIP then RESPOND_TO_HAZARD)
+      expect(result.newState.players[playerId].ships[0].status).toBe('awaiting_hazard');
+      expect(result.newState.players[playerId].ships[0].pendingHazard).toBeDefined();
     });
   });
 });

@@ -1210,6 +1210,76 @@
               }
             </div>
           </div>
+          ${(myState.ships || []).filter(s => s.status === 'awaiting_hazard' && s.pendingHazard).length > 0 ? `
+            <div style="margin-bottom: 10px;">
+              <div style="font-size: 0.75rem; color: #f96; margin-bottom: 5px; font-weight: bold;">⚠️ Awaiting Hazard Response:</div>
+              ${(myState.ships || []).filter(s => s.status === 'awaiting_hazard' && s.pendingHazard).map(ship => {
+                const hazard = ship.pendingHazard;
+                const route = state.map?.routes?.find(r => r.id === ship.pendingRouteId);
+                const isAutoPass = hazard.autoPass || hazard.heliumFireImmunity || hazard.conductiveCoveringImmunity || hazard.fireResistantFabricAvailable;
+                const canAffordEngineers = (myState.engineers || 0) >= (hazard.engineersNeeded || hazard.engineerCost || 0);
+                return \`
+                  <div style="padding: 10px; background: rgba(255, 153, 102, 0.2); border: 2px solid #f96; border-radius: 6px; margin-bottom: 5px;">
+                    <div style="font-weight: bold; margin-bottom: 5px;">\${hazard.name}</div>
+                    <div style="font-size: 0.75rem; color: #ccc; margin-bottom: 8px;">
+                      Route: \${route ? route.from + ' → ' + route.to : 'Unknown'}
+                    </div>
+                    \${hazard.autoPassReason ? \`
+                      <div style="color: #4a9; margin-bottom: 8px;">\${hazard.autoPassReason}</div>
+                      <button class="tech-buy-btn research" onclick="respondToHazard('\${ship.id}', true)" \${!isMyTurn ? 'disabled' : ''}>
+                        ✓ Continue
+                      </button>
+                    \` : hazard.noSave ? \`
+                      <div style="color: #f66; margin-bottom: 8px;">No save possible!</div>
+                      <button class="tech-buy-btn danger" onclick="respondToHazard('\${ship.id}', false)" \${!isMyTurn ? 'disabled' : ''}>
+                        Accept Fate
+                      </button>
+                    \` : hazard.engineerCost !== undefined ? \`
+                      <div style="font-size: 0.8rem; margin-bottom: 5px;">
+                        <span style="color: #f96;">Fire Hazard:</span> Spend \${hazard.engineerCost} Engineer(s) to control fire
+                      </div>
+                      <div style="font-size: 0.75rem; color: #888; margin-bottom: 8px;">
+                        Your Engineers: \${myState.engineers || 0} | Result if controlled: Ship Damaged
+                      </div>
+                      <div style="display: flex; gap: 5px;">
+                        <button class="tech-buy-btn research" onclick="respondToHazard('\${ship.id}', true)"
+                          \${!isMyTurn || !canAffordEngineers ? 'disabled' : ''}>
+                          Spend \${hazard.engineerCost} Engineers
+                        </button>
+                        <button class="tech-buy-btn danger" onclick="respondToHazard('\${ship.id}', false)" \${!isMyTurn ? 'disabled' : ''}>
+                          Let It Crash
+                        </button>
+                      </div>
+                    \` : \`
+                      <div style="font-size: 0.8rem; margin-bottom: 5px;">
+                        <span style="color: #f96;">\${hazard.statName?.toUpperCase() || 'CHECK'} \${hazard.difficulty}:</span>
+                        Your stat: \${hazard.relevantStat}
+                        \${hazard.engineersNeeded > 0 ? \` (need \${hazard.engineersNeeded} engineers)\` : ' ✓'}
+                      </div>
+                      <div style="font-size: 0.75rem; color: #888; margin-bottom: 8px;">
+                        Your Engineers: \${myState.engineers || 0}
+                      </div>
+                      \${hazard.engineersNeeded === 0 ? \`
+                        <button class="tech-buy-btn research" onclick="respondToHazard('\${ship.id}', true)" \${!isMyTurn ? 'disabled' : ''}>
+                          ✓ Pass Check
+                        </button>
+                      \` : \`
+                        <div style="display: flex; gap: 5px;">
+                          <button class="tech-buy-btn research" onclick="respondToHazard('\${ship.id}', true)"
+                            \${!isMyTurn || !canAffordEngineers ? 'disabled' : ''}>
+                            Spend \${hazard.engineersNeeded} Engineers
+                          </button>
+                          <button class="tech-buy-btn danger" onclick="respondToHazard('\${ship.id}', false)" \${!isMyTurn ? 'disabled' : ''}>
+                            Abort Launch
+                          </button>
+                        </div>
+                      \`}
+                    \`}
+                  </div>
+                \`;
+              }).join('')}
+            </div>
+          ` : ''}
           <div style="margin-bottom: 10px;">
             <div style="font-size: 0.75rem; color: #888; margin-bottom: 5px;">On Routes:</div>
             ${(myState.ships || []).filter(s => s.status === 'on_route').length > 0 ?
@@ -2053,6 +2123,11 @@
       if (confirm('Perform hazard check? This will draw from your hazard deck and test your ship.')) {
         performAction('PERFORM_HAZARD_CHECK', { shipId });
       }
+    }
+
+    // Respond to pending hazard after LAUNCH_SHIP
+    function respondToHazard(shipId, spendEngineers) {
+      performAction('RESPOND_TO_HAZARD', { shipId, spendEngineers });
     }
 
     // === MARKET CARDS ===

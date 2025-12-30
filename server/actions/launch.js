@@ -6,7 +6,18 @@
 const { GameRuleError, InsufficientFundsError } = require('../errors');
 const { UPGRADES } = require('../data/upgrades');
 const { AGE_BASELINES } = require('../config/constants');
-const { processHazardCheck } = require('./hazard');
+const { shuffleArray } = require('../utils/random');
+
+/**
+ * Get the auto-pass reason string based on flags
+ */
+function getAutoPassReason(clearWeather, heliumFire, conductiveCovering, fireResistant) {
+  if (clearWeather) return 'Clear Weather';
+  if (heliumFire) return 'Fire Immunity (Helium)';
+  if (conductiveCovering) return 'Conductive Covering';
+  if (fireResistant) return 'Fire-Resistant Fabric (once per Age)';
+  return null;
+}
 
 /**
  * Count the number of separate networks a player has claimed
@@ -429,9 +440,104 @@ function processLaunchShip(state, playerId, data) {
     type: 'action'
   });
 
-  // Step 5: Automatically perform hazard check
-  // Hazard check happens immediately upon launch - no client action needed
-  return processHazardCheck(state, playerId, { shipId, engineersToSpend: 0 });
+  // Step 5: Draw hazard card and store for client response
+  // Per Section 8.2: Player must see hazard and choose whether to spend engineers
+
+  // Draw from hazard deck (reshuffle discard if needed)
+  if (!playerState.hazardDeck || playerState.hazardDeck.length === 0) {
+    const discardPile = playerState.hazardDiscardPile || [];
+    if (discardPile.length === 0) {
+      throw new GameRuleError('No hazard cards remaining (deck and discard pile both empty)');
+    }
+    playerState.hazardDeck = shuffleArray([...discardPile]);
+    playerState.hazardDiscardPile = [];
+    state.log.push({
+      timestamp: new Date().toISOString(),
+      message: 'Hazard deck exhausted - shuffled discard pile to create new deck',
+      playerId,
+      type: 'deck'
+    });
+  }
+
+  const hazard = playerState.hazardDeck.shift();
+  playerState.hazardDiscardPile = playerState.hazardDiscardPile || [];
+  playerState.hazardDiscardPile.push(hazard);
+
+  // Determine relevant stat for this hazard
+  const challengeType = hazard.challengeType || 'reliability';
+  const relevantStat = stats[challengeType] || 0;
+  const difficulty = hazard.difficulty || 0;
+
+  // Calculate engineers needed to pass (for non-fire, non-auto-pass hazards)
+  let engineersNeeded = 0;
+  if (!hazard.autoPass && hazard.category !== 'fire') {
+    engineersNeeded = Math.max(0, difficulty - relevantStat);
+  }
+
+  // Check for auto-pass conditions
+  const isFireHazard = hazard.category === 'fire' || hazard.hydrogenOnly;
+  const autoPassHeliumFire = isFireHazard && gasType === 'helium';
+  const autoPassClearWeather = hazard.autoPass || hazard.type === 'clear_weather';
+
+  // Check for Conductive Covering (auto-pass static discharge)
+  const hasCondictiveCovering = playerState.blueprint?.fabricSlots?.some(
+    fabric => fabric === 'conductive_covering' || fabric?.id === 'conductive_covering'
+  );
+  const autoPassCondictiveCovering = hazard.type === 'static_discharge' && hasCondictiveCovering;
+
+  // Check for Fire-Resistant Fabric (once per age auto-pass fire)
+  const hasFireResistantFabric = playerState.blueprint?.fabricSlots?.some(
+    fabric => fabric === 'fire_resistant_fabric' || fabric?.id === 'fire_resistant_fabric'
+  );
+  const fireProtectionAvailable = isFireHazard && hasFireResistantFabric && !playerState.fireProtectionUsedThisAge;
+
+  // Store pending hazard on ship for client to respond
+  ships[shipIndex].pendingHazard = {
+    // Core hazard info
+    type: hazard.type,
+    name: hazard.name,
+    category: hazard.category,
+    challengeType,
+    difficulty,
+    flak: hazard.flak || 0,
+
+    // Fire hazard specific
+    engineerCost: hazard.engineerCost,  // for Engine Fire, Gas Cell Rupture
+    noSave: hazard.noSave,              // for Catastrophic Explosion
+    hydrogenOnly: hazard.hydrogenOnly,
+
+    // Special effects
+    special: hazard.special,
+    gasLossOnFailure: hazard.gasLossOnFailure,
+
+    // Ship stats for comparison
+    relevantStat,
+    statName: challengeType,
+    engineersNeeded,
+
+    // Auto-pass flags (client uses these to show appropriate UI)
+    autoPass: autoPassClearWeather,
+    autoPassReason: getAutoPassReason(autoPassClearWeather, autoPassHeliumFire, autoPassCondictiveCovering, fireProtectionAvailable),
+    heliumFireImmunity: autoPassHeliumFire,
+    conductiveCoveringImmunity: autoPassCondictiveCovering,
+    fireResistantFabricAvailable: fireProtectionAvailable
+  };
+
+  // Build log message
+  const autoPassReason = ships[shipIndex].pendingHazard.autoPassReason;
+  const hazardDetails = autoPassReason
+    ? ' (' + autoPassReason + ')'
+    : ' (' + challengeType + ' ' + difficulty + ' vs ' + relevantStat + ')';
+
+  state.log.push({
+    timestamp: new Date().toISOString(),
+    message: 'Hazard drawn: ' + hazard.name + hazardDetails,
+    playerId,
+    type: 'hazard'
+  });
+
+  // Return - client must call RESPOND_TO_HAZARD to continue
+  return { newState: state };
 }
 
 /**

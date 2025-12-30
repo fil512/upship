@@ -426,4 +426,203 @@ function resolveHazardAbort(state, playerId, shipIndex, hazard, message) {
   return { newState: state };
 }
 
-module.exports = { processHazardCheck, checkHindenburgDisaster };
+/**
+ * Process player's response to a pending hazard check
+ * This is the second step of the launch flow, called after LAUNCH_SHIP draws a hazard
+ *
+ * @param {Object} state - Game state (mutated)
+ * @param {string} playerId - Acting player ID
+ * @param {Object} data - Action data { shipId, spendEngineers }
+ *   - spendEngineers: boolean - whether to spend engineers to pass/control hazard
+ * @returns {Object} { newState } or throws error
+ */
+function processRespondToHazard(state, playerId, data) {
+  const { shipId, spendEngineers = false } = data;
+  const playerState = state.players[playerId];
+
+  // Find ship with pending hazard
+  const ships = playerState.ships || [];
+  const shipIndex = ships.findIndex(s => s.id === shipId && s.status === 'awaiting_hazard' && s.pendingHazard);
+
+  if (shipIndex === -1) {
+    throw new GameRuleError('No ship awaiting hazard response');
+  }
+
+  const ship = ships[shipIndex];
+  const hazard = ship.pendingHazard;
+  const pendingRouteId = ship.pendingRouteId;
+  const route = state.map?.routes?.find(r => r.id === pendingRouteId);
+
+  // Check for Hindenburg Disaster conditions first (Catastrophic Explosion)
+  const isLuxuryRoute = route?.luxury === true;
+  if (checkHindenburgDisaster({
+    age: state.age,
+    gasType: ship.gasType,
+    isLuxuryRoute,
+    hazardType: hazard.type
+  })) {
+    ships[shipIndex].status = 'destroyed';
+    delete ships[shipIndex].pendingHazard;
+
+    state.hindenburgDisaster = true;
+    state.gameEndReason = 'hindenburg_disaster';
+    playerState.vp = (playerState.vp || 0) + 3;
+
+    state.log.push({
+      timestamp: new Date().toISOString(),
+      message: `THE HINDENBURG DISASTER! A Catastrophic Explosion has destroyed a luxury hydrogen airship. The era of airships has ended. Triggering player gains 3 VP (historical infamy).`,
+      playerId,
+      type: 'game_end'
+    });
+
+    return { newState: state };
+  }
+
+  // Handle auto-pass cases
+  if (hazard.autoPass || hazard.autoPassReason === 'Clear Weather') {
+    delete ships[shipIndex].pendingHazard;
+    return resolveHazardSuccess(state, playerId, shipIndex, route, hazard, 'Clear Weather - Auto Pass');
+  }
+
+  // Handle Helium vs Fire immunity
+  if (hazard.heliumFireImmunity) {
+    delete ships[shipIndex].pendingHazard;
+    return resolveHazardSuccess(state, playerId, shipIndex, route, hazard, 'Fire Immunity (Helium) - Auto Pass');
+  }
+
+  // Handle Conductive Covering immunity (static discharge)
+  if (hazard.conductiveCoveringImmunity) {
+    delete ships[shipIndex].pendingHazard;
+    return resolveHazardSuccess(state, playerId, shipIndex, route, hazard,
+      'Static Discharge - Auto Pass (Conductive Covering grounds electrical charge)');
+  }
+
+  // Handle Fire-Resistant Fabric (once per age)
+  if (hazard.fireResistantFabricAvailable) {
+    playerState.fireProtectionUsedThisAge = true;
+    delete ships[shipIndex].pendingHazard;
+
+    state.log.push({
+      timestamp: new Date().toISOString(),
+      message: `Fire-Resistant Fabric activated! Auto-passing ${hazard.name}.`,
+      playerId,
+      type: 'action'
+    });
+
+    return resolveHazardSuccess(state, playerId, shipIndex, route, hazard,
+      'Fire Hazard - Auto Pass (Fire-Resistant Fabric, once per Age)');
+  }
+
+  // Handle Catastrophic Explosion (no save possible)
+  if (hazard.noSave || hazard.type === 'catastrophic_explosion') {
+    ships[shipIndex].status = 'destroyed';
+    delete ships[shipIndex].pendingHazard;
+
+    state.log.push({
+      timestamp: new Date().toISOString(),
+      message: `CATASTROPHIC EXPLOSION! Ship destroyed - no save possible.`,
+      playerId,
+      type: 'hazard'
+    });
+
+    return { newState: state };
+  }
+
+  // Handle fire hazards with engineer cost (Engine Fire, Gas Cell Rupture)
+  const isFireHazard = hazard.category === 'fire' || hazard.hydrogenOnly;
+  if (isFireHazard && hazard.engineerCost !== undefined) {
+    const engineerCost = hazard.engineerCost;
+    const availableEngineers = playerState.engineers || 0;
+
+    if (spendEngineers && availableEngineers >= engineerCost) {
+      // Fire controlled - ship is DAMAGED
+      playerState.engineers -= engineerCost;
+      ships[shipIndex].status = 'damaged';
+      delete ships[shipIndex].pendingHazard;
+
+      state.log.push({
+        timestamp: new Date().toISOString(),
+        message: `${hazard.name} controlled! Spent ${engineerCost} Engineer(s). Ship damaged.`,
+        playerId,
+        type: 'hazard'
+      });
+
+      return { newState: state };
+    } else {
+      // Not spending or insufficient engineers - crash
+      return resolveFireCrash(state, playerId, shipIndex, hazard);
+    }
+  }
+
+  // Handle Static Discharge (special fire hazard with reliability check)
+  if (hazard.type === 'static_discharge') {
+    const shipStats = ship.stats || {};
+    const reliabilityStat = shipStats.reliability || 0;
+    const engineersNeeded = hazard.engineersNeeded || Math.max(0, hazard.difficulty - reliabilityStat);
+    const availableEngineers = playerState.engineers || 0;
+
+    if (spendEngineers && availableEngineers >= engineersNeeded) {
+      playerState.engineers -= engineersNeeded;
+      delete ships[shipIndex].pendingHazard;
+      return resolveHazardSuccess(state, playerId, shipIndex, route, hazard,
+        `Static Discharge Reliability check passed: ${reliabilityStat + engineersNeeded} >= ${hazard.difficulty}`);
+    } else if (!spendEngineers || availableEngineers < engineersNeeded) {
+      return resolveFireCrash(state, playerId, shipIndex, hazard);
+    }
+  }
+
+  // Handle regular hazards (minor/major with stat check)
+  const availableEngineers = playerState.engineers || 0;
+  const engineersNeeded = hazard.engineersNeeded || 0;
+  const relevantStat = hazard.relevantStat || 0;
+
+  if (engineersNeeded === 0) {
+    // Ship stat already passes - auto success
+    delete ships[shipIndex].pendingHazard;
+    return resolveHazardSuccess(state, playerId, shipIndex, route, hazard,
+      `${hazard.statName?.toUpperCase() || 'CHECK'} passed: ${relevantStat} >= ${hazard.difficulty}`);
+  }
+
+  if (spendEngineers && availableEngineers >= engineersNeeded) {
+    // Spending engineers to pass
+    playerState.engineers -= engineersNeeded;
+    delete ships[shipIndex].pendingHazard;
+    return resolveHazardSuccess(state, playerId, shipIndex, route, hazard,
+      `${hazard.statName?.toUpperCase() || 'CHECK'} passed: ${relevantStat} + ${engineersNeeded} engineers >= ${hazard.difficulty}`);
+  } else {
+    // Not spending or can't afford - abort
+    delete ships[shipIndex].pendingHazard;
+    return resolveHazardAbort(state, playerId, shipIndex, hazard,
+      `${hazard.statName?.toUpperCase() || 'CHECK'} failed: chose to abort rather than spend ${engineersNeeded} engineers`);
+  }
+}
+
+// Note: processRespondToHazard reuses resolveHazardSuccess and resolveHazardAbort from above
+
+/**
+ * Resolve fire crash - ship destroyed (with insurance check)
+ */
+function resolveFireCrash(state, playerId, shipIndex, hazard) {
+  const playerState = state.players[playerId];
+  const ships = playerState.ships;
+
+  // Check for insurance recovery
+  if (applyInsuranceRecovery(state, playerId, shipIndex, hazard.name)) {
+    delete ships[shipIndex].pendingHazard;
+    return { newState: state };
+  }
+
+  ships[shipIndex].status = 'destroyed';
+  delete ships[shipIndex].pendingHazard;
+
+  state.log.push({
+    timestamp: new Date().toISOString(),
+    message: `${hazard.name}! Ship destroyed!`,
+    playerId,
+    type: 'hazard'
+  });
+
+  return { newState: state };
+}
+
+module.exports = { processHazardCheck, processRespondToHazard, checkHindenburgDisaster };

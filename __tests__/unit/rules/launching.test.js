@@ -70,8 +70,8 @@ describe('Rules Compliance - Launching and Repair', () => {
     });
   });
 
-  describe('GAP-020: Launch procedure with automatic Hazard Check', () => {
-    it('should automatically perform hazard check and claim route on success', () => {
+  describe('GAP-020: Launch procedure with two-step Hazard Check', () => {
+    it('should set ship to awaiting_hazard after LAUNCH_SHIP', () => {
       const state = createTestGameState();
       const playerState = state.players['1'];
 
@@ -90,12 +90,13 @@ describe('Rules Compliance - Launching and Repair', () => {
         _internal: true
       });
 
-      // Ship should be on_route after automatic hazard check passes (clear weather)
-      expect(result.newState.players['1'].ships[0].status).toBe('on_route');
-      expect(result.newState.players['1'].ships[0].routeId).toBe('route_1');
+      // Ship should be awaiting_hazard with pendingHazard after LAUNCH_SHIP
+      expect(result.newState.players['1'].ships[0].status).toBe('awaiting_hazard');
+      expect(result.newState.players['1'].ships[0].pendingHazard).toBeDefined();
+      expect(result.newState.players['1'].ships[0].pendingRouteId).toBe('route_1');
     });
 
-    it('should claim route after hazard check passes', () => {
+    it('should claim route after RESPOND_TO_HAZARD with spendEngineers=true', () => {
       const state = createTestGameState();
       const playerState = state.players['1'];
 
@@ -106,19 +107,28 @@ describe('Rules Compliance - Launching and Repair', () => {
       state.map.routes[0].claimed = null;
 
       const { processLaunchShip } = require('../../../server/actions/launch');
+      const { processRespondToHazard } = require('../../../server/actions/hazard');
 
-      const result = processLaunchShip(state, '1', {
+      // Step 1: LAUNCH_SHIP
+      const launchResult = processLaunchShip(state, '1', {
         shipId: 'ship1',
         routeId: 'route_1',
         gasType: 'hydrogen',
         _internal: true
+      });
+
+      // Step 2: RESPOND_TO_HAZARD
+      const hazardResult = processRespondToHazard(launchResult.newState, '1', {
+        shipId: 'ship1',
+        spendEngineers: true
       });
 
       // Route should be claimed after hazard check passes
-      expect(result.newState.map.routes[0].claimed).toBe('1');
+      expect(hazardResult.newState.map.routes[0].claimed).toBe('1');
+      expect(hazardResult.newState.players['1'].ships[0].status).toBe('on_route');
     });
 
-    it('should increase income after hazard check passes', () => {
+    it('should increase income after RESPOND_TO_HAZARD passes', () => {
       const state = createTestGameState();
       const playerState = state.players['1'];
 
@@ -131,16 +141,24 @@ describe('Rules Compliance - Launching and Repair', () => {
       const routeIncome = state.map.routes[0].income;
 
       const { processLaunchShip } = require('../../../server/actions/launch');
+      const { processRespondToHazard } = require('../../../server/actions/hazard');
 
-      const result = processLaunchShip(state, '1', {
+      // Step 1: LAUNCH_SHIP
+      const launchResult = processLaunchShip(state, '1', {
         shipId: 'ship1',
         routeId: 'route_1',
         gasType: 'hydrogen',
         _internal: true
       });
 
+      // Step 2: RESPOND_TO_HAZARD
+      const hazardResult = processRespondToHazard(launchResult.newState, '1', {
+        shipId: 'ship1',
+        spendEngineers: true
+      });
+
       // Income should increase after hazard check passes
-      expect(result.newState.players['1'].income).toBe(initialIncome + routeIncome);
+      expect(hazardResult.newState.players['1'].income).toBe(initialIncome + routeIncome);
     });
   });
 
@@ -173,9 +191,10 @@ describe('Rules Compliance - Launching and Repair', () => {
       // Ship would normally fail Speed check
 
       const { processLaunchShip } = require('../../../server/actions/launch');
+      const { processRespondToHazard } = require('../../../server/actions/hazard');
 
-      // With Trapeze System and bypassedRequirement option, this should work
-      const result = processLaunchShip(state, '3', {
+      // Step 1: LAUNCH_SHIP - With Trapeze System and bypassedRequirement option
+      const launchResult = processLaunchShip(state, '3', {
         shipId: 'ship1',
         routeId: 'route_speed',
         gasType: 'helium',
@@ -183,9 +202,18 @@ describe('Rules Compliance - Launching and Repair', () => {
         _internal: true
       });
 
-      // Should succeed - ship on_route after automatic hazard check passes
-      expect(result.newState.players['3'].ships[0].status).toBe('on_route');
-      expect(result.newState.players['3'].ships[0].routeId).toBe('route_speed');
+      // Should succeed - ship awaiting hazard response
+      expect(launchResult.newState.players['3'].ships[0].status).toBe('awaiting_hazard');
+
+      // Step 2: RESPOND_TO_HAZARD
+      const hazardResult = processRespondToHazard(launchResult.newState, '3', {
+        shipId: 'ship1',
+        spendEngineers: true
+      });
+
+      // Should succeed - ship on_route after hazard check passes
+      expect(hazardResult.newState.players['3'].ships[0].status).toBe('on_route');
+      expect(hazardResult.newState.players['3'].ships[0].routeId).toBe('route_speed');
     });
 
     it('should NOT allow non-USA player to bypass route requirements', () => {

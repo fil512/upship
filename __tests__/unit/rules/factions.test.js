@@ -5,6 +5,7 @@
 
 const { createTestGameState, createTestPlayerState } = require('../../fixtures/testData');
 const { processLaunchShip } = require('../../../server/actions/launch');
+const { processRespondToHazard } = require('../../../server/actions/hazard');
 const { processBuyGas } = require('../../../server/actions/gas');
 
 describe('Rules Compliance - Factions', () => {
@@ -33,16 +34,25 @@ describe('Rules Compliance - Factions', () => {
       // Route should be claimable
       state.map.routes[0].claimed = null;
 
-      // USA should be able to launch with helium
-      const result = processLaunchShip(state, '3', {
+      // Step 1: LAUNCH_SHIP - USA should be able to launch with helium
+      const launchResult = processLaunchShip(state, '3', {
         shipId: 'ship1',
         routeId: 'route_1',
         gasType: 'helium',
         _internal: true
       });
 
-      // Ship on_route after automatic hazard check passes
-      expect(result.newState.players['3'].ships[0].status).toBe('on_route');
+      // Ship should be awaiting hazard response
+      expect(launchResult.newState.players['3'].ships[0].status).toBe('awaiting_hazard');
+
+      // Step 2: RESPOND_TO_HAZARD
+      const hazardResult = processRespondToHazard(launchResult.newState, '3', {
+        shipId: 'ship1',
+        spendEngineers: true
+      });
+
+      // Ship on_route after hazard check passes
+      expect(hazardResult.newState.players['3'].ships[0].status).toBe('on_route');
     });
 
     it('should allow USA to buy helium with helium_handling technology (lowercase)', () => {
