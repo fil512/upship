@@ -293,7 +293,7 @@ function executeLocationAction(state, playerId, locationId, _card, options = {})
       let swapsArray;
       try {
         swapsArray = typeof swapsJson === 'string' ? JSON.parse(swapsJson) : swapsJson;
-      } catch (e) {
+      } catch (_e) {
         return { success: false, error: 'Invalid swaps format - expected JSON array' };
       }
 
