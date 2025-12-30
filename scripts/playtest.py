@@ -1294,6 +1294,24 @@ def debug_state(game_id=None):
             for loc, info in placements.items():
                 print(f"  {loc}: {info}")
 
+        # Show ships for each player
+        print("\nShips by player:")
+        for pid, pdata in players.items():
+            faction = pdata.get('faction', 'unknown')
+            ships = pdata.get('ships', [])
+            print(f"  {faction.upper()}: {len(ships)} ships")
+            for ship in ships:
+                print(f"    - {ship.get('id')}: status={ship.get('status')}")
+
+        # Show log entries
+        log = state.get('log', [])
+        if log:
+            print(f"\nGame Log (last 15 entries):")
+            for entry in log[-15:]:
+                msg = entry.get('message', '')
+                etype = entry.get('type', '')
+                print(f"  [{etype}] {msg}")
+
         # Show whose turn it actually is
         order = state.get('playerOrder', [])
         wp_idx = state.get('workerPlacementIndex')

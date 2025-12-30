@@ -344,12 +344,24 @@ function executeLocationAction(state, playerId, locationId, _card, options = {})
     case 'construction_hall': {
       // Per Section 5.1: Execute action immediately when placing agent
       const buildCount = options.buildCount || 1;
+      state.log.push({
+        timestamp: new Date().toISOString(),
+        message: `[DEBUG] construction_hall case hit, buildCount=${buildCount}`,
+        playerId,
+        type: 'debug'
+      });
       try {
         // Call processBuildShip with _internal flag to bypass validation
         // (agent placement already happened, so we're authorized)
         processBuildShip(state, playerId, { count: buildCount, _internal: true });
         return { success: true, message: `Built ${buildCount} ship(s)` };
       } catch (error) {
+        state.log.push({
+          timestamp: new Date().toISOString(),
+          message: `[DEBUG] construction_hall build error: ${error.message}`,
+          playerId,
+          type: 'debug'
+        });
         return { success: false, error: error.message };
       }
     }
@@ -509,6 +521,12 @@ function executeLocationAction(state, playerId, locationId, _card, options = {})
     }
 
     default:
+      state.log.push({
+        timestamp: new Date().toISOString(),
+        message: `[DEBUG] default case hit, locationId=${locationId}`,
+        playerId,
+        type: 'debug'
+      });
       return { error: `Unknown location: ${locationId}` };
   }
 }
