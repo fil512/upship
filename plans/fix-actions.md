@@ -15,7 +15,7 @@ Per Section 5.1 of the rules, location actions should execute **immediately** wh
 - [x] `academy` - RECRUIT_CREW executes immediately
 - [x] `flight_school` - UPGRADE_OFFICER_INCOME executes immediately
 - [x] `technical_institute` - UPGRADE_ENGINEER_INCOME executes immediately
-- [ ] `insurance_bureau` - BUY_INSURANCE
+- [x] `insurance_bureau` - BUY_INSURANCE executes immediately
 - [ ] `government_liaison` - New processor needed
 - [ ] `research_institute` - New processor needed
 - [ ] `design_bureau` - Array of swaps

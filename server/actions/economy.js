@@ -45,13 +45,34 @@ function processTakeLoan(state, playerId, _data) {
 /**
  * Buy insurance at Insurance Bureau
  *
+ * Per Section 5.1: Location actions execute IMMEDIATELY when placing an agent.
+ * Direct API calls are rejected - must go through PLACE_AGENT.
+ *
  * @param {Object} state - Game state (mutated)
  * @param {string} playerId - Acting player ID
- * @param {Object} data - Action data (unused)
+ * @param {Object} data - Action data { _internal }
  * @returns {Object} { newState } or throws error
  */
-function processBuyInsurance(state, playerId, _data) {
+function processBuyInsurance(state, playerId, data) {
+  const { _internal = false } = data || {};
   const playerState = state.players[playerId];
+
+  // Validate that this is called through PLACE_AGENT (Section 5.1)
+  if (!_internal) {
+    if (state.phase !== 'worker_placement') {
+      throw new GameRuleError(
+        'BUY_INSURANCE not allowed: Actions execute immediately when placing an agent (Section 5.1). ' +
+        'Place an agent at Insurance Bureau during worker placement phase to buy insurance.'
+      );
+    }
+    const placement = state.groundBoard?.placements?.insurance_bureau;
+    if (!placement || placement.playerId !== playerId) {
+      throw new GameRuleError(
+        'BUY_INSURANCE not allowed: You must place an agent at Insurance Bureau to buy insurance. ' +
+        'Use PLACE_AGENT with locationId "insurance_bureau".'
+      );
+    }
+  }
 
   // Track insurance policies
   const currentPolicies = playerState.insurance || 0;

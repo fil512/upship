@@ -13,6 +13,7 @@ const { WEATHER_BUREAU_COST } = require('../config/constants');
 const { processBuildShip } = require('./building');
 const { processBuyGas } = require('./gas');
 const { processRecruitCrew, processUpgradeOfficerIncome, processUpgradeEngineerIncome } = require('./crew');
+const { processBuyInsurance } = require('./economy');
 
 /**
  * Process card effects when used for agent placement (Section 8.1)
@@ -380,8 +381,16 @@ function executeLocationAction(state, playerId, locationId, _card, options = {})
       }
     }
 
-    case 'insurance_bureau':
-      return { success: true, message: 'May buy insurance' };
+    case 'insurance_bureau': {
+      // Per Section 5.1: Execute action immediately when placing agent
+      try {
+        processBuyInsurance(state, playerId, { _internal: true });
+        const policies = playerState.insurance || 0;
+        return { success: true, message: `Purchased insurance policy (${policies} total)` };
+      } catch (error) {
+        return { success: false, error: error.message };
+      }
+    }
 
     case 'weather_bureau': {
       if (playerState.cash < WEATHER_BUREAU_COST) {
@@ -446,7 +455,7 @@ function hasPlayableCards(state, playerId) {
  * @returns {Object} { newState } or throws error
  */
 function processPlaceAgent(state, playerId, data) {
-  const { locationId, cardIndex, buildCount, gasType, gasAmount, crewType, crewCount, levels } = data;
+  const { locationId, cardIndex, buildCount, gasType, gasAmount, crewType, crewCount, levels, policyCount } = data;
   const playerState = state.players[playerId];
 
   // Validate phase
@@ -530,7 +539,7 @@ function processPlaceAgent(state, playerId, data) {
   }
 
   // Execute the location action immediately (Section 5.1)
-  const actionResult = executeLocationAction(state, playerId, locationId, discardedCard, { buildCount, gasType, gasAmount, crewType, crewCount, levels });
+  const actionResult = executeLocationAction(state, playerId, locationId, discardedCard, { buildCount, gasType, gasAmount, crewType, crewCount, levels, policyCount });
   if (actionResult.error) {
     state.log.push({
       timestamp: new Date().toISOString(),

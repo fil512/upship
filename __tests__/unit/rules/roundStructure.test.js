@@ -193,7 +193,8 @@ describe('Rules Compliance - Round Structure', () => {
       state.players[playerId].agents = 2;
 
       // Process upgrade to Officer Income +3
-      processUpgradeOfficerIncome(state, playerId, {});
+      // Use _internal: true since action now validates agent placement
+      processUpgradeOfficerIncome(state, playerId, { _internal: true });
 
       // Per Section 6.6: "When your Officer Income Track reaches +3, immediately gain your 3rd Agent."
       expect(state.players[playerId].officerIncome).toBe(3);
@@ -209,7 +210,8 @@ describe('Rules Compliance - Round Structure', () => {
       state.players[playerId].cash = 15;
       state.players[playerId].agents = 3;
 
-      processUpgradeOfficerIncome(state, playerId, {});
+      // Use _internal: true since action now validates agent placement
+      processUpgradeOfficerIncome(state, playerId, { _internal: true });
 
       // Should not get a 4th agent
       expect(state.players[playerId].agents).toBe(3);
