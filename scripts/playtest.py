@@ -258,11 +258,12 @@ def end_phase(game_id=None):
     print(f">>> Current phase: {phase}")
 
     if phase == "WORKER_PLACEMENT":
-        print(">>> All players passing...")
+        print(">>> All players revealing (atomic pass + acquisitions)...")
         for player in PLAYERS:
-            output = run_cli(player, "action", game_id, "PASS")
-            if "✓" in output or "passed" in output.lower():
-                print(f"  {player}: passed")
+            # Use atomic REVEAL action instead of PASS
+            output = run_cli(player, "reveal", game_id)
+            if "✓" in output or "passed" in output.lower() or "reveal" in output.lower():
+                print(f"  {player}: revealed")
     else:
         print(">>> All players ending turn...")
         for player in PLAYERS:
@@ -551,6 +552,53 @@ def find_strategic_placement(player, hand, locations, game_id):
     return find_playable_card(hand, locations)
 
 
+def handle_launchpad_launches(player, game_id):
+    """Handle the multi-step launchpad: launch ships and call NO_MORE_LAUNCHES.
+
+    Per Section 6.4, launchpad is a multi-step location:
+    - Player places agent (enables launching)
+    - Player launches ships (can be multiple)
+    - Player calls NO_MORE_LAUNCHES to signal completion
+    """
+    ships = get_player_ships(player, game_id)
+    hangar_ships = ships.get('hangar', [])
+
+    if not hangar_ships:
+        # No ships to launch, just call NO_MORE_LAUNCHES
+        run_cli(player, "nolaunches", game_id)
+        print(f"    {player}: no launches (no ships in hangar)")
+        log_action(player, "no launches", "worker_placement")
+        return
+
+    routes = get_available_routes(game_id)
+    if not routes:
+        # No routes available, just call NO_MORE_LAUNCHES
+        run_cli(player, "nolaunches", game_id)
+        print(f"    {player}: no launches (no routes available)")
+        log_action(player, "no launches", "worker_placement")
+        return
+
+    # Sort routes by easiest first (lowest distance/speed requirement)
+    routes.sort(key=lambda r: (r.get('distance', 1), r.get('speed', 1)))
+
+    launched = 0
+    for ship in hangar_ships[:]:  # Copy to avoid mutation during iteration
+        for route in routes[:]:
+            gas_type = get_gas_preference(player, game_id)
+            result = run_cli(player, "launch", game_id, ship['id'], route['id'], gas_type)
+            if "✓" in result or "success" in result.lower():
+                print(f"    {player}: launched {ship['id']} to {route['id']}")
+                log_action(player, f"launched {ship['id']} to {route['id']} ({gas_type})", "worker_placement")
+                routes.remove(route)  # Route now claimed
+                launched += 1
+                break  # Move to next ship
+
+    # Signal done launching
+    run_cli(player, "nolaunches", game_id)
+    print(f"    {player}: done launching ({launched} ships)")
+    log_action(player, f"done launching ({launched} ships)", "worker_placement")
+
+
 def handle_worker_placement_round(game_id):
     """Handle a complete worker placement round. Returns True if phase changed."""
     initial_phase = get_phase(game_id)
@@ -630,89 +678,118 @@ def handle_worker_placement_round(game_id):
                 action_args.append("levels=1")
                 action_desc = f"placed at {location['id']} and upgraded research level"
 
+            elif location['id'] == 'launchpad':
+                # Launchpad is a multi-step location (Section 6.4)
+                # We'll handle launches after placement
+                action_desc = f"placed at {location['id']} (launching ships next)"
+
             result = run_cli(*action_args)
             if "✓" in result or "success" in result.lower():
                 print(f"  {current}: {action_desc}")
                 log_action(current, action_desc, "worker_placement")
+
+                # Handle launchpad multi-step: launch ships and call NO_MORE_LAUNCHES
+                if location['id'] == 'launchpad':
+                    handle_launchpad_launches(current, game_id)
             else:
-                # Placement failed - pass instead
-                run_cli(current, "action", game_id, "PASS")
-                print(f"  {current}: passed (placement failed)")
-                log_action(current, "passed (placement failed)", "worker_placement")
+                # Placement failed - reveal instead
+                submit_reveal(current, game_id, "(placement failed)")
         else:
-            # No playable cards - pass
-            run_cli(current, "action", game_id, "PASS")
-            print(f"  {current}: passed")
-            log_action(current, "passed (no playable cards)", "worker_placement")
+            # No playable cards - reveal
+            submit_reveal(current, game_id, "(no playable cards)")
 
     return get_phase(game_id) != initial_phase
 
 
-def take_reveal_actions(player, game_id):
-    """Take strategic actions during reveal phase."""
-    output = strip_ansi(run_cli(player, "state", game_id))
+def get_reveal_acquisitions(player, game_id):
+    """Calculate what technologies and market cards to acquire during reveal.
 
-    # Check cash
-    cash_match = re.search(r'Cash:\s*£(\d+)', output)
-    cash = int(cash_match.group(1)) if cash_match else 0
+    Returns tuple of (tech_ids_list, card_ids_list) based on available resources.
+    Per Section 5.1, acquisitions are bundled into the atomic REVEAL action.
+    """
+    tech_ids = []
+    card_ids = []
 
-    # Check placements to see what actions are available
-    placements = get_player_placements(player, game_id)
+    # Get R&D board technologies
+    techs = get_rd_board(game_id)
 
-    # Note: construction_hall building now happens immediately when placing agent (Section 5.1)
-    # No need to build during reveal phase
+    # Simple strategy: try to acquire cheapest technology if we'll have enough research
+    # Note: exact research won't be known until reveal resources are collected,
+    # but we can estimate based on research level + engineers
+    if techs:
+        cheapest = min(techs, key=lambda t: t['cost'])
+        # We'll let the server handle validation - if we can't afford it, it'll skip
+        tech_ids.append(cheapest['id'])
 
-    # Note: gas_depot buying now happens immediately when placing agent (Section 5.1)
-    # No need to buy gas during reveal phase
+    # TODO: Could add market card selection based on expected influence
+    # For now, no market purchases
 
-    # Note: academy crew recruitment now happens immediately when placing agent (Section 5.1)
-    # No need to recruit crew during reveal phase
+    return tech_ids, card_ids
 
-    # Try to acquire technology using research (if at research_institute)
-    if 'research_institute' in placements:
-        techs = get_rd_board(game_id)
-        if techs:
-            cheapest = min(techs, key=lambda t: t['cost'])
-            result = run_cli(player, "action", game_id, "ACQUIRE_TECHNOLOGY_RESEARCH",
-                           f"techId={cheapest['id']}")
-            if "✓" in result:
-                print(f"  {player}: acquired tech {cheapest['id']}")
-                log_action(player, f"acquired tech {cheapest['id']}", "reveal")
 
-    # Try to launch ships to routes (if at launchpad)
-    if 'launchpad' in placements:
-        ships = get_player_ships(player, game_id)
-        if ships.get('hangar'):
-            routes = get_available_routes(game_id)
-            # Sort routes by easiest first (lowest distance/speed requirement)
-            routes.sort(key=lambda r: (r.get('distance', 1), r.get('speed', 1)))
-            for ship in ships['hangar']:
-                for route in routes:
-                    gas_type = get_gas_preference(player, game_id)
-                    result = run_cli(player, "launch", game_id, ship['id'], route['id'], gas_type)
-                    if "✓" in result:
-                        print(f"  {player}: launched {ship['id']} to {route['id']}")
-                        log_action(player, f"launched {ship['id']} to {route['id']} ({gas_type})", "reveal")
-                        routes.remove(route)  # Route now claimed
-                        break
+def submit_reveal(player, game_id, reason=""):
+    """Submit atomic REVEAL action with tech/market acquisitions.
+
+    Per Section 5.1, reveal bundles:
+    - Pass (end worker placement participation)
+    - Tech acquisitions using Research
+    - Market purchases using Influence
+    """
+    tech_ids, card_ids = get_reveal_acquisitions(player, game_id)
+
+    # Build reveal command
+    reveal_args = [player, "reveal", game_id]
+    if tech_ids:
+        reveal_args.append(",".join(tech_ids))
+    else:
+        reveal_args.append("")  # Empty tech list
+    if card_ids:
+        reveal_args.append(",".join(card_ids))
+
+    result = run_cli(*reveal_args)
+
+    # Log the action
+    if tech_ids or card_ids:
+        action_desc = f"revealed {reason}".strip()
+        if tech_ids:
+            action_desc += f" (acquiring: {','.join(tech_ids)})"
+    else:
+        action_desc = f"revealed {reason}".strip()
+
+    if "✓" in result or "success" in result.lower():
+        print(f"  {player}: {action_desc}")
+        log_action(player, action_desc, "worker_placement")
+    else:
+        # Fall back to PASS if REVEAL fails
+        print(f"  {player}: reveal failed, using PASS")
+        run_cli(player, "pass", game_id)
+        log_action(player, f"passed {reason}", "worker_placement")
 
 
 def handle_reveal_phase(game_id):
-    """Handle the reveal phase - all players take actions and end turn."""
+    """Handle the reveal phase using atomic REVEAL action.
+
+    Per Section 5.1, reveal is atomic:
+    - Player submits REVEAL with techAcquisitions[] and marketPurchases[]
+    - Resources are collected from revealed cards
+    - Acquisitions are processed using collected resources
+    - If acquisition fails (not enough resources), it's skipped with a log message
+    """
     print("--- Reveal Phase ---")
 
-    for player in PLAYERS:
-        # Try strategic actions first
-        take_reveal_actions(player, game_id)
+    # Note: With atomic reveal, we don't take separate actions.
+    # Everything is bundled into the REVEAL action during worker_placement.
+    # If we're in reveal phase, all players should have already submitted REVEAL.
+    # Just need to wait for the phase to transition.
 
-        # End turn for this player
-        run_cli(player, "endturn", game_id)
-
-    # Wait for phase to change
+    # Wait for phase to change (reveal should auto-complete if all submitted)
     for _ in range(10):
         if get_phase(game_id) != "REVEAL":
             break
         time.sleep(0.3)
+        # If stuck in reveal, all players end turn
+        for player in PLAYERS:
+            run_cli(player, "endturn", game_id)
 
 
 def handle_income_cleanup_phase(game_id):
