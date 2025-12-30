@@ -350,15 +350,24 @@ const PROGRESS_THRESHOLDS = {
 
 // Create technology bag and R&D board together to avoid duplicates
 // Returns { rdBoard: [...], techBag: [...] }
-// excludeIds: array of tech IDs to exclude (e.g., starting technologies already owned by players)
-function createTechBagAndRDBoard(age = 1, excludeIds = []) {
+// Per Section 3.1: Include (N-1) copies of each tech where N = player count
+// starterCounts: Map of techId -> count of players who have it as a starter
+function createTechBagAndRDBoard(age = 1, playerCount = 4, starterCounts = {}) {
   const bag = [];
-  // Add all tiles up to current age, excluding any already owned
+  const copiesPerTech = Math.max(1, playerCount - 1);
+
+  // Add tiles up to current age with appropriate copy counts
   for (let a = 1; a <= age; a++) {
-    const techs = TECHNOLOGY_BAG[a]
-      .filter(t => !excludeIds.includes(t.id))
-      .map(t => ({ ...t, age: a }));
-    bag.push(...techs);
+    for (const tech of TECHNOLOGY_BAG[a]) {
+      // Calculate how many copies to add: (N-1) minus copies given as starters
+      const startersUsed = starterCounts[tech.id] || 0;
+      const copiesToAdd = Math.max(0, copiesPerTech - startersUsed);
+
+      // Add the appropriate number of copies
+      for (let i = 0; i < copiesToAdd; i++) {
+        bag.push({ ...tech, age: a });
+      }
+    }
   }
   const shuffledBag = shuffleArray(bag);
 
@@ -529,17 +538,18 @@ async function initializeGameState(gameId, players) {
     // Determine player count for progress thresholds
     const playerCount = Math.min(4, Math.max(2, players.length));
 
-    // Collect all starting technologies from all players to exclude from tech bag
-    const allStartingTechs = new Set();
+    // Count starting technologies across all players
+    // Per Section 3.1: Remove copies of faction starters equal to players who have them
+    const starterCounts = {};
     for (const pid of Object.keys(playerStates)) {
       for (const tech of playerStates[pid].technologies || []) {
-        allStartingTechs.add(tech);
+        starterCounts[tech] = (starterCounts[tech] || 0) + 1;
       }
     }
 
-    // Create tech bag and R&D board together to avoid duplicates
-    // Exclude starting technologies so they don't appear on R&D board
-    const { rdBoard, techBag } = createTechBagAndRDBoard(1, Array.from(allStartingTechs));
+    // Create tech bag and R&D board with player-scaled copies
+    // Per Section 3.1: (N-1) copies per tech, minus faction starters
+    const { rdBoard, techBag } = createTechBagAndRDBoard(1, playerCount, starterCounts);
 
     // Calculate initial turn order by income (lowest first)
     // At game start, all players have income 5, so use original random order

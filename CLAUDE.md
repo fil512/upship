@@ -354,6 +354,8 @@ python scripts/playtest.py debug                     # Show raw game state
 python scripts/playtest.py gameid                    # Print current game ID
 python scripts/playtest.py routes                    # Show available routes
 python scripts/playtest.py launch <player> <shipId> <routeId> [gas]  # Launch ship
+python scripts/playtest.py tail [num_lines]          # Show last N lines of playtest log
+python scripts/playtest.py output [num_lines]        # Show Claude background task output
 ```
 
 **Features:**

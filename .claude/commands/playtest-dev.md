@@ -73,6 +73,12 @@ UPSHIP_LOCAL=1 python scripts/playtest.py routes
 UPSHIP_LOCAL=1 python scripts/playtest.py launch <player> <shipId> <routeId> [hydrogen|helium]
 ```
 
+### Log Monitoring
+```bash
+UPSHIP_LOCAL=1 python scripts/playtest.py tail             # Last 50 lines of playtest log
+UPSHIP_LOCAL=1 python scripts/playtest.py tail 100         # Last 100 lines of playtest log
+```
+
 ### Utility
 ```bash
 UPSHIP_LOCAL=1 python scripts/playtest.py gameid

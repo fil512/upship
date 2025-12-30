@@ -348,12 +348,20 @@ Fabric technologies unlock outer covering and gas cell material upgrades.
 | III | Sleeping Quarters | 4 | 2 | 1 | Private Berths |
 | III | Smoking Room | 5 | 2 | 3 | Pressurized Lounge |
 
-**Total: 54 Technology Tiles** (Propulsion 11, Frame 10, Fabric 8, Gas Systems 11, Payload 14)
+**54 Unique Technology Tiles** (Propulsion 11, Frame 10, Fabric 8, Gas Systems 11, Payload 14)
 
 **Tiles by Age:**
-- Age I: 11 tiles (2 Propulsion, 2 Frame, 2 Fabric, 2 Gas, 3 Payload)
+- Age I: 12 tiles (3 Propulsion, 2 Frame, 2 Fabric, 2 Gas, 3 Payload)
 - Age II: 23 tiles (4 Propulsion, 5 Frame, 4 Fabric, 4 Gas, 6 Payload)
-- Age III: 20 tiles (5 Propulsion, 3 Frame, 2 Fabric, 5 Gas, 5 Payload)
+- Age III: 19 tiles (4 Propulsion, 3 Frame, 2 Fabric, 5 Gas, 5 Payload)
+
+**Player Scaling (§3.1):** The game includes (N−1) copies of each tile where N = number of players. Faction starting technologies are removed from the bag (one copy per player who starts with that tech).
+
+| Players | Copies per Tile | Age I Bag (after starters) |
+|---------|-----------------|----------------------------|
+| 2       | 1               | ~9 tiles                   |
+| 3       | 2               | ~21 tiles                  |
+| 4       | 3               | ~33 tiles                  |
 
 **PLAYTESTING NOTE:** Current tile counts may be adjusted based on playtesting. Monitor if certain tracks feel over/under-represented.
 

@@ -47,14 +47,16 @@ function reduceHeliumMarket(state, steps = 1) {
  */
 function refreshRnDBoard(state) {
   // Fill empty slots on R&D board from tech bag
-  const rnDBoard = state.rnDBoard || { available: [] };
-  const targetSize = RD_BOARD_SIZE[state.age] || 6;
+  // NOTE: Must use state.rdBoard (not state.rnDBoard) - this is where all
+  // tech acquisition logic reads from. See bug-notes.md for details.
+  state.rdBoard = state.rdBoard || [];
+  state.techBag = state.techBag || [];
 
-  while (rnDBoard.available.length < targetSize && state.techBag && state.techBag.length > 0) {
-    rnDBoard.available.push(state.techBag.pop());
+  const targetSize = RD_BOARD_SIZE[state.age] || 4;
+
+  while (state.rdBoard.length < targetSize && state.techBag.length > 0) {
+    state.rdBoard.push(state.techBag.shift());
   }
-
-  state.rnDBoard = rnDBoard;
 }
 
 /**

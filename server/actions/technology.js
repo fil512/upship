@@ -11,30 +11,40 @@ const { performAgeTransition } = require('./helpers/ageTransition');
 
 /**
  * Add new age technologies to the tech bag
+ * Per Section 3.1: Include (N-1) copies of each tech where N = player count
  *
  * @param {Object} state - Game state (mutated)
  * @param {number} age - Age number (2 or 3)
  */
 function addAgeTechnologies(state, age) {
   const newTechs = TECHNOLOGY_BAG[age] || [];
-  if (newTechs.length > 0) {
-    // Collect all technologies already owned by any player
-    const ownedTechs = new Set();
-    for (const pid of Object.keys(state.players || {})) {
-      for (const tech of state.players[pid].technologies || []) {
-        ownedTechs.add(tech);
-      }
+  if (newTechs.length === 0) return;
+
+  const playerCount = state.playerCount || Object.keys(state.players || {}).length;
+  const copiesPerTech = Math.max(1, playerCount - 1);
+
+  // Count how many copies of each tech are already owned
+  const ownedCounts = {};
+  for (const pid of Object.keys(state.players || {})) {
+    for (const tech of state.players[pid].technologies || []) {
+      ownedCounts[tech] = (ownedCounts[tech] || 0) + 1;
     }
-
-    // Filter out already-owned technologies and add age marker
-    const techsWithAge = newTechs
-      .filter(t => !ownedTechs.has(t.id))
-      .map(t => ({ ...t, age }));
-
-    // Shuffle and add to tech bag
-    state.techBag = state.techBag || [];
-    state.techBag.push(...shuffleArray(techsWithAge));
   }
+
+  // Add (N-1) - ownedCount copies of each new age tech
+  const techsToAdd = [];
+  for (const tech of newTechs) {
+    const ownedCount = ownedCounts[tech.id] || 0;
+    const copiesToAdd = Math.max(0, copiesPerTech - ownedCount);
+
+    for (let i = 0; i < copiesToAdd; i++) {
+      techsToAdd.push({ ...tech, age });
+    }
+  }
+
+  // Shuffle and add to tech bag
+  state.techBag = state.techBag || [];
+  state.techBag.push(...shuffleArray(techsToAdd));
 }
 
 /**

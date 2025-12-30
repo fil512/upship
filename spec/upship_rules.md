@@ -74,7 +74,7 @@ When the marker reaches an Age threshold, that Age ends after the current round.
 | 1 | Combat Mission Deck (20 cards for Age II) |
 | 1 | Ground Board (Worker Placement locations) |
 | 1 | R&D Board (Technology display) |
-| 48 | Technology Tiles (sorted by Age) |
+| 54× | Technology Tiles (sorted by Age; see §3.1 for player scaling) |
 | ~80 | Upgrade Tiles (organized by type) |
 | 1 | Progress Track |
 | 1 | VP Track |
@@ -93,12 +93,18 @@ When the marker reaches an Age threshold, that Age ends after the current round.
 
 1. Place the **Ground Board** in the center of the table.
 2. Place the **Age I Map** (Western Europe) next to it.
-3. Place the **R&D Board** and draw 4 Technology tiles from the Age I bag to fill it.
-4. Organize the **Upgrade Tile Supply** by type.
-5. Set the **Progress Track** marker to 0.
-6. Set up **Officer** and **Engineer** token supplies.
-7. Shuffle the **Market Deck** and deal 5 cards face-up to form the Market Row.
-8. Set the **Helium Market Track** to £2.
+3. **Prepare the Technology Bag:**
+   - For each unique Technology tile, include **(N−1) copies** where N = number of players.
+   - *Example: In a 4-player game, include 3 copies of each Technology tile.*
+   - Remove copies of faction starting technologies equal to the number of players who have them.
+   - *Example: If Germany and USA both start with Duralumin Girders, remove 2 copies from the bag.*
+   - Shuffle all Age I tiles together to form the Technology Bag.
+4. Place the **R&D Board** and draw 4 Technology tiles from the Age I bag to fill it.
+5. Organize the **Upgrade Tile Supply** by type.
+6. Set the **Progress Track** marker to 0.
+7. Set up **Officer** and **Engineer** token supplies.
+8. Shuffle the **Market Deck** and deal 5 cards face-up to form the Market Row.
+9. Set the **Helium Market Track** to £2.
 
 ## 3.2 Player Setup
 

@@ -14,6 +14,8 @@ Usage:
     python scripts/playtest.py action <player> <cmd> # Run single command
     python scripts/playtest.py endphase              # All players end turn
     python scripts/playtest.py debug                 # Show raw game state
+    python scripts/playtest.py tail [num_lines]      # Show last N lines of log (default: 50)
+    python scripts/playtest.py output [num_lines]    # Show Claude background task output (default: 100)
 """
 
 import subprocess
@@ -1792,6 +1794,58 @@ def debug_state(game_id=None):
         print(f"Error parsing response: {e}")
 
 
+def tail_log(num_lines=50):
+    """Show the last N lines of the current playtest log file."""
+    log_file = load_log_file()
+    if not log_file:
+        print("No current log file. Run 'setup' first.")
+        return
+
+    if not log_file.exists():
+        print(f"Log file not found: {log_file}")
+        return
+
+    print(f"=== Tail of {log_file.name} (last {num_lines} lines) ===\n")
+    with open(log_file, 'r') as f:
+        lines = f.readlines()
+        for line in lines[-num_lines:]:
+            print(line.rstrip())
+
+
+def show_claude_output(num_lines=100):
+    """Show the last N lines from Claude's background task output files.
+
+    Claude Code runs background tasks in /tmp/claude/<project>/tasks/*.output
+    This command shows the most recent output, useful for debugging failed playtests.
+    """
+    import glob
+
+    # Find the Claude tasks directory for this project
+    # The path pattern is /tmp/claude/-Volumes-bork-pers-1-upship/tasks/
+    project_path = str(Path.cwd()).replace('/', '-')
+    # Keep leading dash - Claude uses the full path with leading dash
+    tasks_dir = Path(f"/tmp/claude/{project_path}/tasks")
+
+    if not tasks_dir.exists():
+        print(f"No Claude tasks directory found at: {tasks_dir}")
+        return
+
+    # Find the most recent .output file
+    output_files = sorted(tasks_dir.glob("*.output"), key=lambda p: p.stat().st_mtime, reverse=True)
+
+    if not output_files:
+        print(f"No output files found in: {tasks_dir}")
+        return
+
+    most_recent = output_files[0]
+    print(f"=== Claude Task Output: {most_recent.name} (last {num_lines} lines) ===\n")
+
+    with open(most_recent, 'r') as f:
+        lines = f.readlines()
+        for line in lines[-num_lines:]:
+            print(line.rstrip())
+
+
 def main():
     if len(sys.argv) < 2:
         print(__doc__)
@@ -1860,6 +1914,14 @@ def main():
 
     elif cmd == "summary":
         show_summary()
+
+    elif cmd == "tail":
+        num_lines = int(sys.argv[2]) if len(sys.argv) > 2 else 50
+        tail_log(num_lines)
+
+    elif cmd == "output":
+        num_lines = int(sys.argv[2]) if len(sys.argv) > 2 else 100
+        show_claude_output(num_lines)
 
     else:
         print(f"Unknown command: {cmd}")
