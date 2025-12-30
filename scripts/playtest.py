@@ -617,6 +617,11 @@ def handle_launchpad_launches(player, game_id):
     - Player launches ships (can be multiple)
     - Player calls NO_MORE_LAUNCHES to signal completion
     """
+    # Get pre-launch state for detailed logging
+    pre_state, _ = get_full_state(game_id, player)
+    player_id = get_player_id(player, pre_state) if pre_state else None
+    player_data = pre_state.get('players', {}).get(player_id, {}) if pre_state and player_id else {}
+
     ships = get_player_ships(player, game_id)
     hangar_ships = ships.get('hangar', [])
 
@@ -624,7 +629,7 @@ def handle_launchpad_launches(player, game_id):
         # No ships to launch, just call NO_MORE_LAUNCHES
         run_cli(player, "nolaunches", game_id)
         print(f"    {player}: no launches (no ships in hangar)")
-        log_action(player, "no launches", "worker_placement")
+        log_action(player, "no launches (no ships in hangar)", "worker_placement")
         return
 
     routes = get_available_routes(game_id)
@@ -632,7 +637,7 @@ def handle_launchpad_launches(player, game_id):
         # No routes available, just call NO_MORE_LAUNCHES
         run_cli(player, "nolaunches", game_id)
         print(f"    {player}: no launches (no routes available)")
-        log_action(player, "no launches", "worker_placement")
+        log_action(player, "no launches (no routes available)", "worker_placement")
         return
 
     # Sort routes by easiest first (lowest distance/speed requirement)
@@ -640,15 +645,93 @@ def handle_launchpad_launches(player, game_id):
 
     launched = 0
     for ship in hangar_ships[:]:  # Copy to avoid mutation during iteration
+        # Get ship stats before launch
+        ship_obj = next((s for s in player_data.get('ships', []) if s.get('id') == ship['id']), None)
+        ship_stats = get_ship_details(ship_obj, player_data) if ship_obj else None
+
         for route in routes[:]:
             gas_type = get_gas_preference(player, game_id)
+
+            # Log pre-launch ship stats
+            if ship_stats:
+                stats_str = (f"Ship: Lift={ship_stats['lift']} Weight={ship_stats['weight']} "
+                            f"Gas={ship_stats['required_gas']} Range={ship_stats['range']} "
+                            f"Speed={ship_stats['speed']} Rel={ship_stats.get('reliability', 0)}")
+                route_str = (f"Route: {route['name']} (dist={route['distance']}, "
+                            f"speed={route['speed']}, income=+{route['income']})")
+            else:
+                stats_str = "Ship stats: unknown"
+                route_str = f"Route: {route['id']}"
+
             result = strip_ansi(run_cli(player, "launch", game_id, ship['id'], route['id'], gas_type))
+
             if "✓" in result or "success" in result.lower():
-                print(f"    {player}: launched {ship['id']} to {route['id']}")
-                log_action(player, f"launched {ship['id']} to {route['id']} ({gas_type})", "worker_placement")
+                # Get post-launch state to check outcome
+                post_state, _ = get_full_state(game_id, player)
+                post_player_id = get_player_id(player, post_state) if post_state else None
+                post_player_data = post_state.get('players', {}).get(post_player_id, {}) if post_state and post_player_id else {}
+
+                # Find ship status after launch
+                post_ship = next((s for s in post_player_data.get('ships', []) if s.get('id') == ship['id']), None)
+                ship_status = post_ship.get('status', 'unknown') if post_ship else 'unknown'
+
+                # Extract hazard info from game log
+                log_entries = get_last_log_entries(post_state, count=10) if post_state else []
+                hazard_info = None
+                launch_outcome = "unknown"
+
+                for entry in reversed(log_entries):
+                    msg = entry.get('message', '')
+                    msg_lower = msg.lower()
+
+                    # Capture hazard-related log entries
+                    if 'hazard' in msg_lower or 'destroyed' in msg_lower:
+                        hazard_info = msg
+
+                    # Determine outcome from log messages
+                    if 'hazard check passed' in msg_lower:
+                        launch_outcome = "SUCCESS"
+                        break
+                    elif 'launch aborted' in msg_lower or 'returns to hangar' in msg_lower:
+                        launch_outcome = "ABORTED"
+                        break
+                    elif 'destroyed' in msg_lower and ship['id'] in msg:
+                        launch_outcome = "DESTROYED"
+                        break
+
+                # Fallback: determine outcome from ship status
+                if launch_outcome == "unknown":
+                    if ship_status == 'on_route':
+                        launch_outcome = "SUCCESS"
+                    elif ship_status == 'destroyed':
+                        launch_outcome = "DESTROYED"
+                    elif ship_status == 'hangar':
+                        # Ship returned to hangar - likely failed hazard
+                        launch_outcome = "ABORTED"
+                    elif ship_status == 'awaiting_hazard':
+                        launch_outcome = "AWAITING_HAZARD"
+
+                # Log with full details
+                action_str = f"LAUNCH {ship['id']} → {route['id']} ({gas_type})"
+                print(f"    {player}: {action_str} [{launch_outcome}]")
+
+                log_action(player, action_str, "worker_placement")
+                log_action(None, f"  └─ {stats_str}", "worker_placement")
+                log_action(None, f"  └─ {route_str}", "worker_placement")
+                if hazard_info:
+                    log_action(None, f"  └─ Hazard: {hazard_info}", "worker_placement")
+                log_action(None, f"  └─ Outcome: {launch_outcome} (status={ship_status})", "worker_placement")
+
                 routes.remove(route)  # Route now claimed
                 launched += 1
                 break  # Move to next ship
+            else:
+                # Launch failed - log why
+                print(f"    {player}: launch failed for {ship['id']} to {route['id']}")
+                log_action(player, f"LAUNCH FAILED {ship['id']} → {route['id']}", "worker_placement")
+                log_action(None, f"  └─ {stats_str}", "worker_placement")
+                log_action(None, f"  └─ {route_str}", "worker_placement")
+                log_action(None, f"  └─ Error: {result[:100]}", "worker_placement")
 
     # Signal done launching
     run_cli(player, "nolaunches", game_id)
@@ -701,6 +784,14 @@ def handle_worker_placement_round(game_id):
         card, location = find_strategic_placement(current, hand, locations, game_id)
 
         if card and location:
+            # Get pre-action state for comparison
+            pre_state, _ = get_full_state(game_id, current)
+            pre_player_id = get_player_id(current, pre_state) if pre_state else None
+            pre_player_data = pre_state.get('players', {}).get(pre_player_id, {}) if pre_state and pre_player_id else {}
+            pre_blueprint = get_blueprint_stats(pre_player_data)
+            pre_ships = len(pre_player_data.get('ships', []))
+            pre_gas = pre_player_data.get('gasCubes', {})
+
             # Build action args for PLACE_AGENT
             action_args = [current, "action", game_id, "PLACE_AGENT",
                           f"locationId={location['id']}", f"cardIndex={card['index']}"]
@@ -762,6 +853,46 @@ def handle_worker_placement_round(game_id):
                 print(f"  {current}: {action_desc}")
                 log_action(current, action_desc, "worker_placement")
 
+                # Get post-action state for detailed logging
+                post_state, _ = get_full_state(game_id, current)
+                post_player_id = get_player_id(current, post_state) if post_state else None
+                post_player_data = post_state.get('players', {}).get(post_player_id, {}) if post_state and post_player_id else {}
+                post_blueprint = get_blueprint_stats(post_player_data)
+                post_ships = len(post_player_data.get('ships', []))
+                post_gas = post_player_data.get('gasCubes', {})
+
+                # Log card used
+                log_action(None, f"  └─ Card: {card['name']} ({card['symbol']})", "worker_placement")
+
+                # Log blueprint changes for design_bureau
+                if location['id'] == 'design_bureau':
+                    bp_changes = []
+                    for key in ['lift', 'weight', 'range', 'speed', 'ceiling', 'cargo']:
+                        if pre_blueprint.get(key, 0) != post_blueprint.get(key, 0):
+                            bp_changes.append(f"{key}: {pre_blueprint.get(key, 0)} → {post_blueprint.get(key, 0)}")
+                    if bp_changes:
+                        log_action(None, f"  └─ Blueprint changes: {', '.join(bp_changes)}", "worker_placement")
+                    log_action(None, f"  └─ {format_blueprint_log(post_blueprint)}", "worker_placement")
+
+                # Log new ship built
+                if location['id'] == 'construction_hall' and post_ships > pre_ships:
+                    new_ship = post_player_data.get('ships', [])[-1] if post_player_data.get('ships') else None
+                    if new_ship:
+                        ship_id = new_ship.get('id', 'unknown')
+                        log_action(None, f"  └─ New ship: {ship_id}", "worker_placement")
+                        log_action(None, f"  └─ {format_blueprint_log(post_blueprint)}", "worker_placement")
+
+                # Log gas purchased
+                if location['id'] == 'gas_depot':
+                    h2_before = pre_gas.get('hydrogen', 0)
+                    h2_after = post_gas.get('hydrogen', 0)
+                    he_before = pre_gas.get('helium', 0)
+                    he_after = post_gas.get('helium', 0)
+                    if h2_after != h2_before:
+                        log_action(None, f"  └─ Hydrogen: {h2_before} → {h2_after}", "worker_placement")
+                    if he_after != he_before:
+                        log_action(None, f"  └─ Helium: {he_before} → {he_after}", "worker_placement")
+
                 # Handle launchpad multi-step: launch ships and call NO_MORE_LAUNCHES
                 if location['id'] == 'launchpad':
                     handle_launchpad_launches(current, game_id)
@@ -809,6 +940,14 @@ def submit_reveal(player, game_id, reason=""):
     - Tech acquisitions using Research
     - Market purchases using Influence
     """
+    # Get pre-reveal state for comparison
+    pre_state, _ = get_full_state(game_id, player)
+    pre_player_id = get_player_id(player, pre_state) if pre_state else None
+    pre_player_data = pre_state.get('players', {}).get(pre_player_id, {}) if pre_state and pre_player_id else {}
+    pre_research = pre_player_data.get('research', 0)
+    pre_influence = pre_player_data.get('influence', 0)
+    pre_techs = set(t.get('id', t) if isinstance(t, dict) else t for t in pre_player_data.get('technologies', []))
+
     tech_ids, card_ids = get_reveal_acquisitions(player, game_id)
 
     # Build reveal command
@@ -822,21 +961,62 @@ def submit_reveal(player, game_id, reason=""):
 
     result = strip_ansi(run_cli(*reveal_args))
 
-    # Log the action
-    if tech_ids or card_ids:
-        action_desc = f"revealed {reason}".strip()
-        if tech_ids:
-            action_desc += f" (acquiring: {','.join(tech_ids)})"
-    else:
-        action_desc = f"revealed {reason}".strip()
-
     if "✓" in result or "success" in result.lower():
+        # Get post-reveal state for detailed logging
+        post_state, _ = get_full_state(game_id, player)
+        post_player_id = get_player_id(player, post_state) if post_state else None
+        post_player_data = post_state.get('players', {}).get(post_player_id, {}) if post_state and post_player_id else {}
+
+        # Calculate resources collected
+        post_research = post_player_data.get('research', 0)
+        post_influence = post_player_data.get('influence', 0)
+        post_cash = post_player_data.get('cash', 0)
+        post_officers = post_player_data.get('officers', 0)
+        post_engineers = post_player_data.get('engineers', 0)
+        post_techs = set(t.get('id', t) if isinstance(t, dict) else t for t in post_player_data.get('technologies', []))
+
+        # New technologies acquired
+        new_techs = post_techs - pre_techs
+
+        # Extract reveal resources from game log
+        log_entries = get_last_log_entries(post_state, count=10) if post_state else []
+        resources_collected = None
+        for entry in reversed(log_entries):
+            msg = entry.get('message', '')
+            faction = player.replace('playtest_', '').upper()
+            if faction in msg and 'collected' in msg.lower():
+                resources_collected = msg
+                break
+
+        # Build detailed log entry
+        action_desc = f"REVEAL {reason}".strip()
         print(f"  {player}: {action_desc}")
         log_action(player, action_desc, "reveal")
+
+        # Log resources collected
+        if resources_collected:
+            log_action(None, f"  └─ {resources_collected}", "reveal")
+
+        # Log new technologies
+        if new_techs:
+            tech_list = ", ".join(new_techs)
+            log_action(None, f"  └─ Tech acquired: {tech_list}", "reveal")
+            print(f"    └─ Tech acquired: {tech_list}")
+
+        # Log current research/influence totals
+        log_action(None, f"  └─ Resources: Research={post_research} Influence={post_influence} Cash=£{post_cash}", "reveal")
+
+        # Log hand changes (new cards acquired)
+        post_hand = post_player_data.get('hand', [])
+        if post_hand:
+            hand_names = [c.get('name', 'card') for c in post_hand[:5]]
+            log_action(None, f"  └─ Hand ({len(post_hand)} cards): {', '.join(hand_names)}", "reveal")
+
     else:
         # REVEAL failed - log error (PASS action no longer available)
         print(f"  {player}: reveal failed - {result}")
-        log_action(player, f"reveal failed {reason}: {result[:50]}", "reveal")
+        log_action(player, f"REVEAL FAILED {reason}", "reveal")
+        log_action(None, f"  └─ Error: {result[:100]}", "reveal")
 
 
 def handle_reveal_phase(game_id):
@@ -1066,6 +1246,151 @@ def get_session_cookie(player="playtest_germany"):
             session = json.load(f)
             return session.get("cookie", "")
     return ""
+
+
+def get_full_state(game_id, player="playtest_germany"):
+    """Fetch complete game state from API for detailed logging."""
+    try:
+        url = f"{API_BASE}/api/state/{game_id}"
+        req = urllib.request.Request(url)
+        cookie = get_session_cookie(player)
+        if cookie:
+            req.add_header("Cookie", cookie)
+        with urllib.request.urlopen(req, timeout=10) as response:
+            data = json.loads(response.read().decode())
+
+        gs = data.get('gameState', data)
+        state = gs.get('state', gs)
+        return state, gs
+    except Exception as e:
+        print(f"Error fetching state: {e}")
+        return None, None
+
+
+def get_player_id(player, state):
+    """Get player ID from username/faction."""
+    faction = player.replace('playtest_', '')
+    players = state.get('players', {})
+    for pid, pdata in players.items():
+        if pdata.get('faction', '').lower() == faction:
+            return pid
+    return None
+
+
+def get_ship_details(ship, player_data):
+    """Extract detailed ship stats for logging.
+
+    Weight = sum of upgrade weights from all slots
+    Required gas cubes = max(1, ceil(weight/5))
+    Lift = required gas cubes * 5
+    Other stats come from ship.stats if available
+    """
+    blueprint = player_data.get('blueprint', {})
+    ship_stats = ship.get('stats', {})
+
+    # Calculate weight from installed upgrades
+    # Upgrade weights are defined in server/data/upgrades.js (actual IDs from the game)
+    UPGRADE_WEIGHTS = {
+        # Drives
+        'basic_engine': 1, 'efficient_propeller': 1, 'twin_engine': 3,
+        'maybach_cx': 2, 'diesel_engine': 2, 'vectored_thrust': 2,
+        'balanced_propulsion': 2, 'aerodynamic_engine': 2, 'high_altitude_engine': 3,
+        'hybrid_powerplant': 3, 'adaptive_propeller': 2,
+        # Frames
+        'wooden_frame': 2, 'tensioned_frame': 1, 'duralumin_frame': 2,
+        'steel_frame': 3, 'semi_rigid_keel': 2, 'geodetic_frame': 1,
+        'modular_frame': 1, 'flexible_frame': 1,
+        # Fabrics (most are 0)
+        'cotton_envelope': 0, 'doped_covering': 0, 'premium_envelope': 0,
+        'fire_resistant_fabric': 1, 'reflective_covering': 0, 'synthetic_envelope': 0,
+        'advanced_fabric': 0, 'conductive_covering': 0,
+        # Components
+        'passenger_gondola': 2, 'observation_deck': 1, 'cargo_hold': 2,
+        'dining_saloon': 3, 'radio_room': 1, 'sleeping_quarters': 2,
+        'luxury_lounge': 3, 'mail_compartment': 1, 'navigation_suite': 1,
+        'pressurized_cabin': 2,
+    }
+
+    weight = 0
+    for slot_type in ['driveSlots', 'frameSlots', 'fabricSlots', 'componentSlots']:
+        for upgrade_id in blueprint.get(slot_type, []):
+            if upgrade_id:
+                weight += UPGRADE_WEIGHTS.get(upgrade_id, 0)
+
+    # Calculate lift: required gas cubes = max(1, ceil(weight/5)), lift = cubes * 5
+    import math
+    required_cubes = max(1, math.ceil(weight / 5)) if weight > 0 else 1
+    lift = required_cubes * 5
+
+    # Get other stats from ship.stats if available (set at launch time)
+    range_val = ship_stats.get('range', 1)
+    speed = ship_stats.get('speed', 1)
+    ceiling = ship_stats.get('ceiling', 0)
+    reliability = ship_stats.get('reliability', 0)
+    luxury = ship_stats.get('luxury', 0)
+
+    return {
+        'id': ship.get('id', 'unknown'),
+        'status': ship.get('status', 'unknown'),
+        'lift': lift,
+        'weight': weight,
+        'required_gas': required_cubes,
+        'range': range_val,
+        'speed': speed,
+        'ceiling': ceiling,
+        'reliability': reliability,
+        'luxury': luxury,
+        'net_lift': lift - weight
+    }
+
+
+def get_blueprint_stats(player_data):
+    """Extract blueprint stats for logging."""
+    bp = player_data.get('blueprint', {})
+    return {
+        'lift': bp.get('lift', 0),
+        'weight': bp.get('weight', 0),
+        'cargo': bp.get('cargo', 0),
+        'range': bp.get('range', 1),
+        'speed': bp.get('speed', 1),
+        'ceiling': bp.get('ceiling', 0),
+        'frame_slots': len(bp.get('frameSlots', [])),
+        'fabric_slots': len(bp.get('fabricSlots', [])),
+        'drive_slots': len(bp.get('driveSlots', [])),
+        'component_slots': len(bp.get('componentSlots', [])),
+        'gas_sockets': bp.get('gasSockets', 0)
+    }
+
+
+def format_blueprint_log(bp_stats):
+    """Format blueprint stats for log entry."""
+    return (f"Blueprint: Lift={bp_stats['lift']} Weight={bp_stats['weight']} "
+            f"Net={bp_stats['lift']-bp_stats['weight']} Range={bp_stats['range']} "
+            f"Speed={bp_stats['speed']} Ceiling={bp_stats['ceiling']}")
+
+
+def get_last_log_entries(state, count=5, entry_type=None):
+    """Get recent log entries from game state, optionally filtered by type."""
+    log = state.get('log', [])
+    if entry_type:
+        log = [e for e in log if e.get('type') == entry_type]
+    return log[-count:] if log else []
+
+
+def extract_hazard_info(log_entries):
+    """Extract hazard card info from recent log entries."""
+    for entry in reversed(log_entries):
+        msg = entry.get('message', '')
+        if 'hazard' in msg.lower():
+            return msg
+    return None
+
+
+def log_detailed_action(player, action, details, phase=None):
+    """Log an action with additional details on a second line."""
+    log_action(player, action, phase)
+    if details:
+        log_action(None, f"  └─ {details}", phase)
 
 
 def check_game_ended(game_id):
