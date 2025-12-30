@@ -12,7 +12,7 @@ const { reduceHeliumMarket } = require('./helpers/marketHelpers');
 const { WEATHER_BUREAU_COST } = require('../config/constants');
 const { processBuildShip } = require('./building');
 const { processBuyGas } = require('./gas');
-const { processRecruitCrew, processUpgradeOfficerIncome } = require('./crew');
+const { processRecruitCrew, processUpgradeOfficerIncome, processUpgradeEngineerIncome } = require('./crew');
 
 /**
  * Process card effects when used for agent placement (Section 8.1)
@@ -313,8 +313,16 @@ function executeLocationAction(state, playerId, locationId, _card, options = {})
       }
     }
 
-    case 'technical_institute':
-      return { success: true, message: 'May upgrade Engineer income' };
+    case 'technical_institute': {
+      // Per Section 5.1: Execute action immediately when placing agent
+      try {
+        processUpgradeEngineerIncome(state, playerId, { _internal: true });
+        const newEngineerIncome = playerState.engineerIncome || 1;
+        return { success: true, message: `Upgraded Engineer Income to ${newEngineerIncome}/round` };
+      } catch (error) {
+        return { success: false, error: error.message };
+      }
+    }
 
     case 'the_bank':
       return { success: true, message: 'May take a loan' };

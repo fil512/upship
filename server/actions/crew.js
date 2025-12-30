@@ -140,13 +140,34 @@ function processUpgradeOfficerIncome(state, playerId, data) {
 /**
  * Upgrade Engineer Income at Technical Institute
  *
+ * Per Section 5.1: Location actions execute IMMEDIATELY when placing an agent.
+ * Direct API calls are rejected - must go through PLACE_AGENT with levels param.
+ *
  * @param {Object} state - Game state (mutated)
  * @param {string} playerId - Acting player ID
- * @param {Object} data - Action data (unused)
+ * @param {Object} data - Action data { levels, _internal }
  * @returns {Object} { newState } or throws error
  */
-function processUpgradeEngineerIncome(state, playerId, _data) {
+function processUpgradeEngineerIncome(state, playerId, data) {
+  const { _internal = false } = data || {};
   const playerState = state.players[playerId];
+
+  // Validate that this is called through PLACE_AGENT (Section 5.1)
+  if (!_internal) {
+    if (state.phase !== 'worker_placement') {
+      throw new GameRuleError(
+        'UPGRADE_ENGINEER_INCOME not allowed: Actions execute immediately when placing an agent (Section 5.1). ' +
+        'Place an agent at Technical Institute during worker placement phase to upgrade engineer income.'
+      );
+    }
+    const placement = state.groundBoard?.placements?.technical_institute;
+    if (!placement || placement.playerId !== playerId) {
+      throw new GameRuleError(
+        'UPGRADE_ENGINEER_INCOME not allowed: You must place an agent at Technical Institute to upgrade engineer income. ' +
+        'Use PLACE_AGENT with locationId "technical_institute".'
+      );
+    }
+  }
 
   if (playerState.cash < TECHNICAL_INSTITUTE_COST) {
     throw new InsufficientFundsError(TECHNICAL_INSTITUTE_COST, playerState.cash);
