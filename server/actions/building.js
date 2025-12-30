@@ -10,15 +10,42 @@ const { generateId } = require('../utils/random');
 /**
  * Build a ship at the Construction Hall
  *
+ * Per Section 5.1: Actions execute IMMEDIATELY when placing an agent.
+ * This action should only be called:
+ * 1. Internally from processPlaceAgent when placing at construction_hall
+ * 2. NOT directly during reveal phase or without proper agent placement
+ *
  * @param {Object} state - Game state (mutated)
  * @param {string} playerId - Acting player ID
- * @param {Object} data - Action data { count }
+ * @param {Object} data - Action data { count, _internal }
  * @returns {Object} { newState } or throws error
  */
 function processBuildShip(state, playerId, data) {
-  const { count = 1 } = data;
+  const { count = 1, _internal = false } = data;
   const playerState = state.players[playerId];
   const HANGAR_CAPACITY = 3; // Per Section 4.4 and 6.3
+
+  // Per Section 5.1: Actions execute when placing agent, not separately
+  // Only allow direct calls during worker_placement when player has agent at construction_hall
+  // Internal calls (from processPlaceAgent) bypass this check
+  if (!_internal) {
+    // Validate phase - build only happens during worker_placement via agent placement
+    if (state.phase !== 'worker_placement') {
+      throw new GameRuleError(
+        'BUILD_SHIP not allowed: Actions execute immediately when placing an agent (Section 5.1). ' +
+        'Place an agent at Construction Hall during worker placement phase to build ships.'
+      );
+    }
+
+    // Validate the player has an agent at construction_hall
+    const placement = state.groundBoard?.placements?.construction_hall;
+    if (!placement || placement.playerId !== playerId) {
+      throw new GameRuleError(
+        'BUILD_SHIP not allowed: You must place an agent at Construction Hall to build ships. ' +
+        'Use PLACE_AGENT with locationId "construction_hall" and buildCount parameter.'
+      );
+    }
+  }
 
   // Per Section 6.3: "Limit: You may never have more than 3 ships in your Hangar at any time"
   // Count ships currently in Launch Hangar (status === 'hangar')

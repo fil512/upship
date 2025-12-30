@@ -791,17 +791,24 @@ const commands = {
   },
 
   async place(username, args) {
-    const [gameId, locationId, cardIndex] = args;
+    const [gameId, locationId, cardIndex, buildCount] = args;
     if (!gameId || !locationId || cardIndex === undefined) {
-      console.log('Usage: upship <user> place <gameId> <locationId> <cardIndex>');
+      console.log('Usage: upship <user> place <gameId> <locationId> <cardIndex> [buildCount]');
       console.log('');
       console.log('Locations:');
       console.log('  research-institute, design-bureau, construction-hall (wrench)');
       console.log('  launchpad, ministry, gas-depot, weather-bureau (propeller)');
       console.log('  academy, flight-school, technical-institute, the-bank, insurance-bureau (coin)');
+      console.log('');
+      console.log('For construction-hall, specify buildCount (1-3) to build ships immediately.');
       return;
     }
-    return commands.action(username, [gameId, 'PLACE_AGENT', `locationId=${locationId}`, `cardIndex=${cardIndex}`]);
+    const actionArgs = [gameId, 'PLACE_AGENT', `locationId=${locationId}`, `cardIndex=${cardIndex}`];
+    // Add buildCount for construction-hall
+    if (buildCount && locationId === 'construction-hall') {
+      actionArgs.push(`buildCount=${buildCount}`);
+    }
+    return commands.action(username, actionArgs);
   },
 
   async buygas(username, args) {

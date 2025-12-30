@@ -579,11 +579,19 @@ def handle_worker_placement_round(game_id):
         card, location = find_strategic_placement(current, hand, locations, game_id)
 
         if card and location:
-            result = run_cli(current, "action", game_id, "PLACE_AGENT",
-                           f"locationId={location['id']}", f"cardIndex={card['index']}")
+            # For construction_hall, include buildCount to build ship immediately (Section 5.1)
+            action_args = [current, "action", game_id, "PLACE_AGENT",
+                          f"locationId={location['id']}", f"cardIndex={card['index']}"]
+            if location['id'] == 'construction_hall':
+                action_args.append("buildCount=1")  # Build 1 ship when placing
+            result = run_cli(*action_args)
             if "✓" in result or "success" in result.lower():
-                print(f"  {current}: placed at {location['id']} using {card['name']}")
-                log_action(current, f"placed at {location['id']} using {card['name']}", "worker_placement")
+                if location['id'] == 'construction_hall':
+                    print(f"  {current}: placed at {location['id']} and built ship")
+                    log_action(current, f"placed at {location['id']} and built ship", "worker_placement")
+                else:
+                    print(f"  {current}: placed at {location['id']} using {card['name']}")
+                    log_action(current, f"placed at {location['id']} using {card['name']}", "worker_placement")
             else:
                 # Placement failed - pass instead
                 run_cli(current, "action", game_id, "PASS")
@@ -609,13 +617,8 @@ def take_reveal_actions(player, game_id):
     # Check placements to see what actions are available
     placements = get_player_placements(player, game_id)
 
-    # If at construction_hall - build a ship
-    if 'construction_hall' in placements and cash >= 5:
-        result = run_cli(player, "build", game_id, "1")
-        if "✓" in result:
-            print(f"  {player}: built ship")
-            log_action(player, "built ship", "reveal")
-            cash -= 5  # Update local cash tracking
+    # Note: construction_hall building now happens immediately when placing agent (Section 5.1)
+    # No need to build during reveal phase
 
     # If at gas_depot - buy gas
     if 'gas_depot' in placements and cash >= 2:

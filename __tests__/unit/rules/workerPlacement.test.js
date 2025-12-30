@@ -156,7 +156,8 @@ describe('Rules Compliance - Worker Placement', () => {
       const { processBuildShip } = require('../../../server/actions/building');
 
       // Base hull cost = 2, with discount = 0 (minimum)
-      const result = processBuildShip(state, '1', { count: 1 });
+      // Use _internal: true since builds now go through PLACE_AGENT
+      const result = processBuildShip(state, '1', { count: 1, _internal: true });
 
       // Hull cost 2 - 2 discount = 0 (minimum 1), so cost 1
       // Actually, let's check what the code does with discount

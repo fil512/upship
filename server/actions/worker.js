@@ -10,6 +10,7 @@ const { getCurrentPlacer, advanceToNextPlacer, allPlayersPassed } = require('./h
 const { transitionToRevealPhase } = require('./helpers/phaseTransition');
 const { reduceHeliumMarket } = require('./helpers/marketHelpers');
 const { WEATHER_BUREAU_COST } = require('../config/constants');
+const { processBuildShip } = require('./building');
 
 /**
  * Process card effects when used for agent placement (Section 8.1)
@@ -251,8 +252,15 @@ function processCardEffect(state, playerId, card, _locationId) {
 
 /**
  * Execute the action associated with a Ground Board location
+ * Per Section 5.1: Actions execute IMMEDIATELY when placing an agent
+ *
+ * @param {Object} state - Game state
+ * @param {string} playerId - Acting player ID
+ * @param {string} locationId - Location ID
+ * @param {Object} _card - Card used (unused for most locations)
+ * @param {Object} options - Additional options (e.g., buildCount for construction_hall)
  */
-function executeLocationAction(state, playerId, locationId, _card) {
+function executeLocationAction(state, playerId, locationId, _card, options = {}) {
   const playerState = state.players[playerId];
 
   switch (locationId) {
@@ -262,8 +270,18 @@ function executeLocationAction(state, playerId, locationId, _card) {
     case 'design_bureau':
       return { success: true, message: 'May install upgrade to blueprint' };
 
-    case 'construction_hall':
-      return { success: true, message: 'May build a ship' };
+    case 'construction_hall': {
+      // Per Section 5.1: Execute action immediately when placing agent
+      const buildCount = options.buildCount || 1;
+      try {
+        // Call processBuildShip with _internal flag to bypass validation
+        // (agent placement already happened, so we're authorized)
+        processBuildShip(state, playerId, { count: buildCount, _internal: true });
+        return { success: true, message: `Built ${buildCount} ship(s)` };
+      } catch (error) {
+        return { success: false, error: error.message };
+      }
+    }
 
     case 'launchpad':
       return { success: true, message: 'May launch a ship' };
@@ -388,7 +406,7 @@ function hasPlayableCards(state, playerId) {
  * @returns {Object} { newState } or throws error
  */
 function processPlaceAgent(state, playerId, data) {
-  const { locationId, cardIndex } = data;
+  const { locationId, cardIndex, buildCount } = data;
   const playerState = state.players[playerId];
 
   // Validate phase
@@ -471,8 +489,8 @@ function processPlaceAgent(state, playerId, data) {
     });
   }
 
-  // Execute the location action immediately
-  const actionResult = executeLocationAction(state, playerId, locationId, discardedCard);
+  // Execute the location action immediately (Section 5.1)
+  const actionResult = executeLocationAction(state, playerId, locationId, discardedCard, { buildCount });
   if (actionResult.error) {
     state.log.push({
       timestamp: new Date().toISOString(),
