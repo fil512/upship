@@ -770,24 +770,27 @@ def autoplay(num_turns=None, game_id=None):
 
         elif phase == "INCOME_CLEANUP":
             handle_income_cleanup_phase(game_id)
-            turn_count += 1
-            log_turn_start(turn_count)
-            stuck_detector.reset()
 
-            # Show progress after each turn
-            print(f"\n  Turn {turn_count} complete")
-            log_action(None, f"Turn {turn_count} complete", "income_cleanup")
-            output = strip_ansi(run_cli("playtest_germany", "state", game_id))
-            for line in output.split('\n'):
-                if any(x in line for x in ['Age', 'Turn', 'Progress']):
-                    print(f"  {line.strip()}")
+            # Only count as complete turn if phase actually transitioned
+            if get_phase(game_id) != "INCOME_CLEANUP":
+                turn_count += 1
+                log_turn_start(turn_count)
+                stuck_detector.reset()
+
+                # Show progress after each turn
+                print(f"\n  Turn {turn_count} complete")
+                log_action(None, f"Turn {turn_count} complete", "income_cleanup")
+                output = strip_ansi(run_cli("playtest_germany", "state", game_id))
+                for line in output.split('\n'):
+                    if any(x in line for x in ['Age', 'Turn', 'Progress']):
+                        print(f"  {line.strip()}")
+                        break
+
+                if num_turns and turn_count >= num_turns:
+                    print(f"\n{'='*60}")
+                    print(f"Completed {turn_count} turns (target reached)")
+                    print(f"{'='*60}")
                     break
-
-            if num_turns and turn_count >= num_turns:
-                print(f"\n{'='*60}")
-                print(f"Completed {turn_count} turns (target reached)")
-                print(f"{'='*60}")
-                break
 
         else:
             # Unknown phase - try to advance
