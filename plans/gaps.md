@@ -3,8 +3,8 @@
 Last updated: 2025-12-31
 
 ## Summary
-- Total gaps found: 23
-- Resolved: 22
+- Total gaps found: 29
+- Resolved: 28
 - Unresolved: 1 (GAP-051 needs designer decision)
 
 ---
@@ -45,10 +45,21 @@ Level 4 areas analyzed in this session.
 - [x] COMBAT_MISSIONS_APPENDIX (Appendix G) - VERIFIED CORRECT
 
 ### Level 5 - Deep Dive Analysis
-- [ ] WORKER_PLACEMENT_ACTIONS
-- [ ] CARD_AGENT_EFFECTS
-- [ ] UPGRADE_SPECIAL_ABILITIES
-- [ ] FACTION_SPECIAL_ABILITIES
+- [x] WORKER_PLACEMENT_ACTIONS - VERIFIED CORRECT (all 12 Ground Board locations implemented)
+- [x] CARD_AGENT_EFFECTS - VERIFIED CORRECT (all 30 market card effects implemented)
+- [x] UPGRADE_SPECIAL_ABILITIES - ALL 6 GAPS RESOLVED (GAP-075 to GAP-080)
+  - GAP-075: Rapid Descent System weather auto-pass - RESOLVED
+  - GAP-076: Reclamation System gas cost reduction - RESOLVED
+  - GAP-077: Exhaust Condensers helium cost reduction - RESOLVED
+  - GAP-078: Imperial Mast British territories - DEFERRED (needs Age II Home Base feature first)
+  - GAP-079: Sparrowhawk Hangar upgrade check - RESOLVED
+  - GAP-080: Pressurized Lounge helium requirement - RESOLVED
+- [x] FACTION_SPECIAL_ABILITIES - VERIFIED CORRECT
+  - Britain Red Tape: Implemented in `applyBritainRedTape()` in ageTransition.js
+  - USA Late War Entry: Implemented in `validateUsaMissionRestriction()` in combatMission.js
+  - Germany Hydrogen Lock: Implemented via `bannedTechnologies` in FACTION_CONFIG
+  - Italy Compact Design: Implemented in `getBlueprintSlotsForFaction()` in ageTransition.js
+  - USA Helium Monopoly: Implemented via `heliumMonopoly` flag in FACTION_CONFIG
 
 ### Level 6 - Final Comprehensive Sweep
 - [ ] INCOME_TRACK_RULES
@@ -95,6 +106,97 @@ const PROGRESS_THRESHOLDS = {
 ---
 
 ## Resolved Gaps
+
+### GAP-075: Rapid Descent System Auto-Pass Weather Hazards
+**Area:** UPGRADE_SPECIAL_ABILITIES
+**Severity:** Medium
+**Status:** RESOLVED (2025-12-31)
+**Spec Reference:** Appendix D - Gas System Upgrades
+
+**Resolution:** Added check in `processHazardCheck()` for `rapid_descent_system` upgrade in componentSlots. Ships with this upgrade now auto-pass Weather-type hazards.
+
+**Files changed:**
+- `server/actions/hazard.js` - Added weather auto-pass check for rapid_descent_system
+
+**Tests added:**
+- `__tests__/unit/rules/hazards.test.js` - GAP-075 tests for weather auto-pass
+
+---
+
+### GAP-076: Reclamation System Gas Cost Reduction
+**Area:** UPGRADE_SPECIAL_ABILITIES
+**Severity:** Medium
+**Status:** RESOLVED (2025-12-31)
+**Spec Reference:** Appendix D - Gas System Upgrades
+
+**Resolution:** Added -£2 gas cost reduction in `processBuyGas()` when `reclamation_system` upgrade is installed.
+
+**Files changed:**
+- `server/actions/gas.js` - Added gas_cost_reduction discount
+
+**Tests added:**
+- `__tests__/unit/rules/gasDepot.test.js` - GAP-076 tests for gas cost reduction
+
+---
+
+### GAP-077: Exhaust Condensers Helium Cost Reduction
+**Area:** UPGRADE_SPECIAL_ABILITIES
+**Severity:** Medium
+**Status:** RESOLVED (2025-12-31)
+**Spec Reference:** Appendix D - Gas System Upgrades
+
+**Resolution:** Added -£3 helium cost reduction in `processBuyGas()` when `exhaust_condensers` upgrade is installed and purchasing helium.
+
+**Files changed:**
+- `server/actions/gas.js` - Added helium_cost_reduction discount
+
+**Tests added:**
+- `__tests__/unit/rules/gasDepot.test.js` - GAP-077 tests for helium cost reduction
+
+---
+
+### GAP-078: Imperial Mast British Territories Home Base
+**Area:** UPGRADE_SPECIAL_ABILITIES
+**Severity:** Medium
+**Status:** DEFERRED (2025-12-31)
+**Spec Reference:** Appendix D - Payload Upgrades, Section 13.2
+
+**Resolution:** This feature requires the Age II Home Base launch restriction to be implemented first. The Imperial Mast upgrade allows British Territories to count as Home Base for Age II first-ship requirements. Since Age II Home Base restrictions are not yet implemented, this feature is deferred until the larger Home Base feature is implemented.
+
+---
+
+### GAP-079: Sparrowhawk Hangar Checks Upgrade Not Technology
+**Area:** UPGRADE_SPECIAL_ABILITIES
+**Severity:** Low
+**Status:** RESOLVED (2025-12-31)
+**Spec Reference:** Appendix D - Payload Upgrades, Section 13.3
+
+**Resolution:** Changed `hasTrapezeSytem()` to `hasSparrowhawkHangar()` and updated it to check for the `sparrowhawk_hangar` UPGRADE in componentSlots instead of checking for the `trapeze_system` technology. This ensures players must actually install the upgrade (not just own the tech) to bypass route requirements.
+
+**Files changed:**
+- `server/actions/launch.js` - Changed function to check upgrade instead of technology
+
+**Tests added:**
+- `__tests__/unit/rules/launching.test.js` - GAP-079 tests for upgrade check
+- Updated GAP-048 tests to install upgrade before testing bypass
+
+---
+
+### GAP-080: Pressurized Lounge Requires Helium Gas Cell
+**Area:** UPGRADE_SPECIAL_ABILITIES
+**Severity:** Medium
+**Status:** RESOLVED (2025-12-31)
+**Spec Reference:** Appendix D - Payload Upgrades
+
+**Resolution:** Added prerequisite check in `processInstallUpgrade()` for upgrades with `special: 'requires_helium'`. The Pressurized Lounge upgrade now requires Helium Gas Cell to be installed first.
+
+**Files changed:**
+- `server/actions/blueprint.js` - Added requires_helium prerequisite validation
+
+**Tests added:**
+- `__tests__/unit/rules/upgrades.test.js` - GAP-080 tests for helium requirement
+
+---
 
 ### GAP-068: Flexible Frame Weight Mismatch
 **Area:** UPGRADE_APPENDIX
@@ -520,4 +622,4 @@ New tests added in:
 - `__tests__/unit/rules/marketDeck.test.js` - Tests for GAP-061
 - `__tests__/unit/rules/upgrades.test.js` - Tests for GAP-068, GAP-069, GAP-070, GAP-071, GAP-072, GAP-073
 
-All 709 tests pass.
+All 723 tests pass.

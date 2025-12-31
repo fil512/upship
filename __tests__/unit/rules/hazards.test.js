@@ -1099,4 +1099,132 @@ describe('Rules Compliance - Hazards', () => {
       expect(result.newState.players['1'].ships[0].status).toBe('on_route');
     });
   });
+
+  describe('GAP-075: Rapid Descent System auto-pass Weather hazards', () => {
+    it('should auto-pass Weather-type hazards when rapid_descent_system is installed', () => {
+      const state = createTestGameState();
+      state.age = 3;
+
+      // Ship with low reliability (would fail Difficulty 4 weather check)
+      state.players['1'].ships = [{
+        id: 'ship1',
+        status: 'awaiting_hazard',
+        pendingRouteId: 'route_1',
+        gasType: 'hydrogen',
+        stats: { speed: 1, reliability: 1, ceiling: 0, range: 3 }
+      }];
+      state.players['1'].engineers = 0; // No engineers to boost
+
+      // Rapid Descent System installed in componentSlots
+      state.players['1'].blueprint.componentSlots = ['rapid_descent_system'];
+
+      // Weather hazard (Difficulty 4) - would normally fail
+      state.players['1'].hazardDeck = [{
+        id: 'squall_line_0',
+        type: 'major_reliability',
+        category: 'major',
+        name: 'Squall Line',
+        challengeType: 'reliability',
+        hazardType: 'weather',
+        difficulty: 4
+      }];
+
+      state.map.routes = [{
+        id: 'route_1',
+        from: 'A',
+        to: 'B',
+        income: 2,
+        claimed: null
+      }];
+
+      const result = processHazardCheck(state, '1', { shipId: 'ship1' });
+
+      // Should AUTO-PASS due to Rapid Descent System
+      expect(result.newState.players['1'].ships[0].status).toBe('on_route');
+    });
+
+    it('should NOT auto-pass non-weather hazards with rapid_descent_system', () => {
+      const state = createTestGameState();
+      state.age = 3;
+
+      // Ship with low reliability
+      state.players['1'].ships = [{
+        id: 'ship1',
+        status: 'awaiting_hazard',
+        pendingRouteId: 'route_1',
+        gasType: 'hydrogen',
+        stats: { speed: 1, reliability: 1, ceiling: 0, range: 3 }
+      }];
+      state.players['1'].engineers = 0;
+
+      // Rapid Descent System installed
+      state.players['1'].blueprint.componentSlots = ['rapid_descent_system'];
+
+      // MECHANICAL hazard (not weather) - should NOT auto-pass
+      state.players['1'].hazardDeck = [{
+        id: 'structural_damage_0',
+        type: 'major_reliability',
+        category: 'major',
+        name: 'Structural Damage',
+        challengeType: 'reliability',
+        hazardType: 'mechanical',
+        difficulty: 4
+      }];
+
+      state.map.routes = [{
+        id: 'route_1',
+        from: 'A',
+        to: 'B',
+        income: 2,
+        claimed: null
+      }];
+
+      const result = processHazardCheck(state, '1', { shipId: 'ship1' });
+
+      // Should FAIL - Rapid Descent System only works on weather hazards
+      expect(result.newState.players['1'].ships[0].status).toBe('hangar');
+    });
+
+    it('should NOT auto-pass fire hazards with rapid_descent_system', () => {
+      const state = createTestGameState();
+      state.age = 3;
+      state.players['1'].engineers = 0;
+      state.players['1'].insurance = 0;
+
+      // Hydrogen ship
+      state.players['1'].ships = [{
+        id: 'ship1',
+        status: 'awaiting_hazard',
+        pendingRouteId: 'route_1',
+        gasType: 'hydrogen',
+        stats: { speed: 1, reliability: 1, ceiling: 0, range: 3 }
+      }];
+
+      // Rapid Descent System installed
+      state.players['1'].blueprint.componentSlots = ['rapid_descent_system'];
+
+      // Fire hazard - should NOT auto-pass
+      state.players['1'].hazardDeck = [{
+        id: 'engine_fire_0',
+        type: 'engine_fire',
+        category: 'fire',
+        name: 'Engine Fire',
+        hydrogenOnly: true,
+        engineerCost: 1
+      }];
+
+      state.map.routes = [{
+        id: 'route_1',
+        from: 'A',
+        to: 'B',
+        income: 2,
+        claimed: null
+      }];
+
+      const result = processHazardCheck(state, '1', { shipId: 'ship1' });
+
+      // Should CRASH - Rapid Descent System doesn't help with fire hazards
+      expect(result.newState.players['1'].ships[0].status).toBe('destroyed');
+    });
+  });
 });

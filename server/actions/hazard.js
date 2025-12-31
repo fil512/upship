@@ -180,6 +180,16 @@ function processHazardCheck(state, playerId, data) {
       'Static Discharge - Auto Pass (Conductive Covering grounds electrical charge)');
   }
 
+  // GAP-075: Check for Rapid Descent System - auto-pass Weather-type hazards per Appendix D
+  const hasRapidDescentSystem = playerBlueprint?.componentSlots?.some(
+    comp => comp === 'rapid_descent_system' || comp?.id === 'rapid_descent_system'
+  );
+
+  if (hazard.hazardType === 'weather' && hasRapidDescentSystem) {
+    return resolveHazardSuccess(state, playerId, shipIndex, route, hazard,
+      'Weather Hazard - Auto Pass (Rapid Descent System enables emergency venting)');
+  }
+
   // GAP-046: Check for Fire-Resistant Fabric - once per Age, auto-pass fire hazard per Appendix D
   const hasFireResistantFabric = playerBlueprint?.fabricSlots?.some(
     fabric => fabric === 'fire_resistant_fabric' || fabric?.id === 'fire_resistant_fabric'

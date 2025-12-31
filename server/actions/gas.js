@@ -61,7 +61,23 @@ function processBuyGas(state, playerId, data) {
     }
   }
 
-  const price = state.gasMarket[gasType] * amount;
+  let price = state.gasMarket[gasType] * amount;
+
+  // GAP-076: Reclamation System provides -£2 Lifting Gas cost per Appendix D
+  const hasReclamationSystem = playerState.blueprint?.componentSlots?.some(
+    comp => comp === 'reclamation_system' || comp?.id === 'reclamation_system'
+  );
+  if (hasReclamationSystem) {
+    price = Math.max(0, price - 2);
+  }
+
+  // GAP-077: Exhaust Condensers provides -£3 Helium cost per Appendix D (USA specialty)
+  const hasExhaustCondensers = playerState.blueprint?.componentSlots?.some(
+    comp => comp === 'exhaust_condensers' || comp?.id === 'exhaust_condensers'
+  );
+  if (hasExhaustCondensers && gasType === 'helium') {
+    price = Math.max(0, price - 3);
+  }
 
   if (playerState.cash < price) {
     throw new InsufficientFundsError(price, playerState.cash);

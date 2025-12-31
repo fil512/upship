@@ -298,12 +298,14 @@ function calculateRequiredGasCubes(blueprint) {
  * @returns {Object} { newState } or throws error
  */
 /**
- * Check if player has Trapeze System technology (USA faction ability)
+ * Check if player has Sparrowhawk Hangar upgrade installed (USA faction ability)
+ * GAP-079: Per Appendix D, the UPGRADE sparrowhawk_hangar provides the ability
+ * to bypass one route requirement per launch - not just owning the technology.
  * Per Section 13.3: "Trapeze Fighter System (ignore one route requirement per launch)"
  */
-function hasTrapezeSytem(playerState) {
-  return playerState.technologies?.some(t =>
-    (typeof t === 'string' ? t : t.id) === 'trapeze_system'
+function hasSparrowhawkHangar(playerState) {
+  return playerState.blueprint?.componentSlots?.some(
+    comp => comp === 'sparrowhawk_hangar' || comp?.id === 'sparrowhawk_hangar'
   );
 }
 
@@ -352,14 +354,14 @@ function processLaunchShip(state, playerId, data) {
   // Calculate ship stats to validate against route requirements
   const stats = calculateBlueprintStats(playerState.blueprint, state.age);
 
-  // GAP-048: Check if player has Trapeze System for bypassing one requirement
-  const canBypassRequirement = hasTrapezeSytem(playerState);
+  // GAP-048/GAP-079: Check if player has Sparrowhawk Hangar UPGRADE installed for bypassing one requirement
+  const canBypassRequirement = hasSparrowhawkHangar(playerState);
   const validBypassTypes = ['range', 'speed', 'ceiling', 'luxury'];
 
   // Validate bypassRequirement parameter if provided
   if (bypassRequirement) {
     if (!canBypassRequirement) {
-      throw new GameRuleError('Cannot bypass route requirement without Trapeze Fighter System technology');
+      throw new GameRuleError('Cannot bypass route requirement without Sparrowhawk Hangar upgrade installed');
     }
     if (!validBypassTypes.includes(bypassRequirement)) {
       throw new GameRuleError(`Invalid bypass requirement type: ${bypassRequirement}. Must be one of: ${validBypassTypes.join(', ')}`);

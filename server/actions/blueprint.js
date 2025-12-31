@@ -128,6 +128,17 @@ function processInstallUpgrade(state, playerId, data) {
     throw new GameRuleError(`Requires ${tech ? tech.name : upgrade.requiredTech} technology`);
   }
 
+  // GAP-080: Validate special prerequisites (e.g., requires_helium for Pressurized Lounge)
+  if (upgrade.special === 'requires_helium') {
+    // Check if helium_gas_cell is installed in any component slot
+    const hasHeliumGasCell = playerState.blueprint.componentSlots?.some(
+      comp => comp === 'helium_gas_cell' || comp?.id === 'helium_gas_cell'
+    );
+    if (!hasHeliumGasCell) {
+      throw new GameRuleError(`${upgrade.name} requires a Helium Gas Cell to be installed first`);
+    }
+  }
+
   // GAP-032: Hull Upgrade Rule - charge hull cost difference for ships in hangar
   // Only applies to Frame and Fabric slots per Section 6.2
   const isStructuralSlot = slotKey === 'frameSlots' || slotKey === 'fabricSlots';

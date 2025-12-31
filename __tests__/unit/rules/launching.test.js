@@ -163,13 +163,16 @@ describe('Rules Compliance - Launching and Repair', () => {
   });
 
   describe('GAP-048: Trapeze System (USA) route requirement bypass', () => {
-    it('should allow USA with Trapeze System to bypass one route stat requirement', () => {
+    it('should allow USA with Sparrowhawk Hangar upgrade to bypass one route stat requirement', () => {
       const state = createTestGameState();
       // Use player 3 who is USA
       const playerState = state.players['3'];
 
-      // USA has trapeze_system by default from faction config
+      // USA has trapeze_system technology by default from faction config
       expect(playerState.technologies).toContain('trapeze_system');
+
+      // GAP-079: Install sparrowhawk_hangar UPGRADE in blueprint (technology alone is not enough)
+      playerState.blueprint.componentSlots = ['sparrowhawk_hangar'];
 
       // Setup: ship with insufficient Speed for route
       playerState.gasCubes = { hydrogen: 0, helium: 3 };
@@ -216,13 +219,15 @@ describe('Rules Compliance - Launching and Repair', () => {
       expect(hazardResult.newState.players['3'].ships[0].routeId).toBe('route_speed');
     });
 
-    it('should NOT allow non-USA player to bypass route requirements', () => {
+    it('should NOT allow non-USA player to bypass route requirements (no upgrade installed)', () => {
       const state = createTestGameState();
-      // Use player 1 who is Germany (no trapeze_system)
+      // Use player 1 who is Germany (no trapeze_system technology and no sparrowhawk_hangar upgrade)
       const playerState = state.players['1'];
 
-      // Germany doesn't have trapeze_system
+      // Germany doesn't have trapeze_system technology
       expect(playerState.technologies).not.toContain('trapeze_system');
+      // And no sparrowhawk_hangar upgrade installed
+      expect(playerState.blueprint.componentSlots).not.toContain('sparrowhawk_hangar');
 
       playerState.gasCubes = { hydrogen: 3, helium: 0 };
       playerState.officers = 1;
@@ -250,12 +255,15 @@ describe('Rules Compliance - Launching and Repair', () => {
           bypassRequirement: 'speed',
           _internal: true
         });
-      }).toThrow(/trapeze|speed|requirement/i);
+      }).toThrow(/sparrowhawk|hangar|requirement/i);
     });
 
-    it('should only allow bypassing ONE requirement per launch', () => {
+    it('should only allow bypassing ONE requirement per launch (with upgrade installed)', () => {
       const state = createTestGameState();
       const playerState = state.players['3']; // USA
+
+      // GAP-079: Install sparrowhawk_hangar UPGRADE in blueprint
+      playerState.blueprint.componentSlots = ['sparrowhawk_hangar'];
 
       playerState.gasCubes = { hydrogen: 0, helium: 3 };
       playerState.officers = 1;
@@ -285,6 +293,98 @@ describe('Rules Compliance - Launching and Repair', () => {
           _internal: true
         });
       }).toThrow(/ceiling|requirement/i);
+    });
+  });
+
+  describe('GAP-079: Sparrowhawk Hangar requires upgrade installed, not just technology', () => {
+    it('should NOT allow bypass with only trapeze_system technology (upgrade not installed)', () => {
+      const state = createTestGameState();
+      const playerState = state.players['3']; // USA - has trapeze_system technology
+
+      // USA has the technology
+      expect(playerState.technologies).toContain('trapeze_system');
+
+      // But NO sparrowhawk_hangar installed in componentSlots
+      playerState.blueprint = {
+        frameSlots: ['duralumin_frame'],
+        fabricSlots: ['premium_envelope'],
+        driveSlots: [null],
+        componentSlots: [null], // No sparrowhawk_hangar
+        gasSockets: ['hydrogen', 'hydrogen']
+      };
+
+      playerState.gasCubes = { hydrogen: 0, helium: 3 };
+      playerState.officers = 1;
+      playerState.ships = [{ id: 'ship1', status: 'hangar' }];
+
+      // Route requires Speed 5, but ship only has Speed 2
+      state.map.routes = [{
+        id: 'route_speed',
+        from: 'New York',
+        to: 'London',
+        distance: 1,
+        speed: 5,
+        income: 3,
+        claimed: null
+      }];
+
+      const { processLaunchShip } = require('../../../server/actions/launch');
+
+      // Should FAIL - having technology is not enough, upgrade must be installed
+      expect(() => {
+        processLaunchShip(state, '3', {
+          shipId: 'ship1',
+          routeId: 'route_speed',
+          gasType: 'helium',
+          bypassRequirement: 'speed',
+          _internal: true
+        });
+      }).toThrow(/sparrowhawk|trapeze|hangar|requirement/i);
+    });
+
+    it('should ALLOW bypass when sparrowhawk_hangar upgrade IS installed', () => {
+      const state = createTestGameState();
+      const playerState = state.players['3']; // USA - has trapeze_system technology
+
+      // USA has the technology
+      expect(playerState.technologies).toContain('trapeze_system');
+
+      // AND sparrowhawk_hangar IS installed
+      playerState.blueprint = {
+        frameSlots: ['duralumin_frame'],
+        fabricSlots: ['premium_envelope'],
+        driveSlots: [null],
+        componentSlots: ['sparrowhawk_hangar'], // Upgrade installed!
+        gasSockets: ['hydrogen', 'hydrogen']
+      };
+
+      playerState.gasCubes = { hydrogen: 0, helium: 3 };
+      playerState.officers = 1;
+      playerState.ships = [{ id: 'ship1', status: 'hangar' }];
+
+      // Route requires Speed 5, but ship only has Speed 2
+      state.map.routes = [{
+        id: 'route_speed',
+        from: 'New York',
+        to: 'London',
+        distance: 1,
+        speed: 5,
+        income: 3,
+        claimed: null
+      }];
+
+      const { processLaunchShip } = require('../../../server/actions/launch');
+
+      // Should SUCCEED - upgrade is installed
+      const result = processLaunchShip(state, '3', {
+        shipId: 'ship1',
+        routeId: 'route_speed',
+        gasType: 'helium',
+        bypassRequirement: 'speed',
+        _internal: true
+      });
+
+      expect(result.newState.players['3'].ships[0].status).toBe('awaiting_hazard');
     });
   });
 
@@ -376,21 +476,21 @@ describe('Rules Compliance - Launching and Repair', () => {
       expect(result.newState.players['1'].ships[0].status).toBe('awaiting_hazard');
     });
 
-    it('should allow USA with Trapeze System to bypass Luxury requirement', () => {
+    it('should allow USA with Sparrowhawk Hangar upgrade to bypass Luxury requirement', () => {
       const state = createTestGameState();
       state.age = 3;
-      const playerState = state.players['3']; // USA with trapeze_system
+      const playerState = state.players['3']; // USA with trapeze_system technology
 
       playerState.gasCubes = { hydrogen: 0, helium: 3 };
       playerState.officers = 3;
       playerState.ships = [{ id: 'ship1', status: 'hangar' }];
 
-      // Blueprint with no luxury (Luxury stat = 0)
+      // GAP-079: Blueprint with sparrowhawk_hangar upgrade installed (no luxury upgrades)
       playerState.blueprint = {
         frameSlots: ['duralumin_frame'],
         fabricSlots: ['premium_envelope'],
         driveSlots: [null],
-        componentSlots: [null],
+        componentSlots: ['sparrowhawk_hangar'],  // Upgrade installed
         gasSockets: ['helium', 'helium']
       };
 

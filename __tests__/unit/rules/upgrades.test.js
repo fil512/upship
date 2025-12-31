@@ -240,4 +240,62 @@ describe('Rules Compliance - Upgrades', () => {
       expect(upgrade.requiredTech).toBe('smoking_room');
     });
   });
+
+  describe('GAP-080: Pressurized Lounge requires Helium Gas Cell installed', () => {
+    const { createTestGameState } = require('../../fixtures/testData');
+    const { processInstallUpgrade } = require('../../../server/actions/blueprint');
+
+    it('should have requires_helium special on pressurized_lounge', () => {
+      expect(UPGRADES.pressurized_lounge.special).toBe('requires_helium');
+    });
+
+    it('should reject pressurized_lounge installation when no helium_gas_cell is installed', () => {
+      const state = createTestGameState();
+      state.age = 3; // Pressurized Lounge is Age 3
+
+      // Player has smoking_room tech but NO helium_gas_cell installed
+      state.players['1'].technologies = ['smoking_room'];
+      state.players['1'].blueprint = {
+        frameSlots: ['duralumin_frame'],
+        fabricSlots: ['premium_envelope'],
+        driveSlots: ['diesel_engine'],
+        componentSlots: [null, null], // Empty slots, no helium_gas_cell
+        gasSockets: ['hydrogen', 'hydrogen']
+      };
+
+      expect(() => {
+        processInstallUpgrade(state, '1', {
+          slotType: 'component',
+          slotIndex: 0,
+          upgradeId: 'pressurized_lounge',
+          _internal: true
+        });
+      }).toThrow(/helium|gas cell|requires/i);
+    });
+
+    it('should allow pressurized_lounge installation when helium_gas_cell IS installed', () => {
+      const state = createTestGameState();
+      state.age = 3; // Pressurized Lounge is Age 3
+
+      // Player has smoking_room tech AND helium_gas_cell installed
+      state.players['1'].technologies = ['smoking_room'];
+      state.players['1'].blueprint = {
+        frameSlots: ['duralumin_frame'],
+        fabricSlots: ['premium_envelope'],
+        driveSlots: ['diesel_engine'],
+        componentSlots: ['helium_gas_cell', null], // Has helium_gas_cell in first slot
+        gasSockets: ['helium', 'helium']
+      };
+
+      // Should succeed
+      const result = processInstallUpgrade(state, '1', {
+        slotType: 'component',
+        slotIndex: 1, // Install in second slot
+        upgradeId: 'pressurized_lounge',
+        _internal: true
+      });
+
+      expect(result.newState.players['1'].blueprint.componentSlots[1]).toBe('pressurized_lounge');
+    });
+  });
 });
