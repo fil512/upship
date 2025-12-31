@@ -274,7 +274,7 @@ function hasTrapezeSytem(playerState) {
 }
 
 function processLaunchShip(state, playerId, data) {
-  const { shipId, routeId, gasType = 'hydrogen', retainGas = false, bypassRequirement = null, _internal = false } = data;
+  const { shipId, routeId, missionId, gasType = 'hydrogen', retainGas = false, bypassRequirement = null, _internal = false } = data;
   const playerState = state.players[playerId];
   const BLAUGAS_COST = 2; // £2 to retain gas cubes per Section 13.1
 
@@ -289,7 +289,20 @@ function processLaunchShip(state, playerId, data) {
     }
   }
 
-  // Step 1: Choose a target route
+  // Age II: Combat Missions replace routes per Section 10.5
+  if (state.age === 2) {
+    if (routeId && !missionId) {
+      throw new GameRuleError('Age II uses Combat Missions instead of routes. Provide missionId, not routeId.');
+    }
+    if (!missionId) {
+      throw new GameRuleError('Age II requires a missionId from the Mission Row. Use LAUNCH_SHIP with missionId parameter.');
+    }
+    // Delegate to combat mission launch logic
+    const { processLaunchCombatMission } = require('./combatMission');
+    return processLaunchCombatMission(state, playerId, { shipId, missionId, gasType, _internal });
+  }
+
+  // Step 1: Choose a target route (Age I or Age III)
   if (!routeId) {
     throw new GameRuleError('Must specify a route to launch to (routeId required)');
   }

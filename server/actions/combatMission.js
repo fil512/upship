@@ -133,7 +133,7 @@ function calculateEquipmentBonus(playerState, mission) {
  * @param {Object} state - Game state (mutated)
  * @param {string} playerId - Acting player ID
  * @param {Object} data - Action data { shipId, missionId, gasType }
- * @returns {Object} { newState, requiresHazardCheck: true }
+ * @returns {Object} { newState }
  */
 function processLaunchCombatMission(state, playerId, data) {
   const { shipId, missionId, gasType = 'hydrogen' } = data;
@@ -142,6 +142,13 @@ function processLaunchCombatMission(state, playerId, data) {
   // Verify we're in Age II
   if (state.age !== 2) {
     throw new GameRuleError('Combat Missions are only available in Age II');
+  }
+
+  // Check USA faction restriction per Section 13.3
+  // "Flaw: Late to enter war. Cannot acquire a combat mission until all other players have one."
+  const usaRestriction = validateUsaMissionRestriction(state, playerId);
+  if (!usaRestriction.allowed) {
+    throw new GameRuleError(usaRestriction.reason);
   }
 
   // Find the mission in the Mission Row
@@ -216,12 +223,116 @@ function processLaunchCombatMission(state, playerId, data) {
   state.log = state.log || [];
   state.log.push({
     timestamp: new Date().toISOString(),
-    message: `Launched ship for mission: ${mission.name} - HAZARD CHECK REQUIRED`,
+    message: `Launched ship for mission: ${mission.name} (Armor ${armor})`,
     playerId,
     type: 'action'
   });
 
-  return { newState: state, requiresHazardCheck: true };
+  // Draw hazard card (same as route launches)
+  const { shuffleArray } = require('../utils/random');
+
+  if (!playerState.hazardDeck || playerState.hazardDeck.length === 0) {
+    const discardPile = playerState.hazardDiscardPile || [];
+    if (discardPile.length === 0) {
+      throw new GameRuleError('No hazard cards remaining (deck and discard pile both empty)');
+    }
+    playerState.hazardDeck = shuffleArray([...discardPile]);
+    playerState.hazardDiscardPile = [];
+    state.log.push({
+      timestamp: new Date().toISOString(),
+      message: 'Hazard deck exhausted - shuffled discard pile to create new deck',
+      playerId,
+      type: 'deck'
+    });
+  }
+
+  const hazard = playerState.hazardDeck.shift();
+  playerState.hazardDiscardPile = playerState.hazardDiscardPile || [];
+  playerState.hazardDiscardPile.push(hazard);
+
+  // Determine relevant stat for this hazard
+  const challengeType = hazard.challengeType || 'reliability';
+  const relevantStat = stats[challengeType] || 0;
+  const difficulty = hazard.difficulty || 0;
+
+  // Calculate engineers needed to pass (for non-fire, non-auto-pass hazards)
+  let engineersNeeded = 0;
+  if (!hazard.autoPass && hazard.category !== 'fire') {
+    engineersNeeded = Math.max(0, difficulty - relevantStat);
+  }
+
+  // Check for auto-pass conditions
+  const isFireHazard = hazard.category === 'fire' || hazard.hydrogenOnly;
+  const autoPassHeliumFire = isFireHazard && gasType === 'helium';
+  const autoPassClearWeather = hazard.autoPass || hazard.type === 'clear_weather';
+
+  // Check for Conductive Covering (auto-pass static discharge)
+  const hasCondictiveCovering = playerState.blueprint?.fabricSlots?.some(
+    fabric => fabric === 'conductive_covering' || fabric?.id === 'conductive_covering'
+  );
+  const autoPassCondictiveCovering = hazard.type === 'static_discharge' && hasCondictiveCovering;
+
+  // Check for Fire-Resistant Fabric (once per age auto-pass fire)
+  const hasFireResistantFabric = playerState.blueprint?.fabricSlots?.some(
+    fabric => fabric === 'fire_resistant_fabric' || fabric?.id === 'fire_resistant_fabric'
+  );
+  const fireProtectionAvailable = isFireHazard && hasFireResistantFabric && !playerState.fireProtectionUsedThisAge;
+
+  // Helper for auto-pass reason
+  const getAutoPassReason = (clearWeather, heliumFire, conductiveCovering, fireResistant) => {
+    if (clearWeather) return 'Clear Weather';
+    if (heliumFire) return 'Fire Immunity (Helium)';
+    if (conductiveCovering) return 'Conductive Covering';
+    if (fireResistant) return 'Fire-Resistant Fabric (once per Age)';
+    return null;
+  };
+
+  // Store pending hazard on ship for client to respond
+  ships[shipIndex].pendingHazard = {
+    // Core hazard info
+    type: hazard.type,
+    name: hazard.name,
+    category: hazard.category,
+    challengeType,
+    difficulty,
+    flak: hazard.flak || 0,
+
+    // Fire hazard specific
+    engineerCost: hazard.engineerCost,
+    noSave: hazard.noSave,
+    hydrogenOnly: hazard.hydrogenOnly,
+
+    // Special effects
+    special: hazard.special,
+    gasLossOnFailure: hazard.gasLossOnFailure,
+
+    // Ship stats for comparison
+    relevantStat,
+    statName: challengeType,
+    engineersNeeded,
+
+    // Auto-pass flags
+    autoPass: autoPassClearWeather,
+    autoPassReason: getAutoPassReason(autoPassClearWeather, autoPassHeliumFire, autoPassCondictiveCovering, fireProtectionAvailable),
+    heliumFireImmunity: autoPassHeliumFire,
+    conductiveCoveringImmunity: autoPassCondictiveCovering,
+    fireResistantFabricAvailable: fireProtectionAvailable
+  };
+
+  // Build log message
+  const autoPassReason = ships[shipIndex].pendingHazard.autoPassReason;
+  const hazardDetails = autoPassReason
+    ? ' (' + autoPassReason + ')'
+    : ' (' + challengeType + ' ' + difficulty + ' vs ' + relevantStat + ', Flak ' + hazard.flak + ')';
+
+  state.log.push({
+    timestamp: new Date().toISOString(),
+    message: 'Hazard drawn: ' + hazard.name + hazardDetails,
+    playerId,
+    type: 'hazard'
+  });
+
+  return { newState: state };
 }
 
 /**

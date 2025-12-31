@@ -7,6 +7,7 @@ const { shuffleArray } = require('../../utils/random');
 const { calculateTurnOrder } = require('./turnOrder');
 const { refreshRnDBoard, refreshMarketRow } = require('./marketHelpers');
 const { HAND_SIZE, INITIAL_AGENTS } = require('../../config/constants');
+const { setupMissionRow } = require('../../data/combatMissions');
 
 /**
  * Transition from worker placement to reveal phase
@@ -208,13 +209,25 @@ function checkAgeTransitionByProgressTrack(state) {
 
   if (state.age === 1 && state.progressTrack >= thresholds.age2) {
     state.age = 2;
+
+    // Per Section 10.5 and Appendix G: Set up Combat Mission Row for Age II
+    // "At the start of Age II, shuffle the 20-card Combat Mission deck and deal 6 missions face-up"
+    const { missionRow, missionDeck } = setupMissionRow();
+    state.missionRow = missionRow;
+    state.missionDeck = missionDeck;
+
     state.log.push({
       timestamp: new Date().toISOString(),
-      message: `Age II begins! Progress Track reached ${state.progressTrack}.`,
+      message: `Age II begins! Progress Track reached ${state.progressTrack}. Combat Mission Row established with 6 missions.`,
       type: 'phase'
     });
   } else if (state.age === 2 && state.progressTrack >= thresholds.age3) {
     state.age = 3;
+
+    // Clear combat missions when leaving Age II
+    delete state.missionRow;
+    delete state.missionDeck;
+
     state.log.push({
       timestamp: new Date().toISOString(),
       message: `Age III begins! Progress Track reached ${state.progressTrack}.`,
