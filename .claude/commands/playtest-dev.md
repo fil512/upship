@@ -23,8 +23,8 @@ for i in {1..30}; do curl -s http://localhost:3000/health && break || sleep 1; d
 **Step 2: Run the playtest**
 
 ```bash
-UPSHIP_LOCAL=1 python scripts/playtest.py setup
-UPSHIP_LOCAL=1 python scripts/playtest.py autoplay
+UPSHIP_LOCAL=1 python -m playtest setup
+UPSHIP_LOCAL=1 python -m playtest autoplay
 ```
 
 See `.claude/commands/_playtest-shared.md` for what this does and documentation on:
@@ -41,46 +41,46 @@ All commands use `UPSHIP_LOCAL=1` prefix to target local server:
 
 ### Setup
 ```bash
-UPSHIP_LOCAL=1 python scripts/playtest.py setup [game_name]
+UPSHIP_LOCAL=1 python -m playtest setup [game_name]
 ```
 
 ### Autoplay
 ```bash
-UPSHIP_LOCAL=1 python scripts/playtest.py autoplay              # Run until game ends
-UPSHIP_LOCAL=1 python scripts/playtest.py autoplay 20           # Run for 20 turns max
+UPSHIP_LOCAL=1 python -m playtest autoplay              # Run until game ends
+UPSHIP_LOCAL=1 python -m playtest autoplay 20           # Run for 20 turns max
 ```
 
 ### Status
 ```bash
-UPSHIP_LOCAL=1 python scripts/playtest.py status                # Current player's view
-UPSHIP_LOCAL=1 python scripts/playtest.py status playtest_usa   # Specific player's view
-UPSHIP_LOCAL=1 python scripts/playtest.py summary               # All players comparison
-UPSHIP_LOCAL=1 python scripts/playtest.py debug                 # Raw game state
+UPSHIP_LOCAL=1 python -m playtest status                # Current player's view
+UPSHIP_LOCAL=1 python -m playtest status playtest_usa   # Specific player's view
+UPSHIP_LOCAL=1 python -m playtest summary               # All players comparison
+UPSHIP_LOCAL=1 python -m playtest debug                 # Raw game state
 ```
 
 ### Actions
 ```bash
-UPSHIP_LOCAL=1 python scripts/playtest.py action <player> <command>
-UPSHIP_LOCAL=1 python scripts/playtest.py action playtest_germany state
-UPSHIP_LOCAL=1 python scripts/playtest.py action playtest_germany build 1
-UPSHIP_LOCAL=1 python scripts/playtest.py action playtest_usa buygas helium 3
-UPSHIP_LOCAL=1 python scripts/playtest.py endphase
+UPSHIP_LOCAL=1 python -m playtest action <player> <command>
+UPSHIP_LOCAL=1 python -m playtest action playtest_germany state
+UPSHIP_LOCAL=1 python -m playtest action playtest_germany build 1
+UPSHIP_LOCAL=1 python -m playtest action playtest_usa buygas helium 3
+UPSHIP_LOCAL=1 python -m playtest endphase
 ```
 
 ### Routes and Launching
 ```bash
-UPSHIP_LOCAL=1 python scripts/playtest.py routes
-UPSHIP_LOCAL=1 python scripts/playtest.py launch <player> <shipId> <routeId> [hydrogen|helium]
+UPSHIP_LOCAL=1 python -m playtest routes
+UPSHIP_LOCAL=1 python -m playtest launch <player> <shipId> <routeId> [hydrogen|helium]
 ```
 
 ### Log Monitoring
 ```bash
-UPSHIP_LOCAL=1 python scripts/playtest.py tail             # Last 50 lines of playtest log
-UPSHIP_LOCAL=1 python scripts/playtest.py tail 100         # Last 100 lines of playtest log
+UPSHIP_LOCAL=1 python -m playtest tail             # Last 50 lines of playtest log
+UPSHIP_LOCAL=1 python -m playtest tail 100         # Last 100 lines of playtest log
 ```
 
 ### Utility
 ```bash
-UPSHIP_LOCAL=1 python scripts/playtest.py gameid
-UPSHIP_LOCAL=1 python scripts/playtest.py sessions
+UPSHIP_LOCAL=1 python -m playtest gameid
+UPSHIP_LOCAL=1 python -m playtest sessions
 ```

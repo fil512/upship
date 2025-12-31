@@ -28,12 +28,12 @@ For manual analysis of each turn.
 
 ## Extending playtest.py
 
-**IMPORTANT**: If you need functionality that isn't available in playtest.py, extend the Python script rather than calling `npm run cli` directly. The playtest.py tool is the single interface for all playtesting.
+**IMPORTANT**: If you need functionality that isn't available in the playtest package, extend it rather than calling `npm run cli` directly. The playtest package is the single interface for all playtesting.
 
 To add new capabilities:
-1. Add a new function in `scripts/playtest.py`
-2. Add a new command handler in `main()`
-3. Document in the docstring at the top of the file
+1. Add new functions in the appropriate module under `playtest/`
+2. Add a new command handler in `playtest/__main__.py`
+3. Update the module's docstring
 
 ## Document Findings
 

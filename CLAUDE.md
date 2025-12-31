@@ -120,7 +120,7 @@ Global test helpers (defined in `__tests__/setup.js`):
 
 ## CLI Tool
 
-A command-line client for rapid playtesting via the REST API. Supports multiple simultaneous user sessions by storing session tokens in `.upship-sessions/`.
+A Python command-line client for rapid playtesting via the REST API. Uses the `client/` Python library for all API interactions. Supports multiple simultaneous user sessions by storing session tokens in `.upship-sessions/`.
 
 ### Quick Start
 
@@ -343,19 +343,19 @@ The Python playtest tool provides autonomous playtesting with 4 strategic bot pl
 It runs until the game **finishes** or gets **stuck** (detecting design flaws).
 
 ```bash
-python scripts/playtest.py setup [game_name]         # Setup new 4-player game
-python scripts/playtest.py autoplay                  # Run until game ends or gets stuck
-python scripts/playtest.py autoplay [num_turns]      # Run for N turns max
-python scripts/playtest.py status [player]           # Show game status
-python scripts/playtest.py summary                   # Show all players' status table
-python scripts/playtest.py endphase                  # All players end turn/pass
-python scripts/playtest.py action <player> <cmd>     # Run single action
-python scripts/playtest.py debug                     # Show raw game state
-python scripts/playtest.py gameid                    # Print current game ID
-python scripts/playtest.py routes                    # Show available routes
-python scripts/playtest.py launch <player> <shipId> <routeId> [gas]  # Launch ship
-python scripts/playtest.py tail [num_lines]          # Show last N lines of playtest log
-python scripts/playtest.py output [num_lines]        # Show Claude background task output
+python -m playtest setup [game_name]         # Setup new 4-player game
+python -m playtest autoplay                  # Run until game ends or gets stuck
+python -m playtest autoplay [num_turns]      # Run for N turns max
+python -m playtest status [player]           # Show game status
+python -m playtest summary                   # Show all players' status table
+python -m playtest endphase                  # All players end turn/pass
+python -m playtest action <player> <cmd>     # Run single action
+python -m playtest debug                     # Show raw game state
+python -m playtest gameid                    # Print current game ID
+python -m playtest routes                    # Show available routes
+python -m playtest launch <player> <shipId> <routeId> [gas]  # Launch ship
+python -m playtest tail [num_lines]          # Show last N lines of playtest log
+python -m playtest output [num_lines]        # Show Claude background task output
 ```
 
 **Features:**
