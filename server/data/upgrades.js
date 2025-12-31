@@ -229,11 +229,35 @@ const UPGRADES = {
     type: 'frame',
     slotType: 'frameSlots',
     requiredTech: 'articulated_keel',
-    weight: -1,
+    weight: 0,  // Per Appendix D: weight is 0, not -1
     hullCost: 1,
     stats: { ceiling: 1 },  // Per Section 13.4: +1 Ceiling (not reliability)
     special: 'weather_penalty',  // Per Section 13.4: -1 to Reliability checks during Weather hazards
     age: 1  // Italy starting tech, available from Age 1
+  },
+  streamlined_hull: {
+    id: 'streamlined_hull',
+    name: 'Streamlined Hull',
+    type: 'frame',
+    slotType: 'frameSlots',
+    requiredTech: 'aerodynamic_hull_design',
+    weight: -1,
+    hullCost: 2,
+    stats: { lift: 2 },  // Provides lift without gas
+    special: null,
+    age: 2
+  },
+  aerodynamic_lift_system: {
+    id: 'aerodynamic_lift_system',
+    name: 'Aerodynamic Lift System',
+    type: 'frame',
+    slotType: 'frameSlots',
+    requiredTech: 'dynamic_lift_surfaces',
+    weight: -2,
+    hullCost: 3,
+    stats: { lift: 4 },  // Provides lift without gas
+    special: null,
+    age: 3
   },
 
   // === FABRIC UPGRADES ===
@@ -334,35 +358,323 @@ const UPGRADES = {
     age: 2
   },
 
+  // === GAS SYSTEM UPGRADES ===
+  // Per Appendix D: Gas System upgrades enhance or modify gas cell performance
+  pressure_control: {
+    id: 'pressure_control',
+    name: 'Pressure Control',
+    type: 'gas',
+    slotType: 'componentSlots',  // Gas upgrades go in component/payload slots
+    requiredTech: 'improved_valving',
+    weight: -1,
+    stats: { ceiling: 1 },
+    special: null,
+    age: 1
+  },
+  altitude_ballonets: {
+    id: 'altitude_ballonets',
+    name: 'Altitude Ballonets',
+    type: 'gas',
+    slotType: 'componentSlots',
+    requiredTech: 'manual_ballonets',
+    weight: -1,
+    stats: { ceiling: 1 },
+    special: null,
+    age: 1
+  },
+  compartmented_gas: {
+    id: 'compartmented_gas',
+    name: 'Compartmented Gas',
+    type: 'gas',
+    slotType: 'componentSlots',
+    requiredTech: 'multiple_gas_cells',
+    weight: -1,
+    stats: { lift: 2, reliability: 1 },
+    special: null,
+    age: 2
+  },
+  helium_gas_cell: {
+    id: 'helium_gas_cell',
+    name: 'Helium Gas Cell',
+    type: 'gas',
+    slotType: 'componentSlots',
+    requiredTech: 'helium_handling',
+    weight: -1,
+    stats: {},
+    special: 'fire_immunity',  // Safe: immune to Fire hazards; use Helium cubes
+    age: 2
+  },
+  blaugas_tank: {
+    id: 'blaugas_tank',
+    name: 'Blaugas Tank',
+    type: 'gas',
+    slotType: 'componentSlots',
+    requiredTech: 'blaugas_storage',
+    weight: 0,
+    stats: { range: 1 },
+    special: 'gas_retention',  // Pay £2 to keep gas cubes after mission (Germany)
+    age: 2
+  },
+  smart_valving: {
+    id: 'smart_valving',
+    name: 'Smart Valving',
+    type: 'gas',
+    slotType: 'componentSlots',
+    requiredTech: 'automatic_valves',
+    weight: -1,
+    stats: { reliability: 1, ceiling: 1 },
+    special: null,
+    age: 2
+  },
+  high_ceiling_gas: {
+    id: 'high_ceiling_gas',
+    name: 'High-Ceiling Gas',
+    type: 'gas',
+    slotType: 'componentSlots',
+    requiredTech: 'pressure_altitude_system',
+    weight: -2,
+    stats: { lift: 3, ceiling: 2 },
+    special: null,
+    age: 3
+  },
+  redundant_cells: {
+    id: 'redundant_cells',
+    name: 'Redundant Cells',
+    type: 'gas',
+    slotType: 'componentSlots',
+    requiredTech: 'triple_gas_cell',
+    weight: -2,
+    stats: { lift: 4, reliability: 2 },
+    special: null,
+    age: 3
+  },
+  rapid_descent_system: {
+    id: 'rapid_descent_system',
+    name: 'Rapid Descent System',
+    type: 'gas',
+    slotType: 'componentSlots',
+    requiredTech: 'emergency_venting',
+    weight: -1,
+    stats: { reliability: 2 },
+    special: 'weather_auto_pass',  // Auto-pass Weather-type hazards
+    age: 3
+  },
+  reclamation_system: {
+    id: 'reclamation_system',
+    name: 'Reclamation System',
+    type: 'gas',
+    slotType: 'componentSlots',
+    requiredTech: 'gas_recovery',
+    weight: -1,
+    stats: { range: 2 },
+    special: 'gas_cost_reduction',  // -£2 Lifting Gas cost
+    age: 3
+  },
+  exhaust_condensers: {
+    id: 'exhaust_condensers',
+    name: 'Exhaust Condensers',
+    type: 'gas',
+    slotType: 'componentSlots',
+    requiredTech: 'water_recovery_system',
+    weight: -2,
+    stats: {},
+    special: 'helium_cost_reduction',  // -£3 Helium cost (USA specialty)
+    age: 3
+  },
+
   // === COMPONENT/PAYLOAD UPGRADES ===
+  // Per Appendix D: Payload upgrades - names match spec exactly
+
+  // Age I Payload Upgrades
+  spotter_gondola: {
+    id: 'spotter_gondola',
+    name: 'Spotter Gondola',
+    type: 'component',
+    slotType: 'componentSlots',
+    requiredTech: 'observation_platform',
+    weight: -1,
+    stats: { income: 1 },
+    special: null,
+    age: 1
+  },
+  postal_service: {
+    id: 'postal_service',
+    name: 'Postal Service',
+    type: 'component',
+    slotType: 'componentSlots',
+    requiredTech: 'mail_compartment',
+    weight: -1,
+    stats: { income: 2 },
+    special: null,
+    age: 1
+  },
+  external_cargo: {
+    id: 'external_cargo',
+    name: 'External Cargo',
+    type: 'component',
+    slotType: 'componentSlots',
+    requiredTech: 'cargo_nets',
+    weight: -2,
+    stats: { income: 2 },
+    special: null,
+    age: 1
+  },
+
+  // Age II Payload Upgrades
   passenger_gondola: {
     id: 'passenger_gondola',
-    name: 'Passenger Gondola',
+    name: 'Basic Cabin',  // Upgrade name per Appendix D
     type: 'component',
     slotType: 'componentSlots',
     requiredTech: 'passenger_gondola',
     weight: -2,
-    stats: { luxury: 1, income: 1 },
+    stats: { income: 2, luxury: 1 },  // Fixed: income was 1, now 2
     special: null,
-    age: 1
+    age: 2
   },
-  observation_deck: {
-    id: 'observation_deck',
-    name: 'Observation Deck',
+  bombing_equipment: {
+    id: 'bombing_equipment',
+    name: 'Bombing Equipment',
     type: 'component',
     slotType: 'componentSlots',
-    requiredTech: 'observation_deck',
+    requiredTech: 'bomb_bay_design',
+    weight: -3,
+    stats: {},
+    special: 'combat_income_bonus',  // Combat Missions: +£3 Income
+    age: 2
+  },
+  sparrowhawk_hangar: {
+    id: 'sparrowhawk_hangar',
+    name: 'Sparrowhawk Hangar',
+    type: 'component',
+    slotType: 'componentSlots',
+    requiredTech: 'trapeze_system',
+    weight: -3,
+    stats: {},
+    special: 'ignore_route_requirement',  // Ignore one route requirement (USA specialty)
+    age: 2
+  },
+  communications_suite: {
+    id: 'communications_suite',
+    name: 'Communications Suite',
+    type: 'component',
+    slotType: 'componentSlots',
+    requiredTech: 'radio_equipment',
     weight: -1,
-    stats: { luxury: 2 },
+    stats: { reliability: 1 },
+    special: 'navigation_bonus',  // +1 to Navigation hazards
+    age: 2
+  },
+  light_armor_plating: {
+    id: 'light_armor_plating',
+    name: 'Light Armor Plating',
+    type: 'component',
+    slotType: 'componentSlots',
+    requiredTech: 'armored_gondola',
+    weight: -2,
+    stats: { armor: 1 },
+    special: null,
+    age: 2
+  },
+  heavy_armor_plating: {
+    id: 'heavy_armor_plating',
+    name: 'Heavy Armor Plating',
+    type: 'component',
+    slotType: 'componentSlots',
+    requiredTech: 'reinforced_hull',
+    weight: -3,
+    stats: { armor: 2 },
+    special: null,
+    age: 2
+  },
+
+  // Age III Payload Upgrades
+  luxury_cabin: {
+    id: 'luxury_cabin',
+    name: 'Luxury Cabin',
+    type: 'component',
+    slotType: 'componentSlots',
+    requiredTech: 'luxury_accommodation',
+    weight: -3,
+    stats: { income: 3, luxury: 2 },
+    special: null,
+    age: 3
+  },
+  restaurant: {
+    id: 'restaurant',
+    name: 'Restaurant',
+    type: 'component',
+    slotType: 'componentSlots',
+    requiredTech: 'dining_saloon',
+    weight: -2,
+    stats: { income: 2, luxury: 2 },
+    special: null,
+    age: 3
+  },
+  observation_lounge: {
+    id: 'observation_lounge',
+    name: 'Observation Lounge',
+    type: 'component',
+    slotType: 'componentSlots',
+    requiredTech: 'promenade_deck',
+    weight: -2,
+    stats: { income: 1, luxury: 3 },
+    special: null,
+    age: 3
+  },
+  sleeping_quarters: {
+    id: 'sleeping_quarters',
+    name: 'Private Berths',  // Upgrade name per Appendix D
+    type: 'component',
+    slotType: 'componentSlots',
+    requiredTech: 'sleeping_quarters',
+    weight: -2,
+    stats: { income: 2, luxury: 1 },  // Fixed: was luxury: 2, range: 1
+    special: null,
+    age: 3
+  },
+  pressurized_lounge: {
+    id: 'pressurized_lounge',
+    name: 'Pressurized Lounge',
+    type: 'component',
+    slotType: 'componentSlots',
+    requiredTech: 'smoking_room',
+    weight: -2,
+    stats: { income: 1, luxury: 2 },
+    special: 'requires_helium',  // Requires Helium Gas Cell installed
+    age: 3
+  },
+  imperial_mast: {
+    id: 'imperial_mast',
+    name: 'Imperial Mast',
+    type: 'component',
+    slotType: 'componentSlots',
+    requiredTech: 'imperial_mooring',
+    weight: -1,
+    stats: {},
+    special: 'british_territories_home',  // British Territories count as Home Base (Britain specialty)
+    age: 2
+  },
+
+  // Legacy aliases for backwards compatibility (map old names to new)
+  // These remain for any existing save data referencing old names
+  observation_deck: {
+    id: 'observation_deck',
+    name: 'Observation Deck (Legacy)',
+    type: 'component',
+    slotType: 'componentSlots',
+    requiredTech: 'observation_platform',
+    weight: -1,
+    stats: { income: 1 },  // Updated to match spotter_gondola
     special: null,
     age: 1
   },
   cargo_hold: {
     id: 'cargo_hold',
-    name: 'Cargo Hold',
+    name: 'Cargo Hold (Legacy)',
     type: 'component',
     slotType: 'componentSlots',
-    requiredTech: 'cargo_systems',
+    requiredTech: 'cargo_nets',
     weight: -2,
     stats: { income: 2 },
     special: null,
@@ -370,58 +682,47 @@ const UPGRADES = {
   },
   dining_saloon: {
     id: 'dining_saloon',
-    name: 'Dining Saloon',
+    name: 'Dining Saloon (Legacy)',
     type: 'component',
     slotType: 'componentSlots',
     requiredTech: 'dining_saloon',
-    weight: -3,
-    stats: { luxury: 3 },
+    weight: -2,  // Fixed: was -3
+    stats: { income: 2, luxury: 2 },  // Fixed: was luxury: 3, no income
     special: null,
-    age: 2
+    age: 3
   },
   radio_room: {
     id: 'radio_room',
-    name: 'Radio Room',
+    name: 'Radio Room (Legacy)',
     type: 'component',
     slotType: 'componentSlots',
     requiredTech: 'radio_equipment',
     weight: -1,
     stats: { reliability: 1 },
-    special: 'communication',
-    age: 2
-  },
-  sleeping_quarters: {
-    id: 'sleeping_quarters',
-    name: 'Sleeping Quarters',
-    type: 'component',
-    slotType: 'componentSlots',
-    requiredTech: 'sleeping_quarters',
-    weight: -2,
-    stats: { luxury: 2, range: 1 },
-    special: null,
+    special: 'navigation_bonus',
     age: 2
   },
   luxury_lounge: {
     id: 'luxury_lounge',
-    name: 'Luxury Lounge',
+    name: 'Luxury Lounge (Legacy)',
     type: 'component',
     slotType: 'componentSlots',
-    requiredTech: 'luxury_fittings',
+    requiredTech: 'luxury_accommodation',
     weight: -3,
-    stats: { luxury: 4, income: 2 },
+    stats: { income: 3, luxury: 2 },
     special: null,
     age: 3
   },
   mail_compartment: {
     id: 'mail_compartment',
-    name: 'Mail Compartment',
+    name: 'Mail Compartment (Legacy)',
     type: 'component',
     slotType: 'componentSlots',
-    requiredTech: 'mail_systems',
+    requiredTech: 'mail_compartment',
     weight: -1,
-    stats: { income: 3 },
-    special: 'airmail',
-    age: 2
+    stats: { income: 2 },
+    special: null,
+    age: 1
   },
   navigation_suite: {
     id: 'navigation_suite',
@@ -436,13 +737,13 @@ const UPGRADES = {
   },
   pressurized_cabin: {
     id: 'pressurized_cabin',
-    name: 'Pressurized Cabin',
+    name: 'Pressurized Cabin (Legacy)',
     type: 'component',
     slotType: 'componentSlots',
-    requiredTech: 'pressurization',
+    requiredTech: 'smoking_room',
     weight: -2,
-    stats: { ceiling: 2, luxury: 1 },
-    special: null,
+    stats: { income: 1, luxury: 2 },
+    special: 'requires_helium',
     age: 3
   }
 };
@@ -510,16 +811,42 @@ const TECHNOLOGIES = {
   // gelatinized_latex - defined above as USA starting tech
   composite_covering: { id: 'composite_covering', name: 'Composite Covering', type: 'fabric', cost: 5, age: 3 },
 
-  // Component techs
-  passenger_gondola: { id: 'passenger_gondola', name: 'Passenger Gondola', type: 'component', cost: 3, age: 1 },
-  observation_deck: { id: 'observation_deck', name: 'Observation Deck', type: 'component', cost: 4, age: 1 },
-  cargo_systems: { id: 'cargo_systems', name: 'Cargo Systems', type: 'component', cost: 3, age: 1 },
+  // Additional Frame techs per Appendix C
+  aerodynamic_hull_design: { id: 'aerodynamic_hull_design', name: 'Aerodynamic Hull Design', type: 'structure', cost: 3, age: 2 },
+  dynamic_lift_surfaces: { id: 'dynamic_lift_surfaces', name: 'Dynamic Lift Surfaces', type: 'structure', cost: 5, age: 3 },
+
+  // Gas System techs per Appendix C
+  improved_valving: { id: 'improved_valving', name: 'Improved Valving', type: 'gas', cost: 1, age: 1 },
+  manual_ballonets: { id: 'manual_ballonets', name: 'Manual Ballonets', type: 'gas', cost: 1, age: 1 },
+  multiple_gas_cells: { id: 'multiple_gas_cells', name: 'Multiple Gas Cells', type: 'gas', cost: 3, age: 2 },
+  automatic_valves: { id: 'automatic_valves', name: 'Automatic Valves', type: 'gas', cost: 4, age: 2 },
+  pressure_altitude_system: { id: 'pressure_altitude_system', name: 'Pressure Altitude System', type: 'gas', cost: 5, age: 3 },
+  triple_gas_cell: { id: 'triple_gas_cell', name: 'Triple Gas Cell', type: 'gas', cost: 4, age: 3 },
+  emergency_venting: { id: 'emergency_venting', name: 'Emergency Venting', type: 'gas', cost: 4, age: 3 },
+  gas_recovery: { id: 'gas_recovery', name: 'Gas Recovery', type: 'gas', cost: 5, age: 3 },
+  water_recovery_system: { id: 'water_recovery_system', name: 'Water Recovery System', type: 'gas', cost: 5, age: 3 },
+
+  // Payload techs per Appendix C
+  observation_platform: { id: 'observation_platform', name: 'Observation Platform', type: 'component', cost: 1, age: 1 },
+  mail_compartment: { id: 'mail_compartment', name: 'Mail Compartment', type: 'component', cost: 1, age: 1 },
+  cargo_nets: { id: 'cargo_nets', name: 'Cargo Nets', type: 'component', cost: 2, age: 1 },
+  passenger_gondola: { id: 'passenger_gondola', name: 'Passenger Gondola', type: 'component', cost: 3, age: 2 },
+  bomb_bay_design: { id: 'bomb_bay_design', name: 'Bomb Bay Design', type: 'component', cost: 4, age: 2 },
+  armored_gondola: { id: 'armored_gondola', name: 'Armored Gondola', type: 'component', cost: 3, age: 2 },
+  reinforced_hull: { id: 'reinforced_hull', name: 'Reinforced Hull', type: 'component', cost: 4, age: 2 },
   radio_equipment: { id: 'radio_equipment', name: 'Radio Equipment', type: 'component', cost: 3, age: 2 },
-  sleeping_quarters: { id: 'sleeping_quarters', name: 'Sleeping Quarters', type: 'component', cost: 4, age: 2 },
-  luxury_fittings: { id: 'luxury_fittings', name: 'Luxury Fittings', type: 'component', cost: 6, age: 3 },
-  mail_systems: { id: 'mail_systems', name: 'Mail Systems', type: 'component', cost: 3, age: 2 },
+  luxury_accommodation: { id: 'luxury_accommodation', name: 'Luxury Accommodation', type: 'component', cost: 4, age: 3 },
+  promenade_deck: { id: 'promenade_deck', name: 'Promenade Deck', type: 'component', cost: 6, age: 3 },
+  sleeping_quarters: { id: 'sleeping_quarters', name: 'Sleeping Quarters', type: 'component', cost: 4, age: 3 },
+  smoking_room: { id: 'smoking_room', name: 'Smoking Room', type: 'component', cost: 5, age: 3 },
   advanced_navigation: { id: 'advanced_navigation', name: 'Advanced Navigation', type: 'component', cost: 5, age: 3 },
-  pressurization: { id: 'pressurization', name: 'Pressurization', type: 'component', cost: 5, age: 3 }
+
+  // Legacy/deprecated techs kept for backwards compatibility
+  observation_deck: { id: 'observation_deck', name: 'Observation Deck (Legacy)', type: 'component', cost: 1, age: 1 },
+  cargo_systems: { id: 'cargo_systems', name: 'Cargo Systems (Legacy)', type: 'component', cost: 2, age: 1 },
+  luxury_fittings: { id: 'luxury_fittings', name: 'Luxury Fittings (Legacy)', type: 'component', cost: 4, age: 3 },
+  mail_systems: { id: 'mail_systems', name: 'Mail Systems (Legacy)', type: 'component', cost: 1, age: 1 },
+  pressurization: { id: 'pressurization', name: 'Pressurization (Legacy)', type: 'component', cost: 5, age: 3 }
 };
 
 /**

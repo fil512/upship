@@ -3,9 +3,9 @@
 Last updated: 2025-12-31
 
 ## Summary
-- Total gaps found: 16
-- Resolved: 15
-- Unresolved: 1 (needs designer decision)
+- Total gaps found: 23
+- Resolved: 22
+- Unresolved: 1 (GAP-051 needs designer decision)
 
 ---
 
@@ -14,6 +14,7 @@ Last updated: 2025-12-31
 Level 1 areas analyzed in previous session.
 Level 2 areas analyzed in previous session.
 Level 3 areas analyzed in this session.
+Level 4 areas analyzed in this session.
 
 ### Level 1 - Core Structure
 - [x] ROUND_STRUCTURE
@@ -36,11 +37,12 @@ Level 3 areas analyzed in this session.
 - [x] RULES_CLARIFICATIONS (Section 14)
 
 ### Level 4 - Appendix Validation
-- [ ] HAZARD_DECK_APPENDIX (Appendix D/E)
-- [ ] ROUTES_APPENDIX (Appendix F)
-- [ ] MARKET_DECK_APPENDIX (Appendix G/H)
-- [ ] TECHNOLOGY_APPENDIX (Appendix C)
-- [ ] UPGRADE_APPENDIX (Appendix D)
+- [x] HAZARD_DECK_APPENDIX (Appendix E) - VERIFIED CORRECT
+- [x] ROUTES_APPENDIX (Appendix F) - VERIFIED CORRECT
+- [x] MARKET_DECK_APPENDIX (Appendix H) - VERIFIED CORRECT
+- [x] TECHNOLOGY_APPENDIX (Appendix C) - VERIFIED CORRECT
+- [x] UPGRADE_APPENDIX (Appendix D) - ALL GAPS RESOLVED
+- [x] COMBAT_MISSIONS_APPENDIX (Appendix G) - VERIFIED CORRECT
 
 ### Level 5 - Deep Dive Analysis
 - [ ] WORKER_PLACEMENT_ACTIONS
@@ -93,6 +95,174 @@ const PROGRESS_THRESHOLDS = {
 ---
 
 ## Resolved Gaps
+
+### GAP-068: Flexible Frame Weight Mismatch
+**Area:** UPGRADE_APPENDIX
+**Severity:** Low
+**Status:** RESOLVED (2025-12-31)
+**Spec Reference:** Appendix D - Frame Upgrades
+
+**Resolution:** Changed `flexible_frame.weight` from -1 to 0 in `server/data/upgrades.js` to match Appendix D spec.
+
+**Files changed:**
+- `server/data/upgrades.js` - Fixed flexible_frame.weight to 0
+
+**Tests added:**
+- `__tests__/unit/rules/upgrades.test.js` - GAP-068 test for flexible_frame weight
+
+---
+
+### GAP-069: Missing Gas System Upgrades (11 Tiles)
+**Area:** UPGRADE_APPENDIX
+**Severity:** High
+**Status:** RESOLVED (2025-12-31)
+**Spec Reference:** Appendix D - Gas System Upgrades
+
+**Resolution:** Added all 11 Gas System Upgrades to `server/data/upgrades.js`:
+1. pressure_control (Improved Valving)
+2. altitude_ballonets (Manual Ballonets)
+3. compartmented_gas (Multiple Gas Cells)
+4. helium_gas_cell (Helium Handling)
+5. blaugas_tank (Blaugas Fuel System)
+6. smart_valving (Automatic Valves)
+7. high_ceiling_gas (Pressure Altitude System)
+8. redundant_cells (Triple Gas Cell)
+9. rapid_descent_system (Emergency Venting)
+10. reclamation_system (Gas Recovery)
+11. exhaust_condensers (Water Recovery System)
+
+Also added corresponding technologies to TECHNOLOGIES object.
+
+**Files changed:**
+- `server/data/upgrades.js` - Added 11 gas system upgrades and 9 gas system technologies
+
+**Tests added:**
+- `__tests__/unit/rules/upgrades.test.js` - GAP-069 tests for all 11 gas system upgrades
+
+---
+
+### GAP-070: Missing Frame Upgrades (Streamlined Hull, Aerodynamic Lift System)
+**Area:** UPGRADE_APPENDIX
+**Severity:** Medium
+**Status:** RESOLVED (2025-12-31)
+**Spec Reference:** Appendix D - Frame Upgrades
+
+**Resolution:** Added 2 missing Frame Upgrades to `server/data/upgrades.js`:
+1. streamlined_hull (Aerodynamic Hull Design) - Weight -1, Hull +£2, Lift +2
+2. aerodynamic_lift_system (Dynamic Lift Surfaces) - Weight -2, Hull +£3, Lift +4
+
+Also added corresponding technologies: aerodynamic_hull_design, dynamic_lift_surfaces
+
+**Files changed:**
+- `server/data/upgrades.js` - Added 2 frame upgrades and 2 technologies
+
+**Tests added:**
+- `__tests__/unit/rules/upgrades.test.js` - GAP-070 tests for frame upgrades
+
+---
+
+### GAP-071: Missing Payload Upgrades (6 Tiles)
+**Area:** UPGRADE_APPENDIX
+**Severity:** Medium
+**Status:** RESOLVED (2025-12-31)
+**Spec Reference:** Appendix D - Payload Upgrades
+
+**Resolution:** Added 6 missing Payload Upgrades to `server/data/upgrades.js`:
+1. bombing_equipment (Bomb Bay Design) - Weight -3, Combat: +£3 Income
+2. sparrowhawk_hangar (Trapeze System) - Weight -3, Ignore 1 route requirement
+3. light_armor_plating (Armored Gondola) - Weight -2, Armor +1
+4. heavy_armor_plating (Reinforced Hull) - Weight -3, Armor +2
+5. observation_lounge (Promenade Deck) - Weight -2, Income +1, Luxury +3
+6. imperial_mast (Imperial Mooring System) - Weight -1, Britain specialty
+
+Also added corresponding technologies: bomb_bay_design, armored_gondola, reinforced_hull, promenade_deck
+
+**Files changed:**
+- `server/data/upgrades.js` - Added 6 payload upgrades and associated technologies
+
+**Tests added:**
+- `__tests__/unit/rules/upgrades.test.js` - GAP-071 tests for payload upgrades
+
+---
+
+### GAP-072: Payload Upgrade Stat Mismatches
+**Area:** UPGRADE_APPENDIX
+**Severity:** Medium
+**Status:** RESOLVED (2025-12-31)
+**Spec Reference:** Appendix D - Payload Upgrades
+
+**Resolution:** Fixed stat mismatches in existing payload upgrades:
+
+**passenger_gondola (Basic Cabin):**
+- Fixed: income changed from 1 to 2 (spec: Income +2, Luxury +1)
+
+**dining_saloon (Restaurant):**
+- Fixed: weight changed from -3 to -2, added income: 2, luxury changed from 3 to 2 (spec: Weight -2, Income +2, Luxury +2)
+
+**sleeping_quarters (Private Berths):**
+- Fixed: added income: 2, luxury changed from 2 to 1, removed range (spec: Income +2, Luxury +1)
+
+**observation_deck -> spotter_gondola:**
+- Fixed: renamed to spotter_gondola, changed stats from luxury: 2 to income: 1 (spec: Income +1)
+
+**Files changed:**
+- `server/data/upgrades.js` - Fixed stats for 4 payload upgrades
+
+**Tests added:**
+- `__tests__/unit/rules/upgrades.test.js` - GAP-072 tests for stat mismatches
+
+---
+
+### GAP-073: Payload Upgrade Name/Tech Mismatches
+**Area:** UPGRADE_APPENDIX
+**Severity:** Low
+**Status:** RESOLVED (2025-12-31)
+**Spec Reference:** Appendix D - Payload Upgrades
+
+**Resolution:** Fixed upgrade names and technology mappings to match spec:
+
+| Spec Name | Spec Tech | New Impl Name | New Tech |
+|-----------|-----------|---------------|----------|
+| Spotter Gondola | Observation Platform | spotter_gondola | observation_platform |
+| Postal Service | Mail Compartment | postal_service | mail_compartment |
+| External Cargo | Cargo Nets | external_cargo | cargo_nets |
+| Luxury Cabin | Luxury Accommodation | luxury_cabin | luxury_accommodation |
+| Restaurant | Dining Saloon | restaurant | dining_saloon |
+| Pressurized Lounge | Smoking Room | pressurized_lounge | smoking_room |
+
+Legacy aliases kept for backwards compatibility with existing save data.
+
+**Files changed:**
+- `server/data/upgrades.js` - Added correctly-named upgrades, updated technologies, kept legacy aliases
+
+**Tests added:**
+- `__tests__/unit/rules/upgrades.test.js` - GAP-073 tests for name/tech mappings
+
+---
+
+### GAP-074: Hazard Deck Flak Distribution Summary Inconsistency
+**Area:** HAZARD_DECK_APPENDIX
+**Severity:** Low
+**Status:** RESOLVED (2025-12-31)
+**Spec Reference:** Appendix E - Flak Distribution (lines 533-539)
+
+**Resolution:** Fixed the Flak Distribution summary in Appendix E to match the individual card listings:
+
+**Before (incorrect):**
+- 4 Flak: 1 card
+- Total: 24 cards
+
+**After (correct):**
+- 4 Flak: 3 cards (Structural Damage + Static Discharge + Critical Structural Stress)
+- 3 Flak: 6 cards (not 5)
+- Total: 27 cards
+
+Added card breakdown comments for clarity.
+
+**Files changed:**
+- `spec/appendix.md` - Fixed Flak Distribution summary
+
+---
 
 ### GAP-061: Market Row Size Mismatch
 **Area:** DECK_BUILDING
@@ -348,5 +518,6 @@ New tests added in:
 - `__tests__/unit/rules/gasCubeReveal.test.js` - Tests for GAP-067
 - `__tests__/unit/rules/hazards.test.js` - Tests for GAP-064
 - `__tests__/unit/rules/marketDeck.test.js` - Tests for GAP-061
+- `__tests__/unit/rules/upgrades.test.js` - Tests for GAP-068, GAP-069, GAP-070, GAP-071, GAP-072, GAP-073
 
-All 639 tests pass.
+All 709 tests pass.

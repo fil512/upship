@@ -530,13 +530,13 @@ Helium ships automatically pass all Fire-type hazards.
 8. **Crash:** Ship destroyed (token to supply, Officers and gas lost)
 9. **Age II Flak Check:** After resolving the hazard (pass or fail), check Flak vs Armor. If mission succeeded and Flak > Armor, ship is destroyed but rewards are still earned.
 
-**Flak Distribution (24 cards):**
-- 0 Flak: 7 cards (safe passage)
-- 1 Flak: 4 cards (Armor 1+ survives)
-- 2 Flak: 6 cards (Armor 2+ survives)
-- 3 Flak: 5 cards (Armor 3+ survives)
-- 4 Flak: 1 card (Armor 4 survives)
-- 5 Flak: 1 card (always destroys)
+**Flak Distribution (27 cards):**
+- 0 Flak: 7 cards (safe passage) - Clear Weather (4) + Light Turbulence + Crosswind + Fuel Concern
+- 1 Flak: 4 cards (Armor 1+ survives) - Minor Engine Trouble + Gas Leak + Low Visibility + Headwind
+- 2 Flak: 6 cards (Armor 2+ survives) - Structural Stress + Strong Headwind + Icing Conditions + Severe Icing + Engine Fire (2)
+- 3 Flak: 6 cards (Armor 3+ survives) - Engine Failure + Storm System + Navigation Error + Squall Line + Gas Cell Rupture (2)
+- 4 Flak: 3 cards (Armor 4 survives) - Structural Damage + Static Discharge + Critical Structural Stress
+- 5 Flak: 1 card (always destroys) - Catastrophic Explosion
 
 **Deck Management:** Shuffle your discard pile back into your Hazard Deck when the deck is empty.
 
