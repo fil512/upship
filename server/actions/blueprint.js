@@ -251,8 +251,149 @@ function processRemoveUpgrade(state, playerId, data) {
   return { newState: state };
 }
 
+/**
+ * Process free Design Bureau action during age transition
+ * Per Section 12.1 step 5: Each player gets a free Design Bureau action
+ *
+ * @param {Object} state - Game state (mutated)
+ * @param {string} playerId - Acting player ID
+ * @param {Object} data - Action data { swaps: [...] }
+ * @returns {Object} { newState } or throws error
+ */
+function processAgeTransitionDesignBureau(state, playerId, data) {
+  const { completeAgeTransition } = require('./helpers/ageTransition');
+
+  // Verify we're in the correct phase
+  if (state.phase !== 'age_transition_design_bureau') {
+    throw new GameRuleError('Not in age transition Design Bureau phase');
+  }
+
+  const transitionState = state.ageTransitionDesignBureau;
+  if (!transitionState) {
+    throw new GameRuleError('Age transition state not found');
+  }
+
+  // Verify it's this player's turn
+  const currentPlayerId = state.playerOrder[transitionState.currentPlayerIndex];
+  if (playerId !== currentPlayerId) {
+    throw new GameRuleError('Not your turn to upgrade blueprint');
+  }
+
+  // Already completed?
+  if (transitionState.completedPlayers.includes(playerId)) {
+    throw new GameRuleError('You have already completed your free Design Bureau action');
+  }
+
+  const playerState = state.players[playerId];
+  const swaps = data.swaps || [];
+
+  // Get swap limit for this player's faction
+  const swapLimit = getEffectiveSwapLimit(playerState);
+  let swapsUsed = 0;
+
+  // Process each swap (no Hull Upgrade Rule charges during age transition)
+  for (const swap of swaps) {
+    if (swapsUsed >= swapLimit) {
+      state.log.push({
+        timestamp: new Date().toISOString(),
+        message: `Swap limit reached (${swapLimit})`,
+        playerId,
+        type: 'warning'
+      });
+      break;
+    }
+
+    if (swap.action === 'install') {
+      const { slotType, slotIndex, upgradeId } = swap;
+      const slotKey = `${slotType}Slots`;
+
+      if (!playerState.blueprint[slotKey]) {
+        continue; // Invalid slot type, skip
+      }
+
+      if (slotIndex < 0 || slotIndex >= playerState.blueprint[slotKey].length) {
+        continue; // Invalid slot index, skip
+      }
+
+      if (playerState.blueprint[slotKey][slotIndex]) {
+        continue; // Slot occupied, skip
+      }
+
+      // Validate upgrade exists
+      const upgrade = UPGRADES[upgradeId];
+      if (!upgrade) {
+        continue; // Unknown upgrade, skip
+      }
+
+      // Validate upgrade goes in correct slot type
+      if (upgrade.slotType !== slotKey) {
+        continue; // Wrong slot type, skip
+      }
+
+      // Validate player owns required technology
+      if (!playerState.technologies.includes(upgrade.requiredTech)) {
+        continue; // Missing technology, skip
+      }
+
+      // Install the upgrade (NO Hull Upgrade Rule charge during age transition)
+      playerState.blueprint[slotKey][slotIndex] = upgradeId;
+      swapsUsed++;
+
+      state.log.push({
+        timestamp: new Date().toISOString(),
+        message: `Free upgrade: Installed ${upgrade.name} in ${slotType} slot ${slotIndex + 1}`,
+        playerId,
+        type: 'action'
+      });
+    } else if (swap.action === 'remove') {
+      const { slotType, slotIndex } = swap;
+      const slotKey = `${slotType}Slots`;
+
+      if (!playerState.blueprint[slotKey]) {
+        continue;
+      }
+
+      if (slotIndex < 0 || slotIndex >= playerState.blueprint[slotKey].length) {
+        continue;
+      }
+
+      const currentUpgrade = playerState.blueprint[slotKey][slotIndex];
+      if (!currentUpgrade) {
+        continue; // Already empty
+      }
+
+      const upgrade = UPGRADES[currentUpgrade];
+      const upgradeName = upgrade ? upgrade.name : currentUpgrade;
+
+      playerState.blueprint[slotKey][slotIndex] = null;
+      swapsUsed++;
+
+      state.log.push({
+        timestamp: new Date().toISOString(),
+        message: `Free upgrade: Removed ${upgradeName} from ${slotType} slot ${slotIndex + 1}`,
+        playerId,
+        type: 'action'
+      });
+    }
+  }
+
+  // Mark player as complete
+  transitionState.completedPlayers.push(playerId);
+
+  // Advance to next player or complete transition
+  transitionState.currentPlayerIndex++;
+
+  if (transitionState.currentPlayerIndex >= state.playerOrder.length) {
+    // All players done - complete the age transition
+    completeAgeTransition(state);
+  }
+
+  return { newState: state };
+}
+
 module.exports = {
   processInstallUpgrade,
   processRemoveUpgrade,
+  processAgeTransitionDesignBureau,
   calculateHullCost  // Exported for testing
 };

@@ -23,7 +23,7 @@ See `.claude/commands/_playtest-shared.md` for what this does and documentation 
 
 ### Setup
 ```bash
-python -m playtest setup [game_name]
+python -m playtest setup
 ```
 
 ### Autoplay

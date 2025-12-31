@@ -346,6 +346,8 @@ The Ground Board has 12 action spaces. Each requires a matching card symbol.
 
 **Hull Upgrade Rule:** If you upgrade Frame or Fabric while ships are in your Launch Hangar, pay the Hull Cost difference for each ship.
 
+**Duplicates Allowed:** You may install the same Upgrade tile in multiple slots of the same type. If you only own one Frame technology, you can fill both Frame slots with that Upgrade.
+
 ## 6.3 Construction Hall (Wrench)
 
 **Action:** Build ships.
@@ -773,6 +775,8 @@ When the Progress Track reaches the Age threshold (checked during Income & Clean
    > Minimum £0
    
 4. **Replace Blueprint:** Install new Age's Blueprint overlay. Transfer Upgrades to new Blueprint.
+
+5. **Free Blueprint Upgrade:** Each player receives a free Design Bureau action (faction swap limit applies). Players take turns in player order to install upgrades. Hull Upgrade Rule does not apply during this free action. This is the ideal time to fill your new structural slots with duplicate Upgrades if needed.
 
 6. **Set Up New Age:** Place new Map, add new Technologies to bag, refresh R&D Board.
 

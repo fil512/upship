@@ -6,9 +6,9 @@ including card/location selection and launch readiness evaluation.
 
 from typing import Any
 
-from client import Player, Ship, Blueprint, Route, Card
+from client import Player, Ship, Blueprint, Route, Card, CombatMission
 
-from .state import get_state, get_available_routes, get_player_id, get_rd_board
+from .state import get_state, get_available_routes, get_mission_row, get_player_id, get_rd_board
 from .client import get_player_user_id, get_manifest
 
 
@@ -61,19 +61,38 @@ def get_design_bureau_swaps(player_data: Player) -> list[dict]:
     empty_fabric_indices = [i for i, s in enumerate(fabric_slots) if s is None]
     empty_drive_indices = [i for i, s in enumerate(drive_slots) if s is None]
 
+    # Track what's already installed (for drive slots - duplicates not allowed there)
+    installed_drive_upgrades = set(s for s in drive_slots if s is not None)
+
     manifest = get_manifest()
-    available_upgrades = []
+    # Collect ALL available upgrades from technologies (duplicates allowed for frame/fabric)
+    frame_fabric_upgrades = []
+    drive_upgrades = []
     for tech_id in technologies:
         upgrade_info = manifest.get_upgrade_for_tech(tech_id)
         if upgrade_info:
-            available_upgrades.append({
-                'upgradeId': upgrade_info['id'],
-                'slotType': upgrade_info['slotType']
-            })
+            upgrade_id = upgrade_info['id']
+            slot_type = upgrade_info['slotType']
+            if slot_type in ('frameSlots', 'fabricSlots'):
+                # Duplicates allowed for structural slots per Section 6.2
+                frame_fabric_upgrades.append({
+                    'upgradeId': upgrade_id,
+                    'slotType': slot_type
+                })
+            elif slot_type == 'driveSlots':
+                # Skip if already installed in drive slots
+                if upgrade_id not in installed_drive_upgrades:
+                    drive_upgrades.append({
+                        'upgradeId': upgrade_id,
+                        'slotType': slot_type
+                    })
+
+    available_upgrades = frame_fabric_upgrades + drive_upgrades
 
     # Prioritize: Frame > Fabric > Drive
+    # Note: slotType from manifest uses 'frameSlots', 'fabricSlots', 'driveSlots'
     for upgrade in available_upgrades:
-        if upgrade['slotType'] == 'frame' and empty_frame_indices:
+        if upgrade['slotType'] == 'frameSlots' and empty_frame_indices:
             slot_index = empty_frame_indices.pop(0)
             swaps.append({
                 'action': 'install',
@@ -85,7 +104,7 @@ def get_design_bureau_swaps(player_data: Player) -> list[dict]:
                 return swaps
 
     for upgrade in available_upgrades:
-        if upgrade['slotType'] == 'fabric' and empty_fabric_indices:
+        if upgrade['slotType'] == 'fabricSlots' and empty_fabric_indices:
             slot_index = empty_fabric_indices.pop(0)
             swaps.append({
                 'action': 'install',
@@ -97,7 +116,7 @@ def get_design_bureau_swaps(player_data: Player) -> list[dict]:
                 return swaps
 
     for upgrade in available_upgrades:
-        if upgrade['slotType'] == 'drive' and empty_drive_indices:
+        if upgrade['slotType'] == 'driveSlots' and empty_drive_indices:
             slot_index = empty_drive_indices.pop(0)
             swaps.append({
                 'action': 'install',
@@ -226,6 +245,121 @@ def evaluate_launch_readiness(player_data: Player, routes: list[Route], current_
         'total_gas': total_gas,
         'engineers': engineers
     }
+
+
+def evaluate_combat_mission_readiness(
+    player_data: Player,
+    missions: list[CombatMission],
+    ship_stats: dict,
+    current_age: int = 2
+) -> list[dict]:
+    """Evaluate which combat missions a ship can attempt.
+
+    Args:
+        player_data: Player object.
+        missions: List of available CombatMission objects.
+        ship_stats: Dict with ship's calculated stats (range, speed, ceiling, reliability).
+        current_age: Current game age (should be 2 for combat missions).
+
+    Returns:
+        List of dicts with mission info and whether requirements are met:
+        [{'mission': CombatMission, 'can_attempt': bool, 'failures': list[str]}]
+    """
+    if current_age != 2:
+        return []
+
+    results = []
+
+    for mission in missions:
+        failures = []
+
+        # Check stat requirements
+        if mission.range > 0 and ship_stats.get('range', 0) < mission.range:
+            failures.append(f"Range {ship_stats.get('range', 0)} < required {mission.range}")
+        if mission.speed > 0 and ship_stats.get('speed', 0) < mission.speed:
+            failures.append(f"Speed {ship_stats.get('speed', 0)} < required {mission.speed}")
+        if mission.ceiling > 0 and ship_stats.get('ceiling', 0) < mission.ceiling:
+            failures.append(f"Ceiling {ship_stats.get('ceiling', 0)} < required {mission.ceiling}")
+        if mission.reliability > 0 and ship_stats.get('reliability', 0) < mission.reliability:
+            failures.append(f"Reliability {ship_stats.get('reliability', 0)} < required {mission.reliability}")
+
+        results.append({
+            'mission': mission,
+            'can_attempt': len(failures) == 0,
+            'failures': failures
+        })
+
+    # Sort by VP value (highest first) for missions we can attempt
+    results.sort(key=lambda x: (-1 if x['can_attempt'] else 0, -x['mission'].vp, -x['mission'].income))
+
+    return results
+
+
+def find_best_combat_mission(
+    player_data: Player,
+    missions: list[CombatMission],
+    game_id: str
+) -> CombatMission | None:
+    """Find the best combat mission for a player's ships.
+
+    Considers all hangar ships and returns the highest-value mission
+    that any ship can attempt.
+
+    Args:
+        player_data: Player object.
+        missions: List of available CombatMission objects.
+        game_id: The game ID.
+
+    Returns:
+        The best CombatMission or None if none are achievable.
+    """
+    if not missions or not player_data:
+        return None
+
+    hangar_ships = [s for s in (player_data.ships or []) if s.status == 'hangar']
+    if not hangar_ships:
+        return None
+
+    # Check USA faction restriction
+    # USA cannot take missions until all other players have one
+    if player_data.faction == 'usa':
+        state = get_state(game_id)
+        if state:
+            # Check if all other players have at least one mission
+            all_others_have_missions = True
+            for pid, pdata in state.players.items():
+                if pdata.faction != 'usa':
+                    completed = getattr(pdata, 'completed_missions', None) or []
+                    if len(completed) == 0:
+                        all_others_have_missions = False
+                        break
+            if not all_others_have_missions:
+                return None
+
+    best_mission = None
+    best_value = -1
+
+    for ship in hangar_ships:
+        ship_stats = {
+            'range': ship.range_stat,
+            'speed': ship.speed,
+            'ceiling': ship.ceiling,
+            'reliability': ship.reliability
+        }
+
+        evaluations = evaluate_combat_mission_readiness(player_data, missions, ship_stats, current_age=2)
+
+        for eval_result in evaluations:
+            if eval_result['can_attempt']:
+                mission = eval_result['mission']
+                # Value = VP * 10 + income (rough prioritization)
+                value = mission.vp * 10 + mission.income
+                if value > best_value:
+                    best_value = value
+                    best_mission = mission
+                break  # Take the first (best) mission this ship can do
+
+    return best_mission
 
 
 def find_strategic_placement(player: str, hand: list[dict], locations: list[dict], game_id: str) -> tuple[dict | None, dict | None]:

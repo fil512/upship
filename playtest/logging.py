@@ -15,21 +15,23 @@ class PlaytestLogger:
         self.current_round = 0
         self.current_player_turn = 0
         self.routes_claimed_this_round = []
+        self.missions_claimed_this_round = []
         self.techs_acquired_this_round = []
         self.early_reveal_counter = 0
 
-    def init_log_file(self, game_id, game_name=None):
-        """Initialize a new log file for this game."""
+    def init_log_file(self, game_id):
+        """Initialize (truncate) the log file for this game.
+
+        Always uses logs/playtest.log, truncating any existing content.
+        """
         LOGS_DIR.mkdir(exist_ok=True)
 
-        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-        filename = f"playtest_{timestamp}.log"
-        self.log_file = LOGS_DIR / filename
+        self.log_file = LOGS_DIR / "playtest.log"
         self.current_age = 1
         self.current_round = 0
         self.current_player_turn = 0
 
-        # Write header
+        # Truncate and write header
         with open(self.log_file, 'w') as f:
             f.write(f"# UP SHIP! Playtest Log\n")
             f.write(f"# Game ID: {game_id}\n")
@@ -46,12 +48,11 @@ class PlaytestLogger:
         return self.log_file
 
     def load_log_file(self):
-        """Load existing log file path from tracker."""
-        if LOG_FILE_TRACKER.exists():
-            log_path = Path(LOG_FILE_TRACKER.read_text().strip())
-            if log_path.exists():
-                self.log_file = log_path
-                return self.log_file
+        """Load the log file (always logs/playtest.log)."""
+        log_path = LOGS_DIR / "playtest.log"
+        if log_path.exists():
+            self.log_file = log_path
+            return self.log_file
         return None
 
     def log_action(self, player, action, phase=None, is_phase_transition=False):
@@ -95,13 +96,18 @@ class PlaytestLogger:
         self.current_player_turn += 1
 
     def reset_round_tracking(self):
-        """Reset per-round tracking (routes and techs) at start of new round."""
+        """Reset per-round tracking (routes, missions, techs) at start of new round."""
         self.routes_claimed_this_round = []
+        self.missions_claimed_this_round = []
         self.techs_acquired_this_round = []
 
     def track_route_claimed(self, route_name, faction):
         """Track a route claimed during this round."""
         self.routes_claimed_this_round.append({'route': route_name, 'faction': faction})
+
+    def track_mission_claimed(self, mission_name, faction):
+        """Track a combat mission claimed during this round (Age II only)."""
+        self.missions_claimed_this_round.append({'mission': mission_name, 'faction': faction})
 
     def track_tech_acquired(self, tech_name, faction):
         """Track a tech acquired during this round."""

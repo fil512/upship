@@ -14,17 +14,21 @@ from .client import get_client, get_faction_from_player
 from .logging import get_logger, PlaytestLogger
 from .state import (
     get_state, get_phase, get_player_agents, get_player_hand, get_available_locations,
-    get_current_placer, get_available_routes, get_player_id, get_ship_details,
+    get_current_placer, get_available_routes, get_mission_row, get_player_id, get_ship_details,
     get_blueprint_stats, format_blueprint_log, get_last_log_entries, get_gas_preference,
     get_player_data
 )
 from .strategy import (
-    find_strategic_placement, get_design_bureau_swaps, get_reveal_acquisitions
+    find_strategic_placement, get_design_bureau_swaps, get_reveal_acquisitions,
+    evaluate_combat_mission_readiness, find_best_combat_mission
 )
 
 
 def handle_launchpad_launches(player: str, game_id: str, logger: PlaytestLogger) -> None:
     """Handle the multi-step launchpad: launch ships and call NO_MORE_LAUNCHES.
+
+    In Age II, prioritizes combat missions over regular routes.
+    In Age I and III, only regular routes are available.
 
     Args:
         player: Player username.
@@ -48,11 +52,6 @@ def handle_launchpad_launches(player: str, game_id: str, logger: PlaytestLogger)
 
     if not hangar_ships:
         _no_more_launches(player, game_id, "no ships in hangar", logger)
-        return
-
-    routes = get_available_routes(game_id)
-    if not routes:
-        _no_more_launches(player, game_id, "no routes available", logger)
         return
 
     # Check blueprint slot requirements
@@ -89,10 +88,200 @@ def handle_launchpad_launches(player: str, game_id: str, logger: PlaytestLogger)
         _no_more_launches(player, game_id, "no gas available", logger)
         return
 
+    launched = 0
+
+    # Age II: Try combat missions first
+    if current_age == 2:
+        missions = get_mission_row(game_id)
+        if missions:
+            mission_launches = _attempt_combat_missions(
+                player, game_id, hangar_ships, missions, player_data, officers_needed, logger
+            )
+            launched += mission_launches
+
+            # Refresh state after mission launches
+            if mission_launches > 0:
+                state = get_state(game_id, player)
+                if state:
+                    player_id = get_player_id(player, state)
+                    player_data = state.get_player(player_id) if player_id else None
+                    hangar_ships = [s for s in (player_data.ships if player_data else []) if s.status == 'hangar']
+                    available_officers = player_data.officers if player_data else 0
+
+                    # Check if we can continue launching
+                    if not hangar_ships or available_officers < officers_needed:
+                        _no_more_launches_quiet(player, game_id)
+                        print(f"    {player}: done launching ({launched} ships)")
+                        logger.log_action(player, f"done launching ({launched} ships)", "worker_placement")
+                        return
+
+    # Try regular routes
+    routes = get_available_routes(game_id)
+    if routes:
+        route_launches = _attempt_route_launches(
+            player, game_id, hangar_ships, routes, player_data, officers_needed, logger
+        )
+        launched += route_launches
+    elif launched == 0:
+        _no_more_launches(player, game_id, "no routes or missions available", logger)
+        return
+
+    _no_more_launches_quiet(player, game_id)
+    print(f"    {player}: done launching ({launched} ships)")
+    logger.log_action(player, f"done launching ({launched} ships)", "worker_placement")
+
+
+def _attempt_combat_missions(
+    player: str,
+    game_id: str,
+    hangar_ships: list,
+    missions: list,
+    player_data: Player,
+    officers_needed: int,
+    logger: PlaytestLogger
+) -> int:
+    """Attempt to launch ships on combat missions.
+
+    Args:
+        player: Player username.
+        game_id: The game ID.
+        hangar_ships: List of ships in hangar.
+        missions: List of available combat missions.
+        player_data: Player object.
+        officers_needed: Number of officers required per launch.
+        logger: PlaytestLogger instance.
+
+    Returns:
+        Number of successful mission launches.
+    """
+    client = get_client()
+    launched = 0
+
+    for ship in hangar_ships[:]:
+        ship_stats = get_ship_details(ship, player_data)
+
+        # Find a mission this ship can attempt
+        evaluations = evaluate_combat_mission_readiness(
+            player_data,
+            missions,
+            {
+                'range': ship_stats.get('range', 0),
+                'speed': ship_stats.get('speed', 0),
+                'ceiling': ship_stats.get('ceiling', 0),
+                'reliability': ship_stats.get('reliability', 0)
+            },
+            current_age=2
+        )
+
+        for eval_result in evaluations:
+            if not eval_result['can_attempt']:
+                continue
+
+            mission = eval_result['mission']
+            gas_type = get_gas_preference(player, game_id)
+
+            stats_str = (f"Ship: Lift={ship_stats['lift']} Weight={ship_stats['weight']} "
+                        f"Gas={ship_stats['required_gas']} Range={ship_stats['range']} "
+                        f"Speed={ship_stats['speed']} Rel={ship_stats.get('reliability', 0)}")
+            mission_str = (f"Mission: {mission.name} ({mission.mission_type}) "
+                          f"Range≥{mission.range} Speed≥{mission.speed} Ceil≥{mission.ceiling} "
+                          f"Rel≥{mission.reliability} → +{mission.income}£, {mission.vp}VP")
+
+            # Launch the ship on the mission
+            result = client.launch_combat_mission(player, game_id, ship.id, mission.id, gas_type)
+
+            if result.success:
+                # Get updated state
+                post_state = result.game_state or get_state(game_id, player)
+                post_player_id = get_player_id(player, post_state) if post_state else None
+                post_player_data = post_state.get_player(post_player_id) if post_state and post_player_id else None
+
+                post_ship = None
+                if post_player_data:
+                    post_ship = next((s for s in post_player_data.ships if s.id == ship.id), None)
+
+                ship_status = post_ship.status if post_ship else 'unknown'
+
+                # Handle hazard/flak response if needed
+                try:
+                    raw_state = client._api_get(player, f"/api/state/{game_id}")
+                    game_state_wrapper = raw_state.get('gameState', raw_state)
+                    state_data = game_state_wrapper.get('state', {})
+                    players_data = state_data.get('players', {})
+                    raw_player = players_data.get(post_player_id, {})
+                    raw_ships = raw_player.get('ships', [])
+                    raw_ship = next((s for s in raw_ships if s.get('id') == ship.id), None)
+
+                    if raw_ship and raw_ship.get('status') == 'awaiting_hazard':
+                        pending_hazard = raw_ship.get('pendingHazard')
+                        if pending_hazard:
+                            ship_status = _handle_hazard_response(player, game_id, ship.id, pending_hazard, post_player_data, logger)
+                except Exception:
+                    pass
+
+                # Determine launch outcome
+                log_entries = get_last_log_entries(post_state, count=10) if post_state else []
+                launch_outcome = _determine_launch_outcome(log_entries, ship.id, ship_status)
+
+                action_str = f"COMBAT MISSION {ship.id} → {mission.id} ({gas_type})"
+                print(f"    {player}: {action_str} [{launch_outcome}]")
+
+                logger.log_action(player, action_str, "worker_placement")
+                logger.log_action(None, f"  └─ {stats_str}", "worker_placement")
+                logger.log_action(None, f"  └─ {mission_str}", "worker_placement")
+                logger.log_action(None, f"  └─ Outcome: {launch_outcome} (status={ship_status})", "worker_placement")
+
+                if launch_outcome == "SUCCESS" or ship_status == 'on_route':
+                    # Remove mission from list
+                    missions = [m for m in missions if m.id != mission.id]
+                    launched += 1
+                    faction = get_faction_from_player(player)
+                    logger.track_mission_claimed(mission.name, faction)
+
+                    # Check if we have officers left for more launches
+                    if post_player_data:
+                        post_officers = post_player_data.officers or 0
+                        if post_officers < officers_needed:
+                            return launched
+                break
+            else:
+                error_msg = result.error or "unknown error"
+                print(f"    {player}: combat mission failed for {ship.id} to {mission.id}")
+                logger.log_action(player, f"COMBAT MISSION FAILED {ship.id} → {mission.id}", "worker_placement")
+                logger.log_action(None, f"  └─ Error: {error_msg[:100]}", "worker_placement")
+
+    return launched
+
+
+def _attempt_route_launches(
+    player: str,
+    game_id: str,
+    hangar_ships: list,
+    routes: list,
+    player_data: Player,
+    officers_needed: int,
+    logger: PlaytestLogger
+) -> int:
+    """Attempt to launch ships on regular routes.
+
+    Args:
+        player: Player username.
+        game_id: The game ID.
+        hangar_ships: List of ships in hangar.
+        routes: List of available routes.
+        player_data: Player object.
+        officers_needed: Number of officers required per launch.
+        logger: PlaytestLogger instance.
+
+    Returns:
+        Number of successful route launches.
+    """
+    client = get_client()
+    launched = 0
+
     # Sort routes by difficulty (easier first)
     routes_list = sorted(routes, key=lambda r: (r.distance or 1, r.speed_requirement or 0))
 
-    launched = 0
     for ship in hangar_ships[:]:
         ship_stats = get_ship_details(ship, player_data)
 
@@ -121,11 +310,6 @@ def handle_launchpad_launches(player: str, game_id: str, logger: PlaytestLogger)
                 ship_status = post_ship.status if post_ship else 'unknown'
 
                 # Handle hazard response if needed
-                # Note: The server may have auto-processed the hazard check
-                # or it may require a separate RESPOND_TO_HAZARD action
-                # For now, we'll check if ship is awaiting_hazard and respond
-
-                # Get raw state to check for pending hazard
                 try:
                     raw_state = client._api_get(player, f"/api/state/{game_id}")
                     game_state_wrapper = raw_state.get('gameState', raw_state)
@@ -164,10 +348,7 @@ def handle_launchpad_launches(player: str, game_id: str, logger: PlaytestLogger)
                     if post_player_data:
                         post_officers = post_player_data.officers or 0
                         if post_officers < officers_needed:
-                            print(f"    {player}: stopping launches (only {post_officers} officer(s) left)")
-                            _no_more_launches_quiet(player, game_id)
-                            print(f"    {player}: done launching ({launched} ships)")
-                            return
+                            return launched
                 break
             else:
                 error_msg = result.error or "unknown error"
@@ -175,9 +356,7 @@ def handle_launchpad_launches(player: str, game_id: str, logger: PlaytestLogger)
                 logger.log_action(player, f"LAUNCH FAILED {ship.id} → {route.id}", "worker_placement")
                 logger.log_action(None, f"  └─ Error: {error_msg[:100]}", "worker_placement")
 
-    _no_more_launches_quiet(player, game_id)
-    print(f"    {player}: done launching ({launched} ships)")
-    logger.log_action(player, f"done launching ({launched} ships)", "worker_placement")
+    return launched
 
 
 def _no_more_launches(player: str, game_id: str, reason: str, logger: PlaytestLogger) -> None:
@@ -636,3 +815,96 @@ def handle_income_cleanup_phase(game_id: str, logger: PlaytestLogger) -> None:
                 pass
 
     print("  All players collected income")
+
+
+def handle_age_transition_design_bureau(game_id: str, logger: PlaytestLogger) -> bool:
+    """Handle the age transition Design Bureau phase.
+
+    Each player gets a free Design Bureau action (no Hull Upgrade Rule charges).
+    Players take turns installing upgrades using their faction swap limit.
+
+    Args:
+        game_id: The game ID.
+        logger: PlaytestLogger instance.
+
+    Returns:
+        True if phase completed (all players done).
+    """
+    client = get_client()
+
+    # Get current state
+    state = get_state(game_id)
+    if not state:
+        return False
+
+    # Get raw state for transition info
+    try:
+        raw_state = client._api_get("playtest_germany", f"/api/state/{game_id}")
+        game_state_wrapper = raw_state.get('gameState', raw_state)
+        state_data = game_state_wrapper.get('state', {})
+        transition_info = state_data.get('ageTransitionDesignBureau', {})
+    except Exception:
+        return False
+
+    if not transition_info:
+        return False
+
+    current_idx = transition_info.get('currentPlayerIndex', 0)
+    new_age = transition_info.get('newAge', 2)
+    completed_players = transition_info.get('completedPlayers', [])
+
+    # Get current player ID
+    if current_idx >= len(state.player_order):
+        return True  # All done
+
+    current_player_id = state.player_order[current_idx]
+
+    # Find username for this player
+    current_username = None
+    for player in PLAYERS:
+        player_data = state.players.get(current_player_id)
+        if player_data and player_data.faction:
+            faction = player_data.faction.lower()
+            if f"playtest_{faction}" == player:
+                current_username = player
+                break
+
+    if not current_username:
+        # Try to find by faction
+        for player in PLAYERS:
+            expected_faction = player.replace("playtest_", "")
+            player_data = state.get_player(current_player_id)
+            if player_data and player_data.faction == expected_faction:
+                current_username = player
+                break
+
+    if not current_username:
+        return False
+
+    # Get player data
+    player_data = get_player_data(current_username, game_id)
+    if not player_data:
+        return False
+
+    # Calculate swaps for this player
+    swaps = get_design_bureau_swaps(player_data)
+
+    # Submit the action
+    result = client.action(current_username, game_id, 'AGE_TRANSITION_DESIGN_BUREAU', swaps=swaps)
+
+    if result.success:
+        faction = get_faction_from_player(current_username).upper()
+        if swaps:
+            swap_desc = ", ".join(f"{s['upgradeId']} in {s['slotType']}[{s['slotIndex']}]" for s in swaps)
+            print(f"  {current_username}: Age {new_age} free upgrades: {swap_desc}")
+            logger.log_action(current_username, f"Age {new_age} free upgrades: {swap_desc}", "age_transition")
+        else:
+            print(f"  {current_username}: Age {new_age} free upgrades: none (no available upgrades)")
+            logger.log_action(current_username, f"Age {new_age} free upgrades: none", "age_transition")
+        return True
+    else:
+        error_msg = result.error or "unknown error"
+        print(f"  {current_username}: free upgrade failed - {error_msg}")
+        logger.log_action(current_username, f"Age {new_age} free upgrade FAILED", "age_transition")
+        logger.log_action(None, f"  └─ Error: {error_msg[:100]}", "age_transition")
+        return False

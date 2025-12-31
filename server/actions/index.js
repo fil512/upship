@@ -8,7 +8,7 @@ const { GameRuleError } = require('../errors');
 // Import all action processors
 const { processBuyGas } = require('./gas');
 const { processAcquireTechnology, processAcquireTechnologyResearch, processGainResearch } = require('./technology');
-const { processInstallUpgrade, processRemoveUpgrade } = require('./blueprint');
+const { processInstallUpgrade, processRemoveUpgrade, processAgeTransitionDesignBureau } = require('./blueprint');
 const { processBuildShip } = require('./building');
 const { processLaunchShip, processClaimRoute, processNoMoreLaunches } = require('./launch');
 const { processRespondToHazard } = require('./hazard');
@@ -39,6 +39,7 @@ const ACTION_HANDLERS = {
   // Blueprint
   INSTALL_UPGRADE: processInstallUpgrade,
   REMOVE_UPGRADE: processRemoveUpgrade,
+  AGE_TRANSITION_DESIGN_BUREAU: processAgeTransitionDesignBureau,
 
   // Building
   BUILD_SHIP: processBuildShip,

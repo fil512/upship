@@ -5,7 +5,7 @@
 
 const { createTestGameState } = require('../../fixtures/testData');
 const { startNewRound } = require('../../../server/actions/helpers/phaseTransition');
-const { performAgeTransition, scoreAgeVP, calculateTechnologyVP } = require('../../../server/actions/helpers/ageTransition');
+const { performAgeTransition, completeAgeTransition, scoreAgeVP, calculateTechnologyVP } = require('../../../server/actions/helpers/ageTransition');
 
 describe('Rules Compliance - Age Transitions', () => {
 
@@ -273,7 +273,10 @@ describe('Rules Compliance - Age Transitions', () => {
       state.players['2'].faction = 'britain';
       state.players['2'].income = 6;
 
+      // Start transition (enters Design Bureau phase)
       performAgeTransition(state, 2);
+      // Complete transition (applies Red Tape flaw)
+      completeAgeTransition(state);
 
       // Britain's income should be reduced by 1 due to Red Tape flaw
       expect(state.players['2'].income).toBe(5);
@@ -286,10 +289,112 @@ describe('Rules Compliance - Age Transitions', () => {
       state.players['2'].faction = 'britain';
       state.players['2'].income = 0;
 
+      // Start and complete transition
       performAgeTransition(state, 2);
+      completeAgeTransition(state);
 
       // Income should stay at 0, not go negative
       expect(state.players['2'].income).toBe(0);
+    });
+  });
+
+  describe('Free Design Bureau action during age transition', () => {
+    it('should enter age_transition_design_bureau phase after performAgeTransition', () => {
+      const state = createTestGameState();
+      state.age = 1;
+
+      performAgeTransition(state, 2);
+
+      expect(state.phase).toBe('age_transition_design_bureau');
+      expect(state.ageTransitionDesignBureau).toBeDefined();
+      expect(state.ageTransitionDesignBureau.newAge).toBe(2);
+      expect(state.ageTransitionDesignBureau.currentPlayerIndex).toBe(0);
+      expect(state.ageTransitionDesignBureau.completedPlayers).toEqual([]);
+    });
+
+    it('should allow installing upgrades during age transition without Hull Upgrade charges', () => {
+      const { processAgeTransitionDesignBureau } = require('../../../server/actions/blueprint');
+
+      const state = createTestGameState();
+      state.age = 1;
+      state.playerOrder = ['1', '2'];
+
+      // Set up player with a technology and empty slot
+      state.players['1'].technologies = ['duralumin_girders'];
+      state.players['1'].blueprint = {
+        frameSlots: [null, null],
+        fabricSlots: ['cotton_envelope'],
+        driveSlots: [null],
+        componentSlots: [null]
+      };
+      state.players['1'].ships = [{ id: 'ship1', status: 'hangar' }];
+      state.players['1'].cash = 10;
+
+      // Start transition
+      performAgeTransition(state, 2);
+
+      // Player 1 installs an upgrade
+      const result = processAgeTransitionDesignBureau(state, '1', {
+        swaps: [{ action: 'install', slotType: 'frame', slotIndex: 0, upgradeId: 'duralumin_frame' }]
+      });
+
+      expect(result.newState.players['1'].blueprint.frameSlots[0]).toBe('duralumin_frame');
+      // Cash should not be affected (no Hull Upgrade Rule)
+      expect(result.newState.players['1'].cash).toBe(10);
+    });
+
+    it('should allow duplicate upgrades during age transition', () => {
+      const { processAgeTransitionDesignBureau } = require('../../../server/actions/blueprint');
+
+      const state = createTestGameState();
+      state.age = 1;
+      state.playerOrder = ['1', '2'];
+
+      // Set up player with frame tech and slots - one already filled
+      state.players['1'].technologies = ['duralumin_girders'];
+      state.players['1'].blueprint = {
+        frameSlots: ['duralumin_frame', null],  // First slot already has this upgrade
+        fabricSlots: [null],
+        driveSlots: [null],
+        componentSlots: [null]
+      };
+
+      performAgeTransition(state, 2);
+
+      // Try to install same upgrade in second slot (duplicates allowed)
+      const result = processAgeTransitionDesignBureau(state, '1', {
+        swaps: [{ action: 'install', slotType: 'frame', slotIndex: 1, upgradeId: 'duralumin_frame' }]
+      });
+
+      // Both slots should now have the same upgrade
+      expect(result.newState.players['1'].blueprint.frameSlots[0]).toBe('duralumin_frame');
+      expect(result.newState.players['1'].blueprint.frameSlots[1]).toBe('duralumin_frame');
+    });
+
+    it('should complete age transition after all players submit their actions', () => {
+      const { processAgeTransitionDesignBureau } = require('../../../server/actions/blueprint');
+
+      const state = createTestGameState();
+      state.age = 1;
+      state.playerOrder = ['1', '2'];
+
+      // Set up minimal blueprints
+      state.players['1'].blueprint = { frameSlots: [], fabricSlots: [], driveSlots: [], componentSlots: [] };
+      state.players['2'].blueprint = { frameSlots: [], fabricSlots: [], driveSlots: [], componentSlots: [] };
+
+      performAgeTransition(state, 2);
+
+      // Player 1 submits (no swaps)
+      processAgeTransitionDesignBureau(state, '1', { swaps: [] });
+      expect(state.phase).toBe('age_transition_design_bureau');  // Still in phase
+
+      // Player 2 submits (no swaps)
+      const result = processAgeTransitionDesignBureau(state, '2', { swaps: [] });
+
+      // Transition should now be complete
+      expect(result.newState.phase).toBe('worker_placement');
+      expect(result.newState.age).toBe(2);
+      expect(result.newState.ageTransitionDesignBureau).toBeUndefined();
     });
   });
 });

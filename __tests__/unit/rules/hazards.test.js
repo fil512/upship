@@ -915,9 +915,12 @@ describe('Rules Compliance - Hazards', () => {
       state.age = 1;
       state.players['1'].fireProtectionUsedThisAge = true;
 
-      // Use the age transition helper to test reset
-      const { performAgeTransition } = require('../../../server/actions/helpers/ageTransition');
+      // Use the age transition helpers to test reset
+      // performAgeTransition starts the transition (enters Design Bureau phase)
+      // completeAgeTransition finishes it (applies resets and faction flaws)
+      const { performAgeTransition, completeAgeTransition } = require('../../../server/actions/helpers/ageTransition');
       performAgeTransition(state, 2);
+      completeAgeTransition(state);
 
       // Should reset for next age
       expect(state.players['1'].fireProtectionUsedThisAge).toBe(false);

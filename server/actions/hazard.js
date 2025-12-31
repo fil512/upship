@@ -7,6 +7,7 @@
 const { GameRuleError } = require('../errors');
 const { applyCityBonus, CITY_BONUSES } = require('../data/cities');
 const { shuffleArray } = require('../utils/random');
+const { processCompleteMission, resolveFlakCheck, calculateEquipmentBonus } = require('./combatMission');
 
 /**
  * Check if Hindenburg Disaster conditions are met per Section 1.2
@@ -364,13 +365,79 @@ function resolveFireHazard(state, playerId, shipIndex, ship, hazard, engineersTo
 }
 
 /**
- * Resolve successful hazard check - ship claims route
+ * Resolve successful hazard check - ship claims route or completes mission
  */
 function resolveHazardSuccess(state, playerId, shipIndex, route, hazard, message) {
   const playerState = state.players[playerId];
   const ships = playerState.ships;
+  const ship = ships[shipIndex];
 
-  // Ship successfully claims route
+  // Check if this is an Age II combat mission
+  if (ship.pendingMissionId && state.age === 2) {
+    // Find the mission
+    const mission = state.missionRow?.find(m => m.id === ship.pendingMissionId);
+    if (!mission) {
+      // Mission not found - this shouldn't happen but handle gracefully
+      state.log.push({
+        timestamp: new Date().toISOString(),
+        message: `Error: Mission ${ship.pendingMissionId} not found in Mission Row`,
+        playerId,
+        type: 'error'
+      });
+      ships[shipIndex].status = 'hangar';
+      delete ships[shipIndex].pendingMissionId;
+      return { newState: state };
+    }
+
+    // Per Appendix G: Complete mission first (gain rewards), then check flak
+    // "You earn rewards as long as the mission succeeds, even if flak destroys your ship afterward"
+
+    // Calculate equipment bonus income
+    const bonusIncome = calculateEquipmentBonus(playerState, mission);
+
+    // Complete the mission - this awards income and stores for VP
+    processCompleteMission(state, playerId, {
+      ...mission,
+      income: mission.income + bonusIncome
+    });
+
+    state.log.push({
+      timestamp: new Date().toISOString(),
+      message: `Hazard check PASSED (${hazard.type}): ${message}`,
+      playerId,
+      type: 'hazard'
+    });
+
+    // Now do the Flak Check per Section 10.5
+    // "Compare the Hazard card's Flak value to your ship's Armor. If Flak > Armor, ship is destroyed."
+    const flakResult = resolveFlakCheck(ship, hazard);
+
+    if (flakResult.destroyed) {
+      ships[shipIndex].status = 'destroyed';
+      delete ships[shipIndex].pendingMissionId;
+      state.log.push({
+        timestamp: new Date().toISOString(),
+        message: `FLAK! ${flakResult.reason}. Mission completed but ship lost to anti-aircraft fire.`,
+        playerId,
+        type: 'hazard'
+      });
+    } else {
+      // Ship survives - place on completed mission
+      ships[shipIndex].status = 'on_mission';
+      ships[shipIndex].missionId = ship.pendingMissionId;
+      delete ships[shipIndex].pendingMissionId;
+      state.log.push({
+        timestamp: new Date().toISOString(),
+        message: `${flakResult.reason}. Ship survived and mission complete.`,
+        playerId,
+        type: 'action'
+      });
+    }
+
+    return { newState: state };
+  }
+
+  // Age I or Age III: Standard route claiming
   ships[shipIndex].status = 'on_route';
   ships[shipIndex].routeId = route?.id;
   delete ships[shipIndex].pendingRouteId;
@@ -406,6 +473,7 @@ function resolveHazardSuccess(state, playerId, shipIndex, route, hazard, message
 
 /**
  * Resolve aborted launch - ship returns to hangar
+ * Per Appendix G: "If Aborted: Mission remains in the row (like an unclaimed route)"
  */
 function resolveHazardAbort(state, playerId, shipIndex, hazard, message) {
   const playerState = state.players[playerId];
@@ -414,6 +482,7 @@ function resolveHazardAbort(state, playerId, shipIndex, hazard, message) {
   // Ship returns to hangar (per Section 8.1 outcome table: Aborted)
   ships[shipIndex].status = 'hangar';
   delete ships[shipIndex].pendingRouteId;
+  delete ships[shipIndex].pendingMissionId;  // Age II: Mission stays in row
   delete ships[shipIndex].routeId;
 
   state.log.push({

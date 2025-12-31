@@ -1596,6 +1596,13 @@
               <div class="phase-info">
                 <strong>Income & Cleanup Phase:</strong> Income is collected automatically. Click End Turn when ready to proceed.
               </div>
+            ` : state.phase === 'age_transition_design_bureau' ? `
+              <div class="phase-info" style="background: #e8f4e8; border: 2px solid #28a745; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                <strong style="color: #28a745;">Free Blueprint Upgrade!</strong><br>
+                Age transition in progress. Each player gets a free Design Bureau action to fill empty slots.
+                ${isMyTurn ? 'Install upgrades for technologies you own, then click Done.' : 'Waiting for other players...'}
+              </div>
+              ${isMyTurn ? renderAgeTransitionDesignBureau(state, myState) : ''}
             ` : ''}
 
             <div class="section-title">Ground Board Actions</div>
@@ -1699,6 +1706,7 @@
         worker_placement: 'Worker Placement',
         reveal: 'Reveal & Acquisition',
         income_cleanup: 'Income & Cleanup',
+        age_transition_design_bureau: 'Age Transition - Free Blueprint Upgrade',
         // Legacy phases
         planning: 'Planning',
         actions: 'Actions',
@@ -1862,6 +1870,160 @@
       const loc = GROUND_BOARD_LOCATIONS[locationId];
       if (!loc) return false;
       return cardSymbol === 'any' || cardSymbol === loc.symbol;
+    }
+
+    // Track pending swaps for age transition Design Bureau
+    let pendingAgeTransitionSwaps = [];
+
+    function renderAgeTransitionDesignBureau(state, myState) {
+      const allUpgrades = upgradesData?.allUpgrades || {};
+      const allTechs = upgradesData?.allTechnologies || {};
+      const blueprint = myState.blueprint || {};
+      const technologies = myState.technologies || [];
+
+      // Get swap limit for current faction
+      const factionSwapLimits = { germany: 2, usa: 2, britain: 1, italy: 4 };
+      let swapLimit = factionSwapLimits[myState.faction] || 2;
+      // Check for Modular Frame bonus
+      if ((blueprint.frameSlots || []).includes('modular_frame')) {
+        swapLimit += 2;
+      }
+
+      // Find available upgrades from owned technologies
+      const availableUpgrades = {};
+      for (const techId of technologies) {
+        const tech = allTechs[techId];
+        if (tech?.grants) {
+          const upgrade = allUpgrades[tech.grants];
+          if (upgrade) {
+            const slotType = upgrade.slotType?.replace('Slots', '');
+            if (!availableUpgrades[slotType]) availableUpgrades[slotType] = [];
+            availableUpgrades[slotType].push({ ...upgrade, id: tech.grants });
+          }
+        }
+      }
+
+      let html = '<div class="age-transition-design-bureau" style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 15px;">';
+      html += '<h4 style="margin-top: 0;">Select Upgrades to Install (max ' + swapLimit + ' swaps)</h4>';
+      html += '<p style="font-size: 12px; color: #666; margin-bottom: 15px;">Duplicates are allowed. Click empty slots to fill them with available upgrades.</p>';
+
+      // Show each slot type with empty slots
+      const slotTypes = [
+        { key: 'frameSlots', name: 'Frame', icon: SLOT_ICONS.frame },
+        { key: 'fabricSlots', name: 'Fabric', icon: SLOT_ICONS.fabric },
+        { key: 'driveSlots', name: 'Drive', icon: SLOT_ICONS.drive },
+        { key: 'componentSlots', name: 'Component', icon: SLOT_ICONS.component }
+      ];
+
+      for (const slotType of slotTypes) {
+        const slots = blueprint[slotType.key] || [];
+        const shortType = slotType.key.replace('Slots', '');
+        const upgrades = availableUpgrades[shortType] || [];
+
+        if (slots.length === 0) continue;
+
+        html += '<div style="margin-bottom: 10px;">';
+        html += '<strong>' + slotType.icon + ' ' + slotType.name + ':</strong> ';
+
+        for (let i = 0; i < slots.length; i++) {
+          const upgradeId = slots[i];
+          const pendingSwap = pendingAgeTransitionSwaps.find(s => s.slotType === shortType && s.slotIndex === i);
+
+          if (pendingSwap) {
+            // Show pending installation
+            const upgrade = allUpgrades[pendingSwap.upgradeId];
+            html += '<span style="background: #d4edda; padding: 3px 8px; border-radius: 4px; margin: 2px; display: inline-block;">';
+            html += (upgrade?.name || pendingSwap.upgradeId) + ' (pending)';
+            html += ' <button onclick="cancelAgeTransitionSwap(' + i + ', \'' + shortType + '\')" style="border:none; background:none; cursor:pointer; color:#dc3545;">✕</button>';
+            html += '</span>';
+          } else if (upgradeId) {
+            // Show installed upgrade
+            const upgrade = allUpgrades[upgradeId];
+            html += '<span style="background: #e9ecef; padding: 3px 8px; border-radius: 4px; margin: 2px; display: inline-block;">';
+            html += (upgrade?.name || upgradeId);
+            html += '</span>';
+          } else {
+            // Show empty slot with dropdown
+            if (upgrades.length > 0) {
+              html += '<select onchange="addAgeTransitionSwap(\'' + shortType + '\', ' + i + ', this.value)" style="margin: 2px; padding: 3px;">';
+              html += '<option value="">-- Empty --</option>';
+              for (const upgrade of upgrades) {
+                html += '<option value="' + upgrade.id + '">' + upgrade.name + '</option>';
+              }
+              html += '</select>';
+            } else {
+              html += '<span style="background: #fff3cd; padding: 3px 8px; border-radius: 4px; margin: 2px; display: inline-block; font-style: italic;">';
+              html += 'Empty (no upgrades available)';
+              html += '</span>';
+            }
+          }
+        }
+
+        html += '</div>';
+      }
+
+      // Show pending swaps summary
+      if (pendingAgeTransitionSwaps.length > 0) {
+        html += '<div style="margin-top: 10px; padding: 10px; background: #d4edda; border-radius: 4px;">';
+        html += '<strong>Pending (' + pendingAgeTransitionSwaps.length + '/' + swapLimit + '):</strong> ';
+        for (const swap of pendingAgeTransitionSwaps) {
+          const upgrade = allUpgrades[swap.upgradeId];
+          html += (upgrade?.name || swap.upgradeId) + ' ';
+        }
+        html += '</div>';
+      }
+
+      // Submit button
+      html += '<div style="margin-top: 15px;">';
+      html += '<button class="action-btn" onclick="submitAgeTransitionDesignBureau()" style="background: #28a745; border-color: #28a745;">';
+      html += 'Done with Free Upgrades (' + pendingAgeTransitionSwaps.length + ' swaps)';
+      html += '</button>';
+      html += '</div>';
+
+      html += '</div>';
+      return html;
+    }
+
+    function addAgeTransitionSwap(slotType, slotIndex, upgradeId) {
+      if (!upgradeId) return;
+
+      // Check swap limit
+      const myState = gameState?.players?.[userId];
+      const factionSwapLimits = { germany: 2, usa: 2, britain: 1, italy: 4 };
+      let swapLimit = factionSwapLimits[myState?.faction] || 2;
+      if ((myState?.blueprint?.frameSlots || []).includes('modular_frame')) {
+        swapLimit += 2;
+      }
+
+      if (pendingAgeTransitionSwaps.length >= swapLimit) {
+        alert('Swap limit reached (' + swapLimit + ')');
+        return;
+      }
+
+      // Remove any existing swap for this slot
+      pendingAgeTransitionSwaps = pendingAgeTransitionSwaps.filter(s => !(s.slotType === slotType && s.slotIndex === slotIndex));
+
+      // Add new swap
+      pendingAgeTransitionSwaps.push({
+        action: 'install',
+        slotType: slotType,
+        slotIndex: slotIndex,
+        upgradeId: upgradeId
+      });
+
+      // Re-render
+      renderGame(gameState);
+    }
+
+    function cancelAgeTransitionSwap(slotIndex, slotType) {
+      pendingAgeTransitionSwaps = pendingAgeTransitionSwaps.filter(s => !(s.slotType === slotType && s.slotIndex === slotIndex));
+      renderGame(gameState);
+    }
+
+    async function submitAgeTransitionDesignBureau() {
+      await performAction('AGE_TRANSITION_DESIGN_BUREAU', { swaps: pendingAgeTransitionSwaps });
+      pendingAgeTransitionSwaps = []; // Reset for next time
+      await loadGameState();
     }
 
     function renderGroundBoard(state, myState, isMyTurn) {

@@ -274,11 +274,12 @@ function applyBritainRedTape(state) {
 }
 
 /**
- * Perform full age transition per Section 12.1
+ * Start age transition - performs steps 1-4 and enters free Design Bureau phase
+ * Per Section 12.1 step 5: Each player gets a free Design Bureau action
  * @param {Object} state - Game state (mutated)
  * @param {number} newAge - The age to transition to
  */
-function performAgeTransition(state, newAge) {
+function startAgeTransition(state, newAge) {
   // Step 1: Score VP for routes and technologies
   scoreAllPlayersVP(state);
 
@@ -290,6 +291,30 @@ function performAgeTransition(state, newAge) {
 
   // Step 4: Replace Blueprint (expand slots)
   expandBlueprintSlots(state, newAge);
+
+  // Step 5: Enter free Design Bureau phase
+  // Players take turns installing upgrades (no Hull Upgrade Rule charges)
+  state.phase = 'age_transition_design_bureau';
+  state.ageTransitionDesignBureau = {
+    newAge,
+    currentPlayerIndex: 0,
+    completedPlayers: []
+  };
+
+  state.log.push({
+    timestamp: new Date().toISOString(),
+    message: `Age transition to Age ${newAge} - Free Blueprint Upgrade phase begins`,
+    type: 'system'
+  });
+}
+
+/**
+ * Complete age transition after free Design Bureau phase
+ * Called when all players have completed their free swaps
+ * @param {Object} state - Game state (mutated)
+ */
+function completeAgeTransition(state) {
+  const newAge = state.ageTransitionDesignBureau?.newAge || state.age + 1;
 
   // Apply faction-specific flaws
   applyBritainRedTape(state);
@@ -307,11 +332,27 @@ function performAgeTransition(state, newAge) {
     }
   }
 
+  // Clean up transition state
+  delete state.ageTransitionDesignBureau;
+
+  // Return to worker placement for new age
+  state.phase = 'worker_placement';
+
   state.log.push({
     timestamp: new Date().toISOString(),
     message: `=== Age ${newAge} begins! ===`,
     type: 'system'
   });
+}
+
+/**
+ * Perform full age transition per Section 12.1
+ * This starts the transition; completeAgeTransition finishes it after Design Bureau phase
+ * @param {Object} state - Game state (mutated)
+ * @param {number} newAge - The age to transition to
+ */
+function performAgeTransition(state, newAge) {
+  startAgeTransition(state, newAge);
 }
 
 module.exports = {
@@ -325,6 +366,8 @@ module.exports = {
   applyBritainRedTape,
   resetFireProtection,
   performAgeTransition,
+  startAgeTransition,
+  completeAgeTransition,
   getBlueprintSlotsForFaction,
   BLUEPRINT_SLOTS
 };
