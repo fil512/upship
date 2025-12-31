@@ -19,17 +19,18 @@ class PlaytestLogger:
         self.early_reveal_counter = 0
 
     def init_log_file(self, game_id, game_name=None):
-        """Initialize a new log file for this game."""
+        """Initialize (truncate) the log file for this game.
+
+        Always uses logs/playtest.log, truncating any existing content.
+        """
         LOGS_DIR.mkdir(exist_ok=True)
 
-        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-        filename = f"playtest_{timestamp}.log"
-        self.log_file = LOGS_DIR / filename
+        self.log_file = LOGS_DIR / "playtest.log"
         self.current_age = 1
         self.current_round = 0
         self.current_player_turn = 0
 
-        # Write header
+        # Truncate and write header
         with open(self.log_file, 'w') as f:
             f.write(f"# UP SHIP! Playtest Log\n")
             f.write(f"# Game ID: {game_id}\n")
@@ -46,12 +47,11 @@ class PlaytestLogger:
         return self.log_file
 
     def load_log_file(self):
-        """Load existing log file path from tracker."""
-        if LOG_FILE_TRACKER.exists():
-            log_path = Path(LOG_FILE_TRACKER.read_text().strip())
-            if log_path.exists():
-                self.log_file = log_path
-                return self.log_file
+        """Load the log file (always logs/playtest.log)."""
+        log_path = LOGS_DIR / "playtest.log"
+        if log_path.exists():
+            self.log_file = log_path
+            return self.log_file
         return None
 
     def log_action(self, player, action, phase=None, is_phase_transition=False):
