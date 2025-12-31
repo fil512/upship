@@ -955,9 +955,11 @@
     let gameState = null;
     let currentUserId = null;
     let currentUsername = null;
+    let actualUserId = null; // The real logged-in user (for dev mode switching)
     let refreshInterval = null;
     let upgradesData = null;
     let selectedCardIndex = null; // For worker placement card selection
+    let isDevMode = false; // Dev mode enables player switching
 
     // Upgrade definitions (loaded from server)
     const SLOT_ICONS = {
@@ -1013,6 +1015,18 @@
         return;
       }
 
+      // Check if we're in dev mode
+      try {
+        const envRes = await fetch('/api/env');
+        if (envRes.ok) {
+          const envData = await envRes.json();
+          isDevMode = envData.isDev;
+        }
+      } catch (err) {
+        // Default to non-dev mode if env check fails
+        isDevMode = false;
+      }
+
       // Check auth and get user ID
       try {
         const authRes = await fetch('/api/auth/me');
@@ -1023,6 +1037,7 @@
         const authData = await authRes.json();
         currentUserId = authData.user.id;
         currentUsername = authData.user.username;
+        actualUserId = authData.user.id; // Store the real user ID
       } catch (err) {
         window.location.href = '/';
         return;
@@ -1113,9 +1128,22 @@
             <div class="turn-indicator ${isMyTurn ? 'your-turn' : 'waiting'}">
               ${isMyTurn ? '⚡ Your Turn' : '⏳ Waiting...'}
             </div>
-            <div style="color: #aaa; font-size: 0.85rem;">
-              👤 ${currentUsername}
-            </div>
+            ${isDevMode ? `
+              <div style="display: flex; align-items: center; gap: 8px; background: rgba(255, 165, 0, 0.2); padding: 5px 10px; border-radius: 4px; border: 1px solid orange;">
+                <span style="color: orange; font-size: 0.7rem;">DEV</span>
+                <select onchange="switchPlayer(this.value)" style="background: #1a1a2e; color: #e8e8e8; border: 1px solid #c4a35a; border-radius: 4px; padding: 3px 8px; font-family: Georgia, serif; font-size: 0.85rem;">
+                  ${state.playerOrder.map(pid => {
+                    const player = state.players[pid];
+                    const isSelected = pid === currentUserId;
+                    return \`<option value="\${pid}" \${isSelected ? 'selected' : ''}>\${getFactionFlag(player.faction)} \${player.faction}</option>\`;
+                  }).join('')}
+                </select>
+              </div>
+            ` : `
+              <div style="color: #aaa; font-size: 0.85rem;">
+                👤 ${currentUsername}
+              </div>
+            `}
           </div>
         </div>
 
@@ -2296,6 +2324,19 @@
     function goBack() {
       clearInterval(refreshInterval);
       window.location.href = '/';
+    }
+
+    // Switch to viewing as a different player (dev mode only)
+    function switchPlayer(playerId) {
+      if (!isDevMode || !gameState?.state) return;
+
+      const player = gameState.state.players[playerId];
+      if (!player) return;
+
+      currentUserId = playerId;
+      currentUsername = player.faction; // Use faction name as username in dev mode
+      selectedCardIndex = null; // Clear any card selection
+      renderGame();
     }
 
     // Start

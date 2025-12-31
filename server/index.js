@@ -76,6 +76,13 @@ app.get('/api/status', (req, res) => {
   });
 });
 
+// Environment info endpoint (for dev-only features in frontend)
+app.get('/api/env', (req, res) => {
+  res.json({
+    isDev: process.env.NODE_ENV !== 'production'
+  });
+});
+
 // Serve the main page for all other routes (SPA support)
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '..', 'public', 'index.html'));
