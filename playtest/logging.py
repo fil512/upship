@@ -15,6 +15,7 @@ class PlaytestLogger:
         self.current_round = 0
         self.current_player_turn = 0
         self.routes_claimed_this_round = []
+        self.missions_claimed_this_round = []
         self.techs_acquired_this_round = []
         self.early_reveal_counter = 0
 
@@ -95,13 +96,18 @@ class PlaytestLogger:
         self.current_player_turn += 1
 
     def reset_round_tracking(self):
-        """Reset per-round tracking (routes and techs) at start of new round."""
+        """Reset per-round tracking (routes, missions, techs) at start of new round."""
         self.routes_claimed_this_round = []
+        self.missions_claimed_this_round = []
         self.techs_acquired_this_round = []
 
     def track_route_claimed(self, route_name, faction):
         """Track a route claimed during this round."""
         self.routes_claimed_this_round.append({'route': route_name, 'faction': faction})
+
+    def track_mission_claimed(self, mission_name, faction):
+        """Track a combat mission claimed during this round (Age II only)."""
+        self.missions_claimed_this_round.append({'mission': mission_name, 'faction': faction})
 
     def track_tech_acquired(self, tech_name, faction):
         """Track a tech acquired during this round."""

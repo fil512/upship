@@ -35,4 +35,4 @@ if "--early-reveal" in sys.argv:
     sys.argv = [a for a in sys.argv if a != "--early-reveal"]
 
 # Default autoplay configuration
-DEFAULT_MAX_TURNS = 50
+DEFAULT_MAX_TURNS = 20

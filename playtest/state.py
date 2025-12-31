@@ -9,7 +9,7 @@ import json
 import math
 from typing import Any
 
-from client import GameState, Player, Ship, Blueprint, Route, Card
+from client import GameState, Player, Ship, Blueprint, Route, Card, CombatMission
 
 from .config import PLAYERS
 from .client import get_client, get_game_id, get_player_user_id, get_faction_from_player, get_manifest
@@ -150,6 +150,21 @@ def get_available_routes(game_id: str) -> list[Route]:
         if state.available_routes:
             return [r for r in state.available_routes if r.available]
         return [r for r in state.routes if r.available]
+    return []
+
+
+def get_mission_row(game_id: str) -> list[CombatMission]:
+    """Get list of available combat missions (Age II only).
+
+    Args:
+        game_id: The game ID.
+
+    Returns:
+        List of CombatMission objects from the Mission Row.
+    """
+    state = get_state(game_id)
+    if state and state.mission_row:
+        return state.mission_row
     return []
 
 

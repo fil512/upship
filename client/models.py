@@ -194,6 +194,37 @@ class Technology:
 
 
 @dataclass
+class CombatMission:
+    """A combat mission available in Age II."""
+    id: str
+    name: str
+    mission_type: str  # bombing_run, reconnaissance, resupply, naval_patrol, artillery_observation
+    range: int = 0
+    speed: int = 0
+    ceiling: int = 0
+    reliability: int = 0
+    income: int = 0
+    vp: int = 0
+    special: str | None = None
+
+    @classmethod
+    def from_dict(cls, data: dict) -> 'CombatMission':
+        """Create CombatMission from API response dict."""
+        return cls(
+            id=data.get('id', ''),
+            name=data.get('name', ''),
+            mission_type=data.get('type', ''),
+            range=data.get('range', 0),
+            speed=data.get('speed', 0),
+            ceiling=data.get('ceiling', 0),
+            reliability=data.get('reliability', 0),
+            income=data.get('income', 0),
+            vp=data.get('vp', 0),
+            special=data.get('special'),
+        )
+
+
+@dataclass
 class Player:
     """A player in the game."""
     user_id: str
@@ -338,6 +369,7 @@ class GameState:
     rd_board: dict[str, Any] = field(default_factory=dict)
     routes: list[Route] = field(default_factory=list)
     available_routes: list[Route] = field(default_factory=list)
+    mission_row: list[CombatMission] = field(default_factory=list)  # Age II only
     worker_placement: WorkerPlacement | None = None
     log: list[dict] = field(default_factory=list)
 
@@ -353,6 +385,9 @@ class GameState:
         # Parse routes
         routes = [Route.from_dict(r) for r in data.get('routes', [])]
         available_routes = [Route.from_dict(r) for r in data.get('availableRoutes', [])]
+
+        # Parse combat mission row (Age II only)
+        mission_row = [CombatMission.from_dict(m) for m in data.get('missionRow', [])]
 
         # Parse worker placement
         wp_data = data.get('workerPlacement', {})
@@ -382,6 +417,7 @@ class GameState:
             rd_board=data.get('rdBoard', data.get('rnDBoard', {})),
             routes=routes,
             available_routes=available_routes,
+            mission_row=mission_row,
             worker_placement=worker_placement,
             log=data.get('log', []),
         )

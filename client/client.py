@@ -570,6 +570,35 @@ class UpshipClient:
             gasType=gas_type,
         )
 
+    def launch_combat_mission(
+        self,
+        username: str,
+        game_id: str,
+        ship_id: str,
+        mission_id: str,
+        gas_type: str = 'hydrogen',
+    ) -> ActionResult:
+        """Launch a ship on a combat mission (Age II only).
+
+        Args:
+            username: The authenticated username.
+            game_id: The ID of the game.
+            ship_id: The ID of the ship to launch.
+            mission_id: The ID of the combat mission from the Mission Row.
+            gas_type: Type of gas to use ('hydrogen' or 'helium').
+
+        Returns:
+            ActionResult with success status and updated game state.
+        """
+        return self.action(
+            username,
+            game_id,
+            'LAUNCH_COMBAT_MISSION',
+            shipId=ship_id,
+            missionId=mission_id,
+            gasType=gas_type,
+        )
+
     def acquire_technology(self, username: str, game_id: str, tech_id: str) -> ActionResult:
         """Acquire a technology from the R&D board.
 

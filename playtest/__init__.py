@@ -10,7 +10,7 @@ Example:
     game_id = setup_game("Test Game")
 
     # Run autonomous playtesting
-    autoplay(num_turns=50)
+    autoplay(num_turns=20)
 """
 
 from .autoplay import autoplay, StuckDetector
