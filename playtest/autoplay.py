@@ -15,7 +15,8 @@ from .client import get_client, get_game_id, login_all_players
 from .logging import get_logger
 from .state import get_state, get_phase, get_age, check_game_ended, get_state_fingerprint
 from .phases import (
-    handle_worker_placement_round, handle_reveal_phase, handle_income_cleanup_phase
+    handle_worker_placement_round, handle_reveal_phase, handle_income_cleanup_phase,
+    handle_age_transition_design_bureau
 )
 from .display import show_summary
 
@@ -234,6 +235,21 @@ def autoplay(num_turns: int | None = None, game_id: str | None = None) -> None:
                     print(f"Completed {turn_count} turns (target reached)")
                     print(f"{'='*60}")
                     break
+
+        elif phase == "AGE_TRANSITION_DESIGN_BUREAU":
+            # Handle free Design Bureau action during age transition
+            if handle_age_transition_design_bureau(game_id, logger):
+                stuck_detector.reset()
+            # Check if phase completed (might loop for all players)
+            current_phase = get_phase(game_id)
+            if current_phase != "AGE_TRANSITION_DESIGN_BUREAU":
+                # Transition completed
+                current_age = get_age(game_id)
+                if current_age != last_age:
+                    logger.log_age_change(current_age)
+                    print(f"\n  *** AGE {current_age} BEGINS! ***")
+                    last_age = current_age
+                stuck_detector.reset()
 
         else:
             print(f"  Unknown phase: {phase}, attempting to advance...")

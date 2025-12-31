@@ -61,19 +61,38 @@ def get_design_bureau_swaps(player_data: Player) -> list[dict]:
     empty_fabric_indices = [i for i, s in enumerate(fabric_slots) if s is None]
     empty_drive_indices = [i for i, s in enumerate(drive_slots) if s is None]
 
+    # Track what's already installed (for drive slots - duplicates not allowed there)
+    installed_drive_upgrades = set(s for s in drive_slots if s is not None)
+
     manifest = get_manifest()
-    available_upgrades = []
+    # Collect ALL available upgrades from technologies (duplicates allowed for frame/fabric)
+    frame_fabric_upgrades = []
+    drive_upgrades = []
     for tech_id in technologies:
         upgrade_info = manifest.get_upgrade_for_tech(tech_id)
         if upgrade_info:
-            available_upgrades.append({
-                'upgradeId': upgrade_info['id'],
-                'slotType': upgrade_info['slotType']
-            })
+            upgrade_id = upgrade_info['id']
+            slot_type = upgrade_info['slotType']
+            if slot_type in ('frameSlots', 'fabricSlots'):
+                # Duplicates allowed for structural slots per Section 6.2
+                frame_fabric_upgrades.append({
+                    'upgradeId': upgrade_id,
+                    'slotType': slot_type
+                })
+            elif slot_type == 'driveSlots':
+                # Skip if already installed in drive slots
+                if upgrade_id not in installed_drive_upgrades:
+                    drive_upgrades.append({
+                        'upgradeId': upgrade_id,
+                        'slotType': slot_type
+                    })
+
+    available_upgrades = frame_fabric_upgrades + drive_upgrades
 
     # Prioritize: Frame > Fabric > Drive
+    # Note: slotType from manifest uses 'frameSlots', 'fabricSlots', 'driveSlots'
     for upgrade in available_upgrades:
-        if upgrade['slotType'] == 'frame' and empty_frame_indices:
+        if upgrade['slotType'] == 'frameSlots' and empty_frame_indices:
             slot_index = empty_frame_indices.pop(0)
             swaps.append({
                 'action': 'install',
@@ -85,7 +104,7 @@ def get_design_bureau_swaps(player_data: Player) -> list[dict]:
                 return swaps
 
     for upgrade in available_upgrades:
-        if upgrade['slotType'] == 'fabric' and empty_fabric_indices:
+        if upgrade['slotType'] == 'fabricSlots' and empty_fabric_indices:
             slot_index = empty_fabric_indices.pop(0)
             swaps.append({
                 'action': 'install',
@@ -97,7 +116,7 @@ def get_design_bureau_swaps(player_data: Player) -> list[dict]:
                 return swaps
 
     for upgrade in available_upgrades:
-        if upgrade['slotType'] == 'drive' and empty_drive_indices:
+        if upgrade['slotType'] == 'driveSlots' and empty_drive_indices:
             slot_index = empty_drive_indices.pop(0)
             swaps.append({
                 'action': 'install',

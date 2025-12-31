@@ -815,3 +815,96 @@ def handle_income_cleanup_phase(game_id: str, logger: PlaytestLogger) -> None:
                 pass
 
     print("  All players collected income")
+
+
+def handle_age_transition_design_bureau(game_id: str, logger: PlaytestLogger) -> bool:
+    """Handle the age transition Design Bureau phase.
+
+    Each player gets a free Design Bureau action (no Hull Upgrade Rule charges).
+    Players take turns installing upgrades using their faction swap limit.
+
+    Args:
+        game_id: The game ID.
+        logger: PlaytestLogger instance.
+
+    Returns:
+        True if phase completed (all players done).
+    """
+    client = get_client()
+
+    # Get current state
+    state = get_state(game_id)
+    if not state:
+        return False
+
+    # Get raw state for transition info
+    try:
+        raw_state = client._api_get("playtest_germany", f"/api/state/{game_id}")
+        game_state_wrapper = raw_state.get('gameState', raw_state)
+        state_data = game_state_wrapper.get('state', {})
+        transition_info = state_data.get('ageTransitionDesignBureau', {})
+    except Exception:
+        return False
+
+    if not transition_info:
+        return False
+
+    current_idx = transition_info.get('currentPlayerIndex', 0)
+    new_age = transition_info.get('newAge', 2)
+    completed_players = transition_info.get('completedPlayers', [])
+
+    # Get current player ID
+    if current_idx >= len(state.player_order):
+        return True  # All done
+
+    current_player_id = state.player_order[current_idx]
+
+    # Find username for this player
+    current_username = None
+    for player in PLAYERS:
+        player_data = state.players.get(current_player_id)
+        if player_data and player_data.faction:
+            faction = player_data.faction.lower()
+            if f"playtest_{faction}" == player:
+                current_username = player
+                break
+
+    if not current_username:
+        # Try to find by faction
+        for player in PLAYERS:
+            expected_faction = player.replace("playtest_", "")
+            player_data = state.get_player(current_player_id)
+            if player_data and player_data.faction == expected_faction:
+                current_username = player
+                break
+
+    if not current_username:
+        return False
+
+    # Get player data
+    player_data = get_player_data(current_username, game_id)
+    if not player_data:
+        return False
+
+    # Calculate swaps for this player
+    swaps = get_design_bureau_swaps(player_data)
+
+    # Submit the action
+    result = client.action(current_username, game_id, 'AGE_TRANSITION_DESIGN_BUREAU', swaps=swaps)
+
+    if result.success:
+        faction = get_faction_from_player(current_username).upper()
+        if swaps:
+            swap_desc = ", ".join(f"{s['upgradeId']} in {s['slotType']}[{s['slotIndex']}]" for s in swaps)
+            print(f"  {current_username}: Age {new_age} free upgrades: {swap_desc}")
+            logger.log_action(current_username, f"Age {new_age} free upgrades: {swap_desc}", "age_transition")
+        else:
+            print(f"  {current_username}: Age {new_age} free upgrades: none (no available upgrades)")
+            logger.log_action(current_username, f"Age {new_age} free upgrades: none", "age_transition")
+        return True
+    else:
+        error_msg = result.error or "unknown error"
+        print(f"  {current_username}: free upgrade failed - {error_msg}")
+        logger.log_action(current_username, f"Age {new_age} free upgrade FAILED", "age_transition")
+        logger.log_action(None, f"  └─ Error: {error_msg[:100]}", "age_transition")
+        return False
