@@ -182,8 +182,29 @@ function recoverShipsAndOfficers(state) {
 }
 
 /**
+ * Calculate technology income from owned technologies
+ * Per Section 12.1: Sum income values from all technology tiles
+ * @param {string[]} techIds - Array of technology IDs
+ * @returns {number} Total income from technologies
+ */
+function calculateTechnologyIncome(techIds) {
+  const techDefs = getAllTechnologyDefinitions();
+  let totalIncome = 0;
+
+  for (const techId of (techIds || [])) {
+    const tech = techDefs[techId];
+    if (tech && typeof tech.income === 'number') {
+      totalIncome += tech.income;
+    }
+  }
+
+  return totalIncome;
+}
+
+/**
  * Calculate transition income per Section 12.1 step 3
- * New Income = Tech income - £1 per route lost, minimum 0
+ * New Income = (income from Technology tiles) - (£1 per route lost)
+ * Minimum £0
  * @param {Object} state - Game state (mutated)
  */
 function calculateTransitionIncome(state) {
@@ -194,22 +215,19 @@ function calculateTransitionIncome(state) {
     const routes = state.map?.routes || [];
     const routesLost = routes.filter(r => r.claimed === playerId).length;
 
-    // Calculate income from technologies (if they grant income)
-    // Note: Most technologies don't grant income, so this is primarily the penalty
-    let techIncome = 0;
-    // Technologies that grant income would add to techIncome here
-    // For now, starting income is the base
-    const baseIncome = 5; // Starting income per Section 3.2
+    // Calculate income from technologies per Section 12.1 step 3
+    // Each technology tile has an income value (1-3 per Appendix C)
+    const techIncome = calculateTechnologyIncome(playerState.technologies);
 
-    // Apply route loss penalty
-    const newIncome = Math.max(0, baseIncome + techIncome - routesLost);
+    // Per Section 12.1 step 3: "New Income = (income from Technology tiles) - (£1 per route lost)"
+    // This REPLACES the old income, not adds to it
+    const newIncome = Math.max(0, techIncome - routesLost);
 
-    // Don't reduce below current level if already lower
-    playerState.income = Math.max(0, Math.min(playerState.income, newIncome + playerState.income - baseIncome));
+    playerState.income = newIncome;
 
     state.log.push({
       timestamp: new Date().toISOString(),
-      message: `Income adjusted: lost ${routesLost} routes`,
+      message: `Income reset: £${techIncome} from technologies - £${routesLost} route loss penalty = £${newIncome}`,
       playerId,
       type: 'age_transition'
     });

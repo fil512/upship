@@ -100,6 +100,12 @@ function processCalculateScores(state, playerId, data) {
     let totalVP = 0;
     const breakdown = {};
 
+    // Previously accumulated VP from age transitions per Section 12.2
+    // Technologies and routes are "scored every Age" - VP accumulates
+    const previouslyAccumulated = playerState.vp || 0;
+    breakdown.previouslyAccumulated = previouslyAccumulated;
+    totalVP += previouslyAccumulated;
+
     // VP from routes per Section 12.2 and Appendix F
     // Routes have explicit `vp` property per Appendix F specifications
     let routeVP = 0;

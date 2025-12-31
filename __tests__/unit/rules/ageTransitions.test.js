@@ -274,16 +274,24 @@ describe('Rules Compliance - Age Transitions', () => {
       const state = createTestGameState();
       state.age = 1;
 
-      // Set up Britain player
+      // Set up Britain player with technologies that generate income
+      // Per Section 12.1: Income is recalculated from technologies at age transition
+      // We need technologies that total to 6 income so after Red Tape (-1) it's 5
+      // Using: duralumin_framework (2) + maybach_engine (2) + steel_framework (1) + wire_bracing (1) = 6
       state.players['2'].faction = 'britain';
-      state.players['2'].income = 6;
+      state.players['2'].technologies = ['duralumin_framework', 'maybach_engine', 'steel_framework', 'wire_bracing'];
+      state.players['2'].income = 6; // Will be recalculated during transition
+
+      // No routes claimed by this player
+      state.map.routes = state.map.routes.filter(r => r.claimed !== '2');
 
       // Start transition (enters Design Bureau phase)
       performAgeTransition(state, 2);
-      // Complete transition (applies Red Tape flaw)
+      // Complete transition (applies Red Tape flaw after income recalculation)
       completeAgeTransition(state);
 
-      // Britain's income should be reduced by 1 due to Red Tape flaw
+      // Income recalculated: 6 from techs - 0 routes lost = 6
+      // Then Red Tape reduces by 1: 6 - 1 = 5
       expect(state.players['2'].income).toBe(5);
     });
 
@@ -291,14 +299,21 @@ describe('Rules Compliance - Age Transitions', () => {
       const state = createTestGameState();
       state.age = 1;
 
+      // Britain with 1 income from technologies and 1 route lost = 0 income
+      // Red Tape would try to make it -1, but should stay at 0
       state.players['2'].faction = 'britain';
+      state.players['2'].technologies = ['wooden_framework']; // income: 1
       state.players['2'].income = 0;
+
+      // Player has 1 route claimed
+      state.map.routes = [{ id: 'r1', claimed: '2' }];
 
       // Start and complete transition
       performAgeTransition(state, 2);
       completeAgeTransition(state);
 
-      // Income should stay at 0, not go negative
+      // Income recalculated: 1 from tech - 1 route lost = 0
+      // Red Tape would reduce by 1: 0 - 1 = -1, but minimum is 0
       expect(state.players['2'].income).toBe(0);
     });
   });

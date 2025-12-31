@@ -137,18 +137,19 @@ function processHazardCheck(state, playerId, data) {
   const isHindenburgDisaster = checkHindenburgDisaster(hindenburgConditions);
 
   if (isHindenburgDisaster) {
-    // THE HINDENBURG DISASTER - Game ends immediately per Section 1.2
+    // THE HINDENBURG DISASTER - Per Section 1.2: "Complete the current round, then proceed to final scoring"
     ships[shipIndex].status = 'destroyed';
 
     state.hindenburgDisaster = true;
     state.gameEndReason = 'hindenburg_disaster';
+    state.gameEndAfterRound = true; // Game ends after current round completes
 
     // Per Section 14.5: Triggering player gains 3 VP (historical infamy)
     playerState.vp = (playerState.vp || 0) + 3;
 
     state.log.push({
       timestamp: new Date().toISOString(),
-      message: `THE HINDENBURG DISASTER! A Catastrophic Explosion has destroyed a luxury hydrogen airship. The era of airships has ended. Triggering player gains 3 VP (historical infamy).`,
+      message: `THE HINDENBURG DISASTER! A Catastrophic Explosion has destroyed a luxury hydrogen airship. The era of airships has ended. Complete the current round, then final scoring. Triggering player gains 3 VP (historical infamy).`,
       playerId,
       type: 'game_end'
     });
@@ -535,11 +536,12 @@ function processRespondToHazard(state, playerId, data) {
 
     state.hindenburgDisaster = true;
     state.gameEndReason = 'hindenburg_disaster';
+    state.gameEndAfterRound = true; // Per Section 1.2: Complete current round first
     playerState.vp = (playerState.vp || 0) + 3;
 
     state.log.push({
       timestamp: new Date().toISOString(),
-      message: `THE HINDENBURG DISASTER! A Catastrophic Explosion has destroyed a luxury hydrogen airship. The era of airships has ended. Triggering player gains 3 VP (historical infamy).`,
+      message: `THE HINDENBURG DISASTER! A Catastrophic Explosion has destroyed a luxury hydrogen airship. The era of airships has ended. Complete the current round, then final scoring. Triggering player gains 3 VP (historical infamy).`,
       playerId,
       type: 'game_end'
     });

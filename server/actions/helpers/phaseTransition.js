@@ -199,8 +199,20 @@ function transitionToIncomeCleanup(state) {
 }
 
 /**
+ * Trigger final scoring and determine winner
+ * Called when game end conditions are met per Section 1.2
+ * @param {Object} state - Game state (mutated)
+ */
+function triggerFinalScoring(state) {
+  const { processCalculateScores } = require('../scoring');
+  // Call scoring with forceEnd since we've already validated the game end condition
+  processCalculateScores(state, state.playerOrder[0], { forceEnd: true });
+}
+
+/**
  * Start a new round (called after Income & Cleanup)
  * Per Section 5.2: Check Age Transition during Income & Cleanup phase
+ * Per Section 1.2: Check game end conditions
  *
  * @param {Object} state - Game state (mutated)
  */
@@ -213,6 +225,24 @@ function startNewRound(state) {
   const thresholds = state.progressThresholds || { age2: 4, age3: 8, end: 12 };
   let needsAgeTransition = false;
   let newAge = null;
+
+  // Per Section 1.2: Check game end via Progress Track FIRST
+  // "The Rise of Fixed-Wing Aircraft: The Progress Track reaches its threshold."
+  // Since we're at the end of a round (Income & Cleanup just completed), the round is complete
+  if (state.progressTrack >= thresholds.end) {
+    state.gameEndAfterRound = true;
+    state.gameEndReason = 'progress_track';
+
+    state.log.push({
+      timestamp: new Date().toISOString(),
+      message: `Progress Track reached ${state.progressTrack}/${thresholds.end}. The Rise of Fixed-Wing Aircraft signals the end of the airship era!`,
+      type: 'game_end'
+    });
+
+    // Trigger final scoring
+    triggerFinalScoring(state);
+    return;
+  }
 
   if (state.age === 1 && state.progressTrack >= thresholds.age2) {
     needsAgeTransition = true;
