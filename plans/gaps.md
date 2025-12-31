@@ -3,8 +3,8 @@
 Last updated: 2025-12-31
 
 ## Summary
-- Total gaps found: 29
-- Resolved: 28
+- Total gaps found: 31
+- Resolved: 30
 - Unresolved: 1 (GAP-051 needs designer decision)
 
 ---
@@ -62,14 +62,14 @@ Level 4 areas analyzed in this session.
   - USA Helium Monopoly: Implemented via `heliumMonopoly` flag in FACTION_CONFIG
 
 ### Level 6 - Final Comprehensive Sweep
-- [ ] INCOME_TRACK_RULES
-- [ ] GAS_MARKET_MECHANICS
-- [ ] END_GAME_SCORING
-- [ ] INSURANCE_MECHANICS
-- [ ] RESEARCH_LEVEL_TRACK
-- [ ] FIRST_PLAYER_TOKEN
-- [ ] HINDENBURG_DISASTER_VP
-- [ ] BANKRUPTCY_RULES
+- [x] INCOME_TRACK_RULES - VERIFIED CORRECT
+- [x] GAS_MARKET_MECHANICS - VERIFIED CORRECT
+- [x] END_GAME_SCORING - VERIFIED CORRECT
+- [x] INSURANCE_MECHANICS - VERIFIED CORRECT
+- [x] RESEARCH_LEVEL_TRACK - VERIFIED CORRECT
+- [x] FIRST_PLAYER_TOKEN - GAP-081 FOUND (Not Set at Ministry)
+- [x] HINDENBURG_DISASTER_VP - VERIFIED CORRECT
+- [x] BANKRUPTCY_RULES - GAP-082 FOUND (Not Implemented)
 
 ---
 
@@ -102,6 +102,45 @@ const PROGRESS_THRESHOLDS = {
 1. Use spec values for production
 2. Keep reduced values for faster games
 3. Make this configurable
+
+---
+
+### GAP-081: Ministry Does Not Set First Player Token Persistently
+**Area:** FIRST_PLAYER_TOKEN
+**Severity:** Medium
+**Status:** RESOLVED (2025-12-31)
+**Spec Reference:** Section 6.9 Ministry
+
+**Resolution:** Added `state.firstPlayer = playerId` when a player visits Ministry in `server/actions/worker.js`. Also initialized `state.firstPlayer` to `playerOrder[0]` in `initializeGameState()` in `server/services/gameStateService.js`. Updated test fixture `createTestGameState()` to include `firstPlayer` property.
+
+**Files changed:**
+- `server/actions/worker.js` - Set firstPlayer when visiting Ministry
+- `server/services/gameStateService.js` - Initialize firstPlayer at game start
+- `__tests__/fixtures/testData.js` - Added firstPlayer to test fixture
+
+**Tests added:**
+- `__tests__/unit/rules/firstPlayer.test.js` - 5 tests for First Player token initialization and persistence
+
+---
+
+### GAP-082: Bankruptcy Rules Not Implemented
+**Area:** BANKRUPTCY_RULES
+**Severity:** High
+**Status:** RESOLVED (2025-12-31)
+**Spec Reference:** Section 5.3 Loans, Section 14.4
+
+**Resolution:** Implemented complete bankruptcy handling in `transitionToIncomeCleanup()` in `server/actions/helpers/phaseTransition.js`. When a player has negative net income and cannot pay from cash:
+1. Automatically take loans (each giving +30 cash, -3 income) until debt is covered
+2. If taking a loan would push income below -10, trigger bankruptcy:
+   - Deduct 10 VP (minimum 0)
+   - Reset income to 0
+   - Log the bankruptcy event with type 'bankruptcy'
+
+**Files changed:**
+- `server/actions/helpers/phaseTransition.js` - Added complete bankruptcy and automatic loan handling
+
+**Tests added:**
+- `__tests__/unit/rules/bankruptcy.test.js` - 8 tests for automatic loans, bankruptcy triggers, and boundary conditions
 
 ---
 
@@ -605,6 +644,47 @@ The following were analyzed and found to be correctly implemented:
 - **Conductive Covering:** Correctly grants immunity to Static Discharge
 - **Fire-Resistant Fabric:** Correctly grants once-per-Age fire auto-pass
 
+### INCOME_TRACK_RULES (Section 4.6, 5.2)
+- **Income Track starting value:** Correctly initialized to 5 per Section 3.2
+- **Income collection:** Correctly calculates net income = Income Track - Engineers upkeep in `transitionToIncomeCleanup()`
+- **Route income:** Routes correctly add to Income Track when claimed
+- **Crew income:** Officer and Engineer income correctly collected per their respective Income Tracks
+- **Minimum income enforcement:** MIN_INCOME = -10 correctly enforced for loans and insurance
+
+### GAS_MARKET_MECHANICS (Section 6.10, 9.3)
+- **Hydrogen price:** Correctly fixed at 1 (HYDROGEN_PRICE constant)
+- **Helium price track:** Correctly uses stepped progression [2, 3, 4, 5, 6, 8, 10, 15]
+- **Helium market advancement:** Correctly advances 1 step per helium cube purchased (unless USA)
+- **USA Helium Monopoly:** Correctly bypasses market advancement for USA faction
+- **Helium requires tech:** Correctly requires helium_handling technology
+- **Ministry reduces helium price:** Correctly calls `reduceHeliumMarket()` when visiting Ministry
+- **Age transition reset:** Correctly resets helium market to 2 in `completeAgeTransition()`
+
+### END_GAME_SCORING (Section 1.1, 12.2)
+- **Final scoring triggers:** Correctly triggers on progress track end OR Hindenburg Disaster
+- **VP accumulation:** Correctly accumulates VP from age transitions
+- **Route VP:** Correctly uses route.vp property from Appendix F specifications
+- **Technology VP:** Correctly uses technology.vp property from TECHNOLOGY_BAG
+- **Tiebreakers:** Correctly implements in order: Income Track, Cash, Ships on routes
+
+### INSURANCE_MECHANICS (Section 6.11)
+- **Max policies:** Correctly enforces MAX_INSURANCE_POLICIES = 3
+- **Cost:** Correctly reduces Income Track by 1 per policy
+- **Ship recovery:** Correctly recovers crashed ships to Launch Hangar via `applyInsuranceRecovery()`
+- **Officers/gas still lost:** Correctly does not recover officers or gas on insurance claim
+- **Debt limit check:** Correctly prevents insurance purchase if would push income below -10
+
+### RESEARCH_LEVEL_TRACK (Section 4.6, 6.1)
+- **Starting value:** Correctly initialized to 0 per Section 3.2
+- **Upgrade cost:** Correctly costs 4 per level (RESEARCH_INSTITUTE_COST)
+- **Research calculation:** Correctly calculates Research = Research Level + Engineers in Barracks + card bonuses
+- **Specialization discount:** Correctly applies -1/-2 discount based on tech track count
+
+### HINDENBURG_DISASTER_VP (Section 14.5)
+- **VP award:** Correctly awards +3 VP to triggering player ("historical infamy")
+- **Implemented in:** hazard.js lines 148 and 565 in both `processHazardCheck()` and `processRespondToHazard()`
+- **Game end flag:** Correctly sets `state.hindenburgDisaster = true` and `state.gameEndAfterRound = true`
+
 ---
 
 ## Notes
@@ -621,5 +701,7 @@ New tests added in:
 - `__tests__/unit/rules/hazards.test.js` - Tests for GAP-064
 - `__tests__/unit/rules/marketDeck.test.js` - Tests for GAP-061
 - `__tests__/unit/rules/upgrades.test.js` - Tests for GAP-068, GAP-069, GAP-070, GAP-071, GAP-072, GAP-073
+- `__tests__/unit/rules/firstPlayer.test.js` - Tests for GAP-081
+- `__tests__/unit/rules/bankruptcy.test.js` - Tests for GAP-082
 
-All 723 tests pass.
+All 736 tests pass.

@@ -438,6 +438,8 @@ function executeLocationAction(state, playerId, locationId, _card, options = {})
 
     case 'ministry': {
       state.workerPlacement.ministryVisitors.push(playerId);
+      // GAP-081: Set persistent First Player token when visiting Ministry (Section 6.9)
+      state.firstPlayer = playerId;
 
       // Draw 2 cards
       const cardsToDraw = 2;

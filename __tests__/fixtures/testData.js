@@ -176,6 +176,7 @@ const createTestGameState = (playerIds = [1, 2, 3, 4]) => ({
   currentPlayerIndex: 0,
   playerOrder: playerIds,
   playerCount: playerIds.length,
+  firstPlayer: playerIds[0], // GAP-081: First Player token initialized to first player in turn order
   players: playerIds.reduce((acc, id, idx) => {
     const factions = ['germany', 'britain', 'usa', 'italy'];
     acc[id] = createTestPlayerState(factions[idx % 4]);

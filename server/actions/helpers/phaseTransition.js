@@ -6,7 +6,7 @@
 const { shuffleArray } = require('../../utils/random');
 const { calculateTurnOrder } = require('./turnOrder');
 const { refreshRnDBoard, refreshMarketRow } = require('./marketHelpers');
-const { HAND_SIZE, INITIAL_AGENTS } = require('../../config/constants');
+const { HAND_SIZE, INITIAL_AGENTS, MIN_INCOME, LOAN_AMOUNT, LOAN_INCOME_PENALTY } = require('../../config/constants');
 const { performAgeTransition } = require('./ageTransition');
 
 /**
@@ -165,17 +165,67 @@ function transitionToIncomeCleanup(state) {
           type: 'income'
         });
       } else {
-        // Cannot pay - handle bankruptcy (Section 5.3)
+        // GAP-082: Cannot pay full deficit from cash - handle loans and potential bankruptcy
+        // Per Section 5.3: Must take loans until solvent, or go bankrupt if loans would exceed limit
         const canPay = playerState.cash;
+        let remainingDebt = deficit - canPay;
         playerState.cash = 0;
 
         state.log.push({
           timestamp: new Date().toISOString(),
-          message: `${playerState.faction.toUpperCase()} needs loan: paid £${canPay}, still owes £${deficit - canPay}`,
+          message: `${playerState.faction.toUpperCase()} cannot pay full upkeep: paid £${canPay}, needs £${remainingDebt} more`,
           playerId,
           type: 'income'
         });
-        // Note: Loan handling is a separate action per Section 5.3
+
+        // Initialize loans counter if not present
+        if (typeof playerState.loans !== 'number') {
+          playerState.loans = 0;
+        }
+
+        // Try to take loans to cover the debt
+        let currentIncome = playerState.income;
+        while (remainingDebt > 0) {
+          // Check if taking a loan would exceed the debt limit
+          const potentialNewIncome = currentIncome - LOAN_INCOME_PENALTY;
+          if (potentialNewIncome < MIN_INCOME) {
+            // Bankruptcy! Cannot take loan without exceeding debt limit
+            // Per Section 5.3: lose 10 VP and reset Income Track to 0
+            const vpLost = Math.min(10, playerState.vp || 0);
+            playerState.vp = Math.max(0, (playerState.vp || 0) - 10);
+            playerState.income = 0;
+
+            state.log.push({
+              timestamp: new Date().toISOString(),
+              message: `${playerState.faction.toUpperCase()} is BANKRUPT! Cannot take loans (income would drop below ${MIN_INCOME}). Lost ${vpLost} VP, income reset to 0.`,
+              playerId,
+              type: 'bankruptcy'
+            });
+            break;
+          }
+
+          // Take a loan
+          playerState.loans++;
+          playerState.cash += LOAN_AMOUNT;
+          currentIncome -= LOAN_INCOME_PENALTY;
+          playerState.income = currentIncome;
+
+          state.log.push({
+            timestamp: new Date().toISOString(),
+            message: `${playerState.faction.toUpperCase()} took loan #${playerState.loans}: gained £${LOAN_AMOUNT}, income reduced to £${playerState.income}`,
+            playerId,
+            type: 'loan'
+          });
+
+          // Pay off remaining debt from the loan money
+          if (playerState.cash >= remainingDebt) {
+            playerState.cash -= remainingDebt;
+            remainingDebt = 0;
+          } else {
+            remainingDebt -= playerState.cash;
+            playerState.cash = 0;
+          }
+        }
       }
     }
 

@@ -559,6 +559,7 @@ async function initializeGameState(gameId, players) {
       currentPlayerIndex: 0,
       playerOrder,
       playerCount,
+      firstPlayer: playerOrder[0], // GAP-081: Initialize First Player token to first player in turn order
       players: playerStates,
       // Worker placement phase tracking
       workerPlacement: {
