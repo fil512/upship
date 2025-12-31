@@ -11,6 +11,7 @@ const { processAcquireTechnology, processAcquireTechnologyResearch, processGainR
 const { processInstallUpgrade, processRemoveUpgrade, processAgeTransitionDesignBureau } = require('./blueprint');
 const { processBuildShip } = require('./building');
 const { processLaunchShip, processClaimRoute, processNoMoreLaunches } = require('./launch');
+const { processLaunchCombatMission } = require('./combatMission');
 const { processRespondToHazard } = require('./hazard');
 const { processPlaceAgent, processRecallAgents } = require('./worker');
 const { processTakeLoan, processBuyInsurance, processCollectIncome } = require('./economy');
@@ -46,6 +47,7 @@ const ACTION_HANDLERS = {
 
   // Launch and routes
   LAUNCH_SHIP: processLaunchShip,
+  LAUNCH_COMBAT_MISSION: processLaunchCombatMission,
   RESPOND_TO_HAZARD: processRespondToHazard,
   CLAIM_ROUTE: processClaimRoute,
 

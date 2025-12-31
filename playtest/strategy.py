@@ -31,13 +31,15 @@ def find_playable_card(cards: list[dict], locations: list[dict]) -> tuple[dict |
     return None, None
 
 
-def get_design_bureau_swaps(player_data: Player) -> list[dict]:
+def get_design_bureau_swaps(player_data: Player, current_age: int = 1) -> list[dict]:
     """Determine which upgrades to install at Design Bureau.
 
-    Prioritizes Frame and Fabric slots (required for launch) over Drive slots.
+    In Age I, prioritizes Frame and Fabric slots (required for launch).
+    In Age II/III, prioritizes Drive slots (for range/speed needed for missions/routes).
 
     Args:
         player_data: Player object with blueprint and technologies.
+        current_age: Current game age (1, 2, or 3).
 
     Returns:
         List of swap dicts: [{'action': 'install', 'slotType': str, 'slotIndex': int, 'upgradeId': str}]
@@ -66,16 +68,21 @@ def get_design_bureau_swaps(player_data: Player) -> list[dict]:
 
     manifest = get_manifest()
     # Collect ALL available upgrades from technologies (duplicates allowed for frame/fabric)
-    frame_fabric_upgrades = []
+    frame_upgrades = []
+    fabric_upgrades = []
     drive_upgrades = []
     for tech_id in technologies:
         upgrade_info = manifest.get_upgrade_for_tech(tech_id)
         if upgrade_info:
             upgrade_id = upgrade_info['id']
             slot_type = upgrade_info['slotType']
-            if slot_type in ('frameSlots', 'fabricSlots'):
-                # Duplicates allowed for structural slots per Section 6.2
-                frame_fabric_upgrades.append({
+            if slot_type == 'frameSlots':
+                frame_upgrades.append({
+                    'upgradeId': upgrade_id,
+                    'slotType': slot_type
+                })
+            elif slot_type == 'fabricSlots':
+                fabric_upgrades.append({
                     'upgradeId': upgrade_id,
                     'slotType': slot_type
                 })
@@ -87,60 +94,57 @@ def get_design_bureau_swaps(player_data: Player) -> list[dict]:
                         'slotType': slot_type
                     })
 
-    available_upgrades = frame_fabric_upgrades + drive_upgrades
+    # Determine priority based on age
+    # Age I: Frame > Fabric > Drive (need structural for launch)
+    # Age II/III: Drive > Frame > Fabric (need stats for missions/long routes)
+    if current_age == 1:
+        upgrade_order = [
+            (frame_upgrades, empty_frame_indices, 'frame'),
+            (fabric_upgrades, empty_fabric_indices, 'fabric'),
+            (drive_upgrades, empty_drive_indices, 'drive'),
+        ]
+    else:
+        # Age II/III: Prioritize drive for range/speed stats
+        upgrade_order = [
+            (drive_upgrades, empty_drive_indices, 'drive'),
+            (frame_upgrades, empty_frame_indices, 'frame'),
+            (fabric_upgrades, empty_fabric_indices, 'fabric'),
+        ]
 
-    # Prioritize: Frame > Fabric > Drive
-    # Note: slotType from manifest uses 'frameSlots', 'fabricSlots', 'driveSlots'
-    for upgrade in available_upgrades:
-        if upgrade['slotType'] == 'frameSlots' and empty_frame_indices:
-            slot_index = empty_frame_indices.pop(0)
-            swaps.append({
-                'action': 'install',
-                'slotType': 'frame',
-                'slotIndex': slot_index,
-                'upgradeId': upgrade['upgradeId']
-            })
-            if len(swaps) >= 2:
-                return swaps
-
-    for upgrade in available_upgrades:
-        if upgrade['slotType'] == 'fabricSlots' and empty_fabric_indices:
-            slot_index = empty_fabric_indices.pop(0)
-            swaps.append({
-                'action': 'install',
-                'slotType': 'fabric',
-                'slotIndex': slot_index,
-                'upgradeId': upgrade['upgradeId']
-            })
-            if len(swaps) >= 2:
-                return swaps
-
-    for upgrade in available_upgrades:
-        if upgrade['slotType'] == 'driveSlots' and empty_drive_indices:
-            slot_index = empty_drive_indices.pop(0)
-            swaps.append({
-                'action': 'install',
-                'slotType': 'drive',
-                'slotIndex': slot_index,
-                'upgradeId': upgrade['upgradeId']
-            })
-            if len(swaps) >= 2:
-                return swaps
+    for upgrades, empty_indices, slot_type in upgrade_order:
+        for upgrade in upgrades:
+            if empty_indices:
+                slot_index = empty_indices.pop(0)
+                swaps.append({
+                    'action': 'install',
+                    'slotType': slot_type,
+                    'slotIndex': slot_index,
+                    'upgradeId': upgrade['upgradeId']
+                })
+                if len(swaps) >= 2:
+                    return swaps
 
     return swaps
 
 
-def evaluate_launch_readiness(player_data: Player, routes: list[Route], current_age: int = 1) -> dict:
+def evaluate_launch_readiness(
+    player_data: Player,
+    routes: list[Route],
+    current_age: int = 1,
+    missions: list[CombatMission] | None = None
+) -> dict:
     """Evaluate what a player needs to be able to launch a ship.
 
     Args:
         player_data: Player object.
         routes: List of available Route objects.
         current_age: Current game age (1, 2, or 3) - determines officer requirement.
+        missions: List of combat missions (for Age II).
 
     Returns:
         Dict with:
         - can_launch: bool - whether player can launch right now
+        - has_achievable_target: bool - whether any route/mission is achievable
         - missing: list of strings describing what's missing
         - priorities: ordered list of location IDs to address missing items
         - hangar_ships: list of ships in hangar
@@ -170,6 +174,7 @@ def evaluate_launch_readiness(player_data: Player, routes: list[Route], current_
             priorities.append('construction_hall')
         return {
             'can_launch': False,
+            'has_achievable_target': False,
             'missing': missing,
             'priorities': priorities,
             'hangar_ships': hangar_ships,
@@ -211,25 +216,48 @@ def evaluate_launch_readiness(player_data: Player, routes: list[Route], current_
         missing.append(f'need {gas_needed - total_gas} more gas')
         priorities.append('gas_depot')
 
-    # Check 5: Do we have routes we can reach?
-    # Calculate ship stats from blueprint (ships don't store their own stats)
-    if hangar_ships and routes:
-        can_reach_route = False
+    # Check 5: Do we have achievable routes/missions?
+    has_achievable_target = False
+    if hangar_ships:
+        # Calculate best ship stats
         best_ship = hangar_ships[0]
         ship_stats = get_ship_details(best_ship, player_data)
         ship_range = ship_stats.get('range', 1)
         ship_speed = ship_stats.get('speed', 1)
+        ship_ceiling = ship_stats.get('ceiling', 0)
+        ship_reliability = ship_stats.get('reliability', 0)
 
-        for route in routes:
-            route_dist = route.distance or 1
-            route_speed = route.speed_requirement or 0
-            if ship_range >= route_dist and ship_speed >= route_speed:
-                can_reach_route = True
-                break
+        if current_age == 2 and missions:
+            # Age II: Check combat missions
+            for mission in missions:
+                if (ship_range >= (mission.range or 0) and
+                    ship_speed >= (mission.speed or 0) and
+                    ship_ceiling >= (mission.ceiling or 0) and
+                    ship_reliability >= (mission.reliability or 0)):
+                    has_achievable_target = True
+                    break
 
-        if not can_reach_route:
-            missing.append('no reachable routes (need better ship stats)')
-            priorities.append('design_bureau')
+            if not has_achievable_target:
+                missing.append(f'no achievable missions (range={ship_range}, speed={ship_speed}, ceil={ship_ceiling}, rel={ship_reliability})')
+                # Need better stats from drive upgrades
+                priorities.insert(0, 'research_institute')  # Get more tech
+                priorities.insert(1, 'design_bureau')  # Install drive upgrades
+        elif routes:
+            # Age I/III: Check routes
+            for route in routes:
+                route_dist = route.distance or 1
+                route_speed = route.speed_requirement or 0
+                route_ceiling = route.ceiling_requirement or 0
+                if (ship_range >= route_dist and
+                    ship_speed >= route_speed and
+                    ship_ceiling >= route_ceiling):
+                    has_achievable_target = True
+                    break
+
+            if not has_achievable_target:
+                missing.append(f'no reachable routes (range={ship_range}, speed={ship_speed})')
+                priorities.insert(0, 'research_institute')  # Get more tech
+                priorities.insert(1, 'design_bureau')  # Install drive upgrades
 
     # Check 6: Do we have engineers for hazard mitigation?
     if engineers < 2:
@@ -237,10 +265,12 @@ def evaluate_launch_readiness(player_data: Player, routes: list[Route], current_
         priorities.append('technical_institute')
 
     can_launch = (len(hangar_ships) > 0 and slots_ready and
-                  officers >= officers_needed and total_gas >= gas_needed)
+                  officers >= officers_needed and total_gas >= gas_needed and
+                  has_achievable_target)
 
     return {
         'can_launch': can_launch,
+        'has_achievable_target': has_achievable_target,
         'missing': missing,
         'priorities': priorities,
         'hangar_ships': hangar_ships,
@@ -414,7 +444,11 @@ def find_strategic_placement(
 
     routes = get_available_routes(game_id)
     current_age = state.age or 1
-    launch_eval = evaluate_launch_readiness(player_data, routes, current_age)
+
+    # Get missions for Age II
+    missions = get_mission_row(game_id) if current_age == 2 else None
+
+    launch_eval = evaluate_launch_readiness(player_data, routes, current_age, missions)
 
     # Build decision info for logging
     decision_info = {
@@ -430,6 +464,7 @@ def find_strategic_placement(
         },
         'current_age': current_age,
         'routes_available': len(routes) if routes else 0,
+        'missions_available': len(missions) if missions else 0,
         'priority_reason': None,
         'chosen_location': None,
     }
@@ -509,6 +544,9 @@ def find_strategic_placement(
 def get_reveal_acquisitions(player: str, game_id: str) -> tuple[list[str], list[str]]:
     """Calculate what technologies and market cards to acquire during reveal.
 
+    Prioritizes drive technologies (basic_engine, efficient_propeller) which
+    provide range/speed stats needed for Age II missions and Age III routes.
+
     Args:
         player: Player username.
         game_id: The game ID.
@@ -521,7 +559,42 @@ def get_reveal_acquisitions(player: str, game_id: str) -> tuple[list[str], list[
 
     techs = get_rd_board(game_id)
     if techs:
-        cheapest = min(techs, key=lambda t: t.get('cost', 0))
-        tech_ids.append(cheapest['id'])
+        # Get player data to check what techs they already have
+        state = get_state(game_id, player)
+        player_id = get_player_id(player, state) if state else None
+        player_data = state.get_player(player_id) if state and player_id else None
+        owned_techs = set(player_data.technologies) if player_data else set()
+
+        # Priority order for technologies:
+        # 1. Drive technologies (for range/speed stats) - critical for Age II/III
+        # 2. Frame technologies (for lift)
+        # 3. Fabric technologies (for weight reduction)
+        # 4. Component technologies
+
+        drive_tech_names = {
+            'basic_engine', 'efficient_propeller', 'diesel_engine',
+            'supercharger', 'advanced_propeller', 'rotary_engine',
+            'turbocharger', 'triple_engine', 'jet_engine', 'variable_pitch_propeller',
+        }
+
+        # Filter to available techs not already owned
+        available_techs = [t for t in techs if t.get('id') not in owned_techs]
+
+        if not available_techs:
+            return tech_ids, card_ids
+
+        # Prioritize drive technologies
+        drive_techs = [t for t in available_techs if t.get('id') in drive_tech_names]
+        other_techs = [t for t in available_techs if t.get('id') not in drive_tech_names]
+
+        # Sort by cost (prefer cheaper)
+        drive_techs.sort(key=lambda t: t.get('cost', 0))
+        other_techs.sort(key=lambda t: t.get('cost', 0))
+
+        # Pick the best available tech
+        if drive_techs:
+            tech_ids.append(drive_techs[0]['id'])
+        elif other_techs:
+            tech_ids.append(other_techs[0]['id'])
 
     return tech_ids, card_ids

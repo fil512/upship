@@ -90,22 +90,28 @@ def handle_launchpad_launches(player: str, game_id: str, logger: PlaytestLogger)
 
     launched = 0
 
-    # Age II: Combat missions not yet implemented on server
-    # TODO: Re-enable once LAUNCH_COMBAT_MISSION action is supported
+    # Age II: Combat missions instead of routes
     if current_age == 2:
-        _no_more_launches(player, game_id, "Age II combat missions not yet implemented", logger)
-        return
-
-    # Try regular routes (Age I and III)
-    routes = get_available_routes(game_id)
-    if routes:
-        route_launches = _attempt_route_launches(
-            player, game_id, hangar_ships, routes, player_data, officers_needed, logger
-        )
-        launched += route_launches
-    elif launched == 0:
-        _no_more_launches(player, game_id, "no routes available", logger)
-        return
+        missions = get_mission_row(game_id)
+        if missions:
+            mission_launches = _attempt_combat_missions(
+                player, game_id, hangar_ships, missions, player_data, officers_needed, logger
+            )
+            launched += mission_launches
+        if launched == 0:
+            _no_more_launches(player, game_id, "no missions available or achievable", logger)
+            return
+    else:
+        # Try regular routes (Age I and III)
+        routes = get_available_routes(game_id)
+        if routes:
+            route_launches = _attempt_route_launches(
+                player, game_id, hangar_ships, routes, player_data, officers_needed, logger
+            )
+            launched += route_launches
+        elif launched == 0:
+            _no_more_launches(player, game_id, "no routes available", logger)
+            return
 
     _no_more_launches_quiet(player, game_id)
     print(f"    {player}: done launching ({launched} ships)")
@@ -168,8 +174,25 @@ def _attempt_combat_missions(
                           f"Range≥{mission.range} Speed≥{mission.speed} Ceil≥{mission.ceiling} "
                           f"Rel≥{mission.reliability} → +{mission.income}£, {mission.vp}VP")
 
-            # Launch the ship on the mission
-            result = client.launch_combat_mission(player, game_id, ship.id, mission.id, gas_type)
+            # Launch the ship on the mission - wrap in try/except for validation errors
+            try:
+                result = client.launch_combat_mission(player, game_id, ship.id, mission.id, gas_type)
+            except Exception as e:
+                error_str = str(e).lower()
+                # Handle various validation errors gracefully
+                if any(phrase in error_str for phrase in [
+                    "not found", "already", "not enough", "insufficient",
+                    "cannot", "no hazard cards"
+                ]):
+                    print(f"    {player}: mission blocked ({str(e)[:50]}...)")
+                    logger.log_action(player, f"MISSION BLOCKED: {str(e)[:60]}", "worker_placement")
+                    # For gas/resource issues, break out - no point trying more missions with same ship
+                    if "not enough" in error_str or "insufficient" in error_str:
+                        break
+                    continue
+                else:
+                    # Re-raise unexpected errors
+                    raise
 
             if result.success:
                 # Get updated state
@@ -285,8 +308,25 @@ def _attempt_route_launches(
             route_str = (f"Route: {route.name} (dist={route.distance}, "
                         f"speed={route.speed_requirement}, income=+{route.income})")
 
-            # Launch the ship
-            result = client.launch_ship(player, game_id, ship.id, route.id, gas_type)
+            # Launch the ship - wrap in try/except for validation errors
+            try:
+                result = client.launch_ship(player, game_id, ship.id, route.id, gas_type)
+            except Exception as e:
+                error_str = str(e).lower()
+                # Handle various validation errors gracefully
+                if any(phrase in error_str for phrase in [
+                    "already claimed", "not enough", "insufficient",
+                    "not found", "no hazard cards"
+                ]):
+                    print(f"    {player}: launch blocked ({str(e)[:50]}...)")
+                    logger.log_action(player, f"LAUNCH BLOCKED: {str(e)[:60]}", "worker_placement")
+                    # For gas/resource issues, break out - no point trying more routes with same ship
+                    if "not enough" in error_str or "insufficient" in error_str:
+                        break
+                    continue
+                else:
+                    # Re-raise unexpected errors
+                    raise
 
             if result.success:
                 # Get updated state
@@ -734,7 +774,8 @@ def _execute_placement(player: str, game_id: str, card: dict, location: dict, lo
         kwargs['buildCount'] = 1
         action_desc = f"placed at {loc_id} and built ship"
     elif loc_id == 'design_bureau':
-        swaps = get_design_bureau_swaps(pre_player_data) if pre_player_data else []
+        current_age = pre_state.age if pre_state else 1
+        swaps = get_design_bureau_swaps(pre_player_data, current_age) if pre_player_data else []
         if swaps:
             kwargs['swaps'] = swaps
             upgrade_names = [s['upgradeId'] for s in swaps]
@@ -983,7 +1024,8 @@ def handle_age_transition_design_bureau(game_id: str, logger: PlaytestLogger) ->
         return False
 
     # Calculate swaps for this player
-    swaps = get_design_bureau_swaps(player_data)
+    # new_age is the age we're transitioning TO, so that's the appropriate priority
+    swaps = get_design_bureau_swaps(player_data, new_age)
 
     # Submit the action
     result = client.action(current_username, game_id, 'AGE_TRANSITION_DESIGN_BUREAU', swaps=swaps)
