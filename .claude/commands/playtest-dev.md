@@ -41,7 +41,7 @@ All commands use `UPSHIP_LOCAL=1` prefix to target local server:
 
 ### Setup
 ```bash
-UPSHIP_LOCAL=1 python -m playtest setup [game_name]
+UPSHIP_LOCAL=1 python -m playtest setup
 ```
 
 ### Autoplay
