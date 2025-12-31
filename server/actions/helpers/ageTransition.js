@@ -367,8 +367,13 @@ function completeAgeTransition(state) {
   // Update game age
   state.age = newAge;
 
-  // Clear map routes (they're lost at age transition)
-  if (state.map && state.map.routes) {
+  // Clear map routes (they're lost at age transition) or replace with new map
+  if (newAge === 3) {
+    // Age III uses a completely different map (The Atlantic)
+    const { createAgeIIIMap } = require('../../services/gameStateService');
+    state.map = createAgeIIIMap();
+  } else if (state.map && state.map.routes) {
+    // Age II keeps same map but clears claims
     for (const route of state.map.routes) {
       route.claimed = null;
     }

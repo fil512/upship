@@ -148,6 +148,7 @@ class Route:
     name: str
     distance: int = 0
     speed_requirement: int = 0
+    ceiling_requirement: int = 0
     gas_type: str = 'hydrogen'
     income: int = 0
     prestige: int = 0
@@ -178,11 +179,15 @@ class Route:
         else:
             available = claimed_by is None
 
+        # Server uses 'ceiling', extract for route requirements
+        ceiling_req = data.get('ceilingRequirement', data.get('ceiling', 0))
+
         return cls(
             id=data.get('id', ''),
             name=data.get('name', ''),
             distance=distance,
             speed_requirement=speed_req,
+            ceiling_requirement=ceiling_req,
             gas_type=data.get('gasType', 'hydrogen'),
             income=data.get('income', 0),
             prestige=data.get('prestige', data.get('vp', 0)),

@@ -305,7 +305,9 @@ function processUpdateBlueprint(state, playerId, data) {
         }
 
         // Validate age requirement
-        if (upgrade.age > state.age) {
+        // During age transition, use the NEW age for validation
+        const effectiveAge = state.ageTransitionDesignBureau?.newAge || state.age;
+        if (upgrade.age > effectiveAge) {
           throw new GameRuleError(`${upgrade.name} not available until Age ${upgrade.age}`);
         }
 

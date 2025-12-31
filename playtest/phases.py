@@ -275,10 +275,32 @@ def _attempt_route_launches(
     # Sort routes by difficulty (easier first)
     routes_list = sorted(routes, key=lambda r: (r.distance or 1, r.speed_requirement or 0))
 
+    current_officers = player_data.officers or 0
+
     for ship in hangar_ships[:]:
+        # Check we still have officers for this launch
+        if current_officers < officers_needed:
+            break
+
         ship_stats = get_ship_details(ship, player_data)
 
-        for route in routes_list[:]:
+        # Filter routes to only those this ship can fly
+        ship_range = ship_stats.get('range', 0)
+        ship_speed = ship_stats.get('speed', 0)
+        ship_ceiling = ship_stats.get('ceiling', 0)
+
+        flyable_routes = [
+            r for r in routes_list
+            if r.distance <= ship_range
+            and r.speed_requirement <= ship_speed
+            and r.ceiling_requirement <= ship_ceiling
+        ]
+
+        if not flyable_routes:
+            # Ship can't fly any available routes
+            continue
+
+        for route in flyable_routes:
             gas_type = get_gas_preference(player, game_id)
 
             stats_str = (f"Ship: Lift={ship_stats['lift']} Weight={ship_stats['weight']} "
@@ -319,6 +341,10 @@ def _attempt_route_launches(
                 logger.log_action(None, f"  └─ {route_str}", "worker_placement")
                 logger.log_action(None, f"  └─ Outcome: {launch_outcome} (status={ship_status})", "worker_placement")
 
+                # Update current officers after any launch attempt (officer consumed even if aborted)
+                if post_player_data:
+                    current_officers = post_player_data.officers or 0
+
                 if launch_outcome == "SUCCESS" or ship_status == 'on_route':
                     routes_list = [r for r in routes_list if r.id != route.id]
                     launched += 1
@@ -326,10 +352,8 @@ def _attempt_route_launches(
                     logger.track_route_claimed(route.name, faction)
 
                     # Check if we have officers left for more launches
-                    if post_player_data:
-                        post_officers = post_player_data.officers or 0
-                        if post_officers < officers_needed:
-                            return launched
+                    if current_officers < officers_needed:
+                        return launched
                 break
             else:
                 error_msg = result.error or "unknown error"
