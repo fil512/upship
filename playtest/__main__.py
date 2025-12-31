@@ -1,7 +1,7 @@
 """Main entry point for the playtest package.
 
 Usage:
-    python -m playtest setup [game_name]     # Create new 4-player game
+    python -m playtest setup                 # Create new 4-player game
     python -m playtest autoplay [num_turns]  # Run AI until game ends
     python -m playtest status [player]       # Show game status
     python -m playtest summary               # Show all players' summary
@@ -30,19 +30,14 @@ from .display import (
 )
 
 
-def setup_game(game_name: str = None) -> str:
+def setup_game() -> str:
     """Create a new 4-player game.
-
-    Args:
-        game_name: Optional name for the game.
 
     Returns:
         The game ID.
     """
     client = get_client()
-
-    if game_name is None:
-        game_name = f"Playtest_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+    game_name = f"Playtest_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
 
     print("=== UP SHIP! Playtest Setup ===")
     print(f"Server: {API_BASE} {'(LOCAL)' if USE_LOCAL else '(PRODUCTION)'}\n")
@@ -85,7 +80,7 @@ def setup_game(game_name: str = None) -> str:
     save_game_id(game_id)
 
     logger = get_logger()
-    logger.init_log_file(game_id, game_name)
+    logger.init_log_file(game_id)
     logger.log_action(None, "Game created and started", "setup")
 
     print(f"\n{'='*45}")
@@ -229,8 +224,7 @@ def main():
     cmd = sys.argv[1].lower()
 
     if cmd == "setup":
-        game_name = sys.argv[2] if len(sys.argv) > 2 else None
-        setup_game(game_name)
+        setup_game()
 
     elif cmd == "autoplay":
         if len(sys.argv) > 2:

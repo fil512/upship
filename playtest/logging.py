@@ -18,7 +18,7 @@ class PlaytestLogger:
         self.techs_acquired_this_round = []
         self.early_reveal_counter = 0
 
-    def init_log_file(self, game_id, game_name=None):
+    def init_log_file(self, game_id):
         """Initialize (truncate) the log file for this game.
 
         Always uses logs/playtest.log, truncating any existing content.
