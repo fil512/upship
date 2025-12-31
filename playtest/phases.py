@@ -5,7 +5,6 @@ for direct HTTP communication instead of CLI subprocesses.
 """
 
 import json
-import time
 from typing import Any
 
 from client import ActionResult, GameState, Player
@@ -401,7 +400,7 @@ def handle_worker_placement_round(game_id: str, logger: PlaytestLogger) -> bool:
 
         current = get_current_placer(game_id)
         if not current:
-            time.sleep(0.3)
+            # No current placer but still in worker placement - check if phase changed
             if get_phase(game_id) != "WORKER_PLACEMENT":
                 return True
             continue
@@ -555,22 +554,9 @@ def _execute_placement(player: str, game_id: str, card: dict, location: dict, lo
 def handle_reveal_phase(game_id: str, logger: PlaytestLogger) -> None:
     """Handle the reveal phase.
 
-    Args:
-        game_id: The game ID.
-        logger: PlaytestLogger instance.
-    """
-    print("--- Reveal Phase ---")
-    logger.log_action(None, "Reveal phase - collecting resources and processing acquisitions", "reveal")
-
-    for _ in range(10):
-        if get_phase(game_id) != "REVEAL":
-            logger.log_action(None, "Reveal phase complete", "reveal")
-            break
-        time.sleep(0.3)
-
-
-def handle_income_cleanup_phase(game_id: str, logger: PlaytestLogger) -> None:
-    """Handle income and cleanup - all players end turn.
+    All players need to call END_TURN to signal they're done with tech/market
+    purchases. When all players have done this, the server transitions to
+    income_cleanup.
 
     Args:
         game_id: The game ID.
@@ -578,15 +564,75 @@ def handle_income_cleanup_phase(game_id: str, logger: PlaytestLogger) -> None:
     """
     client = get_client()
 
-    print("--- Income & Cleanup Phase ---")
+    print("--- Reveal Phase ---")
+    logger.log_action(None, "Reveal phase - collecting resources and processing acquisitions", "reveal")
+
+    # All players end turn to signal done with reveal phase
     for player in PLAYERS:
         try:
             client.end_turn(player, game_id)
         except Exception:
             pass
-    print("  All players collected income")
 
-    for _ in range(10):
+    logger.log_action(None, "Reveal phase complete", "reveal")
+
+
+def handle_income_cleanup_phase(game_id: str, logger: PlaytestLogger) -> None:
+    """Handle income and cleanup - all players end turn in order.
+
+    During income_cleanup, the server expects players to end turn in the
+    player order (round-robin). We call end_turn for each player in turn
+    until all have completed and the phase transitions.
+
+    Args:
+        game_id: The game ID.
+        logger: PlaytestLogger instance.
+    """
+    # Only process if we're actually in income_cleanup phase
+    if get_phase(game_id) != "INCOME_CLEANUP":
+        return
+
+    client = get_client()
+
+    # Keep calling end_turn until phase changes
+    max_iterations = 10  # Safety limit
+    for _ in range(max_iterations):
         if get_phase(game_id) != "INCOME_CLEANUP":
             break
-        time.sleep(0.3)
+
+        state = get_state(game_id)
+        if not state:
+            break
+
+        # Get current player (the one whose turn it is)
+        current_idx = state.current_player_index
+        if current_idx < 0 or current_idx >= len(state.player_order):
+            break
+
+        current_player_id = state.player_order[current_idx]
+
+        # Find the username for this player ID
+        current_username = None
+        for player in PLAYERS:
+            player_data = state.players.get(current_player_id)
+            if player_data and player_data.faction:
+                faction = player_data.faction.lower()
+                if f"playtest_{faction}" == player:
+                    current_username = player
+                    break
+
+        if not current_username:
+            # Fallback: try all players
+            for player in PLAYERS:
+                try:
+                    client.end_turn(player, game_id)
+                    break
+                except Exception:
+                    pass
+        else:
+            try:
+                client.end_turn(current_username, game_id)
+            except Exception:
+                pass
+
+    print("  All players collected income")

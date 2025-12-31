@@ -164,7 +164,11 @@ def get_rd_board(game_id: str) -> list[dict]:
     """
     state = get_state(game_id)
     if state and state.rd_board:
-        available = state.rd_board.get('available', [])
+        # Handle both list (direct) and dict (with 'available' key) formats
+        if isinstance(state.rd_board, list):
+            available = state.rd_board
+        else:
+            available = state.rd_board.get('available', [])
         result = []
         for tech in available:
             if isinstance(tech, dict):
@@ -427,6 +431,8 @@ def format_blueprint_log(bp_stats: dict) -> str:
     Returns:
         Formatted string for logging.
     """
+    if not bp_stats or 'lift' not in bp_stats:
+        return "Blueprint: (no data)"
     return (f"Blueprint: Lift={bp_stats['lift']} Weight={bp_stats['weight']} "
             f"Net={bp_stats['lift']-bp_stats['weight']} Range={bp_stats['range']} "
             f"Speed={bp_stats['speed']} Ceiling={bp_stats['ceiling']}")
