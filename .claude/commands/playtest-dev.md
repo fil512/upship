@@ -7,17 +7,7 @@ Run a playtest against the **local development server** (http://localhost:3000) 
 **Step 1: Rebuild and restart the local server**
 
 ```bash
-# Kill any existing server on port 3000
-lsof -ti:3000 | xargs kill -9 2>/dev/null || true
-
-# Run database migrations
-npm run migrate:local
-
-# Start the server in background
-npm run dev:local &
-
-# Wait for server to be healthy (up to 30 seconds)
-UPSHIP_LOCAL=1 python -m playtest healthcheck
+./scripts/restart_server.sh
 ```
 
 **Step 2: Run the playtest**

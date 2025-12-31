@@ -90,45 +90,21 @@ def handle_launchpad_launches(player: str, game_id: str, logger: PlaytestLogger)
 
     launched = 0
 
-    # Age II: Try combat missions first
+    # Age II: Combat missions not yet implemented on server
+    # TODO: Re-enable once LAUNCH_COMBAT_MISSION action is supported
     if current_age == 2:
-        missions = get_mission_row(game_id)
-        if missions:
-            mission_launches = _attempt_combat_missions(
-                player, game_id, hangar_ships, missions, player_data, officers_needed, logger
-            )
-            launched += mission_launches
+        _no_more_launches(player, game_id, "Age II combat missions not yet implemented", logger)
+        return
 
-            # Refresh state after mission launches
-            if mission_launches > 0:
-                state = get_state(game_id, player)
-                if state:
-                    player_id = get_player_id(player, state)
-                    player_data = state.get_player(player_id) if player_id else None
-                    hangar_ships = [s for s in (player_data.ships if player_data else []) if s.status == 'hangar']
-                    available_officers = player_data.officers if player_data else 0
-
-                    # Check if we can continue launching
-                    if not hangar_ships or available_officers < officers_needed:
-                        _no_more_launches_quiet(player, game_id)
-                        print(f"    {player}: done launching ({launched} ships)")
-                        logger.log_action(player, f"done launching ({launched} ships)", "worker_placement")
-                        return
-
-    # Try regular routes (Age I and III only - Age II uses combat missions exclusively)
-    if current_age != 2:
-        routes = get_available_routes(game_id)
-        if routes:
-            route_launches = _attempt_route_launches(
-                player, game_id, hangar_ships, routes, player_data, officers_needed, logger
-            )
-            launched += route_launches
-        elif launched == 0:
-            _no_more_launches(player, game_id, "no routes available", logger)
-            return
+    # Try regular routes (Age I and III)
+    routes = get_available_routes(game_id)
+    if routes:
+        route_launches = _attempt_route_launches(
+            player, game_id, hangar_ships, routes, player_data, officers_needed, logger
+        )
+        launched += route_launches
     elif launched == 0:
-        # Age II with no successful mission launches
-        _no_more_launches(player, game_id, "no missions available or ship not ready", logger)
+        _no_more_launches(player, game_id, "no routes available", logger)
         return
 
     _no_more_launches_quiet(player, game_id)

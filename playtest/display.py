@@ -12,7 +12,7 @@ from client import list_sessions as client_list_sessions
 from .config import PLAYERS, PROJECT_ROOT
 from .client import get_client, get_game_id, get_faction_from_player
 from .logging import get_logger
-from .state import get_state, get_player_data, get_player_ships, get_player_id
+from .state import get_state, get_player_data, get_player_ships, get_player_id, get_ship_details
 
 
 def show_status(game_id: str = None, player: str = None) -> None:
@@ -59,7 +59,9 @@ def show_status(game_id: str = None, player: str = None) -> None:
 
         print(f"\nShips ({len(player_data.ships or [])}):")
         for ship in (player_data.ships or []):
-            print(f"  - {ship.id}: {ship.status} (range:{ship.range_stat}, speed:{ship.speed})")
+            # Calculate stats from blueprint (ships don't store their own stats)
+            stats = get_ship_details(ship, player_data)
+            print(f"  - {ship.id}: {ship.status} (range:{stats['range']}, speed:{stats['speed']})")
 
         print(f"\nTechnologies ({len(player_data.technologies or [])}):")
         for tech in (player_data.technologies or [])[:5]:

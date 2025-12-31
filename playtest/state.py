@@ -353,6 +353,10 @@ def get_ship_details(ship: Ship, player_data: Player) -> dict:
     Required gas cubes = max(1, ceil(weight/5))
     Lift = required gas cubes * 5
 
+    Stats (range, speed, ceiling, reliability) are calculated from blueprint
+    upgrades since ships don't store their own stats - they inherit from the
+    blueprint at launch time.
+
     Args:
         ship: Ship object.
         player_data: Player object with blueprint.
@@ -363,7 +367,10 @@ def get_ship_details(ship: Ship, player_data: Player) -> dict:
     blueprint = player_data.blueprint if player_data else None
     manifest = get_manifest()
 
+    # Calculate weight and stats from blueprint upgrades
     weight = 0
+    stats = {'range': 1, 'speed': 1, 'ceiling': 0, 'reliability': 0}  # Age 1 baselines
+
     if blueprint:
         all_slots = (
             blueprint.drive_slots +
@@ -373,7 +380,12 @@ def get_ship_details(ship: Ship, player_data: Player) -> dict:
         )
         for upgrade_id in all_slots:
             if upgrade_id:
-                weight += manifest.get_upgrade_weight(upgrade_id)
+                upgrade = manifest.get_upgrade(upgrade_id)
+                if upgrade:
+                    weight += abs(upgrade.get('weight', 0))
+                    # Add stats from upgrade
+                    for stat, value in upgrade.get('stats', {}).items():
+                        stats[stat] = stats.get(stat, 0) + value
 
     required_cubes = max(1, math.ceil(weight / 5)) if weight > 0 else 1
     lift = required_cubes * 5
@@ -384,16 +396,18 @@ def get_ship_details(ship: Ship, player_data: Player) -> dict:
         'lift': lift,
         'weight': weight,
         'required_gas': required_cubes,
-        'range': ship.range_stat,
-        'speed': ship.speed,
-        'ceiling': ship.ceiling,
-        'reliability': ship.reliability,
+        'range': stats['range'],
+        'speed': stats['speed'],
+        'ceiling': stats['ceiling'],
+        'reliability': stats['reliability'],
         'net_lift': lift - weight
     }
 
 
 def get_blueprint_stats(player_data: Player) -> dict:
     """Extract blueprint stats for logging.
+
+    Calculates all stats from installed upgrades, starting from Age 1 baselines.
 
     Args:
         player_data: Player object with blueprint.
@@ -405,19 +419,26 @@ def get_blueprint_stats(player_data: Player) -> dict:
     if not bp:
         return {
             'lift': 0, 'weight': 0, 'cargo': 0,
-            'range': 1, 'speed': 1, 'ceiling': 0,
+            'range': 1, 'speed': 1, 'ceiling': 0, 'reliability': 0,
             'frame_slots': 0, 'fabric_slots': 0,
             'drive_slots': 0, 'component_slots': 0,
             'gas_sockets': 0
         }
 
-    # Calculate weight from upgrades
+    # Calculate weight and stats from upgrades
     manifest = get_manifest()
     weight = 0
+    stats = {'range': 1, 'speed': 1, 'ceiling': 0, 'reliability': 0}  # Age 1 baselines
+
     all_slots = bp.drive_slots + bp.frame_slots + bp.fabric_slots + bp.component_slots
     for upgrade_id in all_slots:
         if upgrade_id:
-            weight += manifest.get_upgrade_weight(upgrade_id)
+            upgrade = manifest.get_upgrade(upgrade_id)
+            if upgrade:
+                weight += abs(upgrade.get('weight', 0))
+                # Add stats from upgrade
+                for stat, value in upgrade.get('stats', {}).items():
+                    stats[stat] = stats.get(stat, 0) + value
 
     required_cubes = max(1, math.ceil(weight / 5)) if weight > 0 else 1
     lift = required_cubes * 5
@@ -426,9 +447,10 @@ def get_blueprint_stats(player_data: Player) -> dict:
         'lift': lift,
         'weight': weight,
         'cargo': 0,  # Not tracked in Blueprint
-        'range': 1,  # Base value
-        'speed': 1,  # Base value
-        'ceiling': 0,  # Base value
+        'range': stats['range'],
+        'speed': stats['speed'],
+        'ceiling': stats['ceiling'],
+        'reliability': stats['reliability'],
         'frame_slots': len([s for s in bp.frame_slots if s]),
         'fabric_slots': len([s for s in bp.fabric_slots if s]),
         'drive_slots': len([s for s in bp.drive_slots if s]),

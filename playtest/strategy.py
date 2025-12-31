@@ -8,7 +8,7 @@ from typing import Any
 
 from client import Player, Ship, Blueprint, Route, Card, CombatMission
 
-from .state import get_state, get_available_routes, get_mission_row, get_player_id, get_rd_board
+from .state import get_state, get_available_routes, get_mission_row, get_player_id, get_rd_board, get_ship_details
 from .client import get_player_user_id, get_manifest
 
 
@@ -212,11 +212,13 @@ def evaluate_launch_readiness(player_data: Player, routes: list[Route], current_
         priorities.append('gas_depot')
 
     # Check 5: Do we have routes we can reach?
+    # Calculate ship stats from blueprint (ships don't store their own stats)
     if hangar_ships and routes:
         can_reach_route = False
         best_ship = hangar_ships[0]
-        ship_range = best_ship.range_stat or 1
-        ship_speed = best_ship.speed or 1
+        ship_stats = get_ship_details(best_ship, player_data)
+        ship_range = ship_stats.get('range', 1)
+        ship_speed = ship_stats.get('speed', 1)
 
         for route in routes:
             route_dist = route.distance or 1
@@ -340,12 +342,8 @@ def find_best_combat_mission(
     best_value = -1
 
     for ship in hangar_ships:
-        ship_stats = {
-            'range': ship.range_stat,
-            'speed': ship.speed,
-            'ceiling': ship.ceiling,
-            'reliability': ship.reliability
-        }
+        # Calculate ship stats from blueprint (ships don't store their own stats)
+        ship_stats = get_ship_details(ship, player_data)
 
         evaluations = evaluate_combat_mission_readiness(player_data, missions, ship_stats, current_age=2)
 
