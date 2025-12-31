@@ -25,9 +25,8 @@ const FACTION_CONFIG = {
       fabric: 'doped_covering',
       component: 'dining_saloon'  // "Pre-Installed Luxury"
     },
-    bonuses: { luxury: 1 },
-    // The Flaw: Red Tape - only 1 swap instead of 2
-    upgradeSwaps: 1
+    bonuses: { luxury: 1 }
+    // The Flaw: Red Tape - removed (swaps no longer limited)
   },
   usa: {
     // Rules 10.3: Duralumin Framework, Gelatinized Latex, Trapeze Fighter, Helium Handling
@@ -50,8 +49,7 @@ const FACTION_CONFIG = {
       fabric: 'cotton_envelope'
     },
     bonuses: { speed: 1 },
-    // Starting Advantage: Rapid Refit - 4 swaps instead of 2
-    upgradeSwaps: 4,
+    // Starting Advantage: Rapid Refit - removed (swaps no longer limited)
     // The Flaw: Low Ceiling - fewer payload slots (handled in blueprint)
     lowCeiling: true
   }
@@ -91,7 +89,6 @@ function createPlayerState(faction) {
     hazardDeck: createHazardDeck(),
     bonuses: config.bonuses || {},
     // Faction-specific attributes
-    upgradeSwaps: config.upgradeSwaps || 2,  // Default 2, Britain=1, Italy=4
     heliumMonopoly: config.heliumMonopoly || false,
     bannedTechnologies: config.bannedTechnologies || []
   };
@@ -147,7 +144,7 @@ function createStarterDeck() {
     // 1 Any card
     { id: 'starter_1', name: 'Apprentice', symbol: 'any', reveal: { influence: 1 }, effect: 'None' },
     // 3 Wrench cards
-    { id: 'starter_2', name: 'Mechanic', symbol: 'wrench', reveal: { cash: 1 }, effect: '+1 swap' },
+    { id: 'starter_2', name: 'Mechanic', symbol: 'wrench', reveal: { cash: 1 }, effect: null },
     { id: 'starter_3', name: 'Draftsman', symbol: 'wrench', reveal: { influence: 1 }, effect: 'Draw 1 card' },
     { id: 'starter_4', name: 'Rigger', symbol: 'wrench', reveal: { research: 1 }, effect: '-£2 ship build cost' },
     // 3 Coin cards

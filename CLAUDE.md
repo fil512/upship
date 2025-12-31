@@ -364,10 +364,6 @@ python -m playtest output [num_lines]        # Show Claude background task outpu
 - Strategic bot logic (prioritizes building, launching, resources)
 - Correct phase handling (worker_placement, reveal, income_cleanup)
 
-### Legacy Shell Scripts (Deprecated)
-
-Use the Python playtest tool instead. Legacy scripts `./scripts/autoplay.sh`, `./scripts/setup-playtest.sh`, and `./scripts/full-playtest.sh` still work but are deprecated.
-
 ## Working with This Project
 
 ### When Editing Rules

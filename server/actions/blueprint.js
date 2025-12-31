@@ -1,27 +1,12 @@
 /**
  * Blueprint Actions
- * INSTALL_UPGRADE, REMOVE_UPGRADE action processors
- * Implements Section 6.2 (Design Bureau) including Hull Upgrade Rule and swap limits
+ * INSTALL_UPGRADE, REMOVE_UPGRADE, UPDATE_BLUEPRINT action processors
+ * Implements Section 6.2 (Design Bureau) including Hull Upgrade Rule
+ * Note: Swap limits have been removed - players can make unlimited modifications
  */
 
 const { GameRuleError, InsufficientFundsError } = require('../errors');
 const { UPGRADES, TECHNOLOGIES } = require('../data/upgrades');
-
-/**
- * Calculate effective swap limit for player per Section 6.2 and Appendix D
- * Base swaps: Germany/USA 2, Britain 1, Italy 4
- * Modular Frame upgrade grants +2 swaps per Appendix D
- */
-function getEffectiveSwapLimit(playerState) {
-  const baseSwaps = playerState.upgradeSwaps || 2;
-
-  // GAP-047: Check if Modular Frame is installed, granting +2 swaps
-  const hasModularFrame = playerState.blueprint?.frameSlots?.some(
-    frame => frame === 'modular_frame' || frame?.id === 'modular_frame'
-  );
-
-  return baseSwaps + (hasModularFrame ? 2 : 0);
-}
 
 /**
  * Calculate hull cost for an upgrade
@@ -53,14 +38,33 @@ function calculateHullCost(blueprint) {
 }
 
 /**
+ * Validate that blueprint has no empty frame or fabric slots.
+ * Blueprints must always be complete after any modification.
+ *
+ * @param {Object} blueprint - Player's blueprint
+ * @returns {Object} { valid: boolean, emptyFrameSlots: number, emptyFabricSlots: number }
+ */
+function validateBlueprintComplete(blueprint) {
+  const frameSlots = blueprint.frameSlots || [];
+  const fabricSlots = blueprint.fabricSlots || [];
+
+  const emptyFrameSlots = frameSlots.filter(s => s === null || s === undefined).length;
+  const emptyFabricSlots = fabricSlots.filter(s => s === null || s === undefined).length;
+
+  return {
+    valid: emptyFrameSlots === 0 && emptyFabricSlots === 0,
+    emptyFrameSlots,
+    emptyFabricSlots
+  };
+}
+
+/**
  * Install upgrade on blueprint
  * Per Section 6.2:
- * - Each install or removal counts as 1 swap
- * - Swap limit per visit: Britain 1, Germany/USA 2, Italy 4
  * - Hull Upgrade Rule: When upgrading Frame/Fabric, pay hull cost difference per ship in hangar
  *
  * Per Section 5.1: Location actions execute IMMEDIATELY when placing an agent.
- * Direct API calls are rejected - must go through PLACE_AGENT with swaps param.
+ * Direct API calls are rejected - must go through PLACE_AGENT with blueprint param.
  *
  * @param {Object} state - Game state (mutated)
  * @param {string} playerId - Acting player ID
@@ -83,17 +87,9 @@ function processInstallUpgrade(state, playerId, data) {
     if (!placement || placement.playerId !== playerId) {
       throw new GameRuleError(
         'INSTALL_UPGRADE not allowed: You must place an agent at Design Bureau to modify blueprint. ' +
-        'Use PLACE_AGENT with locationId "design_bureau" and swaps parameter.'
+        'Use PLACE_AGENT with locationId "design_bureau" and blueprint parameter.'
       );
     }
-  }
-
-  // GAP-033 & GAP-047: Check swap limit (including Modular Frame bonus)
-  const swapLimit = getEffectiveSwapLimit(playerState);
-  const swapsUsed = playerState.swapsUsedThisVisit || 0;
-
-  if (swapsUsed >= swapLimit) {
-    throw new GameRuleError(`Design Bureau swap limit reached (${swapLimit}). Cannot install more upgrades this visit.`);
   }
 
   const slotKey = `${slotType}Slots`;
@@ -164,9 +160,6 @@ function processInstallUpgrade(state, playerId, data) {
   // Install the upgrade
   playerState.blueprint[slotKey][slotIndex] = upgradeId;
 
-  // Track swap used (GAP-033)
-  playerState.swapsUsedThisVisit = (playerState.swapsUsedThisVisit || 0) + 1;
-
   state.log.push({
     timestamp: new Date().toISOString(),
     message: `Installed ${upgrade.name} in ${slotType} slot ${slotIndex + 1}`,
@@ -179,10 +172,9 @@ function processInstallUpgrade(state, playerId, data) {
 
 /**
  * Remove upgrade from blueprint
- * Per Section 6.2: Each removal counts as 1 swap
  *
  * Per Section 5.1: Location actions execute IMMEDIATELY when placing an agent.
- * Direct API calls are rejected - must go through PLACE_AGENT with swaps param.
+ * Direct API calls are rejected - must go through PLACE_AGENT with blueprint param.
  *
  * @param {Object} state - Game state (mutated)
  * @param {string} playerId - Acting player ID
@@ -205,17 +197,9 @@ function processRemoveUpgrade(state, playerId, data) {
     if (!placement || placement.playerId !== playerId) {
       throw new GameRuleError(
         'REMOVE_UPGRADE not allowed: You must place an agent at Design Bureau to modify blueprint. ' +
-        'Use PLACE_AGENT with locationId "design_bureau" and swaps parameter.'
+        'Use PLACE_AGENT with locationId "design_bureau" and blueprint parameter.'
       );
     }
-  }
-
-  // GAP-033 & GAP-047: Check swap limit (including Modular Frame bonus)
-  const swapLimit = getEffectiveSwapLimit(playerState);
-  const swapsUsed = playerState.swapsUsedThisVisit || 0;
-
-  if (swapsUsed >= swapLimit) {
-    throw new GameRuleError(`Design Bureau swap limit reached (${swapLimit}). Cannot remove more upgrades this visit.`);
   }
 
   const slotKey = `${slotType}Slots`;
@@ -238,9 +222,6 @@ function processRemoveUpgrade(state, playerId, data) {
   // Remove the upgrade
   playerState.blueprint[slotKey][slotIndex] = null;
 
-  // Track swap used (GAP-033)
-  playerState.swapsUsedThisVisit = (playerState.swapsUsedThisVisit || 0) + 1;
-
   state.log.push({
     timestamp: new Date().toISOString(),
     message: `Removed ${upgradeName} from ${slotType} slot ${slotIndex + 1}`,
@@ -252,12 +233,190 @@ function processRemoveUpgrade(state, playerId, data) {
 }
 
 /**
- * Process free Design Bureau action during age transition
- * Per Section 12.1 step 5: Each player gets a free Design Bureau action
+ * Update player's blueprint to a new configuration (declarative approach)
+ * No swap limits - players can make unlimited modifications in a single visit.
+ *
+ * Per Section 5.1: Location actions execute IMMEDIATELY when placing an agent.
+ * Direct API calls are rejected - must go through PLACE_AGENT with blueprint param.
  *
  * @param {Object} state - Game state (mutated)
  * @param {string} playerId - Acting player ID
- * @param {Object} data - Action data { swaps: [...] }
+ * @param {Object} data - { blueprint: { frameSlots, fabricSlots, driveSlots, componentSlots }, _internal }
+ * @returns {Object} { newState } or throws error
+ */
+function processUpdateBlueprint(state, playerId, data) {
+  const { blueprint: newBlueprint, _internal = false, skipHullRule = false } = data;
+  const playerState = state.players[playerId];
+  const oldBlueprint = playerState.blueprint;
+
+  // Validate that this is called through PLACE_AGENT (Section 5.1)
+  if (!_internal) {
+    if (state.phase !== 'worker_placement') {
+      throw new GameRuleError(
+        'UPDATE_BLUEPRINT not allowed: Actions execute immediately when placing an agent (Section 5.1). ' +
+        'Place an agent at Design Bureau during worker placement phase to modify blueprint.'
+      );
+    }
+    const placement = state.groundBoard?.placements?.design_bureau;
+    if (!placement || placement.playerId !== playerId) {
+      throw new GameRuleError(
+        'UPDATE_BLUEPRINT not allowed: You must place an agent at Design Bureau to modify blueprint. ' +
+        'Use PLACE_AGENT with locationId "design_bureau" and blueprint parameter.'
+      );
+    }
+  }
+
+  if (!newBlueprint) {
+    throw new GameRuleError('Blueprint configuration is required');
+  }
+
+  // Validate each slot type
+  const slotTypes = ['frameSlots', 'fabricSlots', 'driveSlots', 'componentSlots'];
+  const changes = [];
+
+  for (const slotKey of slotTypes) {
+    const newSlots = newBlueprint[slotKey];
+    if (!newSlots) continue; // Keep existing slots if not provided
+
+    const oldSlots = oldBlueprint[slotKey] || [];
+
+    // Ensure we don't change slot count
+    if (newSlots.length !== oldSlots.length) {
+      throw new GameRuleError(`Cannot change number of ${slotKey} (expected ${oldSlots.length}, got ${newSlots.length})`);
+    }
+
+    for (let i = 0; i < newSlots.length; i++) {
+      const oldUpgradeId = oldSlots[i];
+      const newUpgradeId = newSlots[i];
+
+      // Skip if no change
+      if (oldUpgradeId === newUpgradeId) continue;
+
+      // If installing a new upgrade
+      if (newUpgradeId) {
+        const upgrade = UPGRADES[newUpgradeId];
+        if (!upgrade) {
+          throw new GameRuleError(`Unknown upgrade: ${newUpgradeId}`);
+        }
+
+        // Validate upgrade goes in correct slot type
+        if (upgrade.slotType !== slotKey) {
+          throw new GameRuleError(`${upgrade.name} must be installed in ${upgrade.slotType}, not ${slotKey}`);
+        }
+
+        // Validate age requirement
+        if (upgrade.age > state.age) {
+          throw new GameRuleError(`${upgrade.name} not available until Age ${upgrade.age}`);
+        }
+
+        // Validate player owns required technology
+        if (!playerState.technologies.includes(upgrade.requiredTech)) {
+          const tech = TECHNOLOGIES[upgrade.requiredTech];
+          throw new GameRuleError(`Requires ${tech ? tech.name : upgrade.requiredTech} technology`);
+        }
+      }
+
+      changes.push({
+        slotKey,
+        slotIndex: i,
+        oldUpgradeId,
+        newUpgradeId
+      });
+    }
+  }
+
+  // Create merged blueprint (keeping unchanged slots)
+  const mergedBlueprint = {
+    ...oldBlueprint,
+    frameSlots: newBlueprint.frameSlots || oldBlueprint.frameSlots,
+    fabricSlots: newBlueprint.fabricSlots || oldBlueprint.fabricSlots,
+    driveSlots: newBlueprint.driveSlots || oldBlueprint.driveSlots,
+    componentSlots: newBlueprint.componentSlots || oldBlueprint.componentSlots
+  };
+
+  // Validate blueprint completeness
+  const validation = validateBlueprintComplete(mergedBlueprint);
+  if (!validation.valid) {
+    const errors = [];
+    if (validation.emptyFrameSlots > 0) {
+      errors.push(`${validation.emptyFrameSlots} empty Frame slot(s)`);
+    }
+    if (validation.emptyFabricSlots > 0) {
+      errors.push(`${validation.emptyFabricSlots} empty Fabric slot(s)`);
+    }
+    throw new GameRuleError(`Blueprint incomplete: ${errors.join(', ')}. All Frame and Fabric slots must be filled.`);
+  }
+
+  // Calculate Hull Upgrade Rule charges (unless skipped for age transitions)
+  if (!skipHullRule) {
+    const oldHullCost = calculateHullCost(oldBlueprint);
+    const newHullCost = calculateHullCost(mergedBlueprint);
+    const hullCostIncrease = Math.max(0, newHullCost - oldHullCost);
+    const shipsInHangar = (playerState.ships || []).filter(s => s.status === 'hangar').length;
+
+    if (hullCostIncrease > 0 && shipsInHangar > 0) {
+      const totalCharge = hullCostIncrease * shipsInHangar;
+
+      if (playerState.cash < totalCharge) {
+        throw new InsufficientFundsError(totalCharge, playerState.cash,
+          `Hull Upgrade Rule: £${hullCostIncrease} increase × ${shipsInHangar} ships in hangar`);
+      }
+
+      playerState.cash -= totalCharge;
+
+      state.log.push({
+        timestamp: new Date().toISOString(),
+        message: `Hull Upgrade Rule: Paid £${totalCharge} (£${hullCostIncrease} × ${shipsInHangar} ships)`,
+        playerId,
+        type: 'action'
+      });
+    }
+  }
+
+  // Apply the new blueprint
+  playerState.blueprint = mergedBlueprint;
+
+  // Log changes
+  for (const change of changes) {
+    const oldUpgrade = change.oldUpgradeId ? UPGRADES[change.oldUpgradeId] : null;
+    const newUpgrade = change.newUpgradeId ? UPGRADES[change.newUpgradeId] : null;
+    const slotType = change.slotKey.replace('Slots', '');
+
+    if (oldUpgrade && newUpgrade) {
+      state.log.push({
+        timestamp: new Date().toISOString(),
+        message: `Replaced ${oldUpgrade.name} with ${newUpgrade.name} in ${slotType} slot ${change.slotIndex + 1}`,
+        playerId,
+        type: 'action'
+      });
+    } else if (newUpgrade) {
+      state.log.push({
+        timestamp: new Date().toISOString(),
+        message: `Installed ${newUpgrade.name} in ${slotType} slot ${change.slotIndex + 1}`,
+        playerId,
+        type: 'action'
+      });
+    } else if (oldUpgrade) {
+      state.log.push({
+        timestamp: new Date().toISOString(),
+        message: `Removed ${oldUpgrade.name} from ${slotType} slot ${change.slotIndex + 1}`,
+        playerId,
+        type: 'action'
+      });
+    }
+  }
+
+  return { newState: state };
+}
+
+/**
+ * Process free Design Bureau action during age transition
+ * Per Section 12.1 step 5: Each player gets a free Design Bureau action
+ * No swap limits and no Hull Upgrade Rule charges during age transition.
+ *
+ * @param {Object} state - Game state (mutated)
+ * @param {string} playerId - Acting player ID
+ * @param {Object} data - Action data { blueprint: { frameSlots, fabricSlots, driveSlots, componentSlots } }
  * @returns {Object} { newState } or throws error
  */
 function processAgeTransitionDesignBureau(state, playerId, data) {
@@ -285,96 +444,58 @@ function processAgeTransitionDesignBureau(state, playerId, data) {
   }
 
   const playerState = state.players[playerId];
-  const swaps = data.swaps || [];
 
-  // Get swap limit for this player's faction
-  const swapLimit = getEffectiveSwapLimit(playerState);
-  let swapsUsed = 0;
+  // Handle both old swaps format and new blueprint format for backwards compatibility
+  if (data.blueprint) {
+    // New declarative blueprint format - process with skipHullRule
+    processUpdateBlueprint(state, playerId, {
+      blueprint: data.blueprint,
+      _internal: true,
+      skipHullRule: true
+    });
+  } else if (data.swaps && data.swaps.length > 0) {
+    // Legacy swaps format - convert to blueprint format
+    const oldBlueprint = playerState.blueprint;
+    const newBlueprint = {
+      frameSlots: [...(oldBlueprint.frameSlots || [])],
+      fabricSlots: [...(oldBlueprint.fabricSlots || [])],
+      driveSlots: [...(oldBlueprint.driveSlots || [])],
+      componentSlots: [...(oldBlueprint.componentSlots || [])]
+    };
 
-  // Process each swap (no Hull Upgrade Rule charges during age transition)
-  for (const swap of swaps) {
-    if (swapsUsed >= swapLimit) {
-      state.log.push({
-        timestamp: new Date().toISOString(),
-        message: `Swap limit reached (${swapLimit})`,
-        playerId,
-        type: 'warning'
-      });
-      break;
+    // Apply swaps to build new blueprint
+    for (const swap of data.swaps) {
+      const slotKey = `${swap.slotType}Slots`;
+      if (!newBlueprint[slotKey]) continue;
+      if (swap.slotIndex < 0 || swap.slotIndex >= newBlueprint[slotKey].length) continue;
+
+      if (swap.action === 'install') {
+        newBlueprint[slotKey][swap.slotIndex] = swap.upgradeId;
+      } else if (swap.action === 'remove') {
+        newBlueprint[slotKey][swap.slotIndex] = null;
+      }
     }
 
-    if (swap.action === 'install') {
-      const { slotType, slotIndex, upgradeId } = swap;
-      const slotKey = `${slotType}Slots`;
+    // Process the converted blueprint
+    processUpdateBlueprint(state, playerId, {
+      blueprint: newBlueprint,
+      _internal: true,
+      skipHullRule: true
+    });
+  }
+  // If neither blueprint nor swaps, player is skipping their free action
 
-      if (!playerState.blueprint[slotKey]) {
-        continue; // Invalid slot type, skip
-      }
-
-      if (slotIndex < 0 || slotIndex >= playerState.blueprint[slotKey].length) {
-        continue; // Invalid slot index, skip
-      }
-
-      if (playerState.blueprint[slotKey][slotIndex]) {
-        continue; // Slot occupied, skip
-      }
-
-      // Validate upgrade exists
-      const upgrade = UPGRADES[upgradeId];
-      if (!upgrade) {
-        continue; // Unknown upgrade, skip
-      }
-
-      // Validate upgrade goes in correct slot type
-      if (upgrade.slotType !== slotKey) {
-        continue; // Wrong slot type, skip
-      }
-
-      // Validate player owns required technology
-      if (!playerState.technologies.includes(upgrade.requiredTech)) {
-        continue; // Missing technology, skip
-      }
-
-      // Install the upgrade (NO Hull Upgrade Rule charge during age transition)
-      playerState.blueprint[slotKey][slotIndex] = upgradeId;
-      swapsUsed++;
-
-      state.log.push({
-        timestamp: new Date().toISOString(),
-        message: `Free upgrade: Installed ${upgrade.name} in ${slotType} slot ${slotIndex + 1}`,
-        playerId,
-        type: 'action'
-      });
-    } else if (swap.action === 'remove') {
-      const { slotType, slotIndex } = swap;
-      const slotKey = `${slotType}Slots`;
-
-      if (!playerState.blueprint[slotKey]) {
-        continue;
-      }
-
-      if (slotIndex < 0 || slotIndex >= playerState.blueprint[slotKey].length) {
-        continue;
-      }
-
-      const currentUpgrade = playerState.blueprint[slotKey][slotIndex];
-      if (!currentUpgrade) {
-        continue; // Already empty
-      }
-
-      const upgrade = UPGRADES[currentUpgrade];
-      const upgradeName = upgrade ? upgrade.name : currentUpgrade;
-
-      playerState.blueprint[slotKey][slotIndex] = null;
-      swapsUsed++;
-
-      state.log.push({
-        timestamp: new Date().toISOString(),
-        message: `Free upgrade: Removed ${upgradeName} from ${slotType} slot ${slotIndex + 1}`,
-        playerId,
-        type: 'action'
-      });
+  // Validate blueprint is complete (no empty frame/fabric slots)
+  const validation = validateBlueprintComplete(playerState.blueprint);
+  if (!validation.valid) {
+    const errors = [];
+    if (validation.emptyFrameSlots > 0) {
+      errors.push(`${validation.emptyFrameSlots} empty Frame slot(s)`);
     }
+    if (validation.emptyFabricSlots > 0) {
+      errors.push(`${validation.emptyFabricSlots} empty Fabric slot(s)`);
+    }
+    throw new GameRuleError(`Blueprint incomplete: ${errors.join(', ')}. All Frame and Fabric slots must be filled.`);
   }
 
   // Mark player as complete
@@ -394,6 +515,8 @@ function processAgeTransitionDesignBureau(state, playerId, data) {
 module.exports = {
   processInstallUpgrade,
   processRemoveUpgrade,
+  processUpdateBlueprint,
   processAgeTransitionDesignBureau,
-  calculateHullCost  // Exported for testing
+  calculateHullCost,  // Exported for testing
+  validateBlueprintComplete  // Exported for use in worker.js
 };

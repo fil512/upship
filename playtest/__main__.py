@@ -14,10 +14,14 @@ Usage:
     python -m playtest gameid                # Print current game ID
     python -m playtest tail [num_lines]      # Show playtest log tail
     python -m playtest output [num_lines]    # Show Claude task output
+    python -m playtest healthcheck [timeout] # Wait for server to be healthy
 """
 
 import sys
+import time
 from datetime import datetime
+
+import requests
 
 from .config import PLAYERS, FACTIONS, API_BASE, USE_LOCAL
 from .client import get_client, get_game_id, save_game_id, login_all_players
@@ -189,6 +193,34 @@ def run_action(player: str, command: str, *args, game_id: str = None) -> None:
         print(f"Error: {e}")
 
 
+def healthcheck(timeout: int = 30) -> bool:
+    """Wait for the server to be healthy.
+
+    Args:
+        timeout: Maximum seconds to wait.
+
+    Returns:
+        True if server is healthy, False if timeout.
+    """
+    url = f"{API_BASE}/health"
+    print(f"Waiting for server at {API_BASE}...")
+
+    for i in range(timeout):
+        try:
+            resp = requests.get(url, timeout=2)
+            if resp.status_code == 200:
+                print(f"Server healthy after {i + 1}s")
+                return True
+        except requests.exceptions.RequestException:
+            pass
+        time.sleep(1)
+        if (i + 1) % 5 == 0:
+            print(f"  Still waiting... ({i + 1}s)")
+
+    print(f"Server not healthy after {timeout}s")
+    return False
+
+
 def launch_ship(player: str, ship_id: str, route_id: str, gas_type: str = "hydrogen") -> None:
     """Launch a ship to claim a route.
 
@@ -289,6 +321,11 @@ def main():
     elif cmd == "output":
         num_lines = int(sys.argv[2]) if len(sys.argv) > 2 else 100
         show_claude_output(num_lines)
+
+    elif cmd == "healthcheck":
+        timeout = int(sys.argv[2]) if len(sys.argv) > 2 else 30
+        success = healthcheck(timeout)
+        sys.exit(0 if success else 1)
 
     else:
         print(f"Unknown command: {cmd}")

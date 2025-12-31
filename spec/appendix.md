@@ -399,7 +399,7 @@ Frame tiles go in Frame slots. Each Frame slot shows a gas cube icon—this indi
 | Steel Frame | Steel Framework | -3 | +£1 | Reliability +2 | Heavier but cheap |
 | Semi-Rigid Keel | Internal Keel | -2 | +£1 | Reliability +1 | Italy's specialty |
 | Geodetic Frame | Geodetic Structure | -1 | +£3 | Reliability +2, Ceiling +1 | Lightest, most expensive |
-| Modular Frame | Modular Construction | -1 | +£2 | — | +2 tile swaps at Design Bureau |
+| Modular Frame | Modular Construction | -1 | +£2 | — | — |
 | Flexible Frame | Articulated Keel Design | 0 | +£1 | Ceiling +1 | Semi-rigid: -1 to Reliability checks during Weather hazards (Italy starting tech) |
 | Streamlined Hull | Aerodynamic Hull Design | -1 | +£2 | Lift +2 | Provides lift without gas |
 | Aerodynamic Lift System | Dynamic Lift Surfaces | -2 | +£3 | Lift +4 | Provides lift without gas |
@@ -701,7 +701,7 @@ The Market Deck contains 30 purchasable crew cards. Five are displayed in the Ma
 
 | Name | Cost | Symbol | Agent Effect | Reveal |
 |------|------|--------|--------------|--------|
-| Chief Engineer | 4 | Wrench | +2 tile swaps | 1 Engineer |
+| Chief Engineer | 4 | Wrench | — | 1 Engineer |
 | Test Pilot | 5 | Propeller | +2 Reliability for this launch | 1 Officer |
 | Navigator | 3 | Propeller | +1 Range for this launch | 1 £, 1 Influence |
 | Weather Expert | 4 | Propeller | Ignore Weather hazards this launch | 1 Engineer |

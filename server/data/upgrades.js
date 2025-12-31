@@ -220,7 +220,7 @@ const UPGRADES = {
     weight: -1,
     hullCost: 2,
     stats: {},
-    special: 'extra_swaps',
+    special: null,
     age: 3
   },
   flexible_frame: {

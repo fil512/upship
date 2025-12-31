@@ -3,7 +3,49 @@
  * Implementation of Section 12 - Age Transitions
  */
 
-const { TECHNOLOGY_BAG } = require('../../config/constants');
+const { TECHNOLOGY_BAG, HAND_SIZE, INITIAL_AGENTS } = require('../../config/constants');
+const { setupMissionRow } = require('../../data/combatMissions');
+const { shuffleArray } = require('../../utils/random');
+const { calculateTurnOrder } = require('./turnOrder');
+const { refreshRnDBoard, refreshMarketRow, refillRDBoard } = require('./marketHelpers');
+
+/**
+ * Add new age technologies to the tech bag
+ * Per Section 3.1: Include (N-1) copies of each tech where N = player count
+ *
+ * @param {Object} state - Game state (mutated)
+ * @param {number} age - Age number (2 or 3)
+ */
+function addAgeTechnologies(state, age) {
+  const newTechs = TECHNOLOGY_BAG[age] || [];
+  if (newTechs.length === 0) return;
+
+  const playerCount = state.playerCount || Object.keys(state.players || {}).length;
+  const copiesPerTech = Math.max(1, playerCount - 1);
+
+  // Count how many copies of each tech are already owned
+  const ownedCounts = {};
+  for (const pid of Object.keys(state.players || {})) {
+    for (const tech of state.players[pid].technologies || []) {
+      ownedCounts[tech] = (ownedCounts[tech] || 0) + 1;
+    }
+  }
+
+  // Add (N-1) - ownedCount copies of each new age tech
+  const techsToAdd = [];
+  for (const tech of newTechs) {
+    const ownedCount = ownedCounts[tech.id] || 0;
+    const copiesToAdd = Math.max(0, copiesPerTech - ownedCount);
+
+    for (let i = 0; i < copiesToAdd; i++) {
+      techsToAdd.push({ ...tech, age });
+    }
+  }
+
+  // Shuffle and add to tech bag
+  state.techBag = state.techBag || [];
+  state.techBag.push(...shuffleArray(techsToAdd));
+}
 
 /**
  * Get all technology definitions flattened from all ages
@@ -332,16 +374,102 @@ function completeAgeTransition(state) {
     }
   }
 
+  // Set up combat missions for Age II, or clear them for Age III
+  if (newAge === 2) {
+    // Per Section 10.5 and Appendix G: Set up Combat Mission Row for Age II
+    const { missionRow, missionDeck } = setupMissionRow();
+    state.missionRow = missionRow;
+    state.missionDeck = missionDeck;
+
+    state.log.push({
+      timestamp: new Date().toISOString(),
+      message: `Combat Mission Row established with 6 missions.`,
+      type: 'system'
+    });
+  } else if (newAge === 3) {
+    // Clear combat missions when leaving Age II
+    delete state.missionRow;
+    delete state.missionDeck;
+  }
+
+  // Add new age technologies to bag per Section 3.1
+  addAgeTechnologies(state, newAge);
+
+  // Refill R&D board with new age technologies
+  refillRDBoard(state);
+
+  // Reset gas market prices for new age (Section 4.4: Helium resets to £2 at Age Transitions)
+  state.gasMarket = { hydrogen: 1, helium: 2 };
+
   // Clean up transition state
   delete state.ageTransitionDesignBureau;
 
   // Return to worker placement for new age
   state.phase = 'worker_placement';
 
+  // === Worker Placement Setup ===
+  // This was skipped in startNewRound because of the age transition
+
+  // Reset worker placement state for all players
+  for (const playerId of state.playerOrder) {
+    const playerState = state.players[playerId];
+    playerState.agentsRemaining = playerState.agents || INITIAL_AGENTS;
+    playerState.hasPassed = false;
+  }
+
+  // Clear Ground Board placements
+  state.groundBoard.placements = {};
+
+  // Calculate new turn order based on income
+  state.workerPlacement = {
+    passedPlayers: [],
+    ministryVisitors: [],
+    placementOrder: calculateTurnOrder(state),
+    currentPlacerIndex: 0
+  };
+
+  // Reset reveal phase tracking
+  state.revealPhase = {
+    revealedHands: {},
+    resourcesCollected: {},
+    techAcquisitionsComplete: {},
+    marketPurchasesComplete: {}
+  };
+
+  // Draw cards to hand size of 5 for each player
+  for (const playerId of state.playerOrder) {
+    const playerState = state.players[playerId];
+    const cardsNeeded = HAND_SIZE - (playerState.hand?.length || 0);
+
+    for (let i = 0; i < cardsNeeded; i++) {
+      if (playerState.deck.length === 0 && playerState.discardPile.length > 0) {
+        // Reshuffle discard into deck
+        playerState.deck = shuffleArray([...playerState.discardPile]);
+        playerState.discardPile = [];
+      }
+
+      if (playerState.deck.length > 0) {
+        playerState.hand.push(playerState.deck.pop());
+      }
+    }
+  }
+
+  // Refresh R&D Board (replenish technologies)
+  refreshRnDBoard(state);
+
+  // Refill Market Row
+  refreshMarketRow(state);
+
   state.log.push({
     timestamp: new Date().toISOString(),
     message: `=== Age ${newAge} begins! ===`,
     type: 'system'
+  });
+
+  state.log.push({
+    timestamp: new Date().toISOString(),
+    message: `Turn ${state.turn} begins. Worker Placement phase started.`,
+    type: 'phase'
   });
 }
 

@@ -102,7 +102,8 @@ describe('Rules Compliance - Design Bureau (Section 6.2)', () => {
       expect(result.newState.players[playerId].blueprint.driveSlots[0]).toBe('maybach_cx');
     });
 
-    it('should enforce swap limit (2 for Germany/USA)', () => {
+    // NOTE: Swap limit test removed - players can now make unlimited modifications at Design Bureau
+    it('should allow unlimited modifications', () => {
       const state = createTestGameState();
       state.phase = 'worker_placement';
       state.age = 1;
@@ -111,7 +112,6 @@ describe('Rules Compliance - Design Bureau (Section 6.2)', () => {
       const playerState = state.players[playerId];
 
       // Technologies that unlock the upgrades we want to install
-      // daimler_engine -> basic_engine, maybach_engine -> maybach_cx, improved_propeller -> efficient_propeller
       playerState.technologies = ['daimler_engine', 'maybach_engine', 'improved_propeller'];
       playerState.agentsRemaining = 2;
 
@@ -132,7 +132,7 @@ describe('Rules Compliance - Design Bureau (Section 6.2)', () => {
       state.playerOrder = [playerId];
       state.groundBoard = { placements: {} };
 
-      // Try 3 swaps (should fail on 3rd due to limit of 2)
+      // All 3 swaps should succeed (no limit)
       const result = processPlaceAgent(state, playerId, {
         locationId: 'design_bureau',
         cardIndex: 0,
@@ -143,14 +143,10 @@ describe('Rules Compliance - Design Bureau (Section 6.2)', () => {
         ])
       });
 
-      // First 2 should succeed, 3rd should fail
+      // All 3 should succeed
       expect(result.newState.players[playerId].blueprint.driveSlots[0]).toBe('basic_engine');
       expect(result.newState.players[playerId].blueprint.driveSlots[1]).toBe('maybach_cx');
-      // 3rd should NOT be installed
-      expect(result.newState.players[playerId].blueprint.driveSlots[2]).toBeNull();
-      // Log should contain warning about swap limit
-      const warningLog = result.newState.log.find(l => l.type === 'warning' && l.message.includes('swap limit'));
-      expect(warningLog).toBeDefined();
+      expect(result.newState.players[playerId].blueprint.driveSlots[2]).toBe('efficient_propeller');
     });
 
     it('should allow 0 swaps (just visit location)', () => {

@@ -71,9 +71,7 @@ describe('GameStateService', () => {
         expect(FACTION_CONFIG.britain.startingTechnologies).toContain('imperial_mooring');
       });
 
-      it('should have only 1 upgrade swap (Red Tape flaw)', () => {
-        expect(FACTION_CONFIG.britain.upgradeSwaps).toBe(1);
-      });
+      // NOTE: Upgrade swaps test removed - swap limits have been eliminated
 
       it('should have pre-installed dining saloon', () => {
         expect(FACTION_CONFIG.britain.startingUpgrades.component).toBe('dining_saloon');
@@ -101,9 +99,7 @@ describe('GameStateService', () => {
         expect(FACTION_CONFIG.italy.startingTechnologies).toContain('articulated_keel');
       });
 
-      it('should have 4 upgrade swaps (Rapid Refit)', () => {
-        expect(FACTION_CONFIG.italy.upgradeSwaps).toBe(4);
-      });
+      // NOTE: Upgrade swaps test removed - swap limits have been eliminated
 
       it('should have low ceiling flaw', () => {
         expect(FACTION_CONFIG.italy.lowCeiling).toBe(true);
@@ -177,19 +173,8 @@ describe('GameStateService', () => {
       expect(germanyPlayer.gasCubes.helium).toBe(0);
     });
 
-    it('should set correct upgrade swaps per faction', async () => {
-      mockClient.query
-        .mockResolvedValueOnce({})
-        .mockResolvedValueOnce({})
-        .mockResolvedValueOnce({});
-
-      const result = await initializeGameState(1, players);
-
-      expect(result.players[1].upgradeSwaps).toBe(2); // Germany default
-      expect(result.players[2].upgradeSwaps).toBe(1); // Britain Red Tape
-      expect(result.players[3].upgradeSwaps).toBe(2); // USA default
-      expect(result.players[4].upgradeSwaps).toBe(4); // Italy Rapid Refit
-    });
+    // NOTE: Upgrade swaps test removed - swap limits have been eliminated
+    // Players can now make unlimited modifications at Design Bureau
 
     it('should draw 5 cards for each player', async () => {
       mockClient.query

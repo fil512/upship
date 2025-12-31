@@ -7,7 +7,7 @@ const { shuffleArray } = require('../../utils/random');
 const { calculateTurnOrder } = require('./turnOrder');
 const { refreshRnDBoard, refreshMarketRow } = require('./marketHelpers');
 const { HAND_SIZE, INITIAL_AGENTS } = require('../../config/constants');
-const { setupMissionRow } = require('../../data/combatMissions');
+const { performAgeTransition } = require('./ageTransition');
 
 /**
  * Transition from worker placement to reveal phase
@@ -199,44 +199,6 @@ function transitionToIncomeCleanup(state) {
 }
 
 /**
- * Check for age transition based on Progress Track (Section 1.3, 12.1)
- * Age transitions are triggered by technology acquisition, not turn count
- *
- * @param {Object} state - Game state (mutated)
- */
-function checkAgeTransitionByProgressTrack(state) {
-  const thresholds = state.progressThresholds || { age2: 4, age3: 8, end: 12 };
-
-  if (state.age === 1 && state.progressTrack >= thresholds.age2) {
-    state.age = 2;
-
-    // Per Section 10.5 and Appendix G: Set up Combat Mission Row for Age II
-    // "At the start of Age II, shuffle the 20-card Combat Mission deck and deal 6 missions face-up"
-    const { missionRow, missionDeck } = setupMissionRow();
-    state.missionRow = missionRow;
-    state.missionDeck = missionDeck;
-
-    state.log.push({
-      timestamp: new Date().toISOString(),
-      message: `Age II begins! Progress Track reached ${state.progressTrack}. Combat Mission Row established with 6 missions.`,
-      type: 'phase'
-    });
-  } else if (state.age === 2 && state.progressTrack >= thresholds.age3) {
-    state.age = 3;
-
-    // Clear combat missions when leaving Age II
-    delete state.missionRow;
-    delete state.missionDeck;
-
-    state.log.push({
-      timestamp: new Date().toISOString(),
-      message: `Age III begins! Progress Track reached ${state.progressTrack}.`,
-      type: 'phase'
-    });
-  }
-}
-
-/**
  * Start a new round (called after Income & Cleanup)
  * Per Section 5.2: Check Age Transition during Income & Cleanup phase
  *
@@ -245,11 +207,34 @@ function checkAgeTransitionByProgressTrack(state) {
 function startNewRound(state) {
   state.turn++;
   state.round = 1;
-  state.phase = 'worker_placement';
 
   // Per Section 5.2 step 3: Check Age Transition based on Progress Track
   // Age transitions are triggered by Progress Track thresholds, NOT turn count
-  checkAgeTransitionByProgressTrack(state);
+  const thresholds = state.progressThresholds || { age2: 4, age3: 8, end: 12 };
+  let needsAgeTransition = false;
+  let newAge = null;
+
+  if (state.age === 1 && state.progressTrack >= thresholds.age2) {
+    needsAgeTransition = true;
+    newAge = 2;
+  } else if (state.age === 2 && state.progressTrack >= thresholds.age3) {
+    needsAgeTransition = true;
+    newAge = 3;
+  }
+
+  if (needsAgeTransition) {
+    // Use complete age transition implementation which includes:
+    // - VP scoring, ship/officer recovery, income adjustment
+    // - Blueprint slot expansion
+    // - Free Design Bureau phase (age_transition_design_bureau)
+    performAgeTransition(state, newAge);
+    // State phase is now 'age_transition_design_bureau'
+    // Worker placement setup will happen after transition completes
+    return;
+  }
+
+  // No age transition - proceed with normal worker placement
+  state.phase = 'worker_placement';
 
   // Reset worker placement state for all players
   // Each player gets back their own number of agents (2 or 3 if earned)

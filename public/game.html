@@ -1881,14 +1881,6 @@
       const blueprint = myState.blueprint || {};
       const technologies = myState.technologies || [];
 
-      // Get swap limit for current faction
-      const factionSwapLimits = { germany: 2, usa: 2, britain: 1, italy: 4 };
-      let swapLimit = factionSwapLimits[myState.faction] || 2;
-      // Check for Modular Frame bonus
-      if ((blueprint.frameSlots || []).includes('modular_frame')) {
-        swapLimit += 2;
-      }
-
       // Find available upgrades from owned technologies
       const availableUpgrades = {};
       for (const techId of technologies) {
@@ -1904,7 +1896,7 @@
       }
 
       let html = '<div class="age-transition-design-bureau" style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 15px;">';
-      html += '<h4 style="margin-top: 0;">Select Upgrades to Install (max ' + swapLimit + ' swaps)</h4>';
+      html += '<h4 style="margin-top: 0;">Select Upgrades to Install</h4>';
       html += '<p style="font-size: 12px; color: #666; margin-bottom: 15px;">Duplicates are allowed. Click empty slots to fill them with available upgrades.</p>';
 
       // Show each slot type with empty slots
@@ -1962,10 +1954,10 @@
         html += '</div>';
       }
 
-      // Show pending swaps summary
+      // Show pending changes summary
       if (pendingAgeTransitionSwaps.length > 0) {
         html += '<div style="margin-top: 10px; padding: 10px; background: #d4edda; border-radius: 4px;">';
-        html += '<strong>Pending (' + pendingAgeTransitionSwaps.length + '/' + swapLimit + '):</strong> ';
+        html += '<strong>Pending (' + pendingAgeTransitionSwaps.length + ' changes):</strong> ';
         for (const swap of pendingAgeTransitionSwaps) {
           const upgrade = allUpgrades[swap.upgradeId];
           html += (upgrade?.name || swap.upgradeId) + ' ';
@@ -1976,7 +1968,7 @@
       // Submit button
       html += '<div style="margin-top: 15px;">';
       html += '<button class="action-btn" onclick="submitAgeTransitionDesignBureau()" style="background: #28a745; border-color: #28a745;">';
-      html += 'Done with Free Upgrades (' + pendingAgeTransitionSwaps.length + ' swaps)';
+      html += 'Done with Free Upgrades (' + pendingAgeTransitionSwaps.length + ' changes)';
       html += '</button>';
       html += '</div>';
 
@@ -1987,23 +1979,10 @@
     function addAgeTransitionSwap(slotType, slotIndex, upgradeId) {
       if (!upgradeId) return;
 
-      // Check swap limit
-      const myState = gameState?.players?.[userId];
-      const factionSwapLimits = { germany: 2, usa: 2, britain: 1, italy: 4 };
-      let swapLimit = factionSwapLimits[myState?.faction] || 2;
-      if ((myState?.blueprint?.frameSlots || []).includes('modular_frame')) {
-        swapLimit += 2;
-      }
-
-      if (pendingAgeTransitionSwaps.length >= swapLimit) {
-        alert('Swap limit reached (' + swapLimit + ')');
-        return;
-      }
-
-      // Remove any existing swap for this slot
+      // Remove any existing change for this slot
       pendingAgeTransitionSwaps = pendingAgeTransitionSwaps.filter(s => !(s.slotType === slotType && s.slotIndex === slotIndex));
 
-      // Add new swap
+      // Add new change
       pendingAgeTransitionSwaps.push({
         action: 'install',
         slotType: slotType,

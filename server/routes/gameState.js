@@ -152,8 +152,21 @@ router.post('/:gameId/action', requireGamePlayer, async (req, res, next) => {
     } else if (state.phase === 'reveal') {
       // Reveal phase allows all players to act simultaneously
       skipTurnCheck = true;
+    } else if (state.phase === 'age_transition_design_bureau' && state.ageTransitionDesignBureau) {
+      // Age transition phase uses its own player index
+      const transitionIndex = state.ageTransitionDesignBureau.currentPlayerIndex || 0;
+      currentPlayerId = state.playerOrder[transitionIndex];
     } else {
       currentPlayerId = state.playerOrder[state.currentPlayerIndex];
+    }
+
+    // Special case: RESPOND_TO_HAZARD is allowed if the player has a ship awaiting hazard
+    if (actionType === 'RESPOND_TO_HAZARD') {
+      const playerState = state.players[req.session.userId];
+      const hasAwaitingHazard = playerState?.ships?.some(s => s.status === 'awaiting_hazard');
+      if (hasAwaitingHazard) {
+        skipTurnCheck = true;
+      }
     }
 
     if (!skipTurnCheck && currentPlayerId !== req.session.userId) {

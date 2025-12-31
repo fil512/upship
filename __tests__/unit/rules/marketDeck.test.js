@@ -232,18 +232,20 @@ describe('Rules Compliance - Market Deck', () => {
   describe('GAP-050: Market Card Agent Effects Implementation', () => {
     const { processCardEffect } = require('../../../server/actions/worker');
 
-    it('should handle Chief Engineer effect (+2 tile swaps)', () => {
+    // NOTE: Chief Engineer swap bonus test removed - swap limits have been eliminated
+    it('should handle Chief Engineer with no special effect (swaps removed)', () => {
       const state = {
         players: {
-          player1: { bonusSwaps: 0 }
+          player1: { }
         }
       };
-      const card = { name: 'Chief Engineer', effect: '+2 tile swaps' };
+      // Chief Engineer no longer has an effect (swaps were removed)
+      const card = { name: 'Chief Engineer', effect: null };
 
       const result = processCardEffect(state, 'player1', card, 'design_bureau');
 
+      // Should succeed but have no special effect
       expect(result.success).toBe(true);
-      expect(state.players.player1.bonusSwaps).toBe(2);
     });
 
     it('should handle Test Pilot effect (+2 Reliability for this launch)', () => {

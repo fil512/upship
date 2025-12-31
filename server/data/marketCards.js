@@ -25,7 +25,7 @@ const MARKET_CARDS = [
     category: 'technical',
     cost: 4,
     symbol: 'wrench',
-    effect: '+2 tile swaps',
+    effect: null,
     reveal: { engineers: 1 }
   },
   {

@@ -17,7 +17,7 @@ npm run migrate:local
 npm run dev:local &
 
 # Wait for server to be healthy (up to 30 seconds)
-for i in {1..30}; do curl -s http://localhost:3000/health && break || sleep 1; done
+UPSHIP_LOCAL=1 python -m playtest healthcheck
 ```
 
 **Step 2: Run the playtest**

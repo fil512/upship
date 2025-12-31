@@ -362,7 +362,13 @@ def find_best_combat_mission(
     return best_mission
 
 
-def find_strategic_placement(player: str, hand: list[dict], locations: list[dict], game_id: str) -> tuple[dict | None, dict | None]:
+def find_strategic_placement(
+    player: str,
+    hand: list[dict],
+    locations: list[dict],
+    game_id: str,
+    return_decision_info: bool = False
+) -> tuple[dict | None, dict | None] | tuple[dict | None, dict | None, dict]:
     """Find a strategic card/location combination using intelligent evaluation.
 
     Strategy:
@@ -376,25 +382,33 @@ def find_strategic_placement(player: str, hand: list[dict], locations: list[dict
         hand: List of card dicts.
         locations: List of available location dicts.
         game_id: The game ID.
+        return_decision_info: If True, return a third element with decision details.
 
     Returns:
         Tuple of (card, location) or (None, None) if no match found.
+        If return_decision_info=True, returns (card, location, decision_info).
     """
     state = get_state(game_id, player)
     if not state:
+        if return_decision_info:
+            return find_playable_card(hand, locations) + ({'reason': 'no state'},)
         return find_playable_card(hand, locations)
 
     player_id = get_player_id(player, state)
     player_data = state.get_player(player_id) if player_id else None
 
     if not player_data:
+        if return_decision_info:
+            return find_playable_card(hand, locations) + ({'reason': 'no player data'},)
         return find_playable_card(hand, locations)
 
     cash = player_data.cash or 0
     engineers = player_data.engineers or 0
     officers = player_data.officers or 0
     gas_cubes = player_data.gas_cubes or {}
-    total_gas = gas_cubes.get('hydrogen', 0) + gas_cubes.get('helium', 0)
+    hydrogen = gas_cubes.get('hydrogen', 0)
+    helium = gas_cubes.get('helium', 0)
+    total_gas = hydrogen + helium
 
     ships = player_data.ships or []
     hangar_count = sum(1 for s in ships if s.status == 'hangar')
@@ -404,11 +418,32 @@ def find_strategic_placement(player: str, hand: list[dict], locations: list[dict
     current_age = state.age or 1
     launch_eval = evaluate_launch_readiness(player_data, routes, current_age)
 
+    # Build decision info for logging
+    decision_info = {
+        'launch_eval': launch_eval,
+        'player_state': {
+            'cash': cash,
+            'officers': officers,
+            'engineers': engineers,
+            'hydrogen': hydrogen,
+            'helium': helium,
+            'hangar_ships': hangar_count,
+            'on_route_ships': on_route_count,
+        },
+        'current_age': current_age,
+        'routes_available': len(routes) if routes else 0,
+        'priority_reason': None,
+        'chosen_location': None,
+    }
+
     priority_locations = []
 
     # Phase 1: Address launch requirements
     if launch_eval['can_launch'] and routes:
         priority_locations.append('launchpad')
+        decision_info['priority_reason'] = 'launch ready - going to launchpad'
+    elif launch_eval['missing']:
+        decision_info['priority_reason'] = f"not launch ready: {'; '.join(launch_eval['missing'])}"
 
     priority_locations.extend(launch_eval['priorities'])
 
@@ -444,6 +479,8 @@ def find_strategic_placement(player: str, hand: list[dict], locations: list[dict
 
     # Phase 4: Find first available location with matching card
     available_loc_ids = {loc['id'] for loc in locations}
+    decision_info['available_locations'] = list(available_loc_ids)
+    decision_info['priority_order'] = priority_locations[:10]  # Top 10
 
     for loc_id in priority_locations:
         if loc_id not in available_loc_ids:
@@ -456,9 +493,19 @@ def find_strategic_placement(player: str, hand: list[dict], locations: list[dict
         for card in hand:
             card_symbol = card.get('symbol', 'any')
             if card_symbol == loc['symbol'] or card_symbol == 'any':
+                decision_info['chosen_location'] = loc_id
+                decision_info['chosen_priority_rank'] = priority_locations.index(loc_id) + 1
+                if return_decision_info:
+                    return card, loc, decision_info
                 return card, loc
 
-    return find_playable_card(hand, locations)
+    # Fallback
+    card, loc = find_playable_card(hand, locations)
+    decision_info['chosen_location'] = loc['id'] if loc else None
+    decision_info['fallback'] = True
+    if return_decision_info:
+        return card, loc, decision_info
+    return card, loc
 
 
 def get_reveal_acquisitions(player: str, game_id: str) -> tuple[list[str], list[str]]:

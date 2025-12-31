@@ -37,12 +37,17 @@ describe('Rules Compliance - Age Transitions', () => {
       state.progressThresholds = { age2: 4, age3: 8, end: 12 };
 
       // Age should transition when progress track reaches threshold
-      // The transition happens in technology.js checkAgeTransition
-      // But startNewRound should check it during Income & Cleanup
+      // Per Section 12.1: Age transition includes a free Design Bureau phase
+      // startNewRound triggers the transition but doesn't complete it immediately
       startNewRound(state);
 
       // Per Section 5.2 step 3: "Check Age Transition: If Progress Track reached threshold, trigger Age Transition"
-      // The age transition is triggered when the progress track threshold is reached
+      // The transition starts by entering the free Design Bureau phase
+      expect(state.phase).toBe('age_transition_design_bureau');
+      expect(state.ageTransitionDesignBureau.newAge).toBe(2);
+
+      // Age is updated when completeAgeTransition is called (after free Design Bureau actions)
+      completeAgeTransition(state);
       expect(state.age).toBe(2);
     });
 
@@ -319,11 +324,12 @@ describe('Rules Compliance - Age Transitions', () => {
       state.age = 1;
       state.playerOrder = ['1', '2'];
 
-      // Set up player with a technology and empty slot
+      // Set up player with a technology and one empty frame slot (second slot)
+      // First frame slot and fabric slot already filled to pass completeness check
       state.players['1'].technologies = ['duralumin_girders'];
       state.players['1'].blueprint = {
-        frameSlots: [null, null],
-        fabricSlots: ['cotton_envelope'],
+        frameSlots: ['duralumin_frame', null],  // First filled, second empty
+        fabricSlots: ['cotton_envelope'],       // Already filled
         driveSlots: [null],
         componentSlots: [null]
       };
@@ -333,12 +339,12 @@ describe('Rules Compliance - Age Transitions', () => {
       // Start transition
       performAgeTransition(state, 2);
 
-      // Player 1 installs an upgrade
+      // Player 1 installs an upgrade - filling the second frame slot with a duplicate
       const result = processAgeTransitionDesignBureau(state, '1', {
-        swaps: [{ action: 'install', slotType: 'frame', slotIndex: 0, upgradeId: 'duralumin_frame' }]
+        swaps: [{ action: 'install', slotType: 'frame', slotIndex: 1, upgradeId: 'duralumin_frame' }]
       });
 
-      expect(result.newState.players['1'].blueprint.frameSlots[0]).toBe('duralumin_frame');
+      expect(result.newState.players['1'].blueprint.frameSlots[1]).toBe('duralumin_frame');
       // Cash should not be affected (no Hull Upgrade Rule)
       expect(result.newState.players['1'].cash).toBe(10);
     });
@@ -351,10 +357,11 @@ describe('Rules Compliance - Age Transitions', () => {
       state.playerOrder = ['1', '2'];
 
       // Set up player with frame tech and slots - one already filled
+      // Fabric slot already filled to pass completeness check
       state.players['1'].technologies = ['duralumin_girders'];
       state.players['1'].blueprint = {
         frameSlots: ['duralumin_frame', null],  // First slot already has this upgrade
-        fabricSlots: [null],
+        fabricSlots: ['cotton_envelope'],        // Already filled
         driveSlots: [null],
         componentSlots: [null]
       };
@@ -378,9 +385,19 @@ describe('Rules Compliance - Age Transitions', () => {
       state.age = 1;
       state.playerOrder = ['1', '2'];
 
-      // Set up minimal blueprints
-      state.players['1'].blueprint = { frameSlots: [], fabricSlots: [], driveSlots: [], componentSlots: [] };
-      state.players['2'].blueprint = { frameSlots: [], fabricSlots: [], driveSlots: [], componentSlots: [] };
+      // Set up complete blueprints (no empty frame/fabric slots)
+      state.players['1'].blueprint = {
+        frameSlots: ['duralumin_frame'],
+        fabricSlots: ['cotton_envelope'],
+        driveSlots: [],
+        componentSlots: []
+      };
+      state.players['2'].blueprint = {
+        frameSlots: ['duralumin_frame'],
+        fabricSlots: ['cotton_envelope'],
+        driveSlots: [],
+        componentSlots: []
+      };
 
       performAgeTransition(state, 2);
 

@@ -7,6 +7,9 @@ Run a playtest against the **production server** (https://upship-production.up.r
 For a complete playtest that runs until the game ends:
 
 ```bash
+# Verify production server is healthy
+python -m playtest healthcheck
+
 python -m playtest setup
 python -m playtest autoplay
 ```

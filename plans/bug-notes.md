@@ -138,6 +138,168 @@ State is initialized with one shape but runtime code expects a different shape.
 
 ---
 
+## Bug Pattern: Complete Implementation Bypassed by Stub/Simplified Version (2025-12-31)
+
+### Description
+A complete, correct implementation exists but another part of the code calls a simplified or stub version of the same functionality, bypassing critical steps.
+
+### Example: Age Transition Free Design Bureau Phase Skipped
+
+**Symptom**: Players never get free Design Bureau upgrades during age transitions. Blueprint frame/fabric slots stay empty throughout the game. Ships can never launch because slots aren't filled.
+
+**Root Cause**: Two separate age transition implementations existed:
+
+1. **Complete implementation** (`ageTransition.js`):
+   - `performAgeTransition()` which calls `startAgeTransition()`
+   - Scores VP for routes and technologies (Section 12.1 step 1)
+   - Recovers ships and officers (Section 12.1 step 2)
+   - Calculates transition income (Section 12.1 step 3)
+   - Expands blueprint slots (Section 12.1 step 4)
+   - **Enters `age_transition_design_bureau` phase** (Section 12.1 step 5)
+   - Properly handles faction-specific flaws (Britain's Red Tape, etc.)
+
+2. **Simplified stub** (`phaseTransition.js`):
+   - `checkAgeTransitionByProgressTrack()` which only:
+   - Sets `state.age = 2` or `3`
+   - Sets up combat mission row for Age II
+   - **Does NOT call the complete implementation**
+
+**Call site issue**: `startNewRound()` in `phaseTransition.js` called the stub version:
+```javascript
+// WRONG: Uses simplified stub that skips critical steps
+checkAgeTransitionByProgressTrack(state);
+```
+
+Should call:
+```javascript
+// CORRECT: Uses complete implementation from ageTransition.js
+performAgeTransition(state, newAge);
+```
+
+**Result**:
+- Blueprint slots were never expanded (stayed at 1/1 instead of 2/2 in Age III)
+- Players never got free Design Bureau upgrades during transitions
+- Ships could never launch because frame/fabric slots weren't filled
+- VP was never scored for routes/technologies at age boundaries
+
+### How to Hunt for Similar Bugs
+
+1. **Search for duplicate implementations with similar names**:
+   ```bash
+   # Find all functions related to a feature
+   grep -rE "function.*(age|Age|transition|Transition)" server/ --include="*.js" | grep -v test
+
+   # Look for "check" vs "perform" vs "do" variants
+   grep -rE "function (check|perform|do|handle|process)\w+(Transition|Phase|Turn)" server/
+   ```
+
+2. **Compare complete vs partial implementations**:
+   ```bash
+   # Find where a complete implementation exists
+   grep -rE "(state\.phase\s*=|phase transitions)" server/actions/helpers/ --include="*.js" -A 3
+
+   # Find where the same state is modified elsewhere
+   grep -rE "state\.age\s*=" server/ --include="*.js"
+   ```
+
+3. **Look for feature flags or conditional logic that might skip complete path**:
+   - Simple conditional: `if (condition) { simpleVersion() } else { completeVersion() }`
+   - The simple version may have been left in for debugging or edge cases
+
+4. **Check call sites for critical features**:
+   ```bash
+   # Who calls the complete version?
+   grep -r "performAgeTransition\|startAgeTransition" server/ --include="*.js"
+
+   # Who calls the stub version?
+   grep -r "checkAgeTransitionByProgressTrack" server/ --include="*.js"
+   ```
+
+5. **Verify state machine completeness**:
+   - If a feature has a dedicated phase (like `age_transition_design_bureau`), verify the phase is actually entered
+   - Search for the phase name to see where it's set vs where it's handled
+
+### Functions to Audit
+
+| Complete Implementation | Stub/Simplified Version | Status |
+|------------------------|------------------------|--------|
+| `performAgeTransition()` | `checkAgeTransitionByProgressTrack()` | FIXED 2025-12-31 |
+| `completeAgeTransition()` | (inline age setting) | FIXED 2025-12-31 |
+
+---
+
+## Bug Pattern: Data Model Mismatch Between Server and Client (2025-12-31)
+
+### Description
+Server stores data in one structure/format, but client expects a different structure/format.
+
+### Example: Route Data Not Parsed by Python Client
+
+**Symptom**: `state.routes` is empty in Python client, so ships can never launch (no available routes).
+
+**Root Cause**: Server vs Client data model mismatch:
+
+| Aspect | Server (Node.js) | Client (Python) |
+|--------|------------------|-----------------|
+| Location | `state.map.routes` | `state.routes` |
+| Distance | `route.range` | `route.distance` |
+| Availability | `route.claimed === null` | `route.available === true` |
+| Speed req | `route.speed` | `route.speed_requirement` |
+
+**Client code** (GameState.from_dict in models.py):
+```python
+routes = [Route.from_dict(r) for r in data.get('routes', [])]  # Wrong: looks at state.routes
+```
+
+**Server code** (gameStateService.js):
+```javascript
+state.map = createAgeIMap();  // Routes are in state.map.routes
+```
+
+**Result**: Python client sees 0 routes, bots never try to launch ships.
+
+### How to Hunt for Similar Bugs
+
+1. **Compare client models to server data**:
+   ```bash
+   # Find client model definitions
+   grep -r "class.*State\|@dataclass" client/ --include="*.py"
+
+   # Compare to server state creation
+   grep -r "state\.\w\+ =" server/services/gameStateService.js
+   ```
+
+2. **Check property name mapping**:
+   ```bash
+   # Find property accesses in client
+   grep -rE "\.\w+_\w+" client/ --include="*.py"  # snake_case
+
+   # Find corresponding server properties
+   grep -rE "\.\w+[A-Z]\w+" server/ --include="*.js"  # camelCase
+   ```
+
+3. **Test data round-trip**:
+   - Serialize state from server, deserialize in client
+   - Compare parsed object to raw JSON
+   - Look for None/empty values that should have data
+
+### Properties to Audit
+
+| Server Path | Expected Client Path | Status |
+|-------------|---------------------|--------|
+| `state.map.routes` | `state.routes` | BUG: Client reads wrong path |
+| `route.range` | `route.distance` | BUG: Property name mismatch |
+| `route.claimed === null` | `route.available` | BUG: Derived property missing |
+
+### Warning Signs
+
+- Functions with names like `check...` that also mutate state (checking should be read-only)
+- Similar functions in different files doing "almost the same thing"
+- Phase/state values that are defined but never set during normal gameplay
+- Features that work in tests but not in playtests (tests may call correct version directly)
+
+---
+
 ## Adding New Bug Patterns
 
 When you discover a new bug pattern:

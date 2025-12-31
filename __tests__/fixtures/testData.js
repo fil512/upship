@@ -153,7 +153,6 @@ const createTestPlayerState = (faction = 'germany') => ({
   ],
   hazardDiscardPile: [],
   bonuses: {},
-  upgradeSwaps: faction === 'italy' ? 4 : (faction === 'britain' ? 1 : 2),
   heliumMonopoly: faction === 'usa',
   bannedTechnologies: faction === 'germany' ? ['helium_handling'] : []
 });

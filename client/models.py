@@ -156,17 +156,38 @@ class Route:
 
     @classmethod
     def from_dict(cls, data: dict) -> 'Route':
-        """Create Route from API response dict."""
+        """Create Route from API response dict.
+
+        Handles both client format (distance, speedRequirement, claimedBy)
+        and server format (range, speed, claimed).
+        """
+        # Handle property name differences between server and client
+        # Server uses 'range', client expects 'distance'
+        distance = data.get('distance', data.get('range', 0))
+
+        # Server uses 'speed', client expects 'speedRequirement'
+        speed_req = data.get('speedRequirement', data.get('speed', 0))
+
+        # Server uses 'claimed' (player ID or null), client expects 'claimedBy'
+        claimed_by = data.get('claimedBy', data.get('claimed'))
+
+        # Derive 'available' from 'claimed' if not explicitly set
+        # Route is available if not claimed (claimed is null/None)
+        if 'available' in data:
+            available = data['available']
+        else:
+            available = claimed_by is None
+
         return cls(
             id=data.get('id', ''),
             name=data.get('name', ''),
-            distance=data.get('distance', 0),
-            speed_requirement=data.get('speedRequirement', data.get('speed', 0)),
+            distance=distance,
+            speed_requirement=speed_req,
             gas_type=data.get('gasType', 'hydrogen'),
             income=data.get('income', 0),
-            prestige=data.get('prestige', 0),
-            available=data.get('available', True),
-            claimed_by=data.get('claimedBy'),
+            prestige=data.get('prestige', data.get('vp', 0)),
+            available=available,
+            claimed_by=claimed_by,
         )
 
 
@@ -382,9 +403,19 @@ class GameState:
         for uid, pdata in players_data.items():
             players[uid] = Player.from_dict(uid, pdata)
 
-        # Parse routes
-        routes = [Route.from_dict(r) for r in data.get('routes', [])]
-        available_routes = [Route.from_dict(r) for r in data.get('availableRoutes', [])]
+        # Parse routes - server stores in state.map.routes, client expected state.routes
+        # Check both locations for compatibility
+        map_data = data.get('map', {})
+        routes_data = data.get('routes', []) or map_data.get('routes', [])
+        routes = [Route.from_dict(r) for r in routes_data]
+
+        # available_routes is a convenience list of unclaimed routes
+        available_routes_data = data.get('availableRoutes', [])
+        if available_routes_data:
+            available_routes = [Route.from_dict(r) for r in available_routes_data]
+        else:
+            # Derive from routes list if not provided
+            available_routes = [r for r in routes if r.available]
 
         # Parse combat mission row (Age II only)
         mission_row = [CombatMission.from_dict(m) for m in data.get('missionRow', [])]

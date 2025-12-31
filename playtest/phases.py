@@ -115,15 +115,20 @@ def handle_launchpad_launches(player: str, game_id: str, logger: PlaytestLogger)
                         logger.log_action(player, f"done launching ({launched} ships)", "worker_placement")
                         return
 
-    # Try regular routes
-    routes = get_available_routes(game_id)
-    if routes:
-        route_launches = _attempt_route_launches(
-            player, game_id, hangar_ships, routes, player_data, officers_needed, logger
-        )
-        launched += route_launches
+    # Try regular routes (Age I and III only - Age II uses combat missions exclusively)
+    if current_age != 2:
+        routes = get_available_routes(game_id)
+        if routes:
+            route_launches = _attempt_route_launches(
+                player, game_id, hangar_ships, routes, player_data, officers_needed, logger
+            )
+            launched += route_launches
+        elif launched == 0:
+            _no_more_launches(player, game_id, "no routes available", logger)
+            return
     elif launched == 0:
-        _no_more_launches(player, game_id, "no routes or missions available", logger)
+        # Age II with no successful mission launches
+        _no_more_launches(player, game_id, "no missions available or ship not ready", logger)
         return
 
     _no_more_launches_quiet(player, game_id)
@@ -202,22 +207,10 @@ def _attempt_combat_missions(
 
                 ship_status = post_ship.status if post_ship else 'unknown'
 
-                # Handle hazard/flak response if needed
-                try:
-                    raw_state = client._api_get(player, f"/api/state/{game_id}")
-                    game_state_wrapper = raw_state.get('gameState', raw_state)
-                    state_data = game_state_wrapper.get('state', {})
-                    players_data = state_data.get('players', {})
-                    raw_player = players_data.get(post_player_id, {})
-                    raw_ships = raw_player.get('ships', [])
-                    raw_ship = next((s for s in raw_ships if s.get('id') == ship.id), None)
-
-                    if raw_ship and raw_ship.get('status') == 'awaiting_hazard':
-                        pending_hazard = raw_ship.get('pendingHazard')
-                        if pending_hazard:
-                            ship_status = _handle_hazard_response(player, game_id, ship.id, pending_hazard, post_player_data, logger)
-                except Exception:
-                    pass
+                # Handle hazard response if ship is awaiting_hazard
+                ship_status = _check_and_handle_hazard(
+                    client, player, game_id, ship.id, post_player_id, post_player_data, logger
+                )
 
                 # Determine launch outcome
                 log_entries = get_last_log_entries(post_state, count=10) if post_state else []
@@ -309,22 +302,10 @@ def _attempt_route_launches(
 
                 ship_status = post_ship.status if post_ship else 'unknown'
 
-                # Handle hazard response if needed
-                try:
-                    raw_state = client._api_get(player, f"/api/state/{game_id}")
-                    game_state_wrapper = raw_state.get('gameState', raw_state)
-                    state_data = game_state_wrapper.get('state', {})
-                    players_data = state_data.get('players', {})
-                    raw_player = players_data.get(post_player_id, {})
-                    raw_ships = raw_player.get('ships', [])
-                    raw_ship = next((s for s in raw_ships if s.get('id') == ship.id), None)
-
-                    if raw_ship and raw_ship.get('status') == 'awaiting_hazard':
-                        pending_hazard = raw_ship.get('pendingHazard')
-                        if pending_hazard:
-                            ship_status = _handle_hazard_response(player, game_id, ship.id, pending_hazard, post_player_data, logger)
-                except Exception:
-                    pass
+                # Handle hazard response if ship is awaiting_hazard
+                ship_status = _check_and_handle_hazard(
+                    client, player, game_id, ship.id, post_player_id, post_player_data, logger
+                )
 
                 # Determine launch outcome
                 log_entries = get_last_log_entries(post_state, count=10) if post_state else []
@@ -374,6 +355,66 @@ def _no_more_launches_quiet(player: str, game_id: str) -> None:
         client.no_more_launches(player, game_id)
     except Exception:
         pass
+
+
+def _check_and_handle_hazard(client, player: str, game_id: str, ship_id: str, player_id: str | None, player_data: Player, logger: PlaytestLogger) -> str:
+    """Check if ship needs hazard response and handle it.
+
+    This function fetches raw state to check for pending hazards because
+    the typed GameState model doesn't expose pendingHazard on ships.
+
+    Args:
+        client: UpshipClient instance.
+        player: Player username.
+        game_id: The game ID.
+        ship_id: The ship ID.
+        player_id: The player's UUID (may be None).
+        player_data: Player object (for engineer count).
+        logger: PlaytestLogger instance.
+
+    Returns:
+        Final ship status string after hazard resolution.
+    """
+    # Fetch raw state to get pendingHazard (not in typed model)
+    raw_state = client._api_get(player, f"/api/state/{game_id}")
+    game_state_wrapper = raw_state.get('gameState', raw_state)
+    state_data = game_state_wrapper.get('state', {})
+    players_data = state_data.get('players', {})
+
+    # If player_id not provided, find it by faction
+    if not player_id:
+        faction = get_faction_from_player(player)
+        for pid, pdata in players_data.items():
+            if pdata.get('faction') == faction:
+                player_id = pid
+                break
+
+    if not player_id:
+        logger.log_action(None, f"  └─ ERROR: Could not find player_id for {player}", "worker_placement")
+        return 'unknown'
+
+    raw_player = players_data.get(player_id, {})
+    raw_ships = raw_player.get('ships', [])
+    raw_ship = next((s for s in raw_ships if s.get('id') == ship_id), None)
+
+    if not raw_ship:
+        # Debug: log available ships
+        ship_ids = [s.get('id', 'unknown')[:20] for s in raw_ships]
+        logger.log_action(None, f"  └─ ERROR: Ship {ship_id[:20]} not found. Available: {ship_ids}", "worker_placement")
+        return 'unknown'
+
+    ship_status = raw_ship.get('status', 'unknown')
+
+    if ship_status != 'awaiting_hazard':
+        return ship_status
+
+    pending_hazard = raw_ship.get('pendingHazard')
+    if not pending_hazard:
+        logger.log_action(None, f"  └─ ERROR: Ship awaiting_hazard but no pendingHazard", "worker_placement")
+        return ship_status
+
+    # Handle the hazard response
+    return _handle_hazard_response(player, game_id, ship_id, pending_hazard, player_data, logger)
 
 
 def _handle_hazard_response(player: str, game_id: str, ship_id: str, pending_hazard: dict, player_data: Player, logger: PlaytestLogger) -> str:
@@ -474,7 +515,7 @@ def _determine_launch_outcome(log_entries: list[dict], ship_id: str, ship_status
         return "SUCCESS"
     elif ship_status == 'destroyed':
         return "DESTROYED"
-    elif ship_status == 'hangar':
+    elif ship_status in ('hangar', 'in_hangar'):
         return "ABORTED"
     elif ship_status == 'damaged':
         return "DAMAGED"
@@ -599,10 +640,16 @@ def handle_worker_placement_round(game_id: str, logger: PlaytestLogger) -> bool:
 
         hand = get_player_hand(current, game_id)
         locations = get_available_locations(game_id)
-        card, location = find_strategic_placement(current, hand, locations, game_id)
+        result = find_strategic_placement(current, hand, locations, game_id, return_decision_info=True)
+
+        if len(result) == 3:
+            card, location, decision_info = result
+        else:
+            card, location = result
+            decision_info = None
 
         if card and location:
-            _execute_placement(current, game_id, card, location, logger)
+            _execute_placement(current, game_id, card, location, logger, decision_info)
         else:
             submit_reveal(current, game_id, logger, "(no playable cards)")
             state = get_state(game_id, current)
@@ -612,7 +659,51 @@ def handle_worker_placement_round(game_id: str, logger: PlaytestLogger) -> bool:
     return get_phase(game_id) != initial_phase
 
 
-def _execute_placement(player: str, game_id: str, card: dict, location: dict, logger: PlaytestLogger) -> None:
+def _log_decision_info(player: str, decision_info: dict, logger: PlaytestLogger) -> None:
+    """Log strategy decision details to help understand bot behavior.
+
+    Args:
+        player: Player username.
+        decision_info: Dict with launch_eval, player_state, priority_reason, etc.
+        logger: PlaytestLogger instance.
+    """
+    launch_eval = decision_info.get('launch_eval', {})
+    player_state = decision_info.get('player_state', {})
+    priority_reason = decision_info.get('priority_reason')
+    chosen_location = decision_info.get('chosen_location')
+    chosen_rank = decision_info.get('chosen_priority_rank', '?')
+
+    # Build a concise status line
+    hangar = player_state.get('hangar_ships', 0)
+    officers = player_state.get('officers', 0)
+    h2 = player_state.get('hydrogen', 0)
+    he = player_state.get('helium', 0)
+    age = decision_info.get('current_age', 1)
+    routes = decision_info.get('routes_available', 0)
+
+    can_launch = launch_eval.get('can_launch', False)
+    missing = launch_eval.get('missing', [])
+
+    # Log launch readiness
+    if can_launch:
+        status_str = f"LAUNCH READY (hangar={hangar}, officers={officers}, gas={h2}H₂+{he}He, routes={routes})"
+        logger.log_action(None, f"  └─ Strategy: {status_str}", "worker_placement")
+    elif missing:
+        missing_str = "; ".join(missing[:3])  # First 3 reasons
+        status_str = f"NOT LAUNCH READY: {missing_str}"
+        logger.log_action(None, f"  └─ Strategy: {status_str}", "worker_placement")
+        # Also log player state for context
+        state_str = f"State: hangar={hangar}, officers={officers}/{age}needed, gas={h2}H₂+{he}He, routes={routes}"
+        logger.log_action(None, f"  └─ {state_str}", "worker_placement")
+
+    # Log why this location was chosen
+    if chosen_location != 'launchpad' and priority_reason:
+        priorities = launch_eval.get('priorities', [])[:5]
+        if priorities:
+            logger.log_action(None, f"  └─ Priorities: {' → '.join(priorities)}", "worker_placement")
+
+
+def _execute_placement(player: str, game_id: str, card: dict, location: dict, logger: PlaytestLogger, decision_info: dict | None = None) -> None:
     """Execute a single agent placement action.
 
     Args:
@@ -621,6 +712,7 @@ def _execute_placement(player: str, game_id: str, card: dict, location: dict, lo
         card: Card dict with 'index', 'name', 'symbol'.
         location: Location dict with 'id', 'symbol'.
         logger: PlaytestLogger instance.
+        decision_info: Optional dict with strategy decision details.
     """
     client = get_client()
 
@@ -681,6 +773,10 @@ def _execute_placement(player: str, game_id: str, card: dict, location: dict, lo
         logger.log_player_turn()
         print(f"  {player}: {action_desc}")
         logger.log_action(player, action_desc, "worker_placement")
+
+        # Log decision info if available (shows why this location was chosen)
+        if decision_info:
+            _log_decision_info(player, decision_info, logger)
 
         # Get post-state for comparison
         post_state = result.game_state or get_state(game_id, player)

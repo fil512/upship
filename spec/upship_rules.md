@@ -338,9 +338,7 @@ The Ground Board has 12 action spaces. Each requires a matching card symbol.
 
 **Cost:** Free.
 
-**Limit:** 2 swaps per visit. Each swap is one installation or removal. (Italy gets 4 swaps; Modular Frame grants +2; Mechanic cards grant +1 each.)
-
-**Constraint:** Only install Upgrades for Technologies you own.
+**Constraint:** Only install Upgrades for Technologies you own. You may make unlimited modifications in a single visit.
 
 > **Example:** Anna visits the Design Bureau and replaces her old Basic Engine with a Maybach Engine. The new upgrade tile is taken from supply and the old upgrade returned to supply.
 
@@ -737,7 +735,7 @@ Distribution: 3 Wrench, 3 Coin, 3 Propeller, 1 Any.
 | Card | Symbol | Agent Effect | Reveal |
 |------|--------|--------------|--------|
 | Apprentice | Any | None | 1 Influence |
-| Mechanic | Wrench | +1 tile swap | 1 £ |
+| Mechanic | Wrench | None | 1 £ |
 | Draftsman | Wrench | Draw 1 card | 1 Influence |
 | Rigger | Wrench | −£2 ship build cost | 1 Research |
 | Purser | Coin | Gain £2 | 2 Influence |
@@ -776,7 +774,7 @@ When the Progress Track reaches the Age threshold (checked during Income & Clean
    
 4. **Replace Blueprint:** Install new Age's Blueprint overlay. Transfer Upgrades to new Blueprint.
 
-5. **Free Blueprint Upgrade:** Each player receives a free Design Bureau action (faction swap limit applies). Players take turns in player order to install upgrades. Hull Upgrade Rule does not apply during this free action. This is the ideal time to fill your new structural slots with duplicate Upgrades if needed.
+5. **Free Blueprint Upgrade:** Each player receives a free Design Bureau action. Players take turns in player order to install upgrades. Hull Upgrade Rule does not apply during this free action. This is the ideal time to fill your new structural slots with duplicate Upgrades if needed.
 
 6. **Set Up New Age:** Place new Map, add new Technologies to bag, refresh R&D Board.
 
@@ -857,8 +855,6 @@ Each nation has unique advantages and constraints.
 ## 13.4 Italy (Nobile Construction)
 
 **Archetype:** The Agile Explorers
-
-**Starting Advantage — Rapid Refit:** 4 tile swaps at Design Bureau instead of 2.
 
 **Starting Technologies:**
 - *Internal Keel*
@@ -984,7 +980,6 @@ When Catastrophic Explosion occurs during a Luxury Launch in Age III using Hydro
 | **Route** | Connection between cities on the map | §10, Appendix E |
 | **Slot** | Empty space for Upgrade installation | §4.2 |
 | **Speed** | Ship stat for velocity | §4.2 |
-| **Swap** | One installation or removal at Design Bureau | §6.2 |
 | **Technology** | Tile representing acquired knowledge | §9.1 |
 | **Upgrade** | Tile installed on Blueprint | §9.2 |
 | **Victory Points** | Scoring currency (highest wins) | §1.1 |
