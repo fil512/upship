@@ -262,7 +262,17 @@ class UpshipClient:
             The current GameState.
         """
         data = self._api_get(username, f'/api/state/{game_id}')
-        state_data = data.get('state', data)
+        # API returns { gameState: { phase, age, state: { players, ... } } }
+        game_state_wrapper = data.get('gameState', data)
+        # Merge top-level gameState fields with nested state
+        state_data = game_state_wrapper.get('state', {})
+        # Copy top-level fields that aren't in nested state
+        for key in ['phase', 'age', 'turnNumber', 'currentPlayerId']:
+            if key in game_state_wrapper and key not in state_data:
+                state_data[key] = game_state_wrapper[key]
+        # Map turnNumber to turn
+        if 'turnNumber' in state_data and 'turn' not in state_data:
+            state_data['turn'] = state_data['turnNumber']
         return GameState.from_dict(game_id, state_data)
 
     def get_blueprint(self, username: str, game_id: str) -> Blueprint:
@@ -363,7 +373,7 @@ class UpshipClient:
         Returns:
             ActionResult with success status and updated game state.
         """
-        body = {'type': action_type, **kwargs}
+        body = {'actionType': action_type, 'actionData': kwargs}
         data = self._api_post(username, f'/api/state/{game_id}/action', body=body)
         return ActionResult.from_response(game_id, data)
 
