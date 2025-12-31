@@ -31,15 +31,19 @@ def find_playable_card(cards: list[dict], locations: list[dict]) -> tuple[dict |
     return None, None
 
 
-def get_design_bureau_swaps(player_data: Player, current_age: int = 1) -> list[dict]:
+def get_design_bureau_swaps(player_data: Player, current_age: int = 1, is_age_transition: bool = False) -> list[dict]:
     """Determine which upgrades to install at Design Bureau.
 
     In Age I, prioritizes Frame and Fabric slots (required for launch).
     In Age II/III, prioritizes Drive slots (for range/speed needed for missions/routes).
 
+    During age transitions, ALL empty Frame and Fabric slots MUST be filled per Section 12.1.
+    During normal worker placement, a practical limit of 2 swaps per visit is applied.
+
     Args:
         player_data: Player object with blueprint and technologies.
         current_age: Current game age (1, 2, or 3).
+        is_age_transition: If True, fill ALL empty frame/fabric slots (no swap limit).
 
     Returns:
         List of swap dicts: [{'action': 'install', 'slotType': str, 'slotIndex': int, 'upgradeId': str}]
@@ -67,7 +71,9 @@ def get_design_bureau_swaps(player_data: Player, current_age: int = 1) -> list[d
     installed_drive_upgrades = set(s for s in drive_slots if s is not None)
 
     manifest = get_manifest()
-    # Collect ALL available upgrades from technologies (duplicates allowed for frame/fabric)
+    # Collect ALL available upgrades from technologies
+    # Frame/Fabric: duplicates allowed (can install same upgrade in multiple slots)
+    # Drive: no duplicates (each drive upgrade can only be installed once)
     frame_upgrades = []
     fabric_upgrades = []
     drive_upgrades = []
@@ -94,22 +100,43 @@ def get_design_bureau_swaps(player_data: Player, current_age: int = 1) -> list[d
                         'slotType': slot_type
                     })
 
-    # Determine priority based on age
-    # Age I: Frame > Fabric > Drive (need structural for launch)
-    # Age II/III: Drive > Frame > Fabric (need stats for missions/long routes)
-    if current_age == 1:
+    # For frame/fabric slots, duplicate installations are allowed per Section 12.1 step 5:
+    # "fill your new structural slots with duplicate Upgrades if needed"
+    # If we have more empty slots than unique upgrades, we can reuse the same upgrade
+    def expand_for_duplicates(upgrades: list, empty_count: int) -> list:
+        """Expand upgrade list to fill all empty slots with duplicates if needed."""
+        if not upgrades or empty_count == 0:
+            return upgrades
+        # If we have more empty slots than upgrades, duplicate the first upgrade
+        while len(upgrades) < empty_count and upgrades:
+            upgrades.append(upgrades[0].copy())
+        return upgrades
+
+    frame_upgrades = expand_for_duplicates(frame_upgrades, len(empty_frame_indices))
+    fabric_upgrades = expand_for_duplicates(fabric_upgrades, len(empty_fabric_indices))
+
+    # Determine priority based on context
+    # During age transitions: Frame > Fabric > Drive (MUST fill structural slots)
+    # Age I normal: Frame > Fabric > Drive (need structural for launch)
+    # Age II/III normal: Drive > Frame > Fabric (need stats for missions/long routes)
+    if is_age_transition or current_age == 1:
+        # Age transition: structural slots MUST be filled first
         upgrade_order = [
             (frame_upgrades, empty_frame_indices, 'frame'),
             (fabric_upgrades, empty_fabric_indices, 'fabric'),
             (drive_upgrades, empty_drive_indices, 'drive'),
         ]
     else:
-        # Age II/III: Prioritize drive for range/speed stats
+        # Age II/III normal: Prioritize drive for range/speed stats
         upgrade_order = [
             (drive_upgrades, empty_drive_indices, 'drive'),
             (frame_upgrades, empty_frame_indices, 'frame'),
             (fabric_upgrades, empty_fabric_indices, 'fabric'),
         ]
+
+    # During age transitions, no swap limit - must fill all empty structural slots
+    # During normal worker placement, apply practical 2-swap limit
+    max_swaps = None if is_age_transition else 2
 
     for upgrades, empty_indices, slot_type in upgrade_order:
         for upgrade in upgrades:
@@ -121,7 +148,7 @@ def get_design_bureau_swaps(player_data: Player, current_age: int = 1) -> list[d
                     'slotIndex': slot_index,
                     'upgradeId': upgrade['upgradeId']
                 })
-                if len(swaps) >= 2:
+                if max_swaps and len(swaps) >= max_swaps:
                     return swaps
 
     return swaps

@@ -1025,7 +1025,8 @@ def handle_age_transition_design_bureau(game_id: str, logger: PlaytestLogger) ->
 
     # Calculate swaps for this player
     # new_age is the age we're transitioning TO, so that's the appropriate priority
-    swaps = get_design_bureau_swaps(player_data, new_age)
+    # is_age_transition=True ensures structural slots are filled first with no swap limit
+    swaps = get_design_bureau_swaps(player_data, new_age, is_age_transition=True)
 
     # Submit the action
     result = client.action(current_username, game_id, 'AGE_TRANSITION_DESIGN_BUREAU', swaps=swaps)
