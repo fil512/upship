@@ -7,10 +7,11 @@
 const HYDROGEN_PRICE = 1;
 const HELIUM_PRICE_TRACK = [2, 3, 4, 5, 6, 8, 10, 15];
 
-// Loans (The Bank)
+// Loans (The Bank) - per Section 5.3
 const MAX_LOANS = 2;
 const LOAN_AMOUNT = 30;
 const LOAN_INCOME_PENALTY = 3;
+const MIN_INCOME = -10;  // Debt limit per Section 5.3
 
 // Game Progression
 const TURNS_PER_AGE = 10;
@@ -19,7 +20,8 @@ const INITIAL_AGENTS = 2;  // Per rules Section 2.1: Start with 2 agents, 3rd ea
 
 // R&D Board sizes by age
 const RD_BOARD_SIZE = { 1: 4, 2: 5, 3: 6 };
-const MARKET_ROW_SIZE = 4;
+// Market Row size per Section 3.1: "deal 5 cards face-up to form the Market Row"
+const MARKET_ROW_SIZE = 5;
 
 // Crew Costs
 const OFFICER_RECRUIT_COST = 2;
@@ -103,7 +105,7 @@ const TECHNOLOGY_BAG = {
     { id: 'steel_framework', name: 'Steel Framework', type: 'structure', cost: 2, vp: 2, income: 1 },
     { id: 'internal_keel', name: 'Internal Keel', type: 'structure', cost: 3, vp: 1, income: 1 },
     { id: 'articulated_keel', name: 'Articulated Keel Design', type: 'structure', cost: 3, vp: 2, income: 1 },
-    { id: 'aerodynamic_hull', name: 'Aerodynamic Hull Design', type: 'structure', cost: 3, vp: 1, income: 1 },
+    { id: 'aerodynamic_hull', name: 'Aerodynamic Hull Design', type: 'structure', cost: 3, vp: 1, income: 1, stats: { lift: 2 } },
     // Fabric (4 tiles)
     { id: 'goldbeater_skin', name: "Goldbeater's Skin", type: 'fabric', cost: 4, vp: 2, income: 2 },
     { id: 'fireproof_coating', name: 'Fireproof Coating', type: 'fabric', cost: 3, vp: 2, income: 1 },
@@ -112,7 +114,7 @@ const TECHNOLOGY_BAG = {
     // Gas Systems (4 tiles)
     { id: 'multiple_gas_cells', name: 'Multiple Gas Cells', type: 'gas', cost: 3, vp: 0, income: 1 },
     { id: 'helium_handling', name: 'Helium Handling', type: 'gas', cost: 4, vp: 0, income: 2 },
-    { id: 'blaugas_system', name: 'Blaugas Fuel System', type: 'gas', cost: 3, vp: 2, income: 2 },
+    { id: 'blaugas_system', name: 'Blaugas Fuel System', type: 'gas', cost: 3, vp: 2, income: 2, stats: { range: 1 } },
     { id: 'automatic_valves', name: 'Automatic Valves', type: 'gas', cost: 4, vp: 1, income: 2 },
     // Payload (6 tiles)
     { id: 'passenger_gondola', name: 'Passenger Gondola', type: 'component', cost: 3, vp: 0, income: 1 },
@@ -131,7 +133,7 @@ const TECHNOLOGY_BAG = {
     // Frame (3 tiles)
     { id: 'geodetic_structure', name: 'Geodetic Structure', type: 'structure', cost: 4, vp: 0, income: 2 },
     { id: 'modular_construction', name: 'Modular Construction', type: 'structure', cost: 5, vp: 3, income: 2 },
-    { id: 'dynamic_lift', name: 'Dynamic Lift Surfaces', type: 'structure', cost: 5, vp: 2, income: 2 },
+    { id: 'dynamic_lift', name: 'Dynamic Lift Surfaces', type: 'structure', cost: 5, vp: 2, income: 2, stats: { lift: 4 } },
     // Fabric (2 tiles)
     { id: 'gelatinized_latex', name: 'Gelatinized Latex', type: 'fabric', cost: 4, vp: 0, income: 2 },
     { id: 'composite_covering', name: 'Composite Covering', type: 'fabric', cost: 5, vp: 1, income: 2 },
@@ -159,6 +161,7 @@ module.exports = {
   MAX_LOANS,
   LOAN_AMOUNT,
   LOAN_INCOME_PENALTY,
+  MIN_INCOME,
 
   // Game Progression
   TURNS_PER_AGE,

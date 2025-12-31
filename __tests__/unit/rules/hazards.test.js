@@ -969,4 +969,134 @@ describe('Rules Compliance - Hazards', () => {
       expect(result.newState.players['1'].ships[0].status).toBe('on_route');
     });
   });
+
+  describe('GAP-064: Italy Articulated Keel -1 Reliability penalty during Weather hazards', () => {
+    it('should apply -1 Reliability penalty for weather hazards when flexible_frame is installed', () => {
+      const state = createTestGameState();
+      state.age = 1;
+
+      // Ship with Reliability 4 - enough to pass Difficulty 4 normally
+      state.players['1'].ships = [{
+        id: 'ship1',
+        status: 'awaiting_hazard',
+        pendingRouteId: 'route_1',
+        gasType: 'hydrogen',
+        stats: { speed: 1, reliability: 4, ceiling: 0, range: 3 }
+      }];
+      state.players['1'].engineers = 0; // No engineers to boost
+
+      // Flexible Frame (Articulated Keel) installed - should apply -1 penalty
+      state.players['1'].blueprint.frameSlots = ['flexible_frame'];
+
+      // Weather hazard (Reliability check, Difficulty 4)
+      // With Reliability 4 and -1 penalty, effective is 3 which fails Difficulty 4
+      state.players['1'].hazardDeck = [{
+        id: 'squall_line_0',
+        type: 'major_reliability',
+        category: 'major',
+        name: 'Squall Line',
+        challengeType: 'reliability',
+        hazardType: 'weather',
+        difficulty: 4
+      }];
+
+      state.map.routes = [{
+        id: 'route_1',
+        from: 'A',
+        to: 'B',
+        income: 2,
+        claimed: null
+      }];
+
+      const result = processHazardCheck(state, '1', { shipId: 'ship1' });
+
+      // Should FAIL due to -1 penalty (4 - 1 = 3 < 4)
+      // Ship returns to hangar (aborted)
+      expect(result.newState.players['1'].ships[0].status).toBe('hangar');
+    });
+
+    it('should NOT apply penalty for non-weather hazards (mechanical, etc.)', () => {
+      const state = createTestGameState();
+      state.age = 1;
+
+      // Ship with Reliability 4 - exactly meets Difficulty 4
+      state.players['1'].ships = [{
+        id: 'ship1',
+        status: 'awaiting_hazard',
+        pendingRouteId: 'route_1',
+        gasType: 'hydrogen',
+        stats: { speed: 1, reliability: 4, ceiling: 0, range: 3 }
+      }];
+      state.players['1'].engineers = 0;
+
+      // Flexible Frame installed
+      state.players['1'].blueprint.frameSlots = ['flexible_frame'];
+
+      // MECHANICAL hazard (not weather) - penalty should NOT apply
+      state.players['1'].hazardDeck = [{
+        id: 'structural_damage_0',
+        type: 'major_reliability',
+        category: 'major',
+        name: 'Structural Damage',
+        challengeType: 'reliability',
+        hazardType: 'mechanical', // NOT weather
+        difficulty: 4
+      }];
+
+      state.map.routes = [{
+        id: 'route_1',
+        from: 'A',
+        to: 'B',
+        income: 2,
+        claimed: null
+      }];
+
+      const result = processHazardCheck(state, '1', { shipId: 'ship1' });
+
+      // Should PASS - no penalty for mechanical hazards (4 >= 4)
+      expect(result.newState.players['1'].ships[0].status).toBe('on_route');
+    });
+
+    it('should pass weather hazard if Reliability is high enough after penalty', () => {
+      const state = createTestGameState();
+      state.age = 1;
+
+      // Ship with Reliability 5 - after -1 penalty, still 4 which passes Difficulty 4
+      state.players['1'].ships = [{
+        id: 'ship1',
+        status: 'awaiting_hazard',
+        pendingRouteId: 'route_1',
+        gasType: 'hydrogen',
+        stats: { speed: 1, reliability: 5, ceiling: 0, range: 3 }
+      }];
+      state.players['1'].engineers = 0;
+
+      // Flexible Frame installed
+      state.players['1'].blueprint.frameSlots = ['flexible_frame'];
+
+      // Weather hazard (Difficulty 4)
+      state.players['1'].hazardDeck = [{
+        id: 'storm_system_0',
+        type: 'major_speed',
+        category: 'major',
+        name: 'Storm System',
+        challengeType: 'reliability',
+        hazardType: 'weather',
+        difficulty: 4
+      }];
+
+      state.map.routes = [{
+        id: 'route_1',
+        from: 'A',
+        to: 'B',
+        income: 2,
+        claimed: null
+      }];
+
+      const result = processHazardCheck(state, '1', { shipId: 'ship1' });
+
+      // Should PASS (5 - 1 = 4 >= 4)
+      expect(result.newState.players['1'].ships[0].status).toBe('on_route');
+    });
+  });
 });

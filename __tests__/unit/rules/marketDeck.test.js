@@ -3,7 +3,29 @@
  * Tests for correct implementation of Appendix H (Market Deck)
  */
 
+const { MARKET_ROW_SIZE } = require('../../../server/config/constants');
+const { refreshMarketRow } = require('../../../server/actions/helpers/marketHelpers');
+
 describe('Rules Compliance - Market Deck', () => {
+
+  describe('GAP-061: Market Row Size per Section 3.1', () => {
+    it('should have MARKET_ROW_SIZE of 5 per spec Section 3.1', () => {
+      // Per Section 3.1: "Shuffle the Market Deck and deal 5 cards face-up to form the Market Row"
+      expect(MARKET_ROW_SIZE).toBe(5);
+    });
+
+    it('should refill market row to 5 cards', () => {
+      const state = {
+        marketRow: ['card1', 'card2'],
+        marketDeck: ['card3', 'card4', 'card5', 'card6', 'card7']
+      };
+
+      refreshMarketRow(state);
+
+      // Should refill to 5 cards (3 more added)
+      expect(state.marketRow.length).toBe(5);
+    });
+  });
 
   describe('GAP-041: Market Deck Composition per Appendix H', () => {
     // Helper to dynamically require the module

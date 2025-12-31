@@ -112,7 +112,7 @@ Each player receives:
 
 1. **Player Board** with their faction's layout
 2. **Age I Blueprint Overlay** installed on the board
-3. **Personal Hazard Deck** of 24 cards (shuffled)
+3. **Personal Hazard Deck** of 27 cards (shuffled) — see Appendix E
 4. **£15 Cash**
 5. **1 Officer Token** (placed in Barracks)
 6. **2 Engineer Tokens** (placed in Barracks)

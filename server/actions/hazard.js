@@ -208,8 +208,22 @@ function processHazardCheck(state, playerId, data) {
 
   // Step 3: Standard hazard check - compare challenge type stat to difficulty
   const challengeType = hazard.challengeType || 'reliability';
-  const relevantStat = getRelevantStat(shipStats, challengeType);
+  let relevantStat = getRelevantStat(shipStats, challengeType);
   const engineerBonus = Math.min(engineersToSpend, playerState.engineers || 0);
+
+  // GAP-064: Apply Italy's Articulated Keel penalty for weather hazards
+  // Per Section 13.4: -1 to Reliability checks during Weather hazards
+  let weatherPenalty = 0;
+  const hasFlexibleFrame = playerBlueprint?.frameSlots?.some(
+    frame => frame === 'flexible_frame' || frame?.id === 'flexible_frame'
+  );
+  const isWeatherHazard = hazard.hazardType === 'weather';
+
+  if (hasFlexibleFrame && isWeatherHazard && challengeType === 'reliability') {
+    weatherPenalty = 1;
+    relevantStat = Math.max(0, relevantStat - weatherPenalty);
+  }
+
   const totalCheck = relevantStat + engineerBonus;
   const success = totalCheck >= hazard.difficulty;
 

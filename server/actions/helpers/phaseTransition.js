@@ -74,6 +74,13 @@ function collectRevealResources(state) {
         cashGained += revealData.cash || 0;
         officersGained += revealData.officers || 0;
         engineersGained += revealData.engineers || 0;
+
+        // GAP-067: Handle generic 'gas' property - defaults to hydrogen
+        // Per market cards, some cards have gas: N which gives player's choice of gas
+        // For simplicity, we default to hydrogen (the cheaper, more common option)
+        if (revealData.gas) {
+          hydrogenGained += revealData.gas;
+        }
       }
     }
 

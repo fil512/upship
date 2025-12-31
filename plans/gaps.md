@@ -3,8 +3,8 @@
 Last updated: 2025-12-31
 
 ## Summary
-- Total gaps found: 9
-- Resolved: 8
+- Total gaps found: 16
+- Resolved: 15
 - Unresolved: 1 (needs designer decision)
 
 ---
@@ -12,7 +12,8 @@ Last updated: 2025-12-31
 ## Analysis Progress
 
 Level 1 areas analyzed in previous session.
-Level 2 areas analyzed in this session.
+Level 2 areas analyzed in previous session.
+Level 3 areas analyzed in this session.
 
 ### Level 1 - Core Structure
 - [x] ROUND_STRUCTURE
@@ -26,13 +27,13 @@ Level 2 areas analyzed in this session.
 - [x] ROUTES_AND_MAPS
 
 ### Level 3 - Detailed Systems
-- [ ] TECHNOLOGY_UPGRADES (Section 9)
-- [ ] DECK_BUILDING (Section 11)
-- [ ] PLAYER_BOARD (Section 4)
-- [ ] BUILDING_SHIPS (Section 7)
-- [ ] SETUP (Section 3)
-- [ ] COMPONENTS (Section 2)
-- [ ] RULES_CLARIFICATIONS (Section 14)
+- [x] TECHNOLOGY_UPGRADES (Section 9)
+- [x] DECK_BUILDING (Section 11)
+- [x] PLAYER_BOARD (Section 4)
+- [x] BUILDING_SHIPS (Section 7)
+- [x] SETUP (Section 3)
+- [x] COMPONENTS (Section 2)
+- [x] RULES_CLARIFICATIONS (Section 14)
 
 ### Level 4 - Appendix Validation
 - [ ] HAZARD_DECK_APPENDIX (Appendix D/E)
@@ -92,6 +93,106 @@ const PROGRESS_THRESHOLDS = {
 ---
 
 ## Resolved Gaps
+
+### GAP-061: Market Row Size Mismatch
+**Area:** DECK_BUILDING
+**Status:** RESOLVED (2025-12-31)
+**Spec Reference:** Section 3.1
+**Resolution:** Changed `MARKET_ROW_SIZE` constant from 4 to 5 in `server/config/constants.js`.
+
+**Files changed:**
+- `server/config/constants.js` - Updated MARKET_ROW_SIZE to 5
+
+**Tests added:**
+- `__tests__/unit/rules/marketDeck.test.js` - GAP-061 tests for market row size
+
+---
+
+### GAP-062: Hazard Deck Size Mismatch (Spec Says 24, Appendix E Says 27)
+**Area:** SETUP / COMPONENTS
+**Status:** RESOLVED (2025-12-31)
+**Spec Reference:** Section 3.2 vs Appendix E
+**Resolution:** Updated spec Section 3.2 to say "27 cards" to match Appendix E and the implementation. The 27-card breakdown (4 Clear Weather, 8 Minor, 8 Major, 6 Fire, 1 Mechanical) is correct.
+
+**Files changed:**
+- `spec/upship_rules.md` - Fixed Section 3.2 to say "27 cards"
+
+---
+
+### GAP-063: Loan Debt Limit Not Enforced
+**Area:** RULES_CLARIFICATIONS
+**Status:** RESOLVED (2025-12-31)
+**Spec Reference:** Section 5.3 Loans
+**Resolution:** Added `MIN_INCOME = -10` constant and updated `processTakeLoan()` and `processBuyInsurance()` to:
+1. Enforce -10 minimum income limit
+2. Reject actions that would push income below -10 with clear error messages
+
+**Files changed:**
+- `server/config/constants.js` - Added MIN_INCOME constant
+- `server/actions/economy.js` - Added debt limit validation
+
+**Tests added:**
+- `__tests__/unit/rules/loans.test.js` - GAP-063 tests for debt limit enforcement
+
+---
+
+### GAP-064: Italy Articulated Keel Penalty Not Implemented
+**Area:** FACTIONS / RULES_CLARIFICATIONS
+**Status:** RESOLVED (2025-12-31)
+**Spec Reference:** Section 13.4 Italy, Appendix D
+**Resolution:** Fixed `flexible_frame` upgrade to have `special: 'weather_penalty'` (was incorrectly `weather_immunity`). Added -1 Reliability penalty during Weather hazards when `flexible_frame` is installed in hazard check logic.
+
+**Files changed:**
+- `server/data/upgrades.js` - Fixed flexible_frame special to 'weather_penalty' and stats to { ceiling: 1 }
+- `server/actions/hazard.js` - Added weather penalty logic for flexible_frame during Reliability checks
+
+**Tests added:**
+- `__tests__/unit/rules/hazards.test.js` - GAP-064 tests for weather penalty
+
+---
+
+### GAP-065: Blaugas Fuel System Gas Recovery Not Implemented
+**Area:** TECHNOLOGY_UPGRADES
+**Status:** RESOLVED (2025-12-31)
+**Spec Reference:** Section 13.1 Germany
+**Resolution:** The `retainGas` parameter and Blaugas functionality was already implemented in `processLaunchShip()`. Added +1 Range stat to `blaugas_system` technology in TECHNOLOGY_BAG and created `calculateShipStats()` function to include technology stat bonuses.
+
+**Files changed:**
+- `server/config/constants.js` - Added stats: { range: 1 } to blaugas_system
+- `server/actions/launch.js` - Added calculateShipStats() function and export
+
+**Tests added:**
+- `__tests__/unit/rules/blaugas.test.js` - GAP-065 tests for Blaugas functionality
+
+---
+
+### GAP-066: Aerodynamic Lift Technologies Not Providing Lift
+**Area:** TECHNOLOGY_UPGRADES
+**Status:** RESOLVED (2025-12-31)
+**Spec Reference:** Section 9.3, Appendix D
+**Resolution:** Added `stats: { lift: 2 }` to `aerodynamic_hull` technology and `stats: { lift: 4 }` to `dynamic_lift` technology in TECHNOLOGY_BAG. The new `calculateShipStats()` function automatically includes these bonuses.
+
+**Files changed:**
+- `server/config/constants.js` - Added lift stats to aerodynamic_hull (+2) and dynamic_lift (+4)
+
+**Tests added:**
+- `__tests__/unit/rules/aerodynamicLift.test.js` - GAP-066 tests for aerodynamic lift
+
+---
+
+### GAP-067: Gas Cube Reveal Icons Not Distinguishing Hydrogen vs Helium
+**Area:** DECK_BUILDING
+**Status:** RESOLVED (2025-12-31)
+**Spec Reference:** Section 5.1, Appendix H
+**Resolution:** Updated `collectRevealResources()` in phaseTransition.js to handle the generic `gas` property from market cards. Gas cubes from reveal default to hydrogen (the cheaper, more common option).
+
+**Files changed:**
+- `server/actions/helpers/phaseTransition.js` - Added handling for revealData.gas property
+
+**Tests added:**
+- `__tests__/unit/rules/gasCubeReveal.test.js` - GAP-067 tests for gas reveal handling
+
+---
 
 ### GAP-059: Luxury Route Requirement Not Validated During Launch
 **Area:** LAUNCHING
@@ -196,41 +297,41 @@ No changes needed - the original implementation was correct.
 
 The following were analyzed and found to be correctly implemented:
 
-### LAUNCHING (Section 7.2, 8)
-- **Hazard Check flow:** Correctly implemented per Section 8.2
-- **Fire hazards:** Correctly implemented per Section 8.3 (Engine Fire, Gas Cell Rupture, Static Discharge, Catastrophic Explosion)
-- **Helium fire immunity:** Correctly auto-passes fire hazards
-- **Damaged ship handling:** Correctly sends to repair hangar
-- **Hindenburg Disaster:** Correctly triggers on Age III + Hydrogen + Luxury + Catastrophic Explosion
-- **Insurance recovery:** Correctly implemented per Section 6.11
+### TECHNOLOGY_UPGRADES (Section 9)
+- **Specialization discount:** Correctly implemented per Section 4.1 (-1 at 3+ techs, -2 at 5+ techs)
+- **Progress Track advancement:** Correctly advances by 1 per tech acquired
+- **R&D Board size by Age:** Correctly scales (4/5/6 tiles per Age I/II/III)
+- **Tech unlocks upgrades:** Correctly requires owning tech to install upgrade
 
-### GROUND_BOARD (Section 5, 6)
-- **12 locations:** All locations present with correct symbols
-- **Research Institute:** £4 per level - correct
-- **Design Bureau:** Unlimited modifications - correct
-- **Construction Hall:** Max 3 ships per action - correct
-- **Academy:** Market Purge available via DISCARD_MARKET_CARD action - correct
-- **Flight School:** £5 per level, 3rd agent at Officer Income +3 - correct
-- **Technical Institute:** £6 per level - correct
-- **Government Liaison:** 1-3 Officers for +1 income each - correct
-- **Ministry:** Draw 2/discard 1, first player, helium -1 - correct
-- **Gas Depot:** £1 hydrogen, market price helium - correct
-- **Insurance Bureau:** -1 income per policy, max 3 - correct
-- **Weather Bureau:** £2 to peek at hazard - correct
+### DECK_BUILDING (Section 11)
+- **Starter deck composition:** Correctly 10 cards (3 Wrench, 3 Coin, 3 Propeller, 1 Any)
+- **Card reveal resources:** Correctly collected during reveal phase
+- **Market card purchases:** Correctly uses Influence, not cash
+- **Deck reshuffling:** Correctly shuffles discard pile when deck empty
 
-### FACTIONS (Section 13)
-- **Germany:** Starting techs, Helium Embargo (bannedTechnologies) - correct
-- **Britain:** Starting techs, Pre-installed Dining Saloon, Red Tape (-1 income at transitions) - correct
-- **USA:** Starting techs including Helium Handling, Helium Monopoly, Late War Entry restriction - correct
-- **Italy:** Starting techs, Compact Design (-1 payload slots in Ages II/III) - correct
-- **Blueprint slots per faction:** Correctly configured in `getBlueprintSlotsForFaction()`
+### PLAYER_BOARD (Section 4)
+- **Blueprint slots by Age:** Correctly configured (1/1/1/1 -> 1/1/2/2 -> 2/2/2/3)
+- **Italy Compact Design:** Correctly reduces payload slots (-1 in Ages II/III)
+- **Economy tracks:** Correctly tracks Income, Research Level, Officer Income, Engineer Income
+- **Hangar capacity:** Correctly limits to 3 ships
+- **Repair cost:** Correctly £3 per ship
 
-### ROUTES_AND_MAPS (Section 10)
-- **Age I routes:** 12 routes with correct requirements and VP values
-- **Age III routes:** 16 routes with correct requirements, VP values, and luxury flags
-- **Age II Combat Missions:** Mission Row with 6 cards, Flak checks - correct
-- **Network connectivity rules:** Correctly implemented for Age III (fee for new networks)
-- **Home bases:** Correctly configured per faction
+### BUILDING_SHIPS (Section 7)
+- **Hull cost formula:** Correctly calculates £2 base + Frame cost + Fabric cost
+- **Build limit:** Correctly limits to 3 ships per Construction Hall action
+- **Physics check not required:** Correctly allows building without physics check
+
+### SETUP (Section 3)
+- **Starting resources:** Correctly £15 cash, 1 officer, 2 engineers, 2 hydrogen
+- **USA helium start:** Correctly starts with 2 helium instead of hydrogen
+- **Agent count:** Correctly starts with 2, 3rd earned at Officer Income +3
+- **Tech bag scaling:** Correctly (N-1) copies where N = player count
+
+### RULES_CLARIFICATIONS (Section 14)
+- **Network connectivity (Age III):** Correctly implemented per Section 14.3
+- **Fire immunity:** Helium ships correctly auto-pass fire hazards
+- **Conductive Covering:** Correctly grants immunity to Static Discharge
+- **Fire-Resistant Fabric:** Correctly grants once-per-Age fire auto-pass
 
 ---
 
@@ -241,5 +342,11 @@ New tests added in:
 - `__tests__/unit/rules/gameEnd.test.js` - Tests for GAP-052, GAP-053, GAP-056, GAP-057
 - `__tests__/unit/rules/transitionIncome.test.js` - Tests for GAP-054
 - `__tests__/unit/rules/launching.test.js` - Tests for GAP-059, GAP-060
+- `__tests__/unit/rules/loans.test.js` - Tests for GAP-063
+- `__tests__/unit/rules/blaugas.test.js` - Tests for GAP-065
+- `__tests__/unit/rules/aerodynamicLift.test.js` - Tests for GAP-066
+- `__tests__/unit/rules/gasCubeReveal.test.js` - Tests for GAP-067
+- `__tests__/unit/rules/hazards.test.js` - Tests for GAP-064
+- `__tests__/unit/rules/marketDeck.test.js` - Tests for GAP-061
 
-All 613 tests pass.
+All 639 tests pass.

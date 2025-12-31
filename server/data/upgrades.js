@@ -231,9 +231,9 @@ const UPGRADES = {
     requiredTech: 'articulated_keel',
     weight: -1,
     hullCost: 1,
-    stats: { reliability: 1 },
-    special: 'weather_immunity',
-    age: 3
+    stats: { ceiling: 1 },  // Per Section 13.4: +1 Ceiling (not reliability)
+    special: 'weather_penalty',  // Per Section 13.4: -1 to Reliability checks during Weather hazards
+    age: 1  // Italy starting tech, available from Age 1
   },
 
   // === FABRIC UPGRADES ===

@@ -4,7 +4,7 @@
  */
 
 const { GameRuleError } = require('../errors');
-const { MAX_LOANS, LOAN_AMOUNT, LOAN_INCOME_PENALTY, MAX_INSURANCE_POLICIES } = require('../config/constants');
+const { MAX_LOANS, LOAN_AMOUNT, LOAN_INCOME_PENALTY, MAX_INSURANCE_POLICIES, MIN_INCOME } = require('../config/constants');
 
 /**
  * Take a loan at The Bank
@@ -23,11 +23,21 @@ function processTakeLoan(state, playerId, _data) {
     throw new GameRuleError(`Maximum ${MAX_LOANS} loans allowed. Pay off existing debt first.`);
   }
 
+  // Per Section 5.3: "If a loan would push you below -10, you cannot take it"
+  const currentIncome = playerState.income || 0;
+  const newIncome = currentIncome - LOAN_INCOME_PENALTY;
+  if (newIncome < MIN_INCOME) {
+    throw new GameRuleError(
+      `Cannot take loan: Income would drop to ${newIncome}, below the debt limit of ${MIN_INCOME}. ` +
+      `Current income: ${currentIncome}.`
+    );
+  }
+
   // Give the player £30
   playerState.cash += LOAN_AMOUNT;
 
-  // Reduce income track by 3 (permanent penalty, minimum 0)
-  playerState.income = Math.max(0, playerState.income - LOAN_INCOME_PENALTY);
+  // Reduce income track by 3 (minimum -10 per Section 5.3)
+  playerState.income = Math.max(MIN_INCOME, currentIncome - LOAN_INCOME_PENALTY);
 
   // Track loan count for reference
   playerState.loans = currentLoans + 1;
@@ -81,8 +91,17 @@ function processBuyInsurance(state, playerId, data) {
     throw new GameRuleError(`Maximum ${MAX_INSURANCE_POLICIES} insurance policies`);
   }
 
-  // Cost is -1 Income (permanent)
-  playerState.income = Math.max(0, playerState.income - 1);
+  // Per Section 5.3 principle: Income cannot go below -10
+  const currentIncome = playerState.income || 0;
+  if (currentIncome - 1 < MIN_INCOME) {
+    throw new GameRuleError(
+      `Cannot buy insurance: Income would drop below the debt limit of ${MIN_INCOME}. ` +
+      `Current income: ${currentIncome}.`
+    );
+  }
+
+  // Cost is -1 Income (permanent), minimum -10 per debt limit
+  playerState.income = Math.max(MIN_INCOME, currentIncome - 1);
   playerState.insurance = currentPolicies + 1;
 
   state.log.push({

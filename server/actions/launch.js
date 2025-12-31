@@ -5,7 +5,7 @@
 
 const { GameRuleError, InsufficientFundsError } = require('../errors');
 const { UPGRADES } = require('../data/upgrades');
-const { AGE_BASELINES } = require('../config/constants');
+const { AGE_BASELINES, TECHNOLOGY_BAG } = require('../config/constants');
 const { shuffleArray } = require('../utils/random');
 
 /**
@@ -220,6 +220,40 @@ function calculateBlueprintStats(blueprint, age = 1) {
         for (const [stat, value] of Object.entries(upgrade.stats)) {
           stats[stat] = (stats[stat] || 0) + value;
         }
+      }
+    }
+  }
+
+  return stats;
+}
+
+/**
+ * Calculate ship stats from player state (includes blueprint + technology bonuses)
+ * Per spec, some technologies provide stat bonuses:
+ * - Blaugas Fuel System: +1 Range (Section 13.1)
+ * - Aerodynamic Hull Design: +2 Lift (GAP-066)
+ * - Dynamic Lift Surfaces: +4 Lift (GAP-066)
+ *
+ * @param {Object} playerState - Player state with blueprint and technologies
+ * @param {number} age - Current age (1, 2, or 3)
+ * @returns {Object} Combined stats from blueprint and technologies
+ */
+function calculateShipStats(playerState, age = 1) {
+  const stats = calculateBlueprintStats(playerState.blueprint, age);
+
+  // Add stats from technologies
+  const technologies = playerState.technologies || [];
+  const allTechs = [...TECHNOLOGY_BAG[1], ...TECHNOLOGY_BAG[2], ...TECHNOLOGY_BAG[3]];
+
+  for (const techRef of technologies) {
+    const techId = typeof techRef === 'string' ? techRef : techRef?.id;
+    if (!techId) continue;
+
+    // Find tech definition in TECHNOLOGY_BAG
+    const tech = allTechs.find(t => t.id === techId);
+    if (tech?.stats) {
+      for (const [stat, value] of Object.entries(tech.stats)) {
+        stats[stat] = (stats[stat] || 0) + value;
       }
     }
   }
@@ -694,6 +728,7 @@ module.exports = {
   processClaimRoute,
   processNoMoreLaunches,
   calculateBlueprintStats,
+  calculateShipStats,
   calculateBlueprintWeight,
   calculateRequiredGasCubes,
   countPlayerNetworks,
