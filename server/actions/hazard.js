@@ -441,7 +441,9 @@ function resolveHazardSuccess(state, playerId, shipIndex, route, hazard, message
   // Age I or Age III: Standard route claiming
   ships[shipIndex].status = 'on_route';
   ships[shipIndex].routeId = route?.id;
+  const pendingCityChoice = ships[shipIndex].pendingCityChoice;
   delete ships[shipIndex].pendingRouteId;
+  delete ships[shipIndex].pendingCityChoice;
 
   // Claim the route and add income
   if (route) {
@@ -454,11 +456,10 @@ function resolveHazardSuccess(state, playerId, shipIndex, route, hazard, message
     playerState.income += route.income || 0;
 
     // Apply city bonus per Section 10.4
-    // For simplicity, we automatically choose the 'to' city for the bonus
-    // In a more complete implementation, this would be a player choice
+    // Use player's choice from LAUNCH_SHIP, or default to 'to' city
     if (CITY_BONUSES) {
-      const cityName = route.to || route.from;
-      applyCityBonus(state, playerId, cityName);
+      const cityName = pendingCityChoice || route.to || route.from;
+      applyCityBonus(playerState, cityName, state, playerId);
     }
   }
 

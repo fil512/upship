@@ -3,15 +3,16 @@
 Last updated: 2025-12-31
 
 ## Summary
-- Total gaps found: 7
-- Resolved: 6
+- Total gaps found: 9
+- Resolved: 8
 - Unresolved: 1 (needs designer decision)
 
 ---
 
 ## Analysis Progress
 
-Level 1 areas analyzed in this session.
+Level 1 areas analyzed in previous session.
+Level 2 areas analyzed in this session.
 
 ### Level 1 - Core Structure
 - [x] ROUND_STRUCTURE
@@ -19,10 +20,10 @@ Level 1 areas analyzed in this session.
 - [x] SCORING
 
 ### Level 2 - Game Systems
-- [ ] LAUNCHING
-- [ ] GROUND_BOARD
-- [ ] FACTIONS
-- [ ] ROUTES_AND_MAPS
+- [x] LAUNCHING
+- [x] GROUND_BOARD
+- [x] FACTIONS
+- [x] ROUTES_AND_MAPS
 
 ### Level 3 - Detailed Systems
 - [ ] TECHNOLOGY_UPGRADES (Section 9)
@@ -91,6 +92,35 @@ const PROGRESS_THRESHOLDS = {
 ---
 
 ## Resolved Gaps
+
+### GAP-059: Luxury Route Requirement Not Validated During Launch
+**Area:** LAUNCHING
+**Status:** RESOLVED
+**Spec Reference:** Section 8.5 Luxury Launches, Section 10.1 Route Requirements
+**Resolution:** Added luxury stat validation in `processLaunchShip()` similar to Range, Speed, and Ceiling checks. Routes with `luxury` requirement now correctly reject ships without sufficient Luxury stat. The USA Trapeze System can bypass luxury requirement.
+
+**Files changed:**
+- `server/actions/launch.js` - Added luxury validation after ceiling check
+
+**Tests added:**
+- `__tests__/unit/rules/launching.test.js` - GAP-059 tests for luxury validation
+
+---
+
+### GAP-060: City Bonus Selection Not Player Choice
+**Area:** ROUTES_AND_MAPS
+**Status:** RESOLVED
+**Spec Reference:** Section 10.4 City Bonuses
+**Resolution:** Added `cityChoice` parameter to LAUNCH_SHIP action. Players can now specify which endpoint city's bonus to receive when launching. The choice is stored on the ship and applied when the route is claimed after hazard check success. Defaults to 'to' city for backwards compatibility.
+
+**Files changed:**
+- `server/actions/launch.js` - Added `cityChoice` parameter validation and `pendingCityChoice` storage on ship
+- `server/actions/hazard.js` - Updated `resolveHazardSuccess` to use `pendingCityChoice` when applying city bonus
+
+**Tests added:**
+- `__tests__/unit/rules/launching.test.js` - GAP-060 tests for city choice functionality
+
+---
 
 ### GAP-052: Hindenburg Disaster Complete Current Round
 **Area:** ROUND_STRUCTURE
@@ -162,11 +192,54 @@ No changes needed - the original implementation was correct.
 
 ---
 
+## Verified Correct Implementations
+
+The following were analyzed and found to be correctly implemented:
+
+### LAUNCHING (Section 7.2, 8)
+- **Hazard Check flow:** Correctly implemented per Section 8.2
+- **Fire hazards:** Correctly implemented per Section 8.3 (Engine Fire, Gas Cell Rupture, Static Discharge, Catastrophic Explosion)
+- **Helium fire immunity:** Correctly auto-passes fire hazards
+- **Damaged ship handling:** Correctly sends to repair hangar
+- **Hindenburg Disaster:** Correctly triggers on Age III + Hydrogen + Luxury + Catastrophic Explosion
+- **Insurance recovery:** Correctly implemented per Section 6.11
+
+### GROUND_BOARD (Section 5, 6)
+- **12 locations:** All locations present with correct symbols
+- **Research Institute:** £4 per level - correct
+- **Design Bureau:** Unlimited modifications - correct
+- **Construction Hall:** Max 3 ships per action - correct
+- **Academy:** Market Purge available via DISCARD_MARKET_CARD action - correct
+- **Flight School:** £5 per level, 3rd agent at Officer Income +3 - correct
+- **Technical Institute:** £6 per level - correct
+- **Government Liaison:** 1-3 Officers for +1 income each - correct
+- **Ministry:** Draw 2/discard 1, first player, helium -1 - correct
+- **Gas Depot:** £1 hydrogen, market price helium - correct
+- **Insurance Bureau:** -1 income per policy, max 3 - correct
+- **Weather Bureau:** £2 to peek at hazard - correct
+
+### FACTIONS (Section 13)
+- **Germany:** Starting techs, Helium Embargo (bannedTechnologies) - correct
+- **Britain:** Starting techs, Pre-installed Dining Saloon, Red Tape (-1 income at transitions) - correct
+- **USA:** Starting techs including Helium Handling, Helium Monopoly, Late War Entry restriction - correct
+- **Italy:** Starting techs, Compact Design (-1 payload slots in Ages II/III) - correct
+- **Blueprint slots per faction:** Correctly configured in `getBlueprintSlotsForFaction()`
+
+### ROUTES_AND_MAPS (Section 10)
+- **Age I routes:** 12 routes with correct requirements and VP values
+- **Age III routes:** 16 routes with correct requirements, VP values, and luxury flags
+- **Age II Combat Missions:** Mission Row with 6 cards, Flak checks - correct
+- **Network connectivity rules:** Correctly implemented for Age III (fee for new networks)
+- **Home bases:** Correctly configured per faction
+
+---
+
 ## Notes
 
 ### Test Coverage
 New tests added in:
 - `__tests__/unit/rules/gameEnd.test.js` - Tests for GAP-052, GAP-053, GAP-056, GAP-057
 - `__tests__/unit/rules/transitionIncome.test.js` - Tests for GAP-054
+- `__tests__/unit/rules/launching.test.js` - Tests for GAP-059, GAP-060
 
-All 604 tests pass.
+All 613 tests pass.

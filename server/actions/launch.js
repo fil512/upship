@@ -274,7 +274,7 @@ function hasTrapezeSytem(playerState) {
 }
 
 function processLaunchShip(state, playerId, data) {
-  const { shipId, routeId, missionId, gasType = 'hydrogen', retainGas = false, bypassRequirement = null, _internal = false } = data;
+  const { shipId, routeId, missionId, gasType = 'hydrogen', retainGas = false, bypassRequirement = null, cityChoice = null, _internal = false } = data;
   const playerState = state.players[playerId];
   const BLAUGAS_COST = 2; // £2 to retain gas cubes per Section 13.1
 
@@ -347,6 +347,26 @@ function processLaunchShip(state, playerId, data) {
   const routeCeiling = route.ceiling || 0;
   if (bypassRequirement !== 'ceiling' && routeCeiling > 0 && stats.ceiling < routeCeiling) {
     throw new GameRuleError(`Ship Ceiling (${stats.ceiling}) does not meet route ceiling requirement (${routeCeiling})`);
+  }
+
+  // Validate Luxury meets route luxury requirement (unless bypassed)
+  // Per Section 8.5/10.1: Routes marked Luxury require ships with the Luxury stat
+  const routeLuxury = route.luxury || 0;
+  const shipLuxury = stats.luxury || 0;
+  if (bypassRequirement !== 'luxury' && routeLuxury > 0 && shipLuxury < routeLuxury) {
+    throw new GameRuleError(`Ship Luxury (${shipLuxury}) does not meet route luxury requirement (${routeLuxury})`);
+  }
+
+  // Validate cityChoice per Section 10.4: Must be one of the route endpoints
+  // Player chooses which endpoint city's bonus to receive
+  let selectedCityChoice = cityChoice;
+  if (cityChoice) {
+    if (cityChoice !== route.from && cityChoice !== route.to) {
+      throw new GameRuleError(`City "${cityChoice}" is not an endpoint of this route. Choose "${route.from}" or "${route.to}".`);
+    }
+  } else {
+    // Default to 'to' city for backwards compatibility
+    selectedCityChoice = route.to || route.from;
   }
 
   // Step 2: Verify launch requirements
@@ -439,6 +459,7 @@ function processLaunchShip(state, playerId, data) {
   ships[shipIndex].launchedAge = state.age;
   ships[shipIndex].gasType = gasType;
   ships[shipIndex].pendingRouteId = routeId;  // Route to claim if hazard check succeeds
+  ships[shipIndex].pendingCityChoice = selectedCityChoice;  // City bonus choice per Section 10.4
 
   // Build stats summary for log
   const statParts = [`Range ${stats.range}`, `Speed ${stats.speed}`];

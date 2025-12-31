@@ -287,4 +287,380 @@ describe('Rules Compliance - Launching and Repair', () => {
       }).toThrow(/ceiling|requirement/i);
     });
   });
+
+  describe('GAP-059: Luxury Route Requirement Validation', () => {
+    it('should reject launch if ship Luxury stat does not meet route requirement', () => {
+      const state = createTestGameState();
+      state.age = 3; // Age III has luxury routes
+      const playerState = state.players['1'];
+
+      playerState.gasCubes = { hydrogen: 3, helium: 0 };
+      playerState.officers = 3; // Age 3 requires 3 officers
+      playerState.ships = [{ id: 'ship1', status: 'hangar' }];
+
+      // Blueprint has no luxury upgrades (Luxury stat = 0)
+      playerState.blueprint = {
+        frameSlots: ['duralumin_frame'],
+        fabricSlots: ['premium_envelope'],
+        driveSlots: [null],
+        componentSlots: [null],
+        gasSockets: ['hydrogen', 'hydrogen']
+      };
+
+      // Luxury route requires luxury: 1
+      state.map.routes = [{
+        id: 'luxury_route',
+        from: 'London',
+        to: 'New York',
+        distance: 2,  // Range requirement is met
+        speed: 1,     // Speed requirement is met
+        ceiling: 0,   // No ceiling requirement
+        luxury: 1,    // Luxury requirement NOT met (ship has 0)
+        income: 8,
+        claimed: null
+      }];
+
+      const { processLaunchShip } = require('../../../server/actions/launch');
+
+      expect(() => {
+        processLaunchShip(state, '1', {
+          shipId: 'ship1',
+          routeId: 'luxury_route',
+          gasType: 'hydrogen',
+          _internal: true
+        });
+      }).toThrow(/luxury/i);
+    });
+
+    it('should allow launch when ship Luxury stat meets route requirement', () => {
+      const state = createTestGameState();
+      state.age = 3; // Age III
+      const playerState = state.players['1'];
+
+      playerState.gasCubes = { hydrogen: 3, helium: 0 };
+      playerState.officers = 3;
+      playerState.ships = [{ id: 'ship1', status: 'hangar' }];
+
+      // Blueprint with sleeping_quarters which gives luxury: 1
+      playerState.blueprint = {
+        frameSlots: ['duralumin_frame'],
+        fabricSlots: ['premium_envelope'],
+        driveSlots: [null],
+        componentSlots: ['sleeping_quarters'],  // +1 luxury
+        gasSockets: ['hydrogen', 'hydrogen']
+      };
+
+      // Luxury route requires luxury: 1
+      state.map.routes = [{
+        id: 'luxury_route',
+        from: 'London',
+        to: 'New York',
+        distance: 2,
+        speed: 1,
+        ceiling: 0,
+        luxury: 1,
+        income: 8,
+        claimed: null
+      }];
+
+      const { processLaunchShip } = require('../../../server/actions/launch');
+
+      // Should succeed - ship has luxury 1, route requires 1
+      const result = processLaunchShip(state, '1', {
+        shipId: 'ship1',
+        routeId: 'luxury_route',
+        gasType: 'hydrogen',
+        _internal: true
+      });
+
+      expect(result.newState.players['1'].ships[0].status).toBe('awaiting_hazard');
+    });
+
+    it('should allow USA with Trapeze System to bypass Luxury requirement', () => {
+      const state = createTestGameState();
+      state.age = 3;
+      const playerState = state.players['3']; // USA with trapeze_system
+
+      playerState.gasCubes = { hydrogen: 0, helium: 3 };
+      playerState.officers = 3;
+      playerState.ships = [{ id: 'ship1', status: 'hangar' }];
+
+      // Blueprint with no luxury (Luxury stat = 0)
+      playerState.blueprint = {
+        frameSlots: ['duralumin_frame'],
+        fabricSlots: ['premium_envelope'],
+        driveSlots: [null],
+        componentSlots: [null],
+        gasSockets: ['helium', 'helium']
+      };
+
+      // Luxury route requires luxury: 1
+      state.map.routes = [{
+        id: 'luxury_route',
+        from: 'New York',
+        to: 'London',
+        distance: 2,
+        speed: 1,
+        ceiling: 0,
+        luxury: 1,
+        income: 8,
+        claimed: null
+      }];
+
+      const { processLaunchShip } = require('../../../server/actions/launch');
+
+      // Should succeed with Trapeze System bypassing luxury requirement
+      const result = processLaunchShip(state, '3', {
+        shipId: 'ship1',
+        routeId: 'luxury_route',
+        gasType: 'helium',
+        bypassRequirement: 'luxury',
+        _internal: true
+      });
+
+      expect(result.newState.players['3'].ships[0].status).toBe('awaiting_hazard');
+    });
+
+    it('should allow launch on non-luxury routes without Luxury stat', () => {
+      const state = createTestGameState();
+      state.age = 3;
+      const playerState = state.players['1'];
+
+      playerState.gasCubes = { hydrogen: 3, helium: 0 };
+      playerState.officers = 3;
+      playerState.ships = [{ id: 'ship1', status: 'hangar' }];
+
+      // Blueprint with no luxury
+      playerState.blueprint = {
+        frameSlots: ['duralumin_frame'],
+        fabricSlots: ['premium_envelope'],
+        driveSlots: [null],
+        componentSlots: [null],
+        gasSockets: ['hydrogen', 'hydrogen']
+      };
+
+      // Regular route with no luxury requirement (luxury: 0 or undefined)
+      state.map.routes = [{
+        id: 'regular_route',
+        from: 'London',
+        to: 'Paris',
+        distance: 2,
+        speed: 1,
+        ceiling: 0,
+        luxury: 0,  // No luxury required
+        income: 5,
+        claimed: null
+      }];
+
+      const { processLaunchShip } = require('../../../server/actions/launch');
+
+      // Should succeed - no luxury requirement
+      const result = processLaunchShip(state, '1', {
+        shipId: 'ship1',
+        routeId: 'regular_route',
+        gasType: 'hydrogen',
+        _internal: true
+      });
+
+      expect(result.newState.players['1'].ships[0].status).toBe('awaiting_hazard');
+    });
+  });
+
+  describe('GAP-060: City Bonus Selection as Player Choice', () => {
+    it('should store cityChoice on ship when specified', () => {
+      const state = createTestGameState();
+      const playerState = state.players['1'];
+
+      playerState.gasCubes = { hydrogen: 3, helium: 0 };
+      playerState.officers = 1;
+      playerState.ships = [{ id: 'ship1', status: 'hangar' }];
+
+      state.map.routes = [{
+        id: 'route_1',
+        from: 'London',  // Has city bonus: +3 cash
+        to: 'Paris',     // Has city bonus: +1 influence
+        distance: 1,
+        speed: 1,
+        income: 3,
+        claimed: null
+      }];
+
+      const { processLaunchShip } = require('../../../server/actions/launch');
+
+      // Player chooses London for the city bonus
+      const result = processLaunchShip(state, '1', {
+        shipId: 'ship1',
+        routeId: 'route_1',
+        gasType: 'hydrogen',
+        cityChoice: 'London',
+        _internal: true
+      });
+
+      expect(result.newState.players['1'].ships[0].pendingCityChoice).toBe('London');
+    });
+
+    it('should apply player-chosen city bonus after hazard success', () => {
+      const state = createTestGameState();
+      const playerState = state.players['1'];
+
+      const initialCash = playerState.cash;
+      playerState.gasCubes = { hydrogen: 3, helium: 0 };
+      playerState.officers = 1;
+      playerState.ships = [{ id: 'ship1', status: 'hangar' }];
+
+      state.map.routes = [{
+        id: 'route_1',
+        from: 'London',  // +3 cash
+        to: 'Paris',     // +1 influence
+        distance: 1,
+        speed: 1,
+        income: 3,
+        claimed: null
+      }];
+
+      const { processLaunchShip } = require('../../../server/actions/launch');
+      const { processRespondToHazard } = require('../../../server/actions/hazard');
+
+      // Launch with London as city choice
+      const launchResult = processLaunchShip(state, '1', {
+        shipId: 'ship1',
+        routeId: 'route_1',
+        gasType: 'hydrogen',
+        cityChoice: 'London',
+        _internal: true
+      });
+
+      // Respond to hazard
+      const hazardResult = processRespondToHazard(launchResult.newState, '1', {
+        shipId: 'ship1',
+        spendEngineers: true
+      });
+
+      // London gives +3 cash
+      expect(hazardResult.newState.players['1'].cash).toBe(initialCash + 3);
+      // Influence should NOT have increased (didn't choose Paris)
+      expect(hazardResult.newState.players['1'].influence).toBe(0);
+    });
+
+    it('should apply alternative city bonus when different city chosen', () => {
+      const state = createTestGameState();
+      const playerState = state.players['1'];
+
+      playerState.gasCubes = { hydrogen: 3, helium: 0 };
+      playerState.officers = 1;
+      playerState.ships = [{ id: 'ship1', status: 'hangar' }];
+      playerState.influence = 0;
+
+      state.map.routes = [{
+        id: 'route_1',
+        from: 'London',  // +3 cash
+        to: 'Paris',     // +1 influence
+        distance: 1,
+        speed: 1,
+        income: 3,
+        claimed: null
+      }];
+
+      const { processLaunchShip } = require('../../../server/actions/launch');
+      const { processRespondToHazard } = require('../../../server/actions/hazard');
+
+      // Launch with Paris as city choice instead
+      const launchResult = processLaunchShip(state, '1', {
+        shipId: 'ship1',
+        routeId: 'route_1',
+        gasType: 'hydrogen',
+        cityChoice: 'Paris',
+        _internal: true
+      });
+
+      const initialCash = launchResult.newState.players['1'].cash;
+
+      // Respond to hazard
+      const hazardResult = processRespondToHazard(launchResult.newState, '1', {
+        shipId: 'ship1',
+        spendEngineers: true
+      });
+
+      // Paris gives +1 influence
+      expect(hazardResult.newState.players['1'].influence).toBe(1);
+      // Cash should NOT have increased from city bonus (didn't choose London)
+      expect(hazardResult.newState.players['1'].cash).toBe(initialCash);
+    });
+
+    it('should validate cityChoice is one of the route endpoints', () => {
+      const state = createTestGameState();
+      const playerState = state.players['1'];
+
+      playerState.gasCubes = { hydrogen: 3, helium: 0 };
+      playerState.officers = 1;
+      playerState.ships = [{ id: 'ship1', status: 'hangar' }];
+
+      state.map.routes = [{
+        id: 'route_1',
+        from: 'London',
+        to: 'Paris',
+        distance: 1,
+        speed: 1,
+        income: 3,
+        claimed: null
+      }];
+
+      const { processLaunchShip } = require('../../../server/actions/launch');
+
+      // Try to choose Berlin (not an endpoint)
+      expect(() => {
+        processLaunchShip(state, '1', {
+          shipId: 'ship1',
+          routeId: 'route_1',
+          gasType: 'hydrogen',
+          cityChoice: 'Berlin',  // Invalid - not an endpoint
+          _internal: true
+        });
+      }).toThrow(/city|endpoint/i);
+    });
+
+    it('should default to "to" city when cityChoice not specified', () => {
+      const state = createTestGameState();
+      const playerState = state.players['1'];
+
+      playerState.gasCubes = { hydrogen: 3, helium: 0 };
+      playerState.officers = 1;
+      playerState.ships = [{ id: 'ship1', status: 'hangar' }];
+      playerState.influence = 0;
+
+      state.map.routes = [{
+        id: 'route_1',
+        from: 'London',  // +3 cash
+        to: 'Paris',     // +1 influence
+        distance: 1,
+        speed: 1,
+        income: 3,
+        claimed: null
+      }];
+
+      const { processLaunchShip } = require('../../../server/actions/launch');
+      const { processRespondToHazard } = require('../../../server/actions/hazard');
+
+      // Launch WITHOUT cityChoice - should default to 'to' city (Paris)
+      const launchResult = processLaunchShip(state, '1', {
+        shipId: 'ship1',
+        routeId: 'route_1',
+        gasType: 'hydrogen',
+        _internal: true
+      });
+
+      const initialCash = launchResult.newState.players['1'].cash;
+
+      // Respond to hazard
+      const hazardResult = processRespondToHazard(launchResult.newState, '1', {
+        shipId: 'ship1',
+        spendEngineers: true
+      });
+
+      // Default (Paris) gives +1 influence
+      expect(hazardResult.newState.players['1'].influence).toBe(1);
+      // Cash should NOT have increased (didn't get London bonus)
+      expect(hazardResult.newState.players['1'].cash).toBe(initialCash);
+    });
+  });
 });
