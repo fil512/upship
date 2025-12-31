@@ -2,7 +2,8 @@
 
 from datetime import datetime
 from pathlib import Path
-from .config import LOGS_DIR, LOG_FILE_TRACKER, AGE_THRESHOLDS
+from .config import LOGS_DIR, LOG_FILE_TRACKER
+from .client import get_manifest
 
 
 class PlaytestLogger:
@@ -130,7 +131,9 @@ class PlaytestLogger:
                 current_age = state.get('age', 1)
                 player_count = len(state.get('players', {}))
 
-            thresholds = AGE_THRESHOLDS.get(player_count, AGE_THRESHOLDS[4])
+            manifest = get_manifest()
+            all_thresholds = manifest.progress_thresholds
+            thresholds = all_thresholds.get(str(player_count), all_thresholds.get('4', {}))
 
             # Determine next threshold
             if current_age == 1:

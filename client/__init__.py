@@ -26,6 +26,7 @@ Example:
 
 from .client import UpshipClient
 from .models import (
+    Manifest,
     Session,
     Card,
     Ship,
@@ -58,6 +59,7 @@ __all__ = [
     'UpshipClient',
 
     # Models
+    'Manifest',
     'Session',
     'Card',
     'Ship',

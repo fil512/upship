@@ -10,6 +10,7 @@ const { createSessionMiddleware } = require('./auth');
 const authRoutes = require('./routes/auth');
 const gameRoutes = require('./routes/games');
 const gameStateRoutes = require('./routes/gameState');
+const manifestRoutes = require('./routes/manifest');
 const { errorHandler, notFoundHandler } = require('./middleware/errorHandler');
 
 const app = express();
@@ -41,6 +42,7 @@ app.use(express.static(path.join(__dirname, '..', 'public')));
 app.use('/api/auth', authRoutes);
 app.use('/api/games', gameRoutes);
 app.use('/api/state', gameStateRoutes);
+app.use('/api/manifest', manifestRoutes);
 
 // Health check endpoint for Railway (includes database status)
 app.get('/health', async (req, res) => {

@@ -5,7 +5,7 @@ from typing import Any
 from .api import APIClient
 from .exceptions import SessionNotFoundError, APIError, InvalidActionError
 from .models import (
-    Session, Game, GameState, Blueprint, Route, ActionResult, Player
+    Session, Game, GameState, Blueprint, Route, ActionResult, Player, Manifest
 )
 from .session import load_session, save_session, delete_session
 
@@ -17,12 +17,18 @@ class UpshipClient:
     and in-game actions. Sessions are automatically persisted to disk for
     interoperability with the JavaScript CLI.
 
+    The client automatically fetches and caches static game data (manifest)
+    on first use. Access via the `manifest` property.
+
     Example:
         client = UpshipClient()
         session = client.login('testpilot42', 'airship123')
         games = client.list_games('testpilot42')
         state = client.get_state('testpilot42', game_id)
         result = client.place_agent('testpilot42', game_id, 'design-bureau', 0)
+
+        # Access static game data
+        upgrade = client.manifest.get_upgrade('basic_engine')
     """
 
     def __init__(self, base_url: str | None = None):
@@ -33,6 +39,33 @@ class UpshipClient:
                      Defaults to UPSHIP_URL env var or production URL.
         """
         self.api = APIClient(base_url)
+        self._manifest: Manifest | None = None
+
+    @property
+    def manifest(self) -> Manifest:
+        """Get the game manifest (static data).
+
+        Fetches from the server on first access and caches for future use.
+
+        Returns:
+            The Manifest containing all static game data.
+        """
+        if self._manifest is None:
+            self._manifest = self._fetch_manifest()
+        return self._manifest
+
+    def _fetch_manifest(self) -> Manifest:
+        """Fetch the manifest from the server."""
+        data, _ = self.api.get('/api/manifest')
+        return Manifest.from_dict(data)
+
+    def ensure_initialized(self) -> None:
+        """Ensure the client is initialized with manifest data.
+
+        Call this explicitly if you want to eagerly load the manifest
+        rather than waiting for first access.
+        """
+        _ = self.manifest
 
     def _get_cookie(self, username: str) -> str:
         """Get the session cookie for a user."""

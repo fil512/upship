@@ -11,8 +11,8 @@ from typing import Any
 
 from client import GameState, Player, Ship, Blueprint, Route, Card
 
-from .config import PLAYERS, LOCATION_SYMBOLS, UPGRADE_WEIGHTS
-from .client import get_client, get_game_id, get_player_user_id, get_faction_from_player
+from .config import PLAYERS
+from .client import get_client, get_game_id, get_player_user_id, get_faction_from_player, get_manifest
 
 
 def get_state(game_id: str, player: str = "playtest_germany") -> GameState | None:
@@ -261,9 +261,13 @@ def get_available_locations(game_id: str) -> list[dict]:
     Returns:
         List of location dicts with 'id' and 'symbol' keys.
     """
+    manifest = get_manifest()
+    all_locations = manifest.locations
+
     state = get_state(game_id)
     if not state:
-        return list({'id': loc_id, 'symbol': symbol} for loc_id, symbol in LOCATION_SYMBOLS.items())
+        return [{'id': loc_id, 'symbol': loc.get('symbol', '')}
+                for loc_id, loc in all_locations.items()]
 
     # Get occupied locations
     placements = state.ground_board.get('placements', {}) if state.ground_board else {}
@@ -271,9 +275,9 @@ def get_available_locations(game_id: str) -> list[dict]:
 
     # Return unoccupied locations
     locations = []
-    for loc_id, symbol in LOCATION_SYMBOLS.items():
+    for loc_id, loc in all_locations.items():
         if loc_id not in occupied:
-            locations.append({'id': loc_id, 'symbol': symbol})
+            locations.append({'id': loc_id, 'symbol': loc.get('symbol', '')})
 
     return locations
 
@@ -338,6 +342,7 @@ def get_ship_details(ship: Ship, player_data: Player) -> dict:
         Dict with ship stats including lift, weight, etc.
     """
     blueprint = player_data.blueprint if player_data else None
+    manifest = get_manifest()
 
     weight = 0
     if blueprint:
@@ -349,7 +354,7 @@ def get_ship_details(ship: Ship, player_data: Player) -> dict:
         )
         for upgrade_id in all_slots:
             if upgrade_id:
-                weight += UPGRADE_WEIGHTS.get(upgrade_id, 0)
+                weight += manifest.get_upgrade_weight(upgrade_id)
 
     required_cubes = max(1, math.ceil(weight / 5)) if weight > 0 else 1
     lift = required_cubes * 5
@@ -388,11 +393,12 @@ def get_blueprint_stats(player_data: Player) -> dict:
         }
 
     # Calculate weight from upgrades
+    manifest = get_manifest()
     weight = 0
     all_slots = bp.drive_slots + bp.frame_slots + bp.fabric_slots + bp.component_slots
     for upgrade_id in all_slots:
         if upgrade_id:
-            weight += UPGRADE_WEIGHTS.get(upgrade_id, 0)
+            weight += manifest.get_upgrade_weight(upgrade_id)
 
     required_cubes = max(1, math.ceil(weight / 5)) if weight > 0 else 1
     lift = required_cubes * 5

@@ -10,7 +10,7 @@ from pathlib import Path
 # Add parent directory to path so we can import the client package
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from client import UpshipClient, AuthenticationError, SessionNotFoundError
+from client import UpshipClient, AuthenticationError, SessionNotFoundError, Manifest
 from .config import API_BASE, GAME_FILE, PLAYERS, PASSWORD, USE_LOCAL
 
 
@@ -28,6 +28,18 @@ def get_client() -> UpshipClient:
     if _client is None:
         _client = UpshipClient(base_url=API_BASE)
     return _client
+
+
+def get_manifest() -> Manifest:
+    """Get the game manifest (static data).
+
+    The manifest contains all static lookup tables: upgrades, technologies,
+    locations, constants, etc. It is fetched once from the server and cached.
+
+    Returns:
+        Manifest: The game manifest with all static data.
+    """
+    return get_client().manifest
 
 
 def get_game_id() -> str | None:

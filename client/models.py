@@ -5,6 +5,75 @@ from typing import Any
 
 
 @dataclass
+class Manifest:
+    """Static game data fetched once from the server.
+
+    Contains all lookup tables for upgrades, technologies, locations, etc.
+    """
+    version: str
+    upgrades: dict[str, dict]
+    technologies: dict[str, dict]
+    technology_bag: dict[str, list[dict]]
+    locations: dict[str, dict]
+    symbols: dict[str, dict]
+    constants: dict[str, Any]
+
+    @classmethod
+    def from_dict(cls, data: dict) -> 'Manifest':
+        """Create Manifest from API response dict."""
+        return cls(
+            version=data.get('version', '1.0.0'),
+            upgrades=data.get('upgrades', {}),
+            technologies=data.get('technologies', {}),
+            technology_bag=data.get('technologyBag', {}),
+            locations=data.get('locations', {}),
+            symbols=data.get('symbols', {}),
+            constants=data.get('constants', {}),
+        )
+
+    def get_upgrade(self, upgrade_id: str) -> dict | None:
+        """Get upgrade definition by ID."""
+        return self.upgrades.get(upgrade_id)
+
+    def get_technology(self, tech_id: str) -> dict | None:
+        """Get technology definition by ID."""
+        return self.technologies.get(tech_id)
+
+    def get_location(self, location_id: str) -> dict | None:
+        """Get ground board location by ID."""
+        return self.locations.get(location_id)
+
+    def get_location_symbol(self, location_id: str) -> str | None:
+        """Get the required symbol for a location."""
+        loc = self.locations.get(location_id)
+        return loc.get('symbol') if loc else None
+
+    def get_upgrade_weight(self, upgrade_id: str) -> int:
+        """Get the weight of an upgrade (negative = uses lift)."""
+        upgrade = self.upgrades.get(upgrade_id)
+        if upgrade:
+            return abs(upgrade.get('weight', 0))
+        return 0
+
+    def get_tech_for_upgrade(self, upgrade_id: str) -> str | None:
+        """Get the required technology for an upgrade."""
+        upgrade = self.upgrades.get(upgrade_id)
+        return upgrade.get('requiredTech') if upgrade else None
+
+    def get_upgrade_for_tech(self, tech_id: str) -> dict | None:
+        """Get the upgrade that a technology unlocks."""
+        for upgrade_id, upgrade in self.upgrades.items():
+            if upgrade.get('requiredTech') == tech_id:
+                return {'id': upgrade_id, 'slotType': upgrade.get('slotType')}
+        return None
+
+    @property
+    def progress_thresholds(self) -> dict:
+        """Get progress thresholds by player count."""
+        return self.constants.get('progressThresholds', {})
+
+
+@dataclass
 class Session:
     """User session information."""
     user_id: str

@@ -8,9 +8,8 @@ from typing import Any
 
 from client import Player, Ship, Blueprint, Route, Card
 
-from .config import TECH_TO_UPGRADE
 from .state import get_state, get_available_routes, get_player_id, get_rd_board
-from .client import get_player_user_id
+from .client import get_player_user_id, get_manifest
 
 
 def find_playable_card(cards: list[dict], locations: list[dict]) -> tuple[dict | None, dict | None]:
@@ -62,10 +61,11 @@ def get_design_bureau_swaps(player_data: Player) -> list[dict]:
     empty_fabric_indices = [i for i, s in enumerate(fabric_slots) if s is None]
     empty_drive_indices = [i for i, s in enumerate(drive_slots) if s is None]
 
+    manifest = get_manifest()
     available_upgrades = []
     for tech_id in technologies:
-        if tech_id in TECH_TO_UPGRADE:
-            upgrade_info = TECH_TO_UPGRADE[tech_id]
+        upgrade_info = manifest.get_upgrade_for_tech(tech_id)
+        if upgrade_info:
             available_upgrades.append({
                 'upgradeId': upgrade_info['id'],
                 'slotType': upgrade_info['slotType']
