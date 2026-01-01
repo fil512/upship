@@ -1878,7 +1878,7 @@
                     <span style="color: #c4a35a; font-size: 1.2rem;">${score.total} VP</span>
                   </div>
                   <div style="font-size: 0.7rem; color: #888; margin-top: 3px;">
-                    Routes: ${score.breakdown.routes} | Tech: ${score.breakdown.technologies} | Cash: ${score.breakdown.cash} | Ships: ${score.breakdown.ships}
+                    Routes: ${score.breakdown.routes || 0} VP | Tech: ${score.breakdown.technologies || 0} VP${score.breakdown.previouslyAccumulated ? ` | Prior Ages: ${score.breakdown.previouslyAccumulated} VP` : ''}
                   </div>
                 </div>
               `).join('')}
