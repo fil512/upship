@@ -355,18 +355,45 @@ async function isPlayerInGame(gameId, userId) {
   return result.rows.length > 0;
 }
 
-// Get games for a specific user
+// Get games for a specific user (with turn info for active games)
 async function getUserGames(userId) {
   const result = await pool.query(
-    `SELECT g.*, u.username as host_username
+    `SELECT g.*, u.username as host_username,
+            gs.state as game_state
      FROM games g
      JOIN users u ON g.host_id = u.id
      JOIN game_players gp ON g.id = gp.game_id
+     LEFT JOIN game_states gs ON g.id = gs.game_id
      WHERE gp.user_id = $1
      ORDER BY g.created_at DESC`,
     [userId]
   );
-  return result.rows;
+
+  // Process games to add isMyTurn flag
+  return result.rows.map(game => {
+    let isMyTurn = false;
+
+    if (game.status === 'in_progress' && game.game_state) {
+      const state = game.game_state;
+
+      // Determine current player based on phase
+      if (state.phase === 'worker_placement') {
+        // During worker placement, use placementOrder and currentPlacerIndex
+        const order = state.workerPlacement?.placementOrder || state.playerOrder;
+        const index = state.workerPlacement?.currentPlacerIndex || 0;
+        const currentPlayerId = order[index];
+        isMyTurn = currentPlayerId === userId;
+      } else {
+        // Other phases use playerOrder and currentPlayerIndex
+        const currentPlayerId = state.playerOrder[state.currentPlayerIndex];
+        isMyTurn = currentPlayerId === userId;
+      }
+    }
+
+    // Remove game_state from response (too large for list view)
+    const { game_state, ...gameWithoutState } = game;
+    return { ...gameWithoutState, isMyTurn };
+  });
 }
 
 // Drop all game data (admin/dev only)

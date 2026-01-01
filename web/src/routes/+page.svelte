@@ -8,6 +8,34 @@
 	let currentGameId: string | null = null;
 	let currentTab: 'open' | 'mine' = 'open';
 	let showCreateModal = false;
+	let lastUserId: string | null = null;
+
+	// Check if user has any games and default to "My Games" tab if so
+	async function initializeDefaultTab() {
+		currentTab = 'open'; // Reset to default first
+		try {
+			const res = await fetch('/api/games/mine', { credentials: 'include' });
+			if (res.ok) {
+				const data = await res.json();
+				if (data.games && data.games.length > 0) {
+					currentTab = 'mine';
+				}
+			}
+		} catch (err) {
+			// Ignore errors, default to 'open' tab
+		}
+	}
+
+	// Initialize/reinitialize tab when user changes
+	$: {
+		const userId = $user?.id || null;
+		if (userId !== lastUserId) {
+			lastUserId = userId;
+			if ($isAuthenticated) {
+				initializeDefaultTab();
+			}
+		}
+	}
 
 	function handleViewGame(event: CustomEvent<{ gameId: string }>) {
 		currentGameId = event.detail.gameId;

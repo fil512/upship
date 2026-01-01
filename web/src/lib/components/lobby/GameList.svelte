@@ -13,6 +13,7 @@
 		current_player_count: number;
 		max_players: number;
 		created_at: string;
+		isMyTurn?: boolean;
 	}
 
 	const dispatch = createEventDispatcher<{ viewGame: { gameId: string } }>();
@@ -80,7 +81,7 @@
 		</div>
 	{:else}
 		{#each games as game (game.id)}
-			<GameCard {game} on:click={() => handleViewGame(game.id)} />
+			<GameCard {game} isMyGame={filter === 'mine'} on:click={() => handleViewGame(game.id)} />
 		{/each}
 	{/if}
 </div>
