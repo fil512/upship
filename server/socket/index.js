@@ -7,7 +7,7 @@ const { Server } = require('socket.io');
 const gameStateService = require('../services/gameStateService');
 const { filterStateForPlayer } = require('../services/gameStateHelpers');
 const { processAction } = require('../actions');
-const { executeUndo } = require('../actions/undo');
+const { executeUndo, getUndoInfo } = require('../actions/undo');
 const logger = require('../logger');
 
 // Track online players per game: Map<gameId, Map<playerId, socketId>>
@@ -150,11 +150,20 @@ function initializeSocket(server, sessionMiddleware) {
           // Broadcast to all players
           broadcastStateUpdate(io, gameId, undoResult.newState, gameState.version + 1, 'UNDO');
 
+          // Get updated undo info after the undo
+          const undoInfo = await getUndoInfo(gameId, effectiveUserId);
+          const playerState = undoResult.newState.players[effectiveUserId];
+
           callback({
             success: true,
             state: filterStateForPlayer(undoResult.newState, playerId),
             version: gameState.version + 1,
-            undoneAction: undoResult.undoneAction
+            undoneAction: undoResult.undoneAction,
+            turnInfo: {
+              canUndo: undoInfo.canUndo,
+              lastActionType: undoInfo.lastActionType,
+              canEndTurn: playerState?.hasTakenActionThisTurn || false
+            }
           });
           return;
         }
@@ -180,12 +189,21 @@ function initializeSocket(server, sessionMiddleware) {
         // Check for turn/phase changes and notify
         checkAndNotifyChanges(io, gameId, state, result.newState);
 
-        // Send response to acting player
+        // Get undo info for the acting player
+        const undoInfo = await getUndoInfo(gameId, effectiveUserId);
+        const playerState = result.newState.players[effectiveUserId];
+
+        // Send response to acting player with turn info
         callback({
           success: true,
           state: filterStateForPlayer(newGameState, playerId),
           version: newGameState.version,
-          isCommitPoint: newGameState.isCommitPoint || false
+          isCommitPoint: newGameState.isCommitPoint || false,
+          turnInfo: {
+            canUndo: undoInfo.canUndo,
+            lastActionType: undoInfo.lastActionType,
+            canEndTurn: playerState?.hasTakenActionThisTurn || false
+          }
         });
 
         logger.info({ gameId, playerId, actionType: action.actionType }, 'Action processed');
@@ -205,9 +223,18 @@ function initializeSocket(server, sessionMiddleware) {
         const gameState = await gameStateService.getGameState(gameId);
 
         if (gameState) {
+          // Get undo info for this player
+          const undoInfo = await getUndoInfo(gameId, playerId);
+          const playerState = gameState.state.players[playerId];
+
           socket.emit('state-sync', {
             state: filterStateForPlayer(gameState.state, playerId),
-            version: gameState.version
+            version: gameState.version,
+            turnInfo: {
+              canUndo: undoInfo.canUndo,
+              lastActionType: undoInfo.lastActionType,
+              canEndTurn: playerState?.hasTakenActionThisTurn || false
+            }
           });
         }
       } catch (error) {

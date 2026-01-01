@@ -4,7 +4,8 @@
  */
 
 const { GameRuleError } = require('../errors');
-const { transitionToIncomeCleanup, startNewRound } = require('./helpers/phaseTransition');
+const { transitionToIncomeCleanup, startNewRound, transitionToRevealPhase } = require('./helpers/phaseTransition');
+const { advanceToNextPlacer, allPlayersPassed } = require('./helpers/turnOrder');
 
 /**
  * End turn - behavior depends on current phase
@@ -17,9 +18,29 @@ function processEndTurn(state, playerId) {
   const playerState = state.players[playerId];
 
   switch (state.phase) {
-    case 'worker_placement':
-      // During worker placement, use PASS action instead of END_TURN
-      throw new GameRuleError('Use PASS action during worker placement phase');
+    case 'worker_placement': {
+      // During worker placement, END_TURN marks player as passed and advances to next placer
+      playerState.hasPassed = true;
+      if (!state.workerPlacement.passedPlayers.includes(playerId)) {
+        state.workerPlacement.passedPlayers.push(playerId);
+      }
+      playerState.hasTakenActionThisTurn = false;
+
+      state.log.push({
+        timestamp: new Date().toISOString(),
+        message: `${playerState.faction.toUpperCase()} ended their turn`,
+        playerId,
+        type: 'turn'
+      });
+
+      // Check if all players passed, transition to reveal; otherwise advance to next placer
+      if (allPlayersPassed(state)) {
+        transitionToRevealPhase(state);
+      } else {
+        advanceToNextPlacer(state);
+      }
+      break;
+    }
 
     case 'reveal': {
       // During reveal phase, END_TURN signals done with tech/market purchases

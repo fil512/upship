@@ -1,11 +1,18 @@
 import { writable, derived, get } from 'svelte/store';
-import type { GameState, PlayerState, GamePhase } from '$lib/types/game';
+import type { GameState, PlayerState, GamePhase, TurnInfo } from '$lib/types/game';
 import { user } from './auth';
 
 // Core game state stores
 export const gameState = writable<GameState | null>(null);
 export const gameVersion = writable<number>(0);
 export const gameId = writable<string | null>(null);
+
+// Turn info for Undo/End Turn buttons
+export const turnInfo = writable<TurnInfo>({
+	canUndo: false,
+	lastActionType: null,
+	canEndTurn: false
+});
 
 // Dev mode for player switching
 export const isDevMode = writable(false);
@@ -123,6 +130,13 @@ export function updateGameState(newState: GameState, version: number): void {
 		gameState.set(newState);
 		gameVersion.set(version);
 	}
+}
+
+/**
+ * Update turn info (for Undo/End Turn buttons)
+ */
+export function updateTurnInfo(info: TurnInfo): void {
+	turnInfo.set(info);
 }
 
 /**

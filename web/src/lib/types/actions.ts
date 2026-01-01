@@ -171,6 +171,7 @@ export interface ActionResponse {
 		type: ActionType;
 		data?: ActionData;
 	};
+	turnInfo?: import('./game').TurnInfo;
 }
 
 // Undo info

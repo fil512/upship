@@ -123,6 +123,10 @@ function advanceToNextPlacer(state) {
     const playerId = order[index];
     if (!passedPlayers.includes(playerId)) {
       state.workerPlacement.currentPlacerIndex = index;
+      // Reset the next player's action flag (they haven't taken action yet this turn)
+      if (state.players[playerId]) {
+        state.players[playerId].hasTakenActionThisTurn = false;
+      }
       return playerId;
     }
   }

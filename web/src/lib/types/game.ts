@@ -279,3 +279,10 @@ export interface LobbyPlayer {
 	username: string;
 	faction: Faction | null;
 }
+
+// Turn info for Undo/End Turn buttons
+export interface TurnInfo {
+	canUndo: boolean;
+	lastActionType: string | null;
+	canEndTurn: boolean;
+}

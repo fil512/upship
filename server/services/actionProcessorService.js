@@ -183,9 +183,30 @@ function processEndTurn(state, playerId) {
   const playerState = state.players[playerId];
 
   switch (state.phase) {
-    case 'worker_placement':
-      // During worker placement, use PASS action instead of END_TURN
-      return { error: 'Use PASS action during worker placement phase' };
+    case 'worker_placement': {
+      // During worker placement, END_TURN advances to next placer
+      // Player is marked as passed for this round
+      playerState.hasPassed = true;
+      if (!state.workerPlacement.passedPlayers.includes(playerId)) {
+        state.workerPlacement.passedPlayers.push(playerId);
+      }
+      playerState.hasTakenActionThisTurn = false;
+
+      state.log.push({
+        timestamp: new Date().toISOString(),
+        message: `${playerState.faction.toUpperCase()} ends their turn`,
+        playerId,
+        type: 'turn'
+      });
+
+      // Check if all players have passed or advance to next
+      if (allPlayersPassed(state)) {
+        transitionToRevealPhase(state);
+      } else {
+        advanceToNextPlacer(state);
+      }
+      break;
+    }
 
     case 'reveal': {
       // During reveal phase, END_TURN signals done with tech/market purchases
@@ -661,27 +682,9 @@ function processPlaceAgent(state, playerId, data) {
     });
   }
 
-  // Check if player should auto-pass (no agents left OR no playable cards)
-  const shouldAutoPass = playerState.agentsRemaining <= 0 || !hasPlayableCards(state, playerId);
-
-  if (shouldAutoPass) {
-    // Auto-pass this player
-    playerState.hasPassed = true;
-    state.workerPlacement.passedPlayers.push(playerId);
-    state.log.push({
-      timestamp: new Date().toISOString(),
-      message: `${playerState.faction.toUpperCase()} auto-passes (no agents or playable cards)`,
-      playerId,
-      type: 'system'
-    });
-  }
-
-  // Advance to next placer or transition phase
-  if (allPlayersPassed(state)) {
-    transitionToRevealPhase(state);
-  } else {
-    advanceToNextPlacer(state);
-  }
+  // Mark that player has taken an action this turn (for Undo/End Turn UI)
+  // Player must explicitly click End Turn to advance to next placer
+  playerState.hasTakenActionThisTurn = true;
 
   return { newState: state };
 }

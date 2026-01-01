@@ -102,6 +102,10 @@ function advanceToNextPlacer(state) {
         state.workerPlacement = { placementOrder: order, passedPlayers: [], currentPlacerIndex: 0 };
       }
       state.workerPlacement.currentPlacerIndex = index;
+      // Reset the next player's action flag
+      if (state.players[playerId]) {
+        state.players[playerId].hasTakenActionThisTurn = false;
+      }
       return playerId;
     }
   }

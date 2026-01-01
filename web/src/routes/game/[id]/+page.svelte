@@ -16,7 +16,8 @@
 		switchToPlayer,
 		effectiveUserId,
 		setGameId,
-		resetGameState
+		resetGameState,
+		turnInfo
 	} from '$lib/stores/gameState';
 	import { connect, disconnect, connected, sendAction, onlinePlayers } from '$lib/stores/socket';
 	import { toasts, showToast } from '$lib/stores/ui';
@@ -145,10 +146,10 @@
 		}
 	}
 
-	async function handlePass() {
-		const result = await sendAction({ actionType: 'PASS', actionData: {} });
+	async function handleUndo() {
+		const result = await sendAction({ actionType: 'UNDO', actionData: {} });
 		if (!result.success) {
-			showToast(result.error || 'Failed to pass', 'error');
+			showToast(result.error || 'Failed to undo', 'error');
 		}
 	}
 
@@ -311,9 +312,12 @@
 				<div class="panel actions">
 					<h3>Actions</h3>
 					{#if $isMyTurn}
-						{#if isWorkerPlacementPhase}
-							<button class="btn secondary w-full" on:click={handlePass}>Pass</button>
-						{:else if $gameState.phase !== 'reveal'}
+						{#if $turnInfo.canUndo}
+							<button class="btn secondary w-full" on:click={handleUndo}>
+								Undo {$turnInfo.lastActionType || ''}
+							</button>
+						{/if}
+						{#if $turnInfo.canEndTurn}
 							<button class="btn w-full" on:click={handleEndTurn}>End Turn</button>
 						{/if}
 					{/if}

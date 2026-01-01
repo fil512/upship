@@ -1,6 +1,6 @@
 // Socket.io event types for UP SHIP!
 
-import type { GameState, GamePhase, Faction } from './game';
+import type { GameState, GamePhase, Faction, TurnInfo } from './game';
 import type { GameAction, ActionResponse } from './actions';
 
 // Server to client events
@@ -44,6 +44,7 @@ export interface ClientToServerEvents {
 export interface StateSyncData {
 	state: GameState;
 	version: number;
+	turnInfo?: TurnInfo;
 }
 
 export interface StateUpdateData {

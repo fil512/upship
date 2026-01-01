@@ -690,16 +690,9 @@ function processPlaceAgent(state, playerId, data) {
     return { newState: state };
   }
 
-  // NOTE: Auto-pass was removed - players must explicitly call REVEAL to exit worker placement
-  // This ensures all players declare their tech/market acquisitions via the atomic REVEAL action.
-  // If a player runs out of agents or playable cards, they must still call REVEAL.
-
-  // Advance to next placer or transition phase (if all have explicitly REVEALed)
-  if (allPlayersPassed(state)) {
-    transitionToRevealPhase(state);
-  } else {
-    advanceToNextPlacer(state);
-  }
+  // Mark that player has taken an action this turn (for Undo/End Turn UI)
+  // Player must explicitly click End Turn to advance to next placer
+  playerState.hasTakenActionThisTurn = true;
 
   return { newState: state };
 }

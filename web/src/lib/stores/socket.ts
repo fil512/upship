@@ -6,7 +6,7 @@ import type {
 	SocketConnectionState
 } from '$lib/types/socket';
 import type { GameAction, ActionResponse } from '$lib/types/actions';
-import { updateGameState, gameVersion, effectiveUserId, isDevMode } from './gameState';
+import { updateGameState, updateTurnInfo, gameVersion, effectiveUserId, isDevMode } from './gameState';
 import { showToast } from './ui';
 
 type TypedSocket = Socket<ServerToClientEvents, ClientToServerEvents>;
@@ -93,8 +93,12 @@ export function connect(gameId: string, playerId: string): void {
 	});
 
 	// Game state events
-	socket.on('state-sync', ({ state, version }) => {
+	socket.on('state-sync', ({ state, version, turnInfo }) => {
 		updateGameState(state, version);
+		// Update turn info if provided
+		if (turnInfo) {
+			updateTurnInfo(turnInfo);
+		}
 	});
 
 	socket.on('state-update', ({ state, version, action }) => {
@@ -186,6 +190,10 @@ export async function sendAction(action: GameAction): Promise<ActionResponse> {
 		socket!.emit('game-action', actionToSend, (response) => {
 			if (response.success && response.state && response.version !== undefined) {
 				updateGameState(response.state, response.version);
+			}
+			// Update turn info if provided
+			if (response.turnInfo) {
+				updateTurnInfo(response.turnInfo);
 			}
 			resolve(response);
 		});
