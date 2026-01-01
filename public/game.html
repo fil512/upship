@@ -1093,7 +1093,10 @@
 
       const state = gameState.state;
       const myState = state.players[currentUserId];
-      const isMyTurn = state.playerOrder[state.currentPlayerIndex] === currentUserId;
+      // During worker placement, use placementOrder; otherwise use playerOrder
+      const isMyTurn = state.phase === 'worker_placement' && state.workerPlacement
+        ? state.workerPlacement.placementOrder[state.workerPlacement.currentPlacerIndex] === currentUserId
+        : state.playerOrder[state.currentPlayerIndex] === currentUserId;
 
       document.getElementById('game-container').innerHTML = `
         <!-- Header -->
@@ -1543,9 +1546,9 @@
             ${(state.marketCards || []).map(card => `
               <div class="card">
                 <div class="card-name">${card.name}</div>
-                <div class="card-type">${card.type}</div>
-                <button class="tech-buy-btn" onclick="buyMarketCard('${card.id}')" ${!isMyTurn || myState.cash < (card.value || 3) ? 'disabled' : ''} style="margin-top: 5px; width: 100%;">
-                  £${card.value || 3}
+                <div class="card-type">${card.category || 'general'}</div>
+                <button class="tech-buy-btn" onclick="buyMarketCard('${card.id}')" ${!isMyTurn || myState.cash < (card.cost || 3) ? 'disabled' : ''} style="margin-top: 5px; width: 100%;">
+                  £${card.cost || 3}
                 </button>
               </div>
             `).join('')}
@@ -1559,13 +1562,13 @@
                 const isClaimed = route.claimed;
                 const isClaimedByMe = route.claimed === currentUserId;
                 const launchedShips = (myState.ships || []).filter(s => s.status === 'launched');
-                const canClaim = !isClaimed && launchedShips.length > 0 && launchedShips.some(s => (s.stats?.range || 1) >= route.distance);
+                const canClaim = !isClaimed && launchedShips.length > 0 && launchedShips.some(s => (s.stats?.range || 1) >= route.range);
                 return `
                   <div class="route-item ${isClaimed ? 'claimed' : ''} ${isClaimedByMe ? 'claimed-by-me' : ''}">
                     <div class="route-info">
                       <span class="route-cities">${route.from} → ${route.to}</span>
                       <div class="route-stats">
-                        <span class="route-stat">📏${route.distance}</span>
+                        <span class="route-stat">📏${route.range}</span>
                         <span class="route-stat">💰+${route.income}</span>
                       </div>
                     </div>
@@ -1573,7 +1576,7 @@
                       `<span style="color: ${isClaimedByMe ? '#4a9' : '#888'}; font-size: 0.7rem;">
                         ${isClaimedByMe ? '✓ Yours' : '✗ Taken'}
                       </span>` :
-                      `<button class="claim-btn" onclick="showClaimRouteModal('${route.id}', ${route.distance})" ${!isMyTurn || !canClaim ? 'disabled' : ''}>
+                      `<button class="claim-btn" onclick="showClaimRouteModal('${route.id}', ${route.range})" ${!isMyTurn || !canClaim ? 'disabled' : ''}>
                         Claim
                       </button>`
                     }
@@ -1680,7 +1683,7 @@
 
         <!-- Game Log -->
         <div class="game-log">
-          ${(state.log || []).slice(-10).reverse().map(entry => `
+          ${(state.log || []).filter(entry => !entry.message?.startsWith('[DEBUG')).slice(-10).reverse().map(entry => `
             <div class="log-entry">
               <span class="log-time">${new Date(entry.timestamp).toLocaleTimeString()}</span>
               <span class="log-message ${entry.type}">${entry.message}</span>
@@ -1840,7 +1843,10 @@
     function selectCard(index) {
       if (!gameState?.state) return;
       const state = gameState.state;
-      const isMyTurn = state.playerOrder[state.currentPlayerIndex] === currentUserId;
+      // During worker placement, use placementOrder
+      const isMyTurn = state.phase === 'worker_placement' && state.workerPlacement
+        ? state.workerPlacement.placementOrder[state.workerPlacement.currentPlacerIndex] === currentUserId
+        : state.playerOrder[state.currentPlayerIndex] === currentUserId;
 
       if (state.phase !== 'worker_placement' || !isMyTurn) return;
 
