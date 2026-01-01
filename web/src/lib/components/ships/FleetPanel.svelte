@@ -24,7 +24,7 @@
 <div class="fleet-panel">
 	<div class="fleet-header">
 		<h4>Fleet</h4>
-		<span class="ship-count">{ships.length} ships</span>
+		<span class="ship-count">{ships.length} {ships.length === 1 ? 'ship' : 'ships'}</span>
 	</div>
 
 	{#if ships.length === 0}

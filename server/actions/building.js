@@ -4,7 +4,7 @@
  */
 
 const { GameRuleError, InsufficientFundsError } = require('../errors');
-const { UPGRADES } = require('../data/upgrades');
+const { UPGRADES, calculateShipStats, calculateLift } = require('../data/upgrades');
 const { generateId } = require('../utils/random');
 
 /**
@@ -97,12 +97,33 @@ function processBuildShip(state, playerId, data) {
     playerState.ships = [];
   }
 
-  // Add ships to hangar
+  // Calculate ship stats from blueprint at build time
+  // This captures the stats when the ship was built
+  const shipStats = calculateShipStats(playerState.blueprint, {}, state.age);
+  const lift = calculateLift(playerState.blueprint.gasSockets);
+
+  // Calculate weight from frame/fabric upgrades
+  let weight = 0;
+  for (const upgradeId of [...(playerState.blueprint.frameSlots || []), ...(playerState.blueprint.fabricSlots || [])]) {
+    if (upgradeId && UPGRADES[upgradeId]?.weight) {
+      weight += UPGRADES[upgradeId].weight;
+    }
+  }
+
+  // Add ships to hangar with stats
   for (let i = 0; i < count; i++) {
     playerState.ships.push({
       id: generateId('ship'),
       status: 'hangar', // hangar, launched, damaged
-      route: null
+      route: null,
+      // Stats from blueprint at build time
+      lift,
+      weight,
+      speed: shipStats.speed,
+      range: shipStats.range,
+      ceiling: shipStats.ceiling,
+      reliability: shipStats.reliability,
+      luxury: shipStats.luxury
     });
   }
 

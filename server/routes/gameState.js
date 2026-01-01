@@ -28,6 +28,7 @@ const {
 const { filterStateForPlayer } = require('../services/gameStateHelpers');
 const { processAction } = require('../actions');
 const { executeUndo, getUndoInfo } = require('../actions/undo');
+const { broadcastStateUpdate } = require('../socket');
 
 // All game state routes require authentication
 router.use(requireAuth);
@@ -213,6 +214,12 @@ router.post('/:gameId/action', requireGamePlayer, async (req, res, next) => {
       const undoResult = await executeUndo(gameId, effectiveUserId);
       const undoInfo = await getUndoInfo(gameId, effectiveUserId);
 
+      // Broadcast undo to all connected players via Socket.io
+      const io = req.app.get('io');
+      if (io) {
+        broadcastStateUpdate(io, gameId, undoResult.newState, gameState.version + 1, 'UNDO');
+      }
+
       return res.json({
         success: true,
         undoneAction: undoResult.undoneAction,
@@ -237,6 +244,12 @@ router.post('/:gameId/action', requireGamePlayer, async (req, res, next) => {
       type: actionType,
       data: actionData
     });
+
+    // Broadcast state update to all connected players via Socket.io
+    const io = req.app.get('io');
+    if (io) {
+      broadcastStateUpdate(io, gameId, newState, newState.version || 1, actionType);
+    }
 
     res.json({
       success: true,

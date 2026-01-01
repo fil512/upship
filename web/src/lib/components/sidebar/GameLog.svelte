@@ -4,7 +4,10 @@
 	export let log: LogEntry[] = [];
 	export let maxEntries: number = 20;
 
-	$: displayLog = log.slice(-maxEntries).reverse();
+	// Filter out debug messages - only show action, phase, and general log entries
+	const DEBUG_TYPES = ['debug', 'internal', 'system'];
+	$: filteredLog = log.filter((entry) => !entry.type || !DEBUG_TYPES.includes(entry.type));
+	$: displayLog = filteredLog.slice(-maxEntries).reverse();
 
 	function formatTimestamp(timestamp: string): string {
 		const date = new Date(timestamp);

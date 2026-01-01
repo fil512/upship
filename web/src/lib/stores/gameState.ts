@@ -144,10 +144,27 @@ export function setDevMode(enabled: boolean): void {
 
 /**
  * Switch to viewing as a different player (dev mode only)
+ * Refetches game state with devMode=true to get unfiltered state
  */
-export function switchToPlayer(playerId: string): void {
-	if (get(isDevMode)) {
-		viewingAsUserId.set(playerId);
+export async function switchToPlayer(playerId: string): Promise<void> {
+	if (!get(isDevMode)) return;
+
+	viewingAsUserId.set(playerId);
+
+	// Refetch game state with devMode=true to get all players' hands
+	const currentGameId = get(gameId);
+	if (currentGameId) {
+		try {
+			const response = await fetch(`/api/games/state/${currentGameId}?devMode=true`);
+			if (response.ok) {
+				const data = await response.json();
+				if (data.gameState?.state) {
+					gameState.set(data.gameState.state);
+				}
+			}
+		} catch (error) {
+			console.error('Failed to fetch dev mode state:', error);
+		}
 	}
 }
 

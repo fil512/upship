@@ -250,6 +250,7 @@
 					<section class="board-section">
 						<GroundBoard
 							{placements}
+							players={$gameState.players}
 							{selectedCardSymbol}
 							isMyTurn={$isMyTurn}
 							{isWorkerPlacementPhase}

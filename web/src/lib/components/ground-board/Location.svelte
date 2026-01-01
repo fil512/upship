@@ -1,12 +1,13 @@
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte';
-	import type { GroundBoardPlacements } from '$lib/types/game';
+	import type { GroundBoardPlacements, PlayerState } from '$lib/types/game';
 
 	export let id: string;
 	export let name: string;
 	export let symbol: 'wrench' | 'coin' | 'propeller';
 	export let description: string;
 	export let placements: GroundBoardPlacements;
+	export let players: Record<string, PlayerState> = {};
 	export let canPlace: boolean = false;
 
 	const dispatch = createEventDispatcher<{
@@ -28,7 +29,7 @@
 	$: placement = placements[id];
 	$: isOccupied = !!placement;
 	$: occupantDisplay = placement
-		? `${placement.playerId.substring(0, 8)}...`
+		? players[placement.playerId]?.faction || placement.playerId.substring(0, 8)
 		: null;
 
 	function handleClick() {

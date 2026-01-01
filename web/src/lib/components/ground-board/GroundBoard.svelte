@@ -2,9 +2,10 @@
 	import { createEventDispatcher } from 'svelte';
 	import { gameState, myState } from '$lib/stores/gameState';
 	import Location from './Location.svelte';
-	import type { GroundBoardPlacements } from '$lib/types/game';
+	import type { GroundBoardPlacements, PlayerState } from '$lib/types/game';
 
 	export let placements: GroundBoardPlacements = {};
+	export let players: Record<string, PlayerState> = {};
 	export let selectedCardSymbol: string | null = null;
 	export let isMyTurn: boolean = false;
 	export let isWorkerPlacementPhase: boolean = false;
@@ -94,16 +95,6 @@
 		}
 	];
 
-	function canPlaceAt(locationSymbol: string): boolean {
-		if (!isMyTurn || !isWorkerPlacementPhase) return false;
-		if (!selectedCardSymbol) return false;
-
-		// 'any' symbol can place anywhere
-		if (selectedCardSymbol === 'any') return true;
-
-		return locationSymbol === selectedCardSymbol;
-	}
-
 	function handleLocationSelect(event: CustomEvent<{ locationId: string }>) {
 		dispatch('placeAgent', { locationId: event.detail.locationId });
 	}
@@ -112,6 +103,22 @@
 	$: wrenchLocations = locations.filter((l) => l.symbol === 'wrench');
 	$: propellerLocations = locations.filter((l) => l.symbol === 'propeller');
 	$: coinLocations = locations.filter((l) => l.symbol === 'coin');
+
+	// Reactive map of which locations can be placed at
+	// This MUST be reactive ($:) so it updates when selectedCardSymbol changes
+	$: canPlaceMap = (() => {
+		const map: Record<string, boolean> = {};
+		for (const loc of locations) {
+			if (!isMyTurn || !isWorkerPlacementPhase || !selectedCardSymbol) {
+				map[loc.id] = false;
+			} else if (selectedCardSymbol === 'any') {
+				map[loc.id] = true;
+			} else {
+				map[loc.id] = loc.symbol === selectedCardSymbol;
+			}
+		}
+		return map;
+	})();
 </script>
 
 <div class="ground-board">
@@ -130,7 +137,8 @@
 					<Location
 						{...loc}
 						{placements}
-						canPlace={canPlaceAt(loc.symbol)}
+						{players}
+						canPlace={canPlaceMap[loc.id]}
 						on:select={handleLocationSelect}
 					/>
 				{/each}
@@ -144,7 +152,8 @@
 					<Location
 						{...loc}
 						{placements}
-						canPlace={canPlaceAt(loc.symbol)}
+						{players}
+						canPlace={canPlaceMap[loc.id]}
 						on:select={handleLocationSelect}
 					/>
 				{/each}
@@ -158,7 +167,8 @@
 					<Location
 						{...loc}
 						{placements}
-						canPlace={canPlaceAt(loc.symbol)}
+						{players}
+						canPlace={canPlaceMap[loc.id]}
 						on:select={handleLocationSelect}
 					/>
 				{/each}
