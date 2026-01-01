@@ -130,7 +130,7 @@ router.get('/:gameId/actions', requireGamePlayer, async (req, res, next) => {
 router.post('/:gameId/action', requireGamePlayer, async (req, res, next) => {
   try {
     const { gameId } = req.params;
-    const { actionType, actionData } = req.body;
+    const { actionType, actionData, asUserId } = req.body;
 
     if (!actionType) {
       throw new ValidationError('Action type is required');
@@ -144,6 +144,16 @@ router.post('/:gameId/action', requireGamePlayer, async (req, res, next) => {
     }
 
     const state = gameState.state;
+
+    // Dev mode impersonation: allow asUserId to override session userId
+    // Only allowed in non-production environment
+    const isDev = process.env.NODE_ENV !== 'production';
+    let effectiveUserId = req.session.userId;
+
+    if (isDev && asUserId && state.players[asUserId]) {
+      // In dev mode, allow impersonating any player in the game
+      effectiveUserId = asUserId;
+    }
 
     // Verify it's this player's turn
     // - Worker placement: use workerPlacement.currentPlacerIndex
@@ -168,19 +178,19 @@ router.post('/:gameId/action', requireGamePlayer, async (req, res, next) => {
 
     // Special case: RESPOND_TO_HAZARD is allowed if the player has a ship awaiting hazard
     if (actionType === 'RESPOND_TO_HAZARD') {
-      const playerState = state.players[req.session.userId];
+      const playerState = state.players[effectiveUserId];
       const hasAwaitingHazard = playerState?.ships?.some(s => s.status === 'awaiting_hazard');
       if (hasAwaitingHazard) {
         skipTurnCheck = true;
       }
     }
 
-    if (!skipTurnCheck && currentPlayerId !== req.session.userId) {
+    if (!skipTurnCheck && currentPlayerId !== effectiveUserId) {
       throw new ForbiddenError('Not your turn');
     }
 
     // Process the action using the extracted service
-    const result = processAction(state, req.session.userId, actionType, actionData);
+    const result = processAction(state, effectiveUserId, actionType, actionData);
 
     if (result.error) {
       throw new ValidationError(result.error);
@@ -188,7 +198,7 @@ router.post('/:gameId/action', requireGamePlayer, async (req, res, next) => {
 
     // Save the new state
     const newState = await gameStateService.updateGameState(gameId, result.newState, {
-      playerId: req.session.userId,
+      playerId: effectiveUserId,
       type: actionType,
       data: actionData
     });
@@ -197,7 +207,7 @@ router.post('/:gameId/action', requireGamePlayer, async (req, res, next) => {
       success: true,
       gameState: {
         ...gameState,
-        state: filterStateForPlayer(newState, req.session.userId)
+        state: filterStateForPlayer(newState, effectiveUserId)
       }
     });
   } catch (error) {

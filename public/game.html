@@ -992,20 +992,20 @@
       3: { speed: 3, range: 3, ceiling: 2, reliability: 2 }
     };
 
-    // Ground Board locations for worker placement
+    // Ground Board locations for worker placement (must match server IDs with underscores)
     const GROUND_BOARD_LOCATIONS = {
-      'research-institute': { name: 'Research Institute', symbol: 'wrench', description: 'Buy Research for £3 each' },
-      'design-bureau': { name: 'Design Bureau', symbol: 'wrench', description: 'Install upgrade to blueprint' },
-      'construction-hall': { name: 'Construction Hall', symbol: 'wrench', description: 'Build ships' },
+      'research_institute': { name: 'Research Institute', symbol: 'propeller', description: 'Expand research program' },
+      'design_bureau': { name: 'Design Bureau', symbol: 'wrench', description: 'Install upgrade to blueprint' },
+      'construction_hall': { name: 'Construction Hall', symbol: 'wrench', description: 'Build ships' },
       'launchpad': { name: 'Launchpad', symbol: 'propeller', description: 'Launch ships' },
       'academy': { name: 'Academy', symbol: 'coin', description: 'Recruit Officers/Engineers' },
-      'flight-school': { name: 'Flight School', symbol: 'coin', description: 'Upgrade Officer income' },
-      'technical-institute': { name: 'Technical Institute', symbol: 'coin', description: 'Upgrade Engineer income' },
-      'the-bank': { name: 'The Bank', symbol: 'coin', description: 'Take loans' },
+      'flight_school': { name: 'Flight School', symbol: 'coin', description: 'Upgrade Officer income' },
+      'technical_institute': { name: 'Technical Institute', symbol: 'coin', description: 'Upgrade Engineer income' },
+      'the_bank': { name: 'The Bank', symbol: 'coin', description: 'Take loans' },
       'ministry': { name: 'Ministry', symbol: 'propeller', description: 'Draw 2/discard 1, turn priority' },
-      'gas-depot': { name: 'Gas Depot', symbol: 'propeller', description: 'Buy gas cubes' },
-      'insurance-bureau': { name: 'Insurance Bureau', symbol: 'coin', description: 'Buy insurance' },
-      'weather-bureau': { name: 'Weather Bureau', symbol: 'propeller', description: 'Peek at hazard for £2' }
+      'gas_depot': { name: 'Gas Depot', symbol: 'propeller', description: 'Buy gas cubes' },
+      'insurance_bureau': { name: 'Insurance Bureau', symbol: 'coin', description: 'Buy insurance' },
+      'weather_bureau': { name: 'Weather Bureau', symbol: 'propeller', description: 'Peek at hazard for £2' }
     };
 
     // Initialize
@@ -1812,10 +1812,16 @@
     // Action functions
     async function performAction(actionType, actionData = {}) {
       try {
+        // In dev mode, send currentUserId as asUserId to allow player impersonation
+        const requestBody = { actionType, actionData };
+        if (isDevMode) {
+          requestBody.asUserId = currentUserId;
+        }
+
         const res = await fetch(`/api/state/${gameId}/action`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ actionType, actionData })
+          body: JSON.stringify(requestBody)
         });
 
         const data = await res.json();
