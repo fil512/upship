@@ -27,6 +27,7 @@ const {
 // Import refactored services
 const { filterStateForPlayer } = require('../services/gameStateHelpers');
 const { processAction } = require('../actions');
+const { executeUndo, getUndoInfo } = require('../actions/undo');
 
 // All game state routes require authentication
 router.use(requireAuth);
@@ -126,6 +127,19 @@ router.get('/:gameId/actions', requireGamePlayer, async (req, res, next) => {
   }
 });
 
+// Get undo info for UI
+router.get('/:gameId/undo-info', requireGamePlayer, async (req, res, next) => {
+  try {
+    const { gameId } = req.params;
+    const userId = req.session.userId;
+
+    const undoInfo = await getUndoInfo(gameId, userId);
+    res.json(undoInfo);
+  } catch (error) {
+    next(error);
+  }
+});
+
 // Perform a game action
 router.post('/:gameId/action', requireGamePlayer, async (req, res, next) => {
   try {
@@ -185,8 +199,29 @@ router.post('/:gameId/action', requireGamePlayer, async (req, res, next) => {
       }
     }
 
+    // Special case: UNDO is allowed if it's your turn or in reveal phase
+    if (actionType === 'UNDO') {
+      skipTurnCheck = true;  // Undo checks are handled by executeUndo
+    }
+
     if (!skipTurnCheck && currentPlayerId !== effectiveUserId) {
       throw new ForbiddenError('Not your turn');
+    }
+
+    // Special handling for UNDO - bypasses normal action processing
+    if (actionType === 'UNDO') {
+      const undoResult = await executeUndo(gameId, effectiveUserId);
+      const undoInfo = await getUndoInfo(gameId, effectiveUserId);
+
+      return res.json({
+        success: true,
+        undoneAction: undoResult.undoneAction,
+        undoInfo,
+        gameState: {
+          ...gameState,
+          state: filterStateForPlayer(undoResult.newState, effectiveUserId)
+        }
+      });
     }
 
     // Process the action using the extracted service
@@ -205,6 +240,7 @@ router.post('/:gameId/action', requireGamePlayer, async (req, res, next) => {
 
     res.json({
       success: true,
+      isCommitPoint: newState.isCommitPoint || false,
       gameState: {
         ...gameState,
         state: filterStateForPlayer(newState, effectiveUserId)

@@ -43,9 +43,9 @@ A shared track represents the advancement of heavier-than-air aviation. Each tim
 
 | Player Count | Age I Ends | Age II Ends | Game Ends |
 |--------------|------------|-------------|-----------|
-| 2 Players | 8 | 16 | 20 |
-| 3 Players | 10 | 20 | 25 |
-| 4 Players | 12 | 24 | 30 |
+| 2 Players | 4 | 8 | 12 |
+| 3 Players | 6 | 12 | 18 |
+| 4 Players | 8 | 16 | 24 |
 
 When the marker reaches an Age threshold, that Age ends after the current round. When it reaches the Game End threshold, the game ends after the current round.
 

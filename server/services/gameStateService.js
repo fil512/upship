@@ -642,9 +642,9 @@ async function updateGameState(gameId, newState, action = null) {
   try {
     await client.query('BEGIN');
 
-    // Get current version
+    // Get current state and version (for undo snapshot)
     const current = await client.query(
-      'SELECT version FROM game_states WHERE game_id = $1 FOR UPDATE',
+      'SELECT state, version, commit_point_version FROM game_states WHERE game_id = $1 FOR UPDATE',
       [gameId]
     );
 
@@ -652,14 +652,27 @@ async function updateGameState(gameId, newState, action = null) {
       throw new Error('Game state not found');
     }
 
-    const newVersion = current.rows[0].version + 1;
+    const previousState = current.rows[0].state;
+    const currentVersion = current.rows[0].version;
+    const newVersion = currentVersion + 1;
 
-    // Update state
+    // Check if this action creates a commit point (reveals hidden info)
+    let isCommitPoint = false;
+    let shouldStoreSnapshot = false;
+
+    if (action) {
+      const { createsCommitPoint, isUndoable } = require('../actions/undo');
+      isCommitPoint = createsCommitPoint(action.type, action.data);
+      shouldStoreSnapshot = isUndoable(action.type);
+    }
+
+    // Update state, and commit_point_version if this action creates a commit point
     await client.query(
       `UPDATE game_states
        SET state = $1, version = $2,
            current_player_id = $3, phase = $4,
            turn_number = $5, age = $6,
+           commit_point_version = CASE WHEN $8 THEN $2 ELSE commit_point_version END,
            updated_at = NOW()
        WHERE game_id = $7`,
       [
@@ -669,21 +682,30 @@ async function updateGameState(gameId, newState, action = null) {
         newState.phase,
         newState.turn,
         newState.age,
-        gameId
+        gameId,
+        isCommitPoint
       ]
     );
 
-    // Record action if provided
+    // Record action if provided (with undo support columns)
     if (action) {
       await client.query(
-        `INSERT INTO game_actions (game_id, player_id, action_type, action_data, state_version)
-         VALUES ($1, $2, $3, $4, $5)`,
-        [gameId, action.playerId, action.type, JSON.stringify(action.data), newVersion]
+        `INSERT INTO game_actions (game_id, player_id, action_type, action_data, state_version, is_undone, creates_commit_point, previous_state)
+         VALUES ($1, $2, $3, $4, $5, FALSE, $6, $7)`,
+        [
+          gameId,
+          action.playerId,
+          action.type,
+          JSON.stringify(action.data),
+          newVersion,
+          isCommitPoint,
+          shouldStoreSnapshot ? previousState : null
+        ]
       );
     }
 
     await client.query('COMMIT');
-    return { ...newState, version: newVersion };
+    return { ...newState, version: newVersion, isCommitPoint };
   } catch (error) {
     await client.query('ROLLBACK');
     throw error;

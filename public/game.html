@@ -351,6 +351,42 @@
       cursor: not-allowed;
     }
 
+    /* Undo button styles */
+    .action-btn.undo {
+      background: #6c757d;
+      color: white;
+    }
+
+    .action-btn.undo:hover:not(:disabled) {
+      background: #5a6268;
+    }
+
+    .action-btn.undo.has-undos {
+      background: #17a2b8;
+    }
+
+    .action-btn.undo.has-undos:hover:not(:disabled) {
+      background: #138496;
+    }
+
+    .undo-count {
+      background: #dc3545;
+      color: white;
+      border-radius: 50%;
+      padding: 1px 6px;
+      font-size: 0.7rem;
+      margin-left: 5px;
+      font-weight: bold;
+    }
+
+    .action-btn.undo.commit-flash {
+      animation: undo-flash 0.5s ease-in-out 2;
+    }
+
+    @keyframes undo-flash {
+      50% { background: #ffc107; }
+    }
+
     /* Bottom - Log */
     .game-log {
       grid-column: 1 / -1;
@@ -996,6 +1032,13 @@
       opacity: 0.6;
     }
 
+    .location.location-disabled {
+      opacity: 0.5;
+      border-color: #dc3545;
+      background: rgba(220, 53, 69, 0.1);
+      cursor: not-allowed;
+    }
+
     .location-symbol {
       font-size: 1.5rem;
     }
@@ -1068,6 +1111,9 @@
     // State tracking for notifications
     let wasMyTurn = false;
     let previousPhase = null;
+
+    // Undo state tracking
+    let undoInfo = { canUndo: false, undoCount: 0, lastActionType: null };
 
     // Toast notification system
     function showToast(message, type = 'default', duration = 3000) {
@@ -1276,6 +1322,10 @@
 
         const data = await res.json();
         gameState = data.gameState;
+
+        // Fetch undo info for UI
+        await fetchUndoInfo();
+
         renderGame();
       } catch (err) {
         console.error('Load game state error:', err);
@@ -1827,6 +1877,11 @@
               <button class="action-btn secondary" onclick="showLaunchShipModal()" ${!isMyTurn ? 'disabled' : ''}>
                 ⚙️ Launch Ship
               </button>
+              ${state.launchpadActive?.[currentUserId] ? `
+              <button class="action-btn primary" onclick="noMoreLaunches()" ${!isMyTurn ? 'disabled' : ''} style="background: #dc3545;">
+                ✅ Done Launching
+              </button>
+              ` : ''}
               <button class="action-btn secondary" onclick="upgradeOfficerIncome()" ${!isMyTurn ? 'disabled' : ''}>
                 🪙 +1 Officer Income (£5)
               </button>
@@ -1854,6 +1909,7 @@
               <button class="action-btn secondary" onclick="collectIncome()" ${!isMyTurn ? 'disabled' : ''}>
                 💵 Collect Income
               </button>
+              ${getUndoButtonHtml(isMyTurn)}
               ${state.phase === 'worker_placement'
                 ? `<button class="action-btn primary" onclick="passAction()" ${!isMyTurn ? 'disabled' : ''}>
                      ⏭️ Pass
@@ -2035,6 +2091,15 @@
         }
 
         gameState = data.gameState;
+
+        // Check for commit point notification
+        if (data.isCommitPoint) {
+          showToast('Checkpoint reached - previous actions locked', 'info');
+        }
+
+        // Refresh undo info after action
+        await fetchUndoInfo();
+
         renderGame();
       } catch (err) {
         console.error('Action error:', err);
@@ -2049,6 +2114,89 @@
     function passAction() {
       // During worker placement, PASS means REVEAL (exit worker placement)
       performAction('REVEAL', {});
+    }
+
+    // Undo functionality
+    async function fetchUndoInfo() {
+      if (!gameId) return;
+      try {
+        const res = await fetch(`/api/state/${gameId}/undo-info`, { credentials: 'include' });
+        if (res.ok) {
+          undoInfo = await res.json();
+        }
+      } catch (err) {
+        console.error('Error fetching undo info:', err);
+      }
+    }
+
+    async function handleUndo() {
+      if (!undoInfo.canUndo) {
+        showToast('No actions to undo', 'warning');
+        return;
+      }
+
+      try {
+        const requestBody = { actionType: 'UNDO', actionData: {} };
+        if (isDevMode) {
+          requestBody.asUserId = currentUserId;
+        }
+
+        const res = await fetch(`/api/state/${gameId}/action`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify(requestBody)
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          showToast(data.error || 'Undo failed', 'error');
+          return;
+        }
+
+        // Update state and undo info
+        gameState = data.gameState;
+        if (data.undoInfo) {
+          undoInfo = data.undoInfo;
+        }
+
+        showToast(`Undid ${formatActionType(data.undoneAction)}`, 'success');
+        renderGame();
+      } catch (err) {
+        console.error('Undo error:', err);
+        showToast('Failed to undo', 'error');
+      }
+    }
+
+    function formatActionType(actionType) {
+      const names = {
+        PLACE_AGENT: 'worker placement',
+        BUILD_SHIP: 'ship build',
+        LAUNCH_SHIP: 'ship launch',
+        BUY_GAS: 'gas purchase',
+        ACQUIRE_TECHNOLOGY: 'tech acquisition',
+        INSTALL_UPGRADE: 'upgrade install',
+        REMOVE_UPGRADE: 'upgrade removal',
+        RECRUIT_CREW: 'crew recruit',
+        TAKE_LOAN: 'loan',
+        BUY_INSURANCE: 'insurance',
+        BUY_MARKET_CARD: 'market purchase',
+        COLLECT_INCOME: 'income collection'
+      };
+      return names[actionType] || actionType?.toLowerCase().replace(/_/g, ' ') || 'action';
+    }
+
+    function getUndoButtonHtml(isMyTurn) {
+      const hasUndos = undoInfo.canUndo && undoInfo.undoCount > 0;
+      const undoClass = hasUndos ? 'undo has-undos' : 'undo';
+      const disabled = !isMyTurn || !hasUndos ? 'disabled' : '';
+      const countBadge = hasUndos ? `<span class="undo-count">${undoInfo.undoCount}</span>` : '';
+      const title = hasUndos ? `Undo ${formatActionType(undoInfo.lastActionType)}` : 'No actions to undo';
+
+      return `<button class="action-btn ${undoClass}" onclick="handleUndo()" ${disabled} title="${title}">
+        ↶ Undo${countBadge}
+      </button>`;
     }
 
     // Card selection for worker placement
@@ -2322,16 +2470,29 @@
       const selectedCard = selectedCardIndex !== null ? (myState.hand || [])[selectedCardIndex] : null;
       const cardSymbolText = selectedCard ? getSymbolIcon(selectedCard.symbol) : '';
 
+      // Check if player has ships in hangar (for Launchpad warning)
+      const hangarShips = (myState.ships || []).filter(s => s.status === 'hangar');
+      const hasShipsInHangar = hangarShips.length > 0;
+
       let locationsHtml = '';
       for (const [locId, loc] of Object.entries(GROUND_BOARD_LOCATIONS)) {
         const placement = state.groundBoard?.placements?.[locId];
         const isOccupied = !!placement;
-        const canPlace = !isOccupied && selectedCard && canPlaceAtLocation(selectedCard.symbol, locId) && isMyTurn;
+
+        // Special handling for Launchpad - disable if no ships in hangar
+        const isLaunchpadWithoutShips = locId === 'launchpad' && !hasShipsInHangar;
+        const canPlace = !isOccupied && selectedCard && canPlaceAtLocation(selectedCard.symbol, locId) && isMyTurn && !isLaunchpadWithoutShips;
 
         let occupantHtml = '';
         if (isOccupied) {
           const occupantFaction = state.players[placement.playerId]?.faction;
           occupantHtml = '<div class="location-occupant">' + getFactionFlag(occupantFaction) + '</div>';
+        }
+
+        // Warning for Launchpad when no ships
+        let warningHtml = '';
+        if (isLaunchpadWithoutShips && !isOccupied) {
+          warningHtml = '<div class="location-warning" style="color: #dc3545; font-size: 0.65rem; font-weight: bold; margin-top: 2px;">⚠️ Need airship</div>';
         }
 
         const onclickAttr = canPlace ? 'onclick="placeAgent(\'' + locId + '\')"' : '';
@@ -2344,9 +2505,16 @@
         if (canPlace) {
           classes += ' matching symbol-' + loc.symbol;
         }
+        // Add disabled styling for launchpad without ships
+        if (isLaunchpadWithoutShips && !isOccupied) {
+          classes += ' location-disabled';
+        }
 
         // Use enhanced tooltip if available, otherwise fall back to description
-        const tooltipText = loc.tooltip || loc.description;
+        let tooltipText = loc.tooltip || loc.description;
+        if (isLaunchpadWithoutShips) {
+          tooltipText = '⚠️ NO SHIPS IN HANGAR\n━━━━━━━━━━━━━━━━━━━━\nBuild a ship at Construction Hall first!\n\n' + tooltipText;
+        }
 
         locationsHtml += '<div class="' + classes + '" ' +
           'role="button" ' +
@@ -2358,6 +2526,7 @@
           'title="' + tooltipText + '">' +
           '<div class="location-symbol">' + getSymbolIcon(loc.symbol) + '</div>' +
           '<div class="location-name">' + loc.name + '</div>' +
+          warningHtml +
           occupantHtml +
           '</div>';
       }
@@ -2430,6 +2599,10 @@
 
     function buildShip() {
       performAction('BUILD_SHIP', { count: 1 });
+    }
+
+    function noMoreLaunches() {
+      performAction('NO_MORE_LAUNCHES');
     }
 
     function upgradeOfficerIncome() {
