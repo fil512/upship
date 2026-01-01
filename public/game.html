@@ -564,6 +564,58 @@
       color: #c4a35a;
     }
 
+    /* Toast notifications */
+    .toast-container {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 2000;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      pointer-events: none;
+    }
+
+    .toast {
+      background: linear-gradient(135deg, #2a3a5a 0%, #1a2a4a 100%);
+      color: white;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: bold;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+      border: 1px solid rgba(196, 163, 90, 0.5);
+      animation: toast-slide-in 0.3s ease-out;
+      opacity: 1;
+      transition: opacity 0.3s ease-out;
+    }
+
+    .toast.fade-out {
+      opacity: 0;
+    }
+
+    .toast.turn-toast {
+      background: linear-gradient(135deg, #2a5a4a 0%, #1a4a3a 100%);
+      border-color: #4a9;
+    }
+
+    .toast.phase-toast {
+      background: linear-gradient(135deg, #4a3a2a 0%, #3a2a1a 100%);
+      border-color: #c4a35a;
+    }
+
+    @keyframes toast-slide-in {
+      0% {
+        transform: translateY(-20px);
+        opacity: 0;
+      }
+      100% {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
     .upgrade-list {
       display: flex;
       flex-direction: column;
@@ -894,6 +946,47 @@
       transform: scale(1.02);
     }
 
+    /* Pulsing animation for matching locations when card is selected */
+    .location.available.matching {
+      animation: pulse-glow 1.5s ease-in-out infinite;
+    }
+
+    @keyframes pulse-glow {
+      0%, 100% { box-shadow: 0 0 5px rgba(68, 170, 153, 0.4); }
+      50% { box-shadow: 0 0 15px rgba(68, 170, 153, 0.8), 0 0 25px rgba(68, 170, 153, 0.4); }
+    }
+
+    /* Symbol-specific colors for matching locations */
+    .location.available.symbol-wrench {
+      border-color: #6af;
+      animation: pulse-wrench 1.5s ease-in-out infinite;
+    }
+
+    .location.available.symbol-coin {
+      border-color: #c4a35a;
+      animation: pulse-coin 1.5s ease-in-out infinite;
+    }
+
+    .location.available.symbol-propeller {
+      border-color: #4a9;
+      animation: pulse-propeller 1.5s ease-in-out infinite;
+    }
+
+    @keyframes pulse-wrench {
+      0%, 100% { box-shadow: 0 0 5px rgba(102, 170, 255, 0.4); }
+      50% { box-shadow: 0 0 15px rgba(102, 170, 255, 0.8), 0 0 25px rgba(102, 170, 255, 0.4); }
+    }
+
+    @keyframes pulse-coin {
+      0%, 100% { box-shadow: 0 0 5px rgba(196, 163, 90, 0.4); }
+      50% { box-shadow: 0 0 15px rgba(196, 163, 90, 0.8), 0 0 25px rgba(196, 163, 90, 0.4); }
+    }
+
+    @keyframes pulse-propeller {
+      0%, 100% { box-shadow: 0 0 5px rgba(68, 170, 153, 0.4); }
+      50% { box-shadow: 0 0 15px rgba(68, 170, 153, 0.8), 0 0 25px rgba(68, 170, 153, 0.4); }
+    }
+
     .location:focus-visible {
       outline: 2px solid #4a9;
       outline-offset: 2px;
@@ -956,6 +1049,7 @@
     <div class="loading">Loading game...</div>
   </div>
   <div id="modal-container"></div>
+  <div id="toast-container" class="toast-container"></div>
 
   <script>
     // Get game ID from URL
@@ -970,6 +1064,49 @@
     let upgradesData = null;
     let selectedCardIndex = null; // For worker placement card selection
     let isDevMode = false; // Dev mode enables player switching
+
+    // State tracking for notifications
+    let wasMyTurn = false;
+    let previousPhase = null;
+
+    // Toast notification system
+    function showToast(message, type = 'default', duration = 3000) {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}-toast`;
+      toast.textContent = message;
+      container.appendChild(toast);
+
+      // Start fade out before removal
+      setTimeout(() => {
+        toast.classList.add('fade-out');
+      }, duration - 300);
+
+      // Remove after duration
+      setTimeout(() => {
+        toast.remove();
+      }, duration);
+    }
+
+    function checkAndShowNotifications(state, isMyTurn) {
+      // Turn notification - show when it becomes player's turn
+      if (isMyTurn && !wasMyTurn) {
+        showToast('⚡ It\'s Your Turn!', 'turn');
+      }
+      wasMyTurn = isMyTurn;
+
+      // Phase notification - show when phase changes
+      if (previousPhase !== null && previousPhase !== state.phase) {
+        const phaseNames = {
+          'worker_placement': '📋 Worker Placement Phase',
+          'reveal': '🔍 Reveal Phase',
+          'income_cleanup': '💰 Income & Cleanup Phase'
+        };
+        const phaseName = phaseNames[state.phase] || state.phase;
+        showToast(phaseName, 'phase');
+      }
+      previousPhase = state.phase;
+    }
 
     // Upgrade definitions (loaded from server)
     const SLOT_ICONS = {
@@ -1004,18 +1141,66 @@
 
     // Ground Board locations for worker placement (must match server IDs with underscores)
     const GROUND_BOARD_LOCATIONS = {
-      'research_institute': { name: 'Research Institute', symbol: 'propeller', description: 'Expand research program' },
-      'design_bureau': { name: 'Design Bureau', symbol: 'wrench', description: 'Install upgrade to blueprint' },
-      'construction_hall': { name: 'Construction Hall', symbol: 'wrench', description: 'Build ships' },
-      'launchpad': { name: 'Launchpad', symbol: 'propeller', description: 'Launch ships' },
-      'academy': { name: 'Academy', symbol: 'coin', description: 'Recruit Officers/Engineers' },
-      'flight_school': { name: 'Flight School', symbol: 'coin', description: 'Upgrade Officer income' },
-      'technical_institute': { name: 'Technical Institute', symbol: 'coin', description: 'Upgrade Engineer income' },
-      'the_bank': { name: 'The Bank', symbol: 'coin', description: 'Take loans' },
-      'ministry': { name: 'Ministry', symbol: 'propeller', description: 'Draw 2/discard 1, turn priority' },
-      'gas_depot': { name: 'Gas Depot', symbol: 'propeller', description: 'Buy gas cubes' },
-      'insurance_bureau': { name: 'Insurance Bureau', symbol: 'coin', description: 'Buy insurance' },
-      'weather_bureau': { name: 'Weather Bureau', symbol: 'propeller', description: 'Peek at hazard for £2' }
+      'research_institute': {
+        name: 'Research Institute', symbol: 'propeller',
+        description: 'Expand research program',
+        tooltip: '⚙️ Propeller card required\n━━━━━━━━━━━━━━━━━━━━\nPay £2 to increase your Research Level by 1.\nHigher research = access to better technologies.'
+      },
+      'design_bureau': {
+        name: 'Design Bureau', symbol: 'wrench',
+        description: 'Install upgrade to blueprint',
+        tooltip: '🔧 Wrench card required\n━━━━━━━━━━━━━━━━━━━━\nInstall an upgrade tile from your owned technologies\ninto an empty slot on your blueprint.'
+      },
+      'construction_hall': {
+        name: 'Construction Hall', symbol: 'wrench',
+        description: 'Build ships',
+        tooltip: '🔧 Wrench card required\n━━━━━━━━━━━━━━━━━━━━\nBuild a ship from your current blueprint.\nShip goes to your hangar ready for launch.'
+      },
+      'launchpad': {
+        name: 'Launchpad', symbol: 'propeller',
+        description: 'Launch ships',
+        tooltip: '⚙️ Propeller card required\n━━━━━━━━━━━━━━━━━━━━\nLaunch ships from your hangar. Requires:\n• Lift ≥ Weight (load gas cubes)\n• Officers available (1 per ship)'
+      },
+      'academy': {
+        name: 'Academy', symbol: 'coin',
+        description: 'Recruit Officers/Engineers',
+        tooltip: '🪙 Coin card required\n━━━━━━━━━━━━━━━━━━━━\nRecruit crew members:\n• Officers: £2 each (needed to launch)\n• Engineers: £4 each (repair hazards)'
+      },
+      'flight_school': {
+        name: 'Flight School', symbol: 'coin',
+        description: 'Upgrade Officer income',
+        tooltip: '🪙 Coin card required\n━━━━━━━━━━━━━━━━━━━━\nPay £3 to increase Officer income by 1.\nGain more Officers each turn during cleanup.'
+      },
+      'technical_institute': {
+        name: 'Technical Institute', symbol: 'coin',
+        description: 'Upgrade Engineer income',
+        tooltip: '🪙 Coin card required\n━━━━━━━━━━━━━━━━━━━━\nPay £5 to increase Engineer income by 1.\nGain more Engineers each turn during cleanup.'
+      },
+      'the_bank': {
+        name: 'The Bank', symbol: 'coin',
+        description: 'Take loans',
+        tooltip: '🪙 Coin card required\n━━━━━━━━━━━━━━━━━━━━\nTake £5 loans from the bank.\n⚠️ Loans must be repaid with interest!'
+      },
+      'ministry': {
+        name: 'Ministry', symbol: 'propeller',
+        description: 'Draw 2/discard 1, turn priority',
+        tooltip: '⚙️ Propeller card required\n━━━━━━━━━━━━━━━━━━━━\nDraw 2 cards, keep 1, discard the other.\nGain first player marker for next turn.'
+      },
+      'gas_depot': {
+        name: 'Gas Depot', symbol: 'propeller',
+        description: 'Buy gas cubes',
+        tooltip: '⚙️ Propeller card required\n━━━━━━━━━━━━━━━━━━━━\nBuy gas from the market:\n• Hydrogen: £1/cube\n• Helium: £3/cube (safer)'
+      },
+      'insurance_bureau': {
+        name: 'Insurance Bureau', symbol: 'coin',
+        description: 'Buy insurance',
+        tooltip: '🪙 Coin card required\n━━━━━━━━━━━━━━━━━━━━\nBuy insurance tokens to protect ships.\nPays out if ship is destroyed by hazard.'
+      },
+      'weather_bureau': {
+        name: 'Weather Bureau', symbol: 'propeller',
+        description: 'Peek at hazard for £2',
+        tooltip: '⚙️ Propeller card required\n━━━━━━━━━━━━━━━━━━━━\nPay £2 to peek at the top hazard card.\nKnow what dangers await before launching!'
+      }
     };
 
     // Initialize
@@ -1109,6 +1294,9 @@
       const isMyTurn = state.phase === 'worker_placement' && state.workerPlacement
         ? state.workerPlacement.placementOrder[state.workerPlacement.currentPlacerIndex] === currentUserId
         : state.playerOrder[state.currentPlayerIndex] === currentUserId;
+
+      // Check for turn/phase changes and show notifications
+      checkAndShowNotifications(state, isMyTurn);
 
       document.getElementById('game-container').innerHTML = `
         <!-- Header -->
@@ -1888,11 +2076,101 @@
         return;
       }
 
+      // Academy requires additional parameters - show modal
+      if (locationId === 'academy') {
+        showAcademyModal(locationId, selectedCardIndex);
+        return;
+      }
+
       await performAction('PLACE_AGENT', {
         locationId: locationId,
         cardIndex: selectedCardIndex
       });
 
+      selectedCardIndex = null;
+    }
+
+    // === ACADEMY MODAL ===
+    function showAcademyModal(locationId, cardIndex) {
+      if (!gameState?.state) return;
+
+      const state = gameState.state;
+      const myState = state.players[currentUserId];
+      const cash = myState.cash || 0;
+      const officers = myState.officers || 0;
+      const engineers = myState.engineers || 0;
+
+      const officerCost = 2;
+      const engineerCost = 4;
+      const maxOfficers = Math.min(3, Math.floor(cash / officerCost));
+      const maxEngineers = Math.min(3, Math.floor(cash / engineerCost));
+
+      const container = document.getElementById('modal-container');
+      container.innerHTML = `
+        <div class="modal-overlay" onclick="closeModal(event)">
+          <div class="modal" onclick="event.stopPropagation()" style="max-width: 450px;">
+            <div class="modal-header">
+              <span class="modal-title">🎓 Academy - Recruit Crew</span>
+              <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+
+            <div style="margin-bottom: 15px; text-align: center;">
+              <div style="display: flex; justify-content: space-around; padding: 10px; background: rgba(0,0,0,0.2); border-radius: 8px;">
+                <div>
+                  <div style="font-size: 1.3rem; color: #c4a35a;">£${cash}</div>
+                  <div style="color: #888; font-size: 0.8rem;">Cash</div>
+                </div>
+                <div>
+                  <div style="font-size: 1.3rem; color: #4a9;">👨‍✈️ ${officers}</div>
+                  <div style="color: #888; font-size: 0.8rem;">Officers</div>
+                </div>
+                <div>
+                  <div style="font-size: 1.3rem; color: #6af;">🔧 ${engineers}</div>
+                  <div style="color: #888; font-size: 0.8rem;">Engineers</div>
+                </div>
+              </div>
+            </div>
+
+            <div style="margin-bottom: 20px;">
+              <div class="section-title">Recruit Officers (£${officerCost} each)</div>
+              <div style="display: flex; gap: 10px; justify-content: center;">
+                ${[1, 2, 3].map(count => `
+                  <button class="action-btn ${count <= maxOfficers ? 'primary' : ''}"
+                          onclick="recruitCrew('${locationId}', ${cardIndex}, 'officer', ${count})"
+                          ${count > maxOfficers ? 'disabled' : ''}>
+                    ${count} Officer${count > 1 ? 's' : ''} (£${count * officerCost})
+                  </button>
+                `).join('')}
+              </div>
+              ${maxOfficers === 0 ? '<div style="color: #e74c3c; text-align: center; margin-top: 5px; font-size: 0.9rem;">Not enough cash</div>' : ''}
+            </div>
+
+            <div style="margin-bottom: 15px;">
+              <div class="section-title">Recruit Engineers (£${engineerCost} each)</div>
+              <div style="display: flex; gap: 10px; justify-content: center;">
+                ${[1, 2, 3].map(count => `
+                  <button class="action-btn ${count <= maxEngineers ? 'primary' : ''}"
+                          onclick="recruitCrew('${locationId}', ${cardIndex}, 'engineer', ${count})"
+                          ${count > maxEngineers ? 'disabled' : ''}>
+                    ${count} Engineer${count > 1 ? 's' : ''} (£${count * engineerCost})
+                  </button>
+                `).join('')}
+              </div>
+              ${maxEngineers === 0 ? '<div style="color: #e74c3c; text-align: center; margin-top: 5px; font-size: 0.9rem;">Not enough cash</div>' : ''}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    async function recruitCrew(locationId, cardIndex, crewType, crewCount) {
+      closeModal();
+      await performAction('PLACE_AGENT', {
+        locationId: locationId,
+        cardIndex: cardIndex,
+        crewType: crewType,
+        crewCount: crewCount
+      });
       selectedCardIndex = null;
     }
 
@@ -2060,7 +2338,15 @@
         const onkeydownAttr = canPlace ? 'onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();placeAgent(\'' + locId + '\')}"' : '';
         const tabindexAttr = canPlace ? 'tabindex="0"' : '';
         const ariaDisabled = !canPlace && !isOccupied ? 'aria-disabled="true"' : '';
-        const classes = 'location' + (isOccupied ? ' occupied' : '') + (canPlace ? ' available' : '');
+
+        // Build classes with symbol-specific highlighting
+        let classes = 'location' + (isOccupied ? ' occupied' : '') + (canPlace ? ' available' : '');
+        if (canPlace) {
+          classes += ' matching symbol-' + loc.symbol;
+        }
+
+        // Use enhanced tooltip if available, otherwise fall back to description
+        const tooltipText = loc.tooltip || loc.description;
 
         locationsHtml += '<div class="' + classes + '" ' +
           'role="button" ' +
@@ -2069,7 +2355,7 @@
           onclickAttr + ' ' +
           onkeydownAttr + ' ' +
           'aria-label="' + loc.name + ': ' + loc.description + '" ' +
-          'title="' + loc.description + '">' +
+          'title="' + tooltipText + '">' +
           '<div class="location-symbol">' + getSymbolIcon(loc.symbol) + '</div>' +
           '<div class="location-name">' + loc.name + '</div>' +
           occupantHtml +
