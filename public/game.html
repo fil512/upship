@@ -1372,7 +1372,7 @@
         <!-- Header -->
         <div class="game-header">
           <div style="display: flex; align-items: center; gap: 20px;">
-            <button class="back-btn" onclick="goBack()">← Lobby</button>
+            <button class="back-btn" data-testid="back-to-lobby" onclick="goBack()">← Lobby</button>
             <span class="game-title">UP SHIP!</span>
           </div>
           <div class="game-info">
@@ -1404,7 +1404,7 @@
             ${isDevMode ? `
               <div style="display: flex; align-items: center; gap: 8px; background: rgba(255, 165, 0, 0.2); padding: 5px 10px; border-radius: 4px; border: 1px solid orange;">
                 <span style="color: orange; font-size: 0.7rem;">DEV</span>
-                <select onchange="switchPlayer(this.value)" style="background: #1a1a2e; color: #e8e8e8; border: 1px solid #c4a35a; border-radius: 4px; padding: 3px 8px; font-family: Georgia, serif; font-size: 0.85rem;">
+                <select data-testid="dev-player-select" onchange="switchPlayer(this.value)" style="background: #1a1a2e; color: #e8e8e8; border: 1px solid #c4a35a; border-radius: 4px; padding: 3px 8px; font-family: Georgia, serif; font-size: 0.85rem;">
                   ${state.playerOrder.map(pid => {
                     const player = state.players[pid];
                     const isSelected = pid === currentUserId;
@@ -1767,6 +1767,8 @@
             <div class="cards-container">
               ${(myState.hand || []).map((card, i) => `
                 <div class="card ${selectedCardIndex === i ? 'selected' : ''} ${state.phase === 'worker_placement' && isMyTurn ? 'playable' : ''}"
+                     data-testid="hand-card-${i}"
+                     data-card-name="${card.name?.toLowerCase().replace(/\s+/g, '-')}"
                      role="button"
                      tabindex="0"
                      aria-pressed="${selectedCardIndex === i}"
@@ -1802,14 +1804,14 @@
               const canAffordCash = myState.cash >= tech.cost;
               const canAffordResearch = availableResearch >= researchCost;
               return `
-                <div class="card">
+                <div class="card" data-testid="tech-${tech.id}">
                   <div class="card-name">${tech.name}</div>
                   <div class="card-type">${tech.type}</div>
                   <div style="display: flex; gap: 5px; margin-top: 5px;">
-                    <button class="tech-buy-btn" onclick="acquireTech('${tech.id}')" ${!isMyTurn || !canAffordCash ? 'disabled' : ''}>
+                    <button class="tech-buy-btn" data-testid="buy-tech-${tech.id}" onclick="acquireTech('${tech.id}')" ${!isMyTurn || !canAffordCash ? 'disabled' : ''}>
                       £${tech.cost}
                     </button>
-                    <button class="tech-buy-btn research" onclick="acquireTechResearch('${tech.id}')" ${!isMyTurn || !canAffordResearch ? 'disabled' : ''}>
+                    <button class="tech-buy-btn research" data-testid="research-tech-${tech.id}" onclick="acquireTechResearch('${tech.id}')" ${!isMyTurn || !canAffordResearch ? 'disabled' : ''}>
                       🔬${researchCost}${discount > 0 ? ` (-${discount})` : ''}
                     </button>
                   </div>
@@ -1821,10 +1823,10 @@
           <div class="section-title">Market Cards</div>
           <div class="cards-container" style="margin-bottom: 15px; max-height: 120px; overflow-y: auto;">
             ${(state.marketCards || []).map(card => `
-              <div class="card">
+              <div class="card" data-testid="market-card-${card.id}">
                 <div class="card-name">${card.name}</div>
                 <div class="card-type">${card.category || 'general'}</div>
-                <button class="tech-buy-btn" onclick="buyMarketCard('${card.id}')" ${!isMyTurn || myState.cash < (card.cost || 3) ? 'disabled' : ''} style="margin-top: 5px; width: 100%;">
+                <button class="tech-buy-btn" data-testid="buy-market-${card.id}" onclick="buyMarketCard('${card.id}')" ${!isMyTurn || myState.cash < (card.cost || 3) ? 'disabled' : ''} style="margin-top: 5px; width: 100%;">
                   £${card.cost || 3}
                 </button>
               </div>
@@ -1853,7 +1855,7 @@
                       `<span style="color: ${isClaimedByMe ? '#4a9' : '#888'}; font-size: 0.7rem;">
                         ${isClaimedByMe ? '✓ Yours' : '✗ Taken'}
                       </span>` :
-                      `<button class="claim-btn" onclick="showClaimRouteModal('${route.id}', ${route.range})" ${!isMyTurn || !canClaim ? 'disabled' : ''}>
+                      `<button class="claim-btn" data-testid="claim-route-${route.id}" onclick="showClaimRouteModal('${route.id}', ${route.range})" ${!isMyTurn || !canClaim ? 'disabled' : ''}>
                         Claim
                       </button>`
                     }
@@ -1887,53 +1889,53 @@
 
             <div class="section-title">Ground Board Actions</div>
             <div class="action-buttons" style="margin-bottom: 10px;">
-              <button class="action-btn secondary" onclick="recruitCrew('officer')" ${!isMyTurn ? 'disabled' : ''}>
+              <button class="action-btn secondary" data-testid="recruit-officer" onclick="recruitCrew('officer')" ${!isMyTurn ? 'disabled' : ''}>
                 🪙 Recruit Officer (£2)
               </button>
-              <button class="action-btn secondary" onclick="recruitCrew('engineer')" ${!isMyTurn ? 'disabled' : ''}>
+              <button class="action-btn secondary" data-testid="recruit-engineer" onclick="recruitCrew('engineer')" ${!isMyTurn ? 'disabled' : ''}>
                 🪙 Recruit Engineer (£4)
               </button>
-              <button class="action-btn secondary" onclick="buildShip()" ${!isMyTurn ? 'disabled' : ''}>
+              <button class="action-btn secondary" data-testid="build-ship" onclick="buildShip()" ${!isMyTurn ? 'disabled' : ''}>
                 🔧 Build Ship
               </button>
-              <button class="action-btn secondary" onclick="showLaunchShipModal()" ${!isMyTurn ? 'disabled' : ''}>
+              <button class="action-btn secondary" data-testid="launch-ship" onclick="showLaunchShipModal()" ${!isMyTurn ? 'disabled' : ''}>
                 ⚙️ Launch Ship
               </button>
               ${state.launchpadActive?.[currentUserId] ? `
-              <button class="action-btn primary" onclick="noMoreLaunches()" ${!isMyTurn ? 'disabled' : ''} style="background: #dc3545;">
+              <button class="action-btn primary" data-testid="done-launching" onclick="noMoreLaunches()" ${!isMyTurn ? 'disabled' : ''} style="background: #dc3545;">
                 ✅ Done Launching
               </button>
               ` : ''}
-              <button class="action-btn secondary" onclick="upgradeOfficerIncome()" ${!isMyTurn ? 'disabled' : ''}>
+              <button class="action-btn secondary" data-testid="upgrade-officer-income" onclick="upgradeOfficerIncome()" ${!isMyTurn ? 'disabled' : ''}>
                 🪙 +1 Officer Income (£5)
               </button>
-              <button class="action-btn secondary" onclick="upgradeEngineerIncome()" ${!isMyTurn ? 'disabled' : ''}>
+              <button class="action-btn secondary" data-testid="upgrade-engineer-income" onclick="upgradeEngineerIncome()" ${!isMyTurn ? 'disabled' : ''}>
                 🔧 +1 Engineer Income (£6)
               </button>
             </div>
             <div class="section-title">Other Actions</div>
             <div class="action-buttons">
-              <button class="action-btn secondary" onclick="buyGas('hydrogen')" ${!isMyTurn ? 'disabled' : ''}>
+              <button class="action-btn secondary" data-testid="buy-hydrogen" onclick="buyGas('hydrogen')" ${!isMyTurn ? 'disabled' : ''}>
                 🔧 Buy Hydrogen (£${state.gasMarket.hydrogen})
               </button>
-              <button class="action-btn secondary" onclick="buyGas('helium')" ${!isMyTurn ? 'disabled' : ''}>
+              <button class="action-btn secondary" data-testid="buy-helium" onclick="buyGas('helium')" ${!isMyTurn ? 'disabled' : ''}>
                 🔧 Buy Helium (£${state.gasMarket.helium})
               </button>
-              <button class="action-btn secondary" onclick="drawCards()" ${!isMyTurn ? 'disabled' : ''}>
+              <button class="action-btn secondary" data-testid="draw-card" onclick="drawCards()" ${!isMyTurn ? 'disabled' : ''}>
                 📋 Draw Card
               </button>
-              <button class="action-btn secondary" onclick="takeLoan()" ${!isMyTurn ? 'disabled' : ''} title="Gain £30, reduce income by 3">
+              <button class="action-btn secondary" data-testid="take-loan" onclick="takeLoan()" ${!isMyTurn ? 'disabled' : ''} title="Gain £30, reduce income by 3">
                 🪙 Take Loan (£30, -3 Inc)
               </button>
-              <button class="action-btn secondary" onclick="buyInsurance()" ${!isMyTurn ? 'disabled' : ''} title="Insurance policy: -1 Income">
+              <button class="action-btn secondary" data-testid="buy-insurance" onclick="buyInsurance()" ${!isMyTurn ? 'disabled' : ''} title="Insurance policy: -1 Income">
                 🪙 Buy Insurance (-1 Inc)
               </button>
-              <button class="action-btn secondary" onclick="collectIncome()" ${!isMyTurn ? 'disabled' : ''}>
+              <button class="action-btn secondary" data-testid="collect-income" onclick="collectIncome()" ${!isMyTurn ? 'disabled' : ''}>
                 💵 Collect Income
               </button>
               ${getUndoButtonHtml(isMyTurn)}
               ${getEndTurnButtonHtml(isMyTurn, state, myState)}
-              <button class="action-btn secondary" onclick="calculateScores()" ${!isMyTurn ? 'disabled' : ''} style="margin-top: 10px;">
+              <button class="action-btn secondary" data-testid="calculate-scores" onclick="calculateScores()" ${!isMyTurn ? 'disabled' : ''} style="margin-top: 10px;">
                 🏆 Calculate Scores
               </button>
             </div>
@@ -2210,7 +2212,7 @@
       const title = `Undo ${formatActionType(undoInfo.lastActionType)}`;
       const disabled = !isMyTurn ? 'disabled' : '';
 
-      return `<button class="action-btn undo has-undos" onclick="handleUndo()" ${disabled} title="${title}">
+      return `<button class="action-btn undo has-undos" data-testid="undo" onclick="handleUndo()" ${disabled} title="${title}">
         ↶ Undo <span class="undo-count">${undoInfo.undoCount}</span>
       </button>`;
     }
@@ -2226,7 +2228,7 @@
       const isWorkerPlacement = state.phase === 'worker_placement';
       const onclick = isWorkerPlacement ? 'passAction()' : 'endTurn()';
 
-      return `<button class="action-btn primary" onclick="${onclick}">
+      return `<button class="action-btn primary" data-testid="end-turn" onclick="${onclick}">
         ✅ End Turn
       </button>`;
     }
@@ -2291,7 +2293,7 @@
           <div class="modal" onclick="event.stopPropagation()" style="max-width: 450px;">
             <div class="modal-header">
               <span class="modal-title">🎓 Academy - Recruit Crew</span>
-              <button class="modal-close" onclick="closeModal()">&times;</button>
+              <button class="modal-close" data-testid="modal-close" onclick="closeModal()">&times;</button>
             </div>
 
             <div style="margin-bottom: 15px; text-align: center;">
@@ -2549,6 +2551,7 @@
         }
 
         locationsHtml += '<div class="' + classes + '" ' +
+          'data-testid="location-' + locId + '" ' +
           'role="button" ' +
           tabindexAttr + ' ' +
           ariaDisabled + ' ' +
@@ -2664,7 +2667,7 @@
           <div class="modal" onclick="event.stopPropagation()" style="max-width: 300px;">
             <div class="modal-header">
               <span class="modal-title">Gas Socket ${socketIndex + 1}</span>
-              <button class="modal-close" onclick="closeModal()">&times;</button>
+              <button class="modal-close" data-testid="modal-close" onclick="closeModal()">&times;</button>
             </div>
             ${currentGas ? `
               <div style="text-align: center; margin-bottom: 15px;">
@@ -2721,7 +2724,7 @@
           <div class="modal" onclick="event.stopPropagation()" style="max-width: 400px;">
             <div class="modal-header">
               <span class="modal-title">Launch Ship</span>
-              <button class="modal-close" onclick="closeModal()">&times;</button>
+              <button class="modal-close" data-testid="modal-close" onclick="closeModal()">&times;</button>
             </div>
 
             <div style="margin-bottom: 15px;">
@@ -2795,7 +2798,7 @@
           <div class="modal" onclick="event.stopPropagation()" style="max-width: 400px;">
             <div class="modal-header">
               <span class="modal-title">Claim Route</span>
-              <button class="modal-close" onclick="closeModal()">&times;</button>
+              <button class="modal-close" data-testid="modal-close" onclick="closeModal()">&times;</button>
             </div>
 
             <div style="margin-bottom: 15px; text-align: center;">
@@ -2879,7 +2882,7 @@
           <div class="modal" onclick="event.stopPropagation()">
             <div class="modal-header">
               <span class="modal-title">${SLOT_ICONS[slotType]} ${SLOT_NAMES[slotType]} Slot ${slotIndex + 1}</span>
-              <button class="modal-close" onclick="closeModal()">&times;</button>
+              <button class="modal-close" data-testid="modal-close" onclick="closeModal()">&times;</button>
             </div>
       `;
 
