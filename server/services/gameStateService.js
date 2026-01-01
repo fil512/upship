@@ -1,5 +1,7 @@
 const { pool } = require('../db');
 const { TECHNOLOGY_BAG } = require('../config/constants');
+const { UPGRADES, calculateShipStats } = require('../data/upgrades');
+const { generateId } = require('../utils/random');
 
 // Faction-specific starting configurations
 // Per rules Section 10: Each nation has unique starting technologies and blueprint configuration
@@ -64,6 +66,42 @@ function createPlayerState(faction) {
     ? { hydrogen: 0, helium: 2 }
     : { hydrogen: 2, helium: 0 };
 
+  // Create blueprint first so we can build starting ship from it
+  const blueprint = createInitialBlueprint(faction);
+
+  // Calculate ship stats from starting blueprint (per rules Section 3.2)
+  const shipStats = calculateShipStats(blueprint, config.bonuses || {}, 1);
+
+  // Calculate weight from frame/fabric upgrades
+  let weight = 0;
+  for (const upgradeId of [...(blueprint.frameSlots || []), ...(blueprint.fabricSlots || [])]) {
+    if (upgradeId && UPGRADES[upgradeId]?.weight) {
+      weight += UPGRADES[upgradeId].weight;
+    }
+  }
+
+  // Calculate lift from frame/fabric upgrades
+  let lift = 0;
+  for (const upgradeId of [...(blueprint.frameSlots || []), ...(blueprint.fabricSlots || [])]) {
+    if (upgradeId && UPGRADES[upgradeId]?.lift) {
+      lift += UPGRADES[upgradeId].lift;
+    }
+  }
+
+  // Create starting ship (per rules Section 3.2: each player starts with 1 airship)
+  const startingShip = {
+    id: generateId('ship'),
+    status: 'hangar',
+    route: null,
+    lift,
+    weight,
+    speed: shipStats.speed,
+    range: shipStats.range,
+    ceiling: shipStats.ceiling,
+    reliability: shipStats.reliability,
+    luxury: shipStats.luxury
+  };
+
   return {
     faction,
     cash: 15,
@@ -80,9 +118,9 @@ function createPlayerState(faction) {
     agentsRemaining: 2, // Per rules Section 2.1: Start with 2 agents
     hasPassed: false, // Whether player has passed in worker placement this round
     technologies: config.startingTechnologies || [],
-    ships: [],
+    ships: [startingShip], // Per rules Section 3.2: Start with 1 airship in hangar
     routes: [],
-    blueprint: createInitialBlueprint(faction),
+    blueprint,
     hand: [],
     deck: createStarterDeck(),
     discardPile: [],

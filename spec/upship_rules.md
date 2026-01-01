@@ -123,6 +123,7 @@ Each player receives:
 11. **Research Level Track** set to 0
 12. **Officer Income Track** set to 0
 13. **Engineer Income Track** set to 1
+14. **1 Airship** in Hangar (built from starting Blueprint)
 
 Draw an opening hand of 5 cards.
 
