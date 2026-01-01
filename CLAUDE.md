@@ -301,6 +301,7 @@ See `plans/overview.md` for the 27-phase implementation plan tracking progress f
 - `/review-rules` - Conducts a comprehensive rules review using the boardgame-design skill
 - `/playtest-dev` - Run a full automated playtest against the local dev server (http://localhost:3000)
 - `/playtest-prod` - Run a full automated playtest against the production server
+- `/playtest-ui` - Run a browser-based UI playtest using Claude in Chrome (tests UI controls, UX, and functionality)
 
 ## Available Skills
 
