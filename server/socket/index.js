@@ -7,7 +7,7 @@ const { Server } = require('socket.io');
 const gameStateService = require('../services/gameStateService');
 const { filterStateForPlayer } = require('../services/gameStateHelpers');
 const { processAction } = require('../actions');
-const { executeUndo, getUndoInfo } = require('../actions/undo');
+const { executeUndo } = require('../actions/undo');
 const logger = require('../logger');
 
 // Track online players per game: Map<gameId, Map<playerId, socketId>>
