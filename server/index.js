@@ -3,6 +3,7 @@ require('dotenv').config();
 const http = require('http');
 const express = require('express');
 const path = require('path');
+const fs = require('fs');
 const pinoHttp = require('pino-http');
 const logger = require('./logger');
 const db = require('./db');
@@ -15,6 +16,10 @@ const gameStateRoutes = require('./routes/gameState');
 const manifestRoutes = require('./routes/manifest');
 const adminRoutes = require('./routes/admin');
 const { errorHandler, notFoundHandler } = require('./middleware/errorHandler');
+
+// Check for SvelteKit build (production uses this, dev uses separate server)
+const svelteKitBuildPath = path.join(__dirname, '..', 'web', 'build');
+const hasSvelteKitBuild = fs.existsSync(path.join(svelteKitBuildPath, 'handler.js'));
 
 const app = express();
 const server = http.createServer(app);
@@ -43,7 +48,11 @@ app.use(pinoHttp({
   }
 }));
 app.use(sessionMiddleware);
-app.use(express.static(path.join(__dirname, '..', 'public')));
+
+// Static files: SvelteKit build client assets in production
+if (hasSvelteKitBuild) {
+  app.use(express.static(path.join(svelteKitBuildPath, 'client')));
+}
 
 // Initialize Socket.io with shared session
 const io = initializeSocket(server, sessionMiddleware);
@@ -97,9 +106,17 @@ app.get('/api/env', (req, res) => {
   });
 });
 
-// Serve the main page for all other routes (SPA support)
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '..', 'public', 'index.html'));
+// SvelteKit handler for all non-API routes (loaded dynamically in start())
+let svelteKitHandler = null;
+
+// Catch-all route: use SvelteKit handler if available
+app.use((req, res, next) => {
+  if (svelteKitHandler) {
+    svelteKitHandler(req, res, next);
+  } else {
+    // No SvelteKit build - 404 for non-API routes
+    next();
+  }
 });
 
 // Error handling middleware (must be last)
@@ -111,6 +128,18 @@ async function start() {
   try {
     logger.info('Running database migrations...');
     await runMigrations();
+
+    // Load SvelteKit handler if build exists (ES module, requires dynamic import)
+    if (hasSvelteKitBuild) {
+      logger.info('Loading SvelteKit handler...');
+      const handlerPath = path.join(svelteKitBuildPath, 'handler.js');
+      const { handler } = await import(handlerPath);
+      svelteKitHandler = handler;
+      logger.info('SvelteKit handler loaded successfully');
+    } else {
+      logger.warn('No SvelteKit build found - frontend will not be served');
+      logger.warn('Run "npm run build:web" to build the frontend');
+    }
 
     server.listen(PORT, () => {
       logger.info({ port: PORT }, 'UP SHIP! server running');
