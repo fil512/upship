@@ -9,63 +9,46 @@ Play a 4-player game where you (kenny) play as **Britain** and Claude controls G
 
 ## Quick Start
 
-### Step 1: Restart the local server
+### Step 1: Restart local server and set up the game
+
+Run the setup in a background shell:
 
 ```bash
-./scripts/restart_server.sh
+./scripts/restart_server.sh && UPSHIP_LOCAL=1 python -m playtest setup-interactive
 ```
 
-### Step 2: Create game and login AI players
+This will:
+- Restart the local server
+- Create a new game with 3 AI players (Germany, USA, Italy)
+- Wait for kenny to join as Britain
+- Automatically start the game once kenny has joined and selected Britain
 
-1. Open browser page for Germany (host):
-```
-mcp__chrome-devtools__new_page url="http://localhost:3000/"
-```
-
-2. Take snapshot and login as `playtest_germany` / `test123456`
-
-3. Create a new game with a memorable name
-
-4. Note the game ID
-
-### Step 3: Prompt user to join
-
-**Ask the user:**
-> Game created! Please:
+**Instruct the user:**
+> Game is being set up! Please:
 > 1. Open http://localhost:3000 in your browser
-> 2. Login as kenny
-> 3. Click "Available Games" and join the game I just created
+> 2. Login as **kenny**
+> 3. Click "Open Games" and join the "Play With Kenny" game
 > 4. Select **Britain** as your faction
-> 5. Let me know when you've joined and selected Britain
+>
+> The game will start automatically once you've joined!
 
-Wait for user confirmation before proceeding.
+Wait for the setup script to report "GAME READY!" before proceeding.
 
-### Step 4: Add remaining AI players
+### Step 2: Open browser tabs for AI players
 
-After user confirms they joined:
+Once the game has started, get the game ID and open browser tabs for each AI player:
 
-1. Open new tab, login as `playtest_usa` / `test123456`:
+```bash
+GAME_ID=$(UPSHIP_LOCAL=1 python -m playtest gameid)
+echo "Game ID: $GAME_ID"
 ```
-mcp__chrome-devtools__new_page url="http://localhost:3000/"
-```
-   - Join the game, select USA faction
 
-2. Open new tab, login as `playtest_italy` / `test123456`:
+Open browser tabs for the 3 AI players:
 ```
-mcp__chrome-devtools__new_page url="http://localhost:3000/"
+mcp__chrome-devtools__new_page url="http://localhost:3000/game.html?id=GAME_ID"
 ```
-   - Join the game, select Italy faction
 
-3. Switch back to Germany tab, select Germany faction
-
-4. Start the game (Germany is host)
-
-### Step 5: Enter the game on all AI tabs
-
-Navigate each AI player's tab to the game board:
-```
-mcp__chrome-devtools__navigate_page type="url" url="http://localhost:3000/game.html?id=GAME_ID"
-```
+Repeat for each AI player (Germany, USA, Italy) using DEV mode impersonation.
 
 ## Game Loop
 

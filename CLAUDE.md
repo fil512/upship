@@ -345,7 +345,8 @@ The Python playtest tool provides autonomous playtesting with 4 strategic bot pl
 It runs until the game **finishes** or gets **stuck** (detecting design flaws).
 
 ```bash
-python -m playtest setup                     # Setup new 4-player game
+python -m playtest setup                     # Setup new 4-player game (all AI)
+python -m playtest setup-interactive         # Setup game for kenny + 3 AI players
 python -m playtest autoplay                  # Run until game ends or gets stuck
 python -m playtest autoplay [num_turns]      # Run for N turns max
 python -m playtest status [player]           # Show game status

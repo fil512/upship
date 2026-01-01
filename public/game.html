@@ -86,47 +86,48 @@
 
     .resource-grid {
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      margin-bottom: 20px;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 5px;
+      margin-bottom: 8px;
     }
 
     .resource-item {
       background: rgba(255, 255, 255, 0.05);
-      padding: 10px;
+      padding: 4px;
       border-radius: 4px;
       text-align: center;
     }
 
     .resource-icon {
-      font-size: 1.5rem;
-      margin-bottom: 5px;
+      font-size: 0.9rem;
+      margin-bottom: 2px;
     }
 
     .resource-value {
-      font-size: 1.2rem;
+      font-size: 0.85rem;
       font-weight: bold;
       color: #c4a35a;
     }
 
     .resource-label {
-      font-size: 0.7rem;
+      font-size: 0.6rem;
       color: #888;
       text-transform: uppercase;
     }
 
     .crew-section {
-      margin-bottom: 20px;
+      margin-bottom: 8px;
     }
 
     .crew-item {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 8px;
+      padding: 4px 6px;
       background: rgba(255, 255, 255, 0.05);
       border-radius: 4px;
-      margin-bottom: 5px;
+      margin-bottom: 3px;
+      font-size: 0.8rem;
     }
 
     .crew-name {
@@ -264,6 +265,25 @@
       overflow-y: auto;
       display: flex;
       flex-direction: column;
+    }
+
+    /* Sticky turn controls at top of right sidebar */
+    .turn-controls {
+      position: sticky;
+      top: 0;
+      background: rgba(30, 30, 50, 0.95);
+      padding: 10px;
+      margin: -15px -15px 15px -15px;
+      border-bottom: 2px solid #c4a35a;
+      display: flex;
+      gap: 10px;
+      z-index: 10;
+    }
+
+    .turn-controls .action-btn {
+      flex: 1;
+      font-size: 1rem;
+      padding: 12px;
     }
 
     .hand-section {
@@ -1414,8 +1434,11 @@
               <div class="resource-value">£${myState.income}/rnd</div>
               <div class="resource-label">Income</div>
             </div>
-          </div>
-          <div class="resource-grid">
+            <div class="resource-item">
+              <div class="resource-icon">🕵️</div>
+              <div class="resource-value">${myState.agentsRemaining ?? myState.agents ?? 3}/${myState.agentsTotal ?? 3}</div>
+              <div class="resource-label">Agents</div>
+            </div>
             <div class="resource-item">
               <div class="resource-icon">🔬</div>
               <div class="resource-value">${myState.research || 0}</div>
@@ -1425,13 +1448,6 @@
               <div class="resource-icon">⭐</div>
               <div class="resource-value">${myState.influence || 0}</div>
               <div class="resource-label">Influence</div>
-            </div>
-          </div>
-          <div class="resource-grid">
-            <div class="resource-item">
-              <div class="resource-icon">🕵️</div>
-              <div class="resource-value">${myState.agentsRemaining ?? myState.agents ?? 3}/${myState.agentsTotal ?? 3}</div>
-              <div class="resource-label">Agents</div>
             </div>
             <div class="resource-item">
               <div class="resource-icon">📊</div>
@@ -1740,6 +1756,12 @@
 
         <!-- Right Sidebar - Cards & Actions -->
         <div class="sidebar-right">
+          <!-- Sticky Turn Controls at Top -->
+          <div class="turn-controls">
+            ${getEndTurnButtonHtml(isMyTurn, state, myState)}
+            ${getUndoButtonHtml(isMyTurn)}
+          </div>
+
           <div class="hand-section">
             <div class="section-title">Hand (${(myState.hand || []).length} cards)</div>
             <div class="cards-container">
@@ -1844,7 +1866,7 @@
           <div class="actions-section">
             ${state.phase === 'worker_placement' ? `
               <div class="phase-info">
-                <strong>Worker Placement Phase:</strong> Select a card from your hand, then click an available location on the Ground Board to place an agent. Pass when done.
+                <strong>Worker Placement Phase:</strong> Select a card from your hand, then click an available location on the Ground Board to place an agent. Click End Turn when finished.
               </div>
             ` : state.phase === 'reveal' ? `
               <div class="phase-info">
@@ -1910,14 +1932,7 @@
                 💵 Collect Income
               </button>
               ${getUndoButtonHtml(isMyTurn)}
-              ${state.phase === 'worker_placement'
-                ? `<button class="action-btn primary" onclick="passAction()" ${!isMyTurn ? 'disabled' : ''}>
-                     ⏭️ Pass
-                   </button>`
-                : `<button class="action-btn primary" onclick="endTurn()" ${!isMyTurn ? 'disabled' : ''}>
-                     ✅ End Turn
-                   </button>`
-              }
+              ${getEndTurnButtonHtml(isMyTurn, state, myState)}
               <button class="action-btn secondary" onclick="calculateScores()" ${!isMyTurn ? 'disabled' : ''} style="margin-top: 10px;">
                 🏆 Calculate Scores
               </button>
@@ -2189,13 +2204,30 @@
 
     function getUndoButtonHtml(isMyTurn) {
       const hasUndos = undoInfo.canUndo && undoInfo.undoCount > 0;
-      const undoClass = hasUndos ? 'undo has-undos' : 'undo';
-      const disabled = !isMyTurn || !hasUndos ? 'disabled' : '';
-      const countBadge = hasUndos ? `<span class="undo-count">${undoInfo.undoCount}</span>` : '';
-      const title = hasUndos ? `Undo ${formatActionType(undoInfo.lastActionType)}` : 'No actions to undo';
+      // Only show undo button when there are actions to undo
+      if (!hasUndos) return '';
 
-      return `<button class="action-btn ${undoClass}" onclick="handleUndo()" ${disabled} title="${title}">
-        ↶ Undo${countBadge}
+      const title = `Undo ${formatActionType(undoInfo.lastActionType)}`;
+      const disabled = !isMyTurn ? 'disabled' : '';
+
+      return `<button class="action-btn undo has-undos" onclick="handleUndo()" ${disabled} title="${title}">
+        ↶ Undo <span class="undo-count">${undoInfo.undoCount}</span>
+      </button>`;
+    }
+
+    function getEndTurnButtonHtml(isMyTurn, state, myState) {
+      // End Turn button should only show when player has completed their actions
+      // For worker_placement: show when player has placed agents or wants to pass
+      // For other phases: always show
+
+      if (!isMyTurn) return '';
+
+      // Determine the action based on phase
+      const isWorkerPlacement = state.phase === 'worker_placement';
+      const onclick = isWorkerPlacement ? 'passAction()' : 'endTurn()';
+
+      return `<button class="action-btn primary" onclick="${onclick}">
+        ✅ End Turn
       </button>`;
     }
 
