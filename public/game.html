@@ -1891,15 +1891,20 @@
       const technologies = myState.technologies || [];
 
       // Find available upgrades from owned technologies
+      // Upgrades have requiredTech field that must match an owned technology
       const availableUpgrades = {};
-      for (const techId of technologies) {
-        const tech = allTechs[techId];
-        if (tech?.grants) {
-          const upgrade = allUpgrades[tech.grants];
-          if (upgrade) {
-            const slotType = upgrade.slotType?.replace('Slots', '');
+      const currentAge = state.age || 1;
+      for (const upgradeId of Object.keys(allUpgrades)) {
+        const upgrade = allUpgrades[upgradeId];
+        // Check if player owns the required technology
+        if (upgrade.requiredTech && technologies.includes(upgrade.requiredTech)) {
+          // Check age restriction
+          if (upgrade.age && upgrade.age > currentAge) continue;
+
+          const slotType = upgrade.slotType?.replace('Slots', '');
+          if (slotType) {
             if (!availableUpgrades[slotType]) availableUpgrades[slotType] = [];
-            availableUpgrades[slotType].push({ ...upgrade, id: tech.grants });
+            availableUpgrades[slotType].push({ ...upgrade, id: upgradeId });
           }
         }
       }
