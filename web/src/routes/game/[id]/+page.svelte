@@ -20,39 +20,55 @@
 	} from '$lib/stores/gameState';
 	import { connect, disconnect, connected, sendAction, onlinePlayers } from '$lib/stores/socket';
 	import { toasts, showToast } from '$lib/stores/ui';
+	import type { Card } from '$lib/types/game';
+
+	// UI Components
 	import ToastContainer from '$lib/components/ui/ToastContainer.svelte';
 
-	// Game components (to be created in Phase 3)
-	// For now, we'll show basic game info
+	// Game Components
+	import Blueprint from '$lib/components/blueprint/Blueprint.svelte';
+	import GroundBoard from '$lib/components/ground-board/GroundBoard.svelte';
+	import HandSection from '$lib/components/cards/HandSection.svelte';
+	import FleetPanel from '$lib/components/ships/FleetPanel.svelte';
+	import RoutesPanel from '$lib/components/ships/RoutesPanel.svelte';
+
+	// Sidebar Components
+	import ResourcePanel from '$lib/components/sidebar/ResourcePanel.svelte';
+	import TechList from '$lib/components/sidebar/TechList.svelte';
+	import PlayersList from '$lib/components/sidebar/PlayersList.svelte';
+	import GameLog from '$lib/components/sidebar/GameLog.svelte';
 
 	$: gameId = $page.params.id;
 
 	let loadingState = true;
 	let connectionError: string | null = null;
+	let selectedCardIndex: number | null = null;
+	let selectedCardSymbol: string | null = null;
 
-	onMount(async () => {
+	let unsubscribe: (() => void) | null = null;
+
+	onMount(() => {
 		if (!$user) {
 			goto('/');
 			return;
 		}
 
-		// Check dev mode
-		try {
-			const res = await fetch('/api/env');
-			if (res.ok) {
-				const data = await res.json();
-				setDevMode(data.isDev);
-			}
-		} catch {
-			setDevMode(false);
-		}
+		// Check dev mode asynchronously
+		fetch('/api/env')
+			.then((res) => (res.ok ? res.json() : null))
+			.then((data) => {
+				if (data) setDevMode(data.isDev);
+			})
+			.catch(() => setDevMode(false));
 
 		// Set game ID and connect via Socket.io
-		setGameId(gameId);
-		connect(gameId, $user.id);
+		if (gameId && $user.id) {
+			setGameId(gameId);
+			connect(gameId, $user.id);
+		}
 
 		// Wait for connection
-		const unsubscribe = connected.subscribe((isConnected) => {
+		unsubscribe = connected.subscribe((isConnected) => {
 			if (isConnected) {
 				loadingState = false;
 			}
@@ -67,7 +83,7 @@
 		}, 10000);
 
 		return () => {
-			unsubscribe();
+			if (unsubscribe) unsubscribe();
 		};
 	});
 
@@ -85,6 +101,43 @@
 		switchToPlayer(select.value);
 	}
 
+	// Card selection for worker placement
+	function handleCardSelect(event: CustomEvent<{ index: number; card: Card }>) {
+		if ($gameState?.phase !== 'worker_placement') return;
+
+		if (selectedCardIndex === event.detail.index) {
+			// Deselect
+			selectedCardIndex = null;
+			selectedCardSymbol = null;
+		} else {
+			selectedCardIndex = event.detail.index;
+			selectedCardSymbol = event.detail.card.symbol;
+		}
+	}
+
+	// Place agent at location
+	async function handlePlaceAgent(event: CustomEvent<{ locationId: string }>) {
+		if (selectedCardIndex === null) {
+			showToast('Select a card first', 'warning');
+			return;
+		}
+
+		const result = await sendAction({
+			actionType: 'PLACE_AGENT',
+			actionData: {
+				locationId: event.detail.locationId,
+				cardIndex: selectedCardIndex
+			}
+		});
+
+		if (result.success) {
+			selectedCardIndex = null;
+			selectedCardSymbol = null;
+		} else {
+			showToast(result.error || 'Failed to place agent', 'error');
+		}
+	}
+
 	async function handleEndTurn() {
 		const result = await sendAction({ actionType: 'END_TURN' });
 		if (!result.success) {
@@ -92,16 +145,18 @@
 		}
 	}
 
-	// Get faction color
-	function getFactionColor(faction: string): string {
-		const colors: Record<string, string> = {
-			germany: 'var(--color-germany)',
-			britain: 'var(--color-britain)',
-			usa: 'var(--color-usa)',
-			italy: 'var(--color-italy)'
-		};
-		return colors[faction] || 'var(--color-text-muted)';
+	async function handlePass() {
+		const result = await sendAction({ actionType: 'PASS' });
+		if (!result.success) {
+			showToast(result.error || 'Failed to pass', 'error');
+		}
 	}
+
+	// Derived values
+	$: isWorkerPlacementPhase = $gameState?.phase === 'worker_placement';
+	$: placements = $gameState?.groundBoard?.placements || {};
+	$: routes = $gameState?.map?.routes || [];
+	$: claimedRouteIds = routes.filter((r) => r.claimed).map((r) => r.id);
 </script>
 
 <svelte:head>
@@ -171,123 +226,97 @@
 		<div class="game-layout">
 			<!-- Left sidebar - Player info -->
 			<aside class="sidebar left">
-				<div class="panel">
-					<h3>Resources</h3>
-					{#if $myState}
-						<div class="resource-row">
-							<span class="label">Cash</span>
-							<span class="value">${$myState.cash}</span>
-						</div>
-						<div class="resource-row">
-							<span class="label">Income</span>
-							<span class="value">+${$myState.income}/turn</span>
-						</div>
-						<div class="resource-row">
-							<span class="label">Research</span>
-							<span class="value">{$myState.research}</span>
-						</div>
-						<div class="resource-row">
-							<span class="label">Influence</span>
-							<span class="value">{$myState.influence}</span>
-						</div>
-					{/if}
-				</div>
+				{#if $myState}
+					<ResourcePanel
+						cash={$myState.cash}
+						income={$myState.income}
+						officers={$myState.officers}
+						engineers={$myState.engineers}
+						hydrogen={$myState.gasCubes.hydrogen}
+						helium={$myState.gasCubes.helium}
+						vp={$myState.vp || 0}
+					/>
 
-				<div class="panel">
-					<h3>Crew</h3>
-					{#if $myState}
-						<div class="resource-row">
-							<span class="label">Officers</span>
-							<span class="value">{$myState.officers}</span>
-						</div>
-						<div class="resource-row">
-							<span class="label">Engineers</span>
-							<span class="value">{$myState.engineers}</span>
-						</div>
-						<div class="resource-row">
-							<span class="label">Agents</span>
-							<span class="value">{$myState.agentsRemaining}/{$myState.agents}</span>
-						</div>
-					{/if}
-				</div>
+					<Blueprint />
 
-				<div class="panel">
-					<h3>Gas Reserve</h3>
-					{#if $myState}
-						<div class="gas-row hydrogen">
-							<span class="gas-icon">H₂</span>
-							<span class="gas-count">{$myState.gasCubes.hydrogen}</span>
-						</div>
-						<div class="gas-row helium">
-							<span class="gas-icon">He</span>
-							<span class="gas-count">{$myState.gasCubes.helium}</span>
-						</div>
-					{/if}
-				</div>
+					<TechList technologies={$myState.technologies || []} />
+				{/if}
 			</aside>
 
 			<!-- Center - Main game board -->
 			<main class="main-board">
-				<div class="placeholder-board">
-					<h2>Game Board</h2>
-					<p>Phase 3 will add the full game board components:</p>
-					<ul>
-						<li>Blueprint with upgrade slots</li>
-						<li>Ground board (12 worker placement locations)</li>
-						<li>Ships and routes</li>
-						<li>Card hand</li>
-						<li>R&D board and market</li>
-					</ul>
+				<div class="board-sections">
+					<!-- Ground Board -->
+					<section class="board-section">
+						<GroundBoard
+							{placements}
+							{selectedCardSymbol}
+							isMyTurn={$isMyTurn}
+							{isWorkerPlacementPhase}
+							on:placeAgent={handlePlaceAgent}
+						/>
+					</section>
 
-					<div class="state-debug">
-						<h4>Current State (Debug)</h4>
-						<pre>{JSON.stringify(
-								{
-									phase: $gameState.phase,
-									turn: $gameState.turn,
-									age: $gameState.age,
-									currentPlayer: $currentPlayerId,
-									myFaction: $myState?.faction
-								},
-								null,
-								2
-							)}</pre>
+					<!-- Hand Section -->
+					<section class="board-section">
+						<HandSection
+							hand={$myState?.hand || []}
+							selectedIndex={selectedCardIndex}
+							selectable={$isMyTurn && isWorkerPlacementPhase}
+							deckSize={$myState?.deck?.length || 0}
+							discardSize={$myState?.discardPile?.length || 0}
+							on:selectCard={handleCardSelect}
+						/>
+					</section>
+
+					<!-- Fleet and Routes -->
+					<div class="fleet-routes-row">
+						<section class="board-section fleet">
+							<FleetPanel
+								ships={$myState?.ships || []}
+								selectable={$isMyTurn}
+							/>
+						</section>
+
+						<section class="board-section routes">
+							<RoutesPanel
+								{routes}
+								{claimedRouteIds}
+								selectable={$isMyTurn}
+							/>
+						</section>
 					</div>
 				</div>
 			</main>
 
 			<!-- Right sidebar - Players & Actions -->
 			<aside class="sidebar right">
-				<div class="panel">
-					<h3>Players</h3>
-					<div class="player-list">
-						{#each $allPlayers as player}
-							<div
-								class="player-row"
-								class:current={player.id === $currentPlayerId}
-								class:online={$onlinePlayers.includes(player.id)}
-							>
-								<span
-									class="faction-badge"
-									style="background: {getFactionColor(player.faction)}"
-								>
-									{player.faction?.charAt(0).toUpperCase()}
-								</span>
-								<span class="player-name">{player.faction}</span>
-								<span class="player-cash">${player.cash}</span>
-							</div>
-						{/each}
-					</div>
-				</div>
+				<PlayersList
+					players={$gameState.players}
+					playerOrder={$gameState.playerOrder}
+					currentPlayerId={$currentPlayerId}
+					onlinePlayers={$onlinePlayers}
+					myPlayerId={$effectiveUserId}
+				/>
 
 				<div class="panel actions">
 					<h3>Actions</h3>
-					{#if $isMyTurn && $gameState.phase !== 'reveal'}
-						<button class="btn w-full" on:click={handleEndTurn}>End Turn</button>
+					{#if $isMyTurn}
+						{#if isWorkerPlacementPhase}
+							<button class="btn secondary w-full" on:click={handlePass}>Pass</button>
+						{:else if $gameState.phase !== 'reveal'}
+							<button class="btn w-full" on:click={handleEndTurn}>End Turn</button>
+						{/if}
 					{/if}
 
-					{#if $gameState.phase === 'worker_placement'}
-						<p class="action-hint">Place workers or pass</p>
+					{#if isWorkerPlacementPhase}
+						<p class="action-hint">
+							{#if selectedCardIndex !== null}
+								Select a location to place your agent
+							{:else}
+								Select a card from your hand
+							{/if}
+						</p>
 					{:else if $gameState.phase === 'reveal'}
 						<p class="action-hint">All players act simultaneously</p>
 					{:else if $gameState.phase === 'income_cleanup'}
@@ -295,31 +324,9 @@
 					{/if}
 				</div>
 
-				<div class="panel">
-					<h3>Technologies</h3>
-					{#if $myState?.technologies?.length}
-						<div class="tech-list">
-							{#each $myState.technologies as techId}
-								<span class="tech-badge">{techId}</span>
-							{/each}
-						</div>
-					{:else}
-						<p class="empty-state">No technologies yet</p>
-					{/if}
-				</div>
+				<GameLog log={$gameState.log || []} maxEntries={15} />
 			</aside>
 		</div>
-
-		<!-- Game log footer -->
-		<footer class="game-footer">
-			<div class="log-preview">
-				{#if $gameState.log?.length}
-					<span class="log-entry">{$gameState.log[$gameState.log.length - 1]?.message}</span>
-				{:else}
-					<span class="log-entry">Game started</span>
-				{/if}
-			</div>
-		</footer>
 	</div>
 
 	<ToastContainer />
@@ -445,7 +452,7 @@
 	/* Layout */
 	.game-layout {
 		display: grid;
-		grid-template-columns: 220px 1fr 260px;
+		grid-template-columns: 280px 1fr 280px;
 		flex: 1;
 		overflow: hidden;
 	}
@@ -473,150 +480,27 @@
 		margin-bottom: var(--spacing-sm);
 	}
 
-	.resource-row {
-		display: flex;
-		justify-content: space-between;
-		padding: var(--spacing-xs) 0;
-		font-size: 0.875rem;
-	}
-
-	.resource-row .label {
-		color: var(--color-text-secondary);
-	}
-
-	.resource-row .value {
-		color: var(--color-accent-gold);
-		font-weight: 600;
-	}
-
-	.gas-row {
-		display: flex;
-		align-items: center;
-		gap: var(--spacing-sm);
-		padding: var(--spacing-xs) 0;
-	}
-
-	.gas-icon {
-		width: 28px;
-		height: 28px;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		border-radius: var(--radius-md);
-		font-size: 0.75rem;
-		font-weight: 600;
-	}
-
-	.hydrogen .gas-icon {
-		background: rgba(96, 165, 250, 0.2);
-		color: var(--color-info);
-	}
-
-	.helium .gas-icon {
-		background: rgba(251, 191, 36, 0.2);
-		color: var(--color-warning);
-	}
-
-	.gas-count {
-		font-size: 1.25rem;
-		font-weight: 600;
-	}
-
 	/* Main board */
 	.main-board {
 		padding: var(--spacing-md);
 		overflow-y: auto;
+		background: var(--color-bg-primary);
 	}
 
-	.placeholder-board {
+	.board-sections {
 		display: flex;
 		flex-direction: column;
-		align-items: center;
-		justify-content: center;
-		height: 100%;
-		text-align: center;
-		color: var(--color-text-secondary);
+		gap: var(--spacing-md);
 	}
 
-	.placeholder-board h2 {
-		margin-bottom: var(--spacing-md);
+	.board-section {
+		/* Wrapper for each major section */
 	}
 
-	.placeholder-board ul {
-		text-align: left;
-		margin: var(--spacing-md) 0;
-	}
-
-	.placeholder-board li {
-		padding: var(--spacing-xs) 0;
-	}
-
-	.state-debug {
-		margin-top: var(--spacing-lg);
-		padding: var(--spacing-md);
-		background: var(--color-bg-card);
-		border-radius: var(--radius-md);
-		text-align: left;
-		max-width: 400px;
-	}
-
-	.state-debug h4 {
-		color: var(--color-text-muted);
-		font-size: 0.75rem;
-		margin-bottom: var(--spacing-sm);
-	}
-
-	.state-debug pre {
-		font-size: 0.75rem;
-		color: var(--color-text-primary);
-		overflow-x: auto;
-	}
-
-	/* Player list */
-	.player-list {
-		display: flex;
-		flex-direction: column;
-		gap: var(--spacing-xs);
-	}
-
-	.player-row {
-		display: flex;
-		align-items: center;
-		gap: var(--spacing-sm);
-		padding: var(--spacing-xs);
-		border-radius: var(--radius-sm);
-		opacity: 0.6;
-	}
-
-	.player-row.online {
-		opacity: 1;
-	}
-
-	.player-row.current {
-		background: var(--color-bg-hover);
-	}
-
-	.faction-badge {
-		width: 24px;
-		height: 24px;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		border-radius: var(--radius-sm);
-		font-size: 0.75rem;
-		font-weight: 600;
-		color: white;
-	}
-
-	.player-name {
-		flex: 1;
-		font-size: 0.875rem;
-		text-transform: capitalize;
-	}
-
-	.player-cash {
-		font-size: 0.75rem;
-		color: var(--color-accent-gold);
+	.fleet-routes-row {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: var(--spacing-md);
 	}
 
 	/* Actions panel */
@@ -631,40 +515,48 @@
 		margin-top: var(--spacing-sm);
 	}
 
-	/* Tech list */
-	.tech-list {
-		display: flex;
-		flex-wrap: wrap;
-		gap: var(--spacing-xs);
-	}
-
-	.tech-badge {
-		padding: 2px 6px;
+	/* Button styles */
+	.btn.secondary {
 		background: var(--color-bg-hover);
-		border-radius: var(--radius-sm);
-		font-size: 0.625rem;
 		color: var(--color-text-secondary);
 	}
 
-	.empty-state {
-		font-size: 0.75rem;
-		color: var(--color-text-muted);
-		font-style: italic;
-	}
-
-	/* Footer */
-	.game-footer {
-		padding: var(--spacing-sm) var(--spacing-md);
+	.btn.secondary:hover {
 		background: var(--color-bg-card);
-		border-top: 1px solid var(--color-bg-hover);
 	}
 
-	.log-preview {
-		font-size: 0.75rem;
-		color: var(--color-text-secondary);
+	.w-full {
+		width: 100%;
 	}
 
-	.log-entry {
-		opacity: 0.8;
+	@keyframes pulse {
+		0%,
+		100% {
+			opacity: 1;
+		}
+		50% {
+			opacity: 0.7;
+		}
+	}
+
+	/* Responsive */
+	@media (max-width: 1200px) {
+		.game-layout {
+			grid-template-columns: 240px 1fr 240px;
+		}
+	}
+
+	@media (max-width: 900px) {
+		.game-layout {
+			grid-template-columns: 1fr;
+		}
+
+		.sidebar {
+			display: none;
+		}
+
+		.fleet-routes-row {
+			grid-template-columns: 1fr;
+		}
 	}
 </style>

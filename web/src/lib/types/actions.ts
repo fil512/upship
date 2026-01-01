@@ -6,6 +6,7 @@ import type { GasType, SlotType } from './game';
 export type ActionType =
 	// Turn management
 	| 'END_TURN'
+	| 'PASS'
 	| 'UNDO'
 	// Gas market
 	| 'BUY_GAS'

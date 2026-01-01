@@ -17,7 +17,8 @@ export type ShipStatus =
 	| 'on_route'
 	| 'awaiting_hazard'
 	| 'destroyed'
-	| 'damaged';
+	| 'damaged'
+	| 'crashed';
 
 // Gas types
 export type GasType = 'hydrogen' | 'helium';
@@ -50,6 +51,7 @@ export interface Card {
 		engineers?: number;
 	};
 	effect?: string;
+	ability?: string;
 }
 
 // Hazard card
@@ -77,12 +79,19 @@ export interface ShipStats {
 	structure?: number;
 }
 
-// Ship structure
+// Ship structure (flat stats for easier component access)
 export interface Ship {
 	id: string;
-	name: string;
+	name?: string;
 	status: ShipStatus;
-	stats: ShipStats;
+	// Flat stats (matches server response)
+	lift: number;
+	weight: number;
+	speed: number;
+	range: number;
+	ceiling: number;
+	reliability: number;
+	luxury: number;
 	gasType?: GasType;
 	gasCubes?: number;
 	routeId?: string;
@@ -97,16 +106,30 @@ export interface Ship {
 export interface Route {
 	id: string;
 	name: string;
-	from: string;
-	to: string;
-	range: number;
-	speed: number;
-	ceiling: number;
+	from?: string;
+	to?: string;
+	distance?: number;
+	range?: number;
+	speed?: number;
+	speedRequirement?: number;
+	ceiling?: number;
+	ceilingRequirement?: number;
 	income: number;
-	vp: number;
+	vp?: number;
 	luxury?: number;
-	claimed: string | null; // playerId or null
+	bonus?: string;
+	claimed?: string | null; // playerId or null
 }
+
+// Log entry type
+export interface LogEntry {
+	timestamp: string;
+	message: string;
+	type?: string;
+}
+
+// Ground board placements type
+export type GroundBoardPlacements = Record<string, GroundBoardPlacement>;
 
 // Technology tile
 export interface Technology {
@@ -144,7 +167,7 @@ export interface PlayerState {
 	researchLevel: number;
 	influence: number;
 	hasPassed: boolean;
-	technologies: string[];
+	technologies: Technology[];
 	ships: Ship[];
 	routes: Route[];
 	blueprint: Blueprint;
@@ -158,6 +181,7 @@ export interface PlayerState {
 	heliumMonopoly?: boolean;
 	bannedTechnologies?: string[];
 	lowCeiling?: boolean;
+	vp?: number;
 }
 
 // Worker placement state
@@ -221,7 +245,8 @@ export interface GameState {
 	progressThresholds: { age2: number; age3: number; end: number };
 	gasMarket: { hydrogen: number; helium: number };
 	map: GameMap;
-	log: Array<{ timestamp: string; message: string; type: string }>;
+	log: LogEntry[];
+	vp?: number;
 }
 
 // Game wrapper from API response
