@@ -369,6 +369,37 @@ async function getUserGames(userId) {
   return result.rows;
 }
 
+// Drop all game data (admin/dev only)
+async function dropAllGames() {
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+
+    // Get counts before deletion for reporting
+    const gamesCount = await client.query('SELECT COUNT(*) FROM games');
+    const statesCount = await client.query('SELECT COUNT(*) FROM game_states');
+    const actionsCount = await client.query('SELECT COUNT(*) FROM game_actions');
+    const playersCount = await client.query('SELECT COUNT(*) FROM game_players');
+
+    // Delete from games - CASCADE will handle game_players, game_states, game_actions
+    await client.query('DELETE FROM games');
+
+    await client.query('COMMIT');
+
+    return {
+      deletedGames: parseInt(gamesCount.rows[0].count),
+      deletedStates: parseInt(statesCount.rows[0].count),
+      deletedActions: parseInt(actionsCount.rows[0].count),
+      deletedPlayers: parseInt(playersCount.rows[0].count)
+    };
+  } catch (error) {
+    await client.query('ROLLBACK');
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
 module.exports = {
   createGame,
   getGames,
@@ -378,5 +409,6 @@ module.exports = {
   selectFaction,
   startGame,
   getUserGames,
-  isPlayerInGame
+  isPlayerInGame,
+  dropAllGames
 };
