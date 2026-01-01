@@ -26,6 +26,11 @@ Thumbs.db
 dist/
 build/
 
+# SvelteKit
+.svelte-kit/
+vite.config.js.timestamp-*
+vite.config.ts.timestamp-*
+
 # Temporary files
 tmp/
 temp/
