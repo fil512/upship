@@ -27,15 +27,16 @@ export {};
 
 declare module "$app/types" {
 	export interface AppTypes {
-		RouteId(): "/" | "/game";
+		RouteId(): "/" | "/game" | "/game/[id]";
 		RouteParams(): {
-			
+			"/game/[id]": { id: string }
 		};
 		LayoutParams(): {
-			"/": Record<string, never>;
-			"/game": Record<string, never>
+			"/": { id?: string };
+			"/game": { id?: string };
+			"/game/[id]": { id: string }
 		};
-		Pathname(): "/" | "/game" | "/game/";
+		Pathname(): "/" | "/game" | "/game/" | `/game/${string}` & {} | `/game/${string}/` & {};
 		ResolvedPathname(): `${"" | `/${string}`}${ReturnType<AppTypes['Pathname']>}`;
 		Asset(): string & {};
 	}
