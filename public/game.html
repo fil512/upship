@@ -290,6 +290,11 @@
       border-color: #c4a35a;
     }
 
+    .card:focus-visible {
+      outline: 2px solid #4a9;
+      outline-offset: 2px;
+    }
+
     .card-name {
       font-size: 0.85rem;
       color: #e8e8e8;
@@ -887,6 +892,11 @@
     .location.available:hover {
       background: rgba(68, 170, 153, 0.2);
       transform: scale(1.02);
+    }
+
+    .location:focus-visible {
+      outline: 2px solid #4a9;
+      outline-offset: 2px;
     }
 
     .location.occupied {
@@ -1497,7 +1507,12 @@
             <div class="cards-container">
               ${(myState.hand || []).map((card, i) => `
                 <div class="card ${selectedCardIndex === i ? 'selected' : ''} ${state.phase === 'worker_placement' && isMyTurn ? 'playable' : ''}"
+                     role="button"
+                     tabindex="0"
+                     aria-pressed="${selectedCardIndex === i}"
+                     aria-label="${card.name}: ${card.effect || 'No effect'}"
                      onclick="${state.phase === 'worker_placement' ? `selectCard(${i})` : `playCard(${i})`}"
+                     onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();${state.phase === 'worker_placement' ? `selectCard(${i})` : `playCard(${i})`}}"
                      data-symbol="${card.symbol || 'any'}">
                   <div class="card-name">
                     ${getSymbolIcon(card.symbol)} ${card.name}
@@ -2042,9 +2057,19 @@
         }
 
         const onclickAttr = canPlace ? 'onclick="placeAgent(\'' + locId + '\')"' : '';
+        const onkeydownAttr = canPlace ? 'onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();placeAgent(\'' + locId + '\')}"' : '';
+        const tabindexAttr = canPlace ? 'tabindex="0"' : '';
+        const ariaDisabled = !canPlace && !isOccupied ? 'aria-disabled="true"' : '';
         const classes = 'location' + (isOccupied ? ' occupied' : '') + (canPlace ? ' available' : '');
 
-        locationsHtml += '<div class="' + classes + '" ' + onclickAttr + ' title="' + loc.description + '">' +
+        locationsHtml += '<div class="' + classes + '" ' +
+          'role="button" ' +
+          tabindexAttr + ' ' +
+          ariaDisabled + ' ' +
+          onclickAttr + ' ' +
+          onkeydownAttr + ' ' +
+          'aria-label="' + loc.name + ': ' + loc.description + '" ' +
+          'title="' + loc.description + '">' +
           '<div class="location-symbol">' + getSymbolIcon(loc.symbol) + '</div>' +
           '<div class="location-name">' + loc.name + '</div>' +
           occupantHtml +

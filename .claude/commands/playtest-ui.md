@@ -2,10 +2,25 @@
 
 Run a playtest through the **web browser interface** using Chrome DevTools MCP tools. Unlike `/playtest-dev` which uses the REST API directly, this command tests that the UI controls function properly and provide a good user experience.
 
+## Quick Start
+
+**Step 1: Rebuild and restart the local server**
+
+```bash
+./scripts/restart_server.sh
+```
+
+**Step 2: Setup the game**
+
+```bash
+UPSHIP_LOCAL=1 python -m playtest setup
+```
+
+**Step 3: Open browser and begin UI testing** (see Playtest Flow below)
+
 ## Prerequisites
 
 1. **Chrome DevTools MCP server must be connected** (chrome-devtools)
-2. **For local testing**: Local dev server must be running (`./scripts/restart_server.sh`)
 
 ## Game Setup
 
@@ -314,28 +329,28 @@ After testing, report findings in this format:
 - Actions tested: [list of actions verified through UI]
 - Any actions NOT available through UI
 
-## Quick Start
+## Quick Start (Summary)
 
-1. **Setup the game** (choose one):
-   - Production: `python -m playtest setup`
-   - Local: `UPSHIP_LOCAL=1 python -m playtest setup` (requires `./scripts/restart_server.sh` first)
+1. **Restart local server**: `./scripts/restart_server.sh`
 
-2. **Get game ID**: `python -m playtest gameid`
+2. **Setup the game**: `UPSHIP_LOCAL=1 python -m playtest setup`
 
-3. **Browser setup**:
+3. **Get game ID**: `python -m playtest gameid`
+
+4. **Browser setup**:
    - List pages: `mcp__chrome-devtools__list_pages`
    - Create page: `mcp__chrome-devtools__new_page url="http://localhost:3000/"`
    - Take snapshot: `mcp__chrome-devtools__take_snapshot`
 
-4. **Login**: Use `playtest_germany` / `test123456`
+5. **Login**: Use `playtest_germany` / `test123456`
    - Fill username and password fields using `mcp__chrome-devtools__fill`
    - Click login button using `mcp__chrome-devtools__click`
 
-5. **Enter the game**: Click "My Games" → Find active game → "View"
+6. **Enter the game**: Click "My Games" → Find active game → "View"
 
-6. **Play through UI**: Follow the playtest flow above, taking snapshots and screenshots at each major step
+7. **Play through UI**: Follow the playtest flow above, taking snapshots and screenshots at each major step
 
-7. **Document any issues encountered**
+8. **Document any issues encountered**
 
 ## Useful Playtest Commands During Testing
 
