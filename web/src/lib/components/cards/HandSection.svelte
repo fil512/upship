@@ -8,6 +8,8 @@
 	export let selectable: boolean = false;
 	export let deckSize: number = 0;
 	export let discardSize: number = 0;
+	export let isViewingOtherPlayer: boolean = false;
+	export let otherPlayerCardCount: number = 0;
 
 	const dispatch = createEventDispatcher<{
 		selectCard: { index: number; card: CardType };
@@ -38,6 +40,10 @@
 					on:select={handleCardSelect}
 				/>
 			{/each}
+		</div>
+	{:else if isViewingOtherPlayer && otherPlayerCardCount > 0}
+		<div class="hidden-hand">
+			🃏 {otherPlayerCardCount} cards (hidden - viewing other player)
 		</div>
 	{:else}
 		<div class="empty-hand">No cards in hand</div>
@@ -92,6 +98,15 @@
 		color: var(--color-text-muted);
 		padding: var(--spacing-lg);
 		font-size: 0.875rem;
+	}
+
+	.hidden-hand {
+		text-align: center;
+		color: var(--color-info);
+		padding: var(--spacing-lg);
+		font-size: 0.875rem;
+		background: var(--color-bg-hover);
+		border-radius: var(--radius-sm);
 	}
 
 	.selection-hint {

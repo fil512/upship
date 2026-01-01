@@ -139,14 +139,14 @@
 	}
 
 	async function handleEndTurn() {
-		const result = await sendAction({ actionType: 'END_TURN' });
+		const result = await sendAction({ actionType: 'END_TURN', actionData: {} });
 		if (!result.success) {
 			showToast(result.error || 'Failed to end turn', 'error');
 		}
 	}
 
 	async function handlePass() {
-		const result = await sendAction({ actionType: 'PASS' });
+		const result = await sendAction({ actionType: 'PASS', actionData: {} });
 		if (!result.success) {
 			showToast(result.error || 'Failed to pass', 'error');
 		}
@@ -157,6 +157,12 @@
 	$: placements = $gameState?.groundBoard?.placements || {};
 	$: routes = $gameState?.map?.routes || [];
 	$: claimedRouteIds = routes.filter((r) => r.claimed).map((r) => r.id);
+
+	// Check if viewing another player (in dev mode)
+	$: isViewingOtherPlayer = $isDevMode && $effectiveUserId !== $user?.id;
+	// Get raw hand value - might be a number if viewing filtered state
+	$: rawHand = $myState?.hand;
+	$: otherPlayerCardCount = typeof rawHand === 'number' ? rawHand : 0;
 </script>
 
 <svelte:head>
@@ -261,11 +267,13 @@
 					<!-- Hand Section -->
 					<section class="board-section">
 						<HandSection
-							hand={$myState?.hand || []}
+							hand={Array.isArray($myState?.hand) ? $myState.hand : []}
 							selectedIndex={selectedCardIndex}
 							selectable={$isMyTurn && isWorkerPlacementPhase}
-							deckSize={$myState?.deck?.length || 0}
-							discardSize={$myState?.discardPile?.length || 0}
+							deckSize={typeof $myState?.deck === 'number' ? $myState.deck : ($myState?.deck?.length || 0)}
+							discardSize={typeof $myState?.discardPile === 'number' ? $myState.discardPile : ($myState?.discardPile?.length || 0)}
+							{isViewingOtherPlayer}
+							{otherPlayerCardCount}
 							on:selectCard={handleCardSelect}
 						/>
 					</section>

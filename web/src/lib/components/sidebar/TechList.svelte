@@ -1,7 +1,27 @@
 <script lang="ts">
 	import type { Technology } from '$lib/types/game';
 
-	export let technologies: Technology[] = [];
+	// Technologies can be either string IDs or full objects
+	export let technologies: (string | Technology)[] = [];
+
+	// Format a technology ID to a readable name
+	function formatTechName(tech: string | Technology): string {
+		if (typeof tech === 'object' && tech.name) {
+			return tech.name;
+		}
+		// Convert snake_case ID to Title Case
+		return String(tech)
+			.split('_')
+			.map(word => word.charAt(0).toUpperCase() + word.slice(1))
+			.join(' ');
+	}
+
+	function getTechEffect(tech: string | Technology): string | null {
+		if (typeof tech === 'object' && tech.effect) {
+			return tech.effect;
+		}
+		return null;
+	}
 </script>
 
 <div class="tech-list">
@@ -12,12 +32,12 @@
 	{:else}
 		<div class="techs">
 			{#each technologies as tech}
-				<div class="tech-item">
+				<div class="tech-item" title={typeof tech === 'string' ? tech : tech.id}>
 					<span class="tech-icon">🔬</span>
 					<div class="tech-info">
-						<span class="tech-name">{tech.name}</span>
-						{#if tech.effect}
-							<span class="tech-effect">{tech.effect}</span>
+						<span class="tech-name">{formatTechName(tech)}</span>
+						{#if getTechEffect(tech)}
+							<span class="tech-effect">{getTechEffect(tech)}</span>
 						{/if}
 					</div>
 				</div>
