@@ -1067,7 +1067,9 @@
     // Load game state
     async function loadGameState() {
       try {
-        const res = await fetch(`/api/state/${gameId}`);
+        // In dev mode, request full unfiltered state for player switching
+        const devModeParam = isDevMode ? '?devMode=true' : '';
+        const res = await fetch(`/api/state/${gameId}${devModeParam}`);
         if (!res.ok) {
           if (res.status === 404) {
             // Game state not initialized - maybe game hasn't started
@@ -1836,7 +1838,8 @@
     }
 
     function passAction() {
-      performAction('PASS', {});
+      // During worker placement, PASS means REVEAL (exit worker placement)
+      performAction('REVEAL', {});
     }
 
     // Card selection for worker placement

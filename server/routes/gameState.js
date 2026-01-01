@@ -41,8 +41,14 @@ router.get('/:gameId', requireGamePlayer, async (req, res, next) => {
       throw new NotFoundError('Game state');
     }
 
-    // Filter state to only show what this player should see
-    const filteredState = filterStateForPlayer(gameState.state, req.session.userId);
+    // In dev mode with devMode query param, return full unfiltered state for player switching
+    const isDev = process.env.NODE_ENV !== 'production';
+    const devModeRequested = req.query.devMode === 'true';
+
+    // Filter state to only show what this player should see (unless dev mode)
+    const filteredState = (isDev && devModeRequested)
+      ? gameState.state
+      : filterStateForPlayer(gameState.state, req.session.userId);
 
     res.json({
       gameState: {
