@@ -49,20 +49,24 @@ python scripts/railway.py getvar        # Check environment variables
 
 ## Tech Stack
 
-- **Backend:** Node.js 18+ with Express
+- **Backend:** Node.js 18+ with Express + Socket.io
 - **Database:** PostgreSQL with JSONB for game state
 - **Session:** express-session with connect-pg-simple
-- **Frontend:** Vanilla HTML/CSS/JavaScript (no framework)
-- **Real-time:** Polling every 2 seconds (WebSocket integration planned)
+- **Frontend:** SvelteKit + TypeScript (in `web/` directory)
+  - Legacy frontend: Vanilla HTML/CSS/JavaScript (in `public/` directory)
+- **Real-time:** Socket.io for push-based updates
 - **Hosting:** Railway with auto-deploy from GitHub
 
 ## Commands
 
 ```bash
-npm install              # Install dependencies
+npm install              # Install all dependencies (including web/)
 npm start                # Production server on port 3000
 npm run dev              # Development with auto-reload (--watch)
 npm run dev:local        # Development with local .env.development
+npm run dev:web          # Run SvelteKit dev server (port 5173)
+npm run dev:all          # Run both servers concurrently
+npm run build:web        # Build SvelteKit for production
 npm run migrate          # Run pending database migrations
 npm run migrate:down     # Rollback last migration
 npm run migrate:status   # Check migration status
@@ -310,6 +314,7 @@ See `plans/overview.md` for the 27-phase implementation plan tracking progress f
 - `boardgame-design` - Game mechanics, balance analysis, rules clarity, Eurogame principles
 
 **Development:**
+- `svelte` - Svelte components, stores, reactivity, SvelteKit, WebSocket integration
 - `realtime-multiplayer` - Socket.io, state sync, reconnection, room management
 - `game-state` - Reducers, validation, phase management, undo/redo
 - `game-database` - PostgreSQL schemas, JSONB, transactions, migrations

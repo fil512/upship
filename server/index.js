@@ -1,5 +1,6 @@
 require('dotenv').config();
 
+const http = require('http');
 const express = require('express');
 const path = require('path');
 const pinoHttp = require('pino-http');
@@ -7,6 +8,7 @@ const logger = require('./logger');
 const db = require('./db');
 const { runMigrations } = require('./db/migrate');
 const { createSessionMiddleware } = require('./auth');
+const { initializeSocket } = require('./socket');
 const authRoutes = require('./routes/auth');
 const gameRoutes = require('./routes/games');
 const gameStateRoutes = require('./routes/gameState');
@@ -15,7 +17,11 @@ const adminRoutes = require('./routes/admin');
 const { errorHandler, notFoundHandler } = require('./middleware/errorHandler');
 
 const app = express();
+const server = http.createServer(app);
 const PORT = process.env.PORT || 3000;
+
+// Create session middleware once to share with Socket.io
+const sessionMiddleware = createSessionMiddleware();
 
 // Security: disable X-Powered-By header to avoid revealing framework info
 app.disable('x-powered-by');
@@ -36,8 +42,14 @@ app.use(pinoHttp({
     ignore: (req) => req.url === '/health' && process.env.NODE_ENV === 'production'
   }
 }));
-app.use(createSessionMiddleware());
+app.use(sessionMiddleware);
 app.use(express.static(path.join(__dirname, '..', 'public')));
+
+// Initialize Socket.io with shared session
+const io = initializeSocket(server, sessionMiddleware);
+
+// Make io available to routes if needed (e.g., for broadcasting)
+app.set('io', io);
 
 // Routes
 app.use('/api/auth', authRoutes);
@@ -100,9 +112,10 @@ async function start() {
     logger.info('Running database migrations...');
     await runMigrations();
 
-    app.listen(PORT, () => {
+    server.listen(PORT, () => {
       logger.info({ port: PORT }, 'UP SHIP! server running');
       logger.info({ url: `http://localhost:${PORT}/health` }, 'Health check available');
+      logger.info('Socket.io enabled for real-time updates');
     });
   } catch (err) {
     logger.fatal({ err }, 'Failed to start server');
@@ -115,4 +128,4 @@ if (require.main === module) {
   start();
 }
 
-module.exports = app;
+module.exports = { app, server, io };
