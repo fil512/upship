@@ -1,0 +1,4 @@
+# SvelteKit build artifacts
+.svelte-kit
+build
+node_modules

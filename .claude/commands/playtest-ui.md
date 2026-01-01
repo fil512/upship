@@ -4,10 +4,19 @@ Run a playtest through the **web browser interface** using Chrome DevTools MCP t
 
 ## Quick Start
 
-**Step 1: Rebuild and restart the local server**
+**Step 1: Start both servers**
 
 ```bash
-./scripts/restart_server.sh
+# Terminal 1: Express API server
+npm run dev:local
+
+# Terminal 2: SvelteKit frontend
+npm run dev -w web
+```
+
+Or use the combined dev command:
+```bash
+npm run dev
 ```
 
 **Step 2: Setup the game**
@@ -21,17 +30,36 @@ UPSHIP_LOCAL=1 python -m playtest setup
 ## Prerequisites
 
 1. **Chrome DevTools MCP server must be connected** (chrome-devtools)
+2. **Both servers running:**
+   - Express API: http://localhost:3000
+   - SvelteKit Frontend: http://localhost:5173
+
+## Server Architecture
+
+The new SvelteKit frontend runs on port 5173 and proxies API requests to the Express backend on port 3000:
+
+```
+Browser (5173) → Vite Dev Server → Express API (3000)
+                     ↓ proxy
+              /api/* → :3000/api/*
+              /socket.io → :3000/socket.io
+```
+
+**URLs:**
+- **Frontend**: http://localhost:5173 (SvelteKit)
+- **API**: http://localhost:3000 (Express)
+- **Game URL pattern**: http://localhost:5173/game/GAME_ID
 
 ## Game Setup
 
 Use the Python playtest module to automatically set up a 4-player game:
 
 ```bash
-# For production server
-python -m playtest setup
-
 # For local dev server
 UPSHIP_LOCAL=1 python -m playtest setup
+
+# For production server
+python -m playtest setup
 ```
 
 This creates 4 test players, a new game, joins all players, selects factions, and starts the game.
@@ -44,26 +72,23 @@ This creates 4 test players, a new game, joins all players, selects factions, an
 
 **Get the game ID** after setup:
 ```bash
-python -m playtest gameid
+UPSHIP_LOCAL=1 python -m playtest gameid
 ```
-
-**Server URLs**:
-- Production: https://upship-production.up.railway.app
-- Local: http://localhost:3000
 
 ## What This Command Tests
 
 ### Functional Testing
-- All game actions available via REST API are also available through the UI
+- All game actions are available through Socket.io (real-time)
 - UI controls respond correctly to user interactions
-- Game state updates are reflected in the UI
+- Game state updates are reflected in real-time via WebSocket
+- Toast notifications appear for turn/phase changes
 - Error messages are displayed appropriately
 - Modal dialogs work correctly (create game, upgrade selection, etc.)
 
 ### User Experience Assessment
 - UI is intuitive and controls are discoverable
 - Game phase is clearly indicated
-- Current player turn is obvious
+- Current player turn is obvious (header indicator + toast)
 - Available actions are visually distinguishable from unavailable ones
 - Resource displays are clear and accurate
 - Blueprint visualization is understandable
@@ -72,53 +97,53 @@ python -m playtest gameid
 
 ### Phase 1: Browser Setup
 
-1. Run `python -m playtest setup` to create and start a 4-player game
-2. Get the game ID with `python -m playtest gameid`
+1. Run `UPSHIP_LOCAL=1 python -m playtest setup` to create and start a 4-player game
+2. Get the game ID with `UPSHIP_LOCAL=1 python -m playtest gameid`
 3. List browser pages: `mcp__chrome-devtools__list_pages`
-4. Navigate to the server URL: `mcp__chrome-devtools__new_page` with url
+4. Navigate to SvelteKit frontend: `mcp__chrome-devtools__new_page url="http://localhost:5173/"`
 5. Take a snapshot to see page elements: `mcp__chrome-devtools__take_snapshot`
 6. Login as `playtest_germany` with password `test123456`
-7. Verify lobby UI displays correctly
+7. Verify lobby UI displays correctly (game list, online status)
 8. Click "My Games" to find the active game
-9. Click "View" or "Enter Game" to join the game board
+9. Click the game to enter the game board
 
 ### Phase 2: Worker Placement Testing
 
-1. Verify Ground Board locations are displayed
-2. Test card selection from hand
+1. Verify Ground Board locations are displayed (organized by symbol type)
+2. Test card selection from hand (cards highlight when selectable)
 3. Test placing agents on locations (click card, then click location)
-4. Verify location shows as occupied after placement
+4. Verify location shows agent marker after placement
 5. Test the "Pass" button
-6. Verify turn progression through all players
-7. Use player switching dropdown to control all 4 players
+6. Verify turn progression through all players (toast notifications)
+7. Use player switching dropdown (dev mode) to control all 4 players
 
 ### Phase 3: Reveal Phase Testing
 
-1. Verify phase indicator shows "Reveal"
+1. Verify phase indicator in header shows "Reveal"
 2. Test each location's action through the UI:
-   - **Gas Depot**: Buy gas (hydrogen/helium buttons)
+   - **Gas Depot**: Gas purchase actions
    - **Design Bureau**: Install upgrades (slot clicks, upgrade modal)
-   - **Construction Hall**: Build ships button
+   - **Construction Hall**: Build ships
    - **Academy/Flight School/Technical Institute**: Recruit crew
    - **Launchpad**: Launch ships (ship selection, route selection, gas type)
    - **Research Institute**: Acquire technology
 
 3. Verify blueprint displays correctly with installed upgrades
-4. Verify ship stats calculate and display properly
+4. Verify ship stats in ShipStats component calculate properly
 5. Test modal interactions (open, select, close, cancel)
 
 ### Phase 4: Income & Cleanup Testing
 
-1. Verify income is collected and displayed
-2. Verify cards are drawn
-3. Verify turn/round counters update
+1. Verify income is collected (ResourcePanel updates)
+2. Verify cards are drawn (HandSection deck count changes)
+3. Verify turn/round counters update in header
 4. Verify Age progression displays
 
 ### Phase 5: Full Game Cycle
 
 Play through multiple rounds testing:
 - Building and launching ships
-- Route claiming
+- Route claiming (RoutesPanel updates)
 - Resource management through the UI
 - Age transitions
 - End game conditions
@@ -126,67 +151,56 @@ Play through multiple rounds testing:
 ## UI Elements to Verify
 
 ### Header
-- [ ] Game title displays
-- [ ] Turn/Round/Age indicators update correctly
-- [ ] Phase indicator shows current phase
-- [ ] Current player turn indicator is visible
+- [ ] Age/Turn/Phase indicators update correctly
+- [ ] "Your Turn" / "Waiting for [player]" indicator
 - [ ] Player switching dropdown works (dev mode)
+- [ ] Online player count shows connected players
 
-### Left Sidebar (Resources)
-- [ ] Cash displays correctly
-- [ ] Income displays correctly
-- [ ] Gas cubes (hydrogen/helium) display with counts
-- [ ] Officers/Engineers counts display
-- [ ] Technology list displays acquired techs
+### Left Sidebar
+- [ ] ResourcePanel: Cash, income, VP display correctly
+- [ ] ResourcePanel: Officers/Engineers counts display
+- [ ] ResourcePanel: Hydrogen/Helium gas cubes with counts
+- [ ] Blueprint: 4 slot rows (Frame, Fabric, Drive, Component)
+- [ ] Blueprint: Filled vs empty slots visually distinct
+- [ ] Blueprint: ShipStats calculate correctly
+- [ ] TechList: Acquired technologies display
 
-### Main Area (Blueprint)
-- [ ] Blueprint slots display correctly
-- [ ] Filled vs empty slots are visually distinct
-- [ ] Clicking slot opens upgrade modal
-- [ ] Ship stats (Speed, Range, Ceiling, Reliability) calculate
-- [ ] Lift vs Weight (physics check) displays
-- [ ] Gas sockets display correctly
-- [ ] Ships list shows hangar/on-route ships
+### Center Area (Main Board)
+- [ ] GroundBoard: 12 locations organized by symbol
+- [ ] GroundBoard: Locations grouped (Technical, Operations, Business)
+- [ ] GroundBoard: Available locations highlight when card selected
+- [ ] GroundBoard: Occupied locations show agent marker
+- [ ] HandSection: Cards display with symbols
+- [ ] HandSection: Cards selectable during worker placement
+- [ ] HandSection: Deck/discard counts show
+- [ ] FleetPanel: Ships grouped by status (hangar, on route, awaiting hazard)
+- [ ] RoutesPanel: Available routes display with stats
 
-### Right Sidebar (Cards & Actions)
-- [ ] Hand cards display with names and symbols
-- [ ] Cards are selectable during worker placement
-- [ ] Action buttons enable/disable appropriately
-- [ ] Build Ship button works
-- [ ] End Turn/Pass button works
-- [ ] Buy Gas buttons work
+### Right Sidebar
+- [ ] PlayersList: All players with factions
+- [ ] PlayersList: Online indicators (green dot)
+- [ ] PlayersList: Current player highlighted
+- [ ] Actions panel: End Turn/Pass button works
+- [ ] GameLog: Recent entries display
 
-### Ground Board (Worker Placement)
-- [ ] All 11 locations display
-- [ ] Available locations are highlighted
-- [ ] Occupied locations show card symbols
-- [ ] Location tooltips explain actions
+### Toast Notifications
+- [ ] "It's Your Turn!" toast appears
+- [ ] Phase change toasts appear
+- [ ] Error toasts appear for invalid actions
 
-### Modals
-- [ ] Upgrade selection modal opens/closes
-- [ ] Available upgrades are listed with stats
-- [ ] Locked upgrades show requirements
-- [ ] Ship launch modal works
-- [ ] Route selection works
+## Action Mapping (Socket.io → UI)
 
-### Game Log
-- [ ] Log entries appear for actions
-- [ ] Log scrolls to show recent entries
-- [ ] System messages are highlighted
-
-## Action Mapping (REST API → UI)
-
-| REST API Action | UI Element |
-|----------------|------------|
-| `PLACE_AGENT` | Card click + Location click |
-| `PASS_PLACEMENT` | "Pass" button |
+| Socket Action | UI Element |
+|--------------|------------|
+| `PLACE_AGENT` | Card click → Location click |
+| `PASS` | "Pass" button |
 | `END_TURN` | "End Turn" button |
-| `BUY_GAS` | Gas Depot "Buy H₂/He" buttons |
+| `BUY_GAS` | Gas Depot location action |
 | `INSTALL_UPGRADE` | Blueprint slot click → Upgrade modal |
-| `BUILD_SHIP` | "Build Ship" button |
-| `LAUNCH_SHIP` | Ship click → Route modal → Launch |
-| `CLAIM_ROUTE` | Route "Claim" button |
-| `RECRUIT_OFFICER/ENGINEER` | Crew location action |
+| `BUILD_SHIP` | Construction Hall location action |
+| `LAUNCH_SHIP` | FleetPanel ship click → Route modal |
+| `CLAIM_ROUTE` | Route "Claim" in modal |
+| `RECRUIT_CREW` | Academy location action |
 | `ACQUIRE_TECHNOLOGY` | Research Institute / Tech modal |
 
 ## Chrome DevTools MCP Commands Reference
@@ -196,14 +210,14 @@ Play through multiple rounds testing:
 # List all open pages
 mcp__chrome-devtools__list_pages
 
-# Create new page with URL
-mcp__chrome-devtools__new_page url="http://localhost:3000/"
+# Create new page with URL (SvelteKit frontend)
+mcp__chrome-devtools__new_page url="http://localhost:5173/"
+
+# Navigate to game page
+mcp__chrome-devtools__navigate_page type="url" url="http://localhost:5173/game/GAME_ID"
 
 # Select a page for subsequent commands
 mcp__chrome-devtools__select_page pageIdx=0
-
-# Navigate current page
-mcp__chrome-devtools__navigate_page type="url" url="http://localhost:3000/game.html?id=GAME_ID"
 
 # Reload page
 mcp__chrome-devtools__navigate_page type="reload"
@@ -252,7 +266,7 @@ mcp__chrome-devtools__drag from_uid="source_uid" to_uid="target_uid"
 ### Waiting & Dialogs
 ```
 # Wait for text to appear
-mcp__chrome-devtools__wait_for text="Login successful"
+mcp__chrome-devtools__wait_for text="Your Turn"
 
 # Handle browser dialog (alert, confirm, prompt)
 mcp__chrome-devtools__handle_dialog action="accept"
@@ -281,11 +295,12 @@ mcp__chrome-devtools__evaluate_script function="() => document.title"
 
 ```
 # 1. Setup game via CLI
-python -m playtest setup
-python -m playtest gameid  # Note the game ID
+UPSHIP_LOCAL=1 python -m playtest setup
+GAME_ID=$(UPSHIP_LOCAL=1 python -m playtest gameid)
+echo "Game ID: $GAME_ID"
 
-# 2. Open browser page
-mcp__chrome-devtools__new_page url="http://localhost:3000/"
+# 2. Open browser page (SvelteKit frontend)
+mcp__chrome-devtools__new_page url="http://localhost:5173/"
 
 # 3. Take snapshot to see elements
 mcp__chrome-devtools__take_snapshot
@@ -298,11 +313,11 @@ mcp__chrome-devtools__click uid="login_button_uid"
 # 5. Wait for login
 mcp__chrome-devtools__wait_for text="My Games"
 
-# 6. Take snapshot to find game link
+# 6. Take snapshot to find game entry
 mcp__chrome-devtools__take_snapshot
 
 # 7. Click to enter game
-mcp__chrome-devtools__click uid="game_link_uid"
+mcp__chrome-devtools__click uid="game_entry_uid"
 
 # 8. Take screenshot of game board
 mcp__chrome-devtools__take_screenshot
@@ -318,11 +333,13 @@ After testing, report findings in this format:
 - List any broken controls
 - List any missing functionality vs REST API
 - List any confusing UX patterns
+- List any Socket.io connection issues
 
 ### UX Recommendations
 - Suggestions for improving discoverability
 - Suggestions for clearer feedback
 - Suggestions for better visual hierarchy
+- Suggestions for toast notification improvements
 
 ### Test Coverage
 - Phases tested: [worker_placement, reveal, income_cleanup]
@@ -331,22 +348,24 @@ After testing, report findings in this format:
 
 ## Quick Start (Summary)
 
-1. **Restart local server**: `./scripts/restart_server.sh`
+1. **Start servers**:
+   - Terminal 1: `npm run dev:local` (Express on :3000)
+   - Terminal 2: `npm run dev -w web` (SvelteKit on :5173)
 
 2. **Setup the game**: `UPSHIP_LOCAL=1 python -m playtest setup`
 
-3. **Get game ID**: `python -m playtest gameid`
+3. **Get game ID**: `UPSHIP_LOCAL=1 python -m playtest gameid`
 
 4. **Browser setup**:
    - List pages: `mcp__chrome-devtools__list_pages`
-   - Create page: `mcp__chrome-devtools__new_page url="http://localhost:3000/"`
+   - Create page: `mcp__chrome-devtools__new_page url="http://localhost:5173/"`
    - Take snapshot: `mcp__chrome-devtools__take_snapshot`
 
 5. **Login**: Use `playtest_germany` / `test123456`
    - Fill username and password fields using `mcp__chrome-devtools__fill`
    - Click login button using `mcp__chrome-devtools__click`
 
-6. **Enter the game**: Click "My Games" → Find active game → "View"
+6. **Enter the game**: Click "My Games" → Find active game → Click to enter
 
 7. **Play through UI**: Follow the playtest flow above, taking snapshots and screenshots at each major step
 
@@ -356,17 +375,17 @@ After testing, report findings in this format:
 
 ```bash
 # Check game state
-python -m playtest status
+UPSHIP_LOCAL=1 python -m playtest status
 
 # Show all players' summary
-python -m playtest summary
+UPSHIP_LOCAL=1 python -m playtest summary
 
 # Have all AI players take their turns (useful to advance game)
-python -m playtest autoplay 1
+UPSHIP_LOCAL=1 python -m playtest autoplay 1
 
 # Show available routes
-python -m playtest routes
+UPSHIP_LOCAL=1 python -m playtest routes
 
 # View game log
-python -m playtest tail 20
+UPSHIP_LOCAL=1 python -m playtest tail 20
 ```

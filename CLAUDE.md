@@ -208,9 +208,20 @@ server/
 └── data/
     ├── upgrades.js       # Upgrade definitions, tech bag, ship stat calculations
     └── groundBoard.js    # Worker placement locations, card symbols
-public/
-├── index.html            # Lobby page (auth, game list, create/join)
-└── game.html             # Game board UI with inline JavaScript
+web/                       # SvelteKit frontend (primary)
+├── src/
+│   ├── lib/
+│   │   ├── components/   # Svelte components (blueprint, cards, ships, sidebar)
+│   │   ├── stores/       # State management (auth, gameState, socket, ui)
+│   │   └── types/        # TypeScript types (game, actions, socket)
+│   └── routes/
+│       ├── +page.svelte         # Lobby page
+│       └── game/[id]/+page.svelte  # Game board
+├── package.json
+└── vite.config.ts        # Vite proxy config for API
+public/                    # Legacy frontend (deprecated)
+├── index.html            # Legacy lobby page
+└── game.html             # Legacy game board
 cli/
 └── upship.js             # Command-line playtesting tool
 spec/                     # Game rules documentation
@@ -222,12 +233,12 @@ plans/                    # Implementation plans (see overview.md for status)
 ### Data Flow
 
 ```
-Browser (fetch) → Express Routes → Service Layer → PostgreSQL
-                                                      ↓
-                      DOM Update ← JSON Response ← JSONB State
+SvelteKit (5173) → Vite Proxy → Express API (3000) → PostgreSQL
+      ↑                              ↓
+      └──── Socket.io ←──────────────┘
 ```
 
-The frontend polls `/api/state/:gameId` every 2 seconds. All game mutations go through `POST /api/state/:gameId/action`.
+The SvelteKit frontend connects via Socket.io for real-time updates. Game actions are sent through Socket.io and broadcast to all players in the game room. The REST API remains available for the CLI and playtest tools.
 
 ### Game State (JSONB)
 
