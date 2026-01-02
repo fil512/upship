@@ -28,11 +28,12 @@
 
 	// Game Components
 	import Blueprint from '$lib/components/blueprint/Blueprint.svelte';
+	import AirshipBlueprint from '$lib/components/blueprint/AirshipBlueprint.svelte';
 	import ShipStats from '$lib/components/blueprint/ShipStats.svelte';
+	import { openModal } from '$lib/stores/ui';
 	import GroundBoard from '$lib/components/ground-board/GroundBoard.svelte';
 	import HandSection from '$lib/components/cards/HandSection.svelte';
-	import FleetPanel from '$lib/components/ships/FleetPanel.svelte';
-	import RoutesPanel from '$lib/components/ships/RoutesPanel.svelte';
+	import MapView from '$lib/components/map/MapView.svelte';
 
 	// Sidebar Components
 	import TechList from '$lib/components/sidebar/TechList.svelte';
@@ -165,9 +166,26 @@
 	$: placements = $gameState?.groundBoard?.placements || {};
 	$: routes = $gameState?.map?.routes || [];
 	$: claimedRouteIds = routes.filter((r) => r.claimed).map((r) => r.id);
+	$: cities = $gameState?.map?.cities || {};
+
+	// All player ships for map display
+	$: allPlayerShips = Object.entries($gameState?.players || {}).flatMap(([playerId, player]) =>
+		(player.ships || []).map((ship) => ({ ship, faction: player.faction }))
+	);
 
 	// Ship stats from blueprint
 	$: shipStats = calculateShipStats($myState?.blueprint);
+
+	// Handle blueprint slot click
+	function handleBlueprintSlotClick(event: CustomEvent<{ slotType: string; index: number; upgrade: string | null }>) {
+		const { slotType, index, upgrade } = event.detail;
+		openModal('upgrade', {
+			slotType,
+			slotIndex: index,
+			currentUpgrade: upgrade,
+			age: $gameState?.age || 1
+		});
+	}
 
 	// Check if viewing another player (in dev mode)
 	$: isViewingOtherPlayer = $isDevMode && $effectiveUserId !== $user?.id;
@@ -315,28 +333,25 @@
 						</div>
 					{:else if activeTab === 'map'}
 						<div class="map-tab">
-							<!-- Fleet and Routes -->
-							<div class="fleet-routes-row">
-								<section class="board-section fleet">
-									<FleetPanel
-										ships={$myState?.ships || []}
-										selectable={$isMyTurn}
-									/>
-								</section>
-
-								<section class="board-section routes">
-									<RoutesPanel
-										{routes}
-										{claimedRouteIds}
-										selectable={$isMyTurn}
-									/>
-								</section>
-							</div>
+							<MapView
+								age={$gameState?.age || 1}
+								{routes}
+								{cities}
+								ships={$myState?.ships || []}
+								{allPlayerShips}
+								missionRow={$gameState?.missionRow || []}
+								myFaction={$myState?.faction}
+								selectable={$isMyTurn}
+							/>
 						</div>
 					{:else if activeTab === 'blueprint'}
 						<div class="blueprint-tab">
-							{#if $myState}
-								<Blueprint />
+							{#if $myState?.blueprint}
+								<AirshipBlueprint
+									blueprint={$myState.blueprint}
+									age={$gameState?.age || 1}
+									on:slotClick={handleBlueprintSlotClick}
+								/>
 								<TechList technologies={$myState.technologies || []} />
 							{/if}
 						</div>
@@ -594,14 +609,17 @@
 	.map-tab {
 		display: flex;
 		flex-direction: column;
-		gap: var(--spacing-md);
+		flex: 1;
+		min-height: 500px;
 	}
 
 	.blueprint-tab {
 		display: flex;
 		flex-direction: column;
-		align-items: center;
-		gap: var(--spacing-md);
+		align-items: stretch;
+		gap: var(--spacing-lg);
+		max-width: 900px;
+		margin: 0 auto;
 	}
 
 	.ship-stats-panel {

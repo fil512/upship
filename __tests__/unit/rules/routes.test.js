@@ -62,10 +62,11 @@ describe('Rules Compliance - Routes and City Bonuses', () => {
       expect(gameStateService.createAgeIIIMap).toBeDefined();
     });
 
-    it('should have 16 Age III routes', () => {
+    it('should have 21 Age III routes forming a fully connected network', () => {
       const gameStateService = require('../../../server/services/gameStateService');
       const map = gameStateService.createAgeIIIMap();
-      expect(map.routes.length).toBe(16);
+      // 21 routes: 13 standard + 8 luxury routes (fully connected network per Appendix F)
+      expect(map.routes.length).toBe(21);
     });
 
     it('should have correct Hindenburg Route as highest VP route', () => {

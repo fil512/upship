@@ -1,0 +1,659 @@
+<script lang="ts">
+	import { createEventDispatcher } from 'svelte';
+	import type { Blueprint } from '$lib/types/game';
+
+	export let blueprint: Blueprint;
+	export let age: number = 1;
+
+	const dispatch = createEventDispatcher<{
+		slotClick: { slotType: string; index: number; upgrade: string | null };
+	}>();
+
+	function handleSlotClick(slotType: string, index: number, upgrade: string | null) {
+		dispatch('slotClick', { slotType, index, upgrade });
+	}
+
+	// Upgrade data lookup (simplified - full names and stats)
+	const UPGRADE_DATA: Record<string, { name: string; weight: number; stats: Record<string, number> }> = {
+		// Frame
+		duralumin_frame: { name: 'Duralumin Frame', weight: 2, stats: { reliability: 2, ceiling: 1 } },
+		wooden_frame: { name: 'Wooden Frame', weight: 2, stats: { reliability: 1 } },
+		tensioned_frame: { name: 'Tensioned Frame', weight: 1, stats: { ceiling: 1 } },
+		steel_frame: { name: 'Steel Frame', weight: 3, stats: { reliability: 2 } },
+		semi_rigid_keel: { name: 'Semi-Rigid Keel', weight: 2, stats: { reliability: 1 } },
+		geodetic_frame: { name: 'Geodetic Frame', weight: 1, stats: { reliability: 2, ceiling: 1 } },
+		modular_frame: { name: 'Modular Frame', weight: 1, stats: {} },
+		flexible_frame: { name: 'Flexible Frame', weight: 0, stats: { ceiling: 1 } },
+		streamlined_hull: { name: 'Streamlined Hull', weight: 1, stats: { lift: 2 } },
+		aerodynamic_lift_system: { name: 'Aero Lift System', weight: 2, stats: { lift: 4 } },
+		// Fabric
+		cotton_envelope: { name: 'Cotton Envelope', weight: 0, stats: {} },
+		doped_covering: { name: 'Doped Covering', weight: 0, stats: { speed: 1 } },
+		premium_envelope: { name: 'Premium Envelope', weight: 0, stats: { lift: 3, reliability: 1, range: 1 } },
+		fire_resistant_fabric: { name: 'Fire-Resist Fabric', weight: 1, stats: { reliability: 1 } },
+		reflective_covering: { name: 'Reflective Cover', weight: 0, stats: { reliability: 1 } },
+		synthetic_envelope: { name: 'Synthetic Envelope', weight: 0, stats: { reliability: 1, range: 1 } },
+		advanced_fabric: { name: 'Advanced Fabric', weight: 0, stats: { reliability: 2 } },
+		conductive_covering: { name: 'Conductive Cover', weight: 0, stats: { reliability: 1 } },
+		// Drive
+		basic_engine: { name: 'Basic Engine', weight: 1, stats: { speed: 1 } },
+		efficient_propeller: { name: 'Efficient Prop', weight: 1, stats: { speed: 1, range: 1 } },
+		twin_engine: { name: 'Twin Engine', weight: 3, stats: { speed: 2, reliability: 1 } },
+		maybach_cx: { name: 'Maybach CX', weight: 2, stats: { speed: 2, range: 1 } },
+		diesel_engine: { name: 'Diesel Engine', weight: 2, stats: { range: 2, reliability: 1 } },
+		vectored_thrust: { name: 'Vectored Thrust', weight: 2, stats: { speed: 1, ceiling: 1 } },
+		balanced_propulsion: { name: 'Balanced Prop', weight: 2, stats: { speed: 2, reliability: 1 } },
+		aerodynamic_engine: { name: 'Aero Engine', weight: 2, stats: { speed: 3 } },
+		high_altitude_engine: { name: 'High-Alt Engine', weight: 3, stats: { speed: 2, ceiling: 2 } },
+		hybrid_powerplant: { name: 'Hybrid Power', weight: 3, stats: { range: 3, reliability: 1 } },
+		adaptive_propeller: { name: 'Adaptive Prop', weight: 2, stats: { speed: 1, range: 2 } },
+		// Component
+		pressure_control: { name: 'Pressure Control', weight: 1, stats: { ceiling: 1 } },
+		altitude_ballonets: { name: 'Altitude Ballonets', weight: 1, stats: { ceiling: 1 } },
+		compartmented_gas: { name: 'Compartment Gas', weight: 1, stats: { lift: 2, reliability: 1 } },
+		helium_gas_cell: { name: 'Helium Gas Cell', weight: 1, stats: {} },
+		blaugas_tank: { name: 'Blaugas Tank', weight: 0, stats: { range: 1 } },
+		smart_valving: { name: 'Smart Valving', weight: 1, stats: { reliability: 1, ceiling: 1 } },
+		high_ceiling_gas: { name: 'High-Ceiling Gas', weight: 2, stats: { lift: 3, ceiling: 2 } },
+		redundant_cells: { name: 'Redundant Cells', weight: 2, stats: { lift: 4, reliability: 2 } },
+		rapid_descent_system: { name: 'Rapid Descent', weight: 1, stats: { reliability: 2 } },
+		reclamation_system: { name: 'Reclamation Sys', weight: 1, stats: { range: 2 } },
+		exhaust_condensers: { name: 'Exhaust Condense', weight: 2, stats: {} },
+		spotter_gondola: { name: 'Spotter Gondola', weight: 1, stats: { income: 1 } },
+		postal_service: { name: 'Postal Service', weight: 1, stats: { income: 2 } },
+		external_cargo: { name: 'External Cargo', weight: 2, stats: { income: 2 } },
+		passenger_gondola: { name: 'Basic Cabin', weight: 2, stats: { income: 2, luxury: 1 } },
+		bombing_equipment: { name: 'Bombing Equip', weight: 3, stats: {} },
+		sparrowhawk_hangar: { name: 'Fighter Hangar', weight: 3, stats: {} },
+		communications_suite: { name: 'Comms Suite', weight: 1, stats: { reliability: 1 } },
+		light_armor_plating: { name: 'Light Armor', weight: 2, stats: {} },
+		heavy_armor_plating: { name: 'Heavy Armor', weight: 3, stats: {} },
+		luxury_cabin: { name: 'Luxury Cabin', weight: 3, stats: { income: 3, luxury: 2 } },
+		restaurant: { name: 'Restaurant', weight: 2, stats: { income: 2, luxury: 2 } },
+		observation_lounge: { name: 'Observation Lounge', weight: 2, stats: { income: 1, luxury: 3 } },
+		sleeping_quarters: { name: 'Private Berths', weight: 2, stats: { income: 2, luxury: 1 } },
+		pressurized_lounge: { name: 'Pressurized Lounge', weight: 2, stats: { income: 1, luxury: 2 } },
+		imperial_mast: { name: 'Imperial Mast', weight: 1, stats: {} },
+		navigation_suite: { name: 'Navigation Suite', weight: 1, stats: { reliability: 2, range: 1 } }
+	};
+
+	function getUpgradeInfo(upgradeId: string | null): { name: string; weight: number; stats: Record<string, number> } | null {
+		if (!upgradeId) return null;
+		// Try exact match first, then strip type prefix (fabric_, frame_, etc.)
+		if (UPGRADE_DATA[upgradeId]) return UPGRADE_DATA[upgradeId];
+		const stripped = upgradeId.replace(/^(fabric|frame|drive|component)_/, '');
+		return UPGRADE_DATA[stripped] || { name: upgradeId.replace(/_/g, ' '), weight: 0, stats: {} };
+	}
+
+	// Slot positions on the airship (viewBox is 800x300)
+	const slotWidth = 100;
+	const slotHeight = 54;
+	const slotPositions = {
+		// Frame: along the central keel/spine (3 slots)
+		frame: [
+			{ x: 120, y: 123 },
+			{ x: 240, y: 123 },
+			{ x: 360, y: 123 }
+		],
+		// Fabric: along the top of the envelope (3 slots)
+		fabric: [
+			{ x: 160, y: 45 },
+			{ x: 280, y: 30 },
+			{ x: 400, y: 45 }
+		],
+		// Drive: at the rear near propellers (2 slots)
+		drive: [
+			{ x: 600, y: 85 },
+			{ x: 600, y: 160 }
+		],
+		// Component: in the gondola area (3 slots)
+		component: [
+			{ x: 160, y: 205 },
+			{ x: 280, y: 205 },
+			{ x: 400, y: 205 }
+		]
+	};
+
+	const slotColors = {
+		frame: '#3b82f6',
+		fabric: '#8b5cf6',
+		drive: '#f59e0b',
+		component: '#10b981'
+	};
+
+	// SVG icon paths (solid filled icons - 24x24 viewBox)
+	const STAT_ICONS: Record<string, { path: string; color: string; filled: boolean }> = {
+		lift: {
+			// Balloon shape (solid)
+			path: 'M12 2C8 2 5 5 5 9c0 3 2 6 5 8l1 3h2l1-3c3-2 5-5 5-8c0-4-3-7-7-7z M10 22h4v1h-4z',
+			color: '#22c55e', // green
+			filled: true
+		},
+		reliability: {
+			// Shield (solid)
+			path: 'M12 2L4 5v6c0 5.5 3.4 10.6 8 12c4.6-1.4 8-6.5 8-12V5l-8-3z',
+			color: '#3b82f6', // blue
+			filled: true
+		},
+		ceiling: {
+			// Cloud shape (solid)
+			path: 'M19.5 10c-.2-2.8-2.5-5-5.4-5c-2 0-3.7 1-4.7 2.6C9 7.2 8.5 7 8 7c-2.2 0-4 1.8-4 4c0 .1 0 .3 0 .4C2.3 12 1 13.5 1 15.3C1 17.4 2.6 19 4.7 19h13.6c2.1 0 3.7-1.6 3.7-3.7c0-2-1.5-3.6-3.4-3.9c0-.1.1-.3.1-.4c0-.7-.1-1.4-.2-2z',
+			color: '#a855f7', // purple
+			filled: true
+		},
+		range: {
+			// Arrow pointing right (solid)
+			path: 'M4 11h12V7l6 5-6 5v-4H4v-2z',
+			color: '#f59e0b', // amber
+			filled: true
+		},
+		speed: {
+			// Wings shape (elegant curved pair)
+			path: 'M12 12 C9 10 5 8 1 9 C3 11 6 14 9 16 C10 15 11 14 12 13 C13 14 14 15 15 16 C18 14 21 11 23 9 C19 8 15 10 12 12 Z',
+			color: '#eab308', // yellow
+			filled: true
+		},
+		income: {
+			// Coin with pound sign (solid)
+			path: 'M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10s10-4.5 10-10S17.5 2 12 2z',
+			color: '#f1c40f', // gold
+			filled: true
+		},
+		luxury: {
+			// Star (solid)
+			path: 'M12 2l2.4 7.4H22l-6 4.6 2.3 7-6.3-4.6L5.7 21l2.3-7-6-4.6h7.6z',
+			color: '#ec4899', // pink
+			filled: true
+		},
+		weight: {
+			// Anchor with ring, crossbar, and curved flukes with pointed tips
+			path: 'M12 1 C9 1 7 3 7 5 C7 7 9 8 11 8 L11 10 L6 10 L6 12 L11 12 L11 18 Q7 18 3 21 L1 23 L4 22 Q8 19 11 19 L11 23 L13 23 L13 19 Q16 19 20 22 L23 23 L21 21 Q17 18 13 18 L13 12 L18 12 L18 10 L13 10 L13 8 C15 8 17 7 17 5 C17 3 15 1 12 1 Z',
+			color: '#ef4444', // red
+			filled: true
+		}
+	};
+
+	// Get list of stats to display as icons with positioning info
+	interface IconInfo {
+		type: string;
+		x: number;
+	}
+
+	function getIconsWithPositions(stats: Record<string, number>, weight: number): IconInfo[] {
+		const icons: IconInfo[] = [];
+		const order = ['lift', 'reliability', 'ceiling', 'range', 'speed', 'income', 'luxury'];
+
+		// Collect all stat icons
+		for (const stat of order) {
+			const count = stats[stat] || 0;
+			for (let i = 0; i < count; i++) {
+				icons.push({ type: stat, x: 0 });
+			}
+		}
+
+		// Add weight icons
+		for (let i = 0; i < weight; i++) {
+			icons.push({ type: 'weight', x: 0 });
+		}
+
+		// Calculate positions (larger spacing for bigger icons)
+		const spacing = 30;
+		const totalIcons = icons.length;
+		const startX = -((totalIcons - 1) * spacing) / 2;
+
+		for (let i = 0; i < icons.length; i++) {
+			icons[i].x = startX + i * spacing;
+		}
+
+		return icons;
+	}
+</script>
+
+<div class="airship-blueprint">
+	<div class="header">
+		<span class="title">BLUEPRINT</span>
+		<span class="age-badge">Age {age}</span>
+	</div>
+
+	<svg viewBox="0 0 800 300" class="airship-svg">
+		<!-- Background gradient -->
+		<defs>
+			<linearGradient id="skyGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+				<stop offset="0%" style="stop-color:#1e293b;stop-opacity:1" />
+				<stop offset="100%" style="stop-color:#0f172a;stop-opacity:1" />
+			</linearGradient>
+		</defs>
+		<rect width="100%" height="100%" fill="url(#skyGradient)" rx="8" />
+
+		<!-- Airship envelope (main body) - larger ellipse -->
+		<ellipse
+			cx="340"
+			cy="120"
+			rx="300"
+			ry="95"
+			fill="none"
+			stroke="#475569"
+			stroke-width="3"
+			class="envelope"
+		/>
+
+		<!-- Internal frame lines (structural) -->
+		<line x1="60" y1="120" x2="620" y2="120" stroke="#334155" stroke-width="1.5" stroke-dasharray="8 4" />
+		<line x1="180" y1="35" x2="180" y2="205" stroke="#334155" stroke-width="1" stroke-dasharray="6 3" />
+		<line x1="340" y1="28" x2="340" y2="212" stroke="#334155" stroke-width="1.5" stroke-dasharray="6 3" />
+		<line x1="500" y1="35" x2="500" y2="205" stroke="#334155" stroke-width="1" stroke-dasharray="6 3" />
+
+		<!-- Gondola (passenger/cargo cabin) - larger -->
+		<path
+			d="M 140 200 Q 140 265 200 265 L 420 265 Q 480 265 480 200"
+			fill="none"
+			stroke="#475569"
+			stroke-width="3"
+			class="gondola"
+		/>
+
+		<!-- Gondola windows -->
+		<ellipse cx="220" cy="240" rx="15" ry="10" fill="none" stroke="#64748b" stroke-width="1.5" />
+		<ellipse cx="280" cy="240" rx="15" ry="10" fill="none" stroke="#64748b" stroke-width="1.5" />
+		<ellipse cx="340" cy="240" rx="15" ry="10" fill="none" stroke="#64748b" stroke-width="1.5" />
+		<ellipse cx="400" cy="240" rx="15" ry="10" fill="none" stroke="#64748b" stroke-width="1.5" />
+
+		<!-- Tail fins - larger -->
+		<path
+			d="M 580 120 L 720 50 L 720 90 L 620 120"
+			fill="none"
+			stroke="#475569"
+			stroke-width="3"
+			class="tail-fin-top"
+		/>
+		<path
+			d="M 580 120 L 720 190 L 720 150 L 620 120"
+			fill="none"
+			stroke="#475569"
+			stroke-width="3"
+			class="tail-fin-bottom"
+		/>
+
+		<!-- Vertical stabilizer -->
+		<path
+			d="M 600 120 L 700 120"
+			stroke="#475569"
+			stroke-width="2"
+		/>
+
+		<!-- Propellers at rear - larger -->
+		<g class="propeller-group" transform="translate(735, 70)">
+			<circle r="25" fill="none" stroke="#475569" stroke-width="2" />
+			<line x1="-20" y1="0" x2="20" y2="0" stroke="#64748b" stroke-width="3" class="prop-blade" />
+			<line x1="0" y1="-20" x2="0" y2="20" stroke="#64748b" stroke-width="3" class="prop-blade" />
+		</g>
+		<g class="propeller-group" transform="translate(735, 170)">
+			<circle r="25" fill="none" stroke="#475569" stroke-width="2" />
+			<line x1="-20" y1="0" x2="20" y2="0" stroke="#64748b" stroke-width="3" class="prop-blade" />
+			<line x1="0" y1="-20" x2="0" y2="20" stroke="#64748b" stroke-width="3" class="prop-blade" />
+		</g>
+
+		<!-- Nose cone -->
+		<ellipse cx="50" cy="120" rx="15" ry="40" fill="none" stroke="#475569" stroke-width="2" />
+
+		<!-- Section Labels -->
+		<text x="340" y="18" text-anchor="middle" font-size="10" fill="#64748b" font-weight="500">ENVELOPE</text>
+		<text x="340" y="290" text-anchor="middle" font-size="10" fill="#64748b" font-weight="500">GONDOLA</text>
+		<text x="700" y="120" text-anchor="middle" font-size="10" fill="#64748b" font-weight="500">DRIVE</text>
+
+		<!-- FABRIC SLOTS (top of envelope) -->
+		{#each blueprint.fabricSlots as upgrade, index}
+			{#if slotPositions.fabric[index]}
+				{@const info = getUpgradeInfo(upgrade)}
+				{@const pos = slotPositions.fabric[index]}
+				{@const icons = info ? getIconsWithPositions(info.stats, info.weight) : []}
+				<g
+					class="slot-group"
+					transform="translate({pos.x}, {pos.y})"
+					role="button"
+					tabindex="0"
+					on:click={() => handleSlotClick('fabric', index, upgrade)}
+					on:keydown={(e) => e.key === 'Enter' && handleSlotClick('fabric', index, upgrade)}
+				>
+					<rect
+						width={slotWidth}
+						height={slotHeight}
+						rx="6"
+						class="slot"
+						class:filled={upgrade !== null}
+						style="--slot-color: {slotColors.fabric}"
+					/>
+					{#if info}
+						<!-- Icons row - large and prominent -->
+						<g transform="translate({slotWidth/2}, 22)">
+							{#each icons as icon}
+								<g transform="translate({icon.x}, 0)">
+									<svg x="-14" y="-14" width="28" height="28" viewBox="0 0 24 24">
+										<path d={STAT_ICONS[icon.type].path} fill={STAT_ICONS[icon.type].color}/>
+									</svg>
+								</g>
+							{/each}
+						</g>
+						<!-- Name below icons -->
+						<text x={slotWidth/2} y="46" text-anchor="middle" class="slot-name" style="--slot-color: {slotColors.fabric}">{info.name}</text>
+					{:else}
+						<text x={slotWidth/2} y="32" text-anchor="middle" class="slot-empty">+ FABRIC</text>
+					{/if}
+				</g>
+			{/if}
+		{/each}
+
+		<!-- FRAME SLOTS (along the keel) -->
+		{#each blueprint.frameSlots as upgrade, index}
+			{#if slotPositions.frame[index]}
+				{@const info = getUpgradeInfo(upgrade)}
+				{@const pos = slotPositions.frame[index]}
+				{@const icons = info ? getIconsWithPositions(info.stats, info.weight) : []}
+				<g
+					class="slot-group"
+					transform="translate({pos.x}, {pos.y})"
+					role="button"
+					tabindex="0"
+					on:click={() => handleSlotClick('frame', index, upgrade)}
+					on:keydown={(e) => e.key === 'Enter' && handleSlotClick('frame', index, upgrade)}
+				>
+					<rect
+						width={slotWidth}
+						height={slotHeight}
+						rx="6"
+						class="slot"
+						class:filled={upgrade !== null}
+						style="--slot-color: {slotColors.frame}"
+					/>
+					{#if info}
+						<!-- Icons row - large and prominent -->
+						<g transform="translate({slotWidth/2}, 22)">
+							{#each icons as icon}
+								<g transform="translate({icon.x}, 0)">
+									<svg x="-14" y="-14" width="28" height="28" viewBox="0 0 24 24">
+										<path d={STAT_ICONS[icon.type].path} fill={STAT_ICONS[icon.type].color}/>
+									</svg>
+								</g>
+							{/each}
+						</g>
+						<!-- Name below icons -->
+						<text x={slotWidth/2} y="46" text-anchor="middle" class="slot-name" style="--slot-color: {slotColors.frame}">{info.name}</text>
+					{:else}
+						<text x={slotWidth/2} y="32" text-anchor="middle" class="slot-empty">+ FRAME</text>
+					{/if}
+				</g>
+			{/if}
+		{/each}
+
+		<!-- DRIVE SLOTS (at the rear) -->
+		{#each blueprint.driveSlots as upgrade, index}
+			{#if slotPositions.drive[index]}
+				{@const info = getUpgradeInfo(upgrade)}
+				{@const pos = slotPositions.drive[index]}
+				{@const icons = info ? getIconsWithPositions(info.stats, info.weight) : []}
+				<g
+					class="slot-group"
+					transform="translate({pos.x}, {pos.y})"
+					role="button"
+					tabindex="0"
+					on:click={() => handleSlotClick('drive', index, upgrade)}
+					on:keydown={(e) => e.key === 'Enter' && handleSlotClick('drive', index, upgrade)}
+				>
+					<rect
+						width={slotWidth}
+						height={slotHeight}
+						rx="6"
+						class="slot"
+						class:filled={upgrade !== null}
+						style="--slot-color: {slotColors.drive}"
+					/>
+					{#if info}
+						<!-- Icons row - large and prominent -->
+						<g transform="translate({slotWidth/2}, 22)">
+							{#each icons as icon}
+								<g transform="translate({icon.x}, 0)">
+									<svg x="-14" y="-14" width="28" height="28" viewBox="0 0 24 24">
+										<path d={STAT_ICONS[icon.type].path} fill={STAT_ICONS[icon.type].color}/>
+									</svg>
+								</g>
+							{/each}
+						</g>
+						<!-- Name below icons -->
+						<text x={slotWidth/2} y="46" text-anchor="middle" class="slot-name" style="--slot-color: {slotColors.drive}">{info.name}</text>
+					{:else}
+						<text x={slotWidth/2} y="32" text-anchor="middle" class="slot-empty">+ DRIVE</text>
+					{/if}
+				</g>
+			{/if}
+		{/each}
+
+		<!-- COMPONENT SLOTS (in the gondola) -->
+		{#each blueprint.componentSlots as upgrade, index}
+			{#if slotPositions.component[index]}
+				{@const info = getUpgradeInfo(upgrade)}
+				{@const pos = slotPositions.component[index]}
+				{@const icons = info ? getIconsWithPositions(info.stats, info.weight) : []}
+				<g
+					class="slot-group"
+					transform="translate({pos.x}, {pos.y})"
+					role="button"
+					tabindex="0"
+					on:click={() => handleSlotClick('component', index, upgrade)}
+					on:keydown={(e) => e.key === 'Enter' && handleSlotClick('component', index, upgrade)}
+				>
+					<rect
+						width={slotWidth}
+						height={slotHeight}
+						rx="6"
+						class="slot"
+						class:filled={upgrade !== null}
+						style="--slot-color: {slotColors.component}"
+					/>
+					{#if info}
+						<!-- Icons row - large and prominent -->
+						<g transform="translate({slotWidth/2}, 22)">
+							{#each icons as icon}
+								<g transform="translate({icon.x}, 0)">
+									<svg x="-14" y="-14" width="28" height="28" viewBox="0 0 24 24">
+										<path d={STAT_ICONS[icon.type].path} fill={STAT_ICONS[icon.type].color}/>
+									</svg>
+								</g>
+							{/each}
+						</g>
+						<!-- Name below icons -->
+						<text x={slotWidth/2} y="46" text-anchor="middle" class="slot-name" style="--slot-color: {slotColors.component}">{info.name}</text>
+					{:else}
+						<text x={slotWidth/2} y="32" text-anchor="middle" class="slot-empty">+ COMPONENT</text>
+					{/if}
+				</g>
+			{/if}
+		{/each}
+	</svg>
+
+	<!-- Legend -->
+	<div class="legend">
+		<div class="legend-section">
+			<span class="legend-title">SLOTS:</span>
+			<span class="legend-item" style="--color: {slotColors.fabric}">Fabric</span>
+			<span class="legend-item" style="--color: {slotColors.frame}">Frame</span>
+			<span class="legend-item" style="--color: {slotColors.drive}">Drive</span>
+			<span class="legend-item" style="--color: {slotColors.component}">Component</span>
+		</div>
+		<div class="legend-section">
+			<span class="legend-title">STATS:</span>
+			<span class="icon-legend">
+				<svg width="20" height="20" viewBox="0 0 24 24"><path d={STAT_ICONS.lift.path} fill={STAT_ICONS.lift.color}/></svg>
+				Lift
+			</span>
+			<span class="icon-legend">
+				<svg width="20" height="20" viewBox="0 0 24 24"><path d={STAT_ICONS.reliability.path} fill={STAT_ICONS.reliability.color}/></svg>
+				Reliability
+			</span>
+			<span class="icon-legend">
+				<svg width="20" height="20" viewBox="0 0 24 24"><path d={STAT_ICONS.ceiling.path} fill={STAT_ICONS.ceiling.color}/></svg>
+				Ceiling
+			</span>
+			<span class="icon-legend">
+				<svg width="20" height="20" viewBox="0 0 24 24"><path d={STAT_ICONS.range.path} fill={STAT_ICONS.range.color}/></svg>
+				Range
+			</span>
+			<span class="icon-legend">
+				<svg width="20" height="20" viewBox="0 0 24 24"><path d={STAT_ICONS.speed.path} fill={STAT_ICONS.speed.color}/></svg>
+				Speed
+			</span>
+			<span class="icon-legend">
+				<svg width="20" height="20" viewBox="0 0 24 24"><path d={STAT_ICONS.weight.path} fill={STAT_ICONS.weight.color}/></svg>
+				Weight
+			</span>
+		</div>
+	</div>
+</div>
+
+<style>
+	.airship-blueprint {
+		background: var(--color-bg-card);
+		border-radius: var(--radius-lg);
+		padding: var(--spacing-md);
+		width: 100%;
+	}
+
+	.header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		margin-bottom: var(--spacing-sm);
+	}
+
+	.title {
+		font-size: 0.875rem;
+		font-weight: 600;
+		color: var(--color-accent-gold);
+		letter-spacing: 0.1em;
+	}
+
+	.age-badge {
+		padding: 2px 10px;
+		background: var(--color-bg-hover);
+		border-radius: var(--radius-full);
+		font-size: 0.75rem;
+		color: var(--color-text-secondary);
+	}
+
+	.airship-svg {
+		width: 100%;
+		height: auto;
+		min-height: 200px;
+		border-radius: var(--radius-md);
+	}
+
+	.envelope,
+	.gondola,
+	.tail-fin-top,
+	.tail-fin-bottom {
+		transition: stroke 0.2s ease;
+	}
+
+	.propeller-group {
+		animation: spin 4s linear infinite;
+		transform-origin: center;
+	}
+
+	@keyframes spin {
+		from { transform: rotate(0deg); }
+		to { transform: rotate(360deg); }
+	}
+
+	.slot-group {
+		cursor: pointer;
+	}
+
+	.slot {
+		fill: rgba(30, 41, 59, 0.8);
+		stroke: var(--slot-color);
+		stroke-width: 2;
+		stroke-dasharray: 6 3;
+		transition: all 0.15s ease;
+	}
+
+	.slot-group:hover .slot {
+		fill: color-mix(in srgb, var(--slot-color) 25%, transparent);
+		stroke-dasharray: none;
+		stroke-width: 2.5;
+	}
+
+	.slot.filled {
+		fill: color-mix(in srgb, var(--slot-color) 20%, rgba(30, 41, 59, 0.9));
+		stroke-dasharray: none;
+	}
+
+	.slot-name {
+		font-size: 9px;
+		font-weight: 600;
+		fill: var(--slot-color);
+		pointer-events: none;
+		font-family: var(--font-sans);
+		opacity: 0.9;
+	}
+
+	.slot-empty {
+		font-size: 11px;
+		font-weight: 500;
+		fill: #64748b;
+		pointer-events: none;
+		font-family: var(--font-sans);
+	}
+
+	.legend {
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: space-between;
+		gap: var(--spacing-md);
+		margin-top: var(--spacing-md);
+		padding-top: var(--spacing-sm);
+		border-top: 1px solid var(--color-border);
+	}
+
+	.legend-section {
+		display: flex;
+		align-items: center;
+		gap: var(--spacing-sm);
+		flex-wrap: wrap;
+	}
+
+	.legend-title {
+		font-size: 0.65rem;
+		font-weight: 700;
+		color: var(--color-text-muted);
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+	}
+
+	.legend-item {
+		font-size: 0.7rem;
+		font-weight: 600;
+		color: var(--color);
+	}
+
+	.legend-item::before {
+		content: '';
+		display: inline-block;
+		width: 10px;
+		height: 10px;
+		background: var(--color);
+		border-radius: 2px;
+		margin-right: 4px;
+		vertical-align: middle;
+	}
+
+	.icon-legend {
+		font-size: 0.7rem;
+		color: var(--color-text-secondary);
+		display: inline-flex;
+		align-items: center;
+		gap: 3px;
+	}
+
+	.icon-legend svg {
+		flex-shrink: 0;
+	}
+</style>

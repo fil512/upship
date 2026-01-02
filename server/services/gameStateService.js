@@ -419,7 +419,7 @@ function createMarketCards() {
 
 /**
  * Create Age I map routes per Appendix F
- * The Pioneer Era features 12 regional routes across Western Europe.
+ * The Pioneer Era features 17 regional routes across Western Europe forming a fully connected network.
  * Each route has VP value matching Appendix F specifications.
  */
 function createAgeIMap() {
@@ -427,15 +427,25 @@ function createAgeIMap() {
     name: 'Western Europe',
     age: 1,
     routes: [
-      // Per Appendix F - Age I Routes
-      { id: 'route_rhine_valley', name: 'Rhine Valley', from: 'Frankfurt', to: 'Cologne',
-        range: 1, speed: 0, ceiling: 0, income: 2, vp: 1, claimed: null },
-      { id: 'route_bodensee', name: 'Bodensee Circuit', from: 'Friedrichshafen', to: 'Konstanz',
+      // Per Appendix F - Age I Routes (fully connected network)
+      // Range 1 routes (starter/regional)
+      { id: 'route_london_gateway', name: 'London Gateway', from: 'London', to: 'Dover',
         range: 1, speed: 0, ceiling: 0, income: 2, vp: 1, claimed: null },
       { id: 'route_channel', name: 'Channel Crossing', from: 'Calais', to: 'Dover',
         range: 1, speed: 1, ceiling: 0, income: 3, vp: 2, claimed: null },
+      { id: 'route_rhine_valley', name: 'Rhine Valley', from: 'Frankfurt', to: 'Cologne',
+        range: 1, speed: 0, ceiling: 0, income: 2, vp: 1, claimed: null },
+      { id: 'route_low_countries', name: 'Low Countries', from: 'Brussels', to: 'Amsterdam',
+        range: 1, speed: 1, ceiling: 0, income: 3, vp: 2, claimed: null },
       { id: 'route_paris_express', name: 'Paris Express', from: 'Paris', to: 'Brussels',
         range: 1, speed: 1, ceiling: 0, income: 3, vp: 2, claimed: null },
+      { id: 'route_rhineland', name: 'Rhineland', from: 'Brussels', to: 'Cologne',
+        range: 1, speed: 1, ceiling: 0, income: 3, vp: 2, claimed: null },
+      { id: 'route_lake_constance', name: 'Lake Constance', from: 'Friedrichshafen', to: 'Zurich',
+        range: 1, speed: 0, ceiling: 0, income: 3, vp: 2, claimed: null },
+      // Range 2 routes (medium distance)
+      { id: 'route_london_paris', name: 'London-Paris', from: 'London', to: 'Paris',
+        range: 2, speed: 2, ceiling: 0, income: 5, vp: 3, claimed: null },
       { id: 'route_north_sea', name: 'North Sea Run', from: 'Hamburg', to: 'Amsterdam',
         range: 2, speed: 1, ceiling: 0, income: 4, vp: 2, claimed: null },
       { id: 'route_baltic', name: 'Baltic Passage', from: 'Hamburg', to: 'Copenhagen',
@@ -444,12 +454,15 @@ function createAgeIMap() {
         range: 2, speed: 0, ceiling: 1, income: 4, vp: 2, claimed: null },
       { id: 'route_mediterranean', name: 'Mediterranean Link', from: 'Marseille', to: 'Barcelona',
         range: 2, speed: 1, ceiling: 0, income: 4, vp: 2, claimed: null },
-      { id: 'route_london_paris', name: 'London-Paris', from: 'London', to: 'Paris',
-        range: 2, speed: 2, ceiling: 0, income: 5, vp: 3, claimed: null },
-      { id: 'route_berlin_vienna', name: 'Berlin-Vienna', from: 'Berlin', to: 'Vienna',
-        range: 3, speed: 1, ceiling: 0, income: 5, vp: 3, claimed: null },
+      { id: 'route_german_alps', name: 'German Alps', from: 'Frankfurt', to: 'Friedrichshafen',
+        range: 2, speed: 0, ceiling: 1, income: 4, vp: 2, claimed: null },
       { id: 'route_rome', name: 'Rome Approach', from: 'Milan', to: 'Rome',
         range: 2, speed: 1, ceiling: 1, income: 5, vp: 3, claimed: null },
+      // Range 3 routes (long distance)
+      { id: 'route_riviera', name: 'Riviera Express', from: 'Paris', to: 'Marseille',
+        range: 3, speed: 1, ceiling: 0, income: 4, vp: 2, claimed: null },
+      { id: 'route_berlin_vienna', name: 'Berlin-Vienna', from: 'Berlin', to: 'Vienna',
+        range: 3, speed: 1, ceiling: 0, income: 5, vp: 3, claimed: null },
       { id: 'route_imperial', name: 'Imperial Circuit', from: 'London', to: 'Berlin',
         range: 3, speed: 2, ceiling: 0, income: 6, vp: 3, claimed: null }
     ],
@@ -457,11 +470,10 @@ function createAgeIMap() {
       'Frankfurt': { type: 'major', homeBase: 'germany' },
       'Cologne': { type: 'minor', homeBase: null },
       'Friedrichshafen': { type: 'minor', homeBase: 'germany' },
-      'Konstanz': { type: 'minor', homeBase: null },
       'Calais': { type: 'minor', homeBase: null },
       'Dover': { type: 'minor', homeBase: 'britain' },
       'Paris': { type: 'major', homeBase: null },
-      'Brussels': { type: 'minor', homeBase: null },
+      'Brussels': { type: 'major', homeBase: null },
       'Hamburg': { type: 'major', homeBase: null },
       'Amsterdam': { type: 'minor', homeBase: null },
       'Copenhagen': { type: 'minor', homeBase: null },
@@ -479,7 +491,7 @@ function createAgeIMap() {
 
 /**
  * Create Age III map routes per Appendix F
- * The Atlantic Era features 16 hemispheric routes including luxury ocean crossings.
+ * The Atlantic Era features 21 hemispheric routes including luxury ocean crossings.
  * Each route has VP value and luxury requirement matching Appendix F specifications.
  */
 function createAgeIIIMap() {
@@ -487,28 +499,41 @@ function createAgeIIIMap() {
     name: 'The Atlantic',
     age: 3,
     routes: [
-      // Standard Routes (8)
+      // Range 1 routes (regional connectors)
+      { id: 'route_eastern_gateway', name: 'Eastern Gateway', from: 'New York', to: 'Lakehurst',
+        range: 1, speed: 0, ceiling: 0, income: 4, vp: 2, luxury: 0, claimed: null },
+      { id: 'route_german_hub', name: 'German Hub', from: 'Frankfurt', to: 'Friedrichshafen',
+        range: 1, speed: 1, ceiling: 0, income: 4, vp: 2, luxury: 0, claimed: null },
+      // Range 2 routes
       { id: 'route_south_atlantic', name: 'South Atlantic', from: 'Rio de Janeiro', to: 'Recife',
         range: 2, speed: 1, ceiling: 0, income: 5, vp: 2, luxury: 0, claimed: null },
       { id: 'route_caribbean', name: 'Caribbean Connection', from: 'Miami', to: 'Havana',
         range: 2, speed: 1, ceiling: 0, income: 5, vp: 2, luxury: 0, claimed: null },
       { id: 'route_pacific_coast', name: 'Pacific Coast', from: 'Los Angeles', to: 'San Francisco',
         range: 2, speed: 1, ceiling: 1, income: 5, vp: 2, luxury: 0, claimed: null },
+      // Range 3 routes
+      { id: 'route_rio_buenos_aires', name: 'Rio-Buenos Aires', from: 'Rio de Janeiro', to: 'Buenos Aires',
+        range: 3, speed: 1, ceiling: 0, income: 5, vp: 2, luxury: 0, claimed: null },
       { id: 'route_european_trunk', name: 'European Trunk', from: 'London', to: 'Berlin',
         range: 3, speed: 2, ceiling: 1, income: 6, vp: 3, luxury: 0, claimed: null },
       { id: 'route_eastern_seaboard', name: 'Eastern Seaboard', from: 'New York', to: 'Miami',
         range: 3, speed: 2, ceiling: 0, income: 6, vp: 3, luxury: 0, claimed: null },
+      { id: 'route_north_sea_express', name: 'North Sea Express', from: 'London', to: 'Oslo',
+        range: 3, speed: 1, ceiling: 1, income: 6, vp: 3, luxury: 0, claimed: null },
+      { id: 'route_around_cape_horn', name: 'Around Cape Horn', from: 'Buenos Aires', to: 'Valparaiso',
+        range: 3, speed: 2, ceiling: 3, income: 7, vp: 3, luxury: 0, claimed: null },
+      { id: 'route_arctic_explorer', name: 'Arctic Explorer', from: 'Oslo', to: 'Svalbard',
+        range: 3, speed: 1, ceiling: 3, income: 7, vp: 3, luxury: 0, claimed: null },
+      // Range 4 routes
+      { id: 'route_transcontinental', name: 'Transcontinental', from: 'Chicago', to: 'Los Angeles',
+        range: 4, speed: 2, ceiling: 1, income: 7, vp: 3, luxury: 0, claimed: null },
       { id: 'route_mediterranean_express', name: 'Mediterranean Express', from: 'Rome', to: 'Cairo',
         range: 4, speed: 2, ceiling: 1, income: 7, vp: 3, luxury: 0, claimed: null },
       { id: 'route_trans_amazon', name: 'Trans-Amazon', from: 'Rio de Janeiro', to: 'Manaus',
         range: 4, speed: 1, ceiling: 0, income: 7, vp: 3, luxury: 0, claimed: null },
       { id: 'route_north_atlantic_express', name: 'North Atlantic Express', from: 'New York', to: 'London',
         range: 4, speed: 2, ceiling: 2, income: 8, vp: 4, luxury: 0, claimed: null },
-      // Luxury Routes (8) - marked with luxury requirement
-      { id: 'route_around_cape_horn', name: 'Around Cape Horn', from: 'Buenos Aires', to: 'Valparaiso',
-        range: 3, speed: 2, ceiling: 3, income: 7, vp: 3, luxury: 0, claimed: null },
-      { id: 'route_arctic_explorer', name: 'Arctic Explorer', from: 'Oslo', to: 'Svalbard',
-        range: 3, speed: 1, ceiling: 3, income: 7, vp: 3, luxury: 0, claimed: null },
+      // Luxury Routes
       { id: 'route_empire_state_express', name: 'Empire State Express', from: 'New York', to: 'Chicago',
         range: 3, speed: 3, ceiling: 1, income: 8, vp: 4, luxury: 1, claimed: null },
       { id: 'route_imperial_airship', name: 'Imperial Airship Route', from: 'London', to: 'Cairo',

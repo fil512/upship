@@ -548,43 +548,55 @@ Routes connect cities on the map boards. Each route has stat requirements that y
 
 ## Age I Routes — The Cradle (Western Europe)
 
-The Pioneer Era features 12 regional routes across Western Europe. Early airship technology limits range and reliability.
+The Pioneer Era features 17 regional routes across Western Europe forming a fully connected network. Early airship technology limits range and reliability.
 
 | Route | From | To | Range | Speed | Other | Income | VP | Notes |
 |-------|------|-----|-------|-------|-------|--------|-----|-------|
-| Rhine Valley | Frankfurt | Cologne | 1 | — | — | £2 | 1 | Starter route |
-| Bodensee Circuit | Friedrichshafen | Konstanz | 1 | — | — | £2 | 1 | Germany's home |
+| London Gateway | London | Dover | 1 | — | — | £2 | 1 | Channel feeder |
 | Channel Crossing | Calais | Dover | 1 | 1 | — | £3 | 2 | First international |
+| Rhine Valley | Frankfurt | Cologne | 1 | — | — | £2 | 1 | Starter route |
+| Low Countries | Brussels | Amsterdam | 1 | 1 | — | £3 | 2 | Connects Benelux |
 | Paris Express | Paris | Brussels | 1 | 1 | — | £3 | 2 | — |
+| Rhineland | Brussels | Cologne | 1 | 1 | — | £3 | 2 | Rhine access |
+| Lake Constance | Friedrichshafen | Zurich | 1 | — | — | £3 | 2 | Alpine approach |
+| London–Paris | London | Paris | 2 | 2 | — | £5 | 3 | Double track |
 | North Sea Run | Hamburg | Amsterdam | 2 | 1 | — | £4 | 2 | — |
 | Baltic Passage | Hamburg | Copenhagen | 2 | 1 | — | £4 | 2 | — |
 | Alpine Transit | Zurich | Milan | 2 | — | Ceiling 1 | £4 | 2 | Mountain crossing |
 | Mediterranean Link | Marseille | Barcelona | 2 | 1 | — | £4 | 2 | — |
-| London–Paris | London | Paris | 2 | 2 | — | £5 | 3 | Double track |
-| Berlin–Vienna | Berlin | Vienna | 3 | 1 | — | £5 | 3 | — |
+| German Alps | Frankfurt | Friedrichshafen | 2 | — | Ceiling 1 | £4 | 2 | Germany's backbone |
 | Rome Approach | Milan | Rome | 2 | 1 | Ceiling 1 | £5 | 3 | Italy's home |
+| Riviera Express | Paris | Marseille | 3 | 1 | — | £4 | 2 | French corridor |
+| Berlin–Vienna | Berlin | Vienna | 3 | 1 | — | £5 | 3 | — |
 | Imperial Circuit | London | Berlin | 3 | 2 | — | £6 | 3 | Prestige route |
 
 **Age I Route Summary:**
-- Range 1: 2 routes
-- Range 2: 7 routes
-- Range 3: 3 routes
+- Range 1: 7 routes (starter/regional)
+- Range 2: 7 routes (medium distance)
+- Range 3: 3 routes (long distance)
+
+**Network Connectivity:** All 17 cities are connected through this route network. Key hubs are London (3 connections), Brussels (4 connections), and Frankfurt (3 connections).
 
 ## Age III Routes — The Golden Age (The Atlantic)
 
-The Atlantic Era features 16 hemispheric routes including luxury ocean crossings. Advanced technology enables intercontinental travel.
+The Atlantic Era features 21 hemispheric routes including luxury ocean crossings forming a fully connected global network. Advanced technology enables intercontinental travel.
 
 | Route | From | To | Range | Speed | Ceiling | Luxury | Income | VP | Notes |
 |-------|------|-----|-------|-------|---------|--------|--------|-----|-------|
+| Eastern Gateway | New York | Lakehurst | 1 | — | — | — | £4 | 2 | NJ connection |
+| German Hub | Frankfurt | Friedrichshafen | 1 | 1 | — | — | £4 | 2 | Zeppelin corridor |
 | South Atlantic | Rio de Janeiro | Recife | 2 | 1 | — | — | £5 | 2 | Brazil domestic |
 | Caribbean Connection | Miami | Havana | 2 | 1 | — | — | £5 | 2 | — |
 | Pacific Coast | Los Angeles | San Francisco | 2 | 1 | 1 | — | £5 | 2 | — |
+| Rio–Buenos Aires | Rio de Janeiro | Buenos Aires | 3 | 1 | — | — | £5 | 2 | South America link |
 | European Trunk | London | Berlin | 3 | 2 | 1 | — | £6 | 3 | — |
 | Eastern Seaboard | New York | Miami | 3 | 2 | — | — | £6 | 3 | — |
-| Mediterranean Express | Rome | Cairo | 4 | 2 | 1 | — | £7 | 3 | — |
-| Trans-Amazon | Rio de Janeiro | Manaus | 4 | 1 | — | — | £7 | 3 | Jungle route |
+| North Sea Express | London | Oslo | 3 | 1 | 1 | — | £6 | 3 | Nordic connection |
 | **Around Cape Horn** | Buenos Aires | Valparaíso | 3 | 2 | 3 | — | £7 | 3 | High altitude |
 | **Arctic Explorer** | Oslo | Svalbard | 3 | 1 | 3 | — | £7 | 3 | Extreme conditions |
+| Transcontinental | Chicago | Los Angeles | 4 | 2 | 1 | — | £7 | 3 | Coast to coast |
+| Mediterranean Express | Rome | Cairo | 4 | 2 | 1 | — | £7 | 3 | — |
+| Trans-Amazon | Rio de Janeiro | Manaus | 4 | 1 | — | — | £7 | 3 | Jungle route |
 | North Atlantic Express | New York | London | 4 | 2 | 2 | — | £8 | 4 | Double track |
 | **Empire State Express** | New York | Chicago | 3 | 3 | 1 | 1 | £8 | 4 | Luxury; American prestige |
 | **Imperial Airship Route** | London | Cairo | 4 | 2 | 2 | 1 | £9 | 4 | Luxury; British specialty |
@@ -594,11 +606,14 @@ The Atlantic Era features 16 hemispheric routes including luxury ocean crossings
 | **Hindenburg Route** | Frankfurt | Lakehurst | 5 | 3 | 2 | 2 | £12 | 6 | Luxury; Hydrogen risk |
 
 **Age III Route Summary:**
-- Standard routes: 8
+- Standard routes: 13
 - Luxury routes: 8 (require Luxury stat; marked in **bold**)
-- Range 2–3: 6 routes (regional)
+- Range 1–2: 5 routes (regional connectors)
+- Range 3: 7 routes (medium distance)
 - Range 4: 5 routes (continental)
-- Range 5: 3 routes (intercontinental)
+- Range 5: 4 routes (intercontinental)
+
+**Network Connectivity:** All 21 cities across 4 continents are connected. Key hubs are New York (5 connections), London (5 connections), and Rio de Janeiro (4 connections). The network enables travel from any city to any other city via connected routes.
 
 **Luxury Route Warning:** Launching a Hydrogen ship on a Luxury route in Age III risks triggering the **Hindenburg Disaster** if a Catastrophic Explosion hazard is drawn.
 

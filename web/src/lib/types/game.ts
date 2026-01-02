@@ -122,6 +122,27 @@ export interface Route {
 	claimed?: string | null; // playerId or null
 }
 
+// Combat Mission (Age II)
+export type MissionType = 'bombing_run' | 'reconnaissance' | 'transport' | 'patrol';
+
+export interface Mission {
+	id: string;
+	name: string;
+	type: MissionType;
+	range?: number;
+	speed?: number;
+	ceiling?: number;
+	reliability?: number;
+	income: number;
+	vp: number;
+	specialBonus?: {
+		type: string;
+		description: string;
+	};
+	claimed?: string | null; // playerId or null
+	completedBy?: string | null;
+}
+
 // Log entry type
 export interface LogEntry {
 	timestamp: string;
