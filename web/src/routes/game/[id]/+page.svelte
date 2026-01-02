@@ -38,6 +38,10 @@
 	import PlayersList from '$lib/components/sidebar/PlayersList.svelte';
 	import GameLog from '$lib/components/sidebar/GameLog.svelte';
 
+	// Center pane tabs
+	type CenterTab = 'actions' | 'log' | 'map' | 'blueprint';
+	let activeTab: CenterTab = 'actions';
+
 	$: gameId = $page.params.id;
 
 	let loadingState = true;
@@ -230,7 +234,7 @@
 
 		<!-- Main game area -->
 		<div class="game-layout">
-			<!-- Left sidebar - Players and Blueprint -->
+			<!-- Left sidebar - Players and Tech -->
 			<aside class="sidebar left">
 				<PlayersList
 					players={$gameState.players}
@@ -241,62 +245,101 @@
 				/>
 
 				{#if $myState}
-					<Blueprint />
-
 					<TechList technologies={$myState.technologies || []} />
 				{/if}
 			</aside>
 
-			<!-- Center - Main game board -->
+			<!-- Center - Tabbed content -->
 			<main class="main-board">
-				<div class="board-sections">
-					<!-- Ground Board -->
-					<section class="board-section">
-						<GroundBoard
-							{placements}
-							players={$gameState.players}
-							{selectedCardSymbol}
-							isMyTurn={$isMyTurn}
-							{isWorkerPlacementPhase}
-							on:placeAgent={handlePlaceAgent}
-						/>
-					</section>
+				<!-- Tab bar -->
+				<div class="tab-bar">
+					<button
+						class="tab-btn"
+						class:active={activeTab === 'actions'}
+						on:click={() => (activeTab = 'actions')}
+					>
+						Actions
+					</button>
+					<button
+						class="tab-btn"
+						class:active={activeTab === 'log'}
+						on:click={() => (activeTab = 'log')}
+					>
+						Game Log
+					</button>
+					<button
+						class="tab-btn"
+						class:active={activeTab === 'map'}
+						on:click={() => (activeTab = 'map')}
+					>
+						Map
+					</button>
+					<button
+						class="tab-btn"
+						class:active={activeTab === 'blueprint'}
+						on:click={() => (activeTab = 'blueprint')}
+					>
+						Blueprint
+					</button>
+				</div>
 
-					<!-- Hand Section -->
-					<section class="board-section">
-						<HandSection
-							hand={Array.isArray($myState?.hand) ? $myState.hand : []}
-							selectedIndex={selectedCardIndex}
-							selectable={$isMyTurn && isWorkerPlacementPhase}
-							deckSize={typeof $myState?.deck === 'number' ? $myState.deck : ($myState?.deck?.length || 0)}
-							discardSize={typeof $myState?.discardPile === 'number' ? $myState.discardPile : ($myState?.discardPile?.length || 0)}
-							{isViewingOtherPlayer}
-							{otherPlayerCardCount}
-							on:selectCard={handleCardSelect}
-						/>
-					</section>
+				<!-- Tab content -->
+				<div class="tab-content">
+					{#if activeTab === 'actions'}
+						<div class="board-sections">
+							<!-- Ground Board -->
+							<section class="board-section">
+								<GroundBoard
+									{placements}
+									players={$gameState.players}
+									{selectedCardSymbol}
+									isMyTurn={$isMyTurn}
+									{isWorkerPlacementPhase}
+									on:placeAgent={handlePlaceAgent}
+								/>
+							</section>
 
-					<!-- Fleet and Routes -->
-					<div class="fleet-routes-row">
-						<section class="board-section fleet">
-							<FleetPanel
-								ships={$myState?.ships || []}
-								selectable={$isMyTurn}
-							/>
-						</section>
+							<!-- Fleet and Routes -->
+							<div class="fleet-routes-row">
+								<section class="board-section fleet">
+									<FleetPanel
+										ships={$myState?.ships || []}
+										selectable={$isMyTurn}
+									/>
+								</section>
 
-						<section class="board-section routes">
-							<RoutesPanel
-								{routes}
-								{claimedRouteIds}
-								selectable={$isMyTurn}
-							/>
-						</section>
-					</div>
+								<section class="board-section routes">
+									<RoutesPanel
+										{routes}
+										{claimedRouteIds}
+										selectable={$isMyTurn}
+									/>
+								</section>
+							</div>
+						</div>
+					{:else if activeTab === 'log'}
+						<div class="log-tab">
+							<GameLog log={$gameState.log || []} maxEntries={50} />
+						</div>
+					{:else if activeTab === 'map'}
+						<div class="map-tab">
+							<div class="map-placeholder">
+								<h3>Route Map</h3>
+								<p>Map visualization coming soon</p>
+								<p class="map-info">Age {$gameState.age} routes: {routes.length} available</p>
+							</div>
+						</div>
+					{:else if activeTab === 'blueprint'}
+						<div class="blueprint-tab">
+							{#if $myState}
+								<Blueprint />
+							{/if}
+						</div>
+					{/if}
 				</div>
 			</main>
 
-			<!-- Right sidebar - Actions & Log -->
+			<!-- Right sidebar - Hand and Actions -->
 			<aside class="sidebar right">
 				<div class="panel actions">
 					<h3>Actions</h3>
@@ -326,7 +369,17 @@
 					{/if}
 				</div>
 
-				<GameLog log={$gameState.log || []} maxEntries={15} />
+				<!-- Hand Section -->
+				<HandSection
+					hand={Array.isArray($myState?.hand) ? $myState.hand : []}
+					selectedIndex={selectedCardIndex}
+					selectable={$isMyTurn && isWorkerPlacementPhase}
+					deckSize={typeof $myState?.deck === 'number' ? $myState.deck : ($myState?.deck?.length || 0)}
+					discardSize={typeof $myState?.discardPile === 'number' ? $myState.discardPile : ($myState?.discardPile?.length || 0)}
+					{isViewingOtherPlayer}
+					{otherPlayerCardCount}
+					on:selectCard={handleCardSelect}
+				/>
 			</aside>
 		</div>
 	</div>
@@ -484,9 +537,81 @@
 
 	/* Main board */
 	.main-board {
+		display: flex;
+		flex-direction: column;
+		overflow: hidden;
+		background: var(--color-bg-primary);
+	}
+
+	/* Tab bar */
+	.tab-bar {
+		display: flex;
+		gap: 2px;
+		padding: var(--spacing-sm) var(--spacing-md);
+		background: var(--color-bg-secondary);
+		border-bottom: 1px solid var(--color-bg-hover);
+	}
+
+	.tab-btn {
+		padding: var(--spacing-xs) var(--spacing-md);
+		background: transparent;
+		border: none;
+		border-radius: var(--radius-md) var(--radius-md) 0 0;
+		color: var(--color-text-secondary);
+		font-size: 0.875rem;
+		font-weight: 500;
+		cursor: pointer;
+		transition: all var(--transition-fast);
+	}
+
+	.tab-btn:hover {
+		background: var(--color-bg-hover);
+		color: var(--color-text-primary);
+	}
+
+	.tab-btn.active {
+		background: var(--color-bg-primary);
+		color: var(--color-accent-gold);
+		border-bottom: 2px solid var(--color-accent-gold);
+	}
+
+	/* Tab content */
+	.tab-content {
+		flex: 1;
 		padding: var(--spacing-md);
 		overflow-y: auto;
-		background: var(--color-bg-primary);
+	}
+
+	.log-tab {
+		height: 100%;
+	}
+
+	.map-tab {
+		height: 100%;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.map-placeholder {
+		text-align: center;
+		color: var(--color-text-muted);
+	}
+
+	.map-placeholder h3 {
+		color: var(--color-text-primary);
+		margin-bottom: var(--spacing-sm);
+	}
+
+	.map-info {
+		margin-top: var(--spacing-md);
+		font-size: 0.875rem;
+		color: var(--color-text-secondary);
+	}
+
+	.blueprint-tab {
+		display: flex;
+		justify-content: center;
 	}
 
 	.board-sections {

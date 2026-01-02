@@ -88,9 +88,9 @@
 
 	.cards-row {
 		display: flex;
+		flex-wrap: wrap;
 		gap: var(--spacing-sm);
-		overflow-x: auto;
-		padding-bottom: var(--spacing-xs);
+		justify-content: center;
 	}
 
 	.empty-hand {
