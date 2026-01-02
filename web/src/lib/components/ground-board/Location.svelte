@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte';
 	import type { GroundBoardPlacements, PlayerState } from '$lib/types/game';
+	import { getFactionColor, getFactionBorderColor } from '$lib/utils/factionColors';
 
 	export let id: string;
 	export let name: string;
@@ -28,9 +29,10 @@
 
 	$: placement = placements[id];
 	$: isOccupied = !!placement;
-	$: occupantDisplay = placement
-		? players[placement.playerId]?.faction || placement.playerId.substring(0, 8)
-		: null;
+	$: occupantPlayer = placement ? players[placement.playerId] : null;
+	$: occupantFaction = occupantPlayer?.faction || null;
+	$: pawnColor = getFactionColor(occupantFaction);
+	$: pawnBorderColor = getFactionBorderColor(occupantFaction);
 
 	function handleClick() {
 		if (canPlace && !isOccupied) {
@@ -56,8 +58,12 @@
 	<div class="location-content">
 		{#if isOccupied && placement}
 			<div class="agent-marker">
-				<span class="agent-icon">👤</span>
-				<span class="agent-player">{occupantDisplay}</span>
+				<div
+					class="pawn"
+					style:--pawn-color={pawnColor}
+					style:--pawn-border={pawnBorderColor}
+				></div>
+				<span class="agent-player" style:color={pawnBorderColor}>{occupantFaction}</span>
 			</div>
 		{:else if canPlace}
 			<div class="place-hint">Click to place</div>
@@ -142,15 +148,35 @@
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		gap: 2px;
+		gap: 4px;
 	}
 
-	.agent-icon {
-		font-size: 1.5rem;
+	.pawn {
+		width: 20px;
+		height: 24px;
+		background-color: var(--pawn-color);
+		border: 2px solid var(--pawn-border);
+		border-radius: 50% 50% 45% 45%;
+		position: relative;
+	}
+
+	/* Pawn head */
+	.pawn::before {
+		content: '';
+		position: absolute;
+		width: 12px;
+		height: 12px;
+		background-color: var(--pawn-color);
+		border: 2px solid var(--pawn-border);
+		border-radius: 50%;
+		top: -10px;
+		left: 50%;
+		transform: translateX(-50%);
 	}
 
 	.agent-player {
 		font-size: 0.625rem;
-		color: var(--color-text-secondary);
+		font-weight: 600;
+		text-transform: capitalize;
 	}
 </style>

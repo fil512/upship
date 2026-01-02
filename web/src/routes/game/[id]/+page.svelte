@@ -34,6 +34,7 @@
 	import RoutesPanel from '$lib/components/ships/RoutesPanel.svelte';
 
 	// Sidebar Components
+	import PawnTracker from '$lib/components/sidebar/PawnTracker.svelte';
 	import ResourcePanel from '$lib/components/sidebar/ResourcePanel.svelte';
 	import TechList from '$lib/components/sidebar/TechList.svelte';
 	import PlayersList from '$lib/components/sidebar/PlayersList.svelte';
@@ -233,6 +234,12 @@
 		<div class="game-layout">
 			<!-- Left sidebar - Player info -->
 			<aside class="sidebar left">
+				<PawnTracker
+					players={$gameState.players}
+					playerOrder={$gameState.playerOrder}
+					currentPlayerId={$currentPlayerId}
+				/>
+
 				{#if $myState}
 					<ResourcePanel
 						cash={$myState.cash}
