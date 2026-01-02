@@ -2,12 +2,15 @@ import type { IconDefinition, GameIconName } from './types';
 
 export const gameIcons: Record<GameIconName, IconDefinition> = {
   ship: {
-    // Airship/zeppelin silhouette
-    svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <ellipse cx="12" cy="10" rx="9" ry="5"/>
-      <path d="M6 14h12v2c0 1-2 2-6 2s-6-1-6-2v-2z"/>
-      <path d="M10 15v2"/>
-      <path d="M14 15v2"/>
+    // Classic zeppelin airship with gondola and fins
+    svg: `<svg viewBox="0 0 24 24" fill="currentColor">
+      <ellipse cx="11" cy="10" rx="10" ry="5"/>
+      <path d="M19 7l3-2v4l-3 2z"/>
+      <path d="M19 11l3 2v-4l-3-2z"/>
+      <rect x="7" y="14" width="8" height="3" rx="1"/>
+      <path d="M9 14v-2"/>
+      <path d="M13 14v-2"/>
+      <circle cx="6" cy="10" r="1" fill="none" stroke="currentColor" stroke-width="0.5"/>
     </svg>`,
     category: 'game',
     tooltip: 'Airship'
