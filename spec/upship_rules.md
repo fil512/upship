@@ -75,7 +75,7 @@ When the marker reaches an Age threshold, that Age ends after the current round.
 | 1 | Ground Board (Worker Placement locations) |
 | 1 | R&D Board (Technology display) |
 | 54× | Technology Tiles (sorted by Age; see §3.1 for player scaling) |
-| ~80 | Upgrade Tiles (organized by type) |
+| ~80 | Tech Tiles (organized by type) |
 | 1 | Progress Track |
 | 1 | VP Track |
 | 30 | Market Deck Cards |
@@ -100,7 +100,7 @@ When the marker reaches an Age threshold, that Age ends after the current round.
    - *Example: If Germany and USA both start with Duralumin Girders, remove 2 copies from the bag.*
    - Shuffle all Age I tiles together to form the Technology Bag.
 4. Place the **R&D Board** and draw 4 Technology tiles from the Age I bag to fill it.
-5. Organize the **Upgrade Tile Supply** by type.
+5. Organize the **Tech Tile Supply** by type.
 6. Set the **Progress Track** marker to 0.
 7. Set up **Officer** and **Engineer** token supplies.
 8. Shuffle the **Market Deck** and deal 5 cards face-up to form the Market Row.
@@ -164,7 +164,7 @@ An Age-specific overlay representing your current **Airship Model**—your "Fact
 
 ### Slot Types
 
-Blueprints have four slot types for installing **Upgrade tiles**:
+Blueprints have four slot types for installing **Tech Tiles**:
 
 | Slot Type | Accepts | Purpose |
 |-----------|---------|---------|
@@ -339,13 +339,13 @@ The Ground Board has 12 action spaces. Each requires a matching card symbol.
 
 **Cost:** Free.
 
-**Constraint:** Only install Upgrades for Technologies you own. You may make unlimited modifications in a single visit.
+**Constraint:** Only install Tech Tiles for Technologies you own. You may make unlimited modifications in a single visit.
 
-> **Example:** Anna visits the Design Bureau and replaces her old Basic Engine with a Maybach Engine. The new upgrade tile is taken from supply and the old upgrade returned to supply.
+> **Example:** Anna visits the Design Bureau and replaces her old Basic Engine with a Maybach Engine. The new Tech Tile is taken from supply and the old tile returned to supply.
 
-**Hull Upgrade Rule:** If you upgrade Frame or Fabric while ships are in your Launch Hangar, pay the Hull Cost difference for each ship.
+**Hull Tech Tile Rule:** If you change Frame or Fabric Tech Tiles while ships are in your Launch Hangar, pay the Hull Cost difference for each ship.
 
-**Duplicates Allowed:** You may install the same Upgrade tile in multiple slots of the same type. If you only own one Frame technology, you can fill both Frame slots with that Upgrade.
+**Duplicates Allowed:** You may install the same Tech Tile in multiple slots of the same type. If you only own one Frame technology, you can fill both Frame slots with that Tech Tile.
 
 ## 6.3 Construction Hall (Wrench)
 
@@ -362,7 +362,7 @@ The Ground Board has 12 action spaces. Each requires a matching card symbol.
 
 **Limit:** You may never have more than 3 ships in your Hangar at any time.
 
-**Hull Upgrade Rule:** If you upgrade Frame or Fabric while ships are in your Launch Hangar, pay the Hull Cost difference for each ship.
+**Hull Tech Tile Rule:** If you change Frame or Fabric Tech Tiles while ships are in your Launch Hangar, pay the Hull Cost difference for each ship.
 
 ## 6.4 Launchpad (Propeller)
 
@@ -544,9 +544,9 @@ Routes marked **Luxury** require ships with the Luxury stat. In Age III, Luxury 
 
 ---
 
-# 9. TECHNOLOGY & UPGRADES
+# 9. TECHNOLOGY & TECH TILES
 
-The game distinguishes between **Technologies** (knowledge) and **Upgrades** (physical components).
+The game distinguishes between **Technologies** (knowledge) and **Tech Tiles** (physical components).
 
 ## 9.1 Technologies
 
@@ -556,7 +556,7 @@ Technologies represent patents and manufacturing capability. Acquire them from t
 - **Research Cost:** How much Research to acquire
 - **Track:** Which Drawing Office track (Propulsion, Frame, Fabric, Gas Systems, or Payload)
 - **Age:** Minimum Age when available
-- **Unlocks:** Which Upgrade tiles you can install
+- **Unlocks:** Which Tech Tiles you can install
 - **£ Value:** Income during Age Transitions
 - **VP Value:** Victory Points at each Age end
 
@@ -581,19 +581,19 @@ When you Reveal:
 4. Advance Progress Track by 1 for each tile acquired.
 5. Unspent Research is lost.
 
-## 9.2 Upgrades
+## 9.2 Tech Tiles
 
-Upgrades are physical components installed on your Blueprint. Each requires the corresponding Technology.
+Tech Tiles are physical components installed on your Blueprint. Each requires the corresponding Technology.
 
-**Upgrade Tile Attributes:**
+**Tech Tile Attributes:**
 - **Weight:** How much Lift consumed
 - **Stats:** Bonuses to Speed, Range, Ceiling, Reliability, Luxury
 - **Special Effects:** Unique abilities
 
-### Installing Upgrades
+### Installing Tech Tiles
 
 Visit the **Design Bureau**:
-1. Choose a tile from the Upgrade Supply.
+1. Choose a tile from the Tech Tile Supply.
 2. Verify you own the corresponding Technology.
 3. Install in a matching empty slot.
 4. Adjust your stat tracks.
@@ -671,7 +671,7 @@ When claiming a route, choose one endpoint city and gain its bonus immediately (
 | Cardington | +1 Engineer |
 | Rome | +1 Influence |
 | Moscow | +£4 |
-| Cairo | Free Upgrade swap |
+| Cairo | Free Tech Tile swap |
 | Scapa Flow | +1 Officer |
 
 ### Age III Cities
@@ -698,7 +698,7 @@ When claiming a route, choose one endpoint city and gain its bonus immediately (
 - **No Map Routes:** Instead of placing ships on routes, players select from a **Mission Row** of 6 face-up **Combat Missions**. See [Appendix G](appendix.md#appendix-g-combat-missions).
 - **Mission Flow:** Resolve Hazard Check first. If successful, take the mission card, gain Income, and spend Officers/gas to supply. Then check Flak—ship may be destroyed but rewards are already earned.
 - **Flak Guns:** Each Hazard card shows 0–5 flak (checked after mission success). If Flak > Armor, ship is destroyed. Max Armor is 4; 5 Flak always destroys.
-- **Armor Upgrades:** Light Armor Plating (+1 Armor) and Heavy Armor Plating (+2 Armor) are Payload upgrades unlocked by Age II technologies.
+- **Armor Tech Tiles:** Light Armor Plating (+1 Armor) and Heavy Armor Plating (+2 Armor) are Payload Tech Tiles unlocked by Age II technologies.
 - **One-Time Missions:** Completed missions are placed in front of you with your ship on them. Missions provide ongoing income like routes.
 - First ship must launch from **Home Base**; subsequent ships may launch from any city where you have a ship.
 
@@ -773,9 +773,9 @@ When the Progress Track reaches the Age threshold (checked during Income & Clean
    > New Income = (£ from Technology tiles) − (£1 × routes lost)
    > Minimum £0
    
-4. **Replace Blueprint:** Install new Age's Blueprint overlay. Transfer Upgrades to new Blueprint.
+4. **Replace Blueprint:** Install new Age's Blueprint overlay. Transfer Tech Tiles to new Blueprint.
 
-5. **Free Blueprint Upgrade:** Each player receives a free Design Bureau action. Players take turns in player order to install upgrades. Hull Upgrade Rule does not apply during this free action. This is the ideal time to fill your new structural slots with duplicate Upgrades if needed.
+5. **Free Blueprint Update:** Each player receives a free Design Bureau action. Players take turns in player order to install Tech Tiles. Hull Tech Tile Rule does not apply during this free action. This is the ideal time to fill your new structural slots with duplicate Tech Tiles if needed.
 
 6. **Set Up New Age:** Place new Map, add new Technologies to bag, refresh R&D Board.
 
@@ -881,10 +881,10 @@ Each nation has unique advantages and constraints.
 
 # 14. RULES CLARIFICATIONS
 
-## 14.1 Technologies vs. Upgrades
+## 14.1 Technologies vs. Tech Tiles
 
 - **Technologies:** Permanent, stored in Drawing Office, carry across Ages
-- **Upgrades:** Temporary, installed on Blueprint, return to supply at Age Transitions
+- **Tech Tiles:** Temporary, installed on Blueprint, return to supply at Age Transitions
 
 ## 14.2 Launch Outcomes Summary
 
@@ -947,10 +947,10 @@ When Catastrophic Explosion occurs during a Luxury Launch in Age III using Hydro
 | **Crash** | Ship destruction; token returns to supply | §8.1 |
 | **Drawing Office** | Zone storing acquired Technologies | §4.1 |
 | **Engineer** | Crew token contributing +1 Research and emergency response | §4.3 |
-| **Fabric** | Upgrade type for outer covering materials | §4.2 |
+| **Fabric** | Tech Tile type for outer covering materials | §4.2 |
 | **Fire Hazard** | Hazard affecting only Hydrogen ships | §8.3 |
 | **Flak** | Anti-aircraft fire on Hazard cards (0–5); Age II only | §10.5 |
-| **Frame** | Upgrade type for structural skeleton | §4.2 |
+| **Frame** | Tech Tile type for structural skeleton | §4.2 |
 | **Gas Cube** | Token providing +5 Lift each | §9.3 |
 | **Gas Reserve** | Zone storing purchased gas cubes | §4.5 |
 | **Ground Board** | Shared board with 12 action spaces | §6 |
@@ -961,16 +961,16 @@ When Catastrophic Explosion occurs during a Luxury Launch in Age III using Hydro
 | **Hull Cost** | £ to build a ship | §7.1 |
 | **Hydrogen** | Standard gas (£1/cube), fire vulnerable | §9.3 |
 | **Income Track** | Track showing £ earned per round | §4.6 |
-| **Influence** | Resource for purchasing Market cards | §5.1 |
-| **Install** | Place an Upgrade tile on Blueprint | §9.2 |
+| **Influence** | Resource for purchasing Agent Cards | §5.1 |
+| **Install** | Place a Tech Tile on Blueprint | §9.2 |
 | **Launch** | Send a ship to claim a route | §8 |
 | **Lift** | Upward force from gas (5 per cube) | §9.3 |
 | **Loan** | Free action: gain £30, reduce Income by 3 (limit: Income ≥ −10) | §5.3 |
 | **Luxury** | Ship stat for passenger comfort | §4.2 |
-| **Market Deck** | Purchasable crew cards | §11.4, Appendix G |
+| **Market Deck** | Purchasable Agent Cards | §11.4, Appendix H |
 | **Combat Mission** | Age II mission card replacing routes | §10.5, Appendix G |
 | **Officer** | Crew token required to launch (1/2/3 per Age) | §4.3 |
-| **Payload** | Upgrade type for cargo and passengers | §4.2 |
+| **Payload** | Tech Tile type for cargo and passengers | §4.2 |
 | **Physics Check** | Lift ≥ Weight requirement | §4.2 |
 | **Player Board** | Personal board (The Factory Interface) | §4 |
 | **Progress Track** | Track advancing toward game end | §1.3 |
@@ -979,10 +979,10 @@ When Catastrophic Explosion occurs during a Luxury Launch in Age III using Hydro
 | **Research** | Resource for acquiring Technologies (Research Level + Engineers + cards) | §9.1 |
 | **Research Level** | Track showing base Research when you Reveal | §4.6 |
 | **Route** | Connection between cities on the map | §10, Appendix E |
-| **Slot** | Empty space for Upgrade installation | §4.2 |
+| **Slot** | Empty space for Tech Tile installation | §4.2 |
 | **Speed** | Ship stat for velocity | §4.2 |
 | **Technology** | Tile representing acquired knowledge | §9.1 |
-| **Upgrade** | Tile installed on Blueprint | §9.2 |
+| **Tech Tile** | Tile installed on Blueprint | §9.2 |
 | **Victory Points** | Scoring currency (highest wins) | §1.1 |
 | **Weight** | Total weight of Blueprint components | §4.2 |
 
@@ -1099,16 +1099,16 @@ See [Appendix G in the separate Appendix document](appendix.md#appendix-g-combat
 
 ---
 
-# APPENDIX G: MARKET DECK
+# APPENDIX G: MARKET DECK (AGENT CARDS)
 
-The Market Deck contains 30 purchasable crew cards in five categories:
+The Market Deck contains 30 purchasable Agent Cards in five categories:
 
 - **Technical Personnel (10):** Engineering and construction bonuses
 - **Political/Financial Personnel (10):** Money and Influence generation
 - **Research Personnel (5):** Technology acquisition support
 - **Organizations (5):** Powerful unique abilities
 
-See [Appendix H in the separate Appendix document](appendix.md#appendix-h-market-deck) for complete card listings.
+See [Appendix H in the separate Appendix document](appendix.md#appendix-h-market-deck-agent-cards) for complete Agent Card listings.
 
 ---
 

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { Technology } from '$lib/types/game';
+	import Icon from '$lib/components/ui/Icon.svelte';
 
 	// Technologies can be either string IDs or full objects
 	export let technologies: (string | Technology)[] = [];
@@ -33,7 +34,7 @@
 		<div class="techs">
 			{#each technologies as tech}
 				<div class="tech-item" title={typeof tech === 'string' ? tech : tech.id}>
-					<span class="tech-icon">🔬</span>
+					<span class="tech-icon"><Icon name="research" size={18} /></span>
 					<div class="tech-info">
 						<span class="tech-name">{formatTechName(tech)}</span>
 						{#if getTechEffect(tech)}
@@ -82,7 +83,9 @@
 	}
 
 	.tech-icon {
-		font-size: 1rem;
+		display: flex;
+		align-items: center;
+		flex-shrink: 0;
 	}
 
 	.tech-info {

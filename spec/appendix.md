@@ -43,8 +43,8 @@ These items are physical component specifications for manufacturing. Rules are c
    - Gas Systems: Hydrogen improvements, Helium handling
    - Payload: Cargo, passenger, and mission technologies
 
-5. **Upgrade Tiles (~80):** Create tiles corresponding to each Technology:
-   - Clear visual link between Technology and its Upgrades
+5. **Tech Tiles (~80):** Create tiles corresponding to each Technology:
+   - Clear visual link between Technology and its Tech Tiles
    - Stat bonuses, weights, special abilities
 
 6. **Progress Track:** Design the shared track with:
@@ -77,7 +77,7 @@ These items are physical component specifications for manufacturing. Rules are c
    - 6 Fire Hazards (Hydrogen ships only)
    - 1 Mechanical Hazard (Critical Structural Stress)
 
-2. **Market Deck:** Design 30 purchasable crew cards with:
+2. **Market Deck:** Design 30 purchasable Agent Cards with:
    - Varied costs (2-6 Influence)
    - Mix of resource reveal icons (£, Research, Officer, Engineer, Gas, Influence)
    - Cards that provide resources you can't easily get elsewhere
@@ -156,13 +156,13 @@ These items require playtesting validation. Rules are complete but balance may n
 
 2. **Progress Track Pacing:** Does the fixed-wing threshold create appropriate tension? Assess whether players avoid acquiring Technologies to extend the game, causing Analysis Paralysis. Verify tech acquisition pace feels balanced.
 
-3. **Technology/Upgrade Flow:** Is the two-step system (acquire tech → install upgrade) intuitive?
+3. **Technology/Tech Tile Flow:** Is the two-step system (acquire tech → install tech tile) intuitive?
 
 4. **Hindenburg Drama:** Does the Age III hydrogen risk create exciting decisions?
 
 5. **Faction Balance:** Ensure no faction dominates across all Ages
 
-6. **Age Transition Impact:** Losing Upgrades but keeping Technologies—does this feel fair?
+6. **Age Transition Impact:** Losing Tech Tiles but keeping Technologies—does this feel fair?
 
 ---
 
@@ -263,7 +263,7 @@ Minimum £0. Technologies cushion the transition; routes cost £1 each when wipe
 
 # APPENDIX C: TECHNOLOGY TILES
 
-Technology tiles are acquired from the R&D Board using Research. Each tile shows: Research Cost, Track (color), Age, £ Value, VP Value (if any), and which Upgrade it unlocks.
+Technology tiles are acquired from the R&D Board using Research. Each tile shows: Research Cost, Track (color), Age, £ Value, VP Value (if any), and which Tech Tile it unlocks.
 
 ## Propulsion Track (11 tiles)
 
@@ -367,11 +367,11 @@ Fabric technologies unlock outer covering and gas cell material upgrades.
 
 ---
 
-# APPENDIX D: UPGRADE TILES
+# APPENDIX D: TECH TILES
 
-Upgrade tiles are installed on your Blueprint. You must own the corresponding Technology to install an Upgrade. Each shows: Weight cost, stat bonuses, and special abilities.
+Tech Tiles are installed on your Blueprint. You must own the corresponding Technology to install a Tech Tile. Each shows: Weight cost, stat bonuses, and special abilities.
 
-## Propulsion Upgrades
+## Propulsion Tech Tiles
 
 | Name | Required Tech | Weight | Stats | Special |
 |------|---------------|--------|-------|---------|
@@ -387,7 +387,7 @@ Upgrade tiles are installed on your Blueprint. You must own the corresponding Te
 | Hybrid Powerplant | Diesel-Electric Drive | -3 | Range +3, Reliability +1 | — |
 | Adaptive Propeller | Variable-Pitch Propeller | -2 | Speed +1, Range +2 | — |
 
-## Frame Upgrades
+## Frame Tech Tiles
 
 Frame tiles go in Frame slots. Each Frame slot shows a gas cube icon—this indicates the gas cost required for launching. The **Hull Cost** column shows how much this tile adds to the cost of building ships.
 
@@ -404,7 +404,7 @@ Frame tiles go in Frame slots. Each Frame slot shows a gas cube icon—this indi
 | Streamlined Hull | Aerodynamic Hull Design | -1 | +£2 | Lift +2 | Provides lift without gas |
 | Aerodynamic Lift System | Dynamic Lift Surfaces | -2 | +£3 | Lift +4 | Provides lift without gas |
 
-## Fabric Upgrades
+## Fabric Tech Tiles
 
 Fabric tiles go in Fabric slots. The **Hull Cost** column shows how much this tile adds to the cost of building ships.
 
@@ -419,9 +419,9 @@ Fabric tiles go in Fabric slots. The **Hull Cost** column shows how much this ti
 | Synthetic Envelope | Gelatinized Latex | 0 | +£2 | Reliability +1, Range +1 | Modern replacement for goldbeater's |
 | Advanced Fabric | Composite Covering | 0 | +£2 | Reliability +2 | Multi-layer protection |
 
-## Gas System Upgrades
+## Gas System Tech Tiles
 
-**Note:** Each gas cube provides **+5 Lift** regardless of type. Gas System upgrades enhance or modify gas cell performance. **Lift bonuses from upgrades** (such as Compartmented Gas +2, High-Ceiling Gas +3, or Redundant Cells +4) are **additive** with gas cube Lift—they represent improved gas efficiency that gives you extra buoyancy beyond the cubes themselves.
+**Note:** Each gas cube provides **+5 Lift** regardless of type. Gas System Tech Tiles enhance or modify gas cell performance. **Lift bonuses from Tech Tiles** (such as Compartmented Gas +2, High-Ceiling Gas +3, or Redundant Cells +4) are **additive** with gas cube Lift—they represent improved gas efficiency that gives you extra buoyancy beyond the cubes themselves.
 
 | Name | Required Tech | Weight | Stats | Special |
 |------|---------------|--------|-------|---------|
@@ -437,7 +437,7 @@ Fabric tiles go in Fabric slots. The **Hull Cost** column shows how much this ti
 | Reclamation System | Gas Recovery | -1 | Range +2 | -£2 Lifting Gas cost |
 | Exhaust Condensers | Water Recovery System | -2 | — | When using Helium: -£3 Lifting Gas cost. Recovers water from engine exhaust (USA specialty) |
 
-## Payload Upgrades
+## Payload Tech Tiles
 
 | Name | Required Tech | Weight | Stats | Special |
 |------|---------------|--------|-------|---------|
@@ -457,7 +457,7 @@ Fabric tiles go in Fabric slots. The **Hull Cost** column shows how much this ti
 | Pressurized Lounge | Smoking Room | -2 | Income +1, Luxury +2 | Requires Helium Gas Cell installed |
 | Imperial Mast | Imperial Mooring System | -1 | — | British Territories count as Home Base (Britain specialty) |
 
-**Total: 56 Upgrade Tiles** (Propulsion 11, Frame 10, Fabric 8, Gas Systems 11, Payload 16)
+**Total: 56 Tech Tiles** (Propulsion 11, Frame 10, Fabric 8, Gas Systems 11, Payload 16)
 
 ---
 
@@ -708,11 +708,11 @@ After each successful mission (removed from row), refill the Mission Row to 6 ca
 
 ---
 
-# APPENDIX H: MARKET DECK
+# APPENDIX H: MARKET DECK (AGENT CARDS)
 
-The Market Deck contains 30 purchasable crew cards. Five are displayed in the Market Row at all times. Purchase cards using Influence during the Reveal Phase.
+The Market Deck contains 30 purchasable Agent Cards. Five are displayed in the Market Row at all times. Purchase Agent Cards using Influence during the Reveal Phase.
 
-## Technical Personnel (10 cards)
+## Technical Personnel (10 Agent Cards)
 
 | Name | Cost | Symbol | Agent Effect | Reveal |
 |------|------|--------|--------------|--------|
@@ -720,14 +720,14 @@ The Market Deck contains 30 purchasable crew cards. Five are displayed in the Ma
 | Test Pilot | 5 | Propeller | +2 Reliability for this launch | 1 Officer |
 | Navigator | 3 | Propeller | +1 Range for this launch | 1 £, 1 Influence |
 | Weather Expert | 4 | Propeller | Ignore Weather hazards this launch | 1 Engineer |
-| Gas Engineer | 3 | Wrench | Install Gas upgrade: -1 Weight | 1 Gas |
-| Engine Specialist | 3 | Wrench | Install Propulsion upgrade: -1 Weight | 1 £, 1 Research |
+| Gas Engineer | 3 | Wrench | Install Gas Tech Tile: -1 Weight | 1 Gas |
+| Engine Specialist | 3 | Wrench | Install Propulsion Tech Tile: -1 Weight | 1 £, 1 Research |
 | Safety Inspector | 4 | Wrench | +2 Reliability for this launch | 1 Engineer |
 | Ground Crew Chief | 2 | Wrench | -£2 Hull Cost | 2 £ |
-| Structural Engineer | 3 | Wrench | Install Structure upgrade: +1 Lift | 1 Research |
+| Structural Engineer | 3 | Wrench | Install Frame Tech Tile: +1 Lift | 1 Research |
 | Fuel Specialist | 3 | Wrench | -£2 Lifting Gas cost | 1 Gas, 1 £ |
 
-## Political/Financial Personnel (10 cards)
+## Political/Financial Personnel (10 Agent Cards)
 
 | Name | Cost | Symbol | Agent Effect | Reveal |
 |------|------|--------|--------------|--------|
@@ -742,7 +742,7 @@ The Market Deck contains 30 purchasable crew cards. Five are displayed in the Ma
 | Union Representative | 2 | Coin | -£1 per crew recruited this action | 1 Influence, 1 Officer |
 | Customs Official | 3 | Propeller | Claim route even if tied | 2 Influence |
 
-## Research Personnel (5 cards)
+## Research Personnel (5 Agent Cards)
 
 | Name | Cost | Symbol | Agent Effect | Reveal |
 |------|------|--------|--------------|--------|
@@ -752,17 +752,17 @@ The Market Deck contains 30 purchasable crew cards. Five are displayed in the Ma
 | Technical Library | 3 | Propeller | Look at top 3 R&D tiles; reorder them | 2 Research |
 | Foreign Consultant | 4 | Propeller | Acquire Tech another player owns (pay double) | 1 Research, 1 £ |
 
-## Organizations (5 cards)
+## Organizations (5 Agent Cards)
 
 | Name | Cost | Symbol | Agent Effect | Reveal |
 |------|------|--------|--------------|--------|
-| Royal Geographic Society | 6 | Wrench | Install 1 Upgrade ignoring Tech requirement | 1 Engineer, 2 Influence |
+| Royal Geographic Society | 6 | Wrench | Install 1 Tech Tile ignoring Tech requirement | 1 Engineer, 2 Influence |
 | Combat Veteran | 5 | Propeller | Gain £8; Combat missions: +£2 Income | 1 Officer, 1 £ |
 | Luxury Travel Agency | 5 | Propeller | +1 Luxury stat for this launch | 3 Influence |
 | Aviation Club | 4 | Coin | Recruit 1 Officer free | 2 Influence, 1 Officer |
 | Engineering Guild | 4 | Coin | Recruit 1 Engineer at -£1 | 1 Influence, 1 Engineer |
 
-**Market Row Mechanics:** Cards are added to the right side of the row. When cards are purchased, remaining cards slide left (oldest on left, newest on right). The Academy action can purge the leftmost card. Refill to 5 cards at end of each round.
+**Market Row Mechanics:** Agent Cards are added to the right side of the row. When Agent Cards are purchased, remaining cards slide left (oldest on left, newest on right). The Academy action can purge the leftmost Agent Card. Refill to 5 Agent Cards at end of each round.
 
 ---
 

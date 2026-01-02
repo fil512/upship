@@ -18,8 +18,8 @@ const { processUpgradeResearchLevel } = require('./technology');
 const { processUpdateBlueprint } = require('./blueprint');
 
 /**
- * Process card effects when used for agent placement (Section 8.1)
- * Handles both starter deck cards and market cards per Appendix H
+ * Process Agent Card effects when used for agent placement (Section 8.1)
+ * Handles both Starter Deck Agent Cards and Market Agent Cards per Appendix H
  */
 function processCardEffect(state, playerId, card, _locationId) {
   const playerState = state.players[playerId];

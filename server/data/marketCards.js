@@ -1,13 +1,13 @@
 /**
- * Market Deck Cards per Appendix H
+ * Market Deck (Agent Cards) per Appendix H
  *
- * The Market Deck contains 30 purchasable crew cards organized into 4 categories:
- * - Technical Personnel (10 cards)
- * - Political/Financial Personnel (10 cards)
- * - Research Personnel (5 cards)
- * - Organizations (5 cards)
+ * The Market Deck contains 30 purchasable Agent Cards organized into 4 categories:
+ * - Technical Personnel (10 Agent Cards)
+ * - Political/Financial Personnel (10 Agent Cards)
+ * - Research Personnel (5 Agent Cards)
+ * - Organizations (5 Agent Cards)
  *
- * Each card has:
+ * Each Agent Card has:
  * - id: unique identifier
  * - name: display name
  * - category: technical | political | research | organizations
@@ -18,7 +18,7 @@
  */
 
 const MARKET_CARDS = [
-  // === TECHNICAL PERSONNEL (10 cards) ===
+  // === TECHNICAL PERSONNEL (10 Agent Cards) ===
   {
     id: 'market_chief_engineer',
     name: 'Chief Engineer',
@@ -110,7 +110,7 @@ const MARKET_CARDS = [
     reveal: { gas: 1, cash: 1 }
   },
 
-  // === POLITICAL/FINANCIAL PERSONNEL (10 cards) ===
+  // === POLITICAL/FINANCIAL PERSONNEL (10 Agent Cards) ===
   {
     id: 'market_aristocrat',
     name: 'The Aristocrat',
@@ -202,7 +202,7 @@ const MARKET_CARDS = [
     reveal: { influence: 2 }
   },
 
-  // === RESEARCH PERSONNEL (5 cards) ===
+  // === RESEARCH PERSONNEL (5 Agent Cards) ===
   {
     id: 'market_university_partnership',
     name: 'University Partnership',
@@ -249,7 +249,7 @@ const MARKET_CARDS = [
     reveal: { research: 1, cash: 1 }
   },
 
-  // === ORGANIZATIONS (5 cards) ===
+  // === ORGANIZATIONS (5 Agent Cards) ===
   {
     id: 'market_royal_geographic',
     name: 'Royal Geographic Society',

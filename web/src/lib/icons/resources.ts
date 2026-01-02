@@ -105,10 +105,9 @@ export const resourceIcons: Record<ResourceIconName, IconDefinition> = {
   },
 
   research: {
-    // Magnifying glass
-    svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <circle cx="11" cy="11" r="8"/>
-      <path d="M21 21l-4.35-4.35"/>
+    // Grey square (matches grey diamond for influence, grey circle for money)
+    svg: `<svg viewBox="0 0 24 24">
+      <rect x="2" y="2" width="20" height="20" rx="2" fill="#888888"/>
     </svg>`,
     category: 'resource',
     tooltip: 'Research - unlock technologies'

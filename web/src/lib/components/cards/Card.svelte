@@ -2,6 +2,7 @@
 	import { createEventDispatcher } from 'svelte';
 	import type { Card } from '$lib/types/game';
 	import Icon from '$lib/components/ui/Icon.svelte';
+	import CostBadge from '$lib/components/ui/CostBadge.svelte';
 	import type { SymbolIconName } from '$lib/icons/types';
 
 	export let card: Card;
@@ -43,8 +44,7 @@
 		<span class="card-name">{card.name}</span>
 		{#if card.cost}
 			<div class="card-cost" title="Costs {card.cost} Influence">
-				<Icon name="influence" size={12} />
-				<span>{card.cost}</span>
+				<CostBadge type="influence" value={card.cost} size={24} />
 			</div>
 		{/if}
 	</div>
@@ -156,13 +156,7 @@
 	.card-cost {
 		display: flex;
 		align-items: center;
-		gap: 2px;
-		background: var(--color-bg-hover);
-		padding: 2px 5px;
-		border-radius: var(--radius-sm);
-		font-size: 0.65rem;
-		font-weight: 700;
-		color: var(--color-text-primary);
+		flex-shrink: 0;
 	}
 
 	/* Center section - Symbol and Effect */
