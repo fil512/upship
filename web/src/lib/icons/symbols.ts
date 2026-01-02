@@ -20,12 +20,12 @@ export const symbolIcons: Record<SymbolIconName, IconDefinition> = {
   },
 
   propeller: {
-    // Solid white propeller (3-blade)
+    // Symmetrical 3-blade propeller (120° apart)
     svg: `<svg viewBox="0 0 24 24" fill="currentColor">
-      <circle cx="12" cy="12" r="2.5"/>
-      <path d="M12 2c-1.5 0-2.5 1-2.5 2.5 0 2 1 4.5 2.5 5.5 1.5-1 2.5-3.5 2.5-5.5C14.5 3 13.5 2 12 2z"/>
-      <path d="M5.5 16.5c-.75 1.3-.5 2.6.5 3.5 1.3 1.3 3.5 1 5-.5 1-1.5 1-4 0-5.5-1.5 1-4 1.5-5.5 2.5z"/>
-      <path d="M18.5 16.5c.75 1.3.5 2.6-.5 3.5-1.3 1.3-3.5 1-5-.5-1-1.5-1-4 0-5.5 1.5 1 4 1.5 5.5 2.5z"/>
+      <circle cx="12" cy="12" r="2"/>
+      <ellipse cx="12" cy="5" rx="2" ry="5" transform="rotate(0 12 12)"/>
+      <ellipse cx="12" cy="5" rx="2" ry="5" transform="rotate(120 12 12)"/>
+      <ellipse cx="12" cy="5" rx="2" ry="5" transform="rotate(240 12 12)"/>
     </svg>`,
     category: 'symbol',
     tooltip: 'Operations - flight and research'
