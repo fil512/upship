@@ -64,35 +64,42 @@
 					</div>
 				</div>
 
-				<!-- Row 2: Resources as icons only -->
+				<!-- Row 2: Resources as value icon +income -->
 				<div class="player-resources">
-					<div class="resource" title="Cash: £{player.cash}">
-						<Icon name="cash" size={14} color="var(--color-accent-gold)" />
+					<div class="resource" title="Cash: £{player.cash}, Income: +£{player.income || 0}">
 						<span class="value">{player.cash}</span>
+						<Icon name="cash" size={14} color="var(--color-accent-gold)" />
+						{#if player.income}<span class="income">+{player.income}</span>{/if}
 					</div>
 					<div class="resource" title="Victory Points: {player.vp || 0}">
-						<Icon name="vp" size={14} color="var(--color-success)" />
 						<span class="value">{player.vp || 0}</span>
+						<Icon name="vp" size={14} color="var(--color-success)" />
 					</div>
-					<div class="resource" title="Officers: {player.officers}">
-						<Icon name="officers" size={14} />
+					<div class="resource" title="Officers: {player.officers}, Income: +{player.officerIncome || 0}">
 						<span class="value">{player.officers}</span>
+						<Icon name="officers" size={14} />
+						<span class="income">+{player.officerIncome || 0}</span>
 					</div>
-					<div class="resource" title="Engineers: {player.engineers}">
-						<Icon name="engineers" size={14} />
+					<div class="resource" title="Engineers: {player.engineers}, Income: +{player.engineerIncome || 0}">
 						<span class="value">{player.engineers}</span>
+						<Icon name="engineers" size={14} />
+						<span class="income">+{player.engineerIncome || 0}</span>
+					</div>
+					<div class="resource" title="Research Level: +{player.researchLevel || 0}">
+						<Icon name="research" size={14} />
+						<span class="income">+{player.researchLevel || 0}</span>
 					</div>
 					<div class="resource" title="Hydrogen: {player.gasCubes?.hydrogen || 0}">
-						<Icon name="hydrogen" size={14} color="#1565c0" />
 						<span class="value">{player.gasCubes?.hydrogen || 0}</span>
+						<Icon name="hydrogen" size={14} />
 					</div>
 					<div class="resource" title="Helium: {player.gasCubes?.helium || 0}">
-						<Icon name="helium" size={14} color="#e65100" />
 						<span class="value">{player.gasCubes?.helium || 0}</span>
+						<Icon name="helium" size={14} />
 					</div>
 					<div class="resource" title="Ships: {player.ships?.length || 0}">
-						<Icon name="ship" size={14} />
 						<span class="value">{player.ships?.length || 0}</span>
+						<Icon name="ship" size={14} />
 					</div>
 				</div>
 			</div>
@@ -233,5 +240,12 @@
 		color: var(--color-text-primary);
 		min-width: 12px;
 		text-align: center;
+	}
+
+	.resource .income {
+		font-size: 0.65rem;
+		font-weight: 600;
+		color: var(--color-success);
+		margin-left: 1px;
 	}
 </style>

@@ -2,46 +2,51 @@ import type { IconDefinition, FactionIconName } from './types';
 
 export const factionIcons: Record<FactionIconName, IconDefinition> = {
   germany: {
-    // Iron Cross simplified
-    svg: `<svg viewBox="0 0 24 24" fill="currentColor">
-      <path d="M12 2L14 8H20L12 12L20 16H14L12 22L10 16H4L12 12L4 8H10L12 2Z"/>
+    // German flag - black, red, gold horizontal stripes
+    svg: `<svg viewBox="0 0 24 24">
+      <rect x="2" y="4" width="20" height="16" rx="2" fill="#000"/>
+      <rect x="2" y="9.33" width="20" height="5.33" fill="#DD0000"/>
+      <rect x="2" y="14.66" width="20" height="5.34" rx="0 0 2 2" fill="#FFCC00"/>
     </svg>`,
     category: 'faction',
     tooltip: 'Germany - rigid airship pioneers'
   },
 
   britain: {
-    // Crown simplified
-    svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M3 18h18v2H3z"/>
-      <path d="M5 18V8l2 2V6l5 4 5-4v4l2-2v10"/>
-      <circle cx="12" cy="5" r="1" fill="currentColor"/>
+    // Union Jack - simplified
+    svg: `<svg viewBox="0 0 24 24">
+      <rect x="2" y="4" width="20" height="16" rx="2" fill="#012169"/>
+      <path d="M2 4l20 16M22 4l-20 16" stroke="#fff" stroke-width="3"/>
+      <path d="M2 4l20 16M22 4l-20 16" stroke="#C8102E" stroke-width="1.5"/>
+      <path d="M12 4v16M2 12h20" stroke="#fff" stroke-width="5"/>
+      <path d="M12 4v16M2 12h20" stroke="#C8102E" stroke-width="3"/>
     </svg>`,
     category: 'faction',
     tooltip: 'Britain - imperial route masters'
   },
 
   usa: {
-    // Eagle simplified
-    svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M12 4c-2 0-4 1-5 3-1 2-1 4 0 6h10c1-2 1-4 0-6-1-2-3-3-5-3z"/>
-      <path d="M8 13l-3 5h14l-3-5"/>
-      <path d="M12 4v-2"/>
-      <path d="M9 6l-2-2"/>
-      <path d="M15 6l2-2"/>
-      <path d="M12 18v2"/>
+    // American flag - simplified stars and stripes
+    svg: `<svg viewBox="0 0 24 24">
+      <rect x="2" y="4" width="20" height="16" rx="2" fill="#BF0A30"/>
+      <rect x="2" y="5.23" width="20" height="1.23" fill="#fff"/>
+      <rect x="2" y="7.69" width="20" height="1.23" fill="#fff"/>
+      <rect x="2" y="10.15" width="20" height="1.23" fill="#fff"/>
+      <rect x="2" y="12.61" width="20" height="1.23" fill="#fff"/>
+      <rect x="2" y="15.07" width="20" height="1.23" fill="#fff"/>
+      <rect x="2" y="17.53" width="20" height="1.23" fill="#fff"/>
+      <rect x="2" y="4" width="10" height="8.6" fill="#002868"/>
     </svg>`,
     category: 'faction',
     tooltip: 'USA - helium monopoly holders'
   },
 
   italy: {
-    // Laurel wreath simplified
-    svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M5 20c2-3 2-7 1-10 2 1 4 4 4 7"/>
-      <path d="M19 20c-2-3-2-7-1-10-2 1-4 4-4 7"/>
-      <path d="M5 20h14"/>
-      <circle cx="12" cy="8" r="3"/>
+    // Italian flag - green, white, red vertical stripes
+    svg: `<svg viewBox="0 0 24 24">
+      <rect x="2" y="4" width="6.67" height="16" rx="2 0 0 2" fill="#009246"/>
+      <rect x="8.67" y="4" width="6.66" height="16" fill="#fff"/>
+      <rect x="15.33" y="4" width="6.67" height="16" rx="0 2 2 0" fill="#CE2B37"/>
     </svg>`,
     category: 'faction',
     tooltip: 'Italy - semi-rigid specialists'

@@ -13,44 +13,46 @@
 </script>
 
 <div class="ship-stats">
-	<div class="stats-grid">
-		<div class="stat" class:positive={stats.netLift > 0} class:negative={stats.netLift <= 0}>
-			<span class="stat-label">Net Lift</span>
-			<span class="stat-value">{stats.netLift > 0 ? '+' : ''}{stats.netLift}</span>
+	<!-- Lift equation row -->
+	<div class="lift-equation">
+		<div class="equation-labels">
+			<span>LIFT</span>
+			<span class="operator">-</span>
+			<span>WEIGHT</span>
+			<span class="operator">=</span>
+			<span>NET LIFT</span>
 		</div>
-
-		<div class="stat">
-			<span class="stat-label">Lift</span>
-			<span class="stat-value">{stats.lift}</span>
+		<div class="equation-values">
+			<span class="value">{stats.lift}</span>
+			<span class="operator">-</span>
+			<span class="value">{stats.weight}</span>
+			<span class="operator">=</span>
+			<span class="value net-lift" class:positive={stats.netLift > 0} class:negative={stats.netLift <= 0}>
+				{stats.netLift > 0 ? '+' : ''}{stats.netLift}
+			</span>
 		</div>
+	</div>
 
-		<div class="stat">
-			<span class="stat-label">Weight</span>
-			<span class="stat-value">{stats.weight}</span>
-		</div>
-
-		<div class="stat">
-			<span class="stat-label">Range</span>
+	<!-- Other stats in single column -->
+	<div class="stats-list">
+		<div class="stat-row">
+			<span class="stat-label">RANGE</span>
 			<span class="stat-value">{stats.range}</span>
 		</div>
-
-		<div class="stat">
-			<span class="stat-label">Speed</span>
+		<div class="stat-row">
+			<span class="stat-label">SPEED</span>
 			<span class="stat-value">{stats.speed}</span>
 		</div>
-
-		<div class="stat">
-			<span class="stat-label">Ceiling</span>
+		<div class="stat-row">
+			<span class="stat-label">CEILING</span>
 			<span class="stat-value">{stats.ceiling}</span>
 		</div>
-
-		<div class="stat">
-			<span class="stat-label">Reliability</span>
+		<div class="stat-row">
+			<span class="stat-label">RELIABILITY</span>
 			<span class="stat-value">{stats.reliability}</span>
 		</div>
-
-		<div class="stat">
-			<span class="stat-label">Luxury</span>
+		<div class="stat-row">
+			<span class="stat-label">LUXURY</span>
 			<span class="stat-value">{stats.luxury}</span>
 		</div>
 	</div>
@@ -69,40 +71,82 @@
 		/* Standalone panel styling */
 	}
 
-	.stats-grid {
-		display: grid;
-		grid-template-columns: repeat(2, 1fr);
+	/* Lift equation section */
+	.lift-equation {
+		background: var(--color-bg-hover);
+		border-radius: var(--radius-sm);
+		padding: var(--spacing-xs) var(--spacing-sm);
+		margin-bottom: var(--spacing-sm);
+	}
+
+	.equation-labels {
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		gap: var(--spacing-xs);
+		font-size: 0.6rem;
+		color: var(--color-text-muted);
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		margin-bottom: 2px;
+	}
+
+	.equation-values {
+		display: flex;
+		justify-content: center;
+		align-items: center;
 		gap: var(--spacing-xs);
 	}
 
-	.stat {
+	.equation-values .value {
+		font-size: 1.1rem;
+		font-weight: 700;
+		color: var(--color-text-primary);
+		min-width: 24px;
+		text-align: center;
+	}
+
+	.equation-labels .operator,
+	.equation-values .operator {
+		color: var(--color-text-muted);
+		font-weight: 400;
+	}
+
+	.net-lift.positive {
+		color: var(--color-success);
+	}
+
+	.net-lift.negative {
+		color: var(--color-error);
+	}
+
+	/* Stats list section */
+	.stats-list {
 		display: flex;
 		flex-direction: column;
+		gap: 2px;
+	}
+
+	.stat-row {
+		display: flex;
+		justify-content: space-between;
 		align-items: center;
-		padding: var(--spacing-xs);
+		padding: 3px var(--spacing-sm);
 		background: var(--color-bg-hover);
 		border-radius: var(--radius-sm);
 	}
 
 	.stat-label {
-		font-size: 0.625rem;
+		font-size: 0.65rem;
 		color: var(--color-text-muted);
 		text-transform: uppercase;
 		letter-spacing: 0.05em;
 	}
 
 	.stat-value {
-		font-size: 1rem;
+		font-size: 0.85rem;
 		font-weight: 600;
 		color: var(--color-text-primary);
-	}
-
-	.stat.positive .stat-value {
-		color: var(--color-success);
-	}
-
-	.stat.negative .stat-value {
-		color: var(--color-error);
 	}
 
 	.launch-status {
