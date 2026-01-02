@@ -17,7 +17,7 @@
 		string,
 		{
 			costs: Array<{ icon: IconName; amount?: string }>;
-			benefits: Array<{ icon: IconName; text: string }>;
+			benefits: Array<{ icon: IconName; icon2?: IconName; text: string }>;
 		}
 	> = {
 		research_institute: {
@@ -43,11 +43,11 @@
 		},
 		flight_school: {
 			costs: [{ icon: 'cash', amount: '5' }],
-			benefits: [{ icon: 'income', text: '+1 Officer Income' }]
+			benefits: [{ icon: 'income', icon2: 'officers', text: '+1' }]
 		},
 		technical_institute: {
 			costs: [{ icon: 'cash', amount: '6' }],
-			benefits: [{ icon: 'income', text: '+1 Engineer Income' }]
+			benefits: [{ icon: 'income', icon2: 'engineers', text: '+1' }]
 		},
 		government_liaison: {
 			costs: [{ icon: 'officers', amount: '1-3' }],
@@ -144,6 +144,9 @@
 					{#each locationData.benefits as benefit}
 						<div class="benefit-item">
 							<Icon name={benefit.icon} size={18} color="var(--color-success)" />
+							{#if benefit.icon2}
+								<Icon name={benefit.icon2} size={16} />
+							{/if}
 							<span class="benefit-text">{benefit.text}</span>
 						</div>
 					{/each}
