@@ -43,6 +43,7 @@ export interface Card {
 	id: string;
 	name: string;
 	symbol: CardSymbol;
+	cost?: number; // Influence cost (market cards only, starter cards have no cost)
 	reveal?: {
 		cash?: number;
 		influence?: number;
@@ -50,7 +51,7 @@ export interface Card {
 		officers?: number;
 		engineers?: number;
 	};
-	effect?: string;
+	effect?: string | null;
 	ability?: string;
 }
 

@@ -21,6 +21,7 @@
 	};
 
 	$: iconName = (card.symbol || 'any') as SymbolIconName;
+	$: symbolColor = SYMBOL_COLORS[card.symbol] || SYMBOL_COLORS.any;
 
 	function handleClick() {
 		if (selectable) {
@@ -33,58 +34,81 @@
 	class="card"
 	class:selected
 	class:selectable
-	style:--card-color={SYMBOL_COLORS[card.symbol] || SYMBOL_COLORS.any}
+	style:--card-color={symbolColor}
 	on:click={handleClick}
 	disabled={!selectable}
 >
-	<div class="card-symbol">
-		<Icon name={iconName} size={28} color={SYMBOL_COLORS[card.symbol] || SYMBOL_COLORS.any} />
+	<!-- Header: Name (left) + Cost (right) -->
+	<div class="card-header">
+		<span class="card-name">{card.name}</span>
+		{#if card.cost}
+			<div class="card-cost" title="Costs {card.cost} Influence">
+				<Icon name="influence" size={12} />
+				<span>{card.cost}</span>
+			</div>
+		{/if}
 	</div>
-	<div class="card-name">{card.name}</div>
-	{#if card.reveal}
-		<div class="card-reveal">
-			{#if card.reveal.cash}
+
+	<!-- Center stripe: Symbol + Agent effect -->
+	<div class="card-center">
+		<div class="card-symbol">
+			<Icon name={iconName} size={32} color={symbolColor} />
+		</div>
+		{#if card.effect}
+			<div class="card-effect">{card.effect}</div>
+		{/if}
+	</div>
+
+	<!-- Bottom stripe: Reveal effect -->
+	<div class="card-reveal">
+		<span class="reveal-label">Reveal:</span>
+		<div class="reveal-items">
+			{#if card.reveal?.cash}
 				<div class="reveal-item" title="+{card.reveal.cash} Cash">
 					<Icon name="cash" size={14} />
 					<span>+{card.reveal.cash}</span>
 				</div>
 			{/if}
-			{#if card.reveal.influence}
+			{#if card.reveal?.influence}
 				<div class="reveal-item" title="+{card.reveal.influence} Influence">
 					<Icon name="influence" size={14} />
 					<span>+{card.reveal.influence}</span>
 				</div>
 			{/if}
-			{#if card.reveal.research}
+			{#if card.reveal?.research}
 				<div class="reveal-item" title="+{card.reveal.research} Research">
 					<Icon name="research" size={14} />
 					<span>+{card.reveal.research}</span>
 				</div>
 			{/if}
-			{#if card.reveal.officers}
+			{#if card.reveal?.officers}
 				<div class="reveal-item" title="+{card.reveal.officers} Officers">
 					<Icon name="officers" size={14} />
 					<span>+{card.reveal.officers}</span>
 				</div>
 			{/if}
+			{#if card.reveal?.engineers}
+				<div class="reveal-item" title="+{card.reveal.engineers} Engineers">
+					<Icon name="engineers" size={14} />
+					<span>+{card.reveal.engineers}</span>
+				</div>
+			{/if}
 		</div>
-	{/if}
+	</div>
 </button>
 
 <style>
 	.card {
 		display: flex;
 		flex-direction: column;
-		align-items: center;
-		justify-content: center;
-		padding: var(--spacing-sm);
+		width: 120px;
+		min-height: 160px;
 		background: var(--color-bg-card);
 		border: 2px solid var(--color-bg-hover);
 		border-radius: var(--radius-md);
-		min-width: 80px;
-		min-height: 100px;
 		cursor: default;
 		transition: all var(--transition-fast);
+		overflow: hidden;
 	}
 
 	.card.selectable {
@@ -98,7 +122,7 @@
 	}
 
 	.card.selected {
-		background: color-mix(in srgb, var(--card-color) 20%, var(--color-bg-card));
+		background: color-mix(in srgb, var(--card-color) 15%, var(--color-bg-card));
 		border-color: var(--card-color);
 		box-shadow: 0 0 12px color-mix(in srgb, var(--card-color) 50%, transparent);
 		transform: translateY(-4px);
@@ -108,25 +132,82 @@
 		cursor: not-allowed;
 	}
 
-	.card-symbol {
-		margin-bottom: var(--spacing-xs);
+	/* Header section */
+	.card-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: flex-start;
+		padding: 6px 8px;
+		background: var(--color-bg-tertiary);
+		border-bottom: 1px solid var(--color-bg-hover);
 	}
 
 	.card-name {
-		font-size: 0.625rem;
-		font-weight: 600;
-		color: var(--card-color);
+		font-size: 0.7rem;
+		font-weight: 700;
+		color: var(--color-text-primary);
 		text-transform: uppercase;
-		text-align: center;
 		line-height: 1.2;
+		flex: 1;
 	}
 
+	.card-cost {
+		display: flex;
+		align-items: center;
+		gap: 2px;
+		background: var(--color-bg-hover);
+		padding: 2px 5px;
+		border-radius: var(--radius-sm);
+		font-size: 0.65rem;
+		font-weight: 700;
+		color: var(--color-text-primary);
+	}
+
+	/* Center section - Symbol and Effect */
+	.card-center {
+		flex: 1;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		padding: 8px;
+		background: color-mix(in srgb, var(--card-color) 10%, transparent);
+	}
+
+	.card-symbol {
+		margin-bottom: 4px;
+	}
+
+	.card-effect {
+		font-size: 0.55rem;
+		color: var(--color-text-secondary);
+		text-align: center;
+		line-height: 1.3;
+		padding: 4px;
+		background: var(--color-bg-card);
+		border-radius: var(--radius-sm);
+		max-width: 100%;
+	}
+
+	/* Bottom section - Reveal */
 	.card-reveal {
+		padding: 6px 8px;
+		background: var(--color-bg-tertiary);
+		border-top: 1px solid var(--color-bg-hover);
+	}
+
+	.reveal-label {
+		font-size: 0.5rem;
+		color: var(--color-text-muted);
+		text-transform: uppercase;
+		display: block;
+		margin-bottom: 3px;
+	}
+
+	.reveal-items {
 		display: flex;
 		flex-wrap: wrap;
 		gap: 4px;
-		justify-content: center;
-		margin-top: var(--spacing-xs);
 	}
 
 	.reveal-item {
@@ -134,9 +215,10 @@
 		align-items: center;
 		gap: 2px;
 		background: var(--color-bg-hover);
-		padding: 2px 4px;
+		padding: 2px 5px;
 		border-radius: var(--radius-sm);
 		font-size: 0.6rem;
+		font-weight: 600;
 		color: var(--color-text-primary);
 	}
 </style>
