@@ -54,13 +54,16 @@ export const resourceIcons: Record<ResourceIconName, IconDefinition> = {
   },
 
   engineers: {
-    // Man holding a wrench
+    // Hard hat / construction helmet
     svg: `<svg viewBox="0 0 24 24" fill="currentColor">
-      <circle cx="10" cy="5" r="3"/>
-      <path d="M6 22v-6c0-2 1-3 3-3h2c2 0 3 1 3 3v6H6z"/>
-      <path d="M14 12l4-4c.5-.5 1.3-.5 1.8 0l.7.7c.5.5.5 1.3 0 1.8l-4 4"/>
-      <path d="M16 14l2.5 2.5"/>
-      <path d="M13 11l-1 1"/>
+      <!-- Main dome -->
+      <path d="M4 14 Q4 6 12 6 Q20 6 20 14 L4 14 Z"/>
+      <!-- Brim -->
+      <rect x="2" y="14" width="20" height="3" rx="1"/>
+      <!-- Top ridge -->
+      <rect x="10" y="4" width="4" height="3" rx="1"/>
+      <!-- Helmet band/stripe -->
+      <rect x="4" y="11" width="16" height="1.5" fill="none" stroke="#f1c40f" stroke-width="1"/>
     </svg>`,
     category: 'resource',
     tooltip: 'Engineers - aid research and repairs'
