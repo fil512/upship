@@ -21,13 +21,13 @@ export const resourceIcons: Record<ResourceIconName, IconDefinition> = {
   },
 
   officers: {
-    // Pilot/captain peaked cap with visor
-    svg: `<svg viewBox="0 0 24 24" fill="currentColor">
-      <path d="M4 14h16v3H4z"/>
-      <path d="M2 17h20v2H2z"/>
-      <ellipse cx="12" cy="14" rx="7" ry="2"/>
-      <path d="M6 14c0-2.5 2.7-5 6-5s6 2.5 6 5"/>
-      <path d="M8 12l4-2 4 2" fill="none" stroke="currentColor" stroke-width="1.5"/>
+    // Captain's hat - white crown, navy band with gold stripe, black visor
+    svg: `<svg viewBox="0 0 24 24">
+      <path d="M5 14c0-4 3-7 7-7s7 3 7 7H5z" fill="white"/>
+      <rect x="4" y="14" width="16" height="4" fill="#2c3e50"/>
+      <path d="M4 15.5h16" stroke="#f1c40f" stroke-width="1.5" fill="none"/>
+      <path d="M4 18q8 3 16 0" fill="#1a1a2e"/>
+      <path d="M12 10l-1.5-2h3l-1.5 2" fill="#2c3e50"/>
     </svg>`,
     category: 'resource',
     tooltip: 'Officers - required for launches'
@@ -47,25 +47,20 @@ export const resourceIcons: Record<ResourceIconName, IconDefinition> = {
   },
 
   hydrogen: {
-    svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <rect x="4" y="6" rx="2" width="16" height="14"/>
-      <path d="M8 10v6"/>
-      <path d="M8 13h4"/>
-      <path d="M12 10v6"/>
-      <path d="M15 16v-3.5a1.5 1.5 0 0 1 3 0V16"/>
+    // H in yellow square
+    svg: `<svg viewBox="0 0 24 24">
+      <rect x="2" y="2" width="20" height="20" rx="2" fill="#f1c40f"/>
+      <text x="12" y="17" text-anchor="middle" font-size="14" font-weight="bold" fill="#1a1a2e">H</text>
     </svg>`,
     category: 'resource',
     tooltip: 'Hydrogen - cheap but flammable'
   },
 
   helium: {
-    svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <rect x="4" y="6" rx="2" width="16" height="14"/>
-      <path d="M8 10v6"/>
-      <path d="M8 13h3"/>
-      <path d="M8 10h3"/>
-      <path d="M8 16h3"/>
-      <path d="M14 16v-3.5a1.5 1.5 0 0 1 3 0V16"/>
+    // He in white square
+    svg: `<svg viewBox="0 0 24 24">
+      <rect x="2" y="2" width="20" height="20" rx="2" fill="white" stroke="#666" stroke-width="1"/>
+      <text x="12" y="17" text-anchor="middle" font-size="12" font-weight="bold" fill="#1a1a2e">He</text>
     </svg>`,
     category: 'resource',
     tooltip: 'Helium - safe but expensive'

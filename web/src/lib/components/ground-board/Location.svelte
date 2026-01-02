@@ -57,8 +57,8 @@
 			benefits: [{ icon: 'politics' }]
 		},
 		gas_depot: {
-			costs: [{ icon: 'cash', amount: '£' }],
-			benefits: [{ icon: 'gas' }]
+			costs: [{ icon: 'cash' }],
+			benefits: [{ icon: 'hydrogen', icon2: 'helium' }]
 		},
 		insurance_bureau: {
 			costs: [{ icon: 'income', amount: '-1' }],
@@ -103,26 +103,24 @@
 	on:click={handleClick}
 	disabled={isOccupied || !canPlace}
 >
-	<!-- Cost bar on the left -->
+	<!-- Cost bar on the left (includes card symbol requirement) -->
 	<div class="location-cost-bar">
-		{#if locationData.costs.length > 0}
-			{#each locationData.costs as cost}
-				<div class="cost-item" title={cost.icon}>
-					<Icon name={cost.icon} size={14} />
-					{#if cost.amount}
-						<span class="cost-amount">{cost.amount}</span>
-					{/if}
-				</div>
-			{/each}
-		{:else}
-			<span class="cost-free">Free</span>
-		{/if}
+		<div class="cost-item symbol-cost" title="Requires {symbol} card">
+			<Icon name={symbol as SymbolIconName} size={16} color="var(--symbol-color)" />
+		</div>
+		{#each locationData.costs as cost}
+			<div class="cost-item" title={cost.icon}>
+				<Icon name={cost.icon} size={14} />
+				{#if cost.amount}
+					<span class="cost-amount">{cost.amount}</span>
+				{/if}
+			</div>
+		{/each}
 	</div>
 
 	<!-- Main content section -->
 	<div class="location-main">
 		<div class="location-header">
-			<Icon name={symbol as SymbolIconName} size={16} color="var(--symbol-color)" />
 			<span class="name">{name}</span>
 		</div>
 
@@ -217,11 +215,10 @@
 		color: var(--color-text-primary);
 	}
 
-	.cost-free {
-		font-size: 0.5rem;
-		color: var(--color-success);
-		text-transform: uppercase;
-		font-weight: 600;
+	.symbol-cost {
+		border-bottom: 1px solid var(--symbol-color);
+		padding-bottom: 4px;
+		margin-bottom: 2px;
 	}
 
 	/* Main content section */

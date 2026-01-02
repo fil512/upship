@@ -41,8 +41,33 @@
 		<Icon name={iconName} size={28} color={SYMBOL_COLORS[card.symbol] || SYMBOL_COLORS.any} />
 	</div>
 	<div class="card-name">{card.name}</div>
-	{#if card.ability}
-		<div class="card-ability">{card.ability}</div>
+	{#if card.reveal}
+		<div class="card-reveal">
+			{#if card.reveal.cash}
+				<div class="reveal-item" title="+{card.reveal.cash} Cash">
+					<Icon name="cash" size={14} />
+					<span>+{card.reveal.cash}</span>
+				</div>
+			{/if}
+			{#if card.reveal.influence}
+				<div class="reveal-item" title="+{card.reveal.influence} Influence">
+					<Icon name="influence" size={14} />
+					<span>+{card.reveal.influence}</span>
+				</div>
+			{/if}
+			{#if card.reveal.research}
+				<div class="reveal-item" title="+{card.reveal.research} Research">
+					<Icon name="research" size={14} />
+					<span>+{card.reveal.research}</span>
+				</div>
+			{/if}
+			{#if card.reveal.officers}
+				<div class="reveal-item" title="+{card.reveal.officers} Officers">
+					<Icon name="officers" size={14} />
+					<span>+{card.reveal.officers}</span>
+				</div>
+			{/if}
+		</div>
 	{/if}
 </button>
 
@@ -96,10 +121,22 @@
 		line-height: 1.2;
 	}
 
-	.card-ability {
-		font-size: 0.5rem;
-		color: var(--color-text-muted);
-		text-align: center;
+	.card-reveal {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 4px;
+		justify-content: center;
 		margin-top: var(--spacing-xs);
+	}
+
+	.reveal-item {
+		display: flex;
+		align-items: center;
+		gap: 2px;
+		background: var(--color-bg-hover);
+		padding: 2px 4px;
+		border-radius: var(--radius-sm);
+		font-size: 0.6rem;
+		color: var(--color-text-primary);
 	}
 </style>
