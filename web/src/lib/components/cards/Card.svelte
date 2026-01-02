@@ -101,8 +101,10 @@
 	.card {
 		display: flex;
 		flex-direction: column;
-		width: 120px;
-		min-height: 160px;
+		width: 100%;
+		min-width: 100px;
+		max-width: 140px;
+		min-height: 150px;
 		background: var(--color-bg-card);
 		border: 2px solid var(--color-bg-hover);
 		border-radius: var(--radius-md);

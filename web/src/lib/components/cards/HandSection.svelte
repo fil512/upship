@@ -87,10 +87,9 @@
 	}
 
 	.cards-row {
-		display: flex;
-		flex-wrap: wrap;
+		display: grid;
+		grid-template-columns: repeat(2, 1fr);
 		gap: var(--spacing-sm);
-		justify-content: center;
 	}
 
 	.empty-hand {

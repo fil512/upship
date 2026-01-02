@@ -512,7 +512,7 @@
 	/* Layout */
 	.game-layout {
 		display: grid;
-		grid-template-columns: 280px 1fr 280px;
+		grid-template-columns: 220px 1fr 340px;
 		flex: 1;
 		overflow: hidden;
 	}
@@ -671,7 +671,7 @@
 	/* Responsive */
 	@media (max-width: 1200px) {
 		.game-layout {
-			grid-template-columns: 240px 1fr 240px;
+			grid-template-columns: 180px 1fr 300px;
 		}
 	}
 
