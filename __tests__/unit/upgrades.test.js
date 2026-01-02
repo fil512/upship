@@ -1,8 +1,8 @@
 const {
-  UPGRADES,
-  TECHNOLOGIES,
+  TECH_TILES,
+  TECH_CARDS,
   AGE_BASELINES,
-  getAvailableUpgrades,
+  getAvailableTechTiles,
   calculateShipStats,
   calculateLift,
   canLaunch
@@ -10,9 +10,9 @@ const {
 const { testBlueprint, emptyBlueprint } = require('../fixtures/testData');
 
 describe('Upgrades Module', () => {
-  describe('UPGRADES constant', () => {
+  describe('TECH_TILES constant', () => {
     it('should contain all required upgrade types', () => {
-      const types = new Set(Object.values(UPGRADES).map(u => u.type));
+      const types = new Set(Object.values(TECH_TILES).map(u => u.type));
       expect(types).toContain('drive');
       expect(types).toContain('frame');
       expect(types).toContain('fabric');
@@ -21,27 +21,27 @@ describe('Upgrades Module', () => {
 
     it('should have valid slot types for all upgrades', () => {
       const validSlotTypes = ['driveSlots', 'frameSlots', 'fabricSlots', 'componentSlots'];
-      Object.values(UPGRADES).forEach(upgrade => {
+      Object.values(TECH_TILES).forEach(upgrade => {
         expect(validSlotTypes).toContain(upgrade.slotType);
       });
     });
 
     it('should have age values between 1 and 3', () => {
-      Object.values(UPGRADES).forEach(upgrade => {
+      Object.values(TECH_TILES).forEach(upgrade => {
         expect(upgrade.age).toBeGreaterThanOrEqual(1);
         expect(upgrade.age).toBeLessThanOrEqual(3);
       });
     });
 
     it('should have required technology for each upgrade', () => {
-      Object.values(UPGRADES).forEach(upgrade => {
-        expect(upgrade.requiredTech).toBeDefined();
-        expect(typeof upgrade.requiredTech).toBe('string');
+      Object.values(TECH_TILES).forEach(upgrade => {
+        expect(upgrade.requiredCard).toBeDefined();
+        expect(typeof upgrade.requiredCard).toBe('string');
       });
     });
 
     it('should have numeric weight values', () => {
-      Object.values(UPGRADES).forEach(upgrade => {
+      Object.values(TECH_TILES).forEach(upgrade => {
         expect(typeof upgrade.weight).toBe('number');
       });
     });
@@ -51,20 +51,20 @@ describe('Upgrades Module', () => {
     it('should contain starting technologies for all factions', () => {
       const factions = ['germany', 'britain', 'usa', 'italy'];
       factions.forEach(faction => {
-        const factionTechs = Object.values(TECHNOLOGIES).filter(t => t.faction === faction);
+        const factionTechs = Object.values(TECH_CARDS).filter(t => t.faction === faction);
         expect(factionTechs.length).toBeGreaterThan(0);
       });
     });
 
     it('should have valid age values', () => {
-      Object.values(TECHNOLOGIES).forEach(tech => {
+      Object.values(TECH_CARDS).forEach(tech => {
         expect(tech.age).toBeGreaterThanOrEqual(1);
         expect(tech.age).toBeLessThanOrEqual(3);
       });
     });
 
     it('should have valid cost values (0 or positive)', () => {
-      Object.values(TECHNOLOGIES).forEach(tech => {
+      Object.values(TECH_CARDS).forEach(tech => {
         expect(tech.cost).toBeGreaterThanOrEqual(0);
       });
     });
@@ -92,9 +92,9 @@ describe('Upgrades Module', () => {
     });
   });
 
-  describe('getAvailableUpgrades', () => {
+  describe('getAvailableTechTiles', () => {
     it('should return empty arrays when player has no technologies', () => {
-      const result = getAvailableUpgrades([], 1);
+      const result = getAvailableTechTiles([], 1);
       expect(result.driveSlots).toEqual([]);
       expect(result.frameSlots).toEqual([]);
       expect(result.fabricSlots).toEqual([]);
@@ -102,28 +102,28 @@ describe('Upgrades Module', () => {
     });
 
     it('should return upgrades when player has matching technology', () => {
-      const result = getAvailableUpgrades(['duralumin_girders'], 1);
+      const result = getAvailableTechTiles(['duralumin_girders'], 1);
       expect(result.frameSlots.length).toBeGreaterThan(0);
       expect(result.frameSlots.some(u => u.id === 'duralumin_frame')).toBe(true);
     });
 
     it('should filter by age', () => {
       // Age 2 upgrade should not appear in Age 1
-      const age1Result = getAvailableUpgrades(['steel_framework'], 1);
-      const age2Result = getAvailableUpgrades(['steel_framework'], 2);
+      const age1Result = getAvailableTechTiles(['steel_framework'], 1);
+      const age2Result = getAvailableTechTiles(['steel_framework'], 2);
 
       expect(age1Result.frameSlots.some(u => u.id === 'steel_frame')).toBe(false);
       expect(age2Result.frameSlots.some(u => u.id === 'steel_frame')).toBe(true);
     });
 
     it('should include upgrades from earlier ages', () => {
-      const result = getAvailableUpgrades(['duralumin_girders'], 3);
+      const result = getAvailableTechTiles(['duralumin_girders'], 3);
       expect(result.frameSlots.some(u => u.id === 'duralumin_frame')).toBe(true);
     });
 
     it('should return upgrades grouped by slot type', () => {
       const techs = ['daimler_engine', 'duralumin_girders', 'goldbeater_skin', 'passenger_gondola'];
-      const result = getAvailableUpgrades(techs, 1);
+      const result = getAvailableTechTiles(techs, 1);
 
       expect(result.driveSlots.every(u => u.slotType === 'driveSlots')).toBe(true);
       expect(result.frameSlots.every(u => u.slotType === 'frameSlots')).toBe(true);
@@ -146,7 +146,7 @@ describe('Upgrades Module', () => {
         driveSlots: ['basic_engine']
       };
       const stats = calculateShipStats(blueprint, {}, 1);
-      expect(stats.speed).toBe(AGE_BASELINES[1].speed + UPGRADES.basic_engine.stats.speed);
+      expect(stats.speed).toBe(AGE_BASELINES[1].speed + TECH_TILES.basic_engine.stats.speed);
     });
 
     it('should accumulate weight from upgrades', () => {
@@ -156,7 +156,7 @@ describe('Upgrades Module', () => {
         fabricSlots: ['premium_envelope']
       };
       const stats = calculateShipStats(blueprint, {}, 1);
-      const expectedWeight = Math.abs(UPGRADES.duralumin_frame.weight) + Math.abs(UPGRADES.premium_envelope.weight);
+      const expectedWeight = Math.abs(TECH_TILES.duralumin_frame.weight) + Math.abs(TECH_TILES.premium_envelope.weight);
       expect(stats.weight).toBe(expectedWeight);
     });
 
@@ -167,7 +167,7 @@ describe('Upgrades Module', () => {
         fabricSlots: ['premium_envelope']
       };
       const stats = calculateShipStats(blueprint, {}, 1);
-      const expectedHullCost = 2 + UPGRADES.duralumin_frame.hullCost + UPGRADES.premium_envelope.hullCost;
+      const expectedHullCost = 2 + TECH_TILES.duralumin_frame.hullCost + TECH_TILES.premium_envelope.hullCost;
       expect(stats.hullCost).toBe(expectedHullCost);
     });
 

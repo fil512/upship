@@ -28,10 +28,10 @@ jest.mock('../../server/services/gameStateService', () => ({
   updateGameState: jest.fn(),
   getGameActions: jest.fn(),
   FACTION_CONFIG: {
-    germany: { startingTechnologies: [], bannedTechnologies: ['helium_handling'] },
-    britain: { startingTechnologies: [] },
-    usa: { startingTechnologies: ['helium_handling'] },
-    italy: { startingTechnologies: [] }
+    germany: { startingTechCards: [], bannedTechCards: ['helium_handling'] },
+    britain: { startingTechCards: [] },
+    usa: { startingTechCards: ['helium_handling'] },
+    italy: { startingTechCards: [] }
   }
 }));
 
@@ -146,7 +146,7 @@ function createFullGameState() {
         loans: 0,
         research: 5,
         gasCubes: { hydrogen: 5, helium: 0 },
-        technologies: ['rigid_frame', 'duralumin_girders'],
+        techCards: ['rigid_frame', 'duralumin_girders'],
         ships: [],
         routes: [],
         blueprint: {
@@ -174,7 +174,7 @@ function createFullGameState() {
         loans: 0,
         research: 0,
         gasCubes: { hydrogen: 3, helium: 0 },
-        technologies: [],
+        techCards: [],
         ships: [],
         routes: [],
         blueprint: { frameSlots: [], fabricSlots: [], driveSlots: [], componentSlots: [], gasSockets: [] },
@@ -191,7 +191,7 @@ function createFullGameState() {
     rdBoard: [
       { id: 'helium_handling', name: 'Helium Handling', cost: 5, type: 'frame' }
     ],
-    techBag: [],
+    techCardBag: [],
     marketRow: [{ id: 'market1', cost: 3, symbol: 'wrench' }],
     availableRoutes: [
       { id: 'route-1', distance: 2, victoryPoints: 3, from: 'A', to: 'B' }
@@ -263,8 +263,8 @@ describe('GameState Routes', () => {
 
       expect(res.status).toBe(200);
       expect(res.body).toHaveProperty('available');
-      expect(res.body).toHaveProperty('allUpgrades');
-      expect(res.body).toHaveProperty('allTechnologies');
+      expect(res.body).toHaveProperty('allTechTiles');
+      expect(res.body).toHaveProperty('allTechCards');
     });
 
     it('should return 403 if not in game', async () => {

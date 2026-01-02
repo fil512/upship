@@ -185,7 +185,7 @@ describe('Rules Compliance - Atomic Reveal Action', () => {
       state.players['1'].researchLevel = 0;
       state.players['1'].engineers = 0;
       state.players['1'].research = 0;
-      state.players['1'].technologies = [];
+      state.players['1'].techCards = [];
 
       // R&D board with affordable tech
       state.rdBoard = [{
@@ -194,7 +194,7 @@ describe('Rules Compliance - Atomic Reveal Action', () => {
         cost: 3,
         type: 'structure'
       }];
-      state.techBag = [];
+      state.techCardBag = [];
 
       const result = processReveal(state, '1', {
         techAcquisitions: ['test_tech'],
@@ -202,7 +202,7 @@ describe('Rules Compliance - Atomic Reveal Action', () => {
       });
 
       // Player should have acquired the technology
-      expect(result.newState.players['1'].technologies).toContain('test_tech');
+      expect(result.newState.players['1'].techCards).toContain('test_tech');
       // Research should be 5 - 3 = 2 remaining
       expect(result.newState.players['1'].research).toBe(2);
     });
@@ -264,7 +264,7 @@ describe('Rules Compliance - Atomic Reveal Action', () => {
       state.players['1'].researchLevel = 0;
       state.players['1'].engineers = 0;
       state.players['1'].research = 0;
-      state.players['1'].technologies = [];
+      state.players['1'].techCards = [];
 
       // Tech costs more than player has
       state.rdBoard = [{
@@ -280,7 +280,7 @@ describe('Rules Compliance - Atomic Reveal Action', () => {
       });
 
       // Player should NOT have the technology
-      expect(result.newState.players['1'].technologies).not.toContain('expensive_tech');
+      expect(result.newState.players['1'].techCards).not.toContain('expensive_tech');
       // Should have logged an error
       expect(result.newState.log.some(l => l.type === 'error' && l.message.includes('could not acquire'))).toBe(true);
     });
@@ -359,21 +359,21 @@ describe('Rules Compliance - Atomic Reveal Action', () => {
         marketPurchasesComplete: {}
       };
       state.players['1'].research = 10;
-      state.players['1'].technologies = [];
+      state.players['1'].techCards = [];
       state.rdBoard = [{
         id: 'test_tech',
         name: 'Test Tech',
         cost: 3,
         type: 'structure'
       }];
-      state.techBag = [];
+      state.techCardBag = [];
 
       const result = processAcquireTechnologyResearch(state, '1', {
         techId: 'test_tech',
         _internal: true
       });
 
-      expect(result.newState.players['1'].technologies).toContain('test_tech');
+      expect(result.newState.players['1'].techCards).toContain('test_tech');
     });
 
     it('should allow internal BUY_MARKET_CARD calls with _internal flag', () => {

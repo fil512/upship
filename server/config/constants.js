@@ -71,10 +71,10 @@ const AGE_BASELINES = {
   3: { speed: 3, range: 3, ceiling: 2, reliability: 2 }
 };
 
-// Technology Bag organized by Age (54 total tiles per Appendix C)
-// IMPORTANT: This is the single source of truth for all technology definitions
+// Tech Card Bag organized by Age (54 total cards per Appendix C)
+// IMPORTANT: This is the single source of truth for all tech card definitions
 // All other files should import from here, not define their own versions
-const TECHNOLOGY_BAG = {
+const TECH_CARD_BAG = {
   1: [ // Age I Technologies (12 tiles)
     // Propulsion (3 tiles)
     { id: 'daimler_engine', name: 'Daimler Petrol Engine', type: 'drive', cost: 1, vp: 0, income: 1 },
@@ -205,6 +205,8 @@ module.exports = {
   // Ship Stats
   AGE_BASELINES,
 
-  // Technology
-  TECHNOLOGY_BAG
+  // Tech Cards
+  TECH_CARD_BAG,
+  // Legacy alias for backwards compatibility during migration
+  TECHNOLOGY_BAG: TECH_CARD_BAG
 };

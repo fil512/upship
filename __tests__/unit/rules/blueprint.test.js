@@ -14,7 +14,7 @@ describe('Rules Compliance - Blueprint System', () => {
       state.age = 1;
 
       // Give player required tech and cash
-      state.players['1'].technologies = ['duralumin_girders'];
+      state.players['1'].techCards = ['duralumin_girders'];
       state.players['1'].cash = 100;
 
       // Old frame has hull cost 0 (null slot)
@@ -40,7 +40,7 @@ describe('Rules Compliance - Blueprint System', () => {
       state.age = 1;
 
       // Give player required tech and cash
-      state.players['1'].technologies = ['duralumin_girders'];
+      state.players['1'].techCards = ['duralumin_girders'];
       state.players['1'].cash = 100;
 
       // Clear frame slot, NO ships in hangar
@@ -60,7 +60,7 @@ describe('Rules Compliance - Blueprint System', () => {
       state.age = 1;
 
       // Give player required tech and cash
-      state.players['1'].technologies = ['daimler_engine'];
+      state.players['1'].techCards = ['daimler_engine'];
       state.players['1'].cash = 100;
 
       // Ships in hangar
@@ -81,7 +81,7 @@ describe('Rules Compliance - Blueprint System', () => {
       state.age = 1;
 
       // Give player required tech and cash
-      state.players['1'].technologies = ['goldbeater_skin'];
+      state.players['1'].techCards = ['goldbeater_skin'];
       state.players['1'].cash = 100;
 
       // Clear fabric slot and put ships in hangar
@@ -106,7 +106,7 @@ describe('Rules Compliance - Blueprint System', () => {
       state.age = 1;
 
       // Give player required tech but not enough cash
-      state.players['1'].technologies = ['duralumin_girders'];
+      state.players['1'].techCards = ['duralumin_girders'];
       state.players['1'].cash = 3;  // Not enough for 2 ships * 2 cost = 4
 
       state.players['1'].blueprint.frameSlots = [null];

@@ -85,7 +85,7 @@ describe('Rules Compliance - Age Transitions', () => {
 
       // Player 1 has technologies with VP values
       // Per constants.js: duralumin_girders = 1 VP, goldbeater_skin = 1 VP
-      state.players['1'].technologies = ['duralumin_girders', 'goldbeater_skin'];
+      state.players['1'].techCards = ['duralumin_girders', 'goldbeater_skin'];
 
       // Initialize VP tracking
       state.players['1'].vp = 0;
@@ -200,7 +200,7 @@ describe('Rules Compliance - Age Transitions', () => {
 
       // Player has income-granting technologies
       // Note: We need to define which techs grant income
-      state.players['1'].technologies = ['cargo_systems']; // Assume this grants £2 income
+      state.players['1'].techCards = ['cargo_systems']; // Assume this grants £2 income
       state.players['1'].income = 8; // Current income from routes
 
       // Player loses 2 routes when map changes
@@ -279,7 +279,7 @@ describe('Rules Compliance - Age Transitions', () => {
       // We need technologies that total to 6 income so after Red Tape (-1) it's 5
       // Using: duralumin_framework (2) + maybach_engine (2) + steel_framework (1) + wire_bracing (1) = 6
       state.players['2'].faction = 'britain';
-      state.players['2'].technologies = ['duralumin_framework', 'maybach_engine', 'steel_framework', 'wire_bracing'];
+      state.players['2'].techCards = ['duralumin_framework', 'maybach_engine', 'steel_framework', 'wire_bracing'];
       state.players['2'].income = 6; // Will be recalculated during transition
 
       // No routes claimed by this player
@@ -302,7 +302,7 @@ describe('Rules Compliance - Age Transitions', () => {
       // Britain with 1 income from technologies and 1 route lost = 0 income
       // Red Tape would try to make it -1, but should stay at 0
       state.players['2'].faction = 'britain';
-      state.players['2'].technologies = ['wooden_framework']; // income: 1
+      state.players['2'].techCards = ['wooden_framework']; // income: 1
       state.players['2'].income = 0;
 
       // Player has 1 route claimed
@@ -341,7 +341,7 @@ describe('Rules Compliance - Age Transitions', () => {
 
       // Set up player with a technology and one empty frame slot (second slot)
       // First frame slot and fabric slot already filled to pass completeness check
-      state.players['1'].technologies = ['duralumin_girders'];
+      state.players['1'].techCards = ['duralumin_girders'];
       state.players['1'].blueprint = {
         frameSlots: ['duralumin_frame', null],  // First filled, second empty
         fabricSlots: ['cotton_envelope'],       // Already filled
@@ -373,7 +373,7 @@ describe('Rules Compliance - Age Transitions', () => {
 
       // Set up player with frame tech and slots - one already filled
       // Fabric slot already filled to pass completeness check
-      state.players['1'].technologies = ['duralumin_girders'];
+      state.players['1'].techCards = ['duralumin_girders'];
       state.players['1'].blueprint = {
         frameSlots: ['duralumin_frame', null],  // First slot already has this upgrade
         fabricSlots: ['cotton_envelope'],        // Already filled

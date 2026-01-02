@@ -5,35 +5,35 @@
  */
 
 const { GameRuleError } = require('../errors');
-const { TECHNOLOGY_BAG } = require('../config/constants');
+const { TECH_CARD_BAG } = require('../config/constants');
 
 /**
- * Get all technology definitions flattened from all ages
+ * Get all tech card definitions flattened from all ages
  */
-function getAllTechnologyDefinitions() {
-  const allTechs = {};
+function getAllTechCardDefinitions() {
+  const allTechCards = {};
   for (const age of [1, 2, 3]) {
-    for (const tech of (TECHNOLOGY_BAG[age] || [])) {
-      allTechs[tech.id] = tech;
+    for (const card of (TECH_CARD_BAG[age] || [])) {
+      allTechCards[card.id] = card;
     }
   }
-  return allTechs;
+  return allTechCards;
 }
 
 /**
- * Calculate VP from technologies based on their VP values per Section 12.2
+ * Calculate VP from tech cards based on their VP values per Section 12.2
  * Essential=0 VP, Useful=1 VP, Niche=2-3 VP
- * @param {string[]} techIds - Array of technology IDs
- * @returns {number} Total VP from technologies
+ * @param {string[]} cardIds - Array of tech card IDs
+ * @returns {number} Total VP from tech cards
  */
-function calculateTechnologyVPForScoring(techIds) {
-  const techDefs = getAllTechnologyDefinitions();
+function calculateTechCardVPForScoring(cardIds) {
+  const cardDefs = getAllTechCardDefinitions();
   let totalVP = 0;
 
-  for (const techId of (techIds || [])) {
-    const tech = techDefs[techId];
-    if (tech && typeof tech.vp === 'number') {
-      totalVP += tech.vp;
+  for (const cardId of (cardIds || [])) {
+    const card = cardDefs[cardId];
+    if (card && typeof card.vp === 'number') {
+      totalVP += card.vp;
     }
   }
 
@@ -118,10 +118,10 @@ function processCalculateScores(state, playerId, data) {
     breakdown.routes = routeVP;
     totalVP += routeVP;
 
-    // VP from technologies per Section 12.2
-    // Use actual VP values from technology tiles, NOT length/2 formula
-    const techVP = calculateTechnologyVPForScoring(playerState.technologies);
-    breakdown.technologies = techVP;
+    // VP from tech cards per Section 12.2
+    // Use actual VP values from tech cards, NOT length/2 formula
+    const techVP = calculateTechCardVPForScoring(playerState.techCards);
+    breakdown.techCards = techVP;
     totalVP += techVP;
 
     // Per Section 1.1: Cash and ships are TIEBREAKERS, not VP sources
@@ -160,6 +160,8 @@ function processCalculateScores(state, playerId, data) {
 
 module.exports = {
   processCalculateScores,
-  calculateTechnologyVPForScoring,
-  applyTiebreakers
+  calculateTechCardVPForScoring,
+  applyTiebreakers,
+  // Legacy alias for backwards compatibility during migration
+  calculateTechnologyVPForScoring: calculateTechCardVPForScoring
 };

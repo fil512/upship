@@ -3,76 +3,76 @@
  * Implementation of Section 12 - Age Transitions
  */
 
-const { TECHNOLOGY_BAG, HAND_SIZE, INITIAL_AGENTS } = require('../../config/constants');
+const { TECH_CARD_BAG, HAND_SIZE, INITIAL_AGENTS } = require('../../config/constants');
 const { setupMissionRow } = require('../../data/combatMissions');
 const { shuffleArray } = require('../../utils/random');
 const { calculateTurnOrder } = require('./turnOrder');
 const { refreshRnDBoard, refreshMarketRow, refillRDBoard } = require('./marketHelpers');
 
 /**
- * Add new age technologies to the tech bag
- * Per Section 3.1: Include (N-1) copies of each tech where N = player count
+ * Add new age tech cards to the tech card bag
+ * Per Section 3.1: Include (N-1) copies of each tech card where N = player count
  *
  * @param {Object} state - Game state (mutated)
  * @param {number} age - Age number (2 or 3)
  */
-function addAgeTechnologies(state, age) {
-  const newTechs = TECHNOLOGY_BAG[age] || [];
-  if (newTechs.length === 0) return;
+function addAgeTechCards(state, age) {
+  const newCards = TECH_CARD_BAG[age] || [];
+  if (newCards.length === 0) return;
 
   const playerCount = state.playerCount || Object.keys(state.players || {}).length;
-  const copiesPerTech = Math.max(1, playerCount - 1);
+  const copiesPerCard = Math.max(1, playerCount - 1);
 
-  // Count how many copies of each tech are already owned
+  // Count how many copies of each tech card are already owned
   const ownedCounts = {};
   for (const pid of Object.keys(state.players || {})) {
-    for (const tech of state.players[pid].technologies || []) {
-      ownedCounts[tech] = (ownedCounts[tech] || 0) + 1;
+    for (const card of state.players[pid].techCards || []) {
+      ownedCounts[card] = (ownedCounts[card] || 0) + 1;
     }
   }
 
-  // Add (N-1) - ownedCount copies of each new age tech
-  const techsToAdd = [];
-  for (const tech of newTechs) {
-    const ownedCount = ownedCounts[tech.id] || 0;
-    const copiesToAdd = Math.max(0, copiesPerTech - ownedCount);
+  // Add (N-1) - ownedCount copies of each new age tech card
+  const cardsToAdd = [];
+  for (const card of newCards) {
+    const ownedCount = ownedCounts[card.id] || 0;
+    const copiesToAdd = Math.max(0, copiesPerCard - ownedCount);
 
     for (let i = 0; i < copiesToAdd; i++) {
-      techsToAdd.push({ ...tech, age });
+      cardsToAdd.push({ ...card, age });
     }
   }
 
-  // Shuffle and add to tech bag
-  state.techBag = state.techBag || [];
-  state.techBag.push(...shuffleArray(techsToAdd));
+  // Shuffle and add to tech card bag
+  state.techCardBag = state.techCardBag || [];
+  state.techCardBag.push(...shuffleArray(cardsToAdd));
 }
 
 /**
- * Get all technology definitions flattened from all ages
+ * Get all tech card definitions flattened from all ages
  */
-function getAllTechnologyDefinitions() {
-  const allTechs = {};
+function getAllTechCardDefinitions() {
+  const allCards = {};
   for (const age of [1, 2, 3]) {
-    for (const tech of (TECHNOLOGY_BAG[age] || [])) {
-      allTechs[tech.id] = tech;
+    for (const card of (TECH_CARD_BAG[age] || [])) {
+      allCards[card.id] = card;
     }
   }
-  return allTechs;
+  return allCards;
 }
 
 /**
- * Calculate VP from technologies based on their VP values per Section 12.2
- * @param {string[]} techIds - Array of technology IDs
- * @returns {number} Total VP from technologies
+ * Calculate VP from tech cards based on their VP values per Section 12.2
+ * @param {string[]} cardIds - Array of tech card IDs
+ * @returns {number} Total VP from tech cards
  */
-function calculateTechnologyVP(techIds) {
-  const techDefs = getAllTechnologyDefinitions();
+function calculateTechCardVP(cardIds) {
+  const cardDefs = getAllTechCardDefinitions();
   let totalVP = 0;
 
-  for (const techId of techIds) {
-    const tech = techDefs[techId];
-    if (tech && typeof tech.vp === 'number') {
-      totalVP += tech.vp;
+  for (const cardId of cardIds) {
+    const card = cardDefs[cardId];
+    if (card && typeof card.vp === 'number') {
+      totalVP += card.vp;
     }
   }
 
@@ -103,17 +103,17 @@ function calculateRouteVP(state, playerId) {
  * Score VP for a player at age transition per Section 12.1 and 12.2
  * @param {Object} state - Game state
  * @param {string} playerId - Player ID
- * @returns {Object} VP breakdown { routes, technologies, total }
+ * @returns {Object} VP breakdown { routes, techCards, total }
  */
 function scoreAgeVP(state, playerId) {
   const playerState = state.players[playerId];
 
   const routeVP = calculateRouteVP(state, playerId);
-  const techVP = calculateTechnologyVP(playerState.technologies || []);
+  const techVP = calculateTechCardVP(playerState.techCards || []);
 
   return {
     routes: routeVP,
-    technologies: techVP,
+    techCards: techVP,
     total: routeVP + techVP
   };
 }
@@ -129,7 +129,7 @@ function scoreAllPlayersVP(state) {
 
     state.log.push({
       timestamp: new Date().toISOString(),
-      message: `Age ${state.age} scoring: ${vpScored.routes} VP from routes, ${vpScored.technologies} VP from technologies`,
+      message: `Age ${state.age} scoring: ${vpScored.routes} VP from routes, ${vpScored.techCards} VP from tech cards`,
       playerId,
       type: 'scoring'
     });
@@ -182,19 +182,19 @@ function recoverShipsAndOfficers(state) {
 }
 
 /**
- * Calculate technology income from owned technologies
- * Per Section 12.1: Sum income values from all technology tiles
- * @param {string[]} techIds - Array of technology IDs
- * @returns {number} Total income from technologies
+ * Calculate tech card income from owned tech cards
+ * Per Section 12.1: Sum income values from all tech cards
+ * @param {string[]} cardIds - Array of tech card IDs
+ * @returns {number} Total income from tech cards
  */
-function calculateTechnologyIncome(techIds) {
-  const techDefs = getAllTechnologyDefinitions();
+function calculateTechCardIncome(cardIds) {
+  const cardDefs = getAllTechCardDefinitions();
   let totalIncome = 0;
 
-  for (const techId of (techIds || [])) {
-    const tech = techDefs[techId];
-    if (tech && typeof tech.income === 'number') {
-      totalIncome += tech.income;
+  for (const cardId of (cardIds || [])) {
+    const card = cardDefs[cardId];
+    if (card && typeof card.income === 'number') {
+      totalIncome += card.income;
     }
   }
 
@@ -215,9 +215,9 @@ function calculateTransitionIncome(state) {
     const routes = state.map?.routes || [];
     const routesLost = routes.filter(r => r.claimed === playerId).length;
 
-    // Calculate income from technologies per Section 12.1 step 3
-    // Each technology tile has an income value (1-3 per Appendix C)
-    const techIncome = calculateTechnologyIncome(playerState.technologies);
+    // Calculate income from tech cards per Section 12.1 step 3
+    // Each tech card has an income value (1-3 per Appendix C)
+    const techIncome = calculateTechCardIncome(playerState.techCards);
 
     // Per Section 12.1 step 3: "New Income = (income from Technology tiles) - (£1 per route lost)"
     // This REPLACES the old income, not adds to it
@@ -227,7 +227,7 @@ function calculateTransitionIncome(state) {
 
     state.log.push({
       timestamp: new Date().toISOString(),
-      message: `Income reset: £${techIncome} from technologies - £${routesLost} route loss penalty = £${newIncome}`,
+      message: `Income reset: £${techIncome} from tech cards - £${routesLost} route loss penalty = £${newIncome}`,
       playerId,
       type: 'age_transition'
     });
@@ -415,10 +415,10 @@ function completeAgeTransition(state) {
     delete state.missionDeck;
   }
 
-  // Add new age technologies to bag per Section 3.1
-  addAgeTechnologies(state, newAge);
+  // Add new age tech cards to bag per Section 3.1
+  addAgeTechCards(state, newAge);
 
-  // Refill R&D board with new age technologies
+  // Refill R&D board with new age tech cards
   refillRDBoard(state);
 
   // Reset gas market prices for new age (Section 4.4: Helium resets to £2 at Age Transitions)
@@ -477,7 +477,7 @@ function completeAgeTransition(state) {
     }
   }
 
-  // Refresh R&D Board (replenish technologies)
+  // Refresh R&D Board (replenish tech cards)
   refreshRnDBoard(state);
 
   // Refill Market Row
@@ -507,7 +507,7 @@ function performAgeTransition(state, newAge) {
 }
 
 module.exports = {
-  calculateTechnologyVP,
+  calculateTechCardVP,
   calculateRouteVP,
   scoreAgeVP,
   scoreAllPlayersVP,
@@ -520,5 +520,8 @@ module.exports = {
   startAgeTransition,
   completeAgeTransition,
   getBlueprintSlotsForFaction,
-  BLUEPRINT_SLOTS
+  BLUEPRINT_SLOTS,
+  // Legacy aliases for backwards compatibility during migration
+  calculateTechnologyVP: calculateTechCardVP,
+  addAgeTechnologies: addAgeTechCards
 };

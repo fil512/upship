@@ -19,7 +19,7 @@
 		resetGameState,
 		turnInfo
 	} from '$lib/stores/gameState';
-	import { connect, disconnect, connected, sendAction, onlinePlayers } from '$lib/stores/socket';
+	import { connect, disconnect, connected, sendAction, onlinePlayers, gameError } from '$lib/stores/socket';
 	import { toasts, showToast } from '$lib/stores/ui';
 	import type { Card } from '$lib/types/game';
 
@@ -203,10 +203,10 @@
 		<div class="spinner"></div>
 		<p>Connecting to game...</p>
 	</div>
-{:else if connectionError}
+{:else if connectionError || $gameError}
 	<div class="error-screen">
-		<h2>Connection Error</h2>
-		<p>{connectionError}</p>
+		<h2>{$gameError ? 'Game Error' : 'Connection Error'}</h2>
+		<p>{$gameError || connectionError}</p>
 		<button class="btn" on:click={handleBackToLobby}>Back to Lobby</button>
 	</div>
 {:else if !$gameState}

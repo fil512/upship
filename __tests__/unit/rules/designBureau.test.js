@@ -25,7 +25,7 @@ describe('Rules Compliance - Design Bureau (Section 6.2)', () => {
       const playerState = state.players[playerId];
 
       // Add required technology (maybach_engine tech unlocks maybach_cx upgrade)
-      playerState.technologies = ['maybach_engine'];
+      playerState.techCards = ['maybach_engine'];
       playerState.agentsRemaining = 2;
 
       // Set up a card with wrench symbol for design_bureau
@@ -71,7 +71,7 @@ describe('Rules Compliance - Design Bureau (Section 6.2)', () => {
       // Install an existing upgrade to remove (basic_engine requires daimler_engine tech)
       playerState.blueprint.driveSlots[0] = 'basic_engine';
       // Add required technologies
-      playerState.technologies = ['daimler_engine', 'maybach_engine'];
+      playerState.techCards = ['daimler_engine', 'maybach_engine'];
       playerState.agentsRemaining = 2;
 
       playerState.hand = [{
@@ -112,7 +112,7 @@ describe('Rules Compliance - Design Bureau (Section 6.2)', () => {
       const playerState = state.players[playerId];
 
       // Technologies that unlock the upgrades we want to install
-      playerState.technologies = ['daimler_engine', 'maybach_engine', 'improved_propeller'];
+      playerState.techCards = ['daimler_engine', 'maybach_engine', 'improved_propeller'];
       playerState.agentsRemaining = 2;
 
       // Expand drive slots for testing (normally 1 in Age I)
@@ -223,7 +223,7 @@ describe('Rules Compliance - Design Bureau (Section 6.2)', () => {
       state.phase = 'reveal';
 
       const playerId = '1';
-      state.players[playerId].technologies = ['maybach_engine'];
+      state.players[playerId].techCards = ['maybach_engine'];
 
       expect(() => {
         processInstallUpgrade(state, playerId, {
@@ -239,7 +239,7 @@ describe('Rules Compliance - Design Bureau (Section 6.2)', () => {
       state.phase = 'worker_placement';
 
       const playerId = '1';
-      state.players[playerId].technologies = ['maybach_engine'];
+      state.players[playerId].techCards = ['maybach_engine'];
       state.groundBoard = { placements: {} }; // No agents placed
 
       expect(() => {
@@ -290,7 +290,7 @@ describe('Rules Compliance - Design Bureau (Section 6.2)', () => {
       const playerId = '1';
       const playerState = state.players[playerId];
       // maybach_engine technology unlocks maybach_cx upgrade
-      playerState.technologies = ['maybach_engine'];
+      playerState.techCards = ['maybach_engine'];
 
       // Internal call bypasses validation
       const result = processInstallUpgrade(state, playerId, {

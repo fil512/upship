@@ -4,14 +4,14 @@
  */
 
 const {
-  UPGRADES
+  TECH_TILES
 } = require('../data/upgrades');
 const {
   GROUND_BOARD_LOCATIONS,
   canPlaceAtLocation
 } = require('../data/groundBoard');
 const {
-  TECHNOLOGY_BAG
+  TECH_CARD_BAG
 } = require('../config/constants');
 
 // Import phase transition functions from canonical source
@@ -26,8 +26,8 @@ const {
 // £2 → £3 → £4 → £5 → £6 → £8 → £10 → £15
 const HELIUM_PRICE_TRACK = [2, 3, 4, 5, 6, 8, 10, 15];
 
-// TECHNOLOGY_BAG is imported from ../config/constants.js (single source of truth)
-// See constants.js for the full 54-tile definition per Appendix C
+// TECH_CARD_BAG is imported from ../config/constants.js (single source of truth)
+// See constants.js for the full 54-card definition per Appendix C
 
 // Filter state to hide other players' private information
 function filterStateForPlayer(state, playerId) {
@@ -151,14 +151,14 @@ function shuffleArray(array) {
   return shuffled;
 }
 
-// Refresh R&D Board with new technologies
+// Refresh R&D Board with new tech cards
 function refreshRnDBoard(state) {
-  // Fill empty slots on R&D board from tech bag
+  // Fill empty slots on R&D board from tech card bag
   const rnDBoard = state.rnDBoard || { available: [] };
-  const targetSize = 6; // 6 technologies available
+  const targetSize = 6; // 6 tech cards available
 
-  while (rnDBoard.available.length < targetSize && state.techBag && state.techBag.length > 0) {
-    rnDBoard.available.push(state.techBag.pop());
+  while (rnDBoard.available.length < targetSize && state.techCardBag && state.techCardBag.length > 0) {
+    rnDBoard.available.push(state.techCardBag.pop());
   }
 
   state.rnDBoard = rnDBoard;
@@ -402,34 +402,34 @@ function executeLocationAction(state, playerId, locationId, _card) {
   }
 }
 
-// Add new age technologies to the tech bag
-function addAgeTechnologies(state, age) {
-  const newTechs = TECHNOLOGY_BAG[age] || [];
-  if (newTechs.length > 0) {
-    // Collect all technologies already owned by any player
-    const ownedTechs = new Set();
+// Add new age tech cards to the tech card bag
+function addAgeTechCards(state, age) {
+  const newCards = TECH_CARD_BAG[age] || [];
+  if (newCards.length > 0) {
+    // Collect all tech cards already owned by any player
+    const ownedCards = new Set();
     for (const pid of Object.keys(state.players || {})) {
-      for (const tech of state.players[pid].technologies || []) {
-        ownedTechs.add(tech);
+      for (const card of state.players[pid].techCards || []) {
+        ownedCards.add(card);
       }
     }
 
-    // Filter out already-owned technologies and add age marker
-    const techsWithAge = newTechs
-      .filter(t => !ownedTechs.has(t.id))
+    // Filter out already-owned tech cards and add age marker
+    const cardsWithAge = newCards
+      .filter(t => !ownedCards.has(t.id))
       .map(t => ({ ...t, age }));
 
-    // Shuffle and add to tech bag
-    state.techBag = state.techBag || [];
-    state.techBag.push(...shuffleArray(techsWithAge));
+    // Shuffle and add to tech card bag
+    state.techCardBag = state.techCardBag || [];
+    state.techCardBag.push(...shuffleArray(cardsWithAge));
   }
 }
 
-// Refill R&D board from tech bag (Section 4.1)
-// Age I: 4 tiles, Age II: 5 tiles, Age III: 6 tiles
+// Refill R&D board from tech card bag (Section 4.1)
+// Age I: 4 cards, Age II: 5 cards, Age III: 6 cards
 function refillRDBoard(state) {
   state.rdBoard = state.rdBoard || [];
-  state.techBag = state.techBag || [];
+  state.techCardBag = state.techCardBag || [];
 
   // R&D Board size scales by Age
   const rdBoardSize = {
@@ -439,8 +439,8 @@ function refillRDBoard(state) {
   };
   const targetSize = rdBoardSize[state.age] || 4;
 
-  while (state.rdBoard.length < targetSize && state.techBag.length > 0) {
-    state.rdBoard.push(state.techBag.shift());
+  while (state.rdBoard.length < targetSize && state.techCardBag.length > 0) {
+    state.rdBoard.push(state.techCardBag.shift());
   }
 }
 
@@ -477,15 +477,15 @@ function calculateBlueprintStats(blueprint, age = 1) {
 
   const stats = { ...AGE_BASELINES[age] };
 
-  // Add stats from upgrades
+  // Add stats from tech tiles
   const slots = ['frameSlots', 'fabricSlots', 'driveSlots', 'componentSlots'];
   for (const slotKey of slots) {
     const slotArray = blueprint[slotKey] || [];
-    for (const upgradeId of slotArray) {
-      if (!upgradeId) continue;
-      const upgrade = UPGRADES[upgradeId];
-      if (upgrade?.stats) {
-        for (const [stat, value] of Object.entries(upgrade.stats)) {
+    for (const tileId of slotArray) {
+      if (!tileId) continue;
+      const tile = TECH_TILES[tileId];
+      if (tile?.stats) {
+        for (const [stat, value] of Object.entries(tile.stats)) {
           stats[stat] = (stats[stat] || 0) + value;
         }
       }
@@ -501,11 +501,11 @@ function calculateBlueprintWeight(blueprint) {
   const slots = ['frameSlots', 'fabricSlots', 'driveSlots', 'componentSlots'];
   for (const slotKey of slots) {
     const slotArray = blueprint[slotKey] || [];
-    for (const upgradeId of slotArray) {
-      if (!upgradeId) continue;
-      const upgrade = UPGRADES[upgradeId];
-      if (upgrade?.weight) {
-        weight += Math.abs(upgrade.weight);
+    for (const tileId of slotArray) {
+      if (!tileId) continue;
+      const tile = TECH_TILES[tileId];
+      if (tile?.weight) {
+        weight += Math.abs(tile.weight);
       }
     }
   }
@@ -522,7 +522,7 @@ function calculateRequiredGasCubes(blueprint) {
 module.exports = {
   // Constants
   HELIUM_PRICE_TRACK,
-  TECHNOLOGY_BAG,
+  TECH_CARD_BAG,
 
   // State filtering
   filterStateForPlayer,
@@ -558,13 +558,17 @@ module.exports = {
   processCardEffect,
   executeLocationAction,
 
-  // Technology management
-  addAgeTechnologies,
+  // Tech card management
+  addAgeTechCards,
   refillRDBoard,
   calculateSpecializationDiscount,
 
   // Blueprint calculations
   calculateBlueprintStats,
   calculateBlueprintWeight,
-  calculateRequiredGasCubes
+  calculateRequiredGasCubes,
+
+  // Legacy aliases for backwards compatibility during migration
+  TECHNOLOGY_BAG: TECH_CARD_BAG,
+  addAgeTechnologies: addAgeTechCards
 };

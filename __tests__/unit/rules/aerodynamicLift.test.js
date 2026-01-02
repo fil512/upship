@@ -21,7 +21,7 @@ describe('Rules Compliance - Aerodynamic Lift', () => {
 
       it('should apply +2 Lift to ship stats when player has Aerodynamic Hull Design', () => {
         const playerState = {
-          technologies: ['aerodynamic_hull'],
+          techCards: ['aerodynamic_hull'],
           blueprint: {
             frameSlots: ['basic_frame'],
             fabricSlots: ['basic_fabric'],
@@ -48,7 +48,7 @@ describe('Rules Compliance - Aerodynamic Lift', () => {
 
       it('should apply +4 Lift to ship stats when player has Dynamic Lift Surfaces', () => {
         const playerState = {
-          technologies: ['dynamic_lift'],
+          techCards: ['dynamic_lift'],
           blueprint: {
             frameSlots: ['basic_frame'],
             fabricSlots: ['basic_fabric'],
@@ -66,7 +66,7 @@ describe('Rules Compliance - Aerodynamic Lift', () => {
     describe('Combined lift from multiple sources', () => {
       it('should stack aerodynamic lift from multiple technologies', () => {
         const playerState = {
-          technologies: ['aerodynamic_hull', 'dynamic_lift'],
+          techCards: ['aerodynamic_hull', 'dynamic_lift'],
           blueprint: {
             frameSlots: ['basic_frame'],
             fabricSlots: ['basic_fabric'],

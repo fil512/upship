@@ -38,49 +38,49 @@ describe('GameStateService', () => {
 
     it('should have starting technologies for each faction', () => {
       validFactions.forEach(faction => {
-        expect(FACTION_CONFIG[faction].startingTechnologies).toBeDefined();
-        expect(Array.isArray(FACTION_CONFIG[faction].startingTechnologies)).toBe(true);
-        expect(FACTION_CONFIG[faction].startingTechnologies.length).toBeGreaterThan(0);
+        expect(FACTION_CONFIG[faction].startingTechCards).toBeDefined();
+        expect(Array.isArray(FACTION_CONFIG[faction].startingTechCards)).toBe(true);
+        expect(FACTION_CONFIG[faction].startingTechCards.length).toBeGreaterThan(0);
       });
     });
 
     it('should have starting upgrades for each faction', () => {
       validFactions.forEach(faction => {
-        expect(FACTION_CONFIG[faction].startingUpgrades).toBeDefined();
-        expect(FACTION_CONFIG[faction].startingUpgrades.frame).toBeDefined();
-        expect(FACTION_CONFIG[faction].startingUpgrades.fabric).toBeDefined();
+        expect(FACTION_CONFIG[faction].startingTechTiles).toBeDefined();
+        expect(FACTION_CONFIG[faction].startingTechTiles.frame).toBeDefined();
+        expect(FACTION_CONFIG[faction].startingTechTiles.fabric).toBeDefined();
       });
     });
 
     describe('Germany faction', () => {
       it('should have duralumin, goldbeater, and blaugas technologies', () => {
-        expect(FACTION_CONFIG.germany.startingTechnologies).toContain('duralumin_girders');
-        expect(FACTION_CONFIG.germany.startingTechnologies).toContain('goldbeater_skin');
-        expect(FACTION_CONFIG.germany.startingTechnologies).toContain('blaugas_storage');
+        expect(FACTION_CONFIG.germany.startingTechCards).toContain('duralumin_girders');
+        expect(FACTION_CONFIG.germany.startingTechCards).toContain('goldbeater_skin');
+        expect(FACTION_CONFIG.germany.startingTechCards).toContain('blaugas_storage');
       });
 
       it('should have helium_handling as banned technology', () => {
-        expect(FACTION_CONFIG.germany.bannedTechnologies).toContain('helium_handling');
+        expect(FACTION_CONFIG.germany.bannedTechCards).toContain('helium_handling');
       });
     });
 
     describe('Britain faction', () => {
       it('should have wire bracing, doped canvas, and imperial mooring', () => {
-        expect(FACTION_CONFIG.britain.startingTechnologies).toContain('wire_bracing');
-        expect(FACTION_CONFIG.britain.startingTechnologies).toContain('doped_canvas');
-        expect(FACTION_CONFIG.britain.startingTechnologies).toContain('imperial_mooring');
+        expect(FACTION_CONFIG.britain.startingTechCards).toContain('wire_bracing');
+        expect(FACTION_CONFIG.britain.startingTechCards).toContain('doped_canvas');
+        expect(FACTION_CONFIG.britain.startingTechCards).toContain('imperial_mooring');
       });
 
       // NOTE: Upgrade swaps test removed - swap limits have been eliminated
 
       it('should have pre-installed dining saloon', () => {
-        expect(FACTION_CONFIG.britain.startingUpgrades.component).toBe('dining_saloon');
+        expect(FACTION_CONFIG.britain.startingTechTiles.component).toBe('dining_saloon');
       });
     });
 
     describe('USA faction', () => {
       it('should have helium handling technology', () => {
-        expect(FACTION_CONFIG.usa.startingTechnologies).toContain('helium_handling');
+        expect(FACTION_CONFIG.usa.startingTechCards).toContain('helium_handling');
       });
 
       it('should have helium monopoly', () => {
@@ -88,15 +88,15 @@ describe('GameStateService', () => {
       });
 
       it('should have 4 starting technologies', () => {
-        expect(FACTION_CONFIG.usa.startingTechnologies.length).toBe(4);
+        expect(FACTION_CONFIG.usa.startingTechCards.length).toBe(4);
       });
     });
 
     describe('Italy faction', () => {
       it('should have internal keel, rubberized cotton, and articulated keel', () => {
-        expect(FACTION_CONFIG.italy.startingTechnologies).toContain('internal_keel');
-        expect(FACTION_CONFIG.italy.startingTechnologies).toContain('rubberized_cotton');
-        expect(FACTION_CONFIG.italy.startingTechnologies).toContain('articulated_keel');
+        expect(FACTION_CONFIG.italy.startingTechCards).toContain('internal_keel');
+        expect(FACTION_CONFIG.italy.startingTechCards).toContain('rubberized_cotton');
+        expect(FACTION_CONFIG.italy.startingTechCards).toContain('articulated_keel');
       });
 
       // NOTE: Upgrade swaps test removed - swap limits have been eliminated
@@ -218,11 +218,11 @@ describe('GameStateService', () => {
       // Total: 3 starters, each used by 1 player
       // Non-starters: 9 techs * 3 copies = 27
       // Starters: 3 techs * 2 copies each (3-1) = 6
-      // Total in bag: 27 + 6 = 33, minus 4 on R&D board = 29 in techBag
-      const totalTechsInBag = result.rdBoard.length + result.techBag.length;
+      // Total in bag: 27 + 6 = 33, minus 4 on R&D board = 29 in techCardBag
+      const totalTechsInBag = result.rdBoard.length + result.techCardBag.length;
       expect(totalTechsInBag).toBe(33);
       expect(result.rdBoard.length).toBe(4);
-      expect(result.techBag.length).toBe(29);
+      expect(result.techCardBag.length).toBe(29);
     });
 
     it('should set correct progress thresholds for player count', async () => {

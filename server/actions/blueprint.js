@@ -1,21 +1,21 @@
 /**
  * Blueprint Actions
- * INSTALL_UPGRADE, REMOVE_UPGRADE, UPDATE_BLUEPRINT action processors
+ * INSTALL_TECH_TILE, REMOVE_TECH_TILE, UPDATE_BLUEPRINT action processors
  * Implements Section 6.2 (Design Bureau) including Hull Upgrade Rule
  * Note: Swap limits have been removed - players can make unlimited modifications
  */
 
 const { GameRuleError, InsufficientFundsError } = require('../errors');
-const { UPGRADES, TECHNOLOGIES } = require('../data/upgrades');
+const { TECH_TILES, TECH_CARDS } = require('../data/upgrades');
 
 /**
- * Calculate hull cost for an upgrade
- * Only Frame and Fabric upgrades contribute to hull cost per Section 7.1
+ * Calculate hull cost for a tech tile
+ * Only Frame and Fabric tech tiles contribute to hull cost per Section 7.1
  */
-function getUpgradeHullCost(upgradeId) {
-  if (!upgradeId) return 0;
-  const upgrade = UPGRADES[upgradeId];
-  return upgrade?.hullCost || 0;
+function getTechTileHullCost(tileId) {
+  if (!tileId) return 0;
+  const tile = TECH_TILES[tileId];
+  return tile?.hullCost || 0;
 }
 
 /**
@@ -25,13 +25,13 @@ function calculateHullCost(blueprint) {
   let cost = 2; // Base cost per Section 7.1
 
   // Add Frame hull costs
-  for (const upgradeId of blueprint.frameSlots || []) {
-    cost += getUpgradeHullCost(upgradeId);
+  for (const tileId of blueprint.frameSlots || []) {
+    cost += getTechTileHullCost(tileId);
   }
 
   // Add Fabric hull costs
-  for (const upgradeId of blueprint.fabricSlots || []) {
-    cost += getUpgradeHullCost(upgradeId);
+  for (const tileId of blueprint.fabricSlots || []) {
+    cost += getTechTileHullCost(tileId);
   }
 
   return cost;
@@ -59,7 +59,7 @@ function validateBlueprintComplete(blueprint) {
 }
 
 /**
- * Install upgrade on blueprint
+ * Install tech tile on blueprint
  * Per Section 6.2:
  * - Hull Upgrade Rule: When upgrading Frame/Fabric, pay hull cost difference per ship in hangar
  *
@@ -68,25 +68,27 @@ function validateBlueprintComplete(blueprint) {
  *
  * @param {Object} state - Game state (mutated)
  * @param {string} playerId - Acting player ID
- * @param {Object} data - Action data { slotType, slotIndex, upgradeId, _internal }
+ * @param {Object} data - Action data { slotType, slotIndex, tileId, _internal }
  * @returns {Object} { newState } or throws error
  */
-function processInstallUpgrade(state, playerId, data) {
-  const { slotType, slotIndex, upgradeId, _internal = false } = data;
+function processInstallTechTile(state, playerId, data) {
+  const { slotType, slotIndex, tileId, upgradeId, _internal = false } = data;
+  // Support both tileId (new) and upgradeId (legacy) for backwards compatibility
+  const targetId = tileId || upgradeId;
   const playerState = state.players[playerId];
 
   // Validate that this is called through PLACE_AGENT (Section 5.1)
   if (!_internal) {
     if (state.phase !== 'worker_placement') {
       throw new GameRuleError(
-        'INSTALL_UPGRADE not allowed: Actions execute immediately when placing an agent (Section 5.1). ' +
+        'INSTALL_TECH_TILE not allowed: Actions execute immediately when placing an agent (Section 5.1). ' +
         'Place an agent at Design Bureau during worker placement phase to modify blueprint.'
       );
     }
     const placement = state.groundBoard?.placements?.design_bureau;
     if (!placement || placement.playerId !== playerId) {
       throw new GameRuleError(
-        'INSTALL_UPGRADE not allowed: You must place an agent at Design Bureau to modify blueprint. ' +
+        'INSTALL_TECH_TILE not allowed: You must place an agent at Design Bureau to modify blueprint. ' +
         'Use PLACE_AGENT with locationId "design_bureau" and blueprint parameter.'
       );
     }
@@ -103,39 +105,39 @@ function processInstallUpgrade(state, playerId, data) {
 
   // Check if slot is already occupied
   if (playerState.blueprint[slotKey][slotIndex]) {
-    throw new GameRuleError('Slot already occupied. Remove current upgrade first.');
+    throw new GameRuleError('Slot already occupied. Remove current tech tile first.');
   }
 
-  // Validate upgrade exists
-  const upgrade = UPGRADES[upgradeId];
-  if (!upgrade) {
-    throw new GameRuleError('Unknown upgrade');
+  // Validate tech tile exists
+  const tile = TECH_TILES[targetId];
+  if (!tile) {
+    throw new GameRuleError('Unknown tech tile');
   }
 
-  // Validate upgrade goes in correct slot type
-  if (upgrade.slotType !== slotKey) {
-    throw new GameRuleError(`${upgrade.name} must be installed in ${upgrade.slotType}`);
+  // Validate tech tile goes in correct slot type
+  if (tile.slotType !== slotKey) {
+    throw new GameRuleError(`${tile.name} must be installed in ${tile.slotType}`);
   }
 
   // Validate age requirement
-  if (upgrade.age > state.age) {
-    throw new GameRuleError(`${upgrade.name} not available until Age ${upgrade.age}`);
+  if (tile.age > state.age) {
+    throw new GameRuleError(`${tile.name} not available until Age ${tile.age}`);
   }
 
-  // Validate player owns required technology
-  if (!playerState.technologies.includes(upgrade.requiredTech)) {
-    const tech = TECHNOLOGIES[upgrade.requiredTech];
-    throw new GameRuleError(`Requires ${tech ? tech.name : upgrade.requiredTech} technology`);
+  // Validate player owns required tech card
+  if (!playerState.techCards.includes(tile.requiredCard)) {
+    const card = TECH_CARDS[tile.requiredCard];
+    throw new GameRuleError(`Requires ${card ? card.name : tile.requiredCard} tech card`);
   }
 
   // GAP-080: Validate special prerequisites (e.g., requires_helium for Pressurized Lounge)
-  if (upgrade.special === 'requires_helium') {
+  if (tile.special === 'requires_helium') {
     // Check if helium_gas_cell is installed in any component slot
     const hasHeliumGasCell = playerState.blueprint.componentSlots?.some(
       comp => comp === 'helium_gas_cell' || comp?.id === 'helium_gas_cell'
     );
     if (!hasHeliumGasCell) {
-      throw new GameRuleError(`${upgrade.name} requires a Helium Gas Cell to be installed first`);
+      throw new GameRuleError(`${tile.name} requires a Helium Gas Cell to be installed first`);
     }
   }
 
@@ -145,8 +147,8 @@ function processInstallUpgrade(state, playerId, data) {
   const shipsInHangar = (playerState.ships || []).filter(s => s.status === 'hangar').length;
 
   if (isStructuralSlot && shipsInHangar > 0) {
-    const oldHullCost = getUpgradeHullCost(playerState.blueprint[slotKey][slotIndex]);
-    const newHullCost = getUpgradeHullCost(upgradeId);
+    const oldHullCost = getTechTileHullCost(playerState.blueprint[slotKey][slotIndex]);
+    const newHullCost = getTechTileHullCost(targetId);
     const hullCostIncrease = Math.max(0, newHullCost - oldHullCost);
 
     if (hullCostIncrease > 0) {
@@ -168,12 +170,12 @@ function processInstallUpgrade(state, playerId, data) {
     }
   }
 
-  // Install the upgrade
-  playerState.blueprint[slotKey][slotIndex] = upgradeId;
+  // Install the tech tile
+  playerState.blueprint[slotKey][slotIndex] = targetId;
 
   state.log.push({
     timestamp: new Date().toISOString(),
-    message: `Installed ${upgrade.name} in ${slotType} slot ${slotIndex + 1}`,
+    message: `Installed ${tile.name} in ${slotType} slot ${slotIndex + 1}`,
     playerId,
     type: 'action'
   });
@@ -182,7 +184,7 @@ function processInstallUpgrade(state, playerId, data) {
 }
 
 /**
- * Remove upgrade from blueprint
+ * Remove tech tile from blueprint
  *
  * Per Section 5.1: Location actions execute IMMEDIATELY when placing an agent.
  * Direct API calls are rejected - must go through PLACE_AGENT with blueprint param.
@@ -192,7 +194,7 @@ function processInstallUpgrade(state, playerId, data) {
  * @param {Object} data - Action data { slotType, slotIndex, _internal }
  * @returns {Object} { newState } or throws error
  */
-function processRemoveUpgrade(state, playerId, data) {
+function processRemoveTechTile(state, playerId, data) {
   const { slotType, slotIndex, _internal = false } = data;
   const playerState = state.players[playerId];
 
@@ -200,14 +202,14 @@ function processRemoveUpgrade(state, playerId, data) {
   if (!_internal) {
     if (state.phase !== 'worker_placement') {
       throw new GameRuleError(
-        'REMOVE_UPGRADE not allowed: Actions execute immediately when placing an agent (Section 5.1). ' +
+        'REMOVE_TECH_TILE not allowed: Actions execute immediately when placing an agent (Section 5.1). ' +
         'Place an agent at Design Bureau during worker placement phase to modify blueprint.'
       );
     }
     const placement = state.groundBoard?.placements?.design_bureau;
     if (!placement || placement.playerId !== playerId) {
       throw new GameRuleError(
-        'REMOVE_UPGRADE not allowed: You must place an agent at Design Bureau to modify blueprint. ' +
+        'REMOVE_TECH_TILE not allowed: You must place an agent at Design Bureau to modify blueprint. ' +
         'Use PLACE_AGENT with locationId "design_bureau" and blueprint parameter.'
       );
     }
@@ -222,20 +224,20 @@ function processRemoveUpgrade(state, playerId, data) {
     throw new GameRuleError('Invalid slot index');
   }
 
-  const currentUpgrade = playerState.blueprint[slotKey][slotIndex];
-  if (!currentUpgrade) {
+  const currentTile = playerState.blueprint[slotKey][slotIndex];
+  if (!currentTile) {
     throw new GameRuleError('Slot is already empty');
   }
 
-  const upgrade = UPGRADES[currentUpgrade];
-  const upgradeName = upgrade ? upgrade.name : currentUpgrade;
+  const tile = TECH_TILES[currentTile];
+  const tileName = tile ? tile.name : currentTile;
 
-  // Remove the upgrade
+  // Remove the tech tile
   playerState.blueprint[slotKey][slotIndex] = null;
 
   state.log.push({
     timestamp: new Date().toISOString(),
-    message: `Removed ${upgradeName} from ${slotType} slot ${slotIndex + 1}`,
+    message: `Removed ${tileName} from ${slotType} slot ${slotIndex + 1}`,
     playerId,
     type: 'action'
   });
@@ -297,43 +299,43 @@ function processUpdateBlueprint(state, playerId, data) {
     }
 
     for (let i = 0; i < newSlots.length; i++) {
-      const oldUpgradeId = oldSlots[i];
-      const newUpgradeId = newSlots[i];
+      const oldTileId = oldSlots[i];
+      const newTileId = newSlots[i];
 
       // Skip if no change
-      if (oldUpgradeId === newUpgradeId) continue;
+      if (oldTileId === newTileId) continue;
 
-      // If installing a new upgrade
-      if (newUpgradeId) {
-        const upgrade = UPGRADES[newUpgradeId];
-        if (!upgrade) {
-          throw new GameRuleError(`Unknown upgrade: ${newUpgradeId}`);
+      // If installing a new tech tile
+      if (newTileId) {
+        const tile = TECH_TILES[newTileId];
+        if (!tile) {
+          throw new GameRuleError(`Unknown tech tile: ${newTileId}`);
         }
 
-        // Validate upgrade goes in correct slot type
-        if (upgrade.slotType !== slotKey) {
-          throw new GameRuleError(`${upgrade.name} must be installed in ${upgrade.slotType}, not ${slotKey}`);
+        // Validate tech tile goes in correct slot type
+        if (tile.slotType !== slotKey) {
+          throw new GameRuleError(`${tile.name} must be installed in ${tile.slotType}, not ${slotKey}`);
         }
 
         // Validate age requirement
         // During age transition, use the NEW age for validation
         const effectiveAge = state.ageTransitionDesignBureau?.newAge || state.age;
-        if (upgrade.age > effectiveAge) {
-          throw new GameRuleError(`${upgrade.name} not available until Age ${upgrade.age}`);
+        if (tile.age > effectiveAge) {
+          throw new GameRuleError(`${tile.name} not available until Age ${tile.age}`);
         }
 
-        // Validate player owns required technology
-        if (!playerState.technologies.includes(upgrade.requiredTech)) {
-          const tech = TECHNOLOGIES[upgrade.requiredTech];
-          throw new GameRuleError(`Requires ${tech ? tech.name : upgrade.requiredTech} technology`);
+        // Validate player owns required tech card
+        if (!playerState.techCards.includes(tile.requiredCard)) {
+          const card = TECH_CARDS[tile.requiredCard];
+          throw new GameRuleError(`Requires ${card ? card.name : tile.requiredCard} tech card`);
         }
       }
 
       changes.push({
         slotKey,
         slotIndex: i,
-        oldUpgradeId,
-        newUpgradeId
+        oldTileId,
+        newTileId
       });
     }
   }
@@ -391,28 +393,28 @@ function processUpdateBlueprint(state, playerId, data) {
 
   // Log changes
   for (const change of changes) {
-    const oldUpgrade = change.oldUpgradeId ? UPGRADES[change.oldUpgradeId] : null;
-    const newUpgrade = change.newUpgradeId ? UPGRADES[change.newUpgradeId] : null;
+    const oldTile = change.oldTileId ? TECH_TILES[change.oldTileId] : null;
+    const newTile = change.newTileId ? TECH_TILES[change.newTileId] : null;
     const slotType = change.slotKey.replace('Slots', '');
 
-    if (oldUpgrade && newUpgrade) {
+    if (oldTile && newTile) {
       state.log.push({
         timestamp: new Date().toISOString(),
-        message: `Replaced ${oldUpgrade.name} with ${newUpgrade.name} in ${slotType} slot ${change.slotIndex + 1}`,
+        message: `Replaced ${oldTile.name} with ${newTile.name} in ${slotType} slot ${change.slotIndex + 1}`,
         playerId,
         type: 'action'
       });
-    } else if (newUpgrade) {
+    } else if (newTile) {
       state.log.push({
         timestamp: new Date().toISOString(),
-        message: `Installed ${newUpgrade.name} in ${slotType} slot ${change.slotIndex + 1}`,
+        message: `Installed ${newTile.name} in ${slotType} slot ${change.slotIndex + 1}`,
         playerId,
         type: 'action'
       });
-    } else if (oldUpgrade) {
+    } else if (oldTile) {
       state.log.push({
         timestamp: new Date().toISOString(),
-        message: `Removed ${oldUpgrade.name} from ${slotType} slot ${change.slotIndex + 1}`,
+        message: `Removed ${oldTile.name} from ${slotType} slot ${change.slotIndex + 1}`,
         playerId,
         type: 'action'
       });
@@ -483,7 +485,8 @@ function processAgeTransitionDesignBureau(state, playerId, data) {
       if (swap.slotIndex < 0 || swap.slotIndex >= newBlueprint[slotKey].length) continue;
 
       if (swap.action === 'install') {
-        newBlueprint[slotKey][swap.slotIndex] = swap.upgradeId;
+        // Support both tileId (new) and upgradeId (legacy)
+        newBlueprint[slotKey][swap.slotIndex] = swap.tileId || swap.upgradeId;
       } else if (swap.action === 'remove') {
         newBlueprint[slotKey][swap.slotIndex] = null;
       }
@@ -526,10 +529,13 @@ function processAgeTransitionDesignBureau(state, playerId, data) {
 }
 
 module.exports = {
-  processInstallUpgrade,
-  processRemoveUpgrade,
+  processInstallTechTile,
+  processRemoveTechTile,
   processUpdateBlueprint,
   processAgeTransitionDesignBureau,
   calculateHullCost,  // Exported for testing
-  validateBlueprintComplete  // Exported for use in worker.js
+  validateBlueprintComplete,  // Exported for use in worker.js
+  // Legacy aliases for backwards compatibility during migration
+  processInstallUpgrade: processInstallTechTile,
+  processRemoveUpgrade: processRemoveTechTile
 };

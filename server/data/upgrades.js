@@ -1,12 +1,12 @@
 /**
- * Upgrade Tiles Data
+ * Tech Tiles Data
  *
- * Each upgrade has:
+ * Each tech tile has:
  * - id: unique identifier
  * - name: display name
  * - type: drive | frame | fabric | component
  * - slotType: which slot type it goes in (frameSlots, fabricSlots, driveSlots, componentSlots)
- * - requiredTech: technology ID that must be owned to install
+ * - requiredCard: tech card ID that must be owned to install
  * - weight: how much Lift is consumed (negative number)
  * - hullCost: additional cost when building ships (for frame/fabric)
  * - stats: bonuses to Speed, Range, Ceiling, Reliability, Luxury, Income
@@ -14,14 +14,14 @@
  * - age: minimum age when available (1, 2, or 3)
  */
 
-const UPGRADES = {
+const TECH_TILES = {
   // === PROPULSION/DRIVE UPGRADES ===
   basic_engine: {
     id: 'basic_engine',
     name: 'Basic Engine',
     type: 'drive',
     slotType: 'driveSlots',
-    requiredTech: 'daimler_engine',
+    requiredCard: 'daimler_engine',
     weight: -1,
     stats: { speed: 1 },
     special: null,
@@ -32,7 +32,7 @@ const UPGRADES = {
     name: 'Efficient Propeller',
     type: 'drive',
     slotType: 'driveSlots',
-    requiredTech: 'improved_propeller',
+    requiredCard: 'improved_propeller',
     weight: -1,
     stats: { speed: 1, range: 1 },
     special: null,
@@ -43,7 +43,7 @@ const UPGRADES = {
     name: 'Twin Engine',
     type: 'drive',
     slotType: 'driveSlots',
-    requiredTech: 'dual_engine_mount',
+    requiredCard: 'dual_engine_mount',
     weight: -3,
     stats: { speed: 2, reliability: 1 },
     special: null,
@@ -54,7 +54,7 @@ const UPGRADES = {
     name: 'Maybach CX Engine',
     type: 'drive',
     slotType: 'driveSlots',
-    requiredTech: 'maybach_engine',
+    requiredCard: 'maybach_engine',
     weight: -2,
     stats: { speed: 2, range: 1 },
     special: null,
@@ -65,7 +65,7 @@ const UPGRADES = {
     name: 'Diesel Engine',
     type: 'drive',
     slotType: 'driveSlots',
-    requiredTech: 'diesel_powerplant',
+    requiredCard: 'diesel_powerplant',
     weight: -2,
     stats: { range: 2, reliability: 1 },
     special: null,
@@ -76,7 +76,7 @@ const UPGRADES = {
     name: 'Vectored Thrust',
     type: 'drive',
     slotType: 'driveSlots',
-    requiredTech: 'swiveling_propeller',
+    requiredCard: 'swiveling_propeller',
     weight: -2,
     stats: { speed: 1, ceiling: 1 },
     special: null,
@@ -87,7 +87,7 @@ const UPGRADES = {
     name: 'Balanced Propulsion',
     type: 'drive',
     slotType: 'driveSlots',
-    requiredTech: 'contra_rotating',
+    requiredCard: 'contra_rotating',
     weight: -2,
     stats: { speed: 2, reliability: 1 },
     special: null,
@@ -98,7 +98,7 @@ const UPGRADES = {
     name: 'Aerodynamic Engine',
     type: 'drive',
     slotType: 'driveSlots',
-    requiredTech: 'streamlined_nacelle',
+    requiredCard: 'streamlined_nacelle',
     weight: -2,
     stats: { speed: 3 },
     special: null,
@@ -109,7 +109,7 @@ const UPGRADES = {
     name: 'High-Altitude Engine',
     type: 'drive',
     slotType: 'driveSlots',
-    requiredTech: 'supercharged_engine',
+    requiredCard: 'supercharged_engine',
     weight: -3,
     stats: { speed: 2, ceiling: 2 },
     special: null,
@@ -120,7 +120,7 @@ const UPGRADES = {
     name: 'Hybrid Powerplant',
     type: 'drive',
     slotType: 'driveSlots',
-    requiredTech: 'diesel_electric',
+    requiredCard: 'diesel_electric',
     weight: -3,
     stats: { range: 3, reliability: 1 },
     special: null,
@@ -131,7 +131,7 @@ const UPGRADES = {
     name: 'Adaptive Propeller',
     type: 'drive',
     slotType: 'driveSlots',
-    requiredTech: 'variable_pitch',
+    requiredCard: 'variable_pitch',
     weight: -2,
     stats: { speed: 1, range: 2 },
     special: null,
@@ -144,7 +144,7 @@ const UPGRADES = {
     name: 'Wooden Frame',
     type: 'frame',
     slotType: 'frameSlots',
-    requiredTech: 'wooden_framework',
+    requiredCard: 'wooden_framework',
     weight: -2,
     hullCost: 1,
     stats: { reliability: 1 },
@@ -156,7 +156,7 @@ const UPGRADES = {
     name: 'Tensioned Frame',
     type: 'frame',
     slotType: 'frameSlots',
-    requiredTech: 'wire_bracing',
+    requiredCard: 'wire_bracing',
     weight: -1,
     hullCost: 1,
     stats: { ceiling: 1 },
@@ -168,7 +168,7 @@ const UPGRADES = {
     name: 'Duralumin Frame',
     type: 'frame',
     slotType: 'frameSlots',
-    requiredTech: 'duralumin_girders',
+    requiredCard: 'duralumin_girders',
     weight: -2,
     hullCost: 2,
     stats: { reliability: 2, ceiling: 1 },
@@ -180,7 +180,7 @@ const UPGRADES = {
     name: 'Steel Frame',
     type: 'frame',
     slotType: 'frameSlots',
-    requiredTech: 'steel_framework',
+    requiredCard: 'steel_framework',
     weight: -3,
     hullCost: 1,
     stats: { reliability: 2 },
@@ -192,7 +192,7 @@ const UPGRADES = {
     name: 'Semi-Rigid Keel',
     type: 'frame',
     slotType: 'frameSlots',
-    requiredTech: 'internal_keel',
+    requiredCard: 'internal_keel',
     weight: -2,
     hullCost: 1,
     stats: { reliability: 1 },
@@ -204,7 +204,7 @@ const UPGRADES = {
     name: 'Geodetic Frame',
     type: 'frame',
     slotType: 'frameSlots',
-    requiredTech: 'geodetic_structure',
+    requiredCard: 'geodetic_structure',
     weight: -1,
     hullCost: 3,
     stats: { reliability: 2, ceiling: 1 },
@@ -216,7 +216,7 @@ const UPGRADES = {
     name: 'Modular Frame',
     type: 'frame',
     slotType: 'frameSlots',
-    requiredTech: 'modular_construction',
+    requiredCard: 'modular_construction',
     weight: -1,
     hullCost: 2,
     stats: {},
@@ -228,7 +228,7 @@ const UPGRADES = {
     name: 'Flexible Frame',
     type: 'frame',
     slotType: 'frameSlots',
-    requiredTech: 'articulated_keel',
+    requiredCard: 'articulated_keel',
     weight: 0,  // Per Appendix D: weight is 0, not -1
     hullCost: 1,
     stats: { ceiling: 1 },  // Per Section 13.4: +1 Ceiling (not reliability)
@@ -240,7 +240,7 @@ const UPGRADES = {
     name: 'Streamlined Hull',
     type: 'frame',
     slotType: 'frameSlots',
-    requiredTech: 'aerodynamic_hull_design',
+    requiredCard: 'aerodynamic_hull_design',
     weight: -1,
     hullCost: 2,
     stats: { lift: 2 },  // Provides lift without gas
@@ -252,7 +252,7 @@ const UPGRADES = {
     name: 'Aerodynamic Lift System',
     type: 'frame',
     slotType: 'frameSlots',
-    requiredTech: 'dynamic_lift_surfaces',
+    requiredCard: 'dynamic_lift_surfaces',
     weight: -2,
     hullCost: 3,
     stats: { lift: 4 },  // Provides lift without gas
@@ -266,7 +266,7 @@ const UPGRADES = {
     name: 'Cotton Envelope',
     type: 'fabric',
     slotType: 'fabricSlots',
-    requiredTech: 'rubberized_cotton',
+    requiredCard: 'rubberized_cotton',
     weight: 0,
     hullCost: 0,
     stats: {},
@@ -278,7 +278,7 @@ const UPGRADES = {
     name: 'Doped Covering',
     type: 'fabric',
     slotType: 'fabricSlots',
-    requiredTech: 'doped_canvas',
+    requiredCard: 'doped_canvas',
     weight: 0,
     hullCost: 1,
     stats: { speed: 1 },
@@ -290,7 +290,7 @@ const UPGRADES = {
     name: 'Premium Envelope',
     type: 'fabric',
     slotType: 'fabricSlots',
-    requiredTech: 'goldbeater_skin',
+    requiredCard: 'goldbeater_skin',
     weight: 0,
     hullCost: 3,
     stats: { reliability: 1, range: 1 },
@@ -302,7 +302,7 @@ const UPGRADES = {
     name: 'Fire-Resistant Fabric',
     type: 'fabric',
     slotType: 'fabricSlots',
-    requiredTech: 'fireproof_coating',
+    requiredCard: 'fireproof_coating',
     weight: -1,
     hullCost: 2,
     stats: { reliability: 1 },
@@ -314,7 +314,7 @@ const UPGRADES = {
     name: 'Reflective Covering',
     type: 'fabric',
     slotType: 'fabricSlots',
-    requiredTech: 'aluminum_doping',
+    requiredCard: 'aluminum_doping',
     weight: 0,
     hullCost: 1,
     stats: { reliability: 1 },
@@ -326,7 +326,7 @@ const UPGRADES = {
     name: 'Synthetic Envelope',
     type: 'fabric',
     slotType: 'fabricSlots',
-    requiredTech: 'gelatinized_latex',
+    requiredCard: 'gelatinized_latex',
     weight: 0,
     hullCost: 2,
     stats: { reliability: 1, range: 1 },
@@ -338,7 +338,7 @@ const UPGRADES = {
     name: 'Advanced Fabric',
     type: 'fabric',
     slotType: 'fabricSlots',
-    requiredTech: 'composite_covering',
+    requiredCard: 'composite_covering',
     weight: 0,
     hullCost: 2,
     stats: { reliability: 2 },
@@ -350,7 +350,7 @@ const UPGRADES = {
     name: 'Conductive Covering',
     type: 'fabric',
     slotType: 'fabricSlots',
-    requiredTech: 'grounding_systems',
+    requiredCard: 'grounding_systems',
     weight: 0,
     hullCost: 1,
     stats: { reliability: 1 },
@@ -365,7 +365,7 @@ const UPGRADES = {
     name: 'Pressure Control',
     type: 'gas',
     slotType: 'componentSlots',  // Gas upgrades go in component/payload slots
-    requiredTech: 'improved_valving',
+    requiredCard: 'improved_valving',
     weight: -1,
     stats: { ceiling: 1 },
     special: null,
@@ -376,7 +376,7 @@ const UPGRADES = {
     name: 'Altitude Ballonets',
     type: 'gas',
     slotType: 'componentSlots',
-    requiredTech: 'manual_ballonets',
+    requiredCard: 'manual_ballonets',
     weight: -1,
     stats: { ceiling: 1 },
     special: null,
@@ -387,7 +387,7 @@ const UPGRADES = {
     name: 'Compartmented Gas',
     type: 'gas',
     slotType: 'componentSlots',
-    requiredTech: 'multiple_gas_cells',
+    requiredCard: 'multiple_gas_cells',
     weight: -1,
     stats: { lift: 2, reliability: 1 },
     special: null,
@@ -398,7 +398,7 @@ const UPGRADES = {
     name: 'Helium Gas Cell',
     type: 'gas',
     slotType: 'componentSlots',
-    requiredTech: 'helium_handling',
+    requiredCard: 'helium_handling',
     weight: -1,
     stats: {},
     special: 'fire_immunity',  // Safe: immune to Fire hazards; use Helium cubes
@@ -409,7 +409,7 @@ const UPGRADES = {
     name: 'Blaugas Tank',
     type: 'gas',
     slotType: 'componentSlots',
-    requiredTech: 'blaugas_storage',
+    requiredCard: 'blaugas_storage',
     weight: 0,
     stats: { range: 1 },
     special: 'gas_retention',  // Pay £2 to keep gas cubes after mission (Germany)
@@ -420,7 +420,7 @@ const UPGRADES = {
     name: 'Smart Valving',
     type: 'gas',
     slotType: 'componentSlots',
-    requiredTech: 'automatic_valves',
+    requiredCard: 'automatic_valves',
     weight: -1,
     stats: { reliability: 1, ceiling: 1 },
     special: null,
@@ -431,7 +431,7 @@ const UPGRADES = {
     name: 'High-Ceiling Gas',
     type: 'gas',
     slotType: 'componentSlots',
-    requiredTech: 'pressure_altitude_system',
+    requiredCard: 'pressure_altitude_system',
     weight: -2,
     stats: { lift: 3, ceiling: 2 },
     special: null,
@@ -442,7 +442,7 @@ const UPGRADES = {
     name: 'Redundant Cells',
     type: 'gas',
     slotType: 'componentSlots',
-    requiredTech: 'triple_gas_cell',
+    requiredCard: 'triple_gas_cell',
     weight: -2,
     stats: { lift: 4, reliability: 2 },
     special: null,
@@ -453,7 +453,7 @@ const UPGRADES = {
     name: 'Rapid Descent System',
     type: 'gas',
     slotType: 'componentSlots',
-    requiredTech: 'emergency_venting',
+    requiredCard: 'emergency_venting',
     weight: -1,
     stats: { reliability: 2 },
     special: 'weather_auto_pass',  // Auto-pass Weather-type hazards
@@ -464,7 +464,7 @@ const UPGRADES = {
     name: 'Reclamation System',
     type: 'gas',
     slotType: 'componentSlots',
-    requiredTech: 'gas_recovery',
+    requiredCard: 'gas_recovery',
     weight: -1,
     stats: { range: 2 },
     special: 'gas_cost_reduction',  // -£2 Lifting Gas cost
@@ -475,7 +475,7 @@ const UPGRADES = {
     name: 'Exhaust Condensers',
     type: 'gas',
     slotType: 'componentSlots',
-    requiredTech: 'water_recovery_system',
+    requiredCard: 'water_recovery_system',
     weight: -2,
     stats: {},
     special: 'helium_cost_reduction',  // -£3 Helium cost (USA specialty)
@@ -491,7 +491,7 @@ const UPGRADES = {
     name: 'Spotter Gondola',
     type: 'component',
     slotType: 'componentSlots',
-    requiredTech: 'observation_platform',
+    requiredCard: 'observation_platform',
     weight: -1,
     stats: { income: 1 },
     special: null,
@@ -502,7 +502,7 @@ const UPGRADES = {
     name: 'Postal Service',
     type: 'component',
     slotType: 'componentSlots',
-    requiredTech: 'mail_compartment',
+    requiredCard: 'mail_compartment',
     weight: -1,
     stats: { income: 2 },
     special: null,
@@ -513,7 +513,7 @@ const UPGRADES = {
     name: 'External Cargo',
     type: 'component',
     slotType: 'componentSlots',
-    requiredTech: 'cargo_nets',
+    requiredCard: 'cargo_nets',
     weight: -2,
     stats: { income: 2 },
     special: null,
@@ -526,7 +526,7 @@ const UPGRADES = {
     name: 'Basic Cabin',  // Upgrade name per Appendix D
     type: 'component',
     slotType: 'componentSlots',
-    requiredTech: 'passenger_gondola',
+    requiredCard: 'passenger_gondola',
     weight: -2,
     stats: { income: 2, luxury: 1 },  // Fixed: income was 1, now 2
     special: null,
@@ -537,7 +537,7 @@ const UPGRADES = {
     name: 'Bombing Equipment',
     type: 'component',
     slotType: 'componentSlots',
-    requiredTech: 'bomb_bay_design',
+    requiredCard: 'bomb_bay_design',
     weight: -3,
     stats: {},
     special: 'combat_income_bonus',  // Combat Missions: +£3 Income
@@ -548,7 +548,7 @@ const UPGRADES = {
     name: 'Sparrowhawk Hangar',
     type: 'component',
     slotType: 'componentSlots',
-    requiredTech: 'trapeze_system',
+    requiredCard: 'trapeze_system',
     weight: -3,
     stats: {},
     special: 'ignore_route_requirement',  // Ignore one route requirement (USA specialty)
@@ -559,7 +559,7 @@ const UPGRADES = {
     name: 'Communications Suite',
     type: 'component',
     slotType: 'componentSlots',
-    requiredTech: 'radio_equipment',
+    requiredCard: 'radio_equipment',
     weight: -1,
     stats: { reliability: 1 },
     special: 'navigation_bonus',  // +1 to Navigation hazards
@@ -570,7 +570,7 @@ const UPGRADES = {
     name: 'Light Armor Plating',
     type: 'component',
     slotType: 'componentSlots',
-    requiredTech: 'armored_gondola',
+    requiredCard: 'armored_gondola',
     weight: -2,
     stats: { armor: 1 },
     special: null,
@@ -581,7 +581,7 @@ const UPGRADES = {
     name: 'Heavy Armor Plating',
     type: 'component',
     slotType: 'componentSlots',
-    requiredTech: 'reinforced_hull',
+    requiredCard: 'reinforced_hull',
     weight: -3,
     stats: { armor: 2 },
     special: null,
@@ -594,7 +594,7 @@ const UPGRADES = {
     name: 'Luxury Cabin',
     type: 'component',
     slotType: 'componentSlots',
-    requiredTech: 'luxury_accommodation',
+    requiredCard: 'luxury_accommodation',
     weight: -3,
     stats: { income: 3, luxury: 2 },
     special: null,
@@ -605,7 +605,7 @@ const UPGRADES = {
     name: 'Restaurant',
     type: 'component',
     slotType: 'componentSlots',
-    requiredTech: 'dining_saloon',
+    requiredCard: 'dining_saloon',
     weight: -2,
     stats: { income: 2, luxury: 2 },
     special: null,
@@ -616,7 +616,7 @@ const UPGRADES = {
     name: 'Observation Lounge',
     type: 'component',
     slotType: 'componentSlots',
-    requiredTech: 'promenade_deck',
+    requiredCard: 'promenade_deck',
     weight: -2,
     stats: { income: 1, luxury: 3 },
     special: null,
@@ -627,7 +627,7 @@ const UPGRADES = {
     name: 'Private Berths',  // Upgrade name per Appendix D
     type: 'component',
     slotType: 'componentSlots',
-    requiredTech: 'sleeping_quarters',
+    requiredCard: 'sleeping_quarters',
     weight: -2,
     stats: { income: 2, luxury: 1 },  // Fixed: was luxury: 2, range: 1
     special: null,
@@ -638,7 +638,7 @@ const UPGRADES = {
     name: 'Pressurized Lounge',
     type: 'component',
     slotType: 'componentSlots',
-    requiredTech: 'smoking_room',
+    requiredCard: 'smoking_room',
     weight: -2,
     stats: { income: 1, luxury: 2 },
     special: 'requires_helium',  // Requires Helium Gas Cell installed
@@ -649,7 +649,7 @@ const UPGRADES = {
     name: 'Imperial Mast',
     type: 'component',
     slotType: 'componentSlots',
-    requiredTech: 'imperial_mooring',
+    requiredCard: 'imperial_mooring',
     weight: -1,
     stats: {},
     special: 'british_territories_home',  // British Territories count as Home Base (Britain specialty)
@@ -663,7 +663,7 @@ const UPGRADES = {
     name: 'Observation Deck (Legacy)',
     type: 'component',
     slotType: 'componentSlots',
-    requiredTech: 'observation_platform',
+    requiredCard: 'observation_platform',
     weight: -1,
     stats: { income: 1 },  // Updated to match spotter_gondola
     special: null,
@@ -674,7 +674,7 @@ const UPGRADES = {
     name: 'Cargo Hold (Legacy)',
     type: 'component',
     slotType: 'componentSlots',
-    requiredTech: 'cargo_nets',
+    requiredCard: 'cargo_nets',
     weight: -2,
     stats: { income: 2 },
     special: null,
@@ -685,7 +685,7 @@ const UPGRADES = {
     name: 'Dining Saloon (Legacy)',
     type: 'component',
     slotType: 'componentSlots',
-    requiredTech: 'dining_saloon',
+    requiredCard: 'dining_saloon',
     weight: -2,  // Fixed: was -3
     stats: { income: 2, luxury: 2 },  // Fixed: was luxury: 3, no income
     special: null,
@@ -696,7 +696,7 @@ const UPGRADES = {
     name: 'Radio Room (Legacy)',
     type: 'component',
     slotType: 'componentSlots',
-    requiredTech: 'radio_equipment',
+    requiredCard: 'radio_equipment',
     weight: -1,
     stats: { reliability: 1 },
     special: 'navigation_bonus',
@@ -707,7 +707,7 @@ const UPGRADES = {
     name: 'Luxury Lounge (Legacy)',
     type: 'component',
     slotType: 'componentSlots',
-    requiredTech: 'luxury_accommodation',
+    requiredCard: 'luxury_accommodation',
     weight: -3,
     stats: { income: 3, luxury: 2 },
     special: null,
@@ -718,7 +718,7 @@ const UPGRADES = {
     name: 'Mail Compartment (Legacy)',
     type: 'component',
     slotType: 'componentSlots',
-    requiredTech: 'mail_compartment',
+    requiredCard: 'mail_compartment',
     weight: -1,
     stats: { income: 2 },
     special: null,
@@ -729,7 +729,7 @@ const UPGRADES = {
     name: 'Navigation Suite',
     type: 'component',
     slotType: 'componentSlots',
-    requiredTech: 'advanced_navigation',
+    requiredCard: 'advanced_navigation',
     weight: -1,
     stats: { reliability: 2, range: 1 },
     special: null,
@@ -740,7 +740,7 @@ const UPGRADES = {
     name: 'Pressurized Cabin (Legacy)',
     type: 'component',
     slotType: 'componentSlots',
-    requiredTech: 'smoking_room',
+    requiredCard: 'smoking_room',
     weight: -2,
     stats: { income: 1, luxury: 2 },
     special: 'requires_helium',
@@ -749,10 +749,10 @@ const UPGRADES = {
 };
 
 /**
- * Technology Definitions
- * Maps technology IDs to their upgrade unlock and metadata
+ * Tech Card Definitions
+ * Maps tech card IDs to their tech tile unlock and metadata
  */
-const TECHNOLOGIES = {
+const TECH_CARDS = {
   // Faction starting techs (pre-printed on player boards, cost 0, don't advance Progress)
   // Germany starting techs
   duralumin_girders: { id: 'duralumin_girders', name: 'Duralumin Framework', type: 'structure', cost: 0, age: 1, faction: 'germany' },
@@ -889,12 +889,12 @@ const AGE_BASELINES = {
 };
 
 /**
- * Get available upgrades for a player based on owned technologies
- * @param {Array} playerTechnologies - List of technology IDs the player owns
+ * Get available tech tiles for a player based on owned tech cards
+ * @param {Array} playerTechCards - List of tech card IDs the player owns
  * @param {number} currentAge - Current game age (1, 2, or 3)
- * @returns {Object} Upgrades grouped by slot type
+ * @returns {Object} Tech tiles grouped by slot type
  */
-function getAvailableUpgrades(playerTechnologies, currentAge) {
+function getAvailableTechTiles(playerTechCards, currentAge) {
   const available = {
     driveSlots: [],
     frameSlots: [],
@@ -902,22 +902,22 @@ function getAvailableUpgrades(playerTechnologies, currentAge) {
     componentSlots: []
   };
 
-  for (const upgrade of Object.values(UPGRADES)) {
-    // Check if player owns required technology
-    if (!playerTechnologies.includes(upgrade.requiredTech)) continue;
+  for (const tile of Object.values(TECH_TILES)) {
+    // Check if player owns required tech card
+    if (!playerTechCards.includes(tile.requiredCard)) continue;
 
-    // Check if upgrade is available in current age
-    if (upgrade.age > currentAge) continue;
+    // Check if tech tile is available in current age
+    if (tile.age > currentAge) continue;
 
-    available[upgrade.slotType].push(upgrade);
+    available[tile.slotType].push(tile);
   }
 
   return available;
 }
 
 /**
- * Calculate ship stats from installed upgrades
- * @param {Object} blueprint - Player's blueprint with installed upgrades
+ * Calculate ship stats from installed tech tiles
+ * @param {Object} blueprint - Player's blueprint with installed tech tiles
  * @param {Object} factionBonuses - Faction-specific stat bonuses
  * @param {number} age - Current age for baseline stats
  * @returns {Object} Calculated stats
@@ -936,28 +936,28 @@ function calculateShipStats(blueprint, factionBonuses = {}, age = 1) {
     hullCost: 2 // Base hull cost
   };
 
-  // Sum stats from all installed upgrades
+  // Sum stats from all installed tech tiles
   const allSlots = ['frameSlots', 'fabricSlots', 'driveSlots', 'componentSlots'];
 
   for (const slotKey of allSlots) {
     const slots = blueprint[slotKey] || [];
-    for (const upgradeId of slots) {
-      if (!upgradeId) continue;
+    for (const tileId of slots) {
+      if (!tileId) continue;
 
-      const upgrade = UPGRADES[upgradeId];
-      if (!upgrade) continue;
+      const tile = TECH_TILES[tileId];
+      if (!tile) continue;
 
-      // Add upgrade stats
-      for (const [stat, value] of Object.entries(upgrade.stats || {})) {
+      // Add tech tile stats
+      for (const [stat, value] of Object.entries(tile.stats || {})) {
         stats[stat] = (stats[stat] || 0) + value;
       }
 
       // Add weight (negative values reduce lift budget)
-      stats.weight += Math.abs(upgrade.weight || 0);
+      stats.weight += Math.abs(tile.weight || 0);
 
       // Add hull cost (for frame/fabric)
-      if (upgrade.hullCost) {
-        stats.hullCost += upgrade.hullCost;
+      if (tile.hullCost) {
+        stats.hullCost += tile.hullCost;
       }
     }
   }
@@ -1001,7 +1001,7 @@ function canLaunch(blueprint, factionBonuses = {}, age = 1) {
       canLaunch: false,
       lift,
       weight: stats.weight,
-      message: `Need ${requiredSlots.frameSlots} frame tile(s), have ${frameCount}`
+      message: `Need ${requiredSlots.frameSlots} frame tech tile(s), have ${frameCount}`
     };
   }
 
@@ -1010,7 +1010,7 @@ function canLaunch(blueprint, factionBonuses = {}, age = 1) {
       canLaunch: false,
       lift,
       weight: stats.weight,
-      message: `Need ${requiredSlots.fabricSlots} fabric tile(s), have ${fabricCount}`
+      message: `Need ${requiredSlots.fabricSlots} fabric tech tile(s), have ${fabricCount}`
     };
   }
 
@@ -1033,11 +1033,15 @@ function canLaunch(blueprint, factionBonuses = {}, age = 1) {
 }
 
 module.exports = {
-  UPGRADES,
-  TECHNOLOGIES,
+  TECH_TILES,
+  TECH_CARDS,
   AGE_BASELINES,
-  getAvailableUpgrades,
+  getAvailableTechTiles,
   calculateShipStats,
   calculateLift,
-  canLaunch
+  canLaunch,
+  // Legacy aliases for backwards compatibility during migration
+  UPGRADES: TECH_TILES,
+  TECHNOLOGIES: TECH_CARDS,
+  getAvailableUpgrades: getAvailableTechTiles
 };

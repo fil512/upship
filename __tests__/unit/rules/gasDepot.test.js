@@ -29,7 +29,7 @@ describe('Rules Compliance - Gas Depot', () => {
       const state = createTestGameState();
       state.players['1'].cash = 20;
       state.players['1'].gasCubes = { hydrogen: 0, helium: 0 };
-      state.players['1'].technologies = ['helium_handling'];
+      state.players['1'].techCards = ['helium_handling'];
       state.gasMarket = { hydrogen: 1, helium: 5 };
 
       const result = processBuyGas(state, '1', { gasType: 'helium', amount: 2, _internal: true });
@@ -41,7 +41,7 @@ describe('Rules Compliance - Gas Depot', () => {
     it('should reject helium purchase without Helium Handling', () => {
       const state = createTestGameState();
       state.players['1'].cash = 20;
-      state.players['1'].technologies = [];
+      state.players['1'].techCards = [];
       state.gasMarket = { hydrogen: 1, helium: 5 };
 
       expect(() => {
@@ -89,7 +89,7 @@ describe('Rules Compliance - Gas Depot', () => {
       const playerId = '1';
       state.players[playerId].cash = 20;
       state.players[playerId].gasCubes = { hydrogen: 0, helium: 0 };
-      state.players[playerId].technologies = ['helium_handling'];
+      state.players[playerId].techCards = ['helium_handling'];
       state.players[playerId].agentsRemaining = 2;
       state.players[playerId].hand = [
         { id: 'card1', name: 'Mechanic', symbol: 'wrench', effect: '+1 swap' }
@@ -182,7 +182,7 @@ describe('Rules Compliance - Gas Depot', () => {
       const state = createTestGameState();
       state.players['1'].cash = 20;
       state.players['1'].gasCubes = { hydrogen: 0, helium: 0 };
-      state.players['1'].technologies = ['helium_handling'];
+      state.players['1'].techCards = ['helium_handling'];
       state.gasMarket = { hydrogen: 1, helium: 5 };
 
       // Reclamation System installed
@@ -217,7 +217,7 @@ describe('Rules Compliance - Gas Depot', () => {
       const state = createTestGameState();
       state.players['1'].cash = 20;
       state.players['1'].gasCubes = { hydrogen: 0, helium: 0 };
-      state.players['1'].technologies = ['helium_handling'];
+      state.players['1'].techCards = ['helium_handling'];
       state.gasMarket = { hydrogen: 1, helium: 5 };
 
       // Exhaust Condensers installed (USA specialty)
@@ -250,7 +250,7 @@ describe('Rules Compliance - Gas Depot', () => {
       const state = createTestGameState();
       state.players['1'].cash = 20;
       state.players['1'].gasCubes = { hydrogen: 0, helium: 0 };
-      state.players['1'].technologies = ['helium_handling'];
+      state.players['1'].techCards = ['helium_handling'];
       state.gasMarket = { hydrogen: 1, helium: 5 };
 
       // Both upgrades installed

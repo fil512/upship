@@ -7,8 +7,8 @@ const { GameRuleError } = require('../errors');
 
 // Import all action processors
 const { processBuyGas } = require('./gas');
-const { processAcquireTechnology, processAcquireTechnologyResearch, processGainResearch } = require('./technology');
-const { processInstallUpgrade, processRemoveUpgrade, processAgeTransitionDesignBureau } = require('./blueprint');
+const { processAcquireTechCard, processAcquireTechCardResearch, processGainResearch } = require('./technology');
+const { processInstallTechTile, processRemoveTechTile, processAgeTransitionDesignBureau } = require('./blueprint');
 const { processBuildShip } = require('./building');
 const { processLaunchShip, processClaimRoute, processNoMoreLaunches } = require('./launch');
 const { processLaunchCombatMission } = require('./combatMission');
@@ -32,15 +32,21 @@ const ACTION_HANDLERS = {
   // Gas market
   BUY_GAS: processBuyGas,
 
-  // Technology
-  ACQUIRE_TECHNOLOGY: processAcquireTechnology,
-  ACQUIRE_TECHNOLOGY_RESEARCH: processAcquireTechnologyResearch,
+  // Tech Cards
+  ACQUIRE_TECH_CARD: processAcquireTechCard,
+  ACQUIRE_TECH_CARD_RESEARCH: processAcquireTechCardResearch,
   GAIN_RESEARCH: processGainResearch,
+  // Legacy aliases for backwards compatibility
+  ACQUIRE_TECHNOLOGY: processAcquireTechCard,
+  ACQUIRE_TECHNOLOGY_RESEARCH: processAcquireTechCardResearch,
 
-  // Blueprint
-  INSTALL_UPGRADE: processInstallUpgrade,
-  REMOVE_UPGRADE: processRemoveUpgrade,
+  // Tech Tiles / Blueprint
+  INSTALL_TECH_TILE: processInstallTechTile,
+  REMOVE_TECH_TILE: processRemoveTechTile,
   AGE_TRANSITION_DESIGN_BUREAU: processAgeTransitionDesignBureau,
+  // Legacy aliases for backwards compatibility
+  INSTALL_UPGRADE: processInstallTechTile,
+  REMOVE_UPGRADE: processRemoveTechTile,
 
   // Building
   BUILD_SHIP: processBuildShip,

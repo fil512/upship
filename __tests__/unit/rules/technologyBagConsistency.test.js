@@ -110,22 +110,22 @@ describe('R&D Board Integrity', () => {
     const state = createTestGameState();
     const age1Techs = [...TECHNOLOGY_BAG[1]].map(t => ({ ...t, age: 1 }));
     state.rdBoard = age1Techs.slice(0, 4);
-    state.techBag = age1Techs.slice(4);
+    state.techCardBag = age1Techs.slice(4);
     state.age = 1;
     return state;
   };
 
-  it('should maintain tech count invariant: rdBoard + techBag + acquired = initial', () => {
+  it('should maintain tech count invariant: rdBoard + techCardBag + acquired = initial', () => {
     const { processAcquireTechnologyResearch } = require('../../../server/actions/technology');
 
     const state = createStateWithTechs();
-    const initialCount = state.rdBoard.length + state.techBag.length;
+    const initialCount = state.rdBoard.length + state.techCardBag.length;
     const playerId = state.playerOrder[0];
     const techToAcquire = state.rdBoard[0].id;
 
     // Setup player to have enough research
     state.players[playerId].research = 10;
-    state.players[playerId].technologies = [];
+    state.players[playerId].techCards = [];
     const startingTechCount = 0;
 
     // Acquire a tech
@@ -134,32 +134,32 @@ describe('R&D Board Integrity', () => {
       _internal: true
     });
 
-    const finalCount = state.rdBoard.length + state.techBag.length;
-    const acquiredCount = state.players[playerId].technologies.length - startingTechCount;
+    const finalCount = state.rdBoard.length + state.techCardBag.length;
+    const acquiredCount = state.players[playerId].techCards.length - startingTechCount;
 
     expect(finalCount + acquiredCount).toBe(initialCount);
   });
 
-  it('should refill rdBoard from techBag after acquisition', () => {
+  it('should refill rdBoard from techCardBag after acquisition', () => {
     const { processAcquireTechnologyResearch } = require('../../../server/actions/technology');
 
     const state = createStateWithTechs();
     const initialRdBoardSize = state.rdBoard.length;
-    const initialTechBagSize = state.techBag.length;
+    const initialTechBagSize = state.techCardBag.length;
     const playerId = state.playerOrder[0];
 
     state.players[playerId].research = 10;
-    state.players[playerId].technologies = [];
+    state.players[playerId].techCards = [];
 
     processAcquireTechnologyResearch(state, playerId, {
       techId: state.rdBoard[0].id,
       _internal: true
     });
 
-    // rdBoard should still be full if techBag had techs
+    // rdBoard should still be full if techCardBag had techs
     if (initialTechBagSize > 0) {
       expect(state.rdBoard.length).toBe(initialRdBoardSize);
-      expect(state.techBag.length).toBe(initialTechBagSize - 1);
+      expect(state.techCardBag.length).toBe(initialTechBagSize - 1);
     }
   });
 
@@ -167,7 +167,7 @@ describe('R&D Board Integrity', () => {
     const { processAcquireTechnologyResearch } = require('../../../server/actions/technology');
 
     const state = createStateWithTechs();
-    const initialTotal = state.rdBoard.length + state.techBag.length;
+    const initialTotal = state.rdBoard.length + state.techCardBag.length;
     const playerId = state.playerOrder[0];
 
     expect(() => {
@@ -177,7 +177,7 @@ describe('R&D Board Integrity', () => {
       });
     }).toThrow();
 
-    const finalTotal = state.rdBoard.length + state.techBag.length;
+    const finalTotal = state.rdBoard.length + state.techCardBag.length;
     expect(finalTotal).toBe(initialTotal);
   });
 });

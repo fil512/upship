@@ -137,7 +137,7 @@ const createTestPlayerState = (faction = 'germany') => ({
   influence: 0,
   agentsRemaining: 2,  // Per rules Section 2.1
   hasPassed: false,
-  technologies: getFactionStartingTech(faction),
+  techCards: getFactionStartingTech(faction),
   ships: [],
   routes: [],
   // Deep copy testBlueprint to avoid shared reference mutation
@@ -154,7 +154,7 @@ const createTestPlayerState = (faction = 'germany') => ({
   hazardDiscardPile: [],
   bonuses: {},
   heliumMonopoly: faction === 'usa',
-  bannedTechnologies: faction === 'germany' ? ['helium_handling'] : []
+  bannedTechCards: faction === 'germany' ? ['helium_handling'] : []
 });
 
 function getFactionStartingTech(faction) {
@@ -198,7 +198,7 @@ const createTestGameState = (playerIds = [1, 2, 3, 4]) => ({
     placements: {}
   },
   rdBoard: [],
-  techBag: [],
+  techCardBag: [],
   marketCards: [],
   progressTrack: 0,
   progressThresholds: { age2: 4, age3: 8, end: 12 },

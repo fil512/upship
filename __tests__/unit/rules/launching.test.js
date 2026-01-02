@@ -169,7 +169,7 @@ describe('Rules Compliance - Launching and Repair', () => {
       const playerState = state.players['3'];
 
       // USA has trapeze_system technology by default from faction config
-      expect(playerState.technologies).toContain('trapeze_system');
+      expect(playerState.techCards).toContain('trapeze_system');
 
       // GAP-079: Install sparrowhawk_hangar UPGRADE in blueprint (technology alone is not enough)
       playerState.blueprint.componentSlots = ['sparrowhawk_hangar'];
@@ -225,7 +225,7 @@ describe('Rules Compliance - Launching and Repair', () => {
       const playerState = state.players['1'];
 
       // Germany doesn't have trapeze_system technology
-      expect(playerState.technologies).not.toContain('trapeze_system');
+      expect(playerState.techCards).not.toContain('trapeze_system');
       // And no sparrowhawk_hangar upgrade installed
       expect(playerState.blueprint.componentSlots).not.toContain('sparrowhawk_hangar');
 
@@ -302,7 +302,7 @@ describe('Rules Compliance - Launching and Repair', () => {
       const playerState = state.players['3']; // USA - has trapeze_system technology
 
       // USA has the technology
-      expect(playerState.technologies).toContain('trapeze_system');
+      expect(playerState.techCards).toContain('trapeze_system');
 
       // But NO sparrowhawk_hangar installed in componentSlots
       playerState.blueprint = {
@@ -347,7 +347,7 @@ describe('Rules Compliance - Launching and Repair', () => {
       const playerState = state.players['3']; // USA - has trapeze_system technology
 
       // USA has the technology
-      expect(playerState.technologies).toContain('trapeze_system');
+      expect(playerState.techCards).toContain('trapeze_system');
 
       // AND sparrowhawk_hangar IS installed
       playerState.blueprint = {

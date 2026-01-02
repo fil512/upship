@@ -1,28 +1,28 @@
 const { pool } = require('../db');
-const { TECHNOLOGY_BAG } = require('../config/constants');
-const { UPGRADES, calculateShipStats } = require('../data/upgrades');
+const { TECH_CARD_BAG } = require('../config/constants');
+const { TECH_TILES, calculateShipStats } = require('../data/upgrades');
 const { generateId } = require('../utils/random');
 
 // Faction-specific starting configurations
-// Per rules Section 10: Each nation has unique starting technologies and blueprint configuration
+// Per rules Section 10: Each nation has unique starting tech cards and blueprint configuration
 const FACTION_CONFIG = {
   germany: {
     // Rules 10.1: Duralumin Framework, Goldbeater's Skin, Blaugas Fuel System
-    startingTechnologies: ['duralumin_girders', 'goldbeater_skin', 'blaugas_storage'],
-    // Pre-installed upgrades so Germany can launch on turn 1
-    startingUpgrades: {
+    startingTechCards: ['duralumin_girders', 'goldbeater_skin', 'blaugas_storage'],
+    // Pre-installed tech tiles so Germany can launch on turn 1
+    startingTechTiles: {
       frame: 'duralumin_frame',
       fabric: 'premium_envelope'
     },
     bonuses: { structure: 1 },
-    // The Flaw: Cannot acquire helium_handling technology
-    bannedTechnologies: ['helium_handling']
+    // The Flaw: Cannot acquire helium_handling tech card
+    bannedTechCards: ['helium_handling']
   },
   britain: {
     // Rules 10.2: Wire Bracing, Doped Canvas, Imperial Mooring System
-    startingTechnologies: ['wire_bracing', 'doped_canvas', 'imperial_mooring'],
-    // Pre-installed upgrades including printed Dining Saloon (Starting Advantage)
-    startingUpgrades: {
+    startingTechCards: ['wire_bracing', 'doped_canvas', 'imperial_mooring'],
+    // Pre-installed tech tiles including printed Dining Saloon (Starting Advantage)
+    startingTechTiles: {
       frame: 'tensioned_frame',
       fabric: 'doped_covering',
       component: 'dining_saloon'  // "Pre-Installed Luxury"
@@ -32,9 +32,9 @@ const FACTION_CONFIG = {
   },
   usa: {
     // Rules 10.3: Duralumin Framework, Gelatinized Latex, Trapeze Fighter, Helium Handling
-    startingTechnologies: ['duralumin_girders', 'gelatinized_latex', 'trapeze_system', 'helium_handling'],
-    // Pre-installed upgrades so USA can launch on turn 1
-    startingUpgrades: {
+    startingTechCards: ['duralumin_girders', 'gelatinized_latex', 'trapeze_system', 'helium_handling'],
+    // Pre-installed tech tiles so USA can launch on turn 1
+    startingTechTiles: {
       frame: 'duralumin_frame',
       fabric: 'synthetic_envelope'
     },
@@ -44,9 +44,9 @@ const FACTION_CONFIG = {
   },
   italy: {
     // Rules 10.4: Internal Keel, Rubberized Cotton, Articulated Keel Design
-    startingTechnologies: ['internal_keel', 'rubberized_cotton', 'articulated_keel'],
-    // Pre-installed upgrades so Italy can launch on turn 1
-    startingUpgrades: {
+    startingTechCards: ['internal_keel', 'rubberized_cotton', 'articulated_keel'],
+    // Pre-installed tech tiles so Italy can launch on turn 1
+    startingTechTiles: {
       frame: 'semi_rigid_keel',
       fabric: 'cotton_envelope'
     },
@@ -72,19 +72,19 @@ function createPlayerState(faction) {
   // Calculate ship stats from starting blueprint (per rules Section 3.2)
   const shipStats = calculateShipStats(blueprint, config.bonuses || {}, 1);
 
-  // Calculate weight from frame/fabric upgrades
+  // Calculate weight from frame/fabric tech tiles
   let weight = 0;
-  for (const upgradeId of [...(blueprint.frameSlots || []), ...(blueprint.fabricSlots || [])]) {
-    if (upgradeId && UPGRADES[upgradeId]?.weight) {
-      weight += UPGRADES[upgradeId].weight;
+  for (const tileId of [...(blueprint.frameSlots || []), ...(blueprint.fabricSlots || [])]) {
+    if (tileId && TECH_TILES[tileId]?.weight) {
+      weight += TECH_TILES[tileId].weight;
     }
   }
 
-  // Calculate lift from frame/fabric upgrades
+  // Calculate lift from frame/fabric tech tiles
   let lift = 0;
-  for (const upgradeId of [...(blueprint.frameSlots || []), ...(blueprint.fabricSlots || [])]) {
-    if (upgradeId && UPGRADES[upgradeId]?.lift) {
-      lift += UPGRADES[upgradeId].lift;
+  for (const tileId of [...(blueprint.frameSlots || []), ...(blueprint.fabricSlots || [])]) {
+    if (tileId && TECH_TILES[tileId]?.lift) {
+      lift += TECH_TILES[tileId].lift;
     }
   }
 
@@ -117,7 +117,7 @@ function createPlayerState(faction) {
     influence: 0, // Influence tokens from revealed cards (resets each round)
     agentsRemaining: 2, // Per rules Section 2.1: Start with 2 agents
     hasPassed: false, // Whether player has passed in worker placement this round
-    technologies: config.startingTechnologies || [],
+    techCards: config.startingTechCards || [],
     ships: [startingShip], // Per rules Section 3.2: Start with 1 airship in hangar
     routes: [],
     blueprint,
@@ -128,17 +128,17 @@ function createPlayerState(faction) {
     bonuses: config.bonuses || {},
     // Faction-specific attributes
     heliumMonopoly: config.heliumMonopoly || false,
-    bannedTechnologies: config.bannedTechnologies || []
+    bannedTechCards: config.bannedTechCards || []
   };
 }
 
-// Create initial blueprint for Age I with faction-specific pre-installed upgrades
+// Create initial blueprint for Age I with faction-specific pre-installed tech tiles
 // Per rules Section 10: Each faction has unique starting Blueprint configuration
 // Per rules Section 3.2: All Frame and Fabric slots must be filled to launch
 // Per rules Section 11.2: Players start with 2 H₂ cubes - "enough for an immediate launch"
 function createInitialBlueprint(faction) {
   const config = FACTION_CONFIG[faction] || {};
-  const startingUpgrades = config.startingUpgrades || {};
+  const startingTechTiles = config.startingTechTiles || {};
 
   // Blueprint Configuration by Age (Section 3.2):
   // Age I: 1 Frame, 1 Fabric, 1 Drive, 1 Payload slot
@@ -154,18 +154,18 @@ function createInitialBlueprint(faction) {
     // Note: Gas sockets removed - gas is spent directly from reserve when launching
   };
 
-  // Pre-install starting upgrades so faction can launch on turn 1
-  if (startingUpgrades.frame) {
-    blueprint.frameSlots[0] = startingUpgrades.frame;
+  // Pre-install starting tech tiles so faction can launch on turn 1
+  if (startingTechTiles.frame) {
+    blueprint.frameSlots[0] = startingTechTiles.frame;
   }
-  if (startingUpgrades.fabric) {
-    blueprint.fabricSlots[0] = startingUpgrades.fabric;
+  if (startingTechTiles.fabric) {
+    blueprint.fabricSlots[0] = startingTechTiles.fabric;
   }
-  if (startingUpgrades.drive) {
-    blueprint.driveSlots[0] = startingUpgrades.drive;
+  if (startingTechTiles.drive) {
+    blueprint.driveSlots[0] = startingTechTiles.drive;
   }
-  if (startingUpgrades.component) {
-    blueprint.componentSlots[0] = startingUpgrades.component;
+  if (startingTechTiles.component) {
+    blueprint.componentSlots[0] = startingTechTiles.component;
   }
 
   // Italy's "Low Ceiling" flaw affects Ages II & III, not Age I
@@ -370,8 +370,8 @@ function shuffleArray(array) {
   return shuffled;
 }
 
-// TECHNOLOGY_BAG is imported from ../config/constants.js (single source of truth)
-// See constants.js for the full 54-tile definition per Appendix C
+// TECH_CARD_BAG is imported from ../config/constants.js (single source of truth)
+// See constants.js for the full 54-card definition per Appendix C
 
 // Progress Track thresholds by player count (Section 1.3)
 // Scaled for ~15 round games (Age 1: ~5 rounds, Age 2: ~5 rounds, Age 3: ~5 rounds)
@@ -381,33 +381,33 @@ const PROGRESS_THRESHOLDS = {
   4: { age2: 4, age3: 8, end: 12 }
 };
 
-// Create technology bag and R&D board together to avoid duplicates
-// Returns { rdBoard: [...], techBag: [...] }
-// Per Section 3.1: Include (N-1) copies of each tech where N = player count
-// starterCounts: Map of techId -> count of players who have it as a starter
-function createTechBagAndRDBoard(age = 1, playerCount = 4, starterCounts = {}) {
+// Create tech card bag and R&D board together to avoid duplicates
+// Returns { rdBoard: [...], techCardBag: [...] }
+// Per Section 3.1: Include (N-1) copies of each card where N = player count
+// starterCounts: Map of cardId -> count of players who have it as a starter
+function createTechCardBagAndRDBoard(age = 1, playerCount = 4, starterCounts = {}) {
   const bag = [];
-  const copiesPerTech = Math.max(1, playerCount - 1);
+  const copiesPerCard = Math.max(1, playerCount - 1);
 
-  // Add tiles up to current age with appropriate copy counts
+  // Add cards up to current age with appropriate copy counts
   for (let a = 1; a <= age; a++) {
-    for (const tech of TECHNOLOGY_BAG[a]) {
+    for (const card of TECH_CARD_BAG[a]) {
       // Calculate how many copies to add: (N-1) minus copies given as starters
-      const startersUsed = starterCounts[tech.id] || 0;
-      const copiesToAdd = Math.max(0, copiesPerTech - startersUsed);
+      const startersUsed = starterCounts[card.id] || 0;
+      const copiesToAdd = Math.max(0, copiesPerCard - startersUsed);
 
       // Add the appropriate number of copies
       for (let i = 0; i < copiesToAdd; i++) {
-        bag.push({ ...tech, age: a });
+        bag.push({ ...card, age: a });
       }
     }
   }
   const shuffledBag = shuffleArray(bag);
 
-  // Draw 4 tiles for the R&D board from the shuffled bag
+  // Draw 4 cards for the R&D board from the shuffled bag
   const rdBoard = shuffledBag.splice(0, 4);
 
-  return { rdBoard, techBag: shuffledBag };
+  return { rdBoard, techCardBag: shuffledBag };
 }
 
 // Create initial market cards using the 30-card market deck from Appendix H
@@ -596,18 +596,18 @@ async function initializeGameState(gameId, players) {
     // Determine player count for progress thresholds
     const playerCount = Math.min(4, Math.max(2, players.length));
 
-    // Count starting technologies across all players
+    // Count starting tech cards across all players
     // Per Section 3.1: Remove copies of faction starters equal to players who have them
     const starterCounts = {};
     for (const pid of Object.keys(playerStates)) {
-      for (const tech of playerStates[pid].technologies || []) {
-        starterCounts[tech] = (starterCounts[tech] || 0) + 1;
+      for (const card of playerStates[pid].techCards || []) {
+        starterCounts[card] = (starterCounts[card] || 0) + 1;
       }
     }
 
-    // Create tech bag and R&D board with player-scaled copies
-    // Per Section 3.1: (N-1) copies per tech, minus faction starters
-    const { rdBoard, techBag } = createTechBagAndRDBoard(1, playerCount, starterCounts);
+    // Create tech card bag and R&D board with player-scaled copies
+    // Per Section 3.1: (N-1) copies per card, minus faction starters
+    const { rdBoard, techCardBag } = createTechCardBagAndRDBoard(1, playerCount, starterCounts);
 
     // Calculate initial turn order by income (lowest first)
     // At game start, all players have income 5, so use original random order
@@ -643,7 +643,7 @@ async function initializeGameState(gameId, players) {
         placements: {}            // locationId -> { playerId, cardUsed }
       },
       rdBoard,
-      techBag,
+      techCardBag,
       marketCards: createMarketCards(),
       progressTrack: 0,
       progressThresholds: PROGRESS_THRESHOLDS[playerCount],
@@ -798,8 +798,10 @@ module.exports = {
   updateGameState,
   getGameActions,
   FACTION_CONFIG,
-  TECHNOLOGY_BAG,    // Exported for testing (GAP-043)
+  TECH_CARD_BAG,    // Exported for testing (GAP-043)
   createHazardDeck,  // Exported for testing (GAP-030)
   createAgeIMap,     // Exported for testing (GAP-040)
-  createAgeIIIMap    // Exported for Age III routes (GAP-042)
+  createAgeIIIMap,   // Exported for Age III routes (GAP-042)
+  // Legacy aliases for backwards compatibility during migration
+  TECHNOLOGY_BAG: TECH_CARD_BAG
 };

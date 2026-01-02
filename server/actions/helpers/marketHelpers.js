@@ -41,21 +41,21 @@ function reduceHeliumMarket(state, steps = 1) {
 }
 
 /**
- * Refresh R&D Board with new technologies from tech bag
+ * Refresh R&D Board with new tech cards from tech card bag
  *
  * @param {Object} state - Game state (mutated)
  */
 function refreshRnDBoard(state) {
-  // Fill empty slots on R&D board from tech bag
+  // Fill empty slots on R&D board from tech card bag
   // NOTE: Must use state.rdBoard (not state.rnDBoard) - this is where all
   // tech acquisition logic reads from. See bug-notes.md for details.
   state.rdBoard = state.rdBoard || [];
-  state.techBag = state.techBag || [];
+  state.techCardBag = state.techCardBag || [];
 
   const targetSize = RD_BOARD_SIZE[state.age] || 4;
 
-  while (state.rdBoard.length < targetSize && state.techBag.length > 0) {
-    state.rdBoard.push(state.techBag.shift());
+  while (state.rdBoard.length < targetSize && state.techCardBag.length > 0) {
+    state.rdBoard.push(state.techCardBag.shift());
   }
 }
 
@@ -76,7 +76,7 @@ function refreshMarketRow(state) {
 }
 
 /**
- * Refill R&D board from tech bag (used during age transitions)
+ * Refill R&D board from tech card bag (used during age transitions)
  * Note: This is an alias for refreshRnDBoard - they do the same thing.
  *
  * @param {Object} state - Game state (mutated)

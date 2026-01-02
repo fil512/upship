@@ -107,7 +107,7 @@ describe('Rules Compliance - Game End Conditions', () => {
       // Give players some VP sources
       state.map.routes[0].claimed = '1';
       state.map.routes[0].vp = 3;
-      state.players['1'].technologies = ['wire_bracing']; // 1 VP
+      state.players['1'].techCards = ['wire_bracing']; // 1 VP
 
       // Start new round should trigger scoring
       startNewRound(state);
@@ -125,7 +125,7 @@ describe('Rules Compliance - Game End Conditions', () => {
 
       // Player 1 has technologies with VP values
       // wire_bracing = 1 VP, steel_framework = 2 VP
-      state.players['1'].technologies = ['wire_bracing', 'steel_framework'];
+      state.players['1'].techCards = ['wire_bracing', 'steel_framework'];
       state.players['1'].vp = 0;
 
       // Add route VP
@@ -161,7 +161,7 @@ describe('Rules Compliance - Game End Conditions', () => {
       const state = createTestGameState();
       state.age = 1;
       state.players['1'].vp = 10; // Start with existing VP
-      state.players['1'].technologies = ['wire_bracing']; // 1 VP
+      state.players['1'].techCards = ['wire_bracing']; // 1 VP
       state.map.routes[0].claimed = '1';
       state.map.routes[0].vp = 2;
 
@@ -184,7 +184,7 @@ describe('Rules Compliance - Game End Conditions', () => {
       state.players['1'].vp = 15;
 
       // Current state: 1 tech (1 VP) and 1 route (2 VP)
-      state.players['1'].technologies = ['wire_bracing']; // 1 VP
+      state.players['1'].techCards = ['wire_bracing']; // 1 VP
       state.map.routes = [{ id: 'r1', vp: 2, claimed: '1' }];
 
       const result = processCalculateScores(state, '1', { forceEnd: true });
@@ -196,7 +196,7 @@ describe('Rules Compliance - Game End Conditions', () => {
       // Total: 18
       expect(result.newState.scores['1'].total).toBe(18);
       expect(result.newState.scores['1'].breakdown.previouslyAccumulated).toBe(15);
-      expect(result.newState.scores['1'].breakdown.technologies).toBe(1);
+      expect(result.newState.scores['1'].breakdown.techCards).toBe(1);
       expect(result.newState.scores['1'].breakdown.routes).toBe(2);
     });
 
@@ -209,7 +209,7 @@ describe('Rules Compliance - Game End Conditions', () => {
       // No accumulated VP (game just started Age 3 without scoring)
       state.players['1'].vp = 0;
 
-      state.players['1'].technologies = ['wire_bracing']; // 1 VP
+      state.players['1'].techCards = ['wire_bracing']; // 1 VP
       state.map.routes = [{ id: 'r1', vp: 2, claimed: '1' }];
 
       const result = processCalculateScores(state, '1', { forceEnd: true });

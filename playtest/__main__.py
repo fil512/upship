@@ -16,6 +16,7 @@ Usage:
     python -m playtest tail [num_lines]      # Show playtest log tail
     python -m playtest output [num_lines]    # Show Claude task output
     python -m playtest healthcheck [timeout] # Wait for server to be healthy
+    python -m playtest reset                 # Drop all game data (dev only)
 """
 
 import sys
@@ -368,6 +369,35 @@ def healthcheck(timeout: int = 30) -> bool:
     return False
 
 
+def reset_games() -> bool:
+    """Drop all game data from the database (dev/test only).
+
+    Returns:
+        True if successful, False otherwise.
+    """
+    url = f"{API_BASE}/api/admin/games"
+    print(f"Resetting all game data on {API_BASE}...")
+
+    try:
+        resp = requests.delete(url, timeout=10)
+        if resp.status_code == 200:
+            data = resp.json()
+            print("✓ All game data has been deleted")
+            if 'deleted' in data:
+                d = data['deleted']
+                print(f"  Games: {d.get('games', 0)}, States: {d.get('states', 0)}, Actions: {d.get('actions', 0)}")
+            return True
+        elif resp.status_code == 403:
+            print("✗ Reset not allowed in production environment")
+            return False
+        else:
+            print(f"✗ Failed: HTTP {resp.status_code}")
+            return False
+    except requests.exceptions.RequestException as e:
+        print(f"✗ Request failed: {e}")
+        return False
+
+
 def launch_ship(player: str, ship_id: str, route_id: str, gas_type: str = "hydrogen") -> None:
     """Launch a ship to claim a route.
 
@@ -475,6 +505,10 @@ def main():
     elif cmd == "healthcheck":
         timeout = int(sys.argv[2]) if len(sys.argv) > 2 else 30
         success = healthcheck(timeout)
+        sys.exit(0 if success else 1)
+
+    elif cmd == "reset":
+        success = reset_games()
         sys.exit(0 if success else 1)
 
     else:

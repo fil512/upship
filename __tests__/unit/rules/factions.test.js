@@ -17,7 +17,7 @@ describe('Rules Compliance - Factions', () => {
       // USA starts with 'helium_handling' technology (lowercase)
       const usaPlayer = state.players['3'];  // USA is player 3 in test fixture
       expect(usaPlayer.faction).toBe('usa');
-      expect(usaPlayer.technologies).toContain('helium_handling');
+      expect(usaPlayer.techCards).toContain('helium_handling');
 
       // Set up state for launch
       usaPlayer.gasCubes = { hydrogen: 0, helium: 3 };
@@ -61,7 +61,7 @@ describe('Rules Compliance - Factions', () => {
       // USA starts with 'helium_handling' technology (lowercase)
       const usaPlayer = state.players['3'];
       expect(usaPlayer.faction).toBe('usa');
-      expect(usaPlayer.technologies).toContain('helium_handling');
+      expect(usaPlayer.techCards).toContain('helium_handling');
 
       // Set up state for buying gas
       usaPlayer.cash = 20;
@@ -84,7 +84,7 @@ describe('Rules Compliance - Factions', () => {
       // Germany player does not have helium_handling
       const germanyPlayer = state.players['1'];
       expect(germanyPlayer.faction).toBe('germany');
-      expect(germanyPlayer.technologies).not.toContain('helium_handling');
+      expect(germanyPlayer.techCards).not.toContain('helium_handling');
 
       // Set up state for launch
       germanyPlayer.gasCubes = { hydrogen: 0, helium: 3 };
@@ -101,7 +101,7 @@ describe('Rules Compliance - Factions', () => {
           gasType: 'helium',
           _internal: true
         });
-      }).toThrow(/Helium Handling technology/);
+      }).toThrow(/Helium Handling tech card/);
     });
   });
 
@@ -195,7 +195,7 @@ describe('Rules Compliance - Factions', () => {
       expect(germanyPlayer.faction).toBe('germany');
 
       // Germany has blaugas_storage in starting technologies
-      expect(germanyPlayer.technologies).toContain('blaugas_storage');
+      expect(germanyPlayer.techCards).toContain('blaugas_storage');
 
       // Set up state for launch with retain option
       germanyPlayer.gasCubes = { hydrogen: 3, helium: 0 };
@@ -229,7 +229,7 @@ describe('Rules Compliance - Factions', () => {
       expect(britainPlayer.faction).toBe('britain');
 
       // Britain does not have blaugas_storage
-      expect(britainPlayer.technologies).not.toContain('blaugas_storage');
+      expect(britainPlayer.techCards).not.toContain('blaugas_storage');
 
       britainPlayer.gasCubes = { hydrogen: 3, helium: 0 };
       britainPlayer.cash = 20;

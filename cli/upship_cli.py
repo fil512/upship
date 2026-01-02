@@ -189,6 +189,29 @@ class CLI:
         for session in sessions:
             print(f"  {c(Colors.CYAN, session.username)} ({session.user_id})")
 
+    def cmd_reset(self, args: list[str] = None) -> None:
+        """Drop all game data (dev/test only)."""
+        import requests
+        base_url = os.environ.get('UPSHIP_URL', 'https://upship-production.up.railway.app')
+        url = f"{base_url}/api/admin/games"
+
+        print(f"Resetting all game data on {base_url}...")
+
+        try:
+            resp = requests.delete(url, timeout=10)
+            if resp.status_code == 200:
+                data = resp.json()
+                print(c(Colors.GREEN, '✓ All game data has been deleted'))
+                if 'deleted' in data:
+                    d = data['deleted']
+                    print(f"  Games: {d.get('games', 0)}, States: {d.get('states', 0)}, Actions: {d.get('actions', 0)}")
+            elif resp.status_code == 403:
+                print(c(Colors.RED, '✗ Reset not allowed in production environment'))
+            else:
+                print(c(Colors.RED, f"✗ Failed: HTTP {resp.status_code}"))
+        except requests.exceptions.RequestException as e:
+            print(c(Colors.RED, f"✗ Request failed: {e}"))
+
     # ========================================================================
     # Game lobby commands
     # ========================================================================
@@ -815,6 +838,7 @@ class CLI:
   upship login <user> <pass>    Login and store session
   upship register <user> <pass> Create account and login
   upship sessions               List all active sessions
+  upship reset                  Drop all game data (dev only)
   upship <user> logout          Logout user
   upship <user> whoami          Check current session
 
@@ -882,6 +906,10 @@ def main():
 
     if args[0] == 'sessions':
         cli.cmd_sessions()
+        return
+
+    if args[0] == 'reset':
+        cli.cmd_reset()
         return
 
     # All other commands require username first

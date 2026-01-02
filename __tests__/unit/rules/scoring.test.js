@@ -13,7 +13,7 @@ describe('Rules Compliance - Scoring', () => {
       const state = createTestGameState();
 
       // Per constants.js: wooden_framework=0, wire_bracing=1, steel_framework=2
-      state.players['1'].technologies = ['wooden_framework', 'wire_bracing', 'steel_framework'];
+      state.players['1'].techCards = ['wooden_framework', 'wire_bracing', 'steel_framework'];
 
       // Force end for testing
       state.progressTrack = 30;
@@ -23,7 +23,7 @@ describe('Rules Compliance - Scoring', () => {
       const result = processCalculateScores(state, '1', { forceEnd: true });
 
       // Technology VP should be 0+1+2=3, NOT Math.floor(3/2)=1
-      expect(result.newState.scores['1'].breakdown.technologies).toBe(3);
+      expect(result.newState.scores['1'].breakdown.techCards).toBe(3);
     });
 
     it('should use VP values: Essential=0, Useful=1, Niche=2-3 per Section 12.2', () => {
@@ -47,8 +47,8 @@ describe('Rules Compliance - Scoring', () => {
       const state = createTestGameState([1, 2]);
 
       // Both players have same VP
-      state.players['1'].technologies = [];
-      state.players['2'].technologies = [];
+      state.players['1'].techCards = [];
+      state.players['2'].techCards = [];
 
       // No routes claimed
       state.map.routes = [];
@@ -72,8 +72,8 @@ describe('Rules Compliance - Scoring', () => {
     it('should use cash as second tiebreaker when income is tied', () => {
       const state = createTestGameState([1, 2]);
 
-      state.players['1'].technologies = [];
-      state.players['2'].technologies = [];
+      state.players['1'].techCards = [];
+      state.players['2'].techCards = [];
       state.map.routes = [];
 
       // Same income
@@ -96,8 +96,8 @@ describe('Rules Compliance - Scoring', () => {
     it('should use ships on routes as third tiebreaker', () => {
       const state = createTestGameState([1, 2]);
 
-      state.players['1'].technologies = [];
-      state.players['2'].technologies = [];
+      state.players['1'].techCards = [];
+      state.players['2'].techCards = [];
       state.map.routes = [];
 
       // Same income and cash
@@ -131,7 +131,7 @@ describe('Rules Compliance - Scoring', () => {
         { id: 'r2', vp: 3, distance: 1, claimed: '1' }
       ];
 
-      state.players['1'].technologies = [];
+      state.players['1'].techCards = [];
       state.progressTrack = 30;
       state.age = 3;
 
@@ -150,7 +150,7 @@ describe('Rules Compliance - Scoring', () => {
         { id: 'r2', vp: 2, claimed: '1' }
       ];
 
-      state.players['1'].technologies = [];
+      state.players['1'].techCards = [];
       state.progressTrack = 30;
       state.age = 3;
 
@@ -165,7 +165,7 @@ describe('Rules Compliance - Scoring', () => {
     it('should NOT award VP for cash per Section 1.1', () => {
       const state = createTestGameState([1]);
 
-      state.players['1'].technologies = [];
+      state.players['1'].techCards = [];
       state.players['1'].cash = 100; // High cash should not give VP
       state.map.routes = [];
 
@@ -185,7 +185,7 @@ describe('Rules Compliance - Scoring', () => {
     it('should NOT award VP for ships on routes per Section 1.1', () => {
       const state = createTestGameState([1]);
 
-      state.players['1'].technologies = [];
+      state.players['1'].techCards = [];
       state.players['1'].ships = [
         { status: 'on_route' },
         { status: 'on_route' },
@@ -211,7 +211,7 @@ describe('Rules Compliance - Scoring', () => {
 
       // 3 VP from technologies (using correct IDs from constants.js)
       // wire_bracing (vp: 1) + steel_framework (vp: 2) = 3 VP
-      state.players['1'].technologies = ['wire_bracing', 'steel_framework'];
+      state.players['1'].techCards = ['wire_bracing', 'steel_framework'];
 
       // 5 VP from routes (using vp property per Appendix F)
       state.map.routes = [
@@ -231,7 +231,7 @@ describe('Rules Compliance - Scoring', () => {
       // Total should be 3 (tech) + 5 (routes) = 8 VP
       expect(result.newState.scores['1'].total).toBe(8);
       expect(result.newState.scores['1'].breakdown.routes).toBe(5);
-      expect(result.newState.scores['1'].breakdown.technologies).toBe(3);
+      expect(result.newState.scores['1'].breakdown.techCards).toBe(3);
     });
   });
 });

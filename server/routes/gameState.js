@@ -10,9 +10,9 @@ const { requireAuth } = require('../auth');
 const { requireGamePlayer } = require('../middleware/gameAccess');
 const gameStateService = require('../services/gameStateService');
 const {
-  UPGRADES,
-  TECHNOLOGIES,
-  getAvailableUpgrades
+  TECH_TILES,
+  TECH_CARDS,
+  getAvailableTechTiles
 } = require('../data/upgrades');
 const {
   GROUND_BOARD_LOCATIONS,
@@ -78,17 +78,17 @@ router.get('/:gameId/upgrades', requireGamePlayer, async (req, res, next) => {
       throw new NotFoundError('Player state');
     }
 
-    // Get available upgrades based on owned technologies
-    const available = getAvailableUpgrades(
-      playerState.technologies,
+    // Get available tech tiles based on owned tech cards
+    const available = getAvailableTechTiles(
+      playerState.techCards,
       gameState.state.age
     );
 
-    // Get all upgrade definitions for reference
+    // Get all tech tile and card definitions for reference
     res.json({
       available,
-      allUpgrades: UPGRADES,
-      allTechnologies: TECHNOLOGIES
+      allTechTiles: TECH_TILES,
+      allTechCards: TECH_CARDS
     });
   } catch (error) {
     next(error);

@@ -20,7 +20,7 @@ describe('Rules Compliance - Blaugas Fuel System', () => {
               officers: 1,
               engineers: 2,
               gasCubes: { hydrogen: 2, helium: 0 },
-              technologies: ['blaugas_storage'],
+              techCards: ['blaugas_storage'],
               ships: [{ id: 'ship1', status: 'hangar' }],
               blueprint: {
                 frameSlots: ['basic_frame'],
@@ -78,7 +78,7 @@ describe('Rules Compliance - Blaugas Fuel System', () => {
               officers: 1,
               engineers: 2,
               gasCubes: { hydrogen: 2, helium: 0 },
-              technologies: ['blaugas_storage'],
+              techCards: ['blaugas_storage'],
               ships: [{ id: 'ship1', status: 'hangar' }],
               blueprint: {
                 frameSlots: ['basic_frame'],
@@ -136,7 +136,7 @@ describe('Rules Compliance - Blaugas Fuel System', () => {
               officers: 1,
               engineers: 2,
               gasCubes: { hydrogen: 2, helium: 0 },
-              technologies: [], // No Blaugas
+              techCards: [], // No Blaugas
               ships: [{ id: 'ship1', status: 'hangar' }],
               blueprint: {
                 frameSlots: ['basic_frame'],
@@ -175,7 +175,7 @@ describe('Rules Compliance - Blaugas Fuel System', () => {
               officers: 1,
               engineers: 2,
               gasCubes: { hydrogen: 2, helium: 0 },
-              technologies: ['blaugas_storage'],
+              techCards: ['blaugas_storage'],
               ships: [{ id: 'ship1', status: 'hangar' }],
               blueprint: {
                 frameSlots: ['basic_frame'],
@@ -218,7 +218,7 @@ describe('Rules Compliance - Blaugas Fuel System', () => {
 
       it('should apply +1 Range to ship stats when player has Blaugas', () => {
         const playerState = {
-          technologies: ['blaugas_system'],
+          techCards: ['blaugas_system'],
           blueprint: {
             frameSlots: ['basic_frame'],
             fabricSlots: ['basic_fabric'],

@@ -19,6 +19,9 @@ export const connectionState = writable<SocketConnectionState>({
 	reconnectAttempts: 0
 });
 
+// Game join error (distinct from connection error)
+export const gameError = writable<string | null>(null);
+
 // Online players in current game
 export const onlinePlayers = writable<string[]>([]);
 
@@ -109,7 +112,12 @@ export function connect(gameId: string, playerId: string): void {
 	});
 
 	socket.on('action-error', ({ error }) => {
-		showToast(error, 'error');
+		// Check if this is a join error (game not found, not a player, etc.)
+		if (error === 'Game not found' || error === 'Not a player in this game' || error === 'Failed to join game') {
+			gameError.set(error);
+		} else {
+			showToast(error, 'error');
+		}
 	});
 
 	// Turn notifications
@@ -166,6 +174,7 @@ export function disconnect(): void {
 			reconnectAttempts: 0
 		});
 		onlinePlayers.set([]);
+		gameError.set(null);
 	}
 }
 

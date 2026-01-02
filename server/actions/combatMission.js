@@ -180,13 +180,13 @@ function processLaunchCombatMission(state, playerId, data) {
     throw new GameRuleError('Gas type must be hydrogen or helium');
   }
 
-  // Helium requires Helium Handling technology
+  // Helium requires Helium Handling tech card
   if (gasType === 'helium') {
-    const hasHeliumHandling = playerState.technologies?.some(t =>
+    const hasHeliumHandling = playerState.techCards?.some(t =>
       (typeof t === 'string' ? t : t.id) === 'helium_handling'
     );
     if (!hasHeliumHandling) {
-      throw new GameRuleError('Cannot use Helium without Helium Handling technology');
+      throw new GameRuleError('Cannot use Helium without Helium Handling tech card');
     }
   }
 

@@ -5,8 +5,8 @@
  */
 
 const {
-  UPGRADES,
-  TECHNOLOGIES
+  TECH_TILES,
+  TECH_CARDS
 } = require('../data/upgrades');
 const {
   GROUND_BOARD_LOCATIONS,
@@ -24,7 +24,7 @@ const {
   advanceHeliumMarket,
   processCardEffect,
   executeLocationAction,
-  addAgeTechnologies,
+  addAgeTechCards,
   refillRDBoard,
   calculateSpecializationDiscount,
   calculateBlueprintStats,
@@ -272,11 +272,11 @@ function processBuyGas(state, playerId, data) {
     return { error: 'Invalid gas type' };
   }
 
-  // Helium requires Helium Handling technology (Section 4.4)
+  // Helium requires Helium Handling tech card (Section 4.4)
   if (gasType === 'helium') {
-    const hasHeliumHandling = playerState.technologies?.some(t => t.id === 'HELIUM_HANDLING');
+    const hasHeliumHandling = playerState.techCards?.some(t => t.id === 'HELIUM_HANDLING');
     if (!hasHeliumHandling) {
-      return { error: 'Cannot purchase Helium without Helium Handling technology' };
+      return { error: 'Cannot purchase Helium without Helium Handling tech card' };
     }
   }
 
@@ -312,31 +312,31 @@ function processAcquireTechnology(state, playerId, data) {
   const { techId } = data;
   const playerState = state.players[playerId];
 
-  const techIndex = state.rdBoard.findIndex(t => t.id === techId);
-  if (techIndex === -1) {
-    return { error: 'Technology not available' };
+  const cardIndex = state.rdBoard.findIndex(t => t.id === techId);
+  if (cardIndex === -1) {
+    return { error: 'Tech card not available' };
   }
 
-  const tech = state.rdBoard[techIndex];
+  const card = state.rdBoard[cardIndex];
 
-  if (playerState.cash < tech.cost) {
+  if (playerState.cash < card.cost) {
     return { error: 'Not enough cash' };
   }
 
-  // Check if player already has this technology
-  if (playerState.technologies.includes(techId)) {
-    return { error: 'Already own this technology' };
+  // Check if player already has this tech card
+  if (playerState.techCards.includes(techId)) {
+    return { error: 'Already own this tech card' };
   }
 
-  playerState.cash -= tech.cost;
-  playerState.technologies.push(techId);
+  playerState.cash -= card.cost;
+  playerState.techCards.push(techId);
 
   // Remove from R&D board
-  state.rdBoard.splice(techIndex, 1);
+  state.rdBoard.splice(cardIndex, 1);
 
-  // Draw replacement from tech bag if available
-  if (state.techBag && state.techBag.length > 0) {
-    state.rdBoard.push(state.techBag.shift());
+  // Draw replacement from tech card bag if available
+  if (state.techCardBag && state.techCardBag.length > 0) {
+    state.rdBoard.push(state.techCardBag.shift());
   }
 
   // Advance progress track
@@ -346,35 +346,35 @@ function processAcquireTechnology(state, playerId, data) {
   const thresholds = state.progressThresholds || { age2: 4, age3: 8, end: 12 };
   if (state.age === 1 && state.progressTrack >= thresholds.age2) {
     state.age = 2;
-    // Add Age 2 technologies to the tech bag
-    addAgeTechnologies(state, 2);
-    // Refill R&D board with new techs
+    // Add Age 2 tech cards to the tech card bag
+    addAgeTechCards(state, 2);
+    // Refill R&D board with new tech cards
     refillRDBoard(state);
     // Reset gas market prices for new age (Section 4.4: Helium resets to £2 at Age Transitions)
     state.gasMarket = { hydrogen: 1, helium: 2 };
     state.log.push({
       timestamp: new Date().toISOString(),
-      message: `Age II begins! New technologies available. Gas market reset.`,
+      message: `Age II begins! New tech cards available. Gas market reset.`,
       type: 'system'
     });
   } else if (state.age === 2 && state.progressTrack >= thresholds.age3) {
     state.age = 3;
-    // Add Age 3 technologies to the tech bag
-    addAgeTechnologies(state, 3);
-    // Refill R&D board with new techs
+    // Add Age 3 tech cards to the tech card bag
+    addAgeTechCards(state, 3);
+    // Refill R&D board with new tech cards
     refillRDBoard(state);
     // Reset gas market prices for new age (Section 4.4: Helium resets to £2 at Age Transitions)
     state.gasMarket = { hydrogen: 1, helium: 2 };
     state.log.push({
       timestamp: new Date().toISOString(),
-      message: `Age III begins! Final era technologies unlocked. Gas market reset.`,
+      message: `Age III begins! Final era tech cards unlocked. Gas market reset.`,
       type: 'system'
     });
   }
 
   state.log.push({
     timestamp: new Date().toISOString(),
-    message: `Acquired ${tech.name} technology. Progress: ${state.progressTrack}`,
+    message: `Acquired ${card.name} tech card. Progress: ${state.progressTrack}`,
     playerId,
     type: 'action'
   });
@@ -401,10 +401,10 @@ function processInstallUpgrade(state, playerId, data) {
     return { error: 'Slot already occupied. Remove current upgrade first.' };
   }
 
-  // Validate upgrade exists
-  const upgrade = UPGRADES[upgradeId];
+  // Validate tech tile exists
+  const upgrade = TECH_TILES[upgradeId];
   if (!upgrade) {
-    return { error: 'Unknown upgrade' };
+    return { error: 'Unknown tech tile' };
   }
 
   // Validate upgrade goes in correct slot type
@@ -417,10 +417,10 @@ function processInstallUpgrade(state, playerId, data) {
     return { error: `${upgrade.name} not available until Age ${upgrade.age}` };
   }
 
-  // Validate player owns required technology
-  if (!playerState.technologies.includes(upgrade.requiredTech)) {
-    const tech = TECHNOLOGIES[upgrade.requiredTech];
-    return { error: `Requires ${tech ? tech.name : upgrade.requiredTech} technology` };
+  // Validate player owns required tech card
+  if (!playerState.techCards.includes(upgrade.requiredCard)) {
+    const card = TECH_CARDS[upgrade.requiredCard];
+    return { error: `Requires ${card ? card.name : upgrade.requiredCard} tech card` };
   }
 
   // Install the upgrade
@@ -455,7 +455,7 @@ function processRemoveUpgrade(state, playerId, data) {
     return { error: 'Slot is already empty' };
   }
 
-  const upgrade = UPGRADES[currentUpgrade];
+  const upgrade = TECH_TILES[currentUpgrade];
   const upgradeName = upgrade ? upgrade.name : currentUpgrade;
 
   // Remove the upgrade
@@ -787,20 +787,20 @@ function processBuildShip(state, playerId, data) {
   const { count = 1 } = data;
   const playerState = state.players[playerId];
 
-  // Calculate hull cost from installed upgrades
+  // Calculate hull cost from installed tech tiles
   let hullCost = 2; // Base cost
 
   // Add Frame hull costs
-  for (const upgradeId of playerState.blueprint.frameSlots || []) {
-    if (upgradeId && UPGRADES[upgradeId]?.hullCost) {
-      hullCost += UPGRADES[upgradeId].hullCost;
+  for (const tileId of playerState.blueprint.frameSlots || []) {
+    if (tileId && TECH_TILES[tileId]?.hullCost) {
+      hullCost += TECH_TILES[tileId].hullCost;
     }
   }
 
   // Add Fabric hull costs
-  for (const upgradeId of playerState.blueprint.fabricSlots || []) {
-    if (upgradeId && UPGRADES[upgradeId]?.hullCost) {
-      hullCost += UPGRADES[upgradeId].hullCost;
+  for (const tileId of playerState.blueprint.fabricSlots || []) {
+    if (tileId && TECH_TILES[tileId]?.hullCost) {
+      hullCost += TECH_TILES[tileId].hullCost;
     }
   }
 
@@ -914,21 +914,21 @@ function processAcquireTechnologyResearch(state, playerId, data) {
   const { techId } = data;
   const playerState = state.players[playerId];
 
-  const techIndex = state.rdBoard.findIndex(t => t.id === techId);
-  if (techIndex === -1) {
-    return { error: 'Technology not available on R&D Board' };
+  const cardIndex = state.rdBoard.findIndex(t => t.id === techId);
+  if (cardIndex === -1) {
+    return { error: 'Tech card not available on R&D Board' };
   }
 
-  const tech = state.rdBoard[techIndex];
+  const card = state.rdBoard[cardIndex];
 
-  // Check if player already has this technology
-  if (playerState.technologies.includes(techId)) {
-    return { error: 'Already own this technology' };
+  // Check if player already has this tech card
+  if (playerState.techCards.includes(techId)) {
+    return { error: 'Already own this tech card' };
   }
 
   // Calculate cost with specialization discount
-  const discount = calculateSpecializationDiscount(playerState.technologies, tech.type);
-  const cost = Math.max(0, tech.cost - discount);
+  const discount = calculateSpecializationDiscount(playerState.techCards, card.type);
+  const cost = Math.max(0, card.cost - discount);
 
   // Calculate available research
   const availableResearch = (playerState.research || 0) + (playerState.engineers || 0);
@@ -946,15 +946,15 @@ function processAcquireTechnologyResearch(state, playerId, data) {
     // The rest comes from engineers (they're not spent, just used)
   }
 
-  // Add technology
-  playerState.technologies.push(techId);
+  // Add tech card
+  playerState.techCards.push(techId);
 
   // Remove from R&D board
-  state.rdBoard.splice(techIndex, 1);
+  state.rdBoard.splice(cardIndex, 1);
 
-  // Draw replacement from tech bag if available
-  if (state.techBag && state.techBag.length > 0) {
-    state.rdBoard.push(state.techBag.shift());
+  // Draw replacement from tech card bag if available
+  if (state.techCardBag && state.techCardBag.length > 0) {
+    state.rdBoard.push(state.techCardBag.shift());
   }
 
   // Advance progress track
@@ -964,26 +964,26 @@ function processAcquireTechnologyResearch(state, playerId, data) {
   const thresholds = state.progressThresholds || { age2: 4, age3: 8, end: 12 };
   if (state.age === 1 && state.progressTrack >= thresholds.age2) {
     state.age = 2;
-    addAgeTechnologies(state, 2);
-    // Refill R&D board with new techs
+    addAgeTechCards(state, 2);
+    // Refill R&D board with new tech cards
     refillRDBoard(state);
     // Reset gas market prices for new age (Section 4.4: Helium resets to £2 at Age Transitions)
     state.gasMarket = { hydrogen: 1, helium: 2 };
     state.log.push({
       timestamp: new Date().toISOString(),
-      message: `Age II begins! New technologies available. Gas market reset.`,
+      message: `Age II begins! New tech cards available. Gas market reset.`,
       type: 'system'
     });
   } else if (state.age === 2 && state.progressTrack >= thresholds.age3) {
     state.age = 3;
-    addAgeTechnologies(state, 3);
-    // Refill R&D board with new techs
+    addAgeTechCards(state, 3);
+    // Refill R&D board with new tech cards
     refillRDBoard(state);
     // Reset gas market prices for new age (Section 4.4: Helium resets to £2 at Age Transitions)
     state.gasMarket = { hydrogen: 1, helium: 2 };
     state.log.push({
       timestamp: new Date().toISOString(),
-      message: `Age III begins! Final era technologies unlocked. Gas market reset.`,
+      message: `Age III begins! Final era tech cards unlocked. Gas market reset.`,
       type: 'system'
     });
   }
@@ -991,7 +991,7 @@ function processAcquireTechnologyResearch(state, playerId, data) {
   const discountNote = discount > 0 ? ` (${discount} discount)` : '';
   state.log.push({
     timestamp: new Date().toISOString(),
-    message: `Acquired ${tech.name} for ${cost} research${discountNote}. Progress: ${state.progressTrack}`,
+    message: `Acquired ${card.name} for ${cost} research${discountNote}. Progress: ${state.progressTrack}`,
     playerId,
     type: 'action'
   });
@@ -1054,11 +1054,11 @@ function processLaunchShip(state, playerId, data) {
     return { error: 'Gas type must be hydrogen or helium' };
   }
 
-  // Helium requires Helium Handling technology (Section 4.4)
+  // Helium requires Helium Handling tech card (Section 4.4)
   if (gasType === 'helium') {
-    const hasHeliumHandling = playerState.technologies?.some(t => t.id === 'HELIUM_HANDLING');
+    const hasHeliumHandling = playerState.techCards?.some(t => t.id === 'HELIUM_HANDLING');
     if (!hasHeliumHandling) {
-      return { error: 'Cannot use Helium without Helium Handling technology' };
+      return { error: 'Cannot use Helium without Helium Handling tech card' };
     }
   }
 
@@ -1346,19 +1346,19 @@ function processCalculateScores(state, playerId, data) {
     breakdown.routes = routeVP;
     totalVP += routeVP;
 
-    // VP from technologies
+    // VP from tech cards
     let techVP = 0;
-    for (const techId of playerState.technologies) {
-      // Find tech VP value (default 0)
-      const techInfo = state.rdBoard?.find(t => t.id === techId) ||
-                       state.techBag?.find(t => t.id === techId) ||
+    for (const cardId of playerState.techCards) {
+      // Find tech card VP value (default 0)
+      const cardInfo = state.rdBoard?.find(t => t.id === cardId) ||
+                       state.techCardBag?.find(t => t.id === cardId) ||
                        { vp: 0 };
-      techVP += techInfo.vp || 0;
+      techVP += cardInfo.vp || 0;
     }
-    // Also check TECHNOLOGY_BAG data
-    // For now, approximate 1 VP per 2 techs
-    techVP = Math.floor(playerState.technologies.length / 2);
-    breakdown.technologies = techVP;
+    // Also check TECH_CARD_BAG data
+    // For now, approximate 1 VP per 2 tech cards
+    techVP = Math.floor(playerState.techCards.length / 2);
+    breakdown.techCards = techVP;
     totalVP += techVP;
 
     // VP from cash (£10 = 1 VP)

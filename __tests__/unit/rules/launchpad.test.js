@@ -71,7 +71,7 @@ describe('Rules Compliance - Launchpad (Section 6.4)', () => {
         driveSlots: ['basic_engine'],
         componentSlots: [null]
       };
-      playerState.technologies = ['duralumin_girders', 'rubberized_cotton', 'daimler_engine'];
+      playerState.techCards = ['duralumin_girders', 'rubberized_cotton', 'daimler_engine'];
 
       // Launchpad is active
       state.launchpadActive = { [playerId]: true };
@@ -166,7 +166,7 @@ describe('Rules Compliance - Launchpad (Section 6.4)', () => {
         driveSlots: ['basic_engine'],
         componentSlots: [null]
       };
-      playerState.technologies = ['duralumin_girders', 'rubberized_cotton', 'daimler_engine'];
+      playerState.techCards = ['duralumin_girders', 'rubberized_cotton', 'daimler_engine'];
 
       // Launchpad is NOT active
       state.launchpadActive = {};
@@ -202,7 +202,7 @@ describe('Rules Compliance - Launchpad (Section 6.4)', () => {
         driveSlots: ['basic_engine'],
         componentSlots: [null]
       };
-      playerState.technologies = ['duralumin_girders', 'rubberized_cotton', 'daimler_engine'];
+      playerState.techCards = ['duralumin_girders', 'rubberized_cotton', 'daimler_engine'];
 
       state.map = {
         routes: [{ id: 'route1', from: 'City A', to: 'City B', distance: 1, speed: 1, income: 2 }]

@@ -289,6 +289,24 @@ const commands = {
     }
   },
 
+  async reset() {
+    // Drop all game data (dev/test only)
+    const response = await makeRequest('DELETE', '/api/admin/games');
+
+    if (response.status === 200 && response.data.success) {
+      console.log(c(COLORS.green, '✓ All game data has been deleted'));
+      if (response.data.deleted) {
+        const d = response.data.deleted;
+        console.log(`  Games: ${d.games || 0}, States: ${d.states || 0}, Actions: ${d.actions || 0}`);
+      }
+    } else if (response.status === 403) {
+      console.log(c(COLORS.red, '✗ Reset not allowed in production environment'));
+    } else {
+      const errorMsg = response.data.error || 'HTTP ' + response.status;
+      console.log(c(COLORS.red, `✗ Failed: ${errorMsg}`));
+    }
+  },
+
   // Game lobby
   async games(username, args) {
     const status = args[0] || 'all';
@@ -982,6 +1000,7 @@ ${c(COLORS.yellow, 'Session Management:')}
   upship login <user> <pass>    Login and store session
   upship register <user> <pass> Create account and login
   upship sessions               List all active sessions
+  upship reset                  Drop all game data (dev only)
   upship <user> logout          Logout user
   upship <user> whoami          Check current session
 
@@ -1048,6 +1067,11 @@ async function main() {
 
   if (args[0] === 'sessions') {
     await commands.sessions();
+    return;
+  }
+
+  if (args[0] === 'reset') {
+    await commands.reset();
     return;
   }
 

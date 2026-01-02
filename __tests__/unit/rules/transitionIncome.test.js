@@ -19,7 +19,7 @@ describe('Rules Compliance - Age Transition Income', () => {
       // improved_propeller: income: 1
       // dual_engine_mount: income: 1
       // Total tech income: 3
-      state.players['1'].technologies = ['daimler_engine', 'improved_propeller', 'dual_engine_mount'];
+      state.players['1'].techCards = ['daimler_engine', 'improved_propeller', 'dual_engine_mount'];
       state.players['1'].income = 8; // Current income from routes
 
       // Player loses 2 routes when map changes
@@ -47,7 +47,7 @@ describe('Rules Compliance - Age Transition Income', () => {
       // wire_bracing (Age I): income: 1
       // duralumin_framework (Age II): income: 2
       // Total: 4
-      state.players['1'].technologies = ['wooden_framework', 'wire_bracing', 'duralumin_framework'];
+      state.players['1'].techCards = ['wooden_framework', 'wire_bracing', 'duralumin_framework'];
       state.players['1'].income = 10;
 
       // No routes lost
@@ -67,7 +67,7 @@ describe('Rules Compliance - Age Transition Income', () => {
       // duralumin_framework: income: 2
       // maybach_engine: income: 2
       // wire_bracing: income: 1
-      state.players['1'].technologies = ['duralumin_framework', 'maybach_engine', 'wire_bracing'];
+      state.players['1'].techCards = ['duralumin_framework', 'maybach_engine', 'wire_bracing'];
       state.players['1'].income = 12;
 
       // Player loses 3 routes
@@ -88,7 +88,7 @@ describe('Rules Compliance - Age Transition Income', () => {
       state.age = 1;
 
       // Only 1 income from techs
-      state.players['1'].technologies = ['wooden_framework']; // income: 1
+      state.players['1'].techCards = ['wooden_framework']; // income: 1
       state.players['1'].income = 10;
 
       // Player loses 5 routes (penalty > tech income)
@@ -111,7 +111,7 @@ describe('Rules Compliance - Age Transition Income', () => {
       state.age = 1;
 
       // No technologies - income should be 0
-      state.players['1'].technologies = [];
+      state.players['1'].techCards = [];
       state.players['1'].income = 10;
 
       // No routes lost
@@ -134,7 +134,7 @@ describe('Rules Compliance - Age Transition Income', () => {
       // promenade_deck (Age III): income: 3
       // wire_bracing (Age I): income: 1
       // Total: 10
-      state.players['1'].technologies = ['supercharged_engine', 'dining_saloon', 'promenade_deck', 'wire_bracing'];
+      state.players['1'].techCards = ['supercharged_engine', 'dining_saloon', 'promenade_deck', 'wire_bracing'];
       state.players['1'].income = 15;
 
       // Loses 4 routes
@@ -155,7 +155,7 @@ describe('Rules Compliance - Age Transition Income', () => {
       const state = createTestGameState();
       state.age = 1;
 
-      state.players['1'].technologies = ['wooden_framework', 'wire_bracing']; // income: 2
+      state.players['1'].techCards = ['wooden_framework', 'wire_bracing']; // income: 2
       state.players['1'].income = 8;
 
       // Mix of claimed and unclaimed routes

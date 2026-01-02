@@ -4,8 +4,8 @@
  */
 
 const { GameRuleError, InsufficientFundsError } = require('../errors');
-const { UPGRADES } = require('../data/upgrades');
-const { AGE_BASELINES, TECHNOLOGY_BAG } = require('../config/constants');
+const { TECH_TILES } = require('../data/upgrades');
+const { AGE_BASELINES, TECH_CARD_BAG } = require('../config/constants');
 const { shuffleArray } = require('../utils/random');
 
 /**
@@ -209,15 +209,15 @@ function countPlayerNetworksById(map, playerId) {
 function calculateBlueprintStats(blueprint, age = 1) {
   const stats = { ...AGE_BASELINES[age] };
 
-  // Add stats from upgrades
+  // Add stats from tech tiles
   const slots = ['frameSlots', 'fabricSlots', 'driveSlots', 'componentSlots'];
   for (const slotKey of slots) {
     const slotArray = blueprint[slotKey] || [];
-    for (const upgradeId of slotArray) {
-      if (!upgradeId) continue;
-      const upgrade = UPGRADES[upgradeId];
-      if (upgrade?.stats) {
-        for (const [stat, value] of Object.entries(upgrade.stats)) {
+    for (const tileId of slotArray) {
+      if (!tileId) continue;
+      const tile = TECH_TILES[tileId];
+      if (tile?.stats) {
+        for (const [stat, value] of Object.entries(tile.stats)) {
           stats[stat] = (stats[stat] || 0) + value;
         }
       }
@@ -241,18 +241,18 @@ function calculateBlueprintStats(blueprint, age = 1) {
 function calculateShipStats(playerState, age = 1) {
   const stats = calculateBlueprintStats(playerState.blueprint, age);
 
-  // Add stats from technologies
-  const technologies = playerState.technologies || [];
-  const allTechs = [...TECHNOLOGY_BAG[1], ...TECHNOLOGY_BAG[2], ...TECHNOLOGY_BAG[3]];
+  // Add stats from tech cards
+  const techCards = playerState.techCards || [];
+  const allCards = [...TECH_CARD_BAG[1], ...TECH_CARD_BAG[2], ...TECH_CARD_BAG[3]];
 
-  for (const techRef of technologies) {
-    const techId = typeof techRef === 'string' ? techRef : techRef?.id;
-    if (!techId) continue;
+  for (const cardRef of techCards) {
+    const cardId = typeof cardRef === 'string' ? cardRef : cardRef?.id;
+    if (!cardId) continue;
 
-    // Find tech definition in TECHNOLOGY_BAG
-    const tech = allTechs.find(t => t.id === techId);
-    if (tech?.stats) {
-      for (const [stat, value] of Object.entries(tech.stats)) {
+    // Find card definition in TECH_CARD_BAG
+    const card = allCards.find(c => c.id === cardId);
+    if (card?.stats) {
+      for (const [stat, value] of Object.entries(card.stats)) {
         stats[stat] = (stats[stat] || 0) + value;
       }
     }
@@ -269,11 +269,11 @@ function calculateBlueprintWeight(blueprint) {
   const slots = ['frameSlots', 'fabricSlots', 'driveSlots', 'componentSlots'];
   for (const slotKey of slots) {
     const slotArray = blueprint[slotKey] || [];
-    for (const upgradeId of slotArray) {
-      if (!upgradeId) continue;
-      const upgrade = UPGRADES[upgradeId];
-      if (upgrade?.weight) {
-        weight += Math.abs(upgrade.weight);
+    for (const tileId of slotArray) {
+      if (!tileId) continue;
+      const tile = TECH_TILES[tileId];
+      if (tile?.weight) {
+        weight += Math.abs(tile.weight);
       }
     }
   }
@@ -410,15 +410,15 @@ function processLaunchShip(state, playerId, data) {
     throw new GameRuleError('Gas type must be hydrogen or helium');
   }
 
-  // Helium requires Helium Handling technology (Section 9.3)
+  // Helium requires Helium Handling tech card (Section 9.3)
   if (gasType === 'helium') {
-    // Technology IDs are lowercase (e.g., 'helium_handling')
-    // Technologies array may contain strings (IDs) or objects with id property
-    const hasHeliumHandling = playerState.technologies?.some(t =>
+    // Tech card IDs are lowercase (e.g., 'helium_handling')
+    // Tech cards array may contain strings (IDs) or objects with id property
+    const hasHeliumHandling = playerState.techCards?.some(t =>
       (typeof t === 'string' ? t : t.id) === 'helium_handling'
     );
     if (!hasHeliumHandling) {
-      throw new GameRuleError('Cannot use Helium without Helium Handling technology');
+      throw new GameRuleError('Cannot use Helium without Helium Handling tech card');
     }
   }
 
@@ -462,12 +462,12 @@ function processLaunchShip(state, playerId, data) {
 
   // Check Blaugas option (Germany only, per Section 13.1)
   if (retainGas) {
-    // Blaugas Fuel System requires blaugas_storage technology
-    const hasBlaugas = playerState.technologies?.some(t =>
+    // Blaugas Fuel System requires blaugas_storage tech card
+    const hasBlaugas = playerState.techCards?.some(t =>
       (typeof t === 'string' ? t : t.id) === 'blaugas_storage'
     );
     if (!hasBlaugas) {
-      throw new GameRuleError('Cannot use retainGas without Blaugas Fuel System technology');
+      throw new GameRuleError('Cannot use retainGas without Blaugas Fuel System tech card');
     }
 
     // Must have enough cash to pay Blaugas cost
