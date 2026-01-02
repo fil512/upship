@@ -21,17 +21,13 @@ export const resourceIcons: Record<ResourceIconName, IconDefinition> = {
   },
 
   officers: {
-    // Naval captain's peaked cap
+    // Pilot/captain peaked cap with visor
     svg: `<svg viewBox="0 0 24 24" fill="currentColor">
-      <path d="M3 17h18v2H3z"/>
-      <path d="M4 15h16c0 0 0 2-8 2s-8-2-8-2z"/>
-      <ellipse cx="12" cy="13" rx="8" ry="3"/>
-      <path d="M6 13c0-2 2.5-4 6-4s6 2 6 4" fill="none" stroke="currentColor" stroke-width="0"/>
-      <path d="M5 13c0-3 3-5 7-5s7 2 7 5H5z"/>
-      <path d="M2 17l4-1v1H2z"/>
-      <path d="M22 17l-4-1v1h4z"/>
-      <circle cx="12" cy="12" r="2"/>
-      <path d="M10 12h4" stroke="currentColor" stroke-width="0.5" fill="none"/>
+      <path d="M4 14h16v3H4z"/>
+      <path d="M2 17h20v2H2z"/>
+      <ellipse cx="12" cy="14" rx="7" ry="2"/>
+      <path d="M6 14c0-2.5 2.7-5 6-5s6 2.5 6 5"/>
+      <path d="M8 12l4-2 4 2" fill="none" stroke="currentColor" stroke-width="1.5"/>
     </svg>`,
     category: 'resource',
     tooltip: 'Officers - required for launches'

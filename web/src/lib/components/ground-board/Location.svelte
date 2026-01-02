@@ -43,11 +43,11 @@
 		},
 		flight_school: {
 			costs: [{ icon: 'cash', amount: '5' }],
-			benefits: [{ icon: 'income', icon2: 'officers', text: '+1' }]
+			benefits: [{ icon: 'income', icon2: 'officers', text: '' }]
 		},
 		technical_institute: {
 			costs: [{ icon: 'cash', amount: '6' }],
-			benefits: [{ icon: 'income', icon2: 'engineers', text: '+1' }]
+			benefits: [{ icon: 'income', icon2: 'engineers', text: '' }]
 		},
 		government_liaison: {
 			costs: [{ icon: 'officers', amount: '1-3' }],
