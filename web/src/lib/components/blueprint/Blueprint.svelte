@@ -19,7 +19,6 @@
 
 <div class="blueprint">
 	<div class="blueprint-header">
-		<h3>Blueprint</h3>
 		<span class="age-badge">Age {age}</span>
 	</div>
 

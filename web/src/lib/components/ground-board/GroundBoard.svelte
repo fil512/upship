@@ -122,12 +122,11 @@
 </script>
 
 <div class="ground-board">
-	<div class="board-header">
-		<h3>Ground Board</h3>
-		{#if isWorkerPlacementPhase}
+	{#if isWorkerPlacementPhase}
+		<div class="board-header">
 			<span class="phase-badge">Worker Placement</span>
-		{/if}
-	</div>
+		</div>
+	{/if}
 
 	<div class="location-groups">
 		<div class="location-group wrench-group">

@@ -21,13 +21,15 @@ export const resourceIcons: Record<ResourceIconName, IconDefinition> = {
   },
 
   officers: {
-    // Head with captain's hat (front view)
+    // Captain face with peaked cap (like 🧑‍✈️ emoji)
     svg: `<svg viewBox="0 0 24 24">
-      <circle cx="12" cy="16" r="6" fill="#f5deb3"/>
-      <ellipse cx="12" cy="8" rx="8" ry="4" fill="#2c3e50"/>
-      <rect x="4" y="8" width="16" height="3" fill="#2c3e50"/>
-      <path d="M4 9.5h16" stroke="#f1c40f" stroke-width="1" fill="none"/>
-      <circle cx="12" cy="7" r="2" fill="#f1c40f"/>
+      <circle cx="12" cy="15" r="7" fill="#f5deb3"/>
+      <circle cx="9.5" cy="14" r="1" fill="#1a1a2e"/>
+      <circle cx="14.5" cy="14" r="1" fill="#1a1a2e"/>
+      <path d="M10 17.5q2 1.5 4 0" fill="none" stroke="#1a1a2e" stroke-width="0.8"/>
+      <path d="M5 12h14v-2c0-1-2-3-7-3s-7 2-7 3v2z" fill="#1a1a2e"/>
+      <path d="M5 10.5h14" stroke="#f1c40f" stroke-width="1.5"/>
+      <ellipse cx="12" cy="8" rx="2" ry="1.5" fill="#f1c40f"/>
     </svg>`,
     category: 'resource',
     tooltip: 'Officers - required for launches'

@@ -17,7 +17,7 @@
 		string,
 		{
 			costs: Array<{ icon: IconName; amount?: string }>;
-			benefits: Array<{ icon: IconName; icon2?: IconName }>;
+			benefits: Array<{ icon: IconName; icon2?: IconName; separator?: boolean }>;
 		}
 	> = {
 		research_institute: {
@@ -38,7 +38,7 @@
 		},
 		academy: {
 			costs: [{ icon: 'cash', amount: '2/4' }],
-			benefits: [{ icon: 'officers', icon2: 'engineers' }]
+			benefits: [{ icon: 'officers', icon2: 'engineers', separator: true }]
 		},
 		flight_school: {
 			costs: [{ icon: 'cash', amount: '5' }],
@@ -58,7 +58,7 @@
 		},
 		gas_depot: {
 			costs: [{ icon: 'cash' }],
-			benefits: [{ icon: 'hydrogen', icon2: 'helium' }]
+			benefits: [{ icon: 'hydrogen', icon2: 'helium', separator: true }]
 		},
 		insurance_bureau: {
 			costs: [{ icon: 'income', amount: '-1' }],
@@ -142,7 +142,9 @@
 						<div class="benefit-item">
 							<Icon name={benefit.icon} size={24} color="var(--color-text-primary)" />
 							{#if benefit.icon2}
-								<span class="benefit-separator">/</span>
+								{#if benefit.separator}
+									<span class="benefit-separator">/</span>
+								{/if}
 								<Icon name={benefit.icon2} size={20} color="var(--color-text-primary)" />
 							{/if}
 						</div>

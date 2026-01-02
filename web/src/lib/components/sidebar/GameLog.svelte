@@ -19,8 +19,6 @@
 </script>
 
 <div class="game-log">
-	<h4>Game Log</h4>
-
 	<div class="log-entries">
 		{#if displayLog.length === 0}
 			<div class="empty">No actions yet</div>
@@ -43,12 +41,6 @@
 		max-height: 200px;
 		display: flex;
 		flex-direction: column;
-	}
-
-	.game-log h4 {
-		font-size: 0.875rem;
-		color: var(--color-accent-gold);
-		margin-bottom: var(--spacing-sm);
 	}
 
 	.log-entries {
