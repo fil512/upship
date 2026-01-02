@@ -39,6 +39,10 @@
 	import TechList from '$lib/components/sidebar/TechList.svelte';
 	import PlayersList from '$lib/components/sidebar/PlayersList.svelte';
 	import GameLog from '$lib/components/sidebar/GameLog.svelte';
+	import BudgetDisplay from '$lib/components/sidebar/BudgetDisplay.svelte';
+
+	// Market Components
+	import MarketSection from '$lib/components/market/MarketSection.svelte';
 
 	// Utilities
 	import { calculateShipStats } from '$lib/utils/shipStats';
@@ -161,6 +165,37 @@
 		}
 	}
 
+	// Market purchase handlers (reveal phase)
+	async function handleBuyMarketCard(event: CustomEvent<{ cardId: string }>) {
+		const result = await sendAction({
+			actionType: 'BUY_MARKET_CARD_TENTATIVE',
+			actionData: { cardId: event.detail.cardId }
+		});
+		if (!result.success) {
+			showToast(result.error || 'Failed to purchase card', 'error');
+		}
+	}
+
+	async function handleBuyTechCard(event: CustomEvent<{ cardId: string }>) {
+		const result = await sendAction({
+			actionType: 'ACQUIRE_TECH_CARD_TENTATIVE',
+			actionData: { cardId: event.detail.cardId }
+		});
+		if (!result.success) {
+			showToast(result.error || 'Failed to acquire tech', 'error');
+		}
+	}
+
+	async function handleUndoPurchase(event: CustomEvent<{ cardId: string; type: 'market' | 'tech' }>) {
+		const result = await sendAction({
+			actionType: 'UNDO_MARKET_PURCHASE',
+			actionData: { cardId: event.detail.cardId, type: event.detail.type }
+		});
+		if (!result.success) {
+			showToast(result.error || 'Failed to undo purchase', 'error');
+		}
+	}
+
 	// Derived values
 	$: isWorkerPlacementPhase = $gameState?.phase === 'worker_placement';
 	$: placements = $gameState?.groundBoard?.placements || {};
@@ -192,6 +227,18 @@
 	// Get raw hand value - might be a number if viewing filtered state
 	$: rawHand = $myState?.hand;
 	$: otherPlayerCardCount = typeof rawHand === 'number' ? rawHand : 0;
+
+	// Market/reveal phase derived values
+	$: isRevealPhase = $gameState?.phase === 'reveal';
+	$: isMarketInteractive = isRevealPhase && $isMyTurn;
+	$: marketCards = $gameState?.marketCards || [];
+	$: techCards = $gameState?.rdBoard || [];
+	$: marketCardsClaimed = $gameState?.marketCardsClaimed || {};
+	$: techCardsClaimed = $gameState?.techCardsClaimed || {};
+	$: pendingMarketPurchases = $myState?.pendingMarketPurchases || [];
+	$: pendingTechAcquisitions = $myState?.pendingTechAcquisitions || [];
+	$: playerInfluence = $myState?.influence || 0;
+	$: playerResearch = ($myState?.research || 0) + ($myState?.engineers || 0);
 </script>
 
 <svelte:head>
@@ -326,6 +373,22 @@
 									on:placeAgent={handlePlaceAgent}
 								/>
 							</section>
+
+							<!-- Market Section (always visible) -->
+							<MarketSection
+								{marketCards}
+								{techCards}
+								claimedMarket={marketCardsClaimed}
+								claimedTech={techCardsClaimed}
+								{pendingMarketPurchases}
+								{pendingTechAcquisitions}
+								interactive={isMarketInteractive}
+								myPlayerId={$effectiveUserId}
+								players={$gameState.players}
+								on:buyMarket={handleBuyMarketCard}
+								on:buyTech={handleBuyTechCard}
+								on:undoPurchase={handleUndoPurchase}
+							/>
 						</div>
 					{:else if activeTab === 'log'}
 						<div class="log-tab">
@@ -352,7 +415,13 @@
 									age={$gameState?.age || 1}
 									on:slotClick={handleBlueprintSlotClick}
 								/>
-								<TechList technologies={$myState.technologies || []} />
+								<TechList
+								technologies={$myState.technologies || []}
+								{pendingTechAcquisitions}
+								rdBoard={techCards}
+								showUndo={isRevealPhase && $isMyTurn}
+								on:undo={(e) => handleUndoPurchase({ detail: { cardId: e.detail.cardId, type: 'tech' } })}
+							/>
 							{/if}
 						</div>
 					{/if}
@@ -383,11 +452,16 @@
 							{/if}
 						</p>
 					{:else if $gameState.phase === 'reveal'}
-						<p class="action-hint">All players act simultaneously</p>
+						<p class="action-hint">Purchase cards below, then End Turn</p>
 					{:else if $gameState.phase === 'income_cleanup'}
 						<p class="action-hint">Collecting income...</p>
 					{/if}
 				</div>
+
+				<!-- Budget Display (reveal phase only) -->
+				{#if isRevealPhase}
+					<BudgetDisplay influence={playerInfluence} research={playerResearch} />
+				{/if}
 
 				<!-- Hand Section -->
 				<HandSection

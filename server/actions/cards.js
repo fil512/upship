@@ -104,7 +104,7 @@ function processBuyMarketCard(state, playerId, data) {
   }
 
   const card = marketCards[cardIndex];
-  const cost = card.value || 3; // Default cost is 3 Influence
+  const cost = card.cost || 3; // Default cost is 3 Influence
 
   // Market cards cost Influence, not cash (Section 8.3)
   const availableInfluence = playerState.influence || 0;

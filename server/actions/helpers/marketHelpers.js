@@ -66,13 +66,14 @@ function refreshRnDBoard(state) {
  */
 function refreshMarketRow(state) {
   // Fill empty slots in market row from market deck
-  const marketRow = state.marketRow || [];
+  // NOTE: Must use state.marketCards (not state.marketRow) - this is where
+  // all market card purchase logic reads from. See cards.js processBuyMarketCard.
+  state.marketCards = state.marketCards || [];
+  state.marketDeck = state.marketDeck || [];
 
-  while (marketRow.length < MARKET_ROW_SIZE && state.marketDeck && state.marketDeck.length > 0) {
-    marketRow.push(state.marketDeck.pop());
+  while (state.marketCards.length < MARKET_ROW_SIZE && state.marketDeck.length > 0) {
+    state.marketCards.push(state.marketDeck.pop());
   }
-
-  state.marketRow = marketRow;
 }
 
 /**

@@ -5,6 +5,7 @@
 
 const { transitionToIncomeCleanup, startNewRound, transitionToRevealPhase } = require('./helpers/phaseTransition');
 const { advanceToNextPlacer, allPlayersPassed } = require('./helpers/turnOrder');
+const { refreshMarketRow, refreshRnDBoard } = require('./helpers/marketHelpers');
 
 /**
  * End turn - behavior depends on current phase
@@ -42,13 +43,71 @@ function processEndTurn(state, playerId) {
     }
 
     case 'reveal': {
-      // During reveal phase, END_TURN signals done with tech/market purchases
+      // During reveal phase, END_TURN finalizes tentative purchases
+
+      // 1. Finalize market card purchases (move to discard pile)
+      const pendingMarket = playerState.pendingMarketPurchases || [];
+      for (const purchase of pendingMarket) {
+        const cardIndex = state.marketCards.findIndex(c => c.id === purchase.cardId);
+        if (cardIndex !== -1) {
+          const card = state.marketCards[cardIndex];
+          // Move card to player's discard pile
+          playerState.discardPile = playerState.discardPile || [];
+          playerState.discardPile.push(card);
+          // Remove from market
+          state.marketCards.splice(cardIndex, 1);
+          // Clear claim
+          if (state.marketCardsClaimed) {
+            delete state.marketCardsClaimed[purchase.cardId];
+          }
+
+          state.log.push({
+            timestamp: new Date().toISOString(),
+            message: `Purchased ${card.name} for ${purchase.cost} Influence`,
+            playerId,
+            type: 'action'
+          });
+        }
+      }
+      playerState.pendingMarketPurchases = [];
+
+      // 2. Finalize tech card acquisitions (add to techCards)
+      const pendingTech = playerState.pendingTechAcquisitions || [];
+      for (const acquisition of pendingTech) {
+        const cardIndex = state.rdBoard.findIndex(c => c.id === acquisition.cardId);
+        if (cardIndex !== -1) {
+          const card = state.rdBoard[cardIndex];
+          // Add to player's tech cards
+          playerState.techCards = playerState.techCards || [];
+          playerState.techCards.push(card.id);
+          // Remove from R&D board
+          state.rdBoard.splice(cardIndex, 1);
+          // Clear claim
+          if (state.techCardsClaimed) {
+            delete state.techCardsClaimed[acquisition.cardId];
+          }
+
+          state.log.push({
+            timestamp: new Date().toISOString(),
+            message: `Acquired ${card.name} for ${acquisition.cost} Research`,
+            playerId,
+            type: 'action'
+          });
+        }
+      }
+      playerState.pendingTechAcquisitions = [];
+
+      // 3. Replenish market and R&D board
+      refreshMarketRow(state);
+      refreshRnDBoard(state);
+
+      // Mark player as complete
       state.revealPhase.techAcquisitionsComplete[playerId] = true;
       state.revealPhase.marketPurchasesComplete[playerId] = true;
 
       state.log.push({
         timestamp: new Date().toISOString(),
-        message: `${playerState.faction.toUpperCase()} finished reveal phase actions`,
+        message: `${playerState.faction.toUpperCase()} finished reveal phase`,
         playerId,
         type: 'turn'
       });

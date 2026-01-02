@@ -16,14 +16,14 @@ describe('Rules Compliance - Market Deck', () => {
 
     it('should refill market row to 5 cards', () => {
       const state = {
-        marketRow: ['card1', 'card2'],
+        marketCards: ['card1', 'card2'],
         marketDeck: ['card3', 'card4', 'card5', 'card6', 'card7']
       };
 
       refreshMarketRow(state);
 
       // Should refill to 5 cards (3 more added)
-      expect(state.marketRow.length).toBe(5);
+      expect(state.marketCards.length).toBe(5);
     });
   });
 

@@ -20,6 +20,7 @@ const { processPlayCard, processDrawCards, processBuyMarketCard, processDiscardH
 const { processEndTurn } = require('./turn');
 const { processCalculateScores } = require('./scoring');
 const { processReveal } = require('./reveal');
+const { processBuyMarketCardTentative, processAcquireTechCardTentative, processUndoMarketPurchase } = require('./marketPurchase');
 
 /**
  * Action handler registry
@@ -82,6 +83,11 @@ const ACTION_HANDLERS = {
   BUY_MARKET_CARD: processBuyMarketCard,
   DISCARD_HAZARD: processDiscardHazard,
   DISCARD_MARKET_CARD: processDiscardMarketCard,
+
+  // Tentative purchases during reveal phase
+  BUY_MARKET_CARD_TENTATIVE: processBuyMarketCardTentative,
+  ACQUIRE_TECH_CARD_TENTATIVE: processAcquireTechCardTentative,
+  UNDO_MARKET_PURCHASE: processUndoMarketPurchase,
 
   // Scoring
   CALCULATE_SCORES: processCalculateScores,

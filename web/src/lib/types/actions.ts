@@ -34,6 +34,10 @@ export type ActionType =
 	| 'DRAW_CARDS'
 	// Market
 	| 'BUY_MARKET_CARD'
+	// Tentative purchases during reveal (can be undone before End Turn)
+	| 'BUY_MARKET_CARD_TENTATIVE'
+	| 'ACQUIRE_TECH_CARD_TENTATIVE'
+	| 'UNDO_MARKET_PURCHASE'
 	// Card management
 	| 'DISCARD_HAZARD'
 	| 'DISCARD_MARKET_CARD'
@@ -131,6 +135,20 @@ export interface DiscardMarketCardActionData {
 	cardIndex: number;
 }
 
+// Tentative purchase actions (during reveal phase)
+export interface BuyMarketCardTentativeActionData {
+	cardId: string;
+}
+
+export interface AcquireTechCardTentativeActionData {
+	cardId: string;
+}
+
+export interface UndoMarketPurchaseActionData {
+	cardId: string;
+	type: 'market' | 'tech';
+}
+
 // Generic action data type
 export type ActionData =
 	| BuyGasActionData
@@ -146,6 +164,9 @@ export type ActionData =
 	| PlayCardActionData
 	| DrawCardsActionData
 	| BuyMarketCardActionData
+	| BuyMarketCardTentativeActionData
+	| AcquireTechCardTentativeActionData
+	| UndoMarketPurchaseActionData
 	| RecruitCrewActionData
 	| TakeLoanActionData
 	| BuyInsuranceActionData

@@ -411,10 +411,12 @@ function createTechCardBagAndRDBoard(age = 1, playerCount = 4, starterCounts = {
 }
 
 // Create initial market cards using the 30-card market deck from Appendix H
+// Returns { marketCards, marketDeck } where marketCards is the visible row of 5
+// and marketDeck is the remaining 25 cards to draw from
 function createMarketCards() {
   const { createMarketRow } = require('../data/marketCards');
-  const { marketRow } = createMarketRow();
-  return marketRow;
+  const { marketRow, marketDeck } = createMarketRow();
+  return { marketCards: marketRow, marketDeck };
 }
 
 /**
@@ -609,6 +611,9 @@ async function initializeGameState(gameId, players) {
     // Per Section 3.1: (N-1) copies per card, minus faction starters
     const { rdBoard, techCardBag } = createTechCardBagAndRDBoard(1, playerCount, starterCounts);
 
+    // Create market cards (5 visible + 25 in deck)
+    const { marketCards, marketDeck } = createMarketCards();
+
     // Calculate initial turn order by income (lowest first)
     // At game start, all players have income 5, so use original random order
     const initialPlacementOrder = [...playerOrder];
@@ -644,7 +649,8 @@ async function initializeGameState(gameId, players) {
       },
       rdBoard,
       techCardBag,
-      marketCards: createMarketCards(),
+      marketCards,
+      marketDeck,
       progressTrack: 0,
       progressThresholds: PROGRESS_THRESHOLDS[playerCount],
       gasMarket: { hydrogen: 1, helium: 2 }, // Prices per cube (Section 4.4: H₂ fixed at £1, He starts at £2)

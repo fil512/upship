@@ -173,6 +173,12 @@ export interface Upgrade {
 	stats?: Partial<ShipStats>;
 }
 
+// Pending purchase during reveal phase
+export interface PendingPurchase {
+	cardId: string;
+	cost: number;
+}
+
 // Player state
 export interface PlayerState {
 	faction: Faction;
@@ -204,6 +210,9 @@ export interface PlayerState {
 	bannedTechnologies?: string[];
 	lowCeiling?: boolean;
 	vp?: number;
+	// Tentative purchases during reveal phase (before End Turn finalizes)
+	pendingMarketPurchases?: PendingPurchase[];
+	pendingTechAcquisitions?: PendingPurchase[];
 }
 
 // Worker placement state
@@ -263,6 +272,10 @@ export interface GameState {
 	rdBoard: Technology[];
 	techBag: Technology[];
 	marketCards: Card[];
+	marketDeck: Card[];
+	// Cards tentatively claimed during reveal (cardId -> playerId)
+	marketCardsClaimed?: Record<string, string>;
+	techCardsClaimed?: Record<string, string>;
 	progressTrack: number;
 	progressThresholds: { age2: number; age3: number; end: number };
 	gasMarket: { hydrogen: number; helium: number };
