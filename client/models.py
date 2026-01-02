@@ -56,14 +56,17 @@ class Manifest:
         return 0
 
     def get_tech_for_upgrade(self, upgrade_id: str) -> str | None:
-        """Get the required technology for an upgrade."""
+        """Get the required technology (tech card) for an upgrade."""
         upgrade = self.upgrades.get(upgrade_id)
-        return upgrade.get('requiredTech') if upgrade else None
+        # Server uses 'requiredCard' for the tech card ID
+        return upgrade.get('requiredCard', upgrade.get('requiredTech')) if upgrade else None
 
     def get_upgrade_for_tech(self, tech_id: str) -> dict | None:
-        """Get the upgrade that a technology unlocks."""
+        """Get the upgrade (tech tile) that a technology (tech card) unlocks."""
         for upgrade_id, upgrade in self.upgrades.items():
-            if upgrade.get('requiredTech') == tech_id:
+            # Server uses 'requiredCard' for the tech card ID
+            required = upgrade.get('requiredCard', upgrade.get('requiredTech'))
+            if required == tech_id:
                 return {'id': upgrade_id, 'slotType': upgrade.get('slotType')}
         return None
 
@@ -327,12 +330,12 @@ class Player:
             deck_size=data.get('deckSize', 0) if 'deckSize' in data else (len(data.get('deck', [])) if isinstance(data.get('deck'), list) else 0),
             discard_size=data.get('discardSize', 0) if 'discardSize' in data else (len(data.get('discardPile', [])) if isinstance(data.get('discardPile'), list) else 0),
             ships=ships,
-            technologies=data.get('technologies', []),
+            technologies=data.get('techCards', data.get('technologies', [])),
             routes=data.get('routes', []),
             blueprint=blueprint,
             bonuses=data.get('bonuses', {}),
             upgrade_swaps=data.get('upgradeSwaps', 2),
-            banned_technologies=data.get('bannedTechnologies', []),
+            banned_technologies=data.get('bannedTechCards', data.get('bannedTechnologies', [])),
         )
 
 
