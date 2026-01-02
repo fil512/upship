@@ -28,7 +28,7 @@ const NON_UNDOABLE_ACTIONS = new Set([
 ]);
 
 /**
- * Check if an action creates a commit point (reveals hidden info)
+ * Check if an action creates a commit point (reveals hidden info or phase transition)
  *
  * @param {string} actionType - The action type
  * @param {Object} actionData - The action data
@@ -38,6 +38,13 @@ const NON_UNDOABLE_ACTIONS = new Set([
 function createsCommitPoint(actionType, actionData = {}, _stateChanges = {}) {
   // Explicit commit point action types
   if (COMMIT_POINT_ACTION_TYPES.has(actionType)) {
+    return true;
+  }
+
+  // Phase transitions create commit points - prevents undoing across phases
+  // REVEAL transitions from worker_placement to reveal phase
+  // END_TURN during reveal transitions to income_cleanup (now auto-advances)
+  if (actionType === 'REVEAL' || actionType === 'END_TURN') {
     return true;
   }
 

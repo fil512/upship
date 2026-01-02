@@ -253,6 +253,12 @@ function transitionToIncomeCleanup(state) {
     // Reset influence (it doesn't carry over)
     playerState.influence = 0;
   }
+
+  // Auto-advance: Income phase has no player decisions, so immediately start next round
+  // startNewRound() will either:
+  // - Trigger age transition (phase = 'age_transition_design_bureau') if thresholds met
+  // - Start worker placement (phase = 'worker_placement') for normal rounds
+  startNewRound(state);
 }
 
 /**

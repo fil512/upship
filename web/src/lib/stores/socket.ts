@@ -6,7 +6,7 @@ import type {
 	SocketConnectionState
 } from '$lib/types/socket';
 import type { GameAction, ActionResponse } from '$lib/types/actions';
-import { updateGameState, updateTurnInfo, gameVersion, effectiveUserId, isDevMode } from './gameState';
+import { updateGameState, updateTurnInfo, gameVersion, effectiveUserId, isDevMode, hasUnfilteredState, fetchUnfilteredState } from './gameState';
 import { showToast } from './ui';
 
 type TypedSocket = Socket<ServerToClientEvents, ClientToServerEvents>;
@@ -97,7 +97,12 @@ export function connect(gameId: string, playerId: string): void {
 
 	// Game state events
 	socket.on('state-sync', ({ state, version, turnInfo }) => {
-		updateGameState(state, version);
+		// In dev mode with unfiltered state, re-fetch to preserve full visibility
+		if (get(isDevMode) && get(hasUnfilteredState)) {
+			fetchUnfilteredState();
+		} else {
+			updateGameState(state, version);
+		}
 		// Update turn info if provided
 		if (turnInfo) {
 			updateTurnInfo(turnInfo);
@@ -107,7 +112,12 @@ export function connect(gameId: string, playerId: string): void {
 	socket.on('state-update', ({ state, version, action }) => {
 		const currentVersion = get(gameVersion);
 		if (version > currentVersion) {
-			updateGameState(state, version);
+			// In dev mode with unfiltered state, re-fetch to preserve full visibility
+			if (get(isDevMode) && get(hasUnfilteredState)) {
+				fetchUnfilteredState();
+			} else {
+				updateGameState(state, version);
+			}
 		}
 	});
 

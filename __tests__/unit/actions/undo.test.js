@@ -33,6 +33,14 @@ describe('Undo Module', () => {
       expect(createsCommitPoint('DISCARD_HAZARD', {})).toBe(true);
     });
 
+    it('returns true for END_TURN (phase transition)', () => {
+      expect(createsCommitPoint('END_TURN', {})).toBe(true);
+    });
+
+    it('returns true for REVEAL (phase transition)', () => {
+      expect(createsCommitPoint('REVEAL', {})).toBe(true);
+    });
+
     it('returns false for BUILD_SHIP', () => {
       expect(createsCommitPoint('BUILD_SHIP', {})).toBe(false);
     });

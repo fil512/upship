@@ -129,8 +129,9 @@ describe('Rules Compliance - Atomic Reveal Action', () => {
         marketPurchases: []
       });
 
-      // Should have processed all reveals and transitioned to income_cleanup
-      expect(result.newState.phase).toBe('income_cleanup');
+      // Should have processed all reveals, income, and auto-advanced to worker_placement
+      // (income phase auto-advances since there are no player decisions)
+      expect(result.newState.phase).toBe('worker_placement');
     });
 
     it('should collect reveal resources before processing acquisitions', () => {
@@ -242,8 +243,12 @@ describe('Rules Compliance - Atomic Reveal Action', () => {
         marketPurchases: ['market_card_1']
       });
 
-      // Player should have purchased the card (goes to discard)
-      expect(result.newState.players['1'].discardPile.some(c => c.id === 'market_card_1')).toBe(true);
+      // Player should have purchased the card (now in deck/hand/discard after full phase cycle)
+      const player = result.newState.players['1'];
+      const cardInDeck = player.deck?.some(c => c.id === 'market_card_1') || false;
+      const cardInHand = player.hand?.some(c => c.id === 'market_card_1') || false;
+      const cardInDiscard = player.discardPile?.some(c => c.id === 'market_card_1') || false;
+      expect(cardInDeck || cardInHand || cardInDiscard).toBe(true);
       // Influence is reset to 0 after income/cleanup phase transition (expected per Section 5.2)
       expect(result.newState.players['1'].influence).toBe(0);
     });
