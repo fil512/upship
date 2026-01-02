@@ -179,20 +179,35 @@
 	.pawn {
 		width: 14px;
 		height: 18px;
-		border-radius: 50% 50% 45% 45%;
-		border: 2px solid;
 		position: relative;
+		/* Body - rounded bottom */
+		background: inherit;
+		border-radius: 3px 3px 7px 7px;
+		border: 2px solid;
 	}
 
+	/* Head - circular top */
 	.pawn::before {
 		content: '';
 		position: absolute;
-		width: 8px;
-		height: 8px;
+		width: 10px;
+		height: 10px;
 		background: inherit;
 		border: inherit;
 		border-radius: 50%;
-		top: -7px;
+		top: -8px;
+		left: 50%;
+		transform: translateX(-50%);
+	}
+
+	/* Neck connector */
+	.pawn::after {
+		content: '';
+		position: absolute;
+		width: 6px;
+		height: 4px;
+		background: inherit;
+		top: -2px;
 		left: 50%;
 		transform: translateX(-50%);
 	}

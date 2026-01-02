@@ -286,22 +286,35 @@
 	.pawn {
 		width: 20px;
 		height: 24px;
+		position: relative;
+		/* Body - rounded bottom */
 		background-color: var(--pawn-color);
 		border: 2px solid var(--pawn-border);
-		border-radius: 50% 50% 45% 45%;
-		position: relative;
+		border-radius: 4px 4px 10px 10px;
 	}
 
 	/* Pawn head */
 	.pawn::before {
 		content: '';
 		position: absolute;
-		width: 12px;
-		height: 12px;
+		width: 14px;
+		height: 14px;
 		background-color: var(--pawn-color);
 		border: 2px solid var(--pawn-border);
 		border-radius: 50%;
-		top: -10px;
+		top: -11px;
+		left: 50%;
+		transform: translateX(-50%);
+	}
+
+	/* Neck connector */
+	.pawn::after {
+		content: '';
+		position: absolute;
+		width: 8px;
+		height: 5px;
+		background-color: var(--pawn-color);
+		top: -3px;
 		left: 50%;
 		transform: translateX(-50%);
 	}
