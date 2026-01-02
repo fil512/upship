@@ -54,16 +54,23 @@ export const resourceIcons: Record<ResourceIconName, IconDefinition> = {
   },
 
   engineers: {
-    // Hard hat / construction helmet
+    // Hard hat with safety goggles
     svg: `<svg viewBox="0 0 24 24" fill="currentColor">
       <!-- Main dome -->
-      <path d="M4 14 Q4 6 12 6 Q20 6 20 14 L4 14 Z"/>
+      <path d="M4 12 Q4 4 12 4 Q20 4 20 12 L4 12 Z"/>
+      <!-- Vertical ridges on dome -->
+      <rect x="8" y="5" width="1.5" height="7" fill="var(--color-bg-card, #1a1a2e)"/>
+      <rect x="11.25" y="4" width="1.5" height="8" fill="var(--color-bg-card, #1a1a2e)"/>
+      <rect x="14.5" y="5" width="1.5" height="7" fill="var(--color-bg-card, #1a1a2e)"/>
       <!-- Brim -->
-      <rect x="2" y="14" width="20" height="3" rx="1"/>
-      <!-- Top ridge -->
-      <rect x="10" y="4" width="4" height="3" rx="1"/>
-      <!-- Helmet band/stripe -->
-      <rect x="4" y="11" width="16" height="1.5" fill="none" stroke="#f1c40f" stroke-width="1"/>
+      <rect x="2" y="11" width="20" height="3" rx="1"/>
+      <!-- Safety goggles frame -->
+      <path d="M4 16 L4 18 Q4 20 6 20 L9 20 Q10 20 10.5 19 L13.5 19 Q14 20 15 20 L18 20 Q20 20 20 18 L20 16 Z"/>
+      <!-- Goggle lenses (cutouts) -->
+      <rect x="5" y="16.5" width="4.5" height="2.5" rx="0.5" fill="var(--color-bg-card, #1a1a2e)"/>
+      <rect x="14.5" y="16.5" width="4.5" height="2.5" rx="0.5" fill="var(--color-bg-card, #1a1a2e)"/>
+      <!-- Nose bridge -->
+      <rect x="10.5" y="17" width="3" height="1.5" fill="var(--color-bg-card, #1a1a2e)"/>
     </svg>`,
     category: 'resource',
     tooltip: 'Engineers - aid research and repairs'
