@@ -47,11 +47,16 @@ export type StatIconName =
 
 export type GameIconName =
   | 'ship'
+  | 'launch'
   | 'route'
   | 'technology'
   | 'upgrade'
+  | 'blueprint'
   | 'hazard'
-  | 'insurance';
+  | 'eye'
+  | 'insurance'
+  | 'politics'
+  | 'gas';
 
 export type IconName =
   | ResourceIconName

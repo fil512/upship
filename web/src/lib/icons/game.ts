@@ -16,6 +16,23 @@ export const gameIcons: Record<GameIconName, IconDefinition> = {
     tooltip: 'Airship'
   },
 
+  launch: {
+    // Airship with motion lines indicating upward flight
+    svg: `<svg viewBox="0 0 24 24" fill="currentColor">
+      <ellipse cx="13" cy="9" rx="8" ry="4"/>
+      <path d="M19 6l2-1.5v3l-2 1.5z"/>
+      <path d="M19 10l2 1.5v-3l-2-1.5z"/>
+      <rect x="9" y="12" width="6" height="2.5" rx="0.5"/>
+      <path d="M11 12v-1.5"/>
+      <path d="M15 12v-1.5"/>
+      <path d="M3 18l4-3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      <path d="M2 14l3-2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      <path d="M4 21l3-2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+    </svg>`,
+    category: 'game',
+    tooltip: 'Launch - send ships on routes'
+  },
+
   route: {
     svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <circle cx="5" cy="12" r="2" fill="currentColor"/>
@@ -72,5 +89,48 @@ export const gameIcons: Record<GameIconName, IconDefinition> = {
     </svg>`,
     category: 'game',
     tooltip: 'Insurance - protect ships from crashes'
+  },
+
+  blueprint: {
+    // Technical drawing/schematic
+    svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="3" width="18" height="18" rx="2"/>
+      <path d="M3 9h18"/>
+      <path d="M9 3v18"/>
+      <circle cx="16" cy="16" r="3"/>
+    </svg>`,
+    category: 'game',
+    tooltip: 'Blueprint - modify your design'
+  },
+
+  eye: {
+    // Eye for peeking/viewing
+    svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+      <circle cx="12" cy="12" r="3"/>
+    </svg>`,
+    category: 'game',
+    tooltip: 'Peek - view hidden information'
+  },
+
+  politics: {
+    // Handshake or building columns
+    svg: `<svg viewBox="0 0 24 24" fill="currentColor">
+      <path d="M3 21h4V10H3v11zM17 21h4V10h-4v11zM10 21h4V3h-4v18z"/>
+    </svg>`,
+    category: 'game',
+    tooltip: 'Politics - government influence'
+  },
+
+  gas: {
+    // Gas canister/tank
+    svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="6" y="4" width="12" height="16" rx="2"/>
+      <path d="M10 4V2h4v2"/>
+      <path d="M6 10h12"/>
+      <path d="M6 14h12"/>
+    </svg>`,
+    category: 'game',
+    tooltip: 'Gas - lifting gas for airships'
   }
 };

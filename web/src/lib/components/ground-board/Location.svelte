@@ -12,62 +12,61 @@
 	export let players: Record<string, PlayerState> = {};
 	export let canPlace: boolean = false;
 
-	// Cost and benefit data for each location
+	// Cost and benefit data for each location (icons only, no text)
 	const LOCATION_DATA: Record<
 		string,
 		{
 			costs: Array<{ icon: IconName; amount?: string }>;
-			benefits: Array<{ icon: IconName; icon2?: IconName; text: string }>;
+			benefits: Array<{ icon: IconName; icon2?: IconName }>;
 		}
 	> = {
 		research_institute: {
 			costs: [{ icon: 'cash', amount: '4' }],
-			benefits: [{ icon: 'research', text: '+1 Research' }]
+			benefits: [{ icon: 'research' }]
 		},
 		design_bureau: {
 			costs: [],
-			benefits: [{ icon: 'upgrade', text: 'Modify Blueprint' }]
+			benefits: [{ icon: 'blueprint' }]
 		},
 		construction_hall: {
 			costs: [{ icon: 'cash', amount: '£' }],
-			benefits: [{ icon: 'ship', text: 'Build Ships' }]
+			benefits: [{ icon: 'ship' }]
 		},
-		// Hangar is the display name for construction_hall
 		launchpad: {
 			costs: [{ icon: 'officers' }, { icon: 'hydrogen' }],
-			benefits: [{ icon: 'route', text: 'Launch Ships' }]
+			benefits: [{ icon: 'launch' }]
 		},
 		academy: {
 			costs: [{ icon: 'cash', amount: '2/4' }],
-			benefits: [{ icon: 'officers', text: '+Officer/Engineer' }]
+			benefits: [{ icon: 'officers', icon2: 'engineers' }]
 		},
 		flight_school: {
 			costs: [{ icon: 'cash', amount: '5' }],
-			benefits: [{ icon: 'income', icon2: 'officers', text: '' }]
+			benefits: [{ icon: 'income', icon2: 'officers' }]
 		},
 		technical_institute: {
 			costs: [{ icon: 'cash', amount: '6' }],
-			benefits: [{ icon: 'income', icon2: 'engineers', text: '' }]
+			benefits: [{ icon: 'income', icon2: 'engineers' }]
 		},
 		government_liaison: {
 			costs: [{ icon: 'officers', amount: '1-3' }],
-			benefits: [{ icon: 'income', text: '+Income' }]
+			benefits: [{ icon: 'cash' }]
 		},
 		ministry: {
 			costs: [],
-			benefits: [{ icon: 'influence', text: 'Political Action' }]
+			benefits: [{ icon: 'politics' }]
 		},
 		gas_depot: {
 			costs: [{ icon: 'cash', amount: '£' }],
-			benefits: [{ icon: 'hydrogen', text: 'Buy Gas' }]
+			benefits: [{ icon: 'gas' }]
 		},
 		insurance_bureau: {
 			costs: [{ icon: 'income', amount: '-1' }],
-			benefits: [{ icon: 'insurance', text: 'Buy Insurance' }]
+			benefits: [{ icon: 'insurance' }]
 		},
 		weather_bureau: {
 			costs: [{ icon: 'cash', amount: '2' }],
-			benefits: [{ icon: 'hazard', text: 'Peek Hazard' }]
+			benefits: [{ icon: 'eye', icon2: 'hazard' }]
 		}
 	};
 
@@ -143,11 +142,10 @@
 				<div class="location-benefit">
 					{#each locationData.benefits as benefit}
 						<div class="benefit-item">
-							<Icon name={benefit.icon} size={18} color="var(--color-success)" />
+							<Icon name={benefit.icon} size={24} color="var(--color-success)" />
 							{#if benefit.icon2}
-								<Icon name={benefit.icon2} size={16} />
+								<Icon name={benefit.icon2} size={20} />
 							{/if}
-							<span class="benefit-text">{benefit.text}</span>
 						</div>
 					{/each}
 				</div>
@@ -266,11 +264,6 @@
 		display: flex;
 		align-items: center;
 		gap: var(--spacing-xs);
-	}
-
-	.benefit-text {
-		font-size: 0.625rem;
-		color: var(--color-text-secondary);
 	}
 
 	.place-hint {
