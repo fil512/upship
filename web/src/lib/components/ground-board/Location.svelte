@@ -142,9 +142,9 @@
 				<div class="location-benefit">
 					{#each locationData.benefits as benefit}
 						<div class="benefit-item">
-							<Icon name={benefit.icon} size={24} color="var(--color-success)" />
+							<Icon name={benefit.icon} size={24} color="var(--color-text-primary)" />
 							{#if benefit.icon2}
-								<Icon name={benefit.icon2} size={20} />
+								<Icon name={benefit.icon2} size={20} color="var(--color-text-primary)" />
 							{/if}
 						</div>
 					{/each}
