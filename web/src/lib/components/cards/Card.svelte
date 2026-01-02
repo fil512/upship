@@ -65,32 +65,32 @@
 		<div class="reveal-items">
 			{#if card.reveal?.cash}
 				<div class="reveal-item" title="+{card.reveal.cash} Cash">
-					<Icon name="cash" size={14} />
 					<span>+{card.reveal.cash}</span>
+					<Icon name="cash" size={14} />
 				</div>
 			{/if}
 			{#if card.reveal?.influence}
 				<div class="reveal-item" title="+{card.reveal.influence} Influence">
-					<Icon name="influence" size={14} />
 					<span>+{card.reveal.influence}</span>
+					<Icon name="influence" size={14} />
 				</div>
 			{/if}
 			{#if card.reveal?.research}
 				<div class="reveal-item" title="+{card.reveal.research} Research">
-					<Icon name="research" size={14} />
 					<span>+{card.reveal.research}</span>
+					<Icon name="research" size={14} />
 				</div>
 			{/if}
 			{#if card.reveal?.officers}
 				<div class="reveal-item" title="+{card.reveal.officers} Officers">
-					<Icon name="officers" size={14} />
 					<span>+{card.reveal.officers}</span>
+					<Icon name="officers" size={14} />
 				</div>
 			{/if}
 			{#if card.reveal?.engineers}
 				<div class="reveal-item" title="+{card.reveal.engineers} Engineers">
-					<Icon name="engineers" size={14} />
 					<span>+{card.reveal.engineers}</span>
+					<Icon name="engineers" size={14} />
 				</div>
 			{/if}
 		</div>

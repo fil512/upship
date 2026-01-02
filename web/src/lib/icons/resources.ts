@@ -21,13 +21,13 @@ export const resourceIcons: Record<ResourceIconName, IconDefinition> = {
   },
 
   officers: {
-    // Captain's hat - white crown, navy band with gold stripe, black visor
+    // Head with captain's hat (front view)
     svg: `<svg viewBox="0 0 24 24">
-      <path d="M5 14c0-4 3-7 7-7s7 3 7 7H5z" fill="white"/>
-      <rect x="4" y="14" width="16" height="4" fill="#2c3e50"/>
-      <path d="M4 15.5h16" stroke="#f1c40f" stroke-width="1.5" fill="none"/>
-      <path d="M4 18q8 3 16 0" fill="#1a1a2e"/>
-      <path d="M12 10l-1.5-2h3l-1.5 2" fill="#2c3e50"/>
+      <circle cx="12" cy="16" r="6" fill="#f5deb3"/>
+      <ellipse cx="12" cy="8" rx="8" ry="4" fill="#2c3e50"/>
+      <rect x="4" y="8" width="16" height="3" fill="#2c3e50"/>
+      <path d="M4 9.5h16" stroke="#f1c40f" stroke-width="1" fill="none"/>
+      <circle cx="12" cy="7" r="2" fill="#f1c40f"/>
     </svg>`,
     category: 'resource',
     tooltip: 'Officers - required for launches'
@@ -75,24 +75,19 @@ export const resourceIcons: Record<ResourceIconName, IconDefinition> = {
   },
 
   research: {
+    // Magnifying glass
     svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M9 3h6v7a3 3 0 0 1-3 3v0a3 3 0 0 1-3-3V3z"/>
-      <path d="M7 3h10"/>
-      <path d="M12 13v4"/>
-      <path d="M8 21h8"/>
-      <path d="M10 17h4"/>
+      <circle cx="11" cy="11" r="8"/>
+      <path d="M21 21l-4.35-4.35"/>
     </svg>`,
     category: 'resource',
     tooltip: 'Research - unlock technologies'
   },
 
   influence: {
-    svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M17 6.1H3"/>
-      <path d="M21 12H3"/>
-      <path d="M15.1 18H3"/>
-      <circle cx="19" cy="6" r="2" fill="currentColor"/>
-      <circle cx="19" cy="18" r="2" fill="currentColor"/>
+    // Grey diamond
+    svg: `<svg viewBox="0 0 24 24">
+      <polygon points="12 2 22 12 12 22 2 12" fill="#888888"/>
     </svg>`,
     category: 'resource',
     tooltip: 'Influence - buy market cards'

@@ -17,17 +17,17 @@ export const gameIcons: Record<GameIconName, IconDefinition> = {
   },
 
   launch: {
-    // Airship with motion lines indicating upward flight
+    // Airship facing right with motion lines on left (taking off)
     svg: `<svg viewBox="0 0 24 24" fill="currentColor">
       <ellipse cx="13" cy="9" rx="8" ry="4"/>
       <path d="M19 6l2-1.5v3l-2 1.5z"/>
       <path d="M19 10l2 1.5v-3l-2-1.5z"/>
       <rect x="9" y="12" width="6" height="2.5" rx="0.5"/>
       <path d="M11 12v-1.5"/>
-      <path d="M15 12v-1.5"/>
-      <path d="M3 18l4-3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-      <path d="M2 14l3-2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-      <path d="M4 21l3-2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      <path d="M13 12v-1.5"/>
+      <path d="M3 6l4 3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      <path d="M2 10l3 2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      <path d="M4 3l3 2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
     </svg>`,
     category: 'game',
     tooltip: 'Launch - send ships on routes'

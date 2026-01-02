@@ -142,6 +142,7 @@
 						<div class="benefit-item">
 							<Icon name={benefit.icon} size={24} color="var(--color-text-primary)" />
 							{#if benefit.icon2}
+								<span class="benefit-separator">/</span>
 								<Icon name={benefit.icon2} size={20} color="var(--color-text-primary)" />
 							{/if}
 						</div>
@@ -261,6 +262,12 @@
 		display: flex;
 		align-items: center;
 		gap: var(--spacing-xs);
+	}
+
+	.benefit-separator {
+		font-size: 1rem;
+		font-weight: 300;
+		color: var(--color-text-muted);
 	}
 
 	.place-hint {
