@@ -12,11 +12,9 @@ export const resourceIcons: Record<ResourceIconName, IconDefinition> = {
   },
 
   income: {
-    svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M12 2v14"/>
-      <path d="M5 9l7-7 7 7"/>
-      <path d="M5 19h14"/>
-      <path d="M5 22h14"/>
+    svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 19V5"/>
+      <path d="M5 12l7-7 7 7"/>
     </svg>`,
     category: 'resource',
     tooltip: 'Income - cash earned each turn'
