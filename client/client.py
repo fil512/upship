@@ -415,8 +415,12 @@ class UpshipClient:
         return self.action(username, game_id, 'END_TURN')
 
     def pass_turn(self, username: str, game_id: str) -> ActionResult:
-        """Pass in the worker placement phase."""
-        return self.action(username, game_id, 'PASS')
+        """Exit worker placement without acquiring technologies or cards.
+
+        DEPRECATED: Use reveal() instead. This method is an alias for reveal()
+        with no acquisitions.
+        """
+        return self.reveal(username, game_id)
 
     def place_agent(
         self,

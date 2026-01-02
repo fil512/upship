@@ -724,8 +724,7 @@ const commands = {
       console.log('');
       console.log('Actions:');
       console.log('  END_TURN                    - End your turn');
-      console.log('  PASS                        - Pass (worker placement only)');
-      console.log('  REVEAL techAcquisitions=a,b marketPurchases=c - Atomic pass + acquire');
+      console.log('  REVEAL                      - Exit worker placement (optionally acquire techs/cards)');
       console.log('  NO_MORE_LAUNCHES            - Signal done launching at launchpad');
       console.log('  PLACE_AGENT locationId=<id> cardIndex=<n> - Place agent at location');
       console.log('  BUY_GAS type=hydrogen amt=2 - Buy gas cubes');
@@ -807,22 +806,18 @@ const commands = {
     return commands.action(username, [args[0], 'END_TURN']);
   },
 
-  async pass(username, args) {
-    return commands.action(username, [args[0], 'PASS']);
-  },
-
   async reveal(username, args) {
     const [gameId, techList, cardList] = args;
     if (!gameId) {
       console.log('Usage: upship <user> reveal <gameId> [techId1,techId2,...] [cardId1,cardId2,...]');
       console.log('');
-      console.log('Atomic reveal: pass worker placement AND acquire technologies/market cards.');
+      console.log('Exit worker placement phase (optionally acquiring technologies/market cards).');
       console.log('Tech acquisitions use Research, market purchases use Influence.');
       console.log('');
       console.log('Examples:');
-      console.log('  upship alice reveal abc123                     # Just pass');
-      console.log('  upship alice reveal abc123 diesel_engine       # Pass and acquire 1 tech');
-      console.log('  upship alice reveal abc123 tech1,tech2 card1   # Acquire techs and card');
+      console.log('  upship alice reveal abc123                     # Exit without acquiring');
+      console.log('  upship alice reveal abc123 diesel_engine       # Exit and acquire 1 tech');
+      console.log('  upship alice reveal abc123 tech1,tech2 card1   # Exit and acquire techs + card');
       return;
     }
     const actionArgs = [gameId, 'REVEAL'];
@@ -1007,8 +1002,7 @@ ${c(COLORS.yellow, 'Game State:')}
 
 ${c(COLORS.yellow, 'Worker Placement:')}
   upship <user> place <gameId> <locationId> <cardIndex>  Place agent
-  upship <user> pass <gameId>                 Pass this round
-  upship <user> reveal <gameId> [techs] [cards]  Atomic pass + acquire (Section 5.1)
+  upship <user> reveal <gameId> [techs] [cards]  Exit worker placement (optionally acquire)
   upship <user> nolaunches <gameId>           Signal done launching at launchpad
 
 ${c(COLORS.yellow, 'Actions (shorthand):')}

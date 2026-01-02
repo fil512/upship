@@ -307,9 +307,8 @@ def run_action(player: str, command: str, *args, game_id: str = None) -> None:
     try:
         if command_lower == 'endturn':
             result = client.end_turn(player, game_id)
-        elif command_lower == 'pass':
-            result = client.pass_turn(player, game_id)
-        elif command_lower == 'reveal':
+        elif command_lower in ('pass', 'reveal'):
+            # 'pass' is an alias for 'reveal' - exits worker placement
             result = client.reveal(player, game_id)
         elif command_lower == 'nolaunches':
             result = client.no_more_launches(player, game_id)

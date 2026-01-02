@@ -176,7 +176,7 @@ npm run cli -- <user> action <gameId> <ACTION_TYPE> [key=value ...]
 
 ```bash
 npm run cli -- <user> place <gameId> <locationId> <cardIndex>  # Place agent
-npm run cli -- <user> pass <gameId>                            # Pass this round
+npm run cli -- <user> reveal <gameId> [techs] [cards]          # Exit worker placement (optionally acquire)
 ```
 
 **Location IDs:**
