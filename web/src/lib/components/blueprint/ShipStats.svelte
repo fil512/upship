@@ -66,14 +66,12 @@
 
 <style>
 	.ship-stats {
-		margin-top: var(--spacing-md);
-		padding-top: var(--spacing-md);
-		border-top: 1px solid var(--color-bg-hover);
+		/* Standalone panel styling */
 	}
 
 	.stats-grid {
 		display: grid;
-		grid-template-columns: repeat(4, 1fr);
+		grid-template-columns: repeat(2, 1fr);
 		gap: var(--spacing-xs);
 	}
 

@@ -2,66 +2,9 @@
 	import { myState, gameState } from '$lib/stores/gameState';
 	import { openModal } from '$lib/stores/ui';
 	import SlotRow from './SlotRow.svelte';
-	import ShipStats from './ShipStats.svelte';
 	import type { Blueprint as BlueprintType } from '$lib/types/game';
 
-	// Calculate ship stats from blueprint upgrades
-	function calculateStats(blueprint: BlueprintType | null | undefined) {
-		if (!blueprint) return null;
-
-		// Base stats
-		let lift = 0;
-		let weight = 0;
-		let speed = 0;
-		let range = 1;
-		let ceiling = 0;
-		let reliability = 0;
-		let luxury = 0;
-
-		// Count filled slots for basic stats
-		const allSlots = [
-			...blueprint.frameSlots,
-			...blueprint.fabricSlots,
-			...blueprint.driveSlots,
-			...blueprint.componentSlots
-		].filter(Boolean);
-
-		// Frame provides structure (lift)
-		blueprint.frameSlots.filter(Boolean).forEach(() => {
-			lift += 2;
-		});
-
-		// Fabric provides envelope (lift)
-		blueprint.fabricSlots.filter(Boolean).forEach(() => {
-			lift += 1;
-		});
-
-		// Components add weight
-		blueprint.componentSlots.filter(Boolean).forEach(() => {
-			weight += 1;
-		});
-
-		// Drive provides range/speed
-		blueprint.driveSlots.filter(Boolean).forEach(() => {
-			range += 1;
-			speed += 1;
-		});
-
-		return {
-			lift,
-			weight,
-			netLift: lift - weight,
-			speed,
-			range,
-			ceiling,
-			reliability,
-			luxury,
-			canLaunch: lift > weight
-		};
-	}
-
 	$: blueprint = $myState?.blueprint;
-	$: stats = blueprint ? calculateStats(blueprint) : null;
 	$: age = $gameState?.age || 1;
 
 	function handleSlotClick(slotType: string, slotIndex: number, currentUpgrade: string | null) {
@@ -114,10 +57,6 @@
 				on:slotClick={(e) => handleSlotClick('component', e.detail.index, e.detail.upgrade)}
 			/>
 		</div>
-
-		{#if stats}
-			<ShipStats {stats} />
-		{/if}
 	{:else}
 		<div class="no-blueprint">No blueprint data</div>
 	{/if}

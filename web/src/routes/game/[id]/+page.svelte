@@ -28,6 +28,7 @@
 
 	// Game Components
 	import Blueprint from '$lib/components/blueprint/Blueprint.svelte';
+	import ShipStats from '$lib/components/blueprint/ShipStats.svelte';
 	import GroundBoard from '$lib/components/ground-board/GroundBoard.svelte';
 	import HandSection from '$lib/components/cards/HandSection.svelte';
 	import FleetPanel from '$lib/components/ships/FleetPanel.svelte';
@@ -37,6 +38,9 @@
 	import TechList from '$lib/components/sidebar/TechList.svelte';
 	import PlayersList from '$lib/components/sidebar/PlayersList.svelte';
 	import GameLog from '$lib/components/sidebar/GameLog.svelte';
+
+	// Utilities
+	import { calculateShipStats } from '$lib/utils/shipStats';
 
 	// Center pane tabs
 	type CenterTab = 'actions' | 'log' | 'map' | 'blueprint';
@@ -162,6 +166,9 @@
 	$: routes = $gameState?.map?.routes || [];
 	$: claimedRouteIds = routes.filter((r) => r.claimed).map((r) => r.id);
 
+	// Ship stats from blueprint
+	$: shipStats = calculateShipStats($myState?.blueprint);
+
 	// Check if viewing another player (in dev mode)
 	$: isViewingOtherPlayer = $isDevMode && $effectiveUserId !== $user?.id;
 	// Get raw hand value - might be a number if viewing filtered state
@@ -234,7 +241,7 @@
 
 		<!-- Main game area -->
 		<div class="game-layout">
-			<!-- Left sidebar - Players and Tech -->
+			<!-- Left sidebar - Players and Ship Stats -->
 			<aside class="sidebar left">
 				<PlayersList
 					players={$gameState.players}
@@ -244,8 +251,11 @@
 					myPlayerId={$effectiveUserId}
 				/>
 
-				{#if $myState}
-					<TechList technologies={$myState.technologies || []} />
+				{#if shipStats}
+					<div class="panel ship-stats-panel">
+						<h3>Ship Stats</h3>
+						<ShipStats stats={shipStats} />
+					</div>
 				{/if}
 			</aside>
 
@@ -298,7 +308,13 @@
 									on:placeAgent={handlePlaceAgent}
 								/>
 							</section>
-
+						</div>
+					{:else if activeTab === 'log'}
+						<div class="log-tab">
+							<GameLog log={$gameState.log || []} maxEntries={50} />
+						</div>
+					{:else if activeTab === 'map'}
+						<div class="map-tab">
 							<!-- Fleet and Routes -->
 							<div class="fleet-routes-row">
 								<section class="board-section fleet">
@@ -317,22 +333,11 @@
 								</section>
 							</div>
 						</div>
-					{:else if activeTab === 'log'}
-						<div class="log-tab">
-							<GameLog log={$gameState.log || []} maxEntries={50} />
-						</div>
-					{:else if activeTab === 'map'}
-						<div class="map-tab">
-							<div class="map-placeholder">
-								<h3>Route Map</h3>
-								<p>Map visualization coming soon</p>
-								<p class="map-info">Age {$gameState.age} routes: {routes.length} available</p>
-							</div>
-						</div>
 					{:else if activeTab === 'blueprint'}
 						<div class="blueprint-tab">
 							{#if $myState}
 								<Blueprint />
+								<TechList technologies={$myState.technologies || []} />
 							{/if}
 						</div>
 					{/if}
@@ -587,31 +592,28 @@
 	}
 
 	.map-tab {
-		height: 100%;
 		display: flex;
-		align-items: center;
-		justify-content: center;
-	}
-
-	.map-placeholder {
-		text-align: center;
-		color: var(--color-text-muted);
-	}
-
-	.map-placeholder h3 {
-		color: var(--color-text-primary);
-		margin-bottom: var(--spacing-sm);
-	}
-
-	.map-info {
-		margin-top: var(--spacing-md);
-		font-size: 0.875rem;
-		color: var(--color-text-secondary);
+		flex-direction: column;
+		gap: var(--spacing-md);
 	}
 
 	.blueprint-tab {
 		display: flex;
-		justify-content: center;
+		flex-direction: column;
+		align-items: center;
+		gap: var(--spacing-md);
+	}
+
+	.ship-stats-panel {
+		background: var(--color-bg-card);
+	}
+
+	.ship-stats-panel h3 {
+		font-size: 0.75rem;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		color: var(--color-text-muted);
+		margin-bottom: var(--spacing-xs);
 	}
 
 	.board-sections {
