@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte';
+	import Icon from '$lib/components/ui/Icon.svelte';
+	import type { FactionIconName } from '$lib/icons/types';
 
 	export let selectedFaction: string | null = null;
 	export let takenFactions: (string | null)[] = [];
@@ -53,7 +55,10 @@
 			disabled={isTaken}
 			on:click={() => handleSelect(faction.id)}
 		>
-			<span class="faction-name">{faction.name}</span>
+			<div class="faction-header">
+				<Icon name={faction.id as FactionIconName} size={28} color={faction.color} />
+				<span class="faction-name">{faction.name}</span>
+			</div>
 			<span class="faction-desc">{faction.description}</span>
 			{#if isSelected}
 				<span class="checkmark">&#10003;</span>
@@ -98,6 +103,12 @@
 	.faction-button:disabled {
 		opacity: 0.5;
 		cursor: not-allowed;
+	}
+
+	.faction-header {
+		display: flex;
+		align-items: center;
+		gap: var(--spacing-sm);
 	}
 
 	.faction-name {

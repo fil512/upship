@@ -25,7 +25,7 @@
 		},
 		{
 			id: 'construction_hall',
-			name: 'Construction Hall',
+			name: 'Hangar',
 			symbol: 'wrench' as const,
 			description: 'Build ships'
 		},
@@ -131,7 +131,6 @@
 
 	<div class="location-groups">
 		<div class="location-group wrench-group">
-			<div class="group-label">🔧 Technical</div>
 			<div class="locations-grid">
 				{#each wrenchLocations as loc}
 					<Location
@@ -146,7 +145,6 @@
 		</div>
 
 		<div class="location-group propeller-group">
-			<div class="group-label">⚙️ Operations</div>
 			<div class="locations-grid">
 				{#each propellerLocations as loc}
 					<Location
@@ -161,7 +159,6 @@
 		</div>
 
 		<div class="location-group coin-group">
-			<div class="group-label">🪙 Business</div>
 			<div class="locations-grid">
 				{#each coinLocations as loc}
 					<Location
@@ -217,19 +214,12 @@
 		background: var(--color-bg-hover);
 	}
 
-	.group-label {
-		font-size: 0.75rem;
-		font-weight: 600;
-		margin-bottom: var(--spacing-sm);
-		color: var(--color-text-secondary);
-	}
-
 	.wrench-group {
 		border-left: 3px solid #4a9eff;
 	}
 
 	.propeller-group {
-		border-left: 3px solid #4caf50;
+		border-left: 3px solid #888888;
 	}
 
 	.coin-group {

@@ -1,4 +1,6 @@
 <script lang="ts">
+	import Icon from '$lib/components/ui/Icon.svelte';
+
 	export let cash: number = 0;
 	export let income: number = 0;
 	export let officers: number = 0;
@@ -13,7 +15,7 @@
 
 	<div class="resources-grid">
 		<div class="resource cash">
-			<span class="icon">💷</span>
+			<Icon name="cash" size={24} />
 			<div class="values">
 				<span class="value">{cash}</span>
 				<span class="income">(+{income}/turn)</span>
@@ -22,31 +24,31 @@
 		</div>
 
 		<div class="resource vp">
-			<span class="icon">⭐</span>
+			<Icon name="vp" size={24} />
 			<span class="value">{vp}</span>
 			<span class="label">VP</span>
 		</div>
 
 		<div class="resource officers">
-			<span class="icon">👨‍✈️</span>
+			<Icon name="officers" size={24} />
 			<span class="value">{officers}</span>
 			<span class="label">Officers</span>
 		</div>
 
 		<div class="resource engineers">
-			<span class="icon">👷</span>
+			<Icon name="engineers" size={24} />
 			<span class="value">{engineers}</span>
 			<span class="label">Engineers</span>
 		</div>
 
 		<div class="resource hydrogen">
-			<span class="icon gas-h2">H₂</span>
+			<Icon name="hydrogen" size={24} color="#1565c0" />
 			<span class="value">{hydrogen}</span>
 			<span class="label">Hydrogen</span>
 		</div>
 
 		<div class="resource helium">
-			<span class="icon gas-he">He</span>
+			<Icon name="helium" size={24} color="#e65100" />
 			<span class="value">{helium}</span>
 			<span class="label">Helium</span>
 		</div>
@@ -81,28 +83,6 @@
 		border-radius: var(--radius-sm);
 	}
 
-	.icon {
-		font-size: 1.25rem;
-		margin-bottom: 2px;
-	}
-
-	.gas-h2 {
-		font-size: 1rem;
-		font-weight: bold;
-		color: #1565c0;
-		background: #e3f2fd;
-		padding: 2px 6px;
-		border-radius: 4px;
-	}
-
-	.gas-he {
-		font-size: 1rem;
-		font-weight: bold;
-		color: #e65100;
-		background: #fff3e0;
-		padding: 2px 6px;
-		border-radius: 4px;
-	}
 
 	.values {
 		display: flex;

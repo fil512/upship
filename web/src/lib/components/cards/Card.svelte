@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte';
 	import type { Card } from '$lib/types/game';
+	import Icon from '$lib/components/ui/Icon.svelte';
+	import type { SymbolIconName } from '$lib/icons/types';
 
 	export let card: Card;
 	export let index: number;
@@ -11,19 +13,14 @@
 		select: { index: number; card: Card };
 	}>();
 
-	const SYMBOL_ICONS: Record<string, string> = {
-		wrench: '🔧',
-		coin: '🪙',
-		propeller: '⚙️',
-		any: '⭐'
-	};
-
 	const SYMBOL_COLORS: Record<string, string> = {
 		wrench: '#4a9eff',
 		coin: '#ffc107',
 		propeller: '#4caf50',
 		any: '#c4a35a'
 	};
+
+	$: iconName = (card.symbol || 'any') as SymbolIconName;
 
 	function handleClick() {
 		if (selectable) {
@@ -40,7 +37,9 @@
 	on:click={handleClick}
 	disabled={!selectable}
 >
-	<div class="card-symbol">{SYMBOL_ICONS[card.symbol] || '?'}</div>
+	<div class="card-symbol">
+		<Icon name={iconName} size={28} color={SYMBOL_COLORS[card.symbol] || SYMBOL_COLORS.any} />
+	</div>
 	<div class="card-name">{card.name}</div>
 	{#if card.ability}
 		<div class="card-ability">{card.ability}</div>
@@ -85,7 +84,6 @@
 	}
 
 	.card-symbol {
-		font-size: 1.5rem;
 		margin-bottom: var(--spacing-xs);
 	}
 

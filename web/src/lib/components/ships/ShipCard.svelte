@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte';
 	import type { Ship } from '$lib/types/game';
+	import Icon from '$lib/components/ui/Icon.svelte';
 
 	export let ship: Ship;
 	export let selectable: boolean = false;
@@ -39,25 +40,25 @@
 	disabled={!selectable}
 >
 	<div class="ship-header">
-		<span class="ship-icon">🚢</span>
+		<Icon name="ship" size={18} />
 		<span class="ship-id">Ship #{ship.id.substring(0, 4)}</span>
 	</div>
 
 	<div class="ship-stats">
-		<div class="stat">
-			<span class="label">Lift</span>
+		<div class="stat" title="Lift - carrying capacity">
+			<Icon name="lift" size={10} />
 			<span class="value">{ship.lift}</span>
 		</div>
-		<div class="stat">
-			<span class="label">Wt</span>
+		<div class="stat" title="Weight - total mass">
+			<Icon name="weight" size={10} />
 			<span class="value">{ship.weight}</span>
 		</div>
-		<div class="stat">
-			<span class="label">Rng</span>
+		<div class="stat" title="Range - flight distance">
+			<Icon name="range" size={10} />
 			<span class="value">{ship.range}</span>
 		</div>
-		<div class="stat">
-			<span class="label">Spd</span>
+		<div class="stat" title="Speed - travel rate">
+			<Icon name="speed" size={10} />
 			<span class="value">{ship.speed}</span>
 		</div>
 	</div>
@@ -68,13 +69,14 @@
 
 	{#if ship.routeId}
 		<div class="route-info">
-			Route: {ship.routeId.substring(0, 8)}...
+			<Icon name="route" size={10} />
+			<span>{ship.routeId.substring(0, 8)}...</span>
 		</div>
 	{/if}
 
 	{#if ship.gasType}
 		<div class="gas-type" class:hydrogen={ship.gasType === 'hydrogen'} class:helium={ship.gasType === 'helium'}>
-			{ship.gasType === 'hydrogen' ? 'H₂' : 'He'}
+			<Icon name={ship.gasType} size={12} />
 		</div>
 	{/if}
 </button>
@@ -123,10 +125,6 @@
 		margin-bottom: var(--spacing-xs);
 	}
 
-	.ship-icon {
-		font-size: 1rem;
-	}
-
 	.ship-id {
 		font-size: 0.625rem;
 		color: var(--color-text-secondary);
@@ -141,20 +139,17 @@
 
 	.stat {
 		display: flex;
-		flex-direction: column;
+		flex-direction: row;
 		align-items: center;
+		justify-content: center;
+		gap: 1px;
 		padding: 2px;
 		background: var(--color-bg-hover);
 		border-radius: 2px;
 	}
 
-	.stat .label {
-		font-size: 0.5rem;
-		color: var(--color-text-muted);
-	}
-
 	.stat .value {
-		font-size: 0.75rem;
+		font-size: 0.7rem;
 		font-weight: 600;
 		color: var(--color-text-primary);
 	}
@@ -166,6 +161,9 @@
 	}
 
 	.route-info {
+		display: flex;
+		align-items: center;
+		gap: 2px;
 		font-size: 0.5rem;
 		color: var(--color-text-muted);
 		margin-top: 2px;

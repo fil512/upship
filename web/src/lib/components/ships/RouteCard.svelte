@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte';
 	import type { Route } from '$lib/types/game';
+	import Icon from '$lib/components/ui/Icon.svelte';
 
 	export let route: Route;
 	export let selectable: boolean = false;
@@ -25,6 +26,7 @@
 	disabled={!selectable || claimed}
 >
 	<div class="route-header">
+		<Icon name="route" size={14} color="var(--color-text-muted)" />
 		<span class="route-name">{route.name}</span>
 		{#if claimed}
 			<span class="claimed-badge">Claimed</span>
@@ -32,16 +34,16 @@
 	</div>
 
 	<div class="route-stats">
-		<div class="stat">
-			<span class="label">Dist</span>
+		<div class="stat" title="Range requirement">
+			<Icon name="range" size={12} />
 			<span class="value">{route.distance}</span>
 		</div>
-		<div class="stat">
-			<span class="label">Speed</span>
+		<div class="stat" title="Speed requirement">
+			<Icon name="speed" size={12} />
 			<span class="value">{route.speedRequirement || 0}</span>
 		</div>
-		<div class="stat income">
-			<span class="label">Income</span>
+		<div class="stat income" title="Income earned">
+			<Icon name="income" size={12} />
 			<span class="value">+{route.income}</span>
 		</div>
 	</div>
@@ -87,7 +89,7 @@
 	.route-header {
 		display: flex;
 		align-items: center;
-		justify-content: space-between;
+		gap: var(--spacing-xs);
 		margin-bottom: var(--spacing-xs);
 	}
 
@@ -114,21 +116,18 @@
 
 	.stat {
 		display: flex;
-		flex-direction: column;
+		flex-direction: row;
 		align-items: center;
-		padding: 2px 4px;
+		justify-content: center;
+		gap: 2px;
+		padding: 3px 6px;
 		background: var(--color-bg-hover);
 		border-radius: 2px;
 		flex: 1;
 	}
 
-	.stat .label {
-		font-size: 0.5rem;
-		color: var(--color-text-muted);
-	}
-
 	.stat .value {
-		font-size: 0.75rem;
+		font-size: 0.7rem;
 		font-weight: 600;
 		color: var(--color-text-primary);
 	}

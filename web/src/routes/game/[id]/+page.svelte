@@ -34,8 +34,6 @@
 	import RoutesPanel from '$lib/components/ships/RoutesPanel.svelte';
 
 	// Sidebar Components
-	import PawnTracker from '$lib/components/sidebar/PawnTracker.svelte';
-	import ResourcePanel from '$lib/components/sidebar/ResourcePanel.svelte';
 	import TechList from '$lib/components/sidebar/TechList.svelte';
 	import PlayersList from '$lib/components/sidebar/PlayersList.svelte';
 	import GameLog from '$lib/components/sidebar/GameLog.svelte';
@@ -232,25 +230,17 @@
 
 		<!-- Main game area -->
 		<div class="game-layout">
-			<!-- Left sidebar - Player info -->
+			<!-- Left sidebar - Players and Blueprint -->
 			<aside class="sidebar left">
-				<PawnTracker
+				<PlayersList
 					players={$gameState.players}
 					playerOrder={$gameState.playerOrder}
 					currentPlayerId={$currentPlayerId}
+					onlinePlayers={$onlinePlayers}
+					myPlayerId={$effectiveUserId}
 				/>
 
 				{#if $myState}
-					<ResourcePanel
-						cash={$myState.cash}
-						income={$myState.income}
-						officers={$myState.officers}
-						engineers={$myState.engineers}
-						hydrogen={$myState.gasCubes.hydrogen}
-						helium={$myState.gasCubes.helium}
-						vp={$myState.vp || 0}
-					/>
-
 					<Blueprint />
 
 					<TechList technologies={$myState.technologies || []} />
@@ -306,16 +296,8 @@
 				</div>
 			</main>
 
-			<!-- Right sidebar - Players & Actions -->
+			<!-- Right sidebar - Actions & Log -->
 			<aside class="sidebar right">
-				<PlayersList
-					players={$gameState.players}
-					playerOrder={$gameState.playerOrder}
-					currentPlayerId={$currentPlayerId}
-					onlinePlayers={$onlinePlayers}
-					myPlayerId={$effectiveUserId}
-				/>
-
 				<div class="panel actions">
 					<h3>Actions</h3>
 					{#if $isMyTurn}

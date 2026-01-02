@@ -2,37 +2,92 @@
 	import { createEventDispatcher } from 'svelte';
 	import type { GroundBoardPlacements, PlayerState } from '$lib/types/game';
 	import { getFactionColor, getFactionBorderColor } from '$lib/utils/factionColors';
+	import Icon from '$lib/components/ui/Icon.svelte';
+	import type { SymbolIconName, IconName } from '$lib/icons/types';
 
 	export let id: string;
 	export let name: string;
 	export let symbol: 'wrench' | 'coin' | 'propeller';
-	export let description: string;
 	export let placements: GroundBoardPlacements;
 	export let players: Record<string, PlayerState> = {};
 	export let canPlace: boolean = false;
+
+	// Cost and benefit data for each location
+	const LOCATION_DATA: Record<
+		string,
+		{
+			costs: Array<{ icon: IconName; amount?: string }>;
+			benefits: Array<{ icon: IconName; text: string }>;
+		}
+	> = {
+		research_institute: {
+			costs: [{ icon: 'cash', amount: '4' }],
+			benefits: [{ icon: 'research', text: '+1 Research' }]
+		},
+		design_bureau: {
+			costs: [],
+			benefits: [{ icon: 'upgrade', text: 'Modify Blueprint' }]
+		},
+		construction_hall: {
+			costs: [{ icon: 'cash', amount: '£' }],
+			benefits: [{ icon: 'ship', text: 'Build Ships' }]
+		},
+		// Hangar is the display name for construction_hall
+		launchpad: {
+			costs: [{ icon: 'officers' }, { icon: 'hydrogen' }],
+			benefits: [{ icon: 'route', text: 'Launch Ships' }]
+		},
+		academy: {
+			costs: [{ icon: 'cash', amount: '2/4' }],
+			benefits: [{ icon: 'officers', text: '+Officer/Engineer' }]
+		},
+		flight_school: {
+			costs: [{ icon: 'cash', amount: '5' }],
+			benefits: [{ icon: 'income', text: '+1 Officer Income' }]
+		},
+		technical_institute: {
+			costs: [{ icon: 'cash', amount: '6' }],
+			benefits: [{ icon: 'income', text: '+1 Engineer Income' }]
+		},
+		government_liaison: {
+			costs: [{ icon: 'officers', amount: '1-3' }],
+			benefits: [{ icon: 'income', text: '+Income' }]
+		},
+		ministry: {
+			costs: [],
+			benefits: [{ icon: 'influence', text: 'Political Action' }]
+		},
+		gas_depot: {
+			costs: [{ icon: 'cash', amount: '£' }],
+			benefits: [{ icon: 'hydrogen', text: 'Buy Gas' }]
+		},
+		insurance_bureau: {
+			costs: [{ icon: 'income', amount: '-1' }],
+			benefits: [{ icon: 'insurance', text: 'Buy Insurance' }]
+		},
+		weather_bureau: {
+			costs: [{ icon: 'cash', amount: '2' }],
+			benefits: [{ icon: 'hazard', text: 'Peek Hazard' }]
+		}
+	};
+
+	const SYMBOL_COLORS: Record<string, string> = {
+		wrench: '#4a9eff',    // Blue
+		coin: '#ffc107',      // Gold
+		propeller: '#ffffff'  // White
+	};
 
 	const dispatch = createEventDispatcher<{
 		select: { locationId: string };
 	}>();
 
-	const SYMBOL_ICONS: Record<string, string> = {
-		wrench: '🔧',
-		coin: '🪙',
-		propeller: '⚙️'
-	};
-
-	const SYMBOL_COLORS: Record<string, string> = {
-		wrench: '#4a9eff',
-		coin: '#ffc107',
-		propeller: '#4caf50'
-	};
-
+	$: locationData = LOCATION_DATA[id] || { costs: [], benefits: [] };
 	$: placement = placements[id];
 	$: isOccupied = !!placement;
 	$: occupantPlayer = placement ? players[placement.playerId] : null;
 	$: occupantFaction = occupantPlayer?.faction || null;
-	$: pawnColor = getFactionColor(occupantFaction);
-	$: pawnBorderColor = getFactionBorderColor(occupantFaction);
+	$: pawnColor = getFactionColor(occupantFaction ?? undefined);
+	$: pawnBorderColor = getFactionBorderColor(occupantFaction ?? undefined);
 
 	function handleClick() {
 		if (canPlace && !isOccupied) {
@@ -48,36 +103,60 @@
 	style:--symbol-color={SYMBOL_COLORS[symbol]}
 	on:click={handleClick}
 	disabled={isOccupied || !canPlace}
-	title={description}
 >
-	<div class="location-header">
-		<span class="symbol">{SYMBOL_ICONS[symbol]}</span>
-		<span class="name">{name}</span>
+	<!-- Cost bar on the left -->
+	<div class="location-cost-bar">
+		{#if locationData.costs.length > 0}
+			{#each locationData.costs as cost}
+				<div class="cost-item" title={cost.icon}>
+					<Icon name={cost.icon} size={14} />
+					{#if cost.amount}
+						<span class="cost-amount">{cost.amount}</span>
+					{/if}
+				</div>
+			{/each}
+		{:else}
+			<span class="cost-free">Free</span>
+		{/if}
 	</div>
 
-	<div class="location-content">
-		{#if isOccupied && placement}
-			<div class="agent-marker">
-				<div
-					class="pawn"
-					style:--pawn-color={pawnColor}
-					style:--pawn-border={pawnBorderColor}
-				></div>
-				<span class="agent-player" style:color={pawnBorderColor}>{occupantFaction}</span>
-			</div>
-		{:else if canPlace}
-			<div class="place-hint">Click to place</div>
-		{:else}
-			<div class="location-desc">{description}</div>
-		{/if}
+	<!-- Main content section -->
+	<div class="location-main">
+		<div class="location-header">
+			<Icon name={symbol as SymbolIconName} size={16} color="var(--symbol-color)" />
+			<span class="name">{name}</span>
+		</div>
+
+		<div class="location-content">
+			{#if isOccupied && placement}
+				<div class="agent-marker">
+					<div
+						class="pawn"
+						style:--pawn-color={pawnColor}
+						style:--pawn-border={pawnBorderColor}
+					></div>
+					<span class="agent-player" style:color={pawnBorderColor}>{occupantFaction}</span>
+				</div>
+			{:else if canPlace}
+				<div class="place-hint">Click to place</div>
+			{:else}
+				<div class="location-benefit">
+					{#each locationData.benefits as benefit}
+						<div class="benefit-item">
+							<Icon name={benefit.icon} size={18} color="var(--color-success)" />
+							<span class="benefit-text">{benefit.text}</span>
+						</div>
+					{/each}
+				</div>
+			{/if}
+		</div>
 	</div>
 </button>
 
 <style>
 	.location {
 		display: flex;
-		flex-direction: column;
-		padding: var(--spacing-sm);
+		flex-direction: row;
 		background: var(--color-bg-card);
 		border: 2px solid var(--color-bg-hover);
 		border-radius: var(--radius-md);
@@ -85,6 +164,7 @@
 		transition: all var(--transition-fast);
 		text-align: left;
 		min-height: 80px;
+		overflow: hidden;
 	}
 
 	.location.available {
@@ -106,6 +186,51 @@
 		cursor: not-allowed;
 	}
 
+	/* Cost bar on the left */
+	.location-cost-bar {
+		width: 40px;
+		min-width: 40px;
+		background: var(--color-bg-tertiary);
+		border-right: 2px solid var(--symbol-color);
+		padding: var(--spacing-xs);
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		gap: 4px;
+	}
+
+	.cost-item {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 1px;
+		background: rgba(0, 0, 0, 0.3);
+		padding: 3px 4px;
+		border-radius: var(--radius-sm);
+	}
+
+	.cost-amount {
+		font-size: 0.7rem;
+		font-weight: 700;
+		color: var(--color-text-primary);
+	}
+
+	.cost-free {
+		font-size: 0.5rem;
+		color: var(--color-success);
+		text-transform: uppercase;
+		font-weight: 600;
+	}
+
+	/* Main content section */
+	.location-main {
+		flex: 1;
+		padding: var(--spacing-sm);
+		display: flex;
+		flex-direction: column;
+	}
+
 	.location-header {
 		display: flex;
 		align-items: center;
@@ -113,12 +238,8 @@
 		margin-bottom: var(--spacing-xs);
 	}
 
-	.symbol {
-		font-size: 1rem;
-	}
-
 	.name {
-		font-size: 0.75rem;
+		font-size: 0.7rem;
 		font-weight: 600;
 		color: var(--symbol-color);
 		text-transform: uppercase;
@@ -132,10 +253,21 @@
 		justify-content: center;
 	}
 
-	.location-desc {
+	.location-benefit {
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+	}
+
+	.benefit-item {
+		display: flex;
+		align-items: center;
+		gap: var(--spacing-xs);
+	}
+
+	.benefit-text {
 		font-size: 0.625rem;
-		color: var(--color-text-muted);
-		text-align: center;
+		color: var(--color-text-secondary);
 	}
 
 	.place-hint {
