@@ -37,13 +37,17 @@ def get_design_bureau_swaps(player_data: Player, current_age: int = 1, is_age_tr
     In Age I, prioritizes Frame and Fabric slots (required for launch).
     In Age II/III, prioritizes Drive slots (for range/speed needed for missions/routes).
 
-    During age transitions, ALL empty Frame and Fabric slots MUST be filled per Section 12.1.
+    During age transitions, ALL empty Frame and Fabric slots MUST be filled per Section 12.1 step 5.
+    This is mandatory - the server will reject the action if structural slots remain empty.
+    Every faction starts with at least one Frame and one Fabric Technology, so duplicates
+    can always be used to fill all structural slots.
+
     During normal worker placement, a practical limit of 2 swaps per visit is applied.
 
     Args:
         player_data: Player object with blueprint and technologies.
         current_age: Current game age (1, 2, or 3).
-        is_age_transition: If True, fill ALL empty frame/fabric slots (no swap limit).
+        is_age_transition: If True, MUST fill ALL empty frame/fabric slots (no swap limit).
 
     Returns:
         List of swap dicts: [{'action': 'install', 'slotType': str, 'slotIndex': int, 'upgradeId': str}]
@@ -57,6 +61,9 @@ def get_design_bureau_swaps(player_data: Player, current_age: int = 1, is_age_tr
     technologies = player_data.technologies or []
 
     if not technologies:
+        # This should never happen - all factions start with Frame + Fabric techs
+        import sys
+        print(f"  WARNING: Player has no technologies - cannot fill blueprint slots!", file=sys.stderr)
         return swaps
 
     frame_slots = blueprint.frame_slots or []

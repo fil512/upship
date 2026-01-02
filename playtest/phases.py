@@ -316,7 +316,8 @@ def _attempt_route_launches(
                 # Handle various validation errors gracefully
                 if any(phrase in error_str for phrase in [
                     "already claimed", "not enough", "insufficient",
-                    "not found", "no hazard cards"
+                    "not found", "no hazard cards", "helium handling",
+                    "cannot use helium"
                 ]):
                     print(f"    {player}: launch blocked ({str(e)[:50]}...)")
                     logger.log_action(player, f"LAUNCH BLOCKED: {str(e)[:60]}", "worker_placement")
@@ -1046,4 +1047,14 @@ def handle_age_transition_design_bureau(game_id: str, logger: PlaytestLogger) ->
         print(f"  {current_username}: free upgrade failed - {error_msg}")
         logger.log_action(current_username, f"Age {new_age} free upgrade FAILED", "age_transition")
         logger.log_action(None, f"  └─ Error: {error_msg[:100]}", "age_transition")
+
+        # Enhanced diagnostics for mandatory slot fill failures
+        if player_data and player_data.blueprint:
+            bp = player_data.blueprint
+            frame_empty = [i for i, s in enumerate(bp.frame_slots or []) if s is None]
+            fabric_empty = [i for i, s in enumerate(bp.fabric_slots or []) if s is None]
+            if frame_empty or fabric_empty:
+                logger.log_action(None, f"  └─ Empty slots: Frame={frame_empty}, Fabric={fabric_empty}", "age_transition")
+                logger.log_action(None, f"  └─ Technologies: {player_data.technologies or []}", "age_transition")
+                logger.log_action(None, f"  └─ Attempted swaps: {swaps}", "age_transition")
         return False

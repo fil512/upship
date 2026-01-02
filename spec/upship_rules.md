@@ -775,7 +775,7 @@ When the Progress Track reaches the Age threshold (checked during Income & Clean
    
 4. **Replace Blueprint:** Install new Age's Blueprint overlay. Transfer Tech Tiles to new Blueprint.
 
-5. **Free Blueprint Update:** Each player receives a free Design Bureau action. Players take turns in player order to install Tech Tiles. Hull Tech Tile Rule does not apply during this free action. This is the ideal time to fill your new structural slots with duplicate Tech Tiles if needed.
+5. **Free Blueprint Update (Mandatory):** Each player **must** fill all structural slots (Frame and Fabric) using their free Design Bureau action. Players take turns in player order to install Tech Tiles. Hull Tech Tile Rule does not apply during this free action. Use duplicate Tech Tiles from the same Technology if needed—every faction starts with at least one Frame and one Fabric Technology, so all slots can always be filled.
 
 6. **Set Up New Age:** Place new Map, add new Technologies to bag, refresh R&D Board.
 

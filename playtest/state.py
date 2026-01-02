@@ -65,8 +65,9 @@ def get_age(game_id: str) -> int:
 def get_gas_preference(player: str, game_id: str = None) -> str:
     """Return preferred gas type for player.
 
-    USA prefers helium, others prefer hydrogen.
+    USA prefers helium (if they have the tech), others prefer hydrogen.
     Falls back to the other type if preferred is unavailable.
+    Note: Only players with 'helium_handling' tech can use helium.
 
     Args:
         player: The player username.
@@ -84,10 +85,20 @@ def get_gas_preference(player: str, game_id: str = None) -> str:
             player_data = state.get_player(user_id)
             if player_data:
                 gas = player_data.gas_cubes
-                if preferred == "helium" and gas.get('helium', 0) == 0:
-                    return "hydrogen"
-                elif preferred == "hydrogen" and gas.get('hydrogen', 0) == 0:
-                    return "helium"
+                techs = player_data.technologies or []
+                has_helium_tech = 'helium_handling' in techs
+
+                # Can only use helium if player has the tech
+                if preferred == "helium":
+                    if not has_helium_tech or gas.get('helium', 0) == 0:
+                        return "hydrogen"
+                elif preferred == "hydrogen":
+                    # Only fall back to helium if player has the tech AND hydrogen
+                    if gas.get('hydrogen', 0) == 0:
+                        if has_helium_tech and gas.get('helium', 0) > 0:
+                            return "helium"
+                        # No hydrogen and can't use helium - still return hydrogen
+                        # (will fail validation, but that's expected)
 
     return preferred
 
