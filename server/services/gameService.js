@@ -391,6 +391,7 @@ async function getUserGames(userId) {
     }
 
     // Remove game_state from response (too large for list view)
+    // eslint-disable-next-line no-unused-vars
     const { game_state, ...gameWithoutState } = game;
     return { ...gameWithoutState, isMyTurn };
   });

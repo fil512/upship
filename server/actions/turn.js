@@ -3,7 +3,6 @@
  * END_TURN action processor
  */
 
-const { GameRuleError } = require('../errors');
 const { transitionToIncomeCleanup, startNewRound, transitionToRevealPhase } = require('./helpers/phaseTransition');
 const { advanceToNextPlacer, allPlayersPassed } = require('./helpers/turnOrder');
 

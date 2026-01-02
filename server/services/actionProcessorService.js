@@ -22,7 +22,6 @@ const {
   transitionToIncomeCleanup,
   startNewRound,
   advanceHeliumMarket,
-  hasPlayableCards,
   processCardEffect,
   executeLocationAction,
   addAgeTechnologies,
