@@ -3,6 +3,7 @@
 	import type { Card, Faction } from '$lib/types/game';
 	import Icon from '$lib/components/ui/Icon.svelte';
 	import CostBadge from '$lib/components/ui/CostBadge.svelte';
+	import ResourceBadge from '$lib/components/ui/ResourceBadge.svelte';
 
 	export let cards: Card[] = [];
 	export let claimed: Record<string, string> = {};
@@ -83,19 +84,19 @@
 				<span class="reveal-label">Reveal:</span>
 				<div class="reveal-items">
 					{#if card.reveal?.cash}
-						<span class="reveal-item">+{card.reveal.cash}<Icon name="cash" size={12} /></span>
+						<ResourceBadge type="cash" value={card.reveal.cash} size={14} />
 					{/if}
 					{#if card.reveal?.influence}
-						<span class="reveal-item">+{card.reveal.influence}<Icon name="influence" size={12} /></span>
+						<ResourceBadge type="influence" value={card.reveal.influence} size={14} />
 					{/if}
 					{#if card.reveal?.research}
-						<span class="reveal-item">+{card.reveal.research}<Icon name="research" size={12} /></span>
+						<ResourceBadge type="research" value={card.reveal.research} size={14} />
 					{/if}
 					{#if card.reveal?.officers}
-						<span class="reveal-item">+{card.reveal.officers}<Icon name="officers" size={12} /></span>
+						<ResourceBadge type="officers" value={card.reveal.officers} size={12} />
 					{/if}
 					{#if card.reveal?.engineers}
-						<span class="reveal-item">+{card.reveal.engineers}<Icon name="engineers" size={12} /></span>
+						<ResourceBadge type="engineers" value={card.reveal.engineers} size={12} />
 					{/if}
 				</div>
 			</div>
@@ -137,8 +138,8 @@
 		flex: 1;
 		min-width: 120px;
 		max-width: 160px;
-		background: white;
-		border: 2px solid #ddd;
+		background: #e8e4d9;
+		border: 2px solid #c4b8a0;
 		border-radius: 8px;
 		padding: 0.5rem;
 		display: flex;
@@ -169,8 +170,9 @@
 	}
 
 	.market-card.empty {
-		background: #f5f5f5;
+		background: #f0ebe0;
 		border-style: dashed;
+		border-color: #d4c9b5;
 		justify-content: center;
 		align-items: center;
 	}
@@ -214,7 +216,7 @@
 		align-items: center;
 		gap: 0.25rem;
 		padding-top: 0.25rem;
-		border-top: 1px solid #eee;
+		border-top: 1px solid #d4c9b5;
 		font-size: 0.6rem;
 	}
 
@@ -226,13 +228,7 @@
 		display: flex;
 		gap: 0.25rem;
 		flex-wrap: wrap;
-	}
-
-	.reveal-item {
-		display: flex;
 		align-items: center;
-		gap: 2px;
-		color: #333;
 	}
 
 	.claimed-overlay {

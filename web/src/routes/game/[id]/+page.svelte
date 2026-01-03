@@ -416,7 +416,7 @@
 									on:slotClick={handleBlueprintSlotClick}
 								/>
 								<TechList
-								technologies={$myState.technologies || []}
+								techCards={$myState.techCards || []}
 								{pendingTechAcquisitions}
 								rdBoard={techCards}
 								showUndo={isRevealPhase && $isMyTurn}

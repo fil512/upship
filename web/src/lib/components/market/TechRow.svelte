@@ -2,6 +2,7 @@
 	import { createEventDispatcher } from 'svelte';
 	import type { Technology, Faction } from '$lib/types/game';
 	import CostBadge from '$lib/components/ui/CostBadge.svelte';
+	import { getTilesForCard, formatStats, getSlotTypeLabel } from '$lib/utils/techCardToTiles';
 
 	export let cards: Technology[] = [];
 	export let claimed: Record<string, string> = {};
@@ -46,10 +47,11 @@
 </script>
 
 <div class="tech-row">
-	{#each cards as card (card.id)}
+	{#each cards as card, idx (card.instanceId ?? `${card.id}-${idx}`)}
 		{@const claimedByMe = isClaimedByMe(card.id)}
 		{@const claimedByOther = isClaimedByOther(card.id)}
 		{@const cost = getCost(card)}
+		{@const tiles = getTilesForCard(card.id)}
 
 		<button
 			class="tech-card"
@@ -68,6 +70,28 @@
 			<!-- Effect -->
 			{#if card.effect || card.description}
 				<div class="card-effect">{card.effect || card.description}</div>
+			{/if}
+
+			<!-- Tech tiles this card provides -->
+			{#if tiles.length > 0}
+				<div class="tiles-section">
+					{#each tiles as tile}
+						<div class="tile-info">
+							<div class="tile-header">
+								<span class="tile-name">{tile.name}</span>
+								<span class="tile-type">{getSlotTypeLabel(tile.slotType)}</span>
+							</div>
+							<div class="tile-stats">
+								{#if tile.weight !== 0}
+									<span class="tile-weight">Wt: {tile.weight}</span>
+								{/if}
+								{#if Object.keys(tile.stats).length > 0}
+									<span class="tile-bonuses">{formatStats(tile.stats)}</span>
+								{/if}
+							</div>
+						</div>
+					{/each}
+				</div>
 			{/if}
 
 			<!-- Age badge -->
@@ -111,8 +135,8 @@
 		min-width: 120px;
 		max-width: 160px;
 		min-height: 80px;
-		background: #f8f8f8;
-		border: 2px solid #888;
+		background: #e8e4d9;
+		border: 2px solid #9a8c70;
 		border-radius: 8px;
 		padding: 0.5rem;
 		display: flex;
@@ -143,9 +167,9 @@
 	}
 
 	.tech-card.empty {
-		background: #f5f5f5;
+		background: #f0ebe0;
 		border-style: dashed;
-		border-color: #ccc;
+		border-color: #c4b8a0;
 		justify-content: center;
 		align-items: center;
 	}
@@ -184,6 +208,64 @@
 		font-size: 0.5rem;
 		color: #888;
 		text-transform: uppercase;
+	}
+
+	/* Tech tiles section */
+	.tiles-section {
+		border-top: 1px dashed #9a8c70;
+		padding-top: 0.25rem;
+		margin-top: 0.25rem;
+		background: rgba(255, 255, 255, 0.3);
+		margin-left: -0.5rem;
+		margin-right: -0.5rem;
+		padding-left: 0.5rem;
+		padding-right: 0.5rem;
+		padding-bottom: 0.25rem;
+	}
+
+	.tile-info {
+		margin-bottom: 4px;
+	}
+
+	.tile-info:last-child {
+		margin-bottom: 0;
+	}
+
+	.tile-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		gap: 4px;
+	}
+
+	.tile-name {
+		font-size: 0.55rem;
+		font-weight: 600;
+		color: #333;
+	}
+
+	.tile-type {
+		font-size: 0.45rem;
+		color: #666;
+		background: rgba(0, 0, 0, 0.1);
+		padding: 1px 4px;
+		border-radius: 2px;
+	}
+
+	.tile-stats {
+		display: flex;
+		gap: 6px;
+		font-size: 0.45rem;
+		color: #555;
+		margin-top: 2px;
+	}
+
+	.tile-weight {
+		color: #c62828;
+	}
+
+	.tile-bonuses {
+		color: #2e7d32;
 	}
 
 	.claimed-overlay {

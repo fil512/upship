@@ -1,10 +1,11 @@
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte';
 	import type { Technology, PendingPurchase } from '$lib/types/game';
-	import Icon from '$lib/components/ui/Icon.svelte';
+	import TechCard from '$lib/components/cards/TechCard.svelte';
+	import { TECH_CARDS } from '$lib/data/techTiles';
 
-	// Technologies can be either string IDs or full objects
-	export let technologies: (string | Technology)[] = [];
+	// Tech cards are string IDs from the server
+	export let techCards: string[] = [];
 	// Pending tech acquisitions (show with undo button during reveal)
 	export let pendingAcquisitions: PendingPurchase[] = [];
 	// R&D board to look up pending card details
@@ -16,23 +17,22 @@
 		undo: { cardId: string };
 	}>();
 
-	// Format a technology ID to a readable name
-	function formatTechName(tech: string | Technology): string {
-		if (typeof tech === 'object' && tech.name) {
-			return tech.name;
+	// Convert tech card ID to display format for TechCard
+	function toTechCardFormat(techId: string): { id: string; name: string; effect?: string; researchCost?: number } {
+		// Look up by ID
+		const cardData = TECH_CARDS[techId];
+		if (cardData) {
+			return {
+				id: cardData.id,
+				name: cardData.name,
+				researchCost: cardData.cost > 0 ? cardData.cost : undefined
+			};
 		}
-		// Convert snake_case ID to Title Case
-		return String(tech)
-			.split('_')
-			.map(word => word.charAt(0).toUpperCase() + word.slice(1))
-			.join(' ');
-	}
-
-	function getTechEffect(tech: string | Technology): string | null {
-		if (typeof tech === 'object' && tech.effect) {
-			return tech.effect;
-		}
-		return null;
+		// Fallback: format the ID
+		return {
+			id: techId,
+			name: techId.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
+		};
 	}
 
 	function getPendingTechCard(cardId: string): Technology | null {
@@ -45,24 +45,26 @@
 </script>
 
 <div class="tech-list">
-	<h4>Technologies</h4>
+	<h4>Technology Cards</h4>
 
 	<!-- Pending acquisitions (during reveal phase) -->
 	{#if pendingAcquisitions.length > 0}
 		<div class="pending-section">
 			<h5>Acquiring This Turn</h5>
-			<div class="techs">
+			<div class="tech-cards-row">
 				{#each pendingAcquisitions as pending}
 					{@const tech = getPendingTechCard(pending.cardId)}
 					{#if tech}
-						<div class="tech-item pending">
-							<span class="tech-icon"><Icon name="research" size={18} /></span>
-							<div class="tech-info">
-								<span class="tech-name">{tech.name}</span>
-								{#if tech.effect}
-									<span class="tech-effect">{tech.effect}</span>
-								{/if}
-							</div>
+						{@const cardData = TECH_CARDS[tech.id]}
+						<div class="pending-card-wrapper">
+							<TechCard
+								tech={{
+									id: tech.id,
+									name: tech.name,
+									effect: tech.effect,
+									researchCost: cardData?.cost > 0 ? cardData.cost : undefined
+								}}
+							/>
 							{#if showUndo}
 								<button class="undo-btn" on:click={() => handleUndo(pending.cardId)}>
 									Undo
@@ -75,21 +77,13 @@
 		</div>
 	{/if}
 
-	<!-- Owned technologies -->
-	{#if technologies.length === 0 && pendingAcquisitions.length === 0}
-		<div class="empty">No technologies acquired</div>
-	{:else if technologies.length > 0}
-		<div class="techs">
-			{#each technologies as tech}
-				<div class="tech-item" title={typeof tech === 'string' ? tech : tech.id}>
-					<span class="tech-icon"><Icon name="research" size={18} /></span>
-					<div class="tech-info">
-						<span class="tech-name">{formatTechName(tech)}</span>
-						{#if getTechEffect(tech)}
-							<span class="tech-effect">{getTechEffect(tech)}</span>
-						{/if}
-					</div>
-				</div>
+	<!-- Owned technology cards -->
+	{#if techCards.length === 0 && pendingAcquisitions.length === 0}
+		<div class="empty">No technology cards acquired</div>
+	{:else if techCards.length > 0}
+		<div class="tech-cards-row">
+			{#each techCards as techId}
+				<TechCard tech={toTechCardFormat(techId)} />
 			{/each}
 		</div>
 	{/if}
@@ -115,41 +109,10 @@
 		font-size: 0.75rem;
 	}
 
-	.techs {
+	.tech-cards-row {
 		display: flex;
-		flex-direction: column;
-		gap: var(--spacing-xs);
-	}
-
-	.tech-item {
-		display: flex;
-		align-items: flex-start;
-		gap: var(--spacing-xs);
-		padding: var(--spacing-xs);
-		background: var(--color-bg-hover);
-		border-radius: var(--radius-sm);
-	}
-
-	.tech-icon {
-		display: flex;
-		align-items: center;
-		flex-shrink: 0;
-	}
-
-	.tech-info {
-		display: flex;
-		flex-direction: column;
-	}
-
-	.tech-name {
-		font-size: 0.75rem;
-		font-weight: 600;
-		color: var(--color-text-primary);
-	}
-
-	.tech-effect {
-		font-size: 0.625rem;
-		color: var(--color-text-muted);
+		flex-wrap: wrap;
+		gap: var(--spacing-sm);
 	}
 
 	.pending-section {
@@ -165,22 +128,23 @@
 		font-weight: 600;
 	}
 
-	.tech-item.pending {
-		background: rgba(76, 175, 80, 0.1);
-		border: 1px solid rgba(76, 175, 80, 0.3);
+	.pending-card-wrapper {
+		position: relative;
+		display: flex;
+		flex-direction: column;
+		gap: 4px;
 	}
 
 	.undo-btn {
-		padding: 2px 6px;
+		padding: 4px 8px;
 		background: white;
 		color: #4caf50;
 		border: 1px solid #4caf50;
 		border-radius: 4px;
-		font-size: 0.6rem;
+		font-size: 0.65rem;
 		font-weight: 600;
 		cursor: pointer;
-		flex-shrink: 0;
-		margin-left: auto;
+		align-self: center;
 	}
 
 	.undo-btn:hover {

@@ -22,10 +22,10 @@
 
 <div class="hand-section">
 	<div class="hand-header">
-		<h4>Agent Cards</h4>
+		<h4>Your Hand</h4>
 		<div class="deck-info">
-			<span class="deck-count" title="Agent Cards in deck">📚 {deckSize}</span>
-			<span class="discard-count" title="Agent Cards in discard">🗑️ {discardSize}</span>
+			<span class="deck-count" title="Cards in deck">📚 {deckSize}</span>
+			<span class="discard-count" title="Cards in discard">🗑️ {discardSize}</span>
 		</div>
 	</div>
 
@@ -43,15 +43,15 @@
 		</div>
 	{:else if isViewingOtherPlayer && otherPlayerCardCount > 0}
 		<div class="hidden-hand">
-			🃏 {otherPlayerCardCount} Agent Cards (hidden - viewing other player)
+			🃏 {otherPlayerCardCount} cards (hidden - viewing other player)
 		</div>
 	{:else}
-		<div class="empty-hand">No Agent Cards in hand</div>
+		<div class="empty-hand">No cards in hand</div>
 	{/if}
 
 	{#if selectable && selectedIndex !== null}
 		<div class="selection-hint">
-			Agent Card selected - choose a location on the Ground Board
+			Card selected - choose a location on the Ground Board
 		</div>
 	{/if}
 </div>

@@ -3,6 +3,7 @@
 	import type { GroundBoardPlacements, PlayerState } from '$lib/types/game';
 	import { getFactionColor, getFactionBorderColor } from '$lib/utils/factionColors';
 	import Icon from '$lib/components/ui/Icon.svelte';
+	import ResourceBadge from '$lib/components/ui/ResourceBadge.svelte';
 	import type { SymbolIconName, IconName } from '$lib/icons/types';
 
 	export let id: string;
@@ -12,16 +13,21 @@
 	export let players: Record<string, PlayerState> = {};
 	export let canPlace: boolean = false;
 
-	// Cost and benefit data for each location (icons only, no text)
+	// Cost and benefit data for each location
+	// resourceBadge: array of {type, value} for ResourceBadge display
+	// icons: simple icon display without numbers
+	type CostItem = { icon: IconName; amount?: string } | { resourceBadge: Array<{ type: 'cash' | 'officers'; value: number }> };
+	type BenefitItem = { icon: IconName; icon2?: IconName; separator?: boolean } | { resourceBadge: { type: 'officers' | 'engineers'; count: number }; icon2Badge?: { type: 'officers' | 'engineers'; count: number }; separator?: boolean };
+
 	const LOCATION_DATA: Record<
 		string,
 		{
-			costs: Array<{ icon: IconName; amount?: string }>;
-			benefits: Array<{ icon: IconName; icon2?: IconName; separator?: boolean }>;
+			costs: CostItem[];
+			benefits: BenefitItem[];
 		}
 	> = {
 		research_institute: {
-			costs: [{ icon: 'cash', amount: '4' }],
+			costs: [{ resourceBadge: [{ type: 'cash', value: 4 }] }],
 			benefits: [{ icon: 'research' }]
 		},
 		design_bureau: {
@@ -29,27 +35,27 @@
 			benefits: [{ icon: 'blueprint' }]
 		},
 		construction_hall: {
-			costs: [{ icon: 'cash', amount: '£' }],
+			costs: [{ icon: 'cash' }],
 			benefits: [{ icon: 'ship' }]
 		},
 		launchpad: {
-			costs: [{ icon: 'officers' }, { icon: 'hydrogen' }],
+			costs: [{ resourceBadge: [{ type: 'officers', value: 1 }] }, { icon: 'hydrogen' }],
 			benefits: [{ icon: 'launch' }]
 		},
 		academy: {
-			costs: [{ icon: 'cash', amount: '2/4' }],
-			benefits: [{ icon: 'officers', icon2: 'engineers', separator: true }]
+			costs: [{ resourceBadge: [{ type: 'cash', value: 2 }, { type: 'cash', value: 4 }] }],
+			benefits: [{ resourceBadge: { type: 'officers', count: 1 }, icon2Badge: { type: 'engineers', count: 1 }, separator: true }]
 		},
 		flight_school: {
-			costs: [{ icon: 'cash', amount: '5' }],
-			benefits: [{ icon: 'income', icon2: 'officers' }]
+			costs: [{ resourceBadge: [{ type: 'cash', value: 5 }] }],
+			benefits: [{ icon: 'income' }, { resourceBadge: { type: 'officers', count: 1 } }]
 		},
 		technical_institute: {
-			costs: [{ icon: 'cash', amount: '6' }],
-			benefits: [{ icon: 'income', icon2: 'engineers' }]
+			costs: [{ resourceBadge: [{ type: 'cash', value: 6 }] }],
+			benefits: [{ icon: 'income' }, { resourceBadge: { type: 'engineers', count: 1 } }]
 		},
 		government_liaison: {
-			costs: [{ icon: 'officers', amount: '1-3' }],
+			costs: [{ resourceBadge: [{ type: 'officers', value: 1 }, { type: 'officers', value: 3 }] }],
 			benefits: [{ icon: 'cash' }]
 		},
 		ministry: {
@@ -65,10 +71,19 @@
 			benefits: [{ icon: 'insurance' }]
 		},
 		weather_bureau: {
-			costs: [{ icon: 'cash', amount: '2' }],
+			costs: [{ resourceBadge: [{ type: 'cash', value: 2 }] }],
 			benefits: [{ icon: 'eye', icon2: 'hazard' }]
 		}
 	};
+
+	// Type guards
+	function hasResourceBadge(item: CostItem): item is { resourceBadge: Array<{ type: 'cash' | 'officers'; value: number }> } {
+		return 'resourceBadge' in item;
+	}
+
+	function hasBenefitResourceBadge(item: BenefitItem): item is { resourceBadge: { type: 'officers' | 'engineers'; count: number }; icon2Badge?: { type: 'officers' | 'engineers'; count: number }; separator?: boolean } {
+		return 'resourceBadge' in item;
+	}
 
 	const SYMBOL_COLORS: Record<string, string> = {
 		wrench: '#4a9eff',    // Blue
@@ -109,12 +124,21 @@
 			<Icon name={symbol as SymbolIconName} size={16} color="var(--symbol-color)" />
 		</div>
 		{#each locationData.costs as cost}
-			<div class="cost-item" title={cost.icon}>
-				<Icon name={cost.icon} size={14} />
-				{#if cost.amount}
-					<span class="cost-amount">{cost.amount}</span>
-				{/if}
-			</div>
+			{#if hasResourceBadge(cost)}
+				<div class="cost-item resource-cost">
+					{#each cost.resourceBadge as badge, i}
+						{#if i > 0}<span class="cost-separator">/</span>{/if}
+						<ResourceBadge type={badge.type} value={badge.value} size={14} />
+					{/each}
+				</div>
+			{:else}
+				<div class="cost-item" title={cost.icon}>
+					<Icon name={cost.icon} size={14} />
+					{#if cost.amount}
+						<span class="cost-amount">{cost.amount}</span>
+					{/if}
+				</div>
+			{/if}
 		{/each}
 	</div>
 
@@ -140,12 +164,22 @@
 				<div class="location-benefit">
 					{#each locationData.benefits as benefit}
 						<div class="benefit-item">
-							<Icon name={benefit.icon} size={24} color="var(--color-text-primary)" />
-							{#if benefit.icon2}
+							{#if hasBenefitResourceBadge(benefit)}
+								<ResourceBadge type={benefit.resourceBadge.type} value={benefit.resourceBadge.count} size={16} />
 								{#if benefit.separator}
 									<span class="benefit-separator">/</span>
 								{/if}
-								<Icon name={benefit.icon2} size={20} color="var(--color-text-primary)" />
+								{#if benefit.icon2Badge}
+									<ResourceBadge type={benefit.icon2Badge.type} value={benefit.icon2Badge.count} size={16} />
+								{/if}
+							{:else}
+								<Icon name={benefit.icon} size={24} color="var(--color-text-primary)" />
+								{#if benefit.icon2}
+									{#if benefit.separator}
+										<span class="benefit-separator">/</span>
+									{/if}
+									<Icon name={benefit.icon2} size={20} color="var(--color-text-primary)" />
+								{/if}
 							{/if}
 						</div>
 					{/each}
@@ -216,6 +250,18 @@
 		font-size: 0.7rem;
 		font-weight: 700;
 		color: var(--color-text-primary);
+	}
+
+	.cost-separator {
+		font-size: 0.6rem;
+		font-weight: 300;
+		color: var(--color-text-muted);
+	}
+
+	.resource-cost {
+		display: flex;
+		align-items: center;
+		gap: 2px;
 	}
 
 	.symbol-cost {

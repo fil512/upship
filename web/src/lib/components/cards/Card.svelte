@@ -3,6 +3,7 @@
 	import type { Card } from '$lib/types/game';
 	import Icon from '$lib/components/ui/Icon.svelte';
 	import CostBadge from '$lib/components/ui/CostBadge.svelte';
+	import ResourceBadge from '$lib/components/ui/ResourceBadge.svelte';
 	import type { SymbolIconName } from '$lib/icons/types';
 
 	export let card: Card;
@@ -64,34 +65,19 @@
 		<span class="reveal-label">Reveal:</span>
 		<div class="reveal-items">
 			{#if card.reveal?.cash}
-				<div class="reveal-item" title="+{card.reveal.cash} Cash">
-					<span>+{card.reveal.cash}</span>
-					<Icon name="cash" size={14} />
-				</div>
+				<ResourceBadge type="cash" value={card.reveal.cash} size={16} />
 			{/if}
 			{#if card.reveal?.influence}
-				<div class="reveal-item" title="+{card.reveal.influence} Influence">
-					<span>+{card.reveal.influence}</span>
-					<Icon name="influence" size={14} />
-				</div>
+				<ResourceBadge type="influence" value={card.reveal.influence} size={16} />
 			{/if}
 			{#if card.reveal?.research}
-				<div class="reveal-item" title="+{card.reveal.research} Research">
-					<span>+{card.reveal.research}</span>
-					<Icon name="research" size={14} />
-				</div>
+				<ResourceBadge type="research" value={card.reveal.research} size={16} />
 			{/if}
 			{#if card.reveal?.officers}
-				<div class="reveal-item" title="+{card.reveal.officers} Officers">
-					<span>+{card.reveal.officers}</span>
-					<Icon name="officers" size={14} />
-				</div>
+				<ResourceBadge type="officers" value={card.reveal.officers} size={14} />
 			{/if}
 			{#if card.reveal?.engineers}
-				<div class="reveal-item" title="+{card.reveal.engineers} Engineers">
-					<span>+{card.reveal.engineers}</span>
-					<Icon name="engineers" size={14} />
-				</div>
+				<ResourceBadge type="engineers" value={card.reveal.engineers} size={14} />
 			{/if}
 		</div>
 	</div>
@@ -105,8 +91,8 @@
 		min-width: 100px;
 		max-width: 140px;
 		min-height: 150px;
-		background: var(--color-bg-card);
-		border: 2px solid var(--color-bg-hover);
+		background: #e8e4d9;
+		border: 2px solid #c4b8a0;
 		border-radius: var(--radius-md);
 		cursor: default;
 		transition: all var(--transition-fast);
@@ -124,7 +110,7 @@
 	}
 
 	.card.selected {
-		background: color-mix(in srgb, var(--card-color) 15%, var(--color-bg-card));
+		background: color-mix(in srgb, var(--card-color) 20%, #e8e4d9);
 		border-color: var(--card-color);
 		box-shadow: 0 0 12px color-mix(in srgb, var(--card-color) 50%, transparent);
 		transform: translateY(-4px);
@@ -140,14 +126,14 @@
 		justify-content: space-between;
 		align-items: flex-start;
 		padding: 6px 8px;
-		background: var(--color-bg-tertiary);
-		border-bottom: 1px solid var(--color-bg-hover);
+		background: rgba(0, 0, 0, 0.08);
+		border-bottom: 1px solid #c4b8a0;
 	}
 
 	.card-name {
 		font-size: 0.7rem;
 		font-weight: 700;
-		color: var(--color-text-primary);
+		color: #333;
 		text-transform: uppercase;
 		line-height: 1.2;
 		flex: 1;
@@ -167,7 +153,7 @@
 		align-items: center;
 		justify-content: center;
 		padding: 8px;
-		background: color-mix(in srgb, var(--card-color) 10%, transparent);
+		background: color-mix(in srgb, var(--card-color) 15%, #e8e4d9);
 	}
 
 	.card-symbol {
@@ -176,11 +162,11 @@
 
 	.card-effect {
 		font-size: 0.55rem;
-		color: var(--color-text-secondary);
+		color: #555;
 		text-align: center;
 		line-height: 1.3;
 		padding: 4px;
-		background: var(--color-bg-card);
+		background: rgba(255, 255, 255, 0.5);
 		border-radius: var(--radius-sm);
 		max-width: 100%;
 	}
@@ -188,13 +174,13 @@
 	/* Bottom section - Reveal */
 	.card-reveal {
 		padding: 6px 8px;
-		background: var(--color-bg-tertiary);
-		border-top: 1px solid var(--color-bg-hover);
+		background: rgba(0, 0, 0, 0.08);
+		border-top: 1px solid #c4b8a0;
 	}
 
 	.reveal-label {
 		font-size: 0.5rem;
-		color: var(--color-text-muted);
+		color: #777;
 		text-transform: uppercase;
 		display: block;
 		margin-bottom: 3px;
@@ -204,17 +190,6 @@
 		display: flex;
 		flex-wrap: wrap;
 		gap: 4px;
-	}
-
-	.reveal-item {
-		display: flex;
 		align-items: center;
-		gap: 2px;
-		background: var(--color-bg-hover);
-		padding: 2px 5px;
-		border-radius: var(--radius-sm);
-		font-size: 0.6rem;
-		font-weight: 600;
-		color: var(--color-text-primary);
 	}
 </style>

@@ -195,7 +195,7 @@ export interface PlayerState {
 	researchLevel: number;
 	influence: number;
 	hasPassed: boolean;
-	technologies: Technology[];
+	techCards: string[]; // Server sends tech card IDs, not Technology objects
 	ships: Ship[];
 	routes: Route[];
 	blueprint: Blueprint;
