@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte';
 	import type { Blueprint } from '$lib/types/game';
+	import { icons, type IconName } from '$lib/icons';
+	import Icon from '$lib/components/ui/Icon.svelte';
 
 	export let blueprint: Blueprint;
 	export let age: number = 1;
@@ -11,6 +13,18 @@
 
 	function handleSlotClick(slotType: string, index: number, upgrade: string | null) {
 		dispatch('slotClick', { slotType, index, upgrade });
+	}
+
+	/**
+	 * Extract inner content from SVG string for embedding in parent SVG.
+	 * Strips the outer <svg> tag but preserves all inner elements.
+	 */
+	function getIconSvgContent(iconType: string): string {
+		const iconDef = icons[iconType as IconName];
+		if (!iconDef) return '';
+		// Extract content between <svg...> and </svg>
+		const match = iconDef.svg.match(/<svg[^>]*>([\s\S]*)<\/svg>/i);
+		return match ? match[1] : '';
 	}
 
 	// Upgrade data lookup (simplified - full names and stats)
@@ -119,58 +133,6 @@
 		fabric: '#8b5cf6',
 		drive: '#f59e0b',
 		component: '#10b981'
-	};
-
-	// SVG icon paths (solid filled icons - 24x24 viewBox)
-	const STAT_ICONS: Record<string, { path: string; color: string; filled: boolean }> = {
-		lift: {
-			// Balloon shape (solid)
-			path: 'M12 2C8 2 5 5 5 9c0 3 2 6 5 8l1 3h2l1-3c3-2 5-5 5-8c0-4-3-7-7-7z M10 22h4v1h-4z',
-			color: '#22c55e', // green
-			filled: true
-		},
-		reliability: {
-			// Shield (solid)
-			path: 'M12 2L4 5v6c0 5.5 3.4 10.6 8 12c4.6-1.4 8-6.5 8-12V5l-8-3z',
-			color: '#3b82f6', // blue
-			filled: true
-		},
-		ceiling: {
-			// Cloud shape (solid)
-			path: 'M19.5 10c-.2-2.8-2.5-5-5.4-5c-2 0-3.7 1-4.7 2.6C9 7.2 8.5 7 8 7c-2.2 0-4 1.8-4 4c0 .1 0 .3 0 .4C2.3 12 1 13.5 1 15.3C1 17.4 2.6 19 4.7 19h13.6c2.1 0 3.7-1.6 3.7-3.7c0-2-1.5-3.6-3.4-3.9c0-.1.1-.3.1-.4c0-.7-.1-1.4-.2-2z',
-			color: '#a855f7', // purple
-			filled: true
-		},
-		range: {
-			// Arrow pointing right (solid)
-			path: 'M4 11h12V7l6 5-6 5v-4H4v-2z',
-			color: '#f59e0b', // amber
-			filled: true
-		},
-		speed: {
-			// Wings shape (elegant curved pair)
-			path: 'M12 12 C9 10 5 8 1 9 C3 11 6 14 9 16 C10 15 11 14 12 13 C13 14 14 15 15 16 C18 14 21 11 23 9 C19 8 15 10 12 12 Z',
-			color: '#eab308', // yellow
-			filled: true
-		},
-		income: {
-			// Coin with pound sign (solid)
-			path: 'M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10s10-4.5 10-10S17.5 2 12 2z',
-			color: '#f1c40f', // gold
-			filled: true
-		},
-		luxury: {
-			// Star (solid)
-			path: 'M12 2l2.4 7.4H22l-6 4.6 2.3 7-6.3-4.6L5.7 21l2.3-7-6-4.6h7.6z',
-			color: '#ec4899', // pink
-			filled: true
-		},
-		weight: {
-			// Anchor with ring, crossbar, and curved flukes with pointed tips
-			path: 'M12 1 C9 1 7 3 7 5 C7 7 9 8 11 8 L11 10 L6 10 L6 12 L11 12 L11 18 Q7 18 3 21 L1 23 L4 22 Q8 19 11 19 L11 23 L13 23 L13 19 Q16 19 20 22 L23 23 L21 21 Q17 18 13 18 L13 12 L18 12 L18 10 L13 10 L13 8 C15 8 17 7 17 5 C17 3 15 1 12 1 Z',
-			color: '#ef4444', // red
-			filled: true
-		}
 	};
 
 	// Get list of stats to display as icons with positioning info
@@ -306,7 +268,7 @@
 			{#if slotPositions.fabric[index]}
 				{@const info = getUpgradeInfo(upgrade)}
 				{@const pos = slotPositions.fabric[index]}
-				{@const icons = info ? getIconsWithPositions(info.stats, info.weight) : []}
+				{@const iconPositions = info ? getIconsWithPositions(info.stats, info.weight) : []}
 				<g
 					class="slot-group"
 					transform="translate({pos.x}, {pos.y})"
@@ -326,10 +288,10 @@
 					{#if info}
 						<!-- Icons row - large and prominent -->
 						<g transform="translate({slotWidth/2}, 22)">
-							{#each icons as icon}
+							{#each iconPositions as icon}
 								<g transform="translate({icon.x}, 0)">
 									<svg x="-14" y="-14" width="28" height="28" viewBox="0 0 24 24">
-										<path d={STAT_ICONS[icon.type].path} fill={STAT_ICONS[icon.type].color}/>
+										{@html getIconSvgContent(icon.type)}
 									</svg>
 								</g>
 							{/each}
@@ -348,7 +310,7 @@
 			{#if slotPositions.frame[index]}
 				{@const info = getUpgradeInfo(upgrade)}
 				{@const pos = slotPositions.frame[index]}
-				{@const icons = info ? getIconsWithPositions(info.stats, info.weight) : []}
+				{@const iconPositions = info ? getIconsWithPositions(info.stats, info.weight) : []}
 				<g
 					class="slot-group"
 					transform="translate({pos.x}, {pos.y})"
@@ -368,10 +330,10 @@
 					{#if info}
 						<!-- Icons row - large and prominent -->
 						<g transform="translate({slotWidth/2}, 22)">
-							{#each icons as icon}
+							{#each iconPositions as icon}
 								<g transform="translate({icon.x}, 0)">
 									<svg x="-14" y="-14" width="28" height="28" viewBox="0 0 24 24">
-										<path d={STAT_ICONS[icon.type].path} fill={STAT_ICONS[icon.type].color}/>
+										{@html getIconSvgContent(icon.type)}
 									</svg>
 								</g>
 							{/each}
@@ -390,7 +352,7 @@
 			{#if slotPositions.drive[index]}
 				{@const info = getUpgradeInfo(upgrade)}
 				{@const pos = slotPositions.drive[index]}
-				{@const icons = info ? getIconsWithPositions(info.stats, info.weight) : []}
+				{@const iconPositions = info ? getIconsWithPositions(info.stats, info.weight) : []}
 				<g
 					class="slot-group"
 					transform="translate({pos.x}, {pos.y})"
@@ -410,10 +372,10 @@
 					{#if info}
 						<!-- Icons row - large and prominent -->
 						<g transform="translate({slotWidth/2}, 22)">
-							{#each icons as icon}
+							{#each iconPositions as icon}
 								<g transform="translate({icon.x}, 0)">
 									<svg x="-14" y="-14" width="28" height="28" viewBox="0 0 24 24">
-										<path d={STAT_ICONS[icon.type].path} fill={STAT_ICONS[icon.type].color}/>
+										{@html getIconSvgContent(icon.type)}
 									</svg>
 								</g>
 							{/each}
@@ -432,7 +394,7 @@
 			{#if slotPositions.component[index]}
 				{@const info = getUpgradeInfo(upgrade)}
 				{@const pos = slotPositions.component[index]}
-				{@const icons = info ? getIconsWithPositions(info.stats, info.weight) : []}
+				{@const iconPositions = info ? getIconsWithPositions(info.stats, info.weight) : []}
 				<g
 					class="slot-group"
 					transform="translate({pos.x}, {pos.y})"
@@ -452,10 +414,10 @@
 					{#if info}
 						<!-- Icons row - large and prominent -->
 						<g transform="translate({slotWidth/2}, 22)">
-							{#each icons as icon}
+							{#each iconPositions as icon}
 								<g transform="translate({icon.x}, 0)">
 									<svg x="-14" y="-14" width="28" height="28" viewBox="0 0 24 24">
-										<path d={STAT_ICONS[icon.type].path} fill={STAT_ICONS[icon.type].color}/>
+										{@html getIconSvgContent(icon.type)}
 									</svg>
 								</g>
 							{/each}
@@ -482,27 +444,27 @@
 		<div class="legend-section">
 			<span class="legend-title">STATS:</span>
 			<span class="icon-legend">
-				<svg width="20" height="20" viewBox="0 0 24 24"><path d={STAT_ICONS.lift.path} fill={STAT_ICONS.lift.color}/></svg>
+				<Icon name="lift" size={20} />
 				Lift
 			</span>
 			<span class="icon-legend">
-				<svg width="20" height="20" viewBox="0 0 24 24"><path d={STAT_ICONS.reliability.path} fill={STAT_ICONS.reliability.color}/></svg>
+				<Icon name="reliability" size={20} />
 				Reliability
 			</span>
 			<span class="icon-legend">
-				<svg width="20" height="20" viewBox="0 0 24 24"><path d={STAT_ICONS.ceiling.path} fill={STAT_ICONS.ceiling.color}/></svg>
+				<Icon name="ceiling" size={20} />
 				Ceiling
 			</span>
 			<span class="icon-legend">
-				<svg width="20" height="20" viewBox="0 0 24 24"><path d={STAT_ICONS.range.path} fill={STAT_ICONS.range.color}/></svg>
+				<Icon name="range" size={20} />
 				Range
 			</span>
 			<span class="icon-legend">
-				<svg width="20" height="20" viewBox="0 0 24 24"><path d={STAT_ICONS.speed.path} fill={STAT_ICONS.speed.color}/></svg>
+				<Icon name="speed" size={20} />
 				Speed
 			</span>
 			<span class="icon-legend">
-				<svg width="20" height="20" viewBox="0 0 24 24"><path d={STAT_ICONS.weight.path} fill={STAT_ICONS.weight.color}/></svg>
+				<Icon name="weight" size={20} />
 				Weight
 			</span>
 		</div>
@@ -653,7 +615,7 @@
 		gap: 3px;
 	}
 
-	.icon-legend svg {
+	.icon-legend :global(.icon-wrapper) {
 		flex-shrink: 0;
 	}
 </style>
