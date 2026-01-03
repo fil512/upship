@@ -1,123 +1,67 @@
 import type { IconDefinition, ResourceIconName } from './types';
 
+// Import SVG files as raw strings (Vite ?raw)
+import cashSvg from './svg/cash.svg?raw';
+import incomeSvg from './svg/income.svg?raw';
+import officersSvg from './svg/officers.svg?raw';
+import engineersSvg from './svg/engineers.svg?raw';
+import hydrogenSvg from './svg/hydrogen.svg?raw';
+import heliumSvg from './svg/helium.svg?raw';
+import vpSvg from './svg/vp.svg?raw';
+import researchSvg from './svg/research.svg?raw';
+import influenceSvg from './svg/influence.svg?raw';
+
 export const resourceIcons: Record<ResourceIconName, IconDefinition> = {
   cash: {
-    // Grey circle with dark £ symbol (Dune Imperium style)
-    svg: `<svg viewBox="0 0 24 24">
-      <circle cx="12" cy="12" r="10" fill="#888888"/>
-      <text x="12" y="16" text-anchor="middle" font-size="12" font-weight="bold" fill="#1a1a2e">£</text>
-    </svg>`,
+    svg: cashSvg,
     category: 'resource',
     tooltip: 'Cash - spend on upgrades, gas, and crew'
   },
 
   income: {
-    svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M12 19V5"/>
-      <path d="M5 12l7-7 7 7"/>
-    </svg>`,
+    svg: incomeSvg,
     category: 'resource',
     tooltip: 'Income - cash earned each turn'
   },
 
   officers: {
-    // Captain silhouette with peaked cap, uniform, epaulettes, tie
-    svg: `<svg viewBox="0 0 24 24" fill="currentColor">
-      <!-- Peaked cap top -->
-      <ellipse cx="12" cy="3.5" rx="5" ry="1.5"/>
-      <!-- Cap brim -->
-      <rect x="5" y="4.5" width="14" height="1.5" rx="0.5"/>
-      <!-- Cap band with gold stripe -->
-      <rect x="6" y="5.5" width="12" height="0.8" fill="none" stroke="#f1c40f" stroke-width="0.5"/>
-      <!-- Head -->
-      <ellipse cx="12" cy="9" rx="4" ry="3.5"/>
-      <!-- Ears -->
-      <ellipse cx="7.5" cy="9" rx="0.8" ry="1"/>
-      <ellipse cx="16.5" cy="9" rx="0.8" ry="1"/>
-      <!-- Neck -->
-      <rect x="10" y="12" width="4" height="2"/>
-      <!-- Shoulders and torso -->
-      <path d="M3 24 L3 19 Q3 16 6 15 L8 14 L10 14 L10 16 L14 16 L14 14 L16 14 L18 15 Q21 16 21 19 L21 24 Z"/>
-      <!-- Epaulettes -->
-      <rect x="3" y="16" width="4" height="1.5" rx="0.3"/>
-      <rect x="17" y="16" width="4" height="1.5" rx="0.3"/>
-      <!-- Epaulette stripes -->
-      <path d="M4 17.8h2M5 18.3h2" stroke="#f1c40f" stroke-width="0.4"/>
-      <path d="M18 17.8h2M19 18.3h2" stroke="#f1c40f" stroke-width="0.4"/>
-      <!-- Collar/Lapels -->
-      <path d="M10 14 L9 17 L12 20 L15 17 L14 14" fill="none" stroke="#333" stroke-width="0.5"/>
-      <!-- Tie -->
-      <path d="M12 16 L11 18 L12 23 L13 18 Z" fill="#1a1a2e"/>
-    </svg>`,
+    svg: officersSvg,
     category: 'resource',
     tooltip: 'Officers - required for launches'
   },
 
   engineers: {
-    // Hard hat with safety goggles
-    svg: `<svg viewBox="0 0 24 24" fill="currentColor">
-      <!-- Main dome -->
-      <path d="M4 12 Q4 4 12 4 Q20 4 20 12 L4 12 Z"/>
-      <!-- Vertical ridges on dome -->
-      <rect x="8" y="5" width="1.5" height="7" fill="var(--color-bg-card, #1a1a2e)"/>
-      <rect x="11.25" y="4" width="1.5" height="8" fill="var(--color-bg-card, #1a1a2e)"/>
-      <rect x="14.5" y="5" width="1.5" height="7" fill="var(--color-bg-card, #1a1a2e)"/>
-      <!-- Brim -->
-      <rect x="2" y="11" width="20" height="3" rx="1"/>
-      <!-- Safety goggles frame -->
-      <path d="M4 16 L4 18 Q4 20 6 20 L9 20 Q10 20 10.5 19 L13.5 19 Q14 20 15 20 L18 20 Q20 20 20 18 L20 16 Z"/>
-      <!-- Goggle lenses (cutouts) -->
-      <rect x="5" y="16.5" width="4.5" height="2.5" rx="0.5" fill="var(--color-bg-card, #1a1a2e)"/>
-      <rect x="14.5" y="16.5" width="4.5" height="2.5" rx="0.5" fill="var(--color-bg-card, #1a1a2e)"/>
-      <!-- Nose bridge -->
-      <rect x="10.5" y="17" width="3" height="1.5" fill="var(--color-bg-card, #1a1a2e)"/>
-    </svg>`,
+    svg: engineersSvg,
     category: 'resource',
     tooltip: 'Engineers - aid research and repairs'
   },
 
   hydrogen: {
-    // H in yellow square
-    svg: `<svg viewBox="0 0 24 24">
-      <rect x="2" y="2" width="20" height="20" rx="2" fill="#f1c40f"/>
-      <text x="12" y="17" text-anchor="middle" font-size="14" font-weight="bold" fill="#1a1a2e">H</text>
-    </svg>`,
+    svg: hydrogenSvg,
     category: 'resource',
     tooltip: 'Hydrogen - cheap but flammable'
   },
 
   helium: {
-    // He in white square
-    svg: `<svg viewBox="0 0 24 24">
-      <rect x="2" y="2" width="20" height="20" rx="2" fill="white" stroke="#666" stroke-width="1"/>
-      <text x="12" y="17" text-anchor="middle" font-size="12" font-weight="bold" fill="#1a1a2e">He</text>
-    </svg>`,
+    svg: heliumSvg,
     category: 'resource',
     tooltip: 'Helium - safe but expensive'
   },
 
   vp: {
-    svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
-    </svg>`,
+    svg: vpSvg,
     category: 'resource',
     tooltip: 'Victory Points - win condition'
   },
 
   research: {
-    // Grey square (matches grey diamond for influence, grey circle for money)
-    svg: `<svg viewBox="0 0 24 24">
-      <rect x="2" y="2" width="20" height="20" rx="2" fill="#888888"/>
-    </svg>`,
+    svg: researchSvg,
     category: 'resource',
     tooltip: 'Research - unlock technologies'
   },
 
   influence: {
-    // Grey diamond
-    svg: `<svg viewBox="0 0 24 24">
-      <polygon points="12 2 22 12 12 22 2 12" fill="#888888"/>
-    </svg>`,
+    svg: influenceSvg,
     category: 'resource',
     tooltip: 'Influence - buy market cards'
   }

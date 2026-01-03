@@ -1,0 +1,27 @@
+<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="#e0e0e0">
+  <!-- Peaked cap top -->
+  <ellipse cx="12" cy="3.5" rx="5" ry="1.5"/>
+  <!-- Cap brim -->
+  <rect x="5" y="4.5" width="14" height="1.5" rx="0.5"/>
+  <!-- Cap band with gold stripe -->
+  <rect x="6" y="5.5" width="12" height="0.8" fill="none" stroke="#f1c40f" stroke-width="0.5"/>
+  <!-- Head -->
+  <ellipse cx="12" cy="9" rx="4" ry="3.5"/>
+  <!-- Ears -->
+  <ellipse cx="7.5" cy="9" rx="0.8" ry="1"/>
+  <ellipse cx="16.5" cy="9" rx="0.8" ry="1"/>
+  <!-- Neck -->
+  <rect x="10" y="12" width="4" height="2"/>
+  <!-- Shoulders and torso -->
+  <path d="M3 24 L3 19 Q3 16 6 15 L8 14 L10 14 L10 16 L14 16 L14 14 L16 14 L18 15 Q21 16 21 19 L21 24 Z"/>
+  <!-- Epaulettes -->
+  <rect x="3" y="16" width="4" height="1.5" rx="0.3"/>
+  <rect x="17" y="16" width="4" height="1.5" rx="0.3"/>
+  <!-- Epaulette stripes -->
+  <path d="M4 17.8h2M5 18.3h2" stroke="#f1c40f" stroke-width="0.4"/>
+  <path d="M18 17.8h2M19 18.3h2" stroke="#f1c40f" stroke-width="0.4"/>
+  <!-- Collar/Lapels -->
+  <path d="M10 14 L9 17 L12 20 L15 17 L14 14" fill="none" stroke="#333" stroke-width="0.5"/>
+  <!-- Tie -->
+  <path d="M12 16 L11 18 L12 23 L13 18 Z" fill="#1a1a2e"/>
+</svg>
