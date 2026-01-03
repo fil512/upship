@@ -13,6 +13,7 @@
 	export let interactive: boolean = false;
 	export let myPlayerId: string = '';
 	export let players: Record<string, { faction: Faction }> = {};
+	export let playerTechCards: string[] = [];
 
 	const dispatch = createEventDispatcher<{
 		buyMarket: { cardId: string };
@@ -68,6 +69,7 @@
 		{interactive}
 		{myPlayerId}
 		{players}
+		{playerTechCards}
 		on:buy={handleBuyTech}
 		on:undo={handleUndoTech}
 	/>

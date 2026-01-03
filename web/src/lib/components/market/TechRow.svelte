@@ -3,6 +3,7 @@
 	import type { Technology, Faction } from '$lib/types/game';
 	import CostBadge from '$lib/components/ui/CostBadge.svelte';
 	import { getTilesForCard, formatStats, getSlotTypeLabel } from '$lib/utils/techCardToTiles';
+	import { TECH_CARDS } from '$lib/data/techTiles';
 
 	export let cards: Technology[] = [];
 	export let claimed: Record<string, string> = {};
@@ -10,6 +11,7 @@
 	export let interactive: boolean = false;
 	export let myPlayerId: string = '';
 	export let players: Record<string, { faction: Faction }> = {};
+	export let playerTechCards: string[] = [];
 
 	const dispatch = createEventDispatcher<{
 		buy: { cardId: string };
@@ -39,10 +41,28 @@
 		}
 	}
 
-	function getCost(card: Technology): number {
+	function getBaseCost(card: Technology): number {
 		return (card as { cost?: number; researchCost?: number }).cost ||
 			(card as { cost?: number; researchCost?: number }).researchCost ||
 			3;
+	}
+
+	function calculateDiscount(cardType: string): number {
+		const cardsInTrack = playerTechCards.filter(id => {
+			const techCard = TECH_CARDS[id];
+			return techCard?.type === cardType;
+		}).length;
+		if (cardsInTrack >= 5) return 2;
+		if (cardsInTrack >= 3) return 1;
+		return 0;
+	}
+
+	function getDisplayCost(card: Technology): { cost: number; discounted: boolean } {
+		const baseCost = getBaseCost(card);
+		const cardData = TECH_CARDS[card.id];
+		const discount = cardData ? calculateDiscount(cardData.type) : 0;
+		const finalCost = Math.max(0, baseCost - discount);
+		return { cost: finalCost, discounted: discount > 0 };
 	}
 </script>
 
@@ -50,7 +70,7 @@
 	{#each cards as card, idx (card.instanceId ?? `${card.id}-${idx}`)}
 		{@const claimedByMe = isClaimedByMe(card.id)}
 		{@const claimedByOther = isClaimedByOther(card.id)}
-		{@const cost = getCost(card)}
+		{@const costInfo = getDisplayCost(card)}
 		{@const tiles = getTilesForCard(card.id)}
 
 		<button
@@ -64,7 +84,7 @@
 			<!-- Header -->
 			<div class="card-header">
 				<span class="card-name">{card.name}</span>
-				<CostBadge type="research" value={cost} size={20} />
+				<CostBadge type="research" value={costInfo.cost} size={20} discounted={costInfo.discounted} />
 			</div>
 
 			<!-- Effect -->

@@ -12,6 +12,8 @@
 	export let selected: boolean = false;
 	export let selectable: boolean = false;
 	export let showTiles: boolean = true;
+	export let compact: boolean = false;
+	export let fullWidth: boolean = false;
 
 	const dispatch = createEventDispatcher<{
 		select: { tech: typeof tech };
@@ -27,50 +29,58 @@
 	}
 </script>
 
-<button
-	class="tech-card"
-	class:selected
-	class:selectable
-	on:click={handleClick}
-	disabled={!selectable}
->
-	<!-- Header: Name (left) + Research Cost (right) -->
-	<div class="tech-header">
-		<span class="tech-name">{tech.name}</span>
-		{#if tech.researchCost}
-			<div class="tech-cost" title="Costs {tech.researchCost} Research">
-				<CostBadge type="research" value={tech.researchCost} size={24} />
+{#if compact}
+	<!-- Compact mode: small card for track display -->
+	<div class="tech-card-mini" title={tech.name}>
+		<span class="mini-name">{tech.name}</span>
+	</div>
+{:else}
+	<button
+		class="tech-card"
+		class:selected
+		class:selectable
+		class:full-width={fullWidth}
+		on:click={handleClick}
+		disabled={!selectable}
+	>
+		<!-- Header: Name (left) + Research Cost (right) -->
+		<div class="tech-header">
+			<span class="tech-name">{tech.name}</span>
+			{#if tech.researchCost}
+				<div class="tech-cost" title="Costs {tech.researchCost} Research">
+					<CostBadge type="research" value={tech.researchCost} size={24} />
+				</div>
+			{/if}
+		</div>
+
+		<!-- Effect description -->
+		{#if tech.effect}
+			<div class="tech-effect">{tech.effect}</div>
+		{/if}
+
+		<!-- Tech tiles this card provides -->
+		{#if tiles.length > 0}
+			<div class="tiles-section">
+				{#each tiles as tile}
+					<div class="tile-info">
+						<div class="tile-header">
+							<span class="tile-name">{tile.name}</span>
+							<span class="tile-type">{getSlotTypeLabel(tile.slotType)}</span>
+						</div>
+						<div class="tile-stats">
+							{#if tile.weight !== 0}
+								<span class="tile-weight">Wt: {tile.weight}</span>
+							{/if}
+							{#if Object.keys(tile.stats).length > 0}
+								<span class="tile-bonuses">{formatStats(tile.stats)}</span>
+							{/if}
+						</div>
+					</div>
+				{/each}
 			</div>
 		{/if}
-	</div>
-
-	<!-- Effect description -->
-	{#if tech.effect}
-		<div class="tech-effect">{tech.effect}</div>
-	{/if}
-
-	<!-- Tech tiles this card provides -->
-	{#if tiles.length > 0}
-		<div class="tiles-section">
-			{#each tiles as tile}
-				<div class="tile-info">
-					<div class="tile-header">
-						<span class="tile-name">{tile.name}</span>
-						<span class="tile-type">{getSlotTypeLabel(tile.slotType)}</span>
-					</div>
-					<div class="tile-stats">
-						{#if tile.weight !== 0}
-							<span class="tile-weight">Wt: {tile.weight}</span>
-						{/if}
-						{#if Object.keys(tile.stats).length > 0}
-							<span class="tile-bonuses">{formatStats(tile.stats)}</span>
-						{/if}
-					</div>
-				</div>
-			{/each}
-		</div>
-	{/if}
-</button>
+	</button>
+{/if}
 
 <style>
 	.tech-card {
@@ -86,6 +96,12 @@
 		cursor: default;
 		transition: all var(--transition-fast);
 		overflow: hidden;
+	}
+
+	.tech-card.full-width {
+		flex: 1;
+		min-width: 100px;
+		max-width: none;
 	}
 
 	.tech-card.selectable {
@@ -193,5 +209,36 @@
 
 	.tile-bonuses {
 		color: #2e7d32;
+	}
+
+	/* Compact mode styles */
+	.tech-card-mini {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 100%;
+		height: 100%;
+		min-width: 50px;
+		min-height: 36px;
+		background: #e8e4d9;
+		border: 1px solid #9a8c70;
+		border-radius: 3px;
+		padding: 2px 4px;
+		overflow: hidden;
+	}
+
+	.mini-name {
+		font-size: 0.5rem;
+		font-weight: 600;
+		color: #333;
+		text-transform: uppercase;
+		text-align: center;
+		line-height: 1.1;
+		word-break: break-word;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		display: -webkit-box;
+		-webkit-line-clamp: 2;
+		-webkit-box-orient: vertical;
 	}
 </style>

@@ -17,9 +17,34 @@
 		undo: { cardId: string };
 	}>();
 
+	// Track definitions with display names
+	const TRACKS = [
+		{ type: 'drive', name: 'Propulsion' },
+		{ type: 'structure', name: 'Structure' },
+		{ type: 'fabric', name: 'Fabric' },
+		{ type: 'gas', name: 'Gas Systems' },
+		{ type: 'component', name: 'Payload' }
+	] as const;
+
+	const SLOTS_PER_TRACK = 5;
+
+	// Group tech cards by track type
+	function getCardsByTrack(trackType: string): string[] {
+		return techCards.filter(id => {
+			const card = TECH_CARDS[id];
+			return card?.type === trackType;
+		});
+	}
+
+	// Get discount for a specific slot position (0-indexed)
+	function getSlotDiscount(slotIndex: number): number {
+		if (slotIndex >= 4) return 2; // 5th slot (index 4)
+		if (slotIndex >= 2) return 1; // 3rd-4th slot (index 2-3)
+		return 0; // 1st-2nd slot (index 0-1)
+	}
+
 	// Convert tech card ID to display format for TechCard
 	function toTechCardFormat(techId: string): { id: string; name: string; effect?: string; researchCost?: number } {
-		// Look up by ID
 		const cardData = TECH_CARDS[techId];
 		if (cardData) {
 			return {
@@ -28,7 +53,6 @@
 				researchCost: cardData.cost > 0 ? cardData.cost : undefined
 			};
 		}
-		// Fallback: format the ID
 		return {
 			id: techId,
 			name: techId.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
@@ -77,16 +101,31 @@
 		</div>
 	{/if}
 
-	<!-- Owned technology cards -->
-	{#if techCards.length === 0 && pendingAcquisitions.length === 0}
-		<div class="empty">No technology cards acquired</div>
-	{:else if techCards.length > 0}
-		<div class="tech-cards-row">
-			{#each techCards as techId}
-				<TechCard tech={toTechCardFormat(techId)} />
-			{/each}
-		</div>
-	{/if}
+	<!-- Tech cards organized by track -->
+	<div class="tracks-container">
+		{#each TRACKS as track}
+			{@const cardsInTrack = getCardsByTrack(track.type)}
+			<div class="track-section">
+				<span class="track-label">{track.name}</span>
+				<div class="track-slots">
+					{#each { length: SLOTS_PER_TRACK } as _, idx}
+						{#if idx < cardsInTrack.length}
+							<!-- Filled slot with card -->
+							<TechCard tech={toTechCardFormat(cardsInTrack[idx])} showTiles={true} fullWidth={true} />
+						{:else}
+							<!-- Empty slot with discount indicator -->
+							{@const discount = getSlotDiscount(idx)}
+							<div class="slot empty">
+								{#if discount > 0}
+									<span class="discount-badge">-{discount}</span>
+								{/if}
+							</div>
+						{/if}
+					{/each}
+				</div>
+			</div>
+		{/each}
+	</div>
 </div>
 
 <style>
@@ -94,25 +133,13 @@
 		background: var(--color-bg-card);
 		border-radius: var(--radius-lg);
 		padding: var(--spacing-md);
+		width: 100%;
 	}
 
 	.tech-list h4 {
 		font-size: 0.875rem;
 		color: var(--color-accent-gold);
 		margin-bottom: var(--spacing-sm);
-	}
-
-	.empty {
-		text-align: center;
-		color: var(--color-text-muted);
-		padding: var(--spacing-sm);
-		font-size: 0.75rem;
-	}
-
-	.tech-cards-row {
-		display: flex;
-		flex-wrap: wrap;
-		gap: var(--spacing-sm);
 	}
 
 	.pending-section {
@@ -126,6 +153,12 @@
 		color: #4caf50;
 		margin-bottom: var(--spacing-xs);
 		font-weight: 600;
+	}
+
+	.tech-cards-row {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--spacing-sm);
 	}
 
 	.pending-card-wrapper {
@@ -149,6 +182,59 @@
 
 	.undo-btn:hover {
 		background: #4caf50;
+		color: white;
+	}
+
+	/* Track-based layout */
+	.tracks-container {
+		display: flex;
+		flex-direction: column;
+		gap: var(--spacing-md);
+		width: 100%;
+	}
+
+	.track-section {
+		display: flex;
+		flex-direction: column;
+		gap: var(--spacing-xs);
+		width: 100%;
+	}
+
+	.track-label {
+		font-size: 0.75rem;
+		font-weight: 600;
+		color: var(--color-text-muted);
+		text-transform: uppercase;
+	}
+
+	.track-slots {
+		display: grid;
+		grid-template-columns: repeat(5, 1fr);
+		gap: 0.5rem;
+		width: 100%;
+	}
+
+	/* Empty slot styling - match TechRow dimensions */
+	.slot.empty {
+		min-height: 80px;
+		background: #f0ebe0;
+		border: 2px dashed #c4b8a0;
+		border-radius: 8px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.discount-badge {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 24px;
+		height: 24px;
+		background: #888888;
+		border-radius: 4px;
+		font-size: 0.75rem;
+		font-weight: bold;
 		color: white;
 	}
 </style>

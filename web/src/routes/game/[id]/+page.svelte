@@ -385,6 +385,7 @@
 								interactive={isMarketInteractive}
 								myPlayerId={$effectiveUserId}
 								players={$gameState.players}
+								playerTechCards={$myState?.techCards || []}
 								on:buyMarket={handleBuyMarketCard}
 								on:buyTech={handleBuyTechCard}
 								on:undoPurchase={handleUndoPurchase}
