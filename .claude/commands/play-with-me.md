@@ -1,54 +1,36 @@
 # Play With Me - Interactive UP SHIP! Game
 
-Play a 4-player game where you (kenny) play as **Britain** and Claude controls Germany, USA, and Italy through browser automation.
+Play a 4-player game where you (kenny) play as **Britain** and Claude controls Germany, USA, and Italy via the playtest tool.
 
-## Prerequisites
+## How It Works
 
-1. **Chrome DevTools MCP server must be connected** (chrome-devtools)
-2. **Both servers running:**
-   - Express API: http://localhost:3000
-   - SvelteKit Frontend: http://localhost:5173
+1. Claude restarts the servers and sets up a new game
+2. You join the game in your browser and select Britain
+3. Claude plays the AI turns using the playtest CLI tool
+4. You play your turns in the browser UI
 
-## Server Architecture
+## Step 1: Start Servers
 
-The new SvelteKit frontend runs on port 5173 with real-time updates via Socket.io:
-
-```
-Browser (5173) → Vite Dev Server → Express API (3000)
-                     ↓ proxy           ↓
-              /api/* → :3000/api/*   Socket.io
-              /socket.io → :3000/socket.io
-```
-
-**Key difference from old UI**: State updates happen in real-time via WebSocket, no polling!
-
-## Quick Start
-
-### Step 1: Start both servers
-
-In separate terminals:
+Run the restart script to ensure both servers are running:
 
 ```bash
-# Terminal 1: Express API server
-npm run dev:local
-
-# Terminal 2: SvelteKit frontend
-npm run dev -w web
+./scripts/restart_server.sh
 ```
 
-### Step 2: Set up the game
+This starts:
+- Express API on http://localhost:3000
+- SvelteKit frontend on http://localhost:5173
+
+## Step 2: Set Up the Game
 
 ```bash
 UPSHIP_LOCAL=1 python -m playtest setup-interactive
 ```
 
-This will:
-- Create a new game with 3 AI players (Germany, USA, Italy)
-- Wait for kenny to join as Britain
-- Automatically start the game once kenny has joined and selected Britain
+This creates a game with 3 AI players and waits for kenny to join.
 
-**Instruct the user:**
-> Game is being set up! Please:
+**Tell the user:**
+> Game is ready! Please:
 > 1. Open http://localhost:5173 in your browser
 > 2. Login as **kenny**
 > 3. Click "Open Games" and join the "Play With Kenny" game
@@ -58,219 +40,139 @@ This will:
 
 Wait for the setup script to report "GAME READY!" before proceeding.
 
-### Step 3: Open browser tabs for AI players
+## Step 3: Game Loop
 
-Once the game has started, get the game ID and open browser tabs for each AI player:
+Use the playtest tool to check status and play AI turns:
+
+### Check Whose Turn
 
 ```bash
-GAME_ID=$(UPSHIP_LOCAL=1 python -m playtest gameid)
-echo "Game ID: $GAME_ID"
+UPSHIP_LOCAL=1 python -m playtest whose-turn
 ```
 
-Open browser tabs for the 3 AI players. Each tab will use DEV mode impersonation:
+Shows whose turn it is and the current phase.
 
+### Check Current State
+
+```bash
+UPSHIP_LOCAL=1 python -m playtest summary
 ```
-mcp__chrome-devtools__new_page url="http://localhost:5173/game/$GAME_ID"
+
+Shows all players' status including resources and ships.
+
+### Autoplay Until Kenny's Turn
+
+The easiest way to play - run all AI turns automatically until it's kenny's turn:
+
+```bash
+UPSHIP_LOCAL=1 python -m playtest autoplay-until britain
 ```
 
-After opening each tab:
-1. Login as the AI player (e.g., `playtest_germany` / `test123456`)
-2. Or use the dev mode player switcher dropdown in the game UI
+This will:
+- Play all Germany, USA, and Italy turns automatically
+- Stop when it's Britain's turn
+- Report the current phase and game state
 
-## Game Loop
+### Play Single AI Turn
 
-### Check Current Turn
+To play just one turn for a specific AI faction:
 
-Take a snapshot of any game tab to see:
-- Current phase indicator in header (Worker Placement, Reveal, Income & Cleanup)
-- "Your Turn" or "Waiting for [faction]" indicator
-- Current turn/round/age in header
+```bash
+UPSHIP_LOCAL=1 python -m playtest autoturn germany
+UPSHIP_LOCAL=1 python -m playtest autoturn usa
+UPSHIP_LOCAL=1 python -m playtest autoturn italy
+```
 
-The SvelteKit UI shows real-time updates - you'll see toast notifications when turns change!
+This only works if it's actually that faction's turn.
 
-### If It's Kenny's Turn
+## Step 4: Kenny's Turn
 
-Prompt the user:
+When it's kenny's turn, prompt:
+
 > **Your turn, kenny!**
-> Phase: [current phase]
 >
-> Take your action in the browser and let me know when you're done.
+> Phase: [phase from whose-turn]
+> Turn: [N] | Round: [N] | Age: [N]
+>
+> Take your action in the browser and say "done" when finished.
 
-Wait for user to confirm they've completed their action.
+After kenny confirms, run `autoplay-until britain` again to play AI turns.
 
-### If It's an AI Player's Turn
+## Playtest Commands Reference
 
-1. Switch to that player's tab:
-```
-mcp__chrome-devtools__select_page pageIdx=N
-```
+| Command | Description |
+|---------|-------------|
+| `whose-turn` | Show whose turn it is |
+| `summary` | Show all players' status table |
+| `status [player]` | Detailed status for a player |
+| `autoplay-until <faction>` | Play AI turns until faction's turn |
+| `autoturn <faction>` | Play one turn for faction |
+| `autoplay [turns]` | Auto-play N turns (all players) |
+| `routes` | Show available routes |
+| `endphase` | All players end turn/pass |
+| `action <player> <cmd>` | Execute single action |
 
-2. Take a snapshot to see current state
+## Manual Action Commands
 
-3. Execute the appropriate action (see AI Strategy below)
+If you need finer control over AI actions:
 
-4. Continue to next turn
+| Action | Command |
+|--------|---------|
+| Place agent | `action playtest_germany place <location> <cardIndex>` |
+| Pass/Reveal | `action playtest_germany pass` |
+| End turn | `action playtest_germany endturn` |
+| Buy gas | `action playtest_germany buygas hydrogen 3` |
+| Build ship | `action playtest_germany build 1` |
 
-## AI Strategy
+## Location IDs
 
-### Worker Placement Phase
+**Technical (wrench):**
+- `research-institute`, `design-bureau`, `construction-hall`
 
-**Priority order for locations (from GroundBoard component):**
+**Operations (propeller):**
+- `launchpad`, `ministry`, `gas-depot`, `weather-bureau`
 
-**Technical (🔧 wrench):**
-1. **Design Bureau** - Install upgrades to improve ships
-2. **Construction Hall** - Build ships when blueprint is ready
-3. **Technical Institute** - Upgrade engineer income
-4. **Gas Depot** - Buy fuel for launches
-
-**Operations (⚙️ propeller):**
-1. **Launchpad** - Essential for launching ships
-2. **Research Institute** - Acquire new technologies
-3. **Ministry** - Political maneuvering
-4. **Weather Bureau** - Check hazard forecasts
-
-**Business (🪙 coin):**
-1. **Academy** - Recruit officers/engineers
-2. **Flight School** - Upgrade officer income
-3. **Government Liaison** - Spend officers for income
-4. **Insurance Bureau** - Protect ships
-
-**Placing agents in the new UI:**
-1. Click a card in HandSection that matches the location symbol
-2. Card highlights when selected, showing which locations are available
-3. Click an available location on the GroundBoard (highlighted locations)
-4. Or click "Pass" button in the Actions panel
-
-### Reveal Phase
-
-Process locations where the AI placed agents. Location actions are now executed via Socket.io and update in real-time.
-
-- **Gas Depot**: Purchase gas (hydrogen for Germany, helium for USA with monopoly)
-- **Design Bureau**: Click blueprint slots to install upgrades from modal
-- **Construction Hall**: Build ships if Lift > Weight (check ShipStats component)
-- **Launchpad**: Select ship from FleetPanel, choose route from RoutesPanel
-- **Academy/Schools**: Recruit crew as needed
-- **Research Institute**: Acquire technology from R&D board
-
-### Income & Cleanup Phase
-
-Click "End Turn" button to:
-- Collect income (ResourcePanel updates automatically)
-- Draw cards (HandSection updates)
-- Advance to next turn
-
-## UI Components Reference
-
-| Component | Location | Shows |
-|-----------|----------|-------|
-| Header | Top | Age, Turn, Phase, Turn indicator |
-| ResourcePanel | Left sidebar | Cash, income, VP, officers, engineers, gas |
-| Blueprint | Left sidebar | 4 slot rows with ShipStats |
-| TechList | Left sidebar | Acquired technologies |
-| GroundBoard | Center | 12 locations organized by symbol |
-| HandSection | Center | Player's cards with deck/discard counts |
-| FleetPanel | Center | Ships grouped by status |
-| RoutesPanel | Center | Available routes |
-| PlayersList | Right sidebar | All players with online status |
-| Actions panel | Right sidebar | Pass/End Turn buttons |
-| GameLog | Right sidebar | Recent game actions |
-| ToastContainer | Top right | Turn/phase notifications |
-
-## Browser Tab Reference
-
-| Tab Index | Player | Faction | Login |
-|-----------|--------|---------|-------|
-| 0 | playtest_germany | Germany | test123456 |
-| 1 | playtest_usa | USA | test123456 |
-| 2 | playtest_italy | Italy | test123456 |
-| (user's browser) | kenny | Britain | (user's password) |
-
-## Chrome DevTools Commands Quick Reference
-
-```
-# List pages
-mcp__chrome-devtools__list_pages
-
-# Select a tab
-mcp__chrome-devtools__select_page pageIdx=0
-
-# Take snapshot (see elements with UIDs)
-mcp__chrome-devtools__take_snapshot
-
-# Take screenshot
-mcp__chrome-devtools__take_screenshot
-
-# Click element
-mcp__chrome-devtools__click uid="element_uid"
-
-# Fill input
-mcp__chrome-devtools__fill uid="input_uid" value="text"
-
-# Wait for text
-mcp__chrome-devtools__wait_for text="Your Turn"
-```
+**Business (coin):**
+- `academy`, `flight-school`, `technical-institute`, `the-bank`, `insurance-bureau`
 
 ## Turn Notification Template
 
-When it's kenny's turn, use this format:
+When it's kenny's turn:
 
 ---
 
 **Your turn, kenny!**
 
-📍 **Phase**: [worker_placement / reveal / income_cleanup]
-🎯 **Turn**: [N] | **Round**: [N] | **Age**: [N]
+**Phase**: [worker_placement / reveal / income_cleanup]
+**Turn**: [N] | **Round**: [N] | **Age**: [N]
 
-**Your resources** (from ResourcePanel):
+**Your resources**:
 - Cash: £[X] | Income: +£[X]/turn
-- Gas: [H₂: X, He: X]
+- Gas: H2=[X], He=[X]
 - Officers: [X] | Engineers: [X]
 - VP: [X]
 
-**Your hand** (from HandSection):
-- [X] cards | Deck: [X] | Discard: [X]
-
 **What you can do:**
-- [Phase-specific actions available]
+- [Phase-specific actions]
 
-Let me know when you've taken your action!
+Take your action in the browser and say "done" when finished!
 
 ---
 
-## Real-Time Features
+## Typical Game Flow
 
-The new SvelteKit UI has real-time updates via Socket.io:
-
-- **Turn notifications**: Toast appears saying "It's Your Turn!"
-- **Phase changes**: Toast appears when phase transitions
-- **State sync**: All components update automatically when other players act
-- **Online presence**: PlayersList shows green dots for connected players
+1. Run `./scripts/restart_server.sh`
+2. Run `UPSHIP_LOCAL=1 python -m playtest setup-interactive`
+3. Tell kenny to join and select Britain
+4. Wait for "GAME READY!"
+5. **Loop:**
+   - Run `UPSHIP_LOCAL=1 python -m playtest autoplay-until britain`
+   - Tell kenny it's their turn with status info
+   - Wait for kenny to say "done"
+   - Repeat
 
 ## Game End
 
 When the game ends (Age 3 victory conditions met), report:
 - Winner and final VP totals
 - Each faction's score breakdown
-- Notable achievements during the game
-
-## Troubleshooting
-
-**If a player can't take actions:**
-- Check the turn indicator in the header
-- Verify Socket.io is connected (check online indicator)
-- Try refreshing the page (Cmd+R)
-
-**If the game state seems stuck:**
-- Use `UPSHIP_LOCAL=1 python -m playtest status` to check server-side state
-- Compare with what the UI shows
-- Check browser console for Socket.io errors
-
-**If an AI player's session expires:**
-- Close the tab
-- Open new tab: `mcp__chrome-devtools__new_page url="http://localhost:5173/"`
-- Login and navigate to game
-
-**If Socket.io won't connect:**
-- Ensure both servers are running (Express on :3000, SvelteKit on :5173)
-- Check that the Vite proxy is working
-- Try `mcp__chrome-devtools__list_network_requests` to see WebSocket status

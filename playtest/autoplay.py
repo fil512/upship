@@ -11,9 +11,9 @@ from typing import Any
 from client import GameState
 
 from .config import PLAYERS, DEFAULT_MAX_TURNS
-from .client import get_client, get_game_id, login_all_players
+from .client import get_client, get_game_id, login_all_players, get_faction_from_player
 from .logging import get_logger
-from .state import get_state, get_phase, get_age, check_game_ended, get_state_fingerprint
+from .state import get_state, get_phase, get_age, check_game_ended, get_state_fingerprint, get_current_placer
 from .phases import (
     handle_worker_placement_round, handle_reveal_phase, handle_income_cleanup_phase,
     handle_age_transition_design_bureau
@@ -266,3 +266,247 @@ def autoplay(num_turns: int | None = None, game_id: str | None = None) -> None:
     print(f"Autoplay Summary")
     print(f"{'='*60}")
     show_summary(game_id)
+
+
+def get_current_turn_faction(game_id: str) -> str | None:
+    """Get the faction of the player whose turn it is.
+
+    Args:
+        game_id: The game ID.
+
+    Returns:
+        Faction name (e.g., 'germany', 'britain') or None if can't determine.
+    """
+    state = get_state(game_id)
+    if not state:
+        return None
+
+    phase = state.phase
+
+    # During worker placement, use the current placer
+    if phase == "WORKER_PLACEMENT":
+        current_player = get_current_placer(game_id)
+        if current_player:
+            return get_faction_from_player(current_player)
+        return None
+
+    # During other phases, use current_player_index
+    current_idx = state.current_player_index
+    if current_idx is None or current_idx < 0:
+        return None
+
+    if current_idx >= len(state.player_order):
+        return None
+
+    current_player_id = state.player_order[current_idx]
+    player_data = state.get_player(current_player_id)
+
+    if player_data and player_data.faction:
+        return player_data.faction.lower()
+
+    return None
+
+
+def autoplay_until(target_faction: str, game_id: str | None = None) -> bool:
+    """Run AI turns until it's the target faction's turn.
+
+    Args:
+        target_faction: Faction name (e.g., 'britain', 'germany').
+        game_id: Game ID (uses current game if None).
+
+    Returns:
+        True if target faction's turn was reached, False if game ended or got stuck.
+    """
+    client = get_client()
+
+    if game_id is None:
+        game_id = get_game_id()
+    if not game_id:
+        print("No current game. Run 'setup' first.")
+        return False
+
+    target_faction = target_faction.lower()
+    print(f"=== Autoplay until {target_faction.upper()}'s turn ===")
+
+    logger = get_logger()
+    if not logger.log_file:
+        if not logger.load_log_file():
+            logger.init_log_file(game_id)
+
+    login_all_players()
+
+    stuck_detector = StuckDetector(threshold=10)
+    max_iterations = 200
+
+    for iteration in range(max_iterations):
+        # Check if it's the target faction's turn
+        current_faction = get_current_turn_faction(game_id)
+        if current_faction == target_faction:
+            phase = get_phase(game_id)
+            state = get_state(game_id)
+            print(f"\n>>> It's {target_faction.upper()}'s turn!")
+            print(f"    Phase: {phase}")
+            if state:
+                print(f"    Age: {state.age} | Turn: {state.turn} | Round: {state.round}")
+            return True
+
+        # Check for game end
+        end_status = check_game_ended(game_id)
+        if end_status['ended']:
+            print(f"\nGame ended before {target_faction}'s turn.")
+            print(f"Winner: {end_status['winner']}")
+            return False
+
+        # Check for stuck state
+        is_stuck, stuck_details = stuck_detector.check(game_id)
+        if is_stuck:
+            print(stuck_details)
+            return False
+
+        phase = get_phase(game_id)
+
+        if phase == "WORKER_PLACEMENT":
+            current_placer = get_current_placer(game_id)
+            if current_placer:
+                placer_faction = get_faction_from_player(current_placer)
+                if placer_faction == target_faction:
+                    # It's the target's turn
+                    print(f"\n>>> It's {target_faction.upper()}'s turn!")
+                    print(f"    Phase: Worker Placement")
+                    return True
+
+            if handle_worker_placement_round(game_id, logger):
+                stuck_detector.reset()
+
+        elif phase == "REVEAL":
+            handle_reveal_phase(game_id, logger)
+            stuck_detector.reset()
+
+        elif phase == "INCOME_CLEANUP":
+            handle_income_cleanup_phase(game_id, logger)
+            if get_phase(game_id) != "INCOME_CLEANUP":
+                stuck_detector.reset()
+
+        elif phase == "AGE_TRANSITION_DESIGN_BUREAU":
+            if handle_age_transition_design_bureau(game_id, logger):
+                stuck_detector.reset()
+
+        else:
+            print(f"  Unknown phase: {phase}")
+            for player in PLAYERS:
+                try:
+                    client.end_turn(player, game_id)
+                except Exception:
+                    pass
+
+    print(f"\nReached max iterations ({max_iterations})")
+    return False
+
+
+def autoturn(faction: str, game_id: str | None = None) -> bool:
+    """Play one turn automatically for a specific faction.
+
+    If it's not that faction's turn, does nothing and returns False.
+
+    Args:
+        faction: Faction name (e.g., 'germany', 'britain').
+        game_id: Game ID (uses current game if None).
+
+    Returns:
+        True if a turn was successfully played, False otherwise.
+    """
+    client = get_client()
+
+    if game_id is None:
+        game_id = get_game_id()
+    if not game_id:
+        print("No current game. Run 'setup' first.")
+        return False
+
+    faction = faction.lower()
+
+    # Find the player username for this faction
+    player = f"playtest_{faction}"
+    if player not in PLAYERS:
+        # Handle 'kenny' or other non-playtest players
+        # For now, we only support playtest_ players
+        print(f"Cannot autoturn for {faction} - only AI players supported")
+        return False
+
+    # Check if it's this faction's turn
+    current_faction = get_current_turn_faction(game_id)
+    if current_faction != faction:
+        print(f"It's not {faction.upper()}'s turn (current: {current_faction or 'unknown'})")
+        return False
+
+    logger = get_logger()
+    if not logger.log_file:
+        if not logger.load_log_file():
+            logger.init_log_file(game_id)
+
+    # Login this player
+    try:
+        from .config import PASSWORD
+        client.login(player, PASSWORD)
+    except Exception:
+        pass
+
+    phase = get_phase(game_id)
+    print(f">>> {faction.upper()} taking turn (phase: {phase})")
+
+    if phase == "WORKER_PLACEMENT":
+        from .phases import (
+            get_player_agents, get_player_hand, get_available_locations,
+            _execute_placement, submit_reveal
+        )
+        from .strategy import find_strategic_placement
+
+        agents = get_player_agents(player, game_id)
+
+        if agents <= 0:
+            submit_reveal(player, game_id, logger, "(out of agents)")
+            return True
+
+        hand = get_player_hand(player, game_id)
+        locations = get_available_locations(game_id)
+        result = find_strategic_placement(player, hand, locations, game_id, return_decision_info=True)
+
+        if len(result) == 3:
+            card, location, decision_info = result
+        else:
+            card, location = result
+            decision_info = None
+
+        if card and location:
+            _execute_placement(player, game_id, card, location, logger, decision_info)
+            return True
+        else:
+            submit_reveal(player, game_id, logger, "(no playable cards)")
+            return True
+
+    elif phase == "REVEAL":
+        try:
+            client.end_turn(player, game_id)
+            print(f"  {faction.upper()}: ended reveal phase")
+            return True
+        except Exception as e:
+            print(f"  {faction.upper()}: reveal end failed - {e}")
+            return False
+
+    elif phase == "INCOME_CLEANUP":
+        try:
+            client.end_turn(player, game_id)
+            print(f"  {faction.upper()}: ended income/cleanup")
+            return True
+        except Exception as e:
+            print(f"  {faction.upper()}: end turn failed - {e}")
+            return False
+
+    elif phase == "AGE_TRANSITION_DESIGN_BUREAU":
+        if handle_age_transition_design_bureau(game_id, logger):
+            return True
+        return False
+
+    else:
+        print(f"  Unknown phase: {phase}")
+        return False

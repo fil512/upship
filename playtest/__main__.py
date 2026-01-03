@@ -4,6 +4,9 @@ Usage:
     python -m playtest setup                 # Create new 4-player game (all AI)
     python -m playtest setup-interactive     # Create game for human (kenny) + 3 AI
     python -m playtest autoplay [num_turns]  # Run AI until game ends
+    python -m playtest autoplay-until <faction>  # Run AI until faction's turn
+    python -m playtest autoturn <faction>    # Play one turn for faction
+    python -m playtest whose-turn            # Show whose turn it is
     python -m playtest status [player]       # Show game status
     python -m playtest summary               # Show all players' summary
     python -m playtest endphase              # All players end turn/pass
@@ -29,7 +32,7 @@ from .config import PLAYERS, FACTIONS, API_BASE, USE_LOCAL, PASSWORD
 from .client import get_client, get_game_id, save_game_id, login_all_players
 from .logging import get_logger
 from .state import get_state, get_phase, get_player_id
-from .autoplay import autoplay
+from .autoplay import autoplay, autoplay_until, autoturn, get_current_turn_faction
 from .display import (
     show_status, show_summary, show_sessions, show_routes,
     debug_state, tail_log, show_claude_output
@@ -444,6 +447,36 @@ def main():
         else:
             num_turns = None
         autoplay(num_turns)
+
+    elif cmd == "autoplay-until":
+        if len(sys.argv) < 3:
+            print("Usage: playtest autoplay-until <faction>")
+            print("  faction: germany, britain, usa, italy")
+            return
+        target_faction = sys.argv[2]
+        autoplay_until(target_faction)
+
+    elif cmd == "autoturn":
+        if len(sys.argv) < 3:
+            print("Usage: playtest autoturn <faction>")
+            print("  faction: germany, britain, usa, italy")
+            return
+        faction = sys.argv[2]
+        autoturn(faction)
+
+    elif cmd == "whose-turn" or cmd == "turn":
+        game_id = get_game_id()
+        if not game_id:
+            print("No current game. Run 'setup' first.")
+            return
+        faction = get_current_turn_faction(game_id)
+        phase = get_phase(game_id)
+        if faction:
+            print(f"Current turn: {faction.upper()}")
+            print(f"Phase: {phase}")
+        else:
+            print(f"Could not determine whose turn it is")
+            print(f"Phase: {phase}")
 
     elif cmd == "status":
         player = sys.argv[2] if len(sys.argv) > 2 else None
