@@ -6,7 +6,7 @@
 import { pool } from '../db';
 
 // Use require for CommonJS auth module
-// eslint-disable-next-line @typescript-eslint/no-var-requires
+ 
 const { hashPassword, verifyPassword } = require('../auth');
 
 // User row from database

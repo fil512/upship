@@ -660,7 +660,6 @@ function hasPlayableCards(state: GameState, playerId: string): boolean {
  */
 function processPlaceAgent(state: GameState, playerId: string, data: PlaceAgentData): ActionResult {
   const { locationId, cardIndex, buildCount, gasType, gasAmount, crewType, crewCount, levels, policyCount, officerCount, swaps, blueprint } = data;
-  const workerState = state as WorkerState;
   const playerState = state.players[playerId];
 
   // Validate phase

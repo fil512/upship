@@ -2,24 +2,24 @@
   "name": "upship",
   "version": "1.0.0",
   "description": "UP SHIP! - A strategy board game about airship conglomerates during the Golden Age of Airships",
-  "main": "server/index.js",
+  "main": "server/index.ts",
   "workspaces": [
     "api",
     "web"
   ],
   "scripts": {
-    "start": "node server/index.js",
+    "start": "tsx server/index.ts",
     "build": "npm run build:api && npm run build --workspace=web",
     "build:api": "npm run build --workspace=api",
-    "dev": "tsx watch server/index.js",
-    "dev:local": "DOTENV_CONFIG_PATH=.env.development tsx watch --env-file=.env.development server/index.js",
+    "dev": "tsx watch server/index.ts",
+    "dev:local": "DOTENV_CONFIG_PATH=.env.development tsx watch --env-file=.env.development server/index.ts",
     "dev:web": "npm run dev --workspace=web",
     "dev:all": "concurrently \"npm run dev:local\" \"npm run dev:web\"",
     "build:web": "npm run build --workspace=web",
-    "migrate": "node server/db/migrate.js",
-    "migrate:down": "node server/db/migrate.js down",
-    "migrate:status": "node server/db/migrate.js status",
-    "migrate:local": "DOTENV_CONFIG_PATH=.env.development node -r dotenv/config server/db/migrate.js",
+    "migrate": "tsx server/db/migrate.ts",
+    "migrate:down": "tsx server/db/migrate.ts down",
+    "migrate:status": "tsx server/db/migrate.ts status",
+    "migrate:local": "DOTENV_CONFIG_PATH=.env.development tsx --env-file=.env.development server/db/migrate.ts",
     "db:up": "docker compose up -d",
     "db:down": "docker compose down",
     "db:logs": "docker compose logs -f postgres",
@@ -74,6 +74,7 @@
     "supertest": "^7.1.4",
     "ts-jest": "^29.4.6",
     "tsx": "^4.21.0",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.51.0"
   }
 }

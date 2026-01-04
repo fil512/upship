@@ -327,6 +327,7 @@ See `plans/overview.md` for the 27-phase implementation plan tracking progress f
 - `/playtest-rest` - Run a full automated playtest against the local dev server (http://localhost:3000)
 - `/playtest-ui` - Run a browser-based UI playtest using Chrome DevTools MCP (tests UI controls, UX, and functionality)
 - `/playtest-ui-claude` - Run a browser-based UI playtest using Claude in Chrome MCP (alternative to /playtest-ui)
+- `/playtest-phases` - Multi-phase UI playtest: functionality, rules operation, UX, and design polish; tracks progress in `plans/playtest-tracking.md`
 - `/play-with-me` - Interactive game where you (kenny) play Britain and Claude controls Germany, USA, Italy via browser
 
 ## Available Skills

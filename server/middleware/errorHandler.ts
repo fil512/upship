@@ -7,7 +7,7 @@ import type { Request, Response, NextFunction, ErrorRequestHandler } from 'expre
 import type { Logger } from 'pino';
 
 // Use require for CommonJS compatibility
-// eslint-disable-next-line @typescript-eslint/no-var-requires
+ 
 const logger = require('../logger') as Logger;
 
 import {

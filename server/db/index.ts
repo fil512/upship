@@ -2,7 +2,7 @@ import { Pool, PoolClient, QueryResult, PoolConfig } from 'pg';
 import type { Logger } from 'pino';
 
 // Use require for CommonJS compatibility
-// eslint-disable-next-line @typescript-eslint/no-var-requires
+ 
 const logger = require('../logger') as Logger;
 
 // Child logger for database operations

@@ -48,7 +48,6 @@ router.use(requireAuth);
 // List games (with optional status filter)
 router.get('/', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const authReq = req as AuthenticatedRequest;
     const filters = {
       status: (req.query.status as string) || 'waiting',
       limit: req.query.limit ? parseInt(req.query.limit as string) : 50

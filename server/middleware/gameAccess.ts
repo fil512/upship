@@ -7,7 +7,7 @@ import type { Request, Response, NextFunction } from 'express';
 import { ForbiddenError, NotFoundError } from '../errors';
 
 // Use require for CommonJS compatibility
-// eslint-disable-next-line @typescript-eslint/no-var-requires
+ 
 const gameService = require('../services/gameService');
 
 // Game interface from gameService

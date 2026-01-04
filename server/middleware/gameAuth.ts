@@ -9,7 +9,7 @@ import { ForbiddenError, NotFoundError, NotYourTurnError } from '../errors';
 import { pool } from '../db';
 
 // Use require for CommonJS compatibility
-// eslint-disable-next-line @typescript-eslint/no-var-requires
+ 
 const gameStateService = require('../services/gameStateService');
 
 // Game player row from database

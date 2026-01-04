@@ -18,7 +18,7 @@ lsof -ti:5173 | xargs kill -9 2>/dev/null || true
 # Also kill any lingering npm dev processes
 pkill -f "npm run dev:local" 2>/dev/null || true
 pkill -f "npm run dev -w web" 2>/dev/null || true
-pkill -f "node.*--watch server/index.js" 2>/dev/null || true
+pkill -f "tsx.*server/index.ts" 2>/dev/null || true
 pkill -f "vite dev" 2>/dev/null || true
 sleep 1
 

@@ -3,7 +3,7 @@
  * Handles game state initialization, persistence, and retrieval
  */
 
-import type { Faction, GameState, PlayerState, Card, HazardCard, Ship, Route } from '@upship/api';
+import type { Faction, GameState, PlayerState, Card, HazardCard, Route } from '@upship/api';
 import type { PoolClient } from 'pg';
 
 const { pool } = require('../db');
@@ -237,6 +237,8 @@ function createInitialBlueprint(faction: Faction): Blueprint {
 }
 
 // Starter card structure (separate from Card to allow flexibility in symbol values)
+// Note: This interface documents the structure but isn't directly referenced
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 interface StarterCard {
   id: string;
   name: string;
@@ -698,8 +700,9 @@ interface GamePlayerRow {
   [key: string]: unknown;
 }
 
-// Log entry structure
-interface LogEntry {
+// Log entry structure - documents format, imported from @upship/api
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+interface LocalLogEntry {
   timestamp: string;
   message: string;
   type: string;

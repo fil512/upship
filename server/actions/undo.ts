@@ -5,7 +5,7 @@
  * Commit points prevent undo beyond the point where hidden info was revealed.
  */
 
-import type { GameState, ActionType } from '@upship/api';
+import type { GameState } from '@upship/api';
 
 const { pool } = require('../db');
 const { GameRuleError } = require('../errors');

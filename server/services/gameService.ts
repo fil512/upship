@@ -4,7 +4,6 @@
  */
 
 import type { Faction, GameState } from '@upship/api';
-import type { PoolClient } from 'pg';
 import { pool } from '../db';
 import {
   NotFoundError,
@@ -14,7 +13,7 @@ import {
 } from '../errors';
 
 // Use require for circular dependency with gameStateService
-// eslint-disable-next-line @typescript-eslint/no-var-requires
+ 
 const gameStateService = require('./gameStateService');
 
 // Game settings

@@ -3,7 +3,7 @@
  * ACQUIRE_TECH_CARD, ACQUIRE_TECH_CARD_RESEARCH, GAIN_RESEARCH action processors
  */
 
-import type { GameState, PlayerState, LogEntry, Technology } from '@upship/api';
+import type { GameState, PlayerState, LogEntry } from '@upship/api';
 
 const { GameRuleError, InsufficientFundsError } = require('../errors');
 const { shuffleArray } = require('../utils/random');
