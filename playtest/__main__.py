@@ -3,6 +3,7 @@
 Usage:
     python -m playtest setup                 # Create new 4-player game (all AI)
     python -m playtest setup-interactive     # Create game for human (kenny) + 3 AI
+    python -m playtest start                 # Start the current game (host action)
     python -m playtest autoplay [num_turns]  # Run AI until game ends
     python -m playtest autoplay-until <faction>  # Run AI until faction's turn
     python -m playtest autoturn <faction>    # Play one turn for faction
@@ -28,7 +29,7 @@ from datetime import datetime
 
 import requests
 
-from .config import PLAYERS, FACTIONS, API_BASE, USE_LOCAL, PASSWORD
+from .config import PLAYERS, FACTIONS, API_BASE, FRONTEND_URL, USE_LOCAL, PASSWORD, set_human_faction, clear_human_faction
 from .client import get_client, get_game_id, save_game_id, login_all_players
 from .logging import get_logger
 from .state import get_state, get_phase, get_player_id
@@ -45,6 +46,9 @@ def setup_game() -> str:
     Returns:
         The game ID.
     """
+    # Clear any human faction setting from previous interactive games
+    clear_human_faction()
+
     client = get_client()
     game_name = f"Playtest_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
 
@@ -121,6 +125,9 @@ def setup_interactive_game() -> str:
     human_player = "kenny"
     human_faction = "britain"
 
+    # Mark Britain as human-controlled for autoplay to skip
+    set_human_faction(human_faction)
+
     print("=== UP SHIP! Interactive Game Setup ===")
     print(f"Server: {API_BASE} {'(LOCAL)' if USE_LOCAL else '(PRODUCTION)'}")
     print(f"Human player: {human_player} -> {human_faction}")
@@ -174,18 +181,18 @@ def setup_interactive_game() -> str:
     print(f"\n{'='*50}")
     print(f"WAITING FOR {human_player.upper()} TO JOIN")
     print(f"{'='*50}")
-    print(f"\nGame URL: {API_BASE}/")
+    print(f"\nGame URL: {FRONTEND_URL}/")
     print(f"Game ID: {game_id}")
     print(f"\nInstructions for {human_player}:")
-    print(f"  1. Open {API_BASE}/ in your browser")
+    print(f"  1. Open {FRONTEND_URL}/ in your browser")
     print(f"  2. Login as '{human_player}'")
     print(f"  3. Click 'Open Games' and join '{game_name}'")
     print(f"  4. Select '{human_faction.upper()}' as your faction")
     print(f"\nPolling for {human_player} to join...")
 
-    # Poll until kenny joins and selects Britain
-    max_wait = 300  # 5 minutes
-    poll_interval = 3
+    # Poll until kenny joins and selects Britain (fast polling, short timeout)
+    max_wait = 60  # 1 minute max
+    poll_interval = 1  # Fast polling
     waited = 0
     human_ready = False
 
@@ -211,16 +218,17 @@ def setup_interactive_game() -> str:
                 break
 
         except Exception as e:
-            print(f"  (polling error: {e})")
+            pass  # Silently retry
 
         time.sleep(poll_interval)
         waited += poll_interval
-        if waited % 15 == 0:
-            print(f"  Still waiting... ({waited}s)")
+        if waited % 10 == 0:
+            print(f"  Waiting for {human_player}... ({waited}s)")
 
     if not human_ready:
-        print(f"\n✗ Timeout waiting for {human_player}")
-        print("You can still join manually and start the game from the lobby.")
+        print(f"\n✗ Timeout waiting for {human_player} (60s)")
+        print(f"\nTo start the game manually after joining:")
+        print(f"  python -m playtest start")
         return game_id
 
     # Start the game
@@ -441,6 +449,19 @@ def main():
     elif cmd == "setup-interactive" or cmd == "play-with-me":
         setup_interactive_game()
 
+    elif cmd == "start":
+        # Start the current game (useful after setup-interactive times out)
+        game_id = get_game_id()
+        if not game_id:
+            print("No current game. Run 'setup' or 'setup-interactive' first.")
+            return
+        client = get_client()
+        try:
+            client.start_game("playtest_germany", game_id)
+            print(f"✓ Game started: {game_id}")
+        except Exception as e:
+            print(f"✗ Failed to start game: {e}")
+
     elif cmd == "autoplay":
         if len(sys.argv) > 2:
             num_turns = int(sys.argv[2])
@@ -469,6 +490,36 @@ def main():
         if not game_id:
             print("No current game. Run 'setup' first.")
             return
+
+        # First check if game has started by getting game info
+        client = get_client()
+        try:
+            # Use any logged-in player to get game info
+            for player in PLAYERS:
+                try:
+                    game_info = client.get_game_info(player, game_id)
+                    break
+                except Exception:
+                    continue
+            else:
+                print("Could not get game info (no logged-in players)")
+                return
+
+            if game_info.status == 'waiting':
+                print("=== Game Not Started Yet ===")
+                print(f"Game: {game_info.name}")
+                print(f"Status: WAITING for players\n")
+                print("Players joined:")
+                for p in game_info.players:
+                    username = p.get('username', 'Unknown')
+                    faction = p.get('faction', 'no faction')
+                    print(f"  {username}: {faction if faction else 'no faction selected'}")
+                print(f"\nTotal: {len(game_info.players)}/4 players")
+                return
+        except Exception as e:
+            # Fall through to normal handling if we can't get game info
+            pass
+
         faction = get_current_turn_faction(game_id)
         phase = get_phase(game_id)
         if faction:

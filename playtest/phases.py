@@ -9,7 +9,7 @@ from typing import Any
 
 from client import ActionResult, GameState, Player
 
-from .config import PLAYERS, EARLY_REVEAL_MODE
+from .config import PLAYERS, EARLY_REVEAL_MODE, is_ai_player
 from .client import get_client, get_faction_from_player
 from .logging import get_logger, PlaytestLogger
 from .state import (
@@ -661,10 +661,13 @@ def handle_worker_placement_round(game_id: str, logger: PlaytestLogger) -> bool:
 
         current = get_current_placer(game_id)
         if not current:
-            # No current placer but still in worker placement - check if phase changed
+            # get_current_placer returns None for:
+            # 1. No worker placement state (phase might have changed)
+            # 2. Human player's turn (they play in browser)
             if get_phase(game_id) != "WORKER_PLACEMENT":
                 return True
-            continue
+            # Still in worker placement but no AI player - must be human's turn
+            return False
 
         agents = get_player_agents(current, game_id)
 
@@ -884,22 +887,25 @@ def handle_reveal_phase(game_id: str, logger: PlaytestLogger) -> None:
     print("--- Reveal Phase ---")
     logger.log_action(None, "Reveal phase - collecting resources and processing acquisitions", "reveal")
 
-    # All players end turn to signal done with reveal phase
+    # Only AI players end turn - human players do this in the browser
     for player in PLAYERS:
-        try:
-            client.end_turn(player, game_id)
-        except Exception:
-            pass
+        if is_ai_player(player):
+            try:
+                client.end_turn(player, game_id)
+            except Exception:
+                pass  # Player might not be in this game
 
-    logger.log_action(None, "Reveal phase complete", "reveal")
+    logger.log_action(None, "Reveal phase complete (AI players)", "reveal")
 
 
 def handle_income_cleanup_phase(game_id: str, logger: PlaytestLogger) -> None:
     """Handle income and cleanup - all players end turn in order.
 
     During income_cleanup, the server expects players to end turn in the
-    player order (round-robin). We call end_turn for each player in turn
+    player order (round-robin). We call end_turn for each AI player in turn
     until all have completed and the phase transitions.
+
+    In interactive games, human players must end turn in the browser.
 
     Args:
         game_id: The game ID.
@@ -939,20 +945,19 @@ def handle_income_cleanup_phase(game_id: str, logger: PlaytestLogger) -> None:
                     break
 
         if not current_username:
-            # Fallback: try all players
-            for player in PLAYERS:
-                try:
-                    client.end_turn(player, game_id)
-                    break
-                except Exception:
-                    pass
-        else:
+            # Current player might be a human - skip and return
+            # Human must end turn in browser
+            break
+        elif is_ai_player(current_username):
             try:
                 client.end_turn(current_username, game_id)
             except Exception:
                 pass
+        else:
+            # Human player's turn - stop and let them play
+            break
 
-    print("  All players collected income")
+    print("  AI players collected income")
 
 
 def handle_age_transition_design_bureau(game_id: str, logger: PlaytestLogger) -> bool:
@@ -1017,6 +1022,12 @@ def handle_age_transition_design_bureau(game_id: str, logger: PlaytestLogger) ->
                 break
 
     if not current_username:
+        # Current player is not an AI player (might be human)
+        # Return False to let human player take their turn in browser
+        return False
+
+    if not is_ai_player(current_username):
+        # Human player's turn - wait for them
         return False
 
     # Get player data

@@ -23,22 +23,30 @@ This starts:
 
 ## Step 2: Set Up the Game
 
+Run this command ONCE to create the game:
+
 ```bash
 UPSHIP_LOCAL=1 python -m playtest setup-interactive
 ```
 
 This creates a game with 3 AI players and waits for kenny to join.
 
-**Tell the user:**
+**DO NOT** run this command multiple times - it will create duplicate games!
+
+**Tell the user and WAIT for their confirmation:**
 > Game is ready! Please:
 > 1. Open http://localhost:5173 in your browser
-> 2. Login as **kenny**
-> 3. Click "Open Games" and join the "Play With Kenny" game
+> 2. Login as **kenny** (password: whatever you set, or register a new account)
+> 3. Click "Open Games" and join the "[Game Name]" game
 > 4. Select **Britain** as your faction
 >
-> The game will start automatically once you've joined!
+> **Say "joined" when you're in the game!**
 
-Wait for the setup script to report "GAME READY!" before proceeding.
+**IMPORTANT:**
+- After telling the user the game is ready, **STOP and wait** for them to explicitly say they've joined (e.g., "joined", "done", "I'm in")
+- Do NOT proceed to the game loop until the user confirms
+- Do NOT try to debug, check databases, or verify programmatically - just wait for the user
+- The setup-interactive script runs in the background and may timeout - that's fine, the game is still playable
 
 ## Step 3: Game Loop
 
@@ -162,13 +170,13 @@ Take your action in the browser and say "done" when finished!
 ## Typical Game Flow
 
 1. Run `./scripts/restart_server.sh`
-2. Run `UPSHIP_LOCAL=1 python -m playtest setup-interactive`
-3. Tell kenny to join and select Britain
-4. Wait for "GAME READY!"
-5. **Loop:**
+2. Run `UPSHIP_LOCAL=1 python -m playtest setup-interactive` (in background)
+3. Tell kenny the game is ready with the game name and URL
+4. **STOP and WAIT** for kenny to say "joined" (do NOT proceed until they confirm!)
+5. **Game Loop:**
    - Run `UPSHIP_LOCAL=1 python -m playtest autoplay-until britain`
    - Tell kenny it's their turn with status info
-   - Wait for kenny to say "done"
+   - **WAIT** for kenny to say "done"
    - Repeat
 
 ## Game End

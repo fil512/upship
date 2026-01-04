@@ -126,11 +126,22 @@ export const allPlayers = derived(gameState, ($state) => {
  */
 export function updateGameState(newState: GameState, version: number): void {
 	const currentVersion = get(gameVersion);
+	const userId = get(effectiveUserId);
+
+	console.log(`[CLIENT] updateGameState called: incoming version=${version}, current version=${currentVersion}`);
 
 	// Only update if version is newer
 	if (version > currentVersion) {
+		console.log(`[CLIENT] Updating state to version ${version}`);
+		// Debug: log my player state
+		const myPlayerState = userId ? newState.players?.[userId] : null;
+		console.log(`[CLIENT] My hand after update:`, myPlayerState?.hand);
+		console.log(`[CLIENT] My agents after update:`, myPlayerState?.agents);
+		console.log(`[CLIENT] Ground placements:`, Object.keys(newState.groundBoard?.placements || {}));
 		gameState.set(newState);
 		gameVersion.set(version);
+	} else {
+		console.log(`[CLIENT] SKIPPED update: version ${version} <= current ${currentVersion}`);
 	}
 }
 

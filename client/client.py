@@ -210,6 +210,20 @@ class UpshipClient:
         games = data.get('games', data if isinstance(data, list) else [])
         return [Game.from_dict(g) for g in games]
 
+    def get_game_info(self, username: str, game_id: str) -> Game:
+        """Get game lobby info (status, players, factions).
+
+        Args:
+            username: The authenticated username.
+            game_id: The ID of the game.
+
+        Returns:
+            The Game object with current lobby status.
+        """
+        data = self._api_get(username, f'/api/games/{game_id}')
+        game_data = data.get('game', data)
+        return Game.from_dict(game_data)
+
     def create_game(self, username: str, name: str) -> Game:
         """Create a new game.
 
