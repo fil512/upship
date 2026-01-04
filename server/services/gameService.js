@@ -371,7 +371,8 @@ async function isPlayerInGame(gameId, userId) {
 async function getUserGames(userId) {
   const result = await pool.query(
     `SELECT g.*, u.username as host_username,
-            gs.state as game_state
+            gs.state as game_state,
+            gp.faction as my_faction
      FROM games g
      JOIN users u ON g.host_id = u.id
      JOIN game_players gp ON g.id = gp.game_id
@@ -381,12 +382,18 @@ async function getUserGames(userId) {
     [userId]
   );
 
-  // Process games to add isMyTurn flag
+  // Process games to add isMyTurn flag and extract game info
   return result.rows.map(game => {
     let isMyTurn = false;
+    let age = null;
+    let round = null;
 
     if (game.status === 'in_progress' && game.game_state) {
       const state = game.game_state;
+
+      // Extract age and round
+      age = state.age || null;
+      round = state.round || null;
 
       // Determine current player based on phase
       if (state.phase === 'worker_placement') {
@@ -405,7 +412,7 @@ async function getUserGames(userId) {
     // Remove game_state from response (too large for list view)
     // eslint-disable-next-line no-unused-vars
     const { game_state, ...gameWithoutState } = game;
-    return { ...gameWithoutState, isMyTurn };
+    return { ...gameWithoutState, isMyTurn, age, round };
   });
 }
 

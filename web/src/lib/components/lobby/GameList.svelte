@@ -14,6 +14,9 @@
 		max_players: number;
 		created_at: string;
 		isMyTurn?: boolean;
+		age?: number | null;
+		round?: number | null;
+		my_faction?: string | null;
 	}
 
 	const dispatch = createEventDispatcher<{ viewGame: { gameId: string } }>();

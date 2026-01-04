@@ -8,10 +8,27 @@
 		max_players: number;
 		created_at: string;
 		isMyTurn?: boolean;
+		age?: number | null;
+		round?: number | null;
+		my_faction?: string | null;
 	}
 
 	export let game: Game;
 	export let isMyGame: boolean = false;
+
+	const factionLabels: Record<string, string> = {
+		germany: 'Germany',
+		britain: 'Britain',
+		usa: 'USA',
+		italy: 'Italy'
+	};
+
+	const factionColors: Record<string, string> = {
+		germany: '#dc2626',
+		britain: '#2563eb',
+		usa: '#16a34a',
+		italy: '#ca8a04'
+	};
 
 	function formatDate(dateString: string): string {
 		const date = new Date(dateString);
@@ -65,6 +82,17 @@
 		<h3 class="game-name">{game.name}</h3>
 		<span class="game-status {getStatusClass(game.status)}">{getStatusLabel(game.status)}</span>
 	</div>
+
+	{#if isMyGame && game.status === 'in_progress' && game.my_faction}
+		<div class="game-details">
+			<span class="faction" style="--faction-color: {factionColors[game.my_faction] || '#888'}">
+				{factionLabels[game.my_faction] || game.my_faction}
+			</span>
+			{#if game.age && game.round}
+				<span class="progress">Age {game.age} · Round {game.round}</span>
+			{/if}
+		</div>
+	{/if}
 
 	<div class="game-info">
 		<span class="players">
@@ -125,6 +153,22 @@
 	.status-completed {
 		background: rgba(136, 136, 136, 0.2);
 		color: var(--color-text-muted);
+	}
+
+	.game-details {
+		display: flex;
+		align-items: center;
+		gap: var(--spacing-md);
+		font-size: 0.8rem;
+	}
+
+	.faction {
+		color: var(--faction-color);
+		font-weight: 600;
+	}
+
+	.progress {
+		color: var(--color-text-secondary);
 	}
 
 	.game-info {
