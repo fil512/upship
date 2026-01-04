@@ -1,6 +1,6 @@
 # UP SHIP! Browser UI Playtest - Shared Documentation
 
-This file contains documentation shared between `/playtest-ui` and `/playtest-ui-devtools`.
+This file contains documentation shared between `/playtest-ui` and `/playtest-ui-claude`.
 
 ## Quick Start
 

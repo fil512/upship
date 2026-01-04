@@ -321,8 +321,8 @@ See `plans/overview.md` for the 27-phase implementation plan tracking progress f
 - `/review-rules` - Conducts a comprehensive rules review using the boardgame-design skill
 - `/playtest-dev` - Run a full automated playtest against the local dev server (http://localhost:3000)
 - `/playtest-prod` - Run a full automated playtest against the production server
-- `/playtest-ui` - Run a browser-based UI playtest using Claude in Chrome MCP (tests UI controls, UX, and functionality)
-- `/playtest-ui-devtools` - Run a browser-based UI playtest using Chrome DevTools MCP (alternative to /playtest-ui)
+- `/playtest-ui` - Run a browser-based UI playtest using Chrome DevTools MCP (tests UI controls, UX, and functionality)
+- `/playtest-ui-claude` - Run a browser-based UI playtest using Claude in Chrome MCP (alternative to /playtest-ui)
 - `/play-with-me` - Interactive game where you (kenny) play Britain and Claude controls Germany, USA, Italy via browser
 
 ## Available Skills
