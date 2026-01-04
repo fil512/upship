@@ -324,8 +324,7 @@ See `plans/overview.md` for the 27-phase implementation plan tracking progress f
 - `/find-gaps` - Systematically analyze spec vs server code to find implementation gaps; stops at 10 gaps; tracks progress in `plans/gaps.md`
 - `/resolve-gaps` - Continuously loop between `/find-gaps` and `/fix-gaps` in subcontexts until all gaps are resolved
 - `/review-rules` - Conducts a comprehensive rules review using the boardgame-design skill
-- `/playtest-dev` - Run a full automated playtest against the local dev server (http://localhost:3000)
-- `/playtest-prod` - Run a full automated playtest against the production server
+- `/playtest-rest` - Run a full automated playtest against the local dev server (http://localhost:3000)
 - `/playtest-ui` - Run a browser-based UI playtest using Chrome DevTools MCP (tests UI controls, UX, and functionality)
 - `/playtest-ui-claude` - Run a browser-based UI playtest using Claude in Chrome MCP (alternative to /playtest-ui)
 - `/play-with-me` - Interactive game where you (kenny) play Britain and Claude controls Germany, USA, Italy via browser

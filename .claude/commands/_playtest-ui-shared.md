@@ -4,19 +4,10 @@ This file contains documentation shared between `/playtest-ui` and `/playtest-ui
 
 ## Quick Start
 
-**Step 1: Start both servers**
+**Step 1: Restart both servers**
 
 ```bash
-# Terminal 1: Express API server
-npm run dev:local
-
-# Terminal 2: SvelteKit frontend
-npm run dev -w web
-```
-
-Or use the combined dev command:
-```bash
-npm run dev
+scripts/restart_server.sh
 ```
 
 **Step 2: Setup the game**

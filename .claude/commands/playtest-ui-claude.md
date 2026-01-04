@@ -1,6 +1,6 @@
 # UP SHIP! Browser UI Playtest Command (Claude in Chrome)
 
-Run a playtest through the **web browser interface** using **Claude in Chrome MCP** tools. Unlike `/playtest-dev` which uses the REST API directly, this command tests that the UI controls function properly and provide a good user experience.
+Run a playtest through the **web browser interface** using **Claude in Chrome MCP** tools. Unlike `/playtest-rest` which uses the REST API directly, this command tests that the UI controls function properly and provide a good user experience.
 
 **See `_playtest-ui-shared.md` for common documentation** (game setup, server architecture, test credentials, UI elements checklist, reporting format).
 
@@ -173,9 +173,8 @@ mcp__claude-in-chrome__computer action="screenshot" tabId=TAB_ID
 
 ## Quick Start (Summary)
 
-1. **Start servers**:
-   - Terminal 1: `npm run dev:local` (Express on :3000)
-   - Terminal 2: `npm run dev -w web` (SvelteKit on :5173)
+1. **Restart servers**:
+   - `scripts/restart_server.sh`
 
 2. **Setup the game**: `UPSHIP_LOCAL=1 python -m playtest setup`
 
