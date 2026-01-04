@@ -6,8 +6,11 @@
 /**
  * Base application error with HTTP status code and error code
  */
-class AppError extends Error {
-  constructor(message, statusCode = 400, code = 'UNKNOWN_ERROR') {
+export class AppError extends Error {
+  readonly statusCode: number;
+  readonly code: string;
+
+  constructor(message: string, statusCode = 400, code = 'UNKNOWN_ERROR') {
     super(message);
     this.name = this.constructor.name;
     this.statusCode = statusCode;
@@ -15,7 +18,7 @@ class AppError extends Error {
     Error.captureStackTrace(this, this.constructor);
   }
 
-  toJSON() {
+  toJSON(): { error: string; code: string } {
     return {
       error: this.message,
       code: this.code
@@ -26,7 +29,9 @@ class AppError extends Error {
 /**
  * Resource not found (404)
  */
-class NotFoundError extends AppError {
+export class NotFoundError extends AppError {
+  readonly resource: string;
+
   constructor(resource = 'Resource') {
     super(`${resource} not found`, 404, 'NOT_FOUND');
     this.resource = resource;
@@ -36,7 +41,7 @@ class NotFoundError extends AppError {
 /**
  * Access denied (403)
  */
-class ForbiddenError extends AppError {
+export class ForbiddenError extends AppError {
   constructor(message = 'Access denied') {
     super(message, 403, 'FORBIDDEN');
   }
@@ -45,8 +50,10 @@ class ForbiddenError extends AppError {
 /**
  * Invalid input (400)
  */
-class ValidationError extends AppError {
-  constructor(message, field = null) {
+export class ValidationError extends AppError {
+  readonly field: string | null;
+
+  constructor(message: string, field: string | null = null) {
     super(message, 400, 'VALIDATION_ERROR');
     this.field = field;
   }
@@ -55,8 +62,8 @@ class ValidationError extends AppError {
 /**
  * Game rule violation (400)
  */
-class GameRuleError extends AppError {
-  constructor(message) {
+export class GameRuleError extends AppError {
+  constructor(message: string) {
     super(message, 400, 'GAME_RULE_VIOLATION');
   }
 }
@@ -64,20 +71,26 @@ class GameRuleError extends AppError {
 /**
  * Not player's turn (403)
  */
-class NotYourTurnError extends ForbiddenError {
+export class NotYourTurnError extends ForbiddenError {
   constructor() {
     super('Not your turn');
-    this.code = 'NOT_YOUR_TURN';
+    // Override the code from parent class
+    Object.defineProperty(this, 'code', { value: 'NOT_YOUR_TURN', writable: false });
   }
 }
 
 /**
  * Not enough resources (400)
  */
-class InsufficientFundsError extends GameRuleError {
-  constructor(required, available, currency = 'cash') {
+export class InsufficientFundsError extends GameRuleError {
+  readonly required: number;
+  readonly available: number;
+  readonly currency: string;
+
+  constructor(required: number, available: number, currency = 'cash') {
     super(`Not enough ${currency}: need ${required}, have ${available}`);
-    this.code = 'INSUFFICIENT_FUNDS';
+    // Override the code from parent class
+    Object.defineProperty(this, 'code', { value: 'INSUFFICIENT_FUNDS', writable: false });
     this.required = required;
     this.available = available;
     this.currency = currency;
@@ -87,7 +100,7 @@ class InsufficientFundsError extends GameRuleError {
 /**
  * Authentication required (401)
  */
-class UnauthorizedError extends AppError {
+export class UnauthorizedError extends AppError {
   constructor(message = 'Authentication required') {
     super(message, 401, 'UNAUTHORIZED');
   }
@@ -96,7 +109,7 @@ class UnauthorizedError extends AppError {
 /**
  * Resource already exists (409)
  */
-class ConflictError extends AppError {
+export class ConflictError extends AppError {
   constructor(message = 'Resource already exists') {
     super(message, 409, 'CONFLICT');
   }
@@ -106,8 +119,10 @@ class ConflictError extends AppError {
  * Database operation failed (500)
  * Wraps internal database errors without leaking details
  */
-class DatabaseError extends AppError {
-  constructor(originalError = null) {
+export class DatabaseError extends AppError {
+  readonly originalError: Error | null;
+
+  constructor(originalError: Error | null = null) {
     super('Database operation failed', 500, 'DATABASE_ERROR');
     this.originalError = originalError;
     // Never expose the original error to clients
@@ -118,21 +133,34 @@ class DatabaseError extends AppError {
 /**
  * Check if an error is an application error
  */
-function isAppError(error) {
+export function isAppError(error: unknown): error is AppError {
   return error instanceof AppError;
+}
+
+/**
+ * PostgreSQL error type
+ */
+interface PostgresError extends Error {
+  code: string;
 }
 
 /**
  * Check if an error is a PostgreSQL error
  */
-function isPostgresError(error) {
-  return error && typeof error.code === 'string' && /^\d{2}[A-Z\d]{3}$/.test(error.code);
+export function isPostgresError(error: unknown): error is PostgresError {
+  return (
+    error !== null &&
+    typeof error === 'object' &&
+    'code' in error &&
+    typeof (error as PostgresError).code === 'string' &&
+    /^\d{2}[A-Z\d]{3}$/.test((error as PostgresError).code)
+  );
 }
 
 /**
  * Convert PostgreSQL error codes to appropriate AppError
  */
-function fromPostgresError(error) {
+export function fromPostgresError(error: PostgresError | null): AppError {
   if (!error || !error.code) {
     return new DatabaseError(error);
   }
@@ -151,6 +179,7 @@ function fromPostgresError(error) {
   }
 }
 
+// CommonJS compatibility for gradual migration
 module.exports = {
   AppError,
   NotFoundError,

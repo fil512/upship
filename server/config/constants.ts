@@ -3,77 +3,93 @@
  * Centralized configuration for all magic values
  */
 
+import type { Faction, GamePhase } from '@upship/api';
+
 // Gas Market
-const HYDROGEN_PRICE = 1;
-const HELIUM_PRICE_TRACK = [2, 3, 4, 5, 6, 8, 10, 15];
+export const HYDROGEN_PRICE = 1;
+export const HELIUM_PRICE_TRACK = [2, 3, 4, 5, 6, 8, 10, 15] as const;
 
 // Loans (The Bank) - per Section 5.3
-const MAX_LOANS = 2;
-const LOAN_AMOUNT = 30;
-const LOAN_INCOME_PENALTY = 3;
-const MIN_INCOME = -10;  // Debt limit per Section 5.3
+export const MAX_LOANS = 2;
+export const LOAN_AMOUNT = 30;
+export const LOAN_INCOME_PENALTY = 3;
+export const MIN_INCOME = -10;  // Debt limit per Section 5.3
 
 // Game Progression
-const HAND_SIZE = 5;
-const INITIAL_AGENTS = 2;  // Per rules Section 2.1: Start with 2 agents, 3rd earned at Officer Income +3
+export const HAND_SIZE = 5;
+export const INITIAL_AGENTS = 2;  // Per rules Section 2.1: Start with 2 agents, 3rd earned at Officer Income +3
 
 // R&D Board sizes by age
-const RD_BOARD_SIZE = { 1: 4, 2: 5, 3: 6 };
+export const RD_BOARD_SIZE: Record<number, number> = { 1: 4, 2: 5, 3: 6 };
 // Market Row size per Section 3.1: "deal 5 cards face-up to form the Market Row"
-const MARKET_ROW_SIZE = 5;
+export const MARKET_ROW_SIZE = 5;
 
 // Crew Costs
-const OFFICER_RECRUIT_COST = 2;
-const ENGINEER_RECRUIT_COST = 4;
-const FLIGHT_SCHOOL_COST = 5;
-const TECHNICAL_INSTITUTE_COST = 6;
-const WEATHER_BUREAU_COST = 2;
-const RESEARCH_INSTITUTE_COST = 4; // £4 per level per Section 6.1
+export const OFFICER_RECRUIT_COST = 2;
+export const ENGINEER_RECRUIT_COST = 4;
+export const FLIGHT_SCHOOL_COST = 5;
+export const TECHNICAL_INSTITUTE_COST = 6;
+export const WEATHER_BUREAU_COST = 2;
+export const RESEARCH_INSTITUTE_COST = 4; // £4 per level per Section 6.1
 
 // Insurance
-const MAX_INSURANCE_POLICIES = 3;
+export const MAX_INSURANCE_POLICIES = 3;
 
 // Progress Track Thresholds by player count
 // Balanced for medium-length games (~20-24 progress to end)
-const PROGRESS_THRESHOLDS = {
+export const PROGRESS_THRESHOLDS: Record<number, { age2: number; age3: number; end: number }> = {
   2: { age2: 4, age3: 8, end: 12 },
   3: { age2: 6, age3: 12, end: 18 },
   4: { age2: 8, age3: 16, end: 24 }
 };
 
 // Valid game phases
-const PHASES = {
+export const PHASES: Record<string, GamePhase> = {
   WORKER_PLACEMENT: 'worker_placement',
   REVEAL: 'reveal',
   INCOME_CLEANUP: 'income_cleanup'
 };
 
 // Valid factions
-const FACTIONS = ['germany', 'britain', 'usa', 'italy'];
+export const FACTIONS: Faction[] = ['germany', 'britain', 'usa', 'italy'];
 
 // Starting player resources
-const STARTING_CASH = 15;
-const STARTING_INCOME = 5;
-const STARTING_OFFICER_INCOME = 0;
-const STARTING_ENGINEER_INCOME = 1;
-const STARTING_OFFICERS = 1;
-const STARTING_ENGINEERS = 2;
-const STARTING_HYDROGEN = 2;
-const STARTING_HELIUM = 0;
-const STARTING_RESEARCH = 0;
-const STARTING_INFLUENCE = 0;
+export const STARTING_CASH = 15;
+export const STARTING_INCOME = 5;
+export const STARTING_OFFICER_INCOME = 0;
+export const STARTING_ENGINEER_INCOME = 1;
+export const STARTING_OFFICERS = 1;
+export const STARTING_ENGINEERS = 2;
+export const STARTING_HYDROGEN = 2;
+export const STARTING_HELIUM = 0;
+export const STARTING_RESEARCH = 0;
+export const STARTING_INFLUENCE = 0;
 
 // Age Baselines for ship stats
-const AGE_BASELINES = {
+export const AGE_BASELINES: Record<number, { speed: number; range: number; ceiling: number; reliability: number }> = {
   1: { speed: 1, range: 1, ceiling: 0, reliability: 0 },
   2: { speed: 2, range: 2, ceiling: 1, reliability: 1 },
   3: { speed: 3, range: 3, ceiling: 2, reliability: 2 }
 };
 
+// Tech Card type
+export interface TechCard {
+  id: string;
+  name: string;
+  type: 'drive' | 'structure' | 'fabric' | 'gas' | 'component';
+  cost: number;
+  vp: number;
+  income: number;
+  stats?: {
+    lift?: number;
+    range?: number;
+  };
+}
+
 // Tech Card Bag organized by Age (54 total cards per Appendix C)
 // IMPORTANT: This is the single source of truth for all tech card definitions
 // All other files should import from here, not define their own versions
-const TECH_CARD_BAG = {
+export const TECH_CARD_BAG: Record<number, TechCard[]> = {
   1: [ // Age I Technologies (12 tiles)
     // Propulsion (3 tiles)
     { id: 'daimler_engine', name: 'Daimler Petrol Engine', type: 'drive', cost: 1, vp: 0, income: 1 },
@@ -151,6 +167,10 @@ const TECH_CARD_BAG = {
   ]
 };
 
+// Legacy alias for backwards compatibility during migration
+export const TECHNOLOGY_BAG = TECH_CARD_BAG;
+
+// CommonJS compatibility for gradual migration
 module.exports = {
   // Gas Market
   HYDROGEN_PRICE,

@@ -5,7 +5,7 @@
  * Outputs JSON in production for Railway log aggregation
  *
  * Usage:
- *   const logger = require('./logger');
+ *   import logger from './logger';
  *   logger.info('Server started');
  *   logger.error({ err }, 'Failed to process');
  *
@@ -18,7 +18,7 @@
  *   NODE_ENV  - When 'production', outputs JSON; otherwise uses pino-pretty
  */
 
-const pino = require('pino');
+import pino = require('pino');
 
 const isProduction = process.env.NODE_ENV === 'production';
 
@@ -36,4 +36,7 @@ const logger = pino({
   }
 });
 
+export default logger;
+
+// CommonJS compatibility for gradual migration
 module.exports = logger;

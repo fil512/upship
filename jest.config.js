@@ -1,8 +1,15 @@
 module.exports = {
   testEnvironment: 'node',
-  testMatch: ['**/__tests__/**/*.test.js'],
+  testMatch: ['**/__tests__/**/*.test.[jt]s'],
+  transform: {
+    '^.+\\.tsx?$': ['ts-jest', { useESM: false }]
+  },
+  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json'],
+  moduleNameMapper: {
+    '^@upship/api$': '<rootDir>/api/src'
+  },
   collectCoverageFrom: [
-    'server/**/*.js',
+    'server/**/*.{js,ts}',
     '!server/db/migrations/**',
     '!server/db/migrate.js',       // CLI migration runner
     '!server/routes/gameState.js'  // Complex action logic - tested via integration
