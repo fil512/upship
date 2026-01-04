@@ -5,6 +5,7 @@
 	import { user } from '$lib/stores/auth';
 	import FactionSelector from './FactionSelector.svelte';
 	import PlayerList from './PlayerList.svelte';
+	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
 
 	export let gameId: string;
 
@@ -32,6 +33,9 @@
 	let refreshInterval: ReturnType<typeof setInterval>;
 	let selectedFaction: string | null = null; // For non-players selecting faction before joining
 	let isJoining = false;
+	let isLeaving = false;
+	let isStarting = false;
+	let isSelectingFaction = false;
 
 	$: isHost = game?.host_id === $user?.id;
 	$: isPlayer = game?.players.some((p) => p.id === $user?.id) ?? false;
@@ -97,6 +101,7 @@
 	}
 
 	async function handleLeave() {
+		isLeaving = true;
 		try {
 			const res = await fetch(`/api/games/${gameId}/leave`, {
 				method: 'POST',
@@ -111,10 +116,13 @@
 			dispatch('back');
 		} catch (err) {
 			error = err instanceof Error ? err.message : 'Failed to leave game';
+		} finally {
+			isLeaving = false;
 		}
 	}
 
 	async function handleStart() {
+		isStarting = true;
 		try {
 			const res = await fetch(`/api/games/${gameId}/start`, {
 				method: 'POST',
@@ -129,10 +137,12 @@
 			goto(`/game/${gameId}`);
 		} catch (err) {
 			error = err instanceof Error ? err.message : 'Failed to start game';
+			isStarting = false;
 		}
 	}
 
 	async function handleFactionSelect(event: CustomEvent<{ faction: string }>) {
+		isSelectingFaction = true;
 		try {
 			const res = await fetch(`/api/games/${gameId}/faction`, {
 				method: 'POST',
@@ -149,6 +159,8 @@
 			await loadGame();
 		} catch (err) {
 			error = err instanceof Error ? err.message : 'Failed to select faction';
+		} finally {
+			isSelectingFaction = false;
 		}
 	}
 
@@ -172,8 +184,7 @@
 
 	{#if isLoading}
 		<div class="loading">
-			<div class="spinner"></div>
-			<p>Loading game...</p>
+			<LoadingSpinner size="lg" label="Loading game..." showLabel={true} />
 		</div>
 	{:else if error}
 		<div class="error">
@@ -215,16 +226,35 @@
 			<!-- JOIN button for non-players (only after selecting faction) -->
 			{#if canJoin && selectedFaction}
 				<button class="btn btn-success" on:click={handleJoin} disabled={isJoining}>
-					{isJoining ? 'Joining...' : 'JOIN'}
+					{#if isJoining}
+						<LoadingSpinner size="sm" />
+						Joining...
+					{:else}
+						JOIN
+					{/if}
 				</button>
 			{/if}
 
 			{#if isPlayer && !isHost}
-				<button class="btn btn-outline" on:click={handleLeave}>Leave Game</button>
+				<button class="btn btn-outline" on:click={handleLeave} disabled={isLeaving}>
+					{#if isLeaving}
+						<LoadingSpinner size="sm" />
+						Leaving...
+					{:else}
+						Leave Game
+					{/if}
+				</button>
 			{/if}
 
 			{#if canStart}
-				<button class="btn btn-success" on:click={handleStart}>Start Game</button>
+				<button class="btn btn-success" on:click={handleStart} disabled={isStarting}>
+					{#if isStarting}
+						<LoadingSpinner size="sm" />
+						Starting...
+					{:else}
+						Start Game
+					{/if}
+				</button>
 			{:else if isHost && game.status === 'waiting'}
 				<button class="btn" disabled>
 					{#if (game?.current_player_count ?? 0) < 2}

@@ -23,33 +23,66 @@
   $: dimensions = MAP_DIMENSIONS[age] || MAP_DIMENSIONS[1];
   $: cityPositions = getCityCoordinates(age);
 
-  // Get ship position on the map
-  function getShipPosition(ship: Ship, faction: string): { x: number; y: number } {
+  // Memoized ship positions - only recalculates when dependencies change
+  $: shipPositions = computeShipPositions(allPlayerShips, ships, routes, cityPositions, dimensions, age);
+
+  /**
+   * Pre-compute all ship positions at once for better performance.
+   * This avoids recalculating positions on each render iteration.
+   */
+  function computeShipPositions(
+    allShips: { ship: Ship; faction: string }[],
+    myShips: Ship[],
+    gameRoutes: RouteType[],
+    cityPos: Record<string, { x: number; y: number }>,
+    dims: { width: number; height: number },
+    currentAge: number
+  ): Map<string, { x: number; y: number }> {
+    const positions = new Map<string, { x: number; y: number }>();
+
+    for (const { ship, faction } of allShips) {
+      positions.set(ship.id, getShipPosition(ship, faction, myShips, gameRoutes, cityPos, dims, currentAge, allShips));
+    }
+
+    return positions;
+  }
+
+  // Get ship position on the map (pure function for memoization)
+  function getShipPosition(
+    ship: Ship,
+    faction: string,
+    myShips: Ship[],
+    gameRoutes: RouteType[],
+    cityPos: Record<string, { x: number; y: number }>,
+    dims: { width: number; height: number },
+    currentAge: number,
+    allShips: { ship: Ship; faction: string }[]
+  ): { x: number; y: number } {
     // Ships in hangar go near home base
     if (ship.status === 'hangar') {
-      const homeBase = FACTION_HOME_BASES[faction]?.[age];
-      if (homeBase && cityPositions[homeBase]) {
-        const city = cityPositions[homeBase];
+      const homeBase = FACTION_HOME_BASES[faction]?.[currentAge];
+      if (homeBase && cityPos[homeBase]) {
+        const city = cityPos[homeBase];
         // Offset below the home base city, stagger by ship index
-        const index = ships.filter((s) => s.status === 'hangar').indexOf(ship);
+        const index = myShips.filter((s) => s.status === 'hangar').indexOf(ship);
         return { x: city.x + (index % 3) * 25 - 25, y: city.y + 30 + Math.floor(index / 3) * 18 };
       }
-      return { x: 50, y: dimensions.height - 50 };
+      return { x: 50, y: dims.height - 50 };
     }
 
     // Ships on route go to route midpoint (straight line)
     if ((ship.status === 'on_route' || ship.status === 'awaiting_hazard') && ship.routeId) {
-      const route = routes.find((r) => r.id === ship.routeId);
+      const route = gameRoutes.find((r) => r.id === ship.routeId);
       if (route && route.from && route.to) {
-        const from = cityPositions[route.from];
-        const to = cityPositions[route.to];
+        const from = cityPos[route.from];
+        const to = cityPos[route.to];
         if (from && to) {
           // Midpoint of straight line
           const x = (from.x + to.x) / 2;
           const y = (from.y + to.y) / 2;
 
           // Offset for multiple ships on same route
-          const shipsOnRoute = allPlayerShips.filter(
+          const shipsOnRoute = allShips.filter(
             (s) => s.ship.routeId === ship.routeId && s.ship.status !== 'hangar'
           );
           const shipIndex = shipsOnRoute.findIndex((s) => s.ship.id === ship.id);
@@ -61,7 +94,7 @@
     }
 
     // Default fallback
-    return { x: 50, y: dimensions.height - 50 };
+    return { x: 50, y: dims.height - 50 };
   }
 
   function handleRouteSelect(event: CustomEvent<{ route: RouteType }>) {
@@ -114,7 +147,7 @@
   <!-- Ships layer (top) -->
   <g class="ships-layer">
     {#each allPlayerShips as { ship, faction } (ship.id)}
-      <MapShip {ship} {faction} position={getShipPosition(ship, faction)} />
+      <MapShip {ship} {faction} position={shipPositions.get(ship.id) || { x: 50, y: dimensions.height - 50 }} />
     {/each}
   </g>
 

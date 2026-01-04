@@ -59,7 +59,29 @@ router.post('/', async (req, res, next) => {
       throw new ValidationError('Game name must be 100 characters or less');
     }
 
-    const game = await gameService.createGame(req.session.userId, name.trim(), settings);
+    // SECURITY: Validate game settings to prevent invalid configurations
+    const validatedSettings = { ...settings };
+    if (validatedSettings.minPlayers !== undefined) {
+      const minPlayers = parseInt(validatedSettings.minPlayers, 10);
+      if (isNaN(minPlayers) || minPlayers < 2 || minPlayers > 4) {
+        throw new ValidationError('Minimum players must be between 2 and 4');
+      }
+      validatedSettings.minPlayers = minPlayers;
+    }
+    if (validatedSettings.maxPlayers !== undefined) {
+      const maxPlayers = parseInt(validatedSettings.maxPlayers, 10);
+      if (isNaN(maxPlayers) || maxPlayers < 2 || maxPlayers > 4) {
+        throw new ValidationError('Maximum players must be between 2 and 4');
+      }
+      validatedSettings.maxPlayers = maxPlayers;
+    }
+    // Ensure min <= max
+    if (validatedSettings.minPlayers && validatedSettings.maxPlayers &&
+        validatedSettings.minPlayers > validatedSettings.maxPlayers) {
+      throw new ValidationError('Minimum players cannot exceed maximum players');
+    }
+
+    const game = await gameService.createGame(req.session.userId, name.trim(), validatedSettings);
     res.status(201).json({ game });
   } catch (error) {
     next(error);

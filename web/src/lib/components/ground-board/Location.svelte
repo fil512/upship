@@ -127,11 +127,11 @@
 		<div class="cost-item symbol-cost" title="Requires {symbol} card">
 			<Icon name={symbol as SymbolIconName} size={16} color="var(--symbol-color)" />
 		</div>
-		{#each locationData.costs as cost}
+		{#each locationData.costs as cost, i (i)}
 			{#if hasResourceBadge(cost)}
 				<div class="cost-item resource-cost">
-					{#each cost.resourceBadge as badge, i}
-						{#if i > 0}<span class="cost-separator">{cost.separator || '/'}</span>{/if}
+					{#each cost.resourceBadge as badge, j (j)}
+						{#if j > 0}<span class="cost-separator">{cost.separator || '/'}</span>{/if}
 						<ResourceBadge type={badge.type} value={badge.value} size={14} />
 					{/each}
 				</div>
@@ -166,7 +166,7 @@
 				<div class="place-hint">Click to place</div>
 			{:else}
 				<div class="location-benefit">
-					{#each locationData.benefits as benefit}
+					{#each locationData.benefits as benefit, i (i)}
 						<div class="benefit-item">
 							{#if hasIconWithArrow(benefit)}
 								<Icon name={benefit.icon} size={18} color="var(--color-text-primary)" />

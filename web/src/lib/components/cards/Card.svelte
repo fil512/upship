@@ -39,6 +39,7 @@
 	style:--card-color={symbolColor}
 	on:click={handleClick}
 	disabled={!selectable}
+	aria-label="{card.name} card, {card.symbol || 'any'} symbol{selected ? ', selected' : ''}"
 >
 	<!-- Header: Name (left) + Cost (right) -->
 	<div class="card-header">

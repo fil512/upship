@@ -43,7 +43,7 @@
 </script>
 
 <div class="faction-grid">
-	{#each factions as faction}
+	{#each factions as faction (faction.id)}
 		{@const isTaken = takenFactions.includes(faction.id) && faction.id !== selectedFaction}
 		{@const isSelected = faction.id === selectedFaction}
 
@@ -54,6 +54,7 @@
 			style="--faction-color: {faction.color}"
 			disabled={isTaken}
 			on:click={() => handleSelect(faction.id)}
+			aria-label="{faction.name}: {faction.description}{isSelected ? ', currently selected' : ''}{isTaken ? ', taken by another player' : ''}"
 		>
 			<div class="faction-header">
 				<Icon name={faction.id as FactionIconName} size={28} color={faction.color} />

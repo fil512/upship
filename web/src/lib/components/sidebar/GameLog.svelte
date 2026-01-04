@@ -61,7 +61,7 @@
 	<div class="log-header">
 		<span class="header-text">Game Log ({loading ? logCount : filteredLog.length} entries)</span>
 		{#if !loading}
-			<button class="refresh-btn" on:click={fetchLog} title="Refresh log">↻</button>
+			<button class="refresh-btn" on:click={fetchLog} title="Refresh log" aria-label="Refresh game log">↻</button>
 		{/if}
 	</div>
 	<div class="log-entries">
@@ -72,7 +72,7 @@
 		{:else if displayLog.length === 0}
 			<div class="empty">No actions yet</div>
 		{:else}
-			{#each displayLog as entry}
+			{#each displayLog as entry (entry.timestamp + entry.message)}
 				<div class="log-entry">
 					<span class="round">{formatRound(entry)}</span>
 					<span class="timestamp">{formatTimestamp(entry.timestamp)}</span>

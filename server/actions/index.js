@@ -127,9 +127,15 @@ function processAction(state, playerId, actionType, data) {
     throw new GameRuleError(`Unknown action type: ${actionType}`);
   }
 
+  // SECURITY: Sanitize client data - strip internal flags that should only be set server-side
+  // The _internal flag is used by location actions (e.g., gas_depot calling BUY_GAS)
+  // and should never be accepted from client requests
+  const sanitizedData = data ? { ...data } : {};
+  delete sanitizedData._internal;
+
   // Execute the action handler
   // Handlers throw errors on failure or return { newState }
-  return handler(newState, playerId, data);
+  return handler(newState, playerId, sanitizedData);
 }
 
 /**

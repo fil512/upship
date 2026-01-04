@@ -77,7 +77,9 @@ function getRelevantStat(shipStats, challengeType) {
  * @returns {Object} { newState } or throws error
  */
 function processHazardCheck(state, playerId, data) {
-  const { shipId, engineersToSpend = 0 } = data;
+  const { shipId } = data;
+  // SECURITY: Validate engineersToSpend is non-negative to prevent exploits
+  const engineersToSpend = Math.max(0, parseInt(data.engineersToSpend, 10) || 0);
   const playerState = state.players[playerId];
 
   // Find the ship - accept both 'awaiting_hazard' and legacy 'on_route' status
@@ -532,7 +534,9 @@ function resolveHazardAbort(state, playerId, shipIndex, hazard, message) {
  * @returns {Object} { newState } or throws error
  */
 function processRespondToHazard(state, playerId, data) {
-  const { shipId, spendEngineers = false } = data;
+  const { shipId } = data;
+  // SECURITY: Ensure spendEngineers is a boolean to prevent type coercion exploits
+  const spendEngineers = data.spendEngineers === true;
   const playerState = state.players[playerId];
 
   // Find ship with pending hazard

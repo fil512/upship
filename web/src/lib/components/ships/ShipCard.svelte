@@ -38,6 +38,7 @@
 	class:crashed={ship.status === 'crashed'}
 	on:click={handleClick}
 	disabled={!selectable}
+	aria-label="Ship {ship.id.substring(0, 4)}, {STATUS_LABELS[ship.status] || ship.status}"
 >
 	<div class="ship-header">
 		<Icon name="ship" size={18} />

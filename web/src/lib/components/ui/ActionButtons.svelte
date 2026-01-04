@@ -49,7 +49,7 @@
 
 	{#if buttons.length > 0}
 		<div class="button-row">
-			{#each buttons as button}
+			{#each buttons as button (button.action + JSON.stringify(button.actionData || {}))}
 				<button
 					class="action-button"
 					class:primary={button.primary}
@@ -83,7 +83,7 @@
 		<div class="context-info ministry-cards">
 			<span class="context-label">Choose one card to keep:</span>
 			<div class="ministry-card-preview">
-				{#each uiState.actionContext.drawnMinistryCards as card, i}
+				{#each uiState.actionContext.drawnMinistryCards as card, i (card.id)}
 					<div class="mini-card">
 						<span class="card-name">{card.name}</span>
 						{#if card.symbol}

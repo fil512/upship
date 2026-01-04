@@ -704,8 +704,10 @@ async function getGameState(gameId) {
   };
 }
 
-// Update game state
-async function updateGameState(gameId, newState, action = null) {
+// Update game state with optimistic locking
+// If expectedVersion is provided, the update will fail if the current version doesn't match
+// This prevents race conditions where two concurrent requests both process based on the same state
+async function updateGameState(gameId, newState, action = null, expectedVersion = null) {
   const client = await pool.connect();
 
   try {
@@ -723,6 +725,16 @@ async function updateGameState(gameId, newState, action = null) {
 
     const previousState = current.rows[0].state;
     const currentVersion = current.rows[0].version;
+
+    // SECURITY: Optimistic locking - verify expected version matches current version
+    // This prevents race conditions where concurrent requests could double-spend resources
+    if (expectedVersion !== null && currentVersion !== expectedVersion) {
+      const { ConflictError } = require('../errors');
+      throw new ConflictError(
+        `State was modified by another request (expected version ${expectedVersion}, current ${currentVersion}). Please retry.`
+      );
+    }
+
     const newVersion = currentVersion + 1;
 
     // Check if this action creates a commit point (reveals hidden info)

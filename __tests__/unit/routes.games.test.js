@@ -176,7 +176,8 @@ describe('Games Routes', () => {
 
       expect(res.status).toBe(201);
       expect(res.body.game.name).toBe('New Game');
-      expect(gameService.createGame).toHaveBeenCalledWith(1, 'New Game', undefined);
+      // When no settings provided, we pass an empty object (for validation)
+      expect(gameService.createGame).toHaveBeenCalledWith(1, 'New Game', {});
     });
 
     it('should pass settings', async () => {
@@ -225,7 +226,8 @@ describe('Games Routes', () => {
         .post('/api/games')
         .send({ name: '  Trimmed  ' });
 
-      expect(gameService.createGame).toHaveBeenCalledWith(1, 'Trimmed', undefined);
+      // When no settings provided, we pass an empty object (for validation)
+      expect(gameService.createGame).toHaveBeenCalledWith(1, 'Trimmed', {});
     });
 
     it('should return 500 on error', async () => {

@@ -181,13 +181,21 @@ router.post('/:gameId/action', requireGamePlayer, async (req, res, next) => {
     const state = gameState.state;
 
     // Dev mode impersonation: allow asUserId to override session userId
-    // Only allowed in non-production environment
+    // Only allowed in non-production environment AND only for the game host
+    // SECURITY: This prevents unauthorized players from cheating via impersonation
     const isDev = process.env.NODE_ENV !== 'production';
     let effectiveUserId = req.session.userId;
 
     if (isDev && asUserId && state.players[asUserId]) {
-      // In dev mode, allow impersonating any player in the game
-      effectiveUserId = asUserId;
+      // Verify the requesting user is the game host before allowing impersonation
+      const gameService = require('../services/gameService');
+      const game = await gameService.getGameById(gameId);
+
+      if (game && game.host_id === req.session.userId) {
+        // Only the game host can impersonate other players in dev mode
+        effectiveUserId = asUserId;
+      }
+      // If not host, silently ignore impersonation request (use their own userId)
     }
 
     // Verify it's this player's turn
@@ -258,12 +266,18 @@ router.post('/:gameId/action', requireGamePlayer, async (req, res, next) => {
       throw new ValidationError(result.error);
     }
 
-    // Save the new state
-    const newState = await gameStateService.updateGameState(gameId, result.newState, {
-      playerId: effectiveUserId,
-      type: actionType,
-      data: actionData
-    });
+    // Save the new state with optimistic locking
+    // Pass the version we read to ensure no concurrent modifications occurred
+    const newState = await gameStateService.updateGameState(
+      gameId,
+      result.newState,
+      {
+        playerId: effectiveUserId,
+        type: actionType,
+        data: actionData
+      },
+      gameState.version  // Expected version for optimistic locking
+    );
 
     // Broadcast state update to all connected players via Socket.io
     const io = req.app.get('io');

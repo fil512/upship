@@ -31,7 +31,7 @@
 
 	{#if hand.length > 0}
 		<div class="cards-row">
-			{#each hand as card, index}
+			{#each hand as card, index (card.id)}
 				<Card
 					{card}
 					{index}

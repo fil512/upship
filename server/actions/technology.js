@@ -112,6 +112,11 @@ function processAcquireTechCard(state, playerId, data) {
 
   const card = state.rdBoard[cardIndex];
 
+  // SECURITY: Check faction-specific banned tech cards (e.g., Germany cannot acquire helium_handling)
+  if (playerState.bannedTechCards?.includes(targetId)) {
+    throw new GameRuleError(`Your faction cannot acquire ${card.name || targetId}`);
+  }
+
   if (playerState.cash < card.cost) {
     throw new InsufficientFundsError(card.cost, playerState.cash);
   }
@@ -228,6 +233,11 @@ function processAcquireTechCardResearch(state, playerId, data) {
   }
 
   const card = state.rdBoard[cardIndex];
+
+  // SECURITY: Check faction-specific banned tech cards (e.g., Germany cannot acquire helium_handling)
+  if (playerState.bannedTechCards?.includes(targetId)) {
+    throw new GameRuleError(`Your faction cannot acquire ${card.name || targetId}`);
+  }
 
   // Check if player already has this tech card
   if (playerState.techCards.includes(targetId)) {
