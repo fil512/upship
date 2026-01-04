@@ -3,9 +3,31 @@
  * BUILD_SHIP action processor
  */
 
+import type { GameState, PlayerState, Ship, LogEntry, Blueprint } from '@upship/api';
+
 const { GameRuleError, InsufficientFundsError } = require('../errors');
 const { UPGRADES, calculateShipStats, calculateLift } = require('../data/upgrades');
 const { generateId } = require('../utils/random');
+
+interface ActionResult {
+  newState: GameState;
+}
+
+// Extended blueprint type with gas sockets
+type ExtendedBlueprint = Blueprint & {
+  gasSockets?: string[];
+};
+
+// Extended player state with building-related properties
+type BuildPlayerState = Omit<PlayerState, 'blueprint'> & {
+  buildDiscount?: number;
+  blueprint: ExtendedBlueprint;
+};
+
+interface BuildShipData {
+  count?: number;
+  _internal?: boolean;
+}
 
 /**
  * Build a ship at the Construction Hall
@@ -14,15 +36,10 @@ const { generateId } = require('../utils/random');
  * This action should only be called:
  * 1. Internally from processPlaceAgent when placing at construction_hall
  * 2. NOT directly during reveal phase or without proper agent placement
- *
- * @param {Object} state - Game state (mutated)
- * @param {string} playerId - Acting player ID
- * @param {Object} data - Action data { count, _internal }
- * @returns {Object} { newState } or throws error
  */
-function processBuildShip(state, playerId, data) {
+function processBuildShip(state: GameState, playerId: string, data: BuildShipData): ActionResult {
   const { count = 1, _internal = false } = data;
-  const playerState = state.players[playerId];
+  const playerState = state.players[playerId] as BuildPlayerState;
   const HANGAR_CAPACITY = 3; // Per Section 4.4 and 6.3
 
   // Per Section 5.1: Actions execute when placing agent, not separately
@@ -112,10 +129,10 @@ function processBuildShip(state, playerId, data) {
 
   // Add ships to hangar with stats
   for (let i = 0; i < count; i++) {
-    playerState.ships.push({
+    const newShip: Ship = {
       id: generateId('ship'),
       status: 'hangar', // hangar, launched, damaged
-      route: null,
+      routeId: null,
       // Stats from blueprint at build time
       lift,
       weight,
@@ -124,7 +141,8 @@ function processBuildShip(state, playerId, data) {
       ceiling: shipStats.ceiling,
       reliability: shipStats.reliability,
       luxury: shipStats.luxury
-    });
+    };
+    playerState.ships.push(newShip);
   }
 
   // Clear buildDiscount after use (it's a per-action bonus)
@@ -137,21 +155,20 @@ function processBuildShip(state, playerId, data) {
       : `Built ${count} ship(s) for £${totalCost} (£${effectiveHullCost}/ship)`,
     playerId,
     type: 'action'
-  });
+  } as LogEntry);
 
   return { newState: state };
+}
+
+interface RepairShipData {
+  shipId: string;
 }
 
 /**
  * Repair a damaged ship
  * Per Section 4.4: Repair Cost: £3 per ship to move from Repair Hangar to Launch Hangar
- *
- * @param {Object} state - Game state (mutated)
- * @param {string} playerId - Acting player ID
- * @param {Object} data - Action data { shipId }
- * @returns {Object} { newState } or throws error
  */
-function processRepairShip(state, playerId, data) {
+function processRepairShip(state: GameState, playerId: string, data: RepairShipData): ActionResult {
   const { shipId } = data;
   const playerState = state.players[playerId];
   const REPAIR_COST = 3; // £3 per Section 4.4
@@ -181,16 +198,19 @@ function processRepairShip(state, playerId, data) {
 
   // Move ship from Repair Hangar to Launch Hangar
   ship.status = 'hangar';
-  ship.damaged = false;
+  (ship as Ship & { damaged?: boolean }).damaged = false;
 
   state.log.push({
     timestamp: new Date().toISOString(),
     message: `Repaired ship for £${REPAIR_COST}`,
     playerId,
     type: 'action'
-  });
+  } as LogEntry);
 
   return { newState: state };
 }
 
+export { processBuildShip, processRepairShip };
+
+// CommonJS compatibility
 module.exports = { processBuildShip, processRepairShip };

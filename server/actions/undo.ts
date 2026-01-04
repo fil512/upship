@@ -5,6 +5,8 @@
  * Commit points prevent undo beyond the point where hidden info was revealed.
  */
 
+import type { GameState, ActionType } from '@upship/api';
+
 const { pool } = require('../db');
 const { GameRuleError } = require('../errors');
 
@@ -12,7 +14,7 @@ const { GameRuleError } = require('../errors');
  * Actions that reveal hidden information and create commit points.
  * Once any of these occur, player cannot undo past this point.
  */
-const COMMIT_POINT_ACTION_TYPES = new Set([
+const COMMIT_POINT_ACTION_TYPES = new Set<string>([
   // These action types always create commit points
   'DISCARD_HAZARD',  // Weather Bureau - discards peeked hazard
 ]);
@@ -20,22 +22,26 @@ const COMMIT_POINT_ACTION_TYPES = new Set([
 /**
  * Actions that should NOT be undoable
  */
-const NON_UNDOABLE_ACTIONS = new Set([
+const NON_UNDOABLE_ACTIONS = new Set<string>([
   'END_TURN',
   'REVEAL',  // Ends worker placement round
   'UNDO',    // Cannot undo an undo
   'CALCULATE_SCORES',
 ]);
 
+interface ActionData {
+  locationId?: string;
+  [key: string]: unknown;
+}
+
+interface StateChanges {
+  [key: string]: unknown;
+}
+
 /**
  * Check if an action creates a commit point (reveals hidden info or phase transition)
- *
- * @param {string} actionType - The action type
- * @param {Object} actionData - The action data
- * @param {Object} stateChanges - Optional object with flags about what changed
- * @returns {boolean} True if action creates a commit point
  */
-function createsCommitPoint(actionType, actionData = {}, _stateChanges = {}) {
+function createsCommitPoint(actionType: string, actionData: ActionData = {}, _stateChanges: StateChanges = {}): boolean {
   // Explicit commit point action types
   if (COMMIT_POINT_ACTION_TYPES.has(actionType)) {
     return true;
@@ -68,22 +74,27 @@ function createsCommitPoint(actionType, actionData = {}, _stateChanges = {}) {
 
 /**
  * Check if an action can be undone
- *
- * @param {string} actionType - The action type
- * @returns {boolean} True if action is undoable
  */
-function isUndoable(actionType) {
+function isUndoable(actionType: string): boolean {
   return !NON_UNDOABLE_ACTIONS.has(actionType);
+}
+
+interface ActionRow {
+  id: string;
+  action_type: string;
+  action_data: unknown;
+  previous_state: GameState;
+  state_version: number;
+}
+
+interface CountRow {
+  count: string;
 }
 
 /**
  * Get the last undoable action for a player in a game
- *
- * @param {string} gameId - Game ID
- * @param {string} userId - User ID
- * @returns {Promise<Object|null>} The last undoable action or null
  */
-async function getLastUndoableAction(gameId, userId) {
+async function getLastUndoableAction(gameId: string, userId: string): Promise<ActionRow | null> {
   const result = await pool.query(
     `SELECT ga.id, ga.action_type, ga.action_data, ga.previous_state, ga.state_version
      FROM game_actions ga
@@ -97,19 +108,15 @@ async function getLastUndoableAction(gameId, userId) {
      ORDER BY ga.state_version DESC
      LIMIT 1`,
     [gameId, userId]
-  );
+  ) as { rows: ActionRow[] };
 
   return result.rows[0] || null;
 }
 
 /**
  * Get count of undoable actions for a player
- *
- * @param {string} gameId - Game ID
- * @param {string} userId - User ID
- * @returns {Promise<number>} Number of undoable actions
  */
-async function getUndoCount(gameId, userId) {
+async function getUndoCount(gameId: string, userId: string): Promise<number> {
   const result = await pool.query(
     `SELECT COUNT(*) as count
      FROM game_actions ga
@@ -121,19 +128,21 @@ async function getUndoCount(gameId, userId) {
        AND ga.action_type NOT IN ('END_TURN', 'REVEAL', 'UNDO', 'CALCULATE_SCORES')
        AND ga.previous_state IS NOT NULL`,
     [gameId, userId]
-  );
+  ) as { rows: CountRow[] };
 
   return parseInt(result.rows[0].count, 10);
 }
 
+interface UndoResult {
+  success: boolean;
+  undoneAction: string;
+  newState: GameState;
+}
+
 /**
  * Execute undo of the last action
- *
- * @param {string} gameId - Game ID
- * @param {string} userId - User ID
- * @returns {Promise<Object>} { success, undoneAction, newState }
  */
-async function executeUndo(gameId, userId) {
+async function executeUndo(gameId: string, userId: string): Promise<UndoResult> {
   const client = await pool.connect();
 
   try {
@@ -146,7 +155,7 @@ async function executeUndo(gameId, userId) {
        WHERE game_id = $1
        FOR UPDATE`,
       [gameId]
-    );
+    ) as { rows: { state: GameState; version: number; commit_point_version: number }[] };
 
     if (stateResult.rows.length === 0) {
       throw new GameRuleError('Game not found');
@@ -167,7 +176,7 @@ async function executeUndo(gameId, userId) {
        ORDER BY state_version DESC
        LIMIT 1`,
       [gameId, userId, commit_point_version]
-    );
+    ) as { rows: ActionRow[] };
 
     if (actionResult.rows.length === 0) {
       throw new GameRuleError('No actions available to undo');
@@ -197,7 +206,7 @@ async function executeUndo(gameId, userId) {
         newVersion,
         previousState.playerOrder[previousState.currentPlayerIndex],
         previousState.phase,
-        previousState.turn,
+        (previousState as GameState & { turn?: number }).turn,
         previousState.age,
         gameId
       ]
@@ -225,14 +234,16 @@ async function executeUndo(gameId, userId) {
   }
 }
 
+interface UndoInfo {
+  canUndo: boolean;
+  undoCount: number;
+  lastActionType: string | null;
+}
+
 /**
  * Get undo info for UI display
- *
- * @param {string} gameId - Game ID
- * @param {string} userId - User ID
- * @returns {Promise<Object>} { canUndo, undoCount, lastActionType }
  */
-async function getUndoInfo(gameId, userId) {
+async function getUndoInfo(gameId: string, userId: string): Promise<UndoInfo> {
   const lastAction = await getLastUndoableAction(gameId, userId);
   const undoCount = await getUndoCount(gameId, userId);
 
@@ -243,6 +254,18 @@ async function getUndoInfo(gameId, userId) {
   };
 }
 
+export {
+  createsCommitPoint,
+  isUndoable,
+  getLastUndoableAction,
+  getUndoCount,
+  executeUndo,
+  getUndoInfo,
+  COMMIT_POINT_ACTION_TYPES,
+  NON_UNDOABLE_ACTIONS
+};
+
+// CommonJS compatibility
 module.exports = {
   createsCommitPoint,
   isUndoable,

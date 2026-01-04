@@ -5,23 +5,68 @@
  * Note: Swap limits have been removed - players can make unlimited modifications
  */
 
+import type { GameState, PlayerState, LogEntry, Blueprint, SlotType } from '@upship/api';
+
 const { GameRuleError, InsufficientFundsError } = require('../errors');
 const { TECH_TILES, TECH_CARDS } = require('../data/upgrades');
+
+interface ActionResult {
+  newState: GameState;
+}
+
+// Tech tile definition
+interface TechTile {
+  id: string;
+  name: string;
+  slotType: string;
+  age: number;
+  requiredCard: string;
+  hullCost?: number;
+  special?: string;
+  [key: string]: unknown;
+}
+
+// Tech card definition
+interface TechCard {
+  id: string;
+  name: string;
+  [key: string]: unknown;
+}
+
+// Blueprint changes for UPDATE_BLUEPRINT
+interface BlueprintChanges {
+  frameSlots?: (string | null)[];
+  fabricSlots?: (string | null)[];
+  driveSlots?: (string | null)[];
+  componentSlots?: (string | null)[];
+}
+
+// Age transition state
+interface AgeTransitionState {
+  newAge: number;
+  currentPlayerIndex: number;
+  completedPlayers: string[];
+}
+
+// Extended state with age transition
+type AgeTransitionGameState = GameState & {
+  ageTransitionDesignBureau?: AgeTransitionState;
+};
 
 /**
  * Calculate hull cost for a tech tile
  * Only Frame and Fabric tech tiles contribute to hull cost per Section 7.1
  */
-function getTechTileHullCost(tileId) {
+function getTechTileHullCost(tileId: string | null): number {
   if (!tileId) return 0;
-  const tile = TECH_TILES[tileId];
+  const tile = TECH_TILES[tileId] as TechTile | undefined;
   return tile?.hullCost || 0;
 }
 
 /**
  * Calculate total hull cost for a blueprint
  */
-function calculateHullCost(blueprint) {
+function calculateHullCost(blueprint: Blueprint): number {
   let cost = 2; // Base cost per Section 7.1
 
   // Add Frame hull costs
@@ -37,14 +82,17 @@ function calculateHullCost(blueprint) {
   return cost;
 }
 
+interface BlueprintValidation {
+  valid: boolean;
+  emptyFrameSlots: number;
+  emptyFabricSlots: number;
+}
+
 /**
  * Validate that blueprint has no empty frame or fabric slots.
  * Blueprints must always be complete after any modification.
- *
- * @param {Object} blueprint - Player's blueprint
- * @returns {Object} { valid: boolean, emptyFrameSlots: number, emptyFabricSlots: number }
  */
-function validateBlueprintComplete(blueprint) {
+function validateBlueprintComplete(blueprint: Blueprint): BlueprintValidation {
   const frameSlots = blueprint.frameSlots || [];
   const fabricSlots = blueprint.fabricSlots || [];
 
@@ -58,6 +106,14 @@ function validateBlueprintComplete(blueprint) {
   };
 }
 
+interface InstallTechTileData {
+  slotType: string;
+  slotIndex: number;
+  tileId?: string;
+  upgradeId?: string;  // Legacy support
+  _internal?: boolean;
+}
+
 /**
  * Install tech tile on blueprint
  * Per Section 6.2:
@@ -65,13 +121,8 @@ function validateBlueprintComplete(blueprint) {
  *
  * Per Section 5.1: Location actions execute IMMEDIATELY when placing an agent.
  * Direct API calls are rejected - must go through PLACE_AGENT with blueprint param.
- *
- * @param {Object} state - Game state (mutated)
- * @param {string} playerId - Acting player ID
- * @param {Object} data - Action data { slotType, slotIndex, tileId, _internal }
- * @returns {Object} { newState } or throws error
  */
-function processInstallTechTile(state, playerId, data) {
+function processInstallTechTile(state: GameState, playerId: string, data: InstallTechTileData): ActionResult {
   const { slotType, slotIndex, tileId, upgradeId, _internal = false } = data;
   // Support both tileId (new) and upgradeId (legacy) for backwards compatibility
   const targetId = tileId || upgradeId;
@@ -94,22 +145,23 @@ function processInstallTechTile(state, playerId, data) {
     }
   }
 
-  const slotKey = `${slotType}Slots`;
-  if (!playerState.blueprint[slotKey]) {
+  const slotKey = `${slotType}Slots` as keyof Blueprint;
+  const blueprintAny = playerState.blueprint as unknown as Record<string, (string | null)[]>;
+  if (!blueprintAny[slotKey]) {
     throw new GameRuleError('Invalid slot type');
   }
 
-  if (slotIndex < 0 || slotIndex >= playerState.blueprint[slotKey].length) {
+  if (slotIndex < 0 || slotIndex >= blueprintAny[slotKey].length) {
     throw new GameRuleError('Invalid slot index');
   }
 
   // Check if slot is already occupied
-  if (playerState.blueprint[slotKey][slotIndex]) {
+  if (blueprintAny[slotKey][slotIndex]) {
     throw new GameRuleError('Slot already occupied. Remove current tech tile first.');
   }
 
   // Validate tech tile exists
-  const tile = TECH_TILES[targetId];
+  const tile = TECH_TILES[targetId!] as TechTile | undefined;
   if (!tile) {
     throw new GameRuleError('Unknown tech tile');
   }
@@ -126,7 +178,7 @@ function processInstallTechTile(state, playerId, data) {
 
   // Validate player owns required tech card
   if (!playerState.techCards.includes(tile.requiredCard)) {
-    const card = TECH_CARDS[tile.requiredCard];
+    const card = TECH_CARDS[tile.requiredCard] as TechCard | undefined;
     throw new GameRuleError(`Requires ${card ? card.name : tile.requiredCard} tech card`);
   }
 
@@ -134,7 +186,7 @@ function processInstallTechTile(state, playerId, data) {
   if (tile.special === 'requires_helium') {
     // Check if helium_gas_cell is installed in any component slot
     const hasHeliumGasCell = playerState.blueprint.componentSlots?.some(
-      comp => comp === 'helium_gas_cell' || comp?.id === 'helium_gas_cell'
+      (comp: string | { id: string } | null) => comp === 'helium_gas_cell' || (comp && typeof comp === 'object' && comp.id === 'helium_gas_cell')
     );
     if (!hasHeliumGasCell) {
       throw new GameRuleError(`${tile.name} requires a Helium Gas Cell to be installed first`);
@@ -147,8 +199,8 @@ function processInstallTechTile(state, playerId, data) {
   const shipsInHangar = (playerState.ships || []).filter(s => s.status === 'hangar').length;
 
   if (isStructuralSlot && shipsInHangar > 0) {
-    const oldHullCost = getTechTileHullCost(playerState.blueprint[slotKey][slotIndex]);
-    const newHullCost = getTechTileHullCost(targetId);
+    const oldHullCost = getTechTileHullCost(blueprintAny[slotKey][slotIndex]);
+    const newHullCost = getTechTileHullCost(targetId!);
     const hullCostIncrease = Math.max(0, newHullCost - oldHullCost);
 
     if (hullCostIncrease > 0) {
@@ -166,21 +218,27 @@ function processInstallTechTile(state, playerId, data) {
         message: `Hull Upgrade Rule: Paid £${totalCharge} (£${hullCostIncrease} × ${shipsInHangar} ships)`,
         playerId,
         type: 'action'
-      });
+      } as LogEntry);
     }
   }
 
   // Install the tech tile
-  playerState.blueprint[slotKey][slotIndex] = targetId;
+  blueprintAny[slotKey][slotIndex] = targetId!;
 
   state.log.push({
     timestamp: new Date().toISOString(),
     message: `Installed ${tile.name} in ${slotType} slot ${slotIndex + 1}`,
     playerId,
     type: 'action'
-  });
+  } as LogEntry);
 
   return { newState: state };
+}
+
+interface RemoveTechTileData {
+  slotType: string;
+  slotIndex: number;
+  _internal?: boolean;
 }
 
 /**
@@ -188,13 +246,8 @@ function processInstallTechTile(state, playerId, data) {
  *
  * Per Section 5.1: Location actions execute IMMEDIATELY when placing an agent.
  * Direct API calls are rejected - must go through PLACE_AGENT with blueprint param.
- *
- * @param {Object} state - Game state (mutated)
- * @param {string} playerId - Acting player ID
- * @param {Object} data - Action data { slotType, slotIndex, _internal }
- * @returns {Object} { newState } or throws error
  */
-function processRemoveTechTile(state, playerId, data) {
+function processRemoveTechTile(state: GameState, playerId: string, data: RemoveTechTileData): ActionResult {
   const { slotType, slotIndex, _internal = false } = data;
   const playerState = state.players[playerId];
 
@@ -215,34 +268,48 @@ function processRemoveTechTile(state, playerId, data) {
     }
   }
 
-  const slotKey = `${slotType}Slots`;
-  if (!playerState.blueprint[slotKey]) {
+  const slotKey = `${slotType}Slots` as keyof Blueprint;
+  const blueprintAny = playerState.blueprint as unknown as Record<string, (string | null)[]>;
+  if (!blueprintAny[slotKey]) {
     throw new GameRuleError('Invalid slot type');
   }
 
-  if (slotIndex < 0 || slotIndex >= playerState.blueprint[slotKey].length) {
+  if (slotIndex < 0 || slotIndex >= blueprintAny[slotKey].length) {
     throw new GameRuleError('Invalid slot index');
   }
 
-  const currentTile = playerState.blueprint[slotKey][slotIndex];
+  const currentTile = blueprintAny[slotKey][slotIndex];
   if (!currentTile) {
     throw new GameRuleError('Slot is already empty');
   }
 
-  const tile = TECH_TILES[currentTile];
+  const tile = TECH_TILES[currentTile] as TechTile | undefined;
   const tileName = tile ? tile.name : currentTile;
 
   // Remove the tech tile
-  playerState.blueprint[slotKey][slotIndex] = null;
+  blueprintAny[slotKey][slotIndex] = null;
 
   state.log.push({
     timestamp: new Date().toISOString(),
     message: `Removed ${tileName} from ${slotType} slot ${slotIndex + 1}`,
     playerId,
     type: 'action'
-  });
+  } as LogEntry);
 
   return { newState: state };
+}
+
+interface UpdateBlueprintData {
+  blueprint?: BlueprintChanges;
+  _internal?: boolean;
+  skipHullRule?: boolean;
+}
+
+interface BlueprintChange {
+  slotKey: string;
+  slotIndex: number;
+  oldTileId: string | null;
+  newTileId: string | null;
 }
 
 /**
@@ -251,16 +318,12 @@ function processRemoveTechTile(state, playerId, data) {
  *
  * Per Section 5.1: Location actions execute IMMEDIATELY when placing an agent.
  * Direct API calls are rejected - must go through PLACE_AGENT with blueprint param.
- *
- * @param {Object} state - Game state (mutated)
- * @param {string} playerId - Acting player ID
- * @param {Object} data - { blueprint: { frameSlots, fabricSlots, driveSlots, componentSlots }, _internal }
- * @returns {Object} { newState } or throws error
  */
-function processUpdateBlueprint(state, playerId, data) {
+function processUpdateBlueprint(state: GameState, playerId: string, data: UpdateBlueprintData): ActionResult {
   const { blueprint: newBlueprint, _internal = false, skipHullRule = false } = data;
   const playerState = state.players[playerId];
   const oldBlueprint = playerState.blueprint;
+  const extendedState = state as AgeTransitionGameState;
 
   // Validate that this is called through PLACE_AGENT (Section 5.1)
   if (!_internal) {
@@ -284,14 +347,16 @@ function processUpdateBlueprint(state, playerId, data) {
   }
 
   // Validate each slot type
-  const slotTypes = ['frameSlots', 'fabricSlots', 'driveSlots', 'componentSlots'];
-  const changes = [];
+  const slotTypes = ['frameSlots', 'fabricSlots', 'driveSlots', 'componentSlots'] as const;
+  const changes: BlueprintChange[] = [];
+  const oldBlueprintAny = oldBlueprint as unknown as Record<string, (string | null)[]>;
+  const newBlueprintAny = newBlueprint as unknown as Record<string, (string | null)[]>;
 
   for (const slotKey of slotTypes) {
-    const newSlots = newBlueprint[slotKey];
+    const newSlots = newBlueprintAny[slotKey];
     if (!newSlots) continue; // Keep existing slots if not provided
 
-    const oldSlots = oldBlueprint[slotKey] || [];
+    const oldSlots = oldBlueprintAny[slotKey] || [];
 
     // Ensure we don't change slot count
     if (newSlots.length !== oldSlots.length) {
@@ -307,7 +372,7 @@ function processUpdateBlueprint(state, playerId, data) {
 
       // If installing a new tech tile
       if (newTileId) {
-        const tile = TECH_TILES[newTileId];
+        const tile = TECH_TILES[newTileId] as TechTile | undefined;
         if (!tile) {
           throw new GameRuleError(`Unknown tech tile: ${newTileId}`);
         }
@@ -319,14 +384,14 @@ function processUpdateBlueprint(state, playerId, data) {
 
         // Validate age requirement
         // During age transition, use the NEW age for validation
-        const effectiveAge = state.ageTransitionDesignBureau?.newAge || state.age;
+        const effectiveAge = extendedState.ageTransitionDesignBureau?.newAge || state.age;
         if (tile.age > effectiveAge) {
           throw new GameRuleError(`${tile.name} not available until Age ${tile.age}`);
         }
 
         // Validate player owns required tech card
         if (!playerState.techCards.includes(tile.requiredCard)) {
-          const card = TECH_CARDS[tile.requiredCard];
+          const card = TECH_CARDS[tile.requiredCard] as TechCard | undefined;
           throw new GameRuleError(`Requires ${card ? card.name : tile.requiredCard} tech card`);
         }
       }
@@ -347,12 +412,12 @@ function processUpdateBlueprint(state, playerId, data) {
     fabricSlots: newBlueprint.fabricSlots || oldBlueprint.fabricSlots,
     driveSlots: newBlueprint.driveSlots || oldBlueprint.driveSlots,
     componentSlots: newBlueprint.componentSlots || oldBlueprint.componentSlots
-  };
+  } as Blueprint;
 
   // Validate blueprint completeness
   const validation = validateBlueprintComplete(mergedBlueprint);
   if (!validation.valid) {
-    const errors = [];
+    const errors: string[] = [];
     if (validation.emptyFrameSlots > 0) {
       errors.push(`${validation.emptyFrameSlots} empty Frame slot(s)`);
     }
@@ -384,7 +449,7 @@ function processUpdateBlueprint(state, playerId, data) {
         message: `Hull Upgrade Rule: Paid £${totalCharge} (£${hullCostIncrease} × ${shipsInHangar} ships)`,
         playerId,
         type: 'action'
-      });
+      } as LogEntry);
     }
   }
 
@@ -393,8 +458,8 @@ function processUpdateBlueprint(state, playerId, data) {
 
   // Log changes
   for (const change of changes) {
-    const oldTile = change.oldTileId ? TECH_TILES[change.oldTileId] : null;
-    const newTile = change.newTileId ? TECH_TILES[change.newTileId] : null;
+    const oldTile = change.oldTileId ? TECH_TILES[change.oldTileId] as TechTile | undefined : null;
+    const newTile = change.newTileId ? TECH_TILES[change.newTileId] as TechTile | undefined : null;
     const slotType = change.slotKey.replace('Slots', '');
 
     if (oldTile && newTile) {
@@ -403,46 +468,55 @@ function processUpdateBlueprint(state, playerId, data) {
         message: `Replaced ${oldTile.name} with ${newTile.name} in ${slotType} slot ${change.slotIndex + 1}`,
         playerId,
         type: 'action'
-      });
+      } as LogEntry);
     } else if (newTile) {
       state.log.push({
         timestamp: new Date().toISOString(),
         message: `Installed ${newTile.name} in ${slotType} slot ${change.slotIndex + 1}`,
         playerId,
         type: 'action'
-      });
+      } as LogEntry);
     } else if (oldTile) {
       state.log.push({
         timestamp: new Date().toISOString(),
         message: `Removed ${oldTile.name} from ${slotType} slot ${change.slotIndex + 1}`,
         playerId,
         type: 'action'
-      });
+      } as LogEntry);
     }
   }
 
   return { newState: state };
 }
 
+interface SwapAction {
+  slotType: string;
+  slotIndex: number;
+  action: 'install' | 'remove';
+  tileId?: string;
+  upgradeId?: string;  // Legacy support
+}
+
+interface AgeTransitionDesignBureauData {
+  blueprint?: BlueprintChanges;
+  swaps?: SwapAction[];
+}
+
 /**
  * Process free Design Bureau action during age transition
  * Per Section 12.1 step 5: Each player gets a free Design Bureau action
  * No swap limits and no Hull Upgrade Rule charges during age transition.
- *
- * @param {Object} state - Game state (mutated)
- * @param {string} playerId - Acting player ID
- * @param {Object} data - Action data { blueprint: { frameSlots, fabricSlots, driveSlots, componentSlots } }
- * @returns {Object} { newState } or throws error
  */
-function processAgeTransitionDesignBureau(state, playerId, data) {
+function processAgeTransitionDesignBureau(state: GameState, playerId: string, data: AgeTransitionDesignBureauData): ActionResult {
   const { completeAgeTransition } = require('./helpers/ageTransition');
+  const extendedState = state as AgeTransitionGameState;
 
   // Verify we're in the correct phase
   if (state.phase !== 'age_transition_design_bureau') {
     throw new GameRuleError('Not in age transition Design Bureau phase');
   }
 
-  const transitionState = state.ageTransitionDesignBureau;
+  const transitionState = extendedState.ageTransitionDesignBureau;
   if (!transitionState) {
     throw new GameRuleError('Age transition state not found');
   }
@@ -459,6 +533,7 @@ function processAgeTransitionDesignBureau(state, playerId, data) {
   }
 
   const playerState = state.players[playerId];
+  const oldBlueprintAny = playerState.blueprint as unknown as Record<string, (string | null)[]>;
 
   // Handle both old swaps format and new blueprint format for backwards compatibility
   if (data.blueprint) {
@@ -470,25 +545,25 @@ function processAgeTransitionDesignBureau(state, playerId, data) {
     });
   } else if (data.swaps && data.swaps.length > 0) {
     // Legacy swaps format - convert to blueprint format
-    const oldBlueprint = playerState.blueprint;
-    const newBlueprint = {
-      frameSlots: [...(oldBlueprint.frameSlots || [])],
-      fabricSlots: [...(oldBlueprint.fabricSlots || [])],
-      driveSlots: [...(oldBlueprint.driveSlots || [])],
-      componentSlots: [...(oldBlueprint.componentSlots || [])]
+    const newBlueprint: BlueprintChanges = {
+      frameSlots: [...(oldBlueprintAny.frameSlots || [])],
+      fabricSlots: [...(oldBlueprintAny.fabricSlots || [])],
+      driveSlots: [...(oldBlueprintAny.driveSlots || [])],
+      componentSlots: [...(oldBlueprintAny.componentSlots || [])]
     };
+    const newBlueprintAny = newBlueprint as unknown as Record<string, (string | null)[]>;
 
     // Apply swaps to build new blueprint
     for (const swap of data.swaps) {
       const slotKey = `${swap.slotType}Slots`;
-      if (!newBlueprint[slotKey]) continue;
-      if (swap.slotIndex < 0 || swap.slotIndex >= newBlueprint[slotKey].length) continue;
+      if (!newBlueprintAny[slotKey]) continue;
+      if (swap.slotIndex < 0 || swap.slotIndex >= newBlueprintAny[slotKey].length) continue;
 
       if (swap.action === 'install') {
         // Support both tileId (new) and upgradeId (legacy)
-        newBlueprint[slotKey][swap.slotIndex] = swap.tileId || swap.upgradeId;
+        newBlueprintAny[slotKey][swap.slotIndex] = swap.tileId || swap.upgradeId || null;
       } else if (swap.action === 'remove') {
-        newBlueprint[slotKey][swap.slotIndex] = null;
+        newBlueprintAny[slotKey][swap.slotIndex] = null;
       }
     }
 
@@ -504,7 +579,7 @@ function processAgeTransitionDesignBureau(state, playerId, data) {
   // Validate blueprint is complete (no empty frame/fabric slots)
   const validation = validateBlueprintComplete(playerState.blueprint);
   if (!validation.valid) {
-    const errors = [];
+    const errors: string[] = [];
     if (validation.emptyFrameSlots > 0) {
       errors.push(`${validation.emptyFrameSlots} empty Frame slot(s)`);
     }
@@ -528,14 +603,28 @@ function processAgeTransitionDesignBureau(state, playerId, data) {
   return { newState: state };
 }
 
-module.exports = {
+export {
   processInstallTechTile,
   processRemoveTechTile,
   processUpdateBlueprint,
   processAgeTransitionDesignBureau,
   calculateHullCost,  // Exported for testing
-  validateBlueprintComplete,  // Exported for use in worker.js
-  // Legacy aliases for backwards compatibility during migration
-  processInstallUpgrade: processInstallTechTile,
-  processRemoveUpgrade: processRemoveTechTile
+  validateBlueprintComplete  // Exported for use in worker.js
+};
+
+// Legacy aliases for backwards compatibility during migration
+const processInstallUpgrade = processInstallTechTile;
+const processRemoveUpgrade = processRemoveTechTile;
+
+// CommonJS compatibility
+module.exports = {
+  processInstallTechTile,
+  processRemoveTechTile,
+  processUpdateBlueprint,
+  processAgeTransitionDesignBureau,
+  calculateHullCost,
+  validateBlueprintComplete,
+  // Legacy aliases
+  processInstallUpgrade,
+  processRemoveUpgrade
 };

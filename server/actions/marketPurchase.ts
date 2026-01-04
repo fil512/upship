@@ -5,21 +5,55 @@
  * Purchases are not finalized until END_TURN, allowing undo before committing.
  */
 
+import type { GameState, PlayerState, Card, LogEntry } from '@upship/api';
+
 const { GameRuleError, InsufficientFundsError } = require('../errors');
+
+interface ActionResult {
+  newState: GameState;
+}
+
+interface PendingPurchase {
+  cardId: string;
+  cost: number;
+}
+
+// Extended player state with pending purchases
+type MarketPlayerState = PlayerState & {
+  pendingMarketPurchases?: PendingPurchase[];
+  pendingTechAcquisitions?: PendingPurchase[];
+  research?: number;
+};
+
+// Extended tech card type for R&D board
+type TechCard = {
+  id: string;
+  name: string;
+  cost?: number;
+  researchCost?: number;
+};
+
+// Extended state with market claims
+type MarketState = Omit<GameState, 'rdBoard'> & {
+  marketCardsClaimed?: Record<string, string>;
+  techCardsClaimed?: Record<string, string>;
+  marketCards: Array<Card & { cost?: number }>;
+  rdBoard: TechCard[];
+};
+
+interface BuyMarketCardTentativeData {
+  cardId: string;
+}
 
 /**
  * Tentatively buy a market card (Agent Card) during reveal phase
  * Card is marked as claimed and influence is deducted, but card stays in market
  * until END_TURN finalizes the purchase.
- *
- * @param {Object} state - Game state (mutated)
- * @param {string} playerId - Acting player ID
- * @param {Object} data - { cardId: string }
- * @returns {{ newState: Object }}
  */
-function processBuyMarketCardTentative(state, playerId, data) {
+function processBuyMarketCardTentative(state: GameState, playerId: string, data: BuyMarketCardTentativeData): ActionResult {
   const { cardId } = data;
-  const playerState = state.players[playerId];
+  const marketState = state as MarketState;
+  const playerState = state.players[playerId] as MarketPlayerState;
 
   // Must be in reveal phase
   if (state.phase !== 'reveal') {
@@ -27,15 +61,15 @@ function processBuyMarketCardTentative(state, playerId, data) {
   }
 
   // Find the card in market
-  const card = state.marketCards.find(c => c.id === cardId);
+  const card = marketState.marketCards.find(c => c.id === cardId);
   if (!card) {
     throw new GameRuleError('Card not found in market');
   }
 
   // Check if card is already claimed
-  state.marketCardsClaimed = state.marketCardsClaimed || {};
-  if (state.marketCardsClaimed[cardId]) {
-    const claimingPlayer = state.players[state.marketCardsClaimed[cardId]];
+  marketState.marketCardsClaimed = marketState.marketCardsClaimed || {};
+  if (marketState.marketCardsClaimed[cardId]) {
+    const claimingPlayer = state.players[marketState.marketCardsClaimed[cardId]];
     const faction = claimingPlayer?.faction || 'another player';
     throw new GameRuleError(`This card is already claimed by ${faction}`);
   }
@@ -44,44 +78,45 @@ function processBuyMarketCardTentative(state, playerId, data) {
   const cost = card.cost || 3;
 
   // Check influence
-  const availableInfluence = playerState.influence || 0;
+  const availableInfluence = (playerState as PlayerState & { influence?: number }).influence || 0;
   if (availableInfluence < cost) {
     throw new InsufficientFundsError(cost, availableInfluence, 'Influence');
   }
 
   // Deduct influence
-  playerState.influence -= cost;
+  (playerState as PlayerState & { influence?: number }).influence = availableInfluence - cost;
 
   // Mark card as claimed
-  state.marketCardsClaimed[cardId] = playerId;
+  marketState.marketCardsClaimed[cardId] = playerId;
 
   // Track pending purchase
   playerState.pendingMarketPurchases = playerState.pendingMarketPurchases || [];
   playerState.pendingMarketPurchases.push({ cardId, cost });
 
+  state.log = state.log || [];
   state.log.push({
     timestamp: new Date().toISOString(),
     message: `Tentatively claimed ${card.name} for ${cost} Influence`,
     playerId,
     type: 'action'
-  });
+  } as LogEntry);
 
   return { newState: state };
+}
+
+interface AcquireTechCardTentativeData {
+  cardId: string;
 }
 
 /**
  * Tentatively acquire a tech card during reveal phase
  * Card is marked as claimed and research is deducted, but card stays on R&D board
  * until END_TURN finalizes the acquisition.
- *
- * @param {Object} state - Game state (mutated)
- * @param {string} playerId - Acting player ID
- * @param {Object} data - { cardId: string }
- * @returns {{ newState: Object }}
  */
-function processAcquireTechCardTentative(state, playerId, data) {
+function processAcquireTechCardTentative(state: GameState, playerId: string, data: AcquireTechCardTentativeData): ActionResult {
   const { cardId } = data;
-  const playerState = state.players[playerId];
+  const marketState = state as MarketState;
+  const playerState = state.players[playerId] as MarketPlayerState;
 
   // Must be in reveal phase
   if (state.phase !== 'reveal') {
@@ -89,15 +124,15 @@ function processAcquireTechCardTentative(state, playerId, data) {
   }
 
   // Find the card on R&D board
-  const card = state.rdBoard.find(c => c.id === cardId);
+  const card = marketState.rdBoard.find(c => c.id === cardId);
   if (!card) {
     throw new GameRuleError('Tech card not found on R&D board');
   }
 
   // Check if card is already claimed
-  state.techCardsClaimed = state.techCardsClaimed || {};
-  if (state.techCardsClaimed[cardId]) {
-    const claimingPlayer = state.players[state.techCardsClaimed[cardId]];
+  marketState.techCardsClaimed = marketState.techCardsClaimed || {};
+  if (marketState.techCardsClaimed[cardId]) {
+    const claimingPlayer = state.players[marketState.techCardsClaimed[cardId]];
     const faction = claimingPlayer?.faction || 'another player';
     throw new GameRuleError(`This tech card is already claimed by ${faction}`);
   }
@@ -120,7 +155,7 @@ function processAcquireTechCardTentative(state, playerId, data) {
   let remaining = cost;
   if (savedResearch > 0) {
     const fromSaved = Math.min(savedResearch, remaining);
-    playerState.research -= fromSaved;
+    playerState.research = savedResearch - fromSaved;
     remaining -= fromSaved;
   }
   if (remaining > 0) {
@@ -128,34 +163,36 @@ function processAcquireTechCardTentative(state, playerId, data) {
   }
 
   // Mark card as claimed
-  state.techCardsClaimed[cardId] = playerId;
+  marketState.techCardsClaimed[cardId] = playerId;
 
   // Track pending acquisition
   playerState.pendingTechAcquisitions = playerState.pendingTechAcquisitions || [];
   playerState.pendingTechAcquisitions.push({ cardId, cost });
 
+  state.log = state.log || [];
   state.log.push({
     timestamp: new Date().toISOString(),
     message: `Tentatively claimed ${card.name} for ${cost} Research`,
     playerId,
     type: 'action'
-  });
+  } as LogEntry);
 
   return { newState: state };
+}
+
+interface UndoMarketPurchaseData {
+  cardId: string;
+  type: 'market' | 'tech';
 }
 
 /**
  * Undo a tentative purchase during reveal phase
  * Restores resources and releases the claimed card.
- *
- * @param {Object} state - Game state (mutated)
- * @param {string} playerId - Acting player ID
- * @param {Object} data - { cardId: string, type: 'market' | 'tech' }
- * @returns {{ newState: Object }}
  */
-function processUndoMarketPurchase(state, playerId, data) {
+function processUndoMarketPurchase(state: GameState, playerId: string, data: UndoMarketPurchaseData): ActionResult {
   const { cardId, type } = data;
-  const playerState = state.players[playerId];
+  const marketState = state as MarketState;
+  const playerState = state.players[playerId] as MarketPlayerState;
 
   // Must be in reveal phase
   if (state.phase !== 'reveal') {
@@ -172,27 +209,29 @@ function processUndoMarketPurchase(state, playerId, data) {
     }
 
     // Verify the claim belongs to this player
-    if (state.marketCardsClaimed?.[cardId] !== playerId) {
+    if (marketState.marketCardsClaimed?.[cardId] !== playerId) {
       throw new GameRuleError('You did not claim this card');
     }
 
     // Get the purchase and restore influence
     const purchase = pendingList[purchaseIndex];
-    playerState.influence = (playerState.influence || 0) + purchase.cost;
+    (playerState as PlayerState & { influence?: number }).influence =
+      ((playerState as PlayerState & { influence?: number }).influence || 0) + purchase.cost;
 
     // Remove from pending list
     pendingList.splice(purchaseIndex, 1);
 
     // Release the claim
-    delete state.marketCardsClaimed[cardId];
+    delete marketState.marketCardsClaimed![cardId];
 
-    const card = state.marketCards.find(c => c.id === cardId);
+    const card = marketState.marketCards.find(c => c.id === cardId);
+    state.log = state.log || [];
     state.log.push({
       timestamp: new Date().toISOString(),
       message: `Undid purchase of ${card?.name || cardId}`,
       playerId,
       type: 'action'
-    });
+    } as LogEntry);
 
   } else if (type === 'tech') {
     // Find the pending acquisition
@@ -204,7 +243,7 @@ function processUndoMarketPurchase(state, playerId, data) {
     }
 
     // Verify the claim belongs to this player
-    if (state.techCardsClaimed?.[cardId] !== playerId) {
+    if (marketState.techCardsClaimed?.[cardId] !== playerId) {
       throw new GameRuleError('You did not claim this tech card');
     }
 
@@ -218,15 +257,16 @@ function processUndoMarketPurchase(state, playerId, data) {
     pendingList.splice(acquisitionIndex, 1);
 
     // Release the claim
-    delete state.techCardsClaimed[cardId];
+    delete marketState.techCardsClaimed![cardId];
 
-    const card = state.rdBoard.find(c => c.id === cardId);
+    const card = marketState.rdBoard.find(c => c.id === cardId);
+    state.log = state.log || [];
     state.log.push({
       timestamp: new Date().toISOString(),
       message: `Undid acquisition of ${card?.name || cardId}`,
       playerId,
       type: 'action'
-    });
+    } as LogEntry);
 
   } else {
     throw new GameRuleError('Invalid purchase type. Must be "market" or "tech".');
@@ -235,6 +275,13 @@ function processUndoMarketPurchase(state, playerId, data) {
   return { newState: state };
 }
 
+export {
+  processBuyMarketCardTentative,
+  processAcquireTechCardTentative,
+  processUndoMarketPurchase
+};
+
+// CommonJS compatibility
 module.exports = {
   processBuyMarketCardTentative,
   processAcquireTechCardTentative,

@@ -3,18 +3,31 @@
  * PLAY_CARD, DRAW_CARDS, BUY_MARKET_CARD, DISCARD_HAZARD, DISCARD_MARKET_CARD action processors
  */
 
+import type { GameState, PlayerState, LogEntry, Card, HazardCard } from '@upship/api';
+
 const { GameRuleError, InsufficientFundsError } = require('../errors');
 const { shuffleArray } = require('../utils/random');
 
+interface ActionResult {
+  newState: GameState;
+}
+
+// Extended player state with card-related properties
+type CardPlayerState = PlayerState & {
+  peekedHazard?: HazardCard;
+  hazardDeck?: HazardCard[];
+  drawnMinistryCards?: Card[];
+  influence?: number;
+};
+
+interface PlayCardData {
+  cardIndex: number;
+}
+
 /**
  * Play a card from hand
- *
- * @param {Object} state - Game state (mutated)
- * @param {string} playerId - Acting player ID
- * @param {Object} data - Action data { cardIndex }
- * @returns {Object} { newState } or throws error
  */
-function processPlayCard(state, playerId, data) {
+function processPlayCard(state: GameState, playerId: string, data: PlayCardData): ActionResult {
   const { cardIndex } = data;
   const playerState = state.players[playerId];
 
@@ -30,20 +43,19 @@ function processPlayCard(state, playerId, data) {
     message: `Played ${card.name}`,
     playerId,
     type: 'action'
-  });
+  } as LogEntry);
 
   return { newState: state };
 }
 
+interface DrawCardsData {
+  count?: number;
+}
+
 /**
  * Draw cards from deck
- *
- * @param {Object} state - Game state (mutated)
- * @param {string} playerId - Acting player ID
- * @param {Object} data - Action data { count }
- * @returns {Object} { newState } or throws error
  */
-function processDrawCards(state, playerId, data) {
+function processDrawCards(state: GameState, playerId: string, data: DrawCardsData): ActionResult {
   const { count = 1 } = data;
   const playerState = state.players[playerId];
 
@@ -56,7 +68,7 @@ function processDrawCards(state, playerId, data) {
     }
 
     if (playerState.deck.length > 0) {
-      playerState.hand.push(playerState.deck.pop());
+      playerState.hand.push(playerState.deck.pop()!);
     }
   }
 
@@ -65,22 +77,28 @@ function processDrawCards(state, playerId, data) {
     message: `Drew ${count} card(s)`,
     playerId,
     type: 'action'
-  });
+  } as LogEntry);
 
   return { newState: state };
 }
 
+interface BuyMarketCardData {
+  cardId?: string;
+  _internal?: boolean;
+}
+
+// Extended state with market cards
+type MarketState = GameState & {
+  marketCards?: Card[];
+};
+
 /**
  * Buy a card from the market using Influence
- *
- * @param {Object} state - Game state (mutated)
- * @param {string} playerId - Acting player ID
- * @param {Object} data - Action data { cardId }
- * @returns {Object} { newState } or throws error
  */
-function processBuyMarketCard(state, playerId, data) {
+function processBuyMarketCard(state: GameState, playerId: string, data: BuyMarketCardData | undefined): ActionResult {
   const { cardId, _internal = false } = data || {};
-  const playerState = state.players[playerId];
+  const playerState = state.players[playerId] as CardPlayerState;
+  const marketState = state as MarketState;
 
   // Per Section 5.1: Market purchases during reveal must go through atomic REVEAL action
   if (!_internal) {
@@ -96,7 +114,7 @@ function processBuyMarketCard(state, playerId, data) {
   }
 
   // Find card in market
-  const marketCards = state.marketCards || [];
+  const marketCards = marketState.marketCards || [];
   const cardIndex = marketCards.findIndex(c => c.id === cardId);
 
   if (cardIndex === -1) {
@@ -119,14 +137,14 @@ function processBuyMarketCard(state, playerId, data) {
   playerState.discardPile.push(card);
 
   // Remove from market
-  state.marketCards.splice(cardIndex, 1);
+  marketState.marketCards!.splice(cardIndex, 1);
 
   state.log.push({
     timestamp: new Date().toISOString(),
     message: `Bought ${card.name} for ${cost} Influence`,
     playerId,
     type: 'action'
-  });
+  } as LogEntry);
 
   return { newState: state };
 }
@@ -135,14 +153,9 @@ function processBuyMarketCard(state, playerId, data) {
  * Discard a peeked hazard card (from Weather Bureau)
  * This is part of the Weather Bureau multi-step flow:
  *   PLACE_AGENT(weather_bureau) → at_weather_bureau → DISCARD_HAZARD → idle
- *
- * @param {Object} state - Game state (mutated)
- * @param {string} playerId - Acting player ID
- * @param {Object} data - Action data (unused)
- * @returns {Object} { newState } or throws error
  */
-function processDiscardHazard(state, playerId, _data) {
-  const playerState = state.players[playerId];
+function processDiscardHazard(state: GameState, playerId: string, _data: unknown): ActionResult {
+  const playerState = state.players[playerId] as CardPlayerState;
 
   if (!playerState.peekedHazard) {
     throw new GameRuleError('No peeked hazard to discard. Visit Weather Bureau first.');
@@ -151,13 +164,13 @@ function processDiscardHazard(state, playerId, _data) {
   // Remove the top card from hazard deck
   const hazardDeck = playerState.hazardDeck || [];
   if (hazardDeck.length > 0 && hazardDeck[0].id === playerState.peekedHazard.id) {
-    const discarded = hazardDeck.shift();
+    const discarded = hazardDeck.shift()!;
     state.log.push({
       timestamp: new Date().toISOString(),
       message: `Discarded hazard: ${discarded.type} (difficulty ${discarded.difficulty})`,
       playerId,
       type: 'action'
-    });
+    } as LogEntry);
   }
 
   // Clear peeked hazard
@@ -175,14 +188,9 @@ function processDiscardHazard(state, playerId, _data) {
  * Player has seen the hazard and chooses NOT to discard it.
  * This is part of the Weather Bureau multi-step flow:
  *   PLACE_AGENT(weather_bureau) → at_weather_bureau → KEEP_HAZARD → idle
- *
- * @param {Object} state - Game state (mutated)
- * @param {string} playerId - Acting player ID
- * @param {Object} data - Action data (unused)
- * @returns {Object} { newState } or throws error
  */
-function processKeepHazard(state, playerId, _data) {
-  const playerState = state.players[playerId];
+function processKeepHazard(state: GameState, playerId: string, _data: unknown): ActionResult {
+  const playerState = state.players[playerId] as CardPlayerState;
 
   if (!playerState.peekedHazard) {
     throw new GameRuleError('No peeked hazard to keep. Visit Weather Bureau first.');
@@ -193,7 +201,7 @@ function processKeepHazard(state, playerId, _data) {
     message: `Kept hazard: ${playerState.peekedHazard.type} (difficulty ${playerState.peekedHazard.difficulty})`,
     playerId,
     type: 'action'
-  });
+  } as LogEntry);
 
   // Clear peeked hazard (they've made their decision)
   delete playerState.peekedHazard;
@@ -205,19 +213,18 @@ function processKeepHazard(state, playerId, _data) {
   return { newState: state };
 }
 
+interface DiscardMinistryCardData {
+  cardIndex: number;
+}
+
 /**
  * Discard one of the two cards drawn at Ministry
  * This is part of the Ministry multi-step flow:
  *   PLACE_AGENT(ministry) → at_ministry → DISCARD_MINISTRY_CARD → idle
- *
- * @param {Object} state - Game state (mutated)
- * @param {string} playerId - Acting player ID
- * @param {Object} data - Action data { cardIndex: 0|1 }
- * @returns {Object} { newState } or throws error
  */
-function processDiscardMinistryCard(state, playerId, data) {
+function processDiscardMinistryCard(state: GameState, playerId: string, data: DiscardMinistryCardData): ActionResult {
   const { cardIndex } = data;
-  const playerState = state.players[playerId];
+  const playerState = state.players[playerId] as CardPlayerState;
 
   // Validate player has drawn ministry cards
   if (!playerState.drawnMinistryCards || playerState.drawnMinistryCards.length !== 2) {
@@ -247,7 +254,7 @@ function processDiscardMinistryCard(state, playerId, data) {
     message: `Ministry: Kept ${kept.name}, discarded ${discarded.name}`,
     playerId,
     type: 'action'
-  });
+  } as LogEntry);
 
   // Clear the temporary drawn cards
   delete playerState.drawnMinistryCards;
@@ -261,32 +268,39 @@ function processDiscardMinistryCard(state, playerId, data) {
 
 /**
  * Discard leftmost Market card (from Academy)
- *
- * @param {Object} state - Game state (mutated)
- * @param {string} playerId - Acting player ID
- * @param {Object} data - Action data (unused)
- * @returns {Object} { newState } or throws error
  */
-function processDiscardMarketCard(state, playerId, _data) {
-  const marketCards = state.marketCards || [];
+function processDiscardMarketCard(state: GameState, playerId: string, _data: unknown): ActionResult {
+  const marketState = state as MarketState;
+  const marketCards = marketState.marketCards || [];
 
   if (marketCards.length === 0) {
     throw new GameRuleError('Market row is empty');
   }
 
   // Remove leftmost card
-  const discarded = marketCards.shift();
+  const discarded = marketCards.shift()!;
 
   state.log.push({
     timestamp: new Date().toISOString(),
     message: `Discarded leftmost Market card: ${discarded.name}`,
     playerId,
     type: 'action'
-  });
+  } as LogEntry);
 
   return { newState: state };
 }
 
+export {
+  processPlayCard,
+  processDrawCards,
+  processBuyMarketCard,
+  processDiscardHazard,
+  processKeepHazard,
+  processDiscardMinistryCard,
+  processDiscardMarketCard
+};
+
+// CommonJS compatibility
 module.exports = {
   processPlayCard,
   processDrawCards,

@@ -3,6 +3,8 @@
  * PLACE_AGENT, PASS, RECALL_AGENTS action processors
  */
 
+import type { GameState, PlayerState, Card, LogEntry } from '@upship/api';
+
 const logger = require('../logger');
 const { GameRuleError } = require('../errors');
 const { shuffleArray } = require('../utils/random');
@@ -17,12 +19,93 @@ const { processBuyInsurance } = require('./economy');
 const { processUpgradeResearchLevel } = require('./technology');
 const { processUpdateBlueprint } = require('./blueprint');
 
+interface ActionResult {
+  newState: GameState;
+}
+
+interface CardEffectResult {
+  success: boolean;
+  message?: string;
+}
+
+interface LocationActionResult {
+  success?: boolean;
+  message?: string;
+  error?: string;
+  skipTurnAdvance?: boolean;
+}
+
+// Extended player state
+type WorkerPlayerState = Omit<PlayerState, 'peekedHazard'> & {
+  launchBonuses?: Record<string, unknown>;
+  researchDiscount?: number;
+  buildDiscount?: number;
+  peekedHazard?: { name?: string; type?: string; id?: string } | null;
+  gasDiscount?: number;
+  ministryActionsRemaining?: number;
+  loanBonus?: number;
+  insurancePolicies?: number;
+  crewRecruitDiscount?: number;
+  engineerRecruitDiscount?: number;
+  canReorderRD?: boolean;
+  canAcquireForeignTech?: boolean;
+  canIgnoreTechRequirement?: boolean;
+  drawnMinistryCards?: Card[];
+  research?: number;
+};
+
+// Extended state with worker placement
+type WorkerState = GameState & {
+  nextRoundFirstPlayer?: string;
+  workerPlacement: {
+    currentPlacerIndex: number;
+    placementOrder?: string[];
+    passedPlayers?: string[];
+    ministryVisitors: string[];
+  };
+  launchpadActive?: Record<string, boolean>;
+};
+
+interface GroundBoardLocation {
+  name: string;
+  symbol: string;
+}
+
+interface PlaceAgentData {
+  locationId: string;
+  cardIndex: number;
+  buildCount?: number;
+  gasType?: 'hydrogen' | 'helium';
+  gasAmount?: number;
+  crewType?: 'officer' | 'engineer';
+  crewCount?: number;
+  levels?: number;
+  policyCount?: number;
+  officerCount?: number;
+  swaps?: string | unknown[];
+  blueprint?: string | Record<string, unknown>;
+}
+
+interface LocationActionOptions {
+  buildCount?: number;
+  gasType?: 'hydrogen' | 'helium';
+  gasAmount?: number;
+  crewType?: 'officer' | 'engineer';
+  crewCount?: number;
+  levels?: number;
+  policyCount?: number;
+  officerCount?: number;
+  swaps?: string | unknown[];
+  blueprint?: string | Record<string, unknown>;
+}
+
 /**
  * Process Agent Card effects when used for agent placement (Section 8.1)
  * Handles both Starter Deck Agent Cards and Market Agent Cards per Appendix H
  */
-function processCardEffect(state, playerId, card, _locationId) {
-  const playerState = state.players[playerId];
+function processCardEffect(state: GameState, playerId: string, card: Card, _locationId: string): CardEffectResult {
+  const workerState = state as WorkerState;
+  const playerState = state.players[playerId] as WorkerPlayerState;
   const effect = card.effect;
 
   if (!effect || effect === 'None' || effect === 'No action effect') {
@@ -42,7 +125,7 @@ function processCardEffect(state, playerId, card, _locationId) {
         playerState.discardPile = [];
       }
       if (playerState.deck.length > 0) {
-        const drawn = playerState.deck.pop();
+        const drawn = playerState.deck.pop()!;
         playerState.hand.push(drawn);
         return { success: true, message: `Drew ${drawn.name}` };
       }
@@ -64,11 +147,11 @@ function processCardEffect(state, playerId, card, _locationId) {
     case 'Look at top Hazard':
       // Navigator (starter): Peek at top hazard card (GAP-049)
       {
-        const hazardDeck = playerState.hazardDeck || [];
+        const hazardDeck = (playerState as PlayerState & { hazardDeck?: unknown[] }).hazardDeck || [];
         if (hazardDeck.length === 0) {
           return { success: true, message: 'Hazard deck is empty' };
         }
-        const topHazard = hazardDeck[0];
+        const topHazard = hazardDeck[0] as { name?: string; type?: string };
         playerState.peekedHazard = { ...topHazard };
         return { success: true, message: `Peeked at hazard: ${topHazard.name || topHazard.type}` };
       }
@@ -85,7 +168,7 @@ function processCardEffect(state, playerId, card, _locationId) {
 
     case '+1 ship stat':
       // Helmsman: Temporary ship stat bonus
-      playerState.launchBonuses.statBonus = (playerState.launchBonuses.statBonus || 0) + 1;
+      playerState.launchBonuses!.statBonus = ((playerState.launchBonuses!.statBonus as number) || 0) + 1;
       return { success: true, message: '+1 ship stat for next launch' };
 
     // === MARKET CARD EFFECTS (GAP-050) ===
@@ -93,27 +176,27 @@ function processCardEffect(state, playerId, card, _locationId) {
     // Technical Personnel
     case '+2 Reliability for this launch':
       // Test Pilot / Safety Inspector: +2 Reliability for this launch
-      playerState.launchBonuses.reliability = (playerState.launchBonuses.reliability || 0) + 2;
+      playerState.launchBonuses!.reliability = ((playerState.launchBonuses!.reliability as number) || 0) + 2;
       return { success: true, message: '+2 Reliability for this launch' };
 
     case '+1 Range for this launch':
       // Navigator (market): +1 Range for this launch
-      playerState.launchBonuses.range = (playerState.launchBonuses.range || 0) + 1;
+      playerState.launchBonuses!.range = ((playerState.launchBonuses!.range as number) || 0) + 1;
       return { success: true, message: '+1 Range for this launch' };
 
     case 'Ignore Weather hazards this launch':
       // Weather Expert: Ignore Weather hazards this launch
-      playerState.launchBonuses.ignoreWeather = true;
+      playerState.launchBonuses!.ignoreWeather = true;
       return { success: true, message: 'Ignore Weather hazards this launch' };
 
     case 'Install Gas upgrade: -1 Weight':
       // Gas Engineer: Gas upgrades cost -1 Weight
-      playerState.launchBonuses.gasWeightReduction = 1;
+      playerState.launchBonuses!.gasWeightReduction = 1;
       return { success: true, message: 'Gas upgrades -1 Weight' };
 
     case 'Install Propulsion upgrade: -1 Weight':
       // Engine Specialist: Propulsion upgrades cost -1 Weight
-      playerState.launchBonuses.propulsionWeightReduction = 1;
+      playerState.launchBonuses!.propulsionWeightReduction = 1;
       return { success: true, message: 'Propulsion upgrades -1 Weight' };
 
     case '-2 Hull Cost':
@@ -124,7 +207,7 @@ function processCardEffect(state, playerId, card, _locationId) {
 
     case 'Install Structure upgrade: +1 Lift':
       // Structural Engineer: Structure upgrades give +1 Lift
-      playerState.launchBonuses.structureLiftBonus = 1;
+      playerState.launchBonuses!.structureLiftBonus = 1;
       return { success: true, message: 'Structure upgrades +1 Lift' };
 
     case '-2 Lifting Gas cost':
@@ -147,7 +230,7 @@ function processCardEffect(state, playerId, card, _locationId) {
     case 'Gain 8; Combat missions: +2 Income':
       // Combat Veteran: Gain 8, Combat missions give +2 Income
       playerState.cash += 8;
-      playerState.launchBonuses.combatIncomeBonus = 2;
+      playerState.launchBonuses!.combatIncomeBonus = 2;
       return { success: true, message: 'Gained 8; +2 Income on combat missions' };
 
     case 'Take 2 Ministry actions':
@@ -157,7 +240,7 @@ function processCardEffect(state, playerId, card, _locationId) {
 
     case '+2 Income from this route':
       // Shipping Tycoon: +2 Income from this route
-      playerState.launchBonuses.routeIncomeBonus = 2;
+      playerState.launchBonuses!.routeIncomeBonus = 2;
       return { success: true, message: '+2 Income from this route' };
 
     case 'Loan gives 35 instead of 30':
@@ -174,7 +257,7 @@ function processCardEffect(state, playerId, card, _locationId) {
 
     case 'Go first in turn order next round':
       // Bureaucrat: Go first in turn order next round
-      state.nextRoundFirstPlayer = playerId;
+      workerState.nextRoundFirstPlayer = playerId;
       return { success: true, message: 'Go first in turn order next round' };
 
     case '-1 per crew recruited this action':
@@ -185,7 +268,7 @@ function processCardEffect(state, playerId, card, _locationId) {
 
     case 'Claim route even if tied':
       // Customs Official: Claim route even if tied
-      playerState.launchBonuses.tiebreaker = true;
+      playerState.launchBonuses!.tiebreaker = true;
       return { success: true, message: 'Claim route even if tied' };
 
     // Research Personnel
@@ -225,7 +308,7 @@ function processCardEffect(state, playerId, card, _locationId) {
 
     case '+1 Luxury stat for this launch':
       // Luxury Travel Agency: +1 Luxury stat for this launch
-      playerState.launchBonuses.luxury = (playerState.launchBonuses.luxury || 0) + 1;
+      playerState.launchBonuses!.luxury = ((playerState.launchBonuses!.luxury as number) || 0) + 1;
       return { success: true, message: '+1 Luxury for this launch' };
 
     case 'Recruit 1 Officer free':
@@ -247,23 +330,25 @@ function processCardEffect(state, playerId, card, _locationId) {
 /**
  * Execute the action associated with a Ground Board location
  * Per Section 5.1: Actions execute IMMEDIATELY when placing an agent
- *
- * @param {Object} state - Game state
- * @param {string} playerId - Acting player ID
- * @param {string} locationId - Location ID
- * @param {Object} _card - Card used (unused for most locations)
- * @param {Object} options - Additional options (e.g., buildCount for construction_hall)
  */
-function executeLocationAction(state, playerId, locationId, _card, options = {}) {
-  const playerState = state.players[playerId];
+function executeLocationAction(
+  state: GameState,
+  playerId: string,
+  locationId: string,
+  _card: Card,
+  options: LocationActionOptions = {}
+): LocationActionResult {
+  const workerState = state as WorkerState;
+  const playerState = state.players[playerId] as WorkerPlayerState;
 
   // Debug: Log what locationId we received
+  state.log = state.log || [];
   state.log.push({
     timestamp: new Date().toISOString(),
     message: `[DEBUG] executeLocationAction called with locationId="${locationId}" (type: ${typeof locationId})`,
     playerId,
     type: 'debug'
-  });
+  } as LogEntry);
 
   switch (locationId) {
     case 'research_institute': {
@@ -275,7 +360,7 @@ function executeLocationAction(state, playerId, locationId, _card, options = {})
         processUpgradeResearchLevel(state, playerId, { levels, _internal: true });
         return { success: true, message: `Upgraded Research Level by ${levels}` };
       } catch (error) {
-        return { success: false, error: error.message };
+        return { success: false, error: (error as Error).message };
       }
     }
 
@@ -292,7 +377,7 @@ function executeLocationAction(state, playerId, locationId, _card, options = {})
           });
           return { success: true, message: 'Blueprint updated' };
         } catch (error) {
-          return { success: false, error: error.message };
+          return { success: false, error: (error as Error).message };
         }
       }
 
@@ -301,9 +386,9 @@ function executeLocationAction(state, playerId, locationId, _card, options = {})
         return { success: true, message: 'Visited Design Bureau (no modifications)' };
       }
 
-      let swapsArray;
+      let swapsArray: Array<{ slotType: string; slotIndex: number; action: string; upgradeId?: string }>;
       try {
-        swapsArray = typeof swapsJson === 'string' ? JSON.parse(swapsJson) : swapsJson;
+        swapsArray = typeof swapsJson === 'string' ? JSON.parse(swapsJson) : swapsJson as typeof swapsArray;
       } catch (_e) { // eslint-disable-line sonarjs/no-ignored-exceptions -- User-facing error returned
         return { success: false, error: 'Invalid swaps format - expected JSON array' };
       }
@@ -314,7 +399,7 @@ function executeLocationAction(state, playerId, locationId, _card, options = {})
 
       // Convert swaps to declarative blueprint format
       const oldBlueprint = playerState.blueprint;
-      const newBlueprint = {
+      const newBlueprint: Record<string, (string | null)[]> = {
         frameSlots: [...(oldBlueprint.frameSlots || [])],
         fabricSlots: [...(oldBlueprint.fabricSlots || [])],
         driveSlots: [...(oldBlueprint.driveSlots || [])],
@@ -327,7 +412,7 @@ function executeLocationAction(state, playerId, locationId, _card, options = {})
         if (swap.slotIndex < 0 || swap.slotIndex >= newBlueprint[slotKey].length) continue;
 
         if (swap.action === 'install') {
-          newBlueprint[slotKey][swap.slotIndex] = swap.upgradeId;
+          newBlueprint[slotKey][swap.slotIndex] = swap.upgradeId || null;
         } else if (swap.action === 'remove') {
           newBlueprint[slotKey][swap.slotIndex] = null;
         }
@@ -340,7 +425,7 @@ function executeLocationAction(state, playerId, locationId, _card, options = {})
         });
         return { success: true, message: 'Blueprint updated via swaps' };
       } catch (error) {
-        return { success: false, error: error.message };
+        return { success: false, error: (error as Error).message };
       }
     }
 
@@ -352,7 +437,7 @@ function executeLocationAction(state, playerId, locationId, _card, options = {})
         message: `[DEBUG] construction_hall case hit, buildCount=${buildCount}`,
         playerId,
         type: 'debug'
-      });
+      } as LogEntry);
       try {
         // Call processBuildShip with _internal flag to bypass validation
         // (agent placement already happened, so we're authorized)
@@ -361,19 +446,19 @@ function executeLocationAction(state, playerId, locationId, _card, options = {})
       } catch (error) {
         state.log.push({
           timestamp: new Date().toISOString(),
-          message: `[DEBUG] construction_hall build error: ${error.message}`,
+          message: `[DEBUG] construction_hall build error: ${(error as Error).message}`,
           playerId,
           type: 'debug'
-        });
-        return { success: false, error: error.message };
+        } as LogEntry);
+        return { success: false, error: (error as Error).message };
       }
     }
 
     case 'launchpad': {
       // Launchpad is a multi-step location - enables multiple launches
       // Set launchpadActive and DON'T advance turn until NO_MORE_LAUNCHES is called
-      state.launchpadActive = state.launchpadActive || {};
-      state.launchpadActive[playerId] = true;
+      workerState.launchpadActive = workerState.launchpadActive || {};
+      workerState.launchpadActive[playerId] = true;
 
       return {
         success: true,
@@ -392,7 +477,7 @@ function executeLocationAction(state, playerId, locationId, _card, options = {})
         processRecruitCrew(state, playerId, { crewType, count: crewCount, _internal: true });
         return { success: true, message: `Recruited ${crewCount} ${crewType}(s)` };
       } catch (error) {
-        return { success: false, error: error.message };
+        return { success: false, error: (error as Error).message };
       }
     }
 
@@ -400,10 +485,10 @@ function executeLocationAction(state, playerId, locationId, _card, options = {})
       // Per Section 5.1: Execute action immediately when placing agent
       try {
         processUpgradeOfficerIncome(state, playerId, { _internal: true });
-        const newOfficerIncome = playerState.officerIncome || 0;
+        const newOfficerIncome = (playerState as PlayerState & { officerIncome?: number }).officerIncome || 0;
         return { success: true, message: `Upgraded Officer Income to ${newOfficerIncome}/round` };
       } catch (error) {
-        return { success: false, error: error.message };
+        return { success: false, error: (error as Error).message };
       }
     }
 
@@ -411,10 +496,10 @@ function executeLocationAction(state, playerId, locationId, _card, options = {})
       // Per Section 5.1: Execute action immediately when placing agent
       try {
         processUpgradeEngineerIncome(state, playerId, { _internal: true });
-        const newEngineerIncome = playerState.engineerIncome || 1;
+        const newEngineerIncome = (playerState as PlayerState & { engineerIncome?: number }).engineerIncome || 1;
         return { success: true, message: `Upgraded Engineer Income to ${newEngineerIncome}/round` };
       } catch (error) {
-        return { success: false, error: error.message };
+        return { success: false, error: (error as Error).message };
       }
     }
 
@@ -431,24 +516,24 @@ function executeLocationAction(state, playerId, locationId, _card, options = {})
         processGovernmentLiaison(state, playerId, { officerCount, _internal: true });
         return { success: true, message: `Spent ${officerCount} officer(s) for +${officerCount} income` };
       } catch (error) {
-        return { success: false, error: error.message };
+        return { success: false, error: (error as Error).message };
       }
     }
 
     case 'ministry': {
-      state.workerPlacement.ministryVisitors.push(playerId);
+      workerState.workerPlacement.ministryVisitors.push(playerId);
       // GAP-081: Set persistent First Player token when visiting Ministry (Section 6.9)
-      state.firstPlayer = playerId;
+      (state as GameState & { firstPlayer?: string }).firstPlayer = playerId;
 
       // Draw 2 cards to temporary storage (player must choose which to discard)
-      const drawnCards = [];
+      const drawnCards: Card[] = [];
       for (let i = 0; i < 2; i++) {
         if (playerState.deck.length === 0 && playerState.discardPile.length > 0) {
           playerState.deck = shuffleArray([...playerState.discardPile]);
           playerState.discardPile = [];
         }
         if (playerState.deck.length > 0) {
-          drawnCards.push(playerState.deck.pop());
+          drawnCards.push(playerState.deck.pop()!);
         }
       }
 
@@ -460,7 +545,7 @@ function executeLocationAction(state, playerId, locationId, _card, options = {})
         message: `Ministry: Drew ${drawnCards.length} cards. Choose one to discard with DISCARD_MINISTRY_CARD.`,
         playerId,
         type: 'action'
-      });
+      } as LogEntry);
 
       // Reduce Helium Market Track by 1 step
       reduceHeliumMarket(state, 1);
@@ -469,7 +554,7 @@ function executeLocationAction(state, playerId, locationId, _card, options = {})
         message: `Ministry: Helium price reduced to £${state.gasMarket.helium}`,
         playerId,
         type: 'action'
-      });
+      } as LogEntry);
 
       // Multi-step flow: player must call DISCARD_MINISTRY_CARD
       return {
@@ -489,7 +574,7 @@ function executeLocationAction(state, playerId, locationId, _card, options = {})
         processBuyGas(state, playerId, { gasType, amount: gasAmount, _internal: true });
         return { success: true, message: `Bought ${gasAmount} ${gasType}` };
       } catch (error) {
-        return { success: false, error: error.message };
+        return { success: false, error: (error as Error).message };
       }
     }
 
@@ -497,21 +582,21 @@ function executeLocationAction(state, playerId, locationId, _card, options = {})
       // Per Section 5.1: Execute action immediately when placing agent
       try {
         processBuyInsurance(state, playerId, { _internal: true });
-        const policies = playerState.insurance || 0;
+        const policies = (playerState as PlayerState & { insurance?: number }).insurance || 0;
         return { success: true, message: `Purchased insurance policy (${policies} total)` };
       } catch (error) {
-        return { success: false, error: error.message };
+        return { success: false, error: (error as Error).message };
       }
     }
 
     case 'weather_bureau': {
-      if (playerState.cash < WEATHER_BUREAU_COST) {
+      if (playerState.cash < (WEATHER_BUREAU_COST as number)) {
         return { success: false, message: `Not enough cash for Weather Bureau (need £${WEATHER_BUREAU_COST})` };
       }
 
-      playerState.cash -= WEATHER_BUREAU_COST;
+      playerState.cash -= WEATHER_BUREAU_COST as number;
 
-      const hazardDeck = playerState.hazardDeck || [];
+      const hazardDeck = (playerState as PlayerState & { hazardDeck?: Array<{ type: string; difficulty: number }> }).hazardDeck || [];
       if (hazardDeck.length > 0) {
         const topHazard = hazardDeck[0];
         playerState.peekedHazard = { ...topHazard };
@@ -521,7 +606,7 @@ function executeLocationAction(state, playerId, locationId, _card, options = {})
           message: `Weather Bureau: Peeked at top hazard (${topHazard.type}, difficulty ${topHazard.difficulty}). Choose KEEP_HAZARD or DISCARD_HAZARD.`,
           playerId,
           type: 'action'
-        });
+        } as LogEntry);
 
         // Multi-step flow: player must call KEEP_HAZARD or DISCARD_HAZARD
         return {
@@ -539,7 +624,7 @@ function executeLocationAction(state, playerId, locationId, _card, options = {})
         message: `[DEBUG] default case hit, locationId=${locationId}`,
         playerId,
         type: 'debug'
-      });
+      } as LogEntry);
       return { error: `Unknown location: ${locationId}` };
   }
 }
@@ -547,13 +632,14 @@ function executeLocationAction(state, playerId, locationId, _card, options = {})
 /**
  * Check if player has any cards that match available locations
  */
-function hasPlayableCards(state, playerId) {
+function hasPlayableCards(state: GameState, playerId: string): boolean {
   const playerState = state.players[playerId];
   const hand = playerState.hand || [];
   const placements = state.groundBoard.placements || {};
 
   // Get list of unoccupied locations
-  const availableLocations = Object.keys(GROUND_BOARD_LOCATIONS)
+  const locations = GROUND_BOARD_LOCATIONS as Record<string, GroundBoardLocation>;
+  const availableLocations = Object.keys(locations)
     .filter(locId => !placements[locId]);
 
   // Check if any card in hand matches any available location
@@ -571,14 +657,10 @@ function hasPlayableCards(state, playerId) {
 
 /**
  * Place an agent on a Ground Board location
- *
- * @param {Object} state - Game state (mutated)
- * @param {string} playerId - Acting player ID
- * @param {Object} data - Action data { locationId, cardIndex }
- * @returns {Object} { newState } or throws error
  */
-function processPlaceAgent(state, playerId, data) {
+function processPlaceAgent(state: GameState, playerId: string, data: PlaceAgentData): ActionResult {
   const { locationId, cardIndex, buildCount, gasType, gasAmount, crewType, crewCount, levels, policyCount, officerCount, swaps, blueprint } = data;
+  const workerState = state as WorkerState;
   const playerState = state.players[playerId];
 
   // Validate phase
@@ -603,7 +685,8 @@ function processPlaceAgent(state, playerId, data) {
   }
 
   // Check if location is valid
-  const location = GROUND_BOARD_LOCATIONS[locationId];
+  const locations = GROUND_BOARD_LOCATIONS as Record<string, GroundBoardLocation>;
+  const location = locations[locationId];
   if (!location) {
     throw new GameRuleError('Invalid location');
   }
@@ -637,18 +720,19 @@ function processPlaceAgent(state, playerId, data) {
   // Place the agent
   state.groundBoard.placements[locationId] = {
     playerId,
-    cardUsed: discardedCard.name
+    cardUsed: discardedCard
   };
 
   // Decrement available agents
   playerState.agentsRemaining--;
 
+  state.log = state.log || [];
   state.log.push({
     timestamp: new Date().toISOString(),
     message: `Placed agent at ${location.name} using ${discardedCard.name}`,
     playerId,
     type: 'action'
-  });
+  } as LogEntry);
 
   // Process card effects (Section 8.1)
   const cardEffectResult = processCardEffect(state, playerId, discardedCard, locationId);
@@ -658,7 +742,7 @@ function processPlaceAgent(state, playerId, data) {
       message: `Card effect: ${cardEffectResult.message}`,
       playerId,
       type: 'action'
-    });
+    } as LogEntry);
   }
 
   // Execute the location action immediately (Section 5.1)
@@ -668,21 +752,21 @@ function processPlaceAgent(state, playerId, data) {
     message: `[DEBUG-BEFORE] About to call executeLocationAction with locationId="${locationId}"`,
     playerId,
     type: 'debug'
-  });
+  } as LogEntry);
   const actionResult = executeLocationAction(state, playerId, locationId, discardedCard, { buildCount, gasType, gasAmount, crewType, crewCount, levels, policyCount, officerCount, swaps, blueprint });
   state.log.push({
     timestamp: new Date().toISOString(),
     message: `[DEBUG-AFTER] executeLocationAction returned: ${JSON.stringify(actionResult)}`,
     playerId,
     type: 'debug'
-  });
+  } as LogEntry);
   if (actionResult.error) {
     state.log.push({
       timestamp: new Date().toISOString(),
       message: `Location action failed: ${actionResult.error}`,
       playerId,
       type: 'warning'
-    });
+    } as LogEntry);
   }
 
   // Special handling for launchpad - don't advance turn until NO_MORE_LAUNCHES is called
@@ -693,12 +777,12 @@ function processPlaceAgent(state, playerId, data) {
       message: 'Ready to launch ships. Call LAUNCH_SHIP or NO_MORE_LAUNCHES.',
       playerId,
       type: 'system'
-    });
+    } as LogEntry);
     return { newState: state };
   }
 
   // Mark that player has taken an action this turn (for Undo/End Turn UI)
-  playerState.hasTakenActionThisTurn = true;
+  (playerState as PlayerState & { hasTakenActionThisTurn?: boolean }).hasTakenActionThisTurn = true;
 
   // Auto-advance to next placer (turn order enforcement)
   advanceToNextPlacer(state);
@@ -711,26 +795,32 @@ function processPlaceAgent(state, playerId, data) {
 
 /**
  * Recall all agents (end of round)
- *
- * @param {Object} state - Game state (mutated)
- * @param {string} playerId - Acting player ID
- * @param {Object} data - Action data (unused)
- * @returns {Object} { newState } or throws error
  */
-function processRecallAgents(state, _playerId, _data) {
+function processRecallAgents(state: GameState, _playerId: string, _data: unknown): ActionResult {
   if (state.groundBoard) {
     state.groundBoard.placements = {};
   }
 
+  state.log = state.log || [];
   state.log.push({
     timestamp: new Date().toISOString(),
     message: 'All agents recalled',
     type: 'system'
-  });
+  } as LogEntry);
 
   return { newState: state };
 }
 
+export {
+  processPlaceAgent,
+  // Note: processPass removed - players must use REVEAL to exit worker placement
+  processRecallAgents,
+  processCardEffect,
+  executeLocationAction,
+  hasPlayableCards
+};
+
+// CommonJS compatibility
 module.exports = {
   processPlaceAgent,
   // Note: processPass removed - players must use REVEAL to exit worker placement

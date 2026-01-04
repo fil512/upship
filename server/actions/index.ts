@@ -3,6 +3,8 @@
  * Central entry point for all game action processing
  */
 
+import type { GameState } from '@upship/api';
+
 const { GameRuleError } = require('../errors');
 
 // Import all action processors
@@ -22,11 +24,17 @@ const { processCalculateScores } = require('./scoring');
 const { processReveal } = require('./reveal');
 const { processBuyMarketCardTentative, processAcquireTechCardTentative, processUndoMarketPurchase } = require('./marketPurchase');
 
+interface ActionResult {
+  newState: GameState;
+}
+
+type ActionHandler = (state: GameState, playerId: string, data?: unknown) => ActionResult;
+
 /**
  * Action handler registry
  * Maps action types to their processor functions
  */
-const ACTION_HANDLERS = {
+const ACTION_HANDLERS: Record<string, ActionHandler> = {
   // Turn management
   END_TURN: processEndTurn,
 
@@ -106,14 +114,14 @@ const ACTION_HANDLERS = {
 /**
  * Process a game action
  *
- * @param {Object} state - Current game state (will be deep cloned)
- * @param {string} playerId - ID of the acting player
- * @param {string} actionType - Type of action to perform
- * @param {Object} data - Action-specific data
- * @returns {Object} { newState } - The new game state after action
- * @throws {GameRuleError} If action is invalid or cannot be performed
+ * @param state - Current game state (will be deep cloned)
+ * @param playerId - ID of the acting player
+ * @param actionType - Type of action to perform
+ * @param data - Action-specific data
+ * @returns The new game state after action
+ * @throws GameRuleError If action is invalid or cannot be performed
  */
-function processAction(state, playerId, actionType, data) {
+function processAction(state: GameState, playerId: string, actionType: string, data?: unknown): ActionResult {
   // Deep clone state to avoid mutations on error (structuredClone is faster than JSON.parse/stringify)
   const newState = structuredClone(state);
   const playerState = newState.players[playerId];
@@ -130,7 +138,7 @@ function processAction(state, playerId, actionType, data) {
   // SECURITY: Sanitize client data - strip internal flags that should only be set server-side
   // The _internal flag is used by location actions (e.g., gas_depot calling BUY_GAS)
   // and should never be accepted from client requests
-  const sanitizedData = data ? { ...data } : {};
+  const sanitizedData = data ? { ...(data as Record<string, unknown>) } : {};
   delete sanitizedData._internal;
 
   // Execute the action handler
@@ -140,23 +148,26 @@ function processAction(state, playerId, actionType, data) {
 
 /**
  * Get list of all registered action types
- *
- * @returns {string[]} Array of action type names
  */
-function getActionTypes() {
+function getActionTypes(): string[] {
   return Object.keys(ACTION_HANDLERS);
 }
 
 /**
  * Check if an action type is valid
- *
- * @param {string} actionType - Action type to check
- * @returns {boolean} True if action type is registered
  */
-function isValidActionType(actionType) {
+function isValidActionType(actionType: string): boolean {
   return actionType in ACTION_HANDLERS;
 }
 
+export {
+  processAction,
+  getActionTypes,
+  isValidActionType,
+  ACTION_HANDLERS
+};
+
+// CommonJS compatibility
 module.exports = {
   processAction,
   getActionTypes,

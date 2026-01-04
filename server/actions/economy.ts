@@ -3,30 +3,39 @@
  * TAKE_LOAN, BUY_INSURANCE, COLLECT_INCOME action processors
  */
 
+import type { GameState, PlayerState, LogEntry } from '@upship/api';
+
 const { GameRuleError } = require('../errors');
 const { MAX_LOANS, LOAN_AMOUNT, LOAN_INCOME_PENALTY, MAX_INSURANCE_POLICIES, MIN_INCOME } = require('../config/constants');
 
+interface ActionResult {
+  newState: GameState;
+}
+
+// Extended player state with economy properties
+type EconomyPlayerState = PlayerState & {
+  loans?: number;
+  insurance?: number;
+  officerIncome?: number;
+  engineerIncome?: number;
+};
+
 /**
  * Take a loan at The Bank
- *
- * @param {Object} state - Game state (mutated)
- * @param {string} playerId - Acting player ID
- * @param {Object} data - Action data (unused)
- * @returns {Object} { newState } or throws error
  */
-function processTakeLoan(state, playerId, _data) {
-  const playerState = state.players[playerId];
+function processTakeLoan(state: GameState, playerId: string, _data: unknown): ActionResult {
+  const playerState = state.players[playerId] as EconomyPlayerState;
 
   // Limit maximum loans to 2
   const currentLoans = playerState.loans || 0;
-  if (currentLoans >= MAX_LOANS) {
+  if (currentLoans >= (MAX_LOANS as number)) {
     throw new GameRuleError(`Maximum ${MAX_LOANS} loans allowed. Pay off existing debt first.`);
   }
 
   // Per Section 5.3: "If a loan would push you below -10, you cannot take it"
   const currentIncome = playerState.income || 0;
-  const newIncome = currentIncome - LOAN_INCOME_PENALTY;
-  if (newIncome < MIN_INCOME) {
+  const newIncome = currentIncome - (LOAN_INCOME_PENALTY as number);
+  if (newIncome < (MIN_INCOME as number)) {
     throw new GameRuleError(
       `Cannot take loan: Income would drop to ${newIncome}, below the debt limit of ${MIN_INCOME}. ` +
       `Current income: ${currentIncome}.`
@@ -34,10 +43,10 @@ function processTakeLoan(state, playerId, _data) {
   }
 
   // Give the player £30
-  playerState.cash += LOAN_AMOUNT;
+  playerState.cash += LOAN_AMOUNT as number;
 
   // Reduce income track by 3 (minimum -10 per Section 5.3)
-  playerState.income = Math.max(MIN_INCOME, currentIncome - LOAN_INCOME_PENALTY);
+  playerState.income = Math.max(MIN_INCOME as number, currentIncome - (LOAN_INCOME_PENALTY as number));
 
   // Track loan count for reference
   playerState.loans = currentLoans + 1;
@@ -47,9 +56,13 @@ function processTakeLoan(state, playerId, _data) {
     message: `Took loan ${playerState.loans}/${MAX_LOANS}: gained £${LOAN_AMOUNT}, income reduced by ${LOAN_INCOME_PENALTY}`,
     playerId,
     type: 'action'
-  });
+  } as LogEntry);
 
   return { newState: state };
+}
+
+interface InternalData {
+  _internal?: boolean;
 }
 
 /**
@@ -57,15 +70,10 @@ function processTakeLoan(state, playerId, _data) {
  *
  * Per Section 5.1: Location actions execute IMMEDIATELY when placing an agent.
  * Direct API calls are rejected - must go through PLACE_AGENT.
- *
- * @param {Object} state - Game state (mutated)
- * @param {string} playerId - Acting player ID
- * @param {Object} data - Action data { _internal }
- * @returns {Object} { newState } or throws error
  */
-function processBuyInsurance(state, playerId, data) {
+function processBuyInsurance(state: GameState, playerId: string, data: InternalData | undefined): ActionResult {
   const { _internal = false } = data || {};
-  const playerState = state.players[playerId];
+  const playerState = state.players[playerId] as EconomyPlayerState;
 
   // Validate that this is called through PLACE_AGENT (Section 5.1)
   if (!_internal) {
@@ -87,13 +95,13 @@ function processBuyInsurance(state, playerId, data) {
   // Track insurance policies
   const currentPolicies = playerState.insurance || 0;
 
-  if (currentPolicies >= MAX_INSURANCE_POLICIES) {
+  if (currentPolicies >= (MAX_INSURANCE_POLICIES as number)) {
     throw new GameRuleError(`Maximum ${MAX_INSURANCE_POLICIES} insurance policies`);
   }
 
   // Per Section 5.3 principle: Income cannot go below -10
   const currentIncome = playerState.income || 0;
-  if (currentIncome - 1 < MIN_INCOME) {
+  if (currentIncome - 1 < (MIN_INCOME as number)) {
     throw new GameRuleError(
       `Cannot buy insurance: Income would drop below the debt limit of ${MIN_INCOME}. ` +
       `Current income: ${currentIncome}.`
@@ -101,7 +109,7 @@ function processBuyInsurance(state, playerId, data) {
   }
 
   // Cost is -1 Income (permanent), minimum -10 per debt limit
-  playerState.income = Math.max(MIN_INCOME, currentIncome - 1);
+  playerState.income = Math.max(MIN_INCOME as number, currentIncome - 1);
   playerState.insurance = currentPolicies + 1;
 
   state.log.push({
@@ -109,7 +117,7 @@ function processBuyInsurance(state, playerId, data) {
     message: `Purchased insurance policy (${playerState.insurance}/${MAX_INSURANCE_POLICIES}). Income reduced by 1.`,
     playerId,
     type: 'action'
-  });
+  } as LogEntry);
 
   return { newState: state };
 }
@@ -117,20 +125,15 @@ function processBuyInsurance(state, playerId, data) {
 /**
  * Collect income at end of round
  * Note: Income is now auto-collected when entering income phase
- *
- * @param {Object} state - Game state (mutated)
- * @param {string} playerId - Acting player ID
- * @param {Object} data - Action data (unused)
- * @returns {Object} { newState } or throws error
  */
-function processCollectIncome(state, playerId, _data) {
+function processCollectIncome(state: GameState, playerId: string, _data: unknown): ActionResult {
   // Income is now auto-collected when entering income phase
-  // This action is kept for backwards compatibility but restricted to income phase
-  if (state.phase !== 'income') {
-    throw new GameRuleError('Can only collect income during the Income phase (income is auto-collected when the phase begins)');
+  // This action is kept for backwards compatibility but restricted to income_cleanup phase
+  if (state.phase !== 'income_cleanup') {
+    throw new GameRuleError('Can only collect income during the Income/Cleanup phase (income is auto-collected when the phase begins)');
   }
 
-  const playerState = state.players[playerId];
+  const playerState = state.players[playerId] as EconomyPlayerState;
 
   // Collect cash from income track
   const incomeGained = playerState.income;
@@ -148,11 +151,18 @@ function processCollectIncome(state, playerId, _data) {
     message: `Collected income: £${incomeGained}, +${officersGained} Officer(s), +${engineersGained} Engineer(s)`,
     playerId,
     type: 'income'
-  });
+  } as LogEntry);
 
   return { newState: state };
 }
 
+export {
+  processTakeLoan,
+  processBuyInsurance,
+  processCollectIncome
+};
+
+// CommonJS compatibility
 module.exports = {
   processTakeLoan,
   processBuyInsurance,

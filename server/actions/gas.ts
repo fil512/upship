@@ -3,8 +3,20 @@
  * BUY_GAS action processor
  */
 
+import type { GameState, PlayerState, LogEntry } from '@upship/api';
+
 const { GameRuleError, InsufficientFundsError } = require('../errors');
 const { advanceHeliumMarket } = require('./helpers/marketHelpers');
+
+interface BuyGasData {
+  gasType: 'hydrogen' | 'helium';
+  amount: number;
+  _internal?: boolean;
+}
+
+interface ActionResult {
+  newState: GameState;
+}
 
 /**
  * Buy gas cubes from the gas depot
@@ -13,13 +25,8 @@ const { advanceHeliumMarket } = require('./helpers/marketHelpers');
  * This action should only be called:
  * 1. Internally from processPlaceAgent when placing at gas_depot
  * 2. NOT directly during reveal phase or without proper agent placement
- *
- * @param {Object} state - Game state (mutated)
- * @param {string} playerId - Acting player ID
- * @param {Object} data - Action data { gasType, amount, _internal }
- * @returns {Object} { newState } or throws error
  */
-function processBuyGas(state, playerId, data) {
+function processBuyGas(state: GameState, playerId: string, data: BuyGasData): ActionResult {
   const { gasType, amount, _internal = false } = data;
   const playerState = state.players[playerId];
 
@@ -53,7 +60,7 @@ function processBuyGas(state, playerId, data) {
   if (gasType === 'helium') {
     // Tech card IDs are lowercase (e.g., 'helium_handling')
     // Tech cards array may contain strings (IDs) or objects with id property
-    const hasHeliumHandling = playerState.techCards?.some(t =>
+    const hasHeliumHandling = playerState.techCards?.some((t: string | { id: string }) =>
       (typeof t === 'string' ? t : t.id) === 'helium_handling'
     );
     if (!hasHeliumHandling) {
@@ -64,16 +71,17 @@ function processBuyGas(state, playerId, data) {
   let price = state.gasMarket[gasType] * amount;
 
   // GAP-076: Reclamation System provides -£2 Lifting Gas cost per Appendix D
-  const hasReclamationSystem = playerState.blueprint?.componentSlots?.some(
-    comp => comp === 'reclamation_system' || comp?.id === 'reclamation_system'
+  const componentSlots = (playerState.blueprint as { componentSlots?: (string | { id: string } | null)[] })?.componentSlots;
+  const hasReclamationSystem = componentSlots?.some(
+    (comp: string | { id: string } | null) => comp === 'reclamation_system' || (comp && typeof comp === 'object' && comp.id === 'reclamation_system')
   );
   if (hasReclamationSystem) {
     price = Math.max(0, price - 2);
   }
 
   // GAP-077: Exhaust Condensers provides -£3 Helium cost per Appendix D (USA specialty)
-  const hasExhaustCondensers = playerState.blueprint?.componentSlots?.some(
-    comp => comp === 'exhaust_condensers' || comp?.id === 'exhaust_condensers'
+  const hasExhaustCondensers = componentSlots?.some(
+    (comp: string | { id: string } | null) => comp === 'exhaust_condensers' || (comp && typeof comp === 'object' && comp.id === 'exhaust_condensers')
   );
   if (hasExhaustCondensers && gasType === 'helium') {
     price = Math.max(0, price - 3);
@@ -99,9 +107,12 @@ function processBuyGas(state, playerId, data) {
     message: `Bought ${amount} ${gasType} for £${price}`,
     playerId,
     type: 'action'
-  });
+  } as LogEntry);
 
   return { newState: state };
 }
 
+export { processBuyGas };
+
+// CommonJS compatibility
 module.exports = { processBuyGas };

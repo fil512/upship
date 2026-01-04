@@ -178,7 +178,7 @@ describe('processAction', () => {
 
   describe('COLLECT_INCOME', () => {
     it('should add income and crew during income phase', () => {
-      state.phase = 'income';
+      state.phase = 'income_cleanup';
       state.players['player-1'].officerIncome = 1;
       state.players['player-1'].engineerIncome = 2;
 

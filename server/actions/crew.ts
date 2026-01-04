@@ -3,6 +3,8 @@
  * RECRUIT_CREW, UPGRADE_OFFICER_INCOME, UPGRADE_ENGINEER_INCOME action processors
  */
 
+import type { GameState, PlayerState, LogEntry } from '@upship/api';
+
 const { GameRuleError, InsufficientFundsError } = require('../errors');
 const {
   OFFICER_RECRUIT_COST,
@@ -11,18 +13,30 @@ const {
   TECHNICAL_INSTITUTE_COST
 } = require('../config/constants');
 
+interface ActionResult {
+  newState: GameState;
+}
+
+// Extended player state with crew income properties
+type CrewPlayerState = PlayerState & {
+  officerIncome?: number;
+  engineerIncome?: number;
+  agents?: number;
+};
+
+interface RecruitData {
+  crewType: 'officer' | 'engineer';
+  count?: number;
+  _internal?: boolean;
+}
+
 /**
  * Recruit crew at the Academy
  *
  * Per Section 5.1: Location actions execute IMMEDIATELY when placing an agent.
  * Direct API calls are rejected - must go through PLACE_AGENT with crewType/crewCount params.
- *
- * @param {Object} state - Game state (mutated)
- * @param {string} playerId - Acting player ID
- * @param {Object} data - Action data { crewType, count, _internal }
- * @returns {Object} { newState } or throws error
  */
-function processRecruitCrew(state, playerId, data) {
+function processRecruitCrew(state: GameState, playerId: string, data: RecruitData): ActionResult {
   const { crewType, count = 1, _internal = false } = data;
   const playerState = state.players[playerId];
 
@@ -43,9 +57,9 @@ function processRecruitCrew(state, playerId, data) {
     }
   }
 
-  const costs = {
-    officer: OFFICER_RECRUIT_COST,
-    engineer: ENGINEER_RECRUIT_COST
+  const costs: Record<string, number> = {
+    officer: OFFICER_RECRUIT_COST as number,
+    engineer: ENGINEER_RECRUIT_COST as number
   };
 
   if (!costs[crewType]) {
@@ -71,9 +85,14 @@ function processRecruitCrew(state, playerId, data) {
     message: `Recruited ${count} ${crewType}(s) for £${totalCost}`,
     playerId,
     type: 'action'
-  });
+  } as LogEntry);
 
   return { newState: state };
+}
+
+interface InternalData {
+  levels?: number;
+  _internal?: boolean;
 }
 
 /**
@@ -82,15 +101,10 @@ function processRecruitCrew(state, playerId, data) {
  *
  * Per Section 5.1: Location actions execute IMMEDIATELY when placing an agent.
  * Direct API calls are rejected - must go through PLACE_AGENT with levels param.
- *
- * @param {Object} state - Game state (mutated)
- * @param {string} playerId - Acting player ID
- * @param {Object} data - Action data { levels, _internal }
- * @returns {Object} { newState } or throws error
  */
-function processUpgradeOfficerIncome(state, playerId, data) {
+function processUpgradeOfficerIncome(state: GameState, playerId: string, data: InternalData | undefined): ActionResult {
   const { _internal = false } = data || {};
-  const playerState = state.players[playerId];
+  const playerState = state.players[playerId] as CrewPlayerState;
 
   // Validate that this is called through PLACE_AGENT (Section 5.1)
   if (!_internal) {
@@ -109,11 +123,11 @@ function processUpgradeOfficerIncome(state, playerId, data) {
     }
   }
 
-  if (playerState.cash < FLIGHT_SCHOOL_COST) {
-    throw new InsufficientFundsError(FLIGHT_SCHOOL_COST, playerState.cash);
+  if (playerState.cash < (FLIGHT_SCHOOL_COST as number)) {
+    throw new InsufficientFundsError(FLIGHT_SCHOOL_COST as number, playerState.cash);
   }
 
-  playerState.cash -= FLIGHT_SCHOOL_COST;
+  playerState.cash -= FLIGHT_SCHOOL_COST as number;
   playerState.officerIncome = (playerState.officerIncome || 0) + 1;
 
   state.log.push({
@@ -121,17 +135,17 @@ function processUpgradeOfficerIncome(state, playerId, data) {
     message: `Upgraded Officer Income to ${playerState.officerIncome}/round for £${FLIGHT_SCHOOL_COST}`,
     playerId,
     type: 'action'
-  });
+  } as LogEntry);
 
   // Per Section 6.6: "When your Officer Income Track reaches +3, immediately gain your 3rd Agent."
-  if (playerState.officerIncome >= 3 && playerState.agents < 3) {
+  if (playerState.officerIncome >= 3 && (playerState.agents || 2) < 3) {
     playerState.agents = 3;
     state.log.push({
       timestamp: new Date().toISOString(),
       message: `${playerState.faction.toUpperCase()} earned their 3rd Agent from Officer training!`,
       playerId,
       type: 'milestone'
-    });
+    } as LogEntry);
   }
 
   return { newState: state };
@@ -142,15 +156,10 @@ function processUpgradeOfficerIncome(state, playerId, data) {
  *
  * Per Section 5.1: Location actions execute IMMEDIATELY when placing an agent.
  * Direct API calls are rejected - must go through PLACE_AGENT with levels param.
- *
- * @param {Object} state - Game state (mutated)
- * @param {string} playerId - Acting player ID
- * @param {Object} data - Action data { levels, _internal }
- * @returns {Object} { newState } or throws error
  */
-function processUpgradeEngineerIncome(state, playerId, data) {
+function processUpgradeEngineerIncome(state: GameState, playerId: string, data: InternalData | undefined): ActionResult {
   const { _internal = false } = data || {};
-  const playerState = state.players[playerId];
+  const playerState = state.players[playerId] as CrewPlayerState;
 
   // Validate that this is called through PLACE_AGENT (Section 5.1)
   if (!_internal) {
@@ -169,11 +178,11 @@ function processUpgradeEngineerIncome(state, playerId, data) {
     }
   }
 
-  if (playerState.cash < TECHNICAL_INSTITUTE_COST) {
-    throw new InsufficientFundsError(TECHNICAL_INSTITUTE_COST, playerState.cash);
+  if (playerState.cash < (TECHNICAL_INSTITUTE_COST as number)) {
+    throw new InsufficientFundsError(TECHNICAL_INSTITUTE_COST as number, playerState.cash);
   }
 
-  playerState.cash -= TECHNICAL_INSTITUTE_COST;
+  playerState.cash -= TECHNICAL_INSTITUTE_COST as number;
   playerState.engineerIncome = (playerState.engineerIncome || 1) + 1;
 
   state.log.push({
@@ -181,9 +190,14 @@ function processUpgradeEngineerIncome(state, playerId, data) {
     message: `Upgraded Engineer Income to ${playerState.engineerIncome}/round for £${TECHNICAL_INSTITUTE_COST}`,
     playerId,
     type: 'action'
-  });
+  } as LogEntry);
 
   return { newState: state };
+}
+
+interface GovernmentLiaisonData {
+  officerCount: number;
+  _internal?: boolean;
 }
 
 /**
@@ -194,14 +208,9 @@ function processUpgradeEngineerIncome(state, playerId, data) {
  * Effect: Increase your Income Track by 1 step per Officer spent
  *
  * Per Section 5.1: Location actions execute IMMEDIATELY when placing an agent.
- *
- * @param {Object} state - Game state (mutated)
- * @param {string} playerId - Acting player ID
- * @param {Object} data - Action data { officerCount, _internal }
- * @returns {Object} { newState } or throws error
  */
-function processGovernmentLiaison(state, playerId, data) {
-  const { officerCount, _internal = false } = data || {};
+function processGovernmentLiaison(state: GameState, playerId: string, data: GovernmentLiaisonData | undefined): ActionResult {
+  const { officerCount, _internal = false } = data || { officerCount: 0 };
   const playerState = state.players[playerId];
 
   // Validate that this is called through PLACE_AGENT (Section 5.1)
@@ -244,11 +253,19 @@ function processGovernmentLiaison(state, playerId, data) {
     message: `Government Liaison: Spent ${officerCount} officer(s) to increase income to ${playerState.income}`,
     playerId,
     type: 'action'
-  });
+  } as LogEntry);
 
   return { newState: state };
 }
 
+export {
+  processRecruitCrew,
+  processUpgradeOfficerIncome,
+  processUpgradeEngineerIncome,
+  processGovernmentLiaison
+};
+
+// CommonJS compatibility
 module.exports = {
   processRecruitCrew,
   processUpgradeOfficerIncome,

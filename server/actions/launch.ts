@@ -3,15 +3,97 @@
  * LAUNCH_SHIP, CLAIM_ROUTE action processors
  */
 
+import type { GameState, PlayerState, Ship, Route, LogEntry, HazardCard, Blueprint } from '@upship/api';
+
 const { GameRuleError, InsufficientFundsError } = require('../errors');
 const { TECH_TILES } = require('../data/upgrades');
 const { AGE_BASELINES, TECH_CARD_BAG } = require('../config/constants');
 const { shuffleArray } = require('../utils/random');
 
+interface ActionResult {
+  newState: GameState;
+}
+
+interface ShipStats {
+  range: number;
+  speed: number;
+  ceiling?: number;
+  reliability?: number;
+  luxury?: number;
+  [key: string]: number | undefined;
+}
+
+interface PendingHazard {
+  type: string;
+  name: string;
+  category: string;
+  challengeType: string;
+  difficulty: number;
+  flak: number;
+  engineerCost?: number;
+  noSave?: boolean;
+  hydrogenOnly?: boolean;
+  special?: string;
+  gasLossOnFailure?: boolean;
+  relevantStat: number;
+  statName: string;
+  engineersNeeded: number;
+  autoPass: boolean;
+  autoPassReason: string | null;
+  heliumFireImmunity: boolean;
+  conductiveCoveringImmunity: boolean;
+  fireResistantFabricAvailable: boolean;
+}
+
+// Extended types for launch operations
+type LaunchPlayerState = PlayerState & {
+  fireProtectionUsedThisAge?: boolean;
+  hazardDeck?: HazardCard[];
+  hazardDiscardPile?: HazardCard[];
+  launchBonuses?: Record<string, unknown>;
+};
+
+type LaunchShip = Omit<Ship, 'pendingHazard'> & {
+  stats?: ShipStats;
+  pendingRouteId?: string;
+  pendingCityChoice?: string;
+  pendingHazard?: PendingHazard;
+  gasType?: 'hydrogen' | 'helium';
+  launchedAge?: number;
+};
+
+type LaunchState = GameState & {
+  launchpadActive?: Record<string, boolean>;
+};
+
+interface NetworkValidationResult {
+  valid: boolean;
+  networkFee: number;
+  reason?: string;
+}
+
+interface ExtendedRoute extends Route {
+  claimed?: string;
+  claimedBy?: {
+    playerId: string;
+    shipId: string;
+    round: number;
+  };
+}
+
+interface MapState {
+  routes?: ExtendedRoute[];
+}
+
 /**
  * Get the auto-pass reason string based on flags
  */
-function getAutoPassReason(clearWeather, heliumFire, conductiveCovering, fireResistant) {
+function getAutoPassReason(
+  clearWeather: boolean,
+  heliumFire: boolean,
+  conductiveCovering: boolean,
+  fireResistant: boolean
+): string | null {
   if (clearWeather) return 'Clear Weather';
   if (heliumFire) return 'Fire Immunity (Helium)';
   if (conductiveCovering) return 'Conductive Covering';
@@ -25,19 +107,19 @@ function getAutoPassReason(clearWeather, heliumFire, conductiveCovering, fireRes
  *
  * Uses Union-Find algorithm to count connected components
  */
-function countPlayerNetworks(playerState, map) {
+function countPlayerNetworks(playerState: PlayerState | string, map: MapState): number {
   if (!map?.routes) return 0;
 
   // Also check if routes are claimed by player ID directly
-  const playerId = Object.keys(playerState || {}).includes('cash') ? null : playerState;
+  const playerId = typeof playerState === 'string' ? playerState : null;
 
   // Find routes claimed by this player
-  let claimedRoutes = [];
+  let claimedRoutes: ExtendedRoute[] = [];
   if (map.routes) {
     for (const route of map.routes) {
       // Route can be claimed by player ID string
       if (route.claimed && (route.claimed === playerId ||
-          (typeof route.claimed === 'string' && playerState))) {
+          (typeof route.claimed === 'string' && typeof playerState !== 'string'))) {
         // Check if this player owns it
         claimedRoutes.push(route);
       }
@@ -64,16 +146,16 @@ function countPlayerNetworks(playerState, map) {
   if (claimedRoutes.length === 1) return 1;
 
   // Build a city adjacency graph for this player's routes
-  const cityToRoutes = new Map();
+  const cityToRoutes = new Map<string, ExtendedRoute[]>();
   for (const route of claimedRoutes) {
     if (!cityToRoutes.has(route.from)) cityToRoutes.set(route.from, []);
     if (!cityToRoutes.has(route.to)) cityToRoutes.set(route.to, []);
-    cityToRoutes.get(route.from).push(route);
-    cityToRoutes.get(route.to).push(route);
+    cityToRoutes.get(route.from)!.push(route);
+    cityToRoutes.get(route.to)!.push(route);
   }
 
   // Use BFS to count connected components
-  const visitedRoutes = new Set();
+  const visitedRoutes = new Set<string>();
   let networkCount = 0;
 
   for (const route of claimedRoutes) {
@@ -81,10 +163,10 @@ function countPlayerNetworks(playerState, map) {
 
     // Start a new network
     networkCount++;
-    const queue = [route];
+    const queue: ExtendedRoute[] = [route];
 
     while (queue.length > 0) {
-      const current = queue.shift();
+      const current = queue.shift()!;
       if (visitedRoutes.has(current.id)) continue;
       visitedRoutes.add(current.id);
 
@@ -112,16 +194,15 @@ function countPlayerNetworks(playerState, map) {
  * - Age III: First ship may claim any route from Major Hub.
  *            Subsequent ships must connect to existing network OR
  *            pay £X to start new network where X = number of existing networks
- *
- * @returns {Object} { valid: boolean, networkFee: number, reason?: string }
  */
-function validateNetworkConnectivity(state, playerId, route) {
+function validateNetworkConnectivity(state: GameState, playerId: string, route: ExtendedRoute): NetworkValidationResult {
   // Only applies in Age III
   if (state.age !== 3) {
     return { valid: true, networkFee: 0 };
   }
 
-  const playerRoutes = (state.map?.routes || []).filter(r => r.claimed === playerId);
+  const mapState = state.map as MapState | undefined;
+  const playerRoutes = (mapState?.routes || []).filter(r => r.claimed === playerId);
 
   // First ship can claim any route from a Major Hub
   if (playerRoutes.length === 0) {
@@ -131,7 +212,7 @@ function validateNetworkConnectivity(state, playerId, route) {
   }
 
   // Check if this route connects to an existing network
-  const playerCities = new Set();
+  const playerCities = new Set<string>();
   for (const r of playerRoutes) {
     playerCities.add(r.from);
     playerCities.add(r.to);
@@ -146,7 +227,7 @@ function validateNetworkConnectivity(state, playerId, route) {
   }
 
   // Starting a new network - fee = number of existing networks
-  const existingNetworks = countPlayerNetworksById(state.map, playerId);
+  const existingNetworks = countPlayerNetworksById(mapState, playerId);
   const networkFee = existingNetworks;
 
   return {
@@ -159,7 +240,7 @@ function validateNetworkConnectivity(state, playerId, route) {
 /**
  * Count networks by player ID (helper for validateNetworkConnectivity)
  */
-function countPlayerNetworksById(map, playerId) {
+function countPlayerNetworksById(map: MapState | undefined, playerId: string): number {
   if (!map?.routes) return 0;
 
   const playerRoutes = map.routes.filter(r => r.claimed === playerId);
@@ -167,26 +248,26 @@ function countPlayerNetworksById(map, playerId) {
   if (playerRoutes.length === 1) return 1;
 
   // Build city adjacency
-  const cityToRoutes = new Map();
+  const cityToRoutes = new Map<string, ExtendedRoute[]>();
   for (const route of playerRoutes) {
     if (!cityToRoutes.has(route.from)) cityToRoutes.set(route.from, []);
     if (!cityToRoutes.has(route.to)) cityToRoutes.set(route.to, []);
-    cityToRoutes.get(route.from).push(route);
-    cityToRoutes.get(route.to).push(route);
+    cityToRoutes.get(route.from)!.push(route);
+    cityToRoutes.get(route.to)!.push(route);
   }
 
   // BFS to count connected components
-  const visitedRoutes = new Set();
+  const visitedRoutes = new Set<string>();
   let networkCount = 0;
 
   for (const route of playerRoutes) {
     if (visitedRoutes.has(route.id)) continue;
 
     networkCount++;
-    const queue = [route];
+    const queue: ExtendedRoute[] = [route];
 
     while (queue.length > 0) {
-      const current = queue.shift();
+      const current = queue.shift()!;
       if (visitedRoutes.has(current.id)) continue;
       visitedRoutes.add(current.id);
 
@@ -206,16 +287,16 @@ function countPlayerNetworksById(map, playerId) {
 /**
  * Calculate ship stats from blueprint
  */
-function calculateBlueprintStats(blueprint, age = 1) {
-  const stats = { ...AGE_BASELINES[age] };
+function calculateBlueprintStats(blueprint: Blueprint, age: number = 1): ShipStats {
+  const stats: ShipStats = { ...(AGE_BASELINES as Record<number, ShipStats>)[age] };
 
   // Add stats from tech tiles
-  const slots = ['frameSlots', 'fabricSlots', 'driveSlots', 'componentSlots'];
+  const slots = ['frameSlots', 'fabricSlots', 'driveSlots', 'componentSlots'] as const;
   for (const slotKey of slots) {
-    const slotArray = blueprint[slotKey] || [];
+    const slotArray = (blueprint as unknown as Record<string, (string | null)[]>)[slotKey] || [];
     for (const tileId of slotArray) {
       if (!tileId) continue;
-      const tile = TECH_TILES[tileId];
+      const tile = (TECH_TILES as Record<string, { stats?: Record<string, number> }>)[tileId];
       if (tile?.stats) {
         for (const [stat, value] of Object.entries(tile.stats)) {
           stats[stat] = (stats[stat] || 0) + value;
@@ -233,20 +314,17 @@ function calculateBlueprintStats(blueprint, age = 1) {
  * - Blaugas Fuel System: +1 Range (Section 13.1)
  * - Aerodynamic Hull Design: +2 Lift (GAP-066)
  * - Dynamic Lift Surfaces: +4 Lift (GAP-066)
- *
- * @param {Object} playerState - Player state with blueprint and technologies
- * @param {number} age - Current age (1, 2, or 3)
- * @returns {Object} Combined stats from blueprint and technologies
  */
-function calculateShipStats(playerState, age = 1) {
+function calculateShipStats(playerState: PlayerState, age: number = 1): ShipStats {
   const stats = calculateBlueprintStats(playerState.blueprint, age);
 
   // Add stats from tech cards
   const techCards = playerState.techCards || [];
-  const allCards = [...TECH_CARD_BAG[1], ...TECH_CARD_BAG[2], ...TECH_CARD_BAG[3]];
+  const techCardBag = TECH_CARD_BAG as Record<number, Array<{ id: string; stats?: Record<string, number> }>>;
+  const allCards = [...(techCardBag[1] || []), ...(techCardBag[2] || []), ...(techCardBag[3] || [])];
 
   for (const cardRef of techCards) {
-    const cardId = typeof cardRef === 'string' ? cardRef : cardRef?.id;
+    const cardId = typeof cardRef === 'string' ? cardRef : (cardRef as { id?: string })?.id;
     if (!cardId) continue;
 
     // Find card definition in TECH_CARD_BAG
@@ -264,14 +342,14 @@ function calculateShipStats(playerState, age = 1) {
 /**
  * Calculate weight from blueprint
  */
-function calculateBlueprintWeight(blueprint) {
+function calculateBlueprintWeight(blueprint: Blueprint): number {
   let weight = 0;
-  const slots = ['frameSlots', 'fabricSlots', 'driveSlots', 'componentSlots'];
+  const slots = ['frameSlots', 'fabricSlots', 'driveSlots', 'componentSlots'] as const;
   for (const slotKey of slots) {
-    const slotArray = blueprint[slotKey] || [];
+    const slotArray = (blueprint as unknown as Record<string, (string | null)[]>)[slotKey] || [];
     for (const tileId of slotArray) {
       if (!tileId) continue;
-      const tile = TECH_TILES[tileId];
+      const tile = (TECH_TILES as Record<string, { weight?: number }>)[tileId];
       if (tile?.weight) {
         weight += Math.abs(tile.weight);
       }
@@ -283,41 +361,48 @@ function calculateBlueprintWeight(blueprint) {
 /**
  * Calculate required gas cubes based on weight
  */
-function calculateRequiredGasCubes(blueprint) {
+function calculateRequiredGasCubes(blueprint: Blueprint): number {
   const weight = calculateBlueprintWeight(blueprint);
   // Minimum 1 gas cube, otherwise ceil(weight / 5)
   return Math.max(1, Math.ceil(weight / 5));
 }
 
 /**
- * Launch a ship from hangar
- *
- * @param {Object} state - Game state (mutated)
- * @param {string} playerId - Acting player ID
- * @param {Object} data - Action data { shipId, routeId, gasType }
- * @returns {Object} { newState } or throws error
- */
-/**
  * Check if player has Sparrowhawk Hangar upgrade installed (USA faction ability)
  * GAP-079: Per Appendix D, the UPGRADE sparrowhawk_hangar provides the ability
  * to bypass one route requirement per launch - not just owning the technology.
  * Per Section 13.3: "Trapeze Fighter System (ignore one route requirement per launch)"
  */
-function hasSparrowhawkHangar(playerState) {
+function hasSparrowhawkHangar(playerState: PlayerState): boolean {
   return playerState.blueprint?.componentSlots?.some(
-    comp => comp === 'sparrowhawk_hangar' || comp?.id === 'sparrowhawk_hangar'
-  );
+    comp => comp === 'sparrowhawk_hangar' || (comp && typeof comp === 'object' && (comp as { id?: string }).id === 'sparrowhawk_hangar')
+  ) || false;
 }
 
-function processLaunchShip(state, playerId, data) {
+interface LaunchShipData {
+  shipId: string;
+  routeId?: string;
+  missionId?: string;
+  gasType?: 'hydrogen' | 'helium';
+  retainGas?: boolean;
+  bypassRequirement?: 'range' | 'speed' | 'ceiling' | 'luxury' | null;
+  cityChoice?: string | null;
+  _internal?: boolean;
+}
+
+/**
+ * Launch a ship from hangar
+ */
+function processLaunchShip(state: GameState, playerId: string, data: LaunchShipData): ActionResult {
   const { shipId, routeId, missionId, gasType = 'hydrogen', retainGas = false, bypassRequirement = null, cityChoice = null, _internal = false } = data;
-  const playerState = state.players[playerId];
+  const launchState = state as LaunchState;
+  const playerState = state.players[playerId] as LaunchPlayerState;
   const BLAUGAS_COST = 2; // £2 to retain gas cubes per Section 13.1
 
   // Validate that this is called through PLACE_AGENT at launchpad (Section 5.1)
   if (!_internal) {
     // Check if launchpad is active for this player
-    if (!state.launchpadActive?.[playerId]) {
+    if (!launchState.launchpadActive?.[playerId]) {
       throw new GameRuleError(
         'LAUNCH_SHIP not allowed: You must place an agent at Launchpad to launch ships (Section 5.1). ' +
         'Use PLACE_AGENT with locationId "launchpad" first.'
@@ -343,7 +428,8 @@ function processLaunchShip(state, playerId, data) {
     throw new GameRuleError('Must specify a route to launch to (routeId required)');
   }
 
-  const route = state.map?.routes?.find(r => r.id === routeId);
+  const mapState = state.map as MapState | undefined;
+  const route = mapState?.routes?.find(r => r.id === routeId) as ExtendedRoute | undefined;
   if (!route) {
     throw new GameRuleError(`Route not found: ${routeId}`);
   }
@@ -381,8 +467,8 @@ function processLaunchShip(state, playerId, data) {
 
   // Validate Ceiling meets route ceiling requirement (unless bypassed)
   const routeCeiling = route.ceiling || 0;
-  if (bypassRequirement !== 'ceiling' && routeCeiling > 0 && stats.ceiling < routeCeiling) {
-    throw new GameRuleError(`Ship Ceiling (${stats.ceiling}) does not meet route ceiling requirement (${routeCeiling})`);
+  if (bypassRequirement !== 'ceiling' && routeCeiling > 0 && (stats.ceiling || 0) < routeCeiling) {
+    throw new GameRuleError(`Ship Ceiling (${stats.ceiling || 0}) does not meet route ceiling requirement (${routeCeiling})`);
   }
 
   // Validate Luxury meets route luxury requirement (unless bypassed)
@@ -415,7 +501,7 @@ function processLaunchShip(state, playerId, data) {
     // Tech card IDs are lowercase (e.g., 'helium_handling')
     // Tech cards array may contain strings (IDs) or objects with id property
     const hasHeliumHandling = playerState.techCards?.some(t =>
-      (typeof t === 'string' ? t : t.id) === 'helium_handling'
+      (typeof t === 'string' ? t : (t as { id?: string }).id) === 'helium_handling'
     );
     if (!hasHeliumHandling) {
       throw new GameRuleError('Cannot use Helium without Helium Handling tech card');
@@ -437,7 +523,7 @@ function processLaunchShip(state, playerId, data) {
   }
 
   // Step 3: Select a ship and validate resources
-  const ships = playerState.ships || [];
+  const ships = (playerState.ships || []) as unknown as LaunchShip[];
   const shipIndex = ships.findIndex(s => s.id === shipId && s.status === 'hangar');
 
   if (shipIndex === -1) {
@@ -464,7 +550,7 @@ function processLaunchShip(state, playerId, data) {
   if (retainGas) {
     // Blaugas Fuel System requires blaugas_storage tech card
     const hasBlaugas = playerState.techCards?.some(t =>
-      (typeof t === 'string' ? t : t.id) === 'blaugas_storage'
+      (typeof t === 'string' ? t : (t as { id?: string }).id) === 'blaugas_storage'
     );
     if (!hasBlaugas) {
       throw new GameRuleError('Cannot use retainGas without Blaugas Fuel System tech card');
@@ -495,20 +581,21 @@ function processLaunchShip(state, playerId, data) {
   ships[shipIndex].launchedAge = state.age;
   ships[shipIndex].gasType = gasType;
   ships[shipIndex].pendingRouteId = routeId;  // Route to claim if hazard check succeeds
-  ships[shipIndex].pendingCityChoice = selectedCityChoice;  // City bonus choice per Section 10.4
+  ships[shipIndex].pendingCityChoice = selectedCityChoice || undefined;  // City bonus choice per Section 10.4
 
   // Build stats summary for log
   const statParts = [`Range ${stats.range}`, `Speed ${stats.speed}`];
-  if (stats.ceiling > 0) statParts.push(`Ceiling ${stats.ceiling}`);
-  if (stats.reliability > 0) statParts.push(`Reliability ${stats.reliability}`);
-  if (stats.luxury > 0) statParts.push(`Luxury ${stats.luxury}`);
+  if (stats.ceiling && stats.ceiling > 0) statParts.push(`Ceiling ${stats.ceiling}`);
+  if (stats.reliability && stats.reliability > 0) statParts.push(`Reliability ${stats.reliability}`);
+  if (stats.luxury && stats.luxury > 0) statParts.push(`Luxury ${stats.luxury}`);
 
+  state.log = state.log || [];
   state.log.push({
     timestamp: new Date().toISOString(),
     message: `Launched ship toward ${route.from} → ${route.to} (${requiredOfficers} Officer${requiredOfficers > 1 ? 's' : ''}, ${requiredCubes} ${gasType}): ${statParts.join(', ')}`,
     playerId,
     type: 'action'
-  });
+  } as LogEntry);
 
   // Step 5: Draw hazard card and store for client response
   // Per Section 8.2: Player must see hazard and choose whether to spend engineers
@@ -526,10 +613,10 @@ function processLaunchShip(state, playerId, data) {
       message: 'Hazard deck exhausted - shuffled discard pile to create new deck',
       playerId,
       type: 'deck'
-    });
+    } as LogEntry);
   }
 
-  const hazard = playerState.hazardDeck.shift();
+  const hazard = playerState.hazardDeck!.shift()!;
   playerState.hazardDiscardPile = playerState.hazardDiscardPile || [];
   playerState.hazardDiscardPile.push(hazard);
 
@@ -551,15 +638,18 @@ function processLaunchShip(state, playerId, data) {
 
   // Check for Conductive Covering (auto-pass static discharge)
   const hasCondictiveCovering = playerState.blueprint?.fabricSlots?.some(
-    fabric => fabric === 'conductive_covering' || fabric?.id === 'conductive_covering'
+    fabric => fabric === 'conductive_covering' || (fabric && typeof fabric === 'object' && (fabric as { id?: string }).id === 'conductive_covering')
   );
   const autoPassCondictiveCovering = hazard.type === 'static_discharge' && hasCondictiveCovering;
 
   // Check for Fire-Resistant Fabric (once per age auto-pass fire)
   const hasFireResistantFabric = playerState.blueprint?.fabricSlots?.some(
-    fabric => fabric === 'fire_resistant_fabric' || fabric?.id === 'fire_resistant_fabric'
+    fabric => fabric === 'fire_resistant_fabric' || (fabric && typeof fabric === 'object' && (fabric as { id?: string }).id === 'fire_resistant_fabric')
   );
   const fireProtectionAvailable = isFireHazard && hasFireResistantFabric && !playerState.fireProtectionUsedThisAge;
+
+  // Extended hazard properties that may exist on runtime hazard cards
+  const extendedHazard = hazard as HazardCard & { special?: string; gasLossOnFailure?: boolean };
 
   // Store pending hazard on ship for client to respond
   ships[shipIndex].pendingHazard = {
@@ -577,8 +667,8 @@ function processLaunchShip(state, playerId, data) {
     hydrogenOnly: hazard.hydrogenOnly,
 
     // Special effects
-    special: hazard.special,
-    gasLossOnFailure: hazard.gasLossOnFailure,
+    special: extendedHazard.special,
+    gasLossOnFailure: extendedHazard.gasLossOnFailure,
 
     // Ship stats for comparison
     relevantStat,
@@ -587,14 +677,14 @@ function processLaunchShip(state, playerId, data) {
 
     // Auto-pass flags (client uses these to show appropriate UI)
     autoPass: autoPassClearWeather,
-    autoPassReason: getAutoPassReason(autoPassClearWeather, autoPassHeliumFire, autoPassCondictiveCovering, fireProtectionAvailable),
+    autoPassReason: getAutoPassReason(autoPassClearWeather, autoPassHeliumFire, autoPassCondictiveCovering || false, fireProtectionAvailable),
     heliumFireImmunity: autoPassHeliumFire,
-    conductiveCoveringImmunity: autoPassCondictiveCovering,
+    conductiveCoveringImmunity: autoPassCondictiveCovering || false,
     fireResistantFabricAvailable: fireProtectionAvailable
   };
 
   // Build log message
-  const autoPassReason = ships[shipIndex].pendingHazard.autoPassReason;
+  const autoPassReason = ships[shipIndex].pendingHazard!.autoPassReason;
   const hazardDetails = autoPassReason
     ? ' (' + autoPassReason + ')'
     : ' (' + challengeType + ' ' + difficulty + ' vs ' + relevantStat + ')';
@@ -604,26 +694,26 @@ function processLaunchShip(state, playerId, data) {
     message: 'Hazard drawn: ' + hazard.name + hazardDetails,
     playerId,
     type: 'hazard'
-  });
+  } as LogEntry);
 
   // Return - client must call RESPOND_TO_HAZARD to continue
   return { newState: state };
 }
 
+interface ClaimRouteData {
+  shipId: string;
+  routeId: string;
+}
+
 /**
  * Claim a route with a launched ship
- *
- * @param {Object} state - Game state (mutated)
- * @param {string} playerId - Acting player ID
- * @param {Object} data - Action data { shipId, routeId }
- * @returns {Object} { newState } or throws error
  */
-function processClaimRoute(state, playerId, data) {
+function processClaimRoute(state: GameState, playerId: string, data: ClaimRouteData): ActionResult {
   const { shipId, routeId } = data;
   const playerState = state.players[playerId];
 
   // Find launched ship
-  const ships = playerState.ships || [];
+  const ships = (playerState.ships || []) as unknown as LaunchShip[];
   const shipIndex = ships.findIndex(s => s.id === shipId && s.status === 'launched');
 
   if (shipIndex === -1) {
@@ -633,7 +723,8 @@ function processClaimRoute(state, playerId, data) {
   const ship = ships[shipIndex];
 
   // Find route
-  const route = state.map?.routes?.find(r => r.id === routeId);
+  const mapState = state.map as MapState | undefined;
+  const route = mapState?.routes?.find(r => r.id === routeId) as ExtendedRoute | undefined;
   if (!route) {
     throw new GameRuleError('Route not found');
   }
@@ -662,17 +753,18 @@ function processClaimRoute(state, playerId, data) {
 
   // Update ship to on-route status
   ships[shipIndex].status = 'on_route';
-  ships[shipIndex].routeId = routeId;
+  (ships[shipIndex] as unknown as Ship & { routeId?: string }).routeId = routeId;
 
   // Add route income to player
   playerState.income += route.income;
 
+  state.log = state.log || [];
   state.log.push({
     timestamp: new Date().toISOString(),
     message: `Claimed route ${route.from} → ${route.to} for +${route.income} income`,
     playerId,
     type: 'action'
-  });
+  } as LogEntry);
 
   return { newState: state };
 }
@@ -683,14 +775,12 @@ function processClaimRoute(state, playerId, data) {
  * - Place agent to enable launching
  * - Can launch multiple ships while at launchpad
  * - Call NO_MORE_LAUNCHES to signal completion and advance turn
- *
- * @param {Object} state - Game state (mutated)
- * @param {string} playerId - Acting player ID
- * @returns {Object} { newState } or throws error
  */
-function processNoMoreLaunches(state, playerId) {
+function processNoMoreLaunches(state: GameState, playerId: string): ActionResult {
+  const launchState = state as LaunchState;
+
   // Validate launchpad is active for this player
-  if (!state.launchpadActive?.[playerId]) {
+  if (!launchState.launchpadActive?.[playerId]) {
     throw new GameRuleError(
       'NO_MORE_LAUNCHES not allowed: You are not at the Launchpad. ' +
       'Place an agent at Launchpad first using PLACE_AGENT.'
@@ -698,14 +788,15 @@ function processNoMoreLaunches(state, playerId) {
   }
 
   // Deactivate launchpad
-  state.launchpadActive[playerId] = false;
+  launchState.launchpadActive[playerId] = false;
 
+  state.log = state.log || [];
   state.log.push({
     timestamp: new Date().toISOString(),
     message: 'Finished launching ships at Launchpad',
     playerId,
     type: 'action'
-  });
+  } as LogEntry);
 
   // Import here to avoid circular dependency
   const { advanceToNextPlacer, allPlayersPassed } = require('./helpers/turnOrder');
@@ -725,6 +816,20 @@ function processNoMoreLaunches(state, playerId) {
   return { newState: state };
 }
 
+export {
+  processLaunchShip,
+  processClaimRoute,
+  processNoMoreLaunches,
+  calculateBlueprintStats,
+  calculateShipStats,
+  calculateBlueprintWeight,
+  calculateRequiredGasCubes,
+  countPlayerNetworks,
+  countPlayerNetworksById,
+  validateNetworkConnectivity
+};
+
+// CommonJS compatibility
 module.exports = {
   processLaunchShip,
   processClaimRoute,

@@ -7,44 +7,62 @@
  * When all players have revealed, resources are collected and acquisitions processed
  */
 
+import type { GameState, PlayerState, LogEntry } from '@upship/api';
+
 const { GameRuleError } = require('../errors');
 const {
   transitionToRevealPhase,
   transitionToIncomeCleanup
 } = require('./helpers/phaseTransition');
-const { processAcquireTechnologyResearch } = require('./technology');
+const { processAcquireTechCardResearch } = require('./technology');
 const { processBuyMarketCard } = require('./cards');
 const { refillRDBoard, refreshMarketRow } = require('./helpers/marketHelpers');
 
+interface ActionResult {
+  newState: GameState;
+}
+
+// Extended state with worker placement and reveal phase
+type RevealState = GameState & {
+  workerPlacement: {
+    currentPlacerIndex: number;
+    placementOrder?: string[];
+    passedPlayers?: string[];
+  };
+  pendingReveals?: Record<string, { techAcquisitions: string[]; marketPurchases: string[] }>;
+  revealPhase: {
+    techAcquisitionsComplete: Record<string, boolean>;
+    marketPurchasesComplete: Record<string, boolean>;
+  };
+  turnInRound?: number;
+};
+
 /**
  * Get the current placer during worker placement
- * @param {Object} state - Game state
- * @returns {string} Current placer's player ID
  */
-function getCurrentPlacer(state) {
-  const placementOrder = state.workerPlacement?.placementOrder || state.playerOrder;
-  return placementOrder[state.workerPlacement?.currentPlacerIndex || 0];
+function getCurrentPlacer(state: GameState): string {
+  const revealState = state as RevealState;
+  const placementOrder = revealState.workerPlacement?.placementOrder || state.playerOrder;
+  return placementOrder[revealState.workerPlacement?.currentPlacerIndex || 0];
 }
 
 /**
  * Check if all players have passed/revealed
- * @param {Object} state - Game state
- * @returns {boolean} True if all players have passed
  */
-function allPlayersPassed(state) {
+function allPlayersPassed(state: GameState): boolean {
   return state.playerOrder.every(pid => state.players[pid].hasPassed);
 }
 
 /**
  * Advance to the next placer who hasn't passed
- * @param {Object} state - Game state (mutated)
  */
-function advanceToNextPlacer(state) {
+function advanceToNextPlacer(state: GameState): void {
+  const revealState = state as RevealState;
   // Increment turn counter within the current round
-  state.turnInRound = (state.turnInRound || 1) + 1;
+  revealState.turnInRound = (revealState.turnInRound || 1) + 1;
 
-  const placementOrder = state.workerPlacement?.placementOrder || state.playerOrder;
-  let nextIndex = (state.workerPlacement.currentPlacerIndex + 1) % placementOrder.length;
+  const placementOrder = revealState.workerPlacement?.placementOrder || state.playerOrder;
+  let nextIndex = (revealState.workerPlacement.currentPlacerIndex + 1) % placementOrder.length;
 
   // Skip players who have passed
   let attempts = 0;
@@ -53,7 +71,12 @@ function advanceToNextPlacer(state) {
     attempts++;
   }
 
-  state.workerPlacement.currentPlacerIndex = nextIndex;
+  revealState.workerPlacement.currentPlacerIndex = nextIndex;
+}
+
+interface RevealData {
+  techAcquisitions?: string[];
+  marketPurchases?: string[];
 }
 
 /**
@@ -62,14 +85,10 @@ function advanceToNextPlacer(state) {
  * This replaces the separate PASS + ACQUIRE_TECHNOLOGY + BUY_MARKET_CARD + END_TURN flow.
  * Player declares what they want to acquire upfront, and when all players have revealed,
  * resources are collected and acquisitions processed in player order.
- *
- * @param {Object} state - Game state (mutated)
- * @param {string} playerId - Acting player ID
- * @param {Object} data - Action data { techAcquisitions[], marketPurchases[] }
- * @returns {Object} { newState } or throws error
  */
-function processReveal(state, playerId, data) {
+function processReveal(state: GameState, playerId: string, data: RevealData | undefined): ActionResult {
   const { techAcquisitions = [], marketPurchases = [] } = data || {};
+  const revealState = state as RevealState;
   const playerState = state.players[playerId];
 
   // Validate: must be in worker_placement phase
@@ -90,19 +109,20 @@ function processReveal(state, playerId, data) {
 
   // Mark player as passed/revealed
   playerState.hasPassed = true;
-  state.workerPlacement.passedPlayers = state.workerPlacement.passedPlayers || [];
-  state.workerPlacement.passedPlayers.push(playerId);
+  revealState.workerPlacement.passedPlayers = revealState.workerPlacement.passedPlayers || [];
+  revealState.workerPlacement.passedPlayers.push(playerId);
 
   // Store pending acquisitions
-  state.pendingReveals = state.pendingReveals || {};
-  state.pendingReveals[playerId] = { techAcquisitions, marketPurchases };
+  revealState.pendingReveals = revealState.pendingReveals || {};
+  revealState.pendingReveals[playerId] = { techAcquisitions, marketPurchases };
 
+  state.log = state.log || [];
   state.log.push({
     timestamp: new Date().toISOString(),
     message: `${playerState.faction.toUpperCase()} reveals`,
     playerId,
     type: 'action'
-  });
+  } as LogEntry);
 
   // Check if all players have revealed
   if (allPlayersPassed(state)) {
@@ -116,30 +136,31 @@ function processReveal(state, playerId, data) {
 
 /**
  * Execute all pending reveals atomically
- *
- * @param {Object} state - Game state (mutated)
  */
-function executeAllReveals(state) {
+function executeAllReveals(state: GameState): void {
+  const revealState = state as RevealState;
+
   // Transition to reveal phase and collect resources from cards
   transitionToRevealPhase(state);
 
   // Process each player's acquisitions in player order
   for (const playerId of state.playerOrder) {
-    const pending = state.pendingReveals?.[playerId] || {};
-    const { techAcquisitions = [], marketPurchases = [] } = pending;
+    const pending = revealState.pendingReveals?.[playerId] || { techAcquisitions: [], marketPurchases: [] };
+    const { techAcquisitions, marketPurchases } = pending;
     const playerState = state.players[playerId];
 
     // Process tech acquisitions using collected research
     for (const techId of techAcquisitions) {
       try {
-        processAcquireTechnologyResearch(state, playerId, { techId, _internal: true });
+        processAcquireTechCardResearch(state, playerId, { techId, _internal: true });
       } catch (e) {
+        state.log = state.log || [];
         state.log.push({
           timestamp: new Date().toISOString(),
-          message: `${playerState.faction.toUpperCase()} could not acquire ${techId}: ${e.message}`,
+          message: `${playerState.faction.toUpperCase()} could not acquire ${techId}: ${(e as Error).message}`,
           playerId,
           type: 'error'
-        });
+        } as LogEntry);
       }
     }
 
@@ -148,18 +169,19 @@ function executeAllReveals(state) {
       try {
         processBuyMarketCard(state, playerId, { cardId, _internal: true });
       } catch (e) {
+        state.log = state.log || [];
         state.log.push({
           timestamp: new Date().toISOString(),
-          message: `${playerState.faction.toUpperCase()} could not buy ${cardId}: ${e.message}`,
+          message: `${playerState.faction.toUpperCase()} could not buy ${cardId}: ${(e as Error).message}`,
           playerId,
           type: 'error'
-        });
+        } as LogEntry);
       }
     }
 
     // Mark player as done with reveal
-    state.revealPhase.techAcquisitionsComplete[playerId] = true;
-    state.revealPhase.marketPurchasesComplete[playerId] = true;
+    revealState.revealPhase.techAcquisitionsComplete[playerId] = true;
+    revealState.revealPhase.marketPurchasesComplete[playerId] = true;
 
     // Replenish R&D Board and Market AFTER this player's purchases
     // This allows later players to see freshly drawn tiles/cards
@@ -168,12 +190,15 @@ function executeAllReveals(state) {
   }
 
   // Clear pending reveals
-  delete state.pendingReveals;
+  delete revealState.pendingReveals;
 
   // Transition to income/cleanup since all reveals are now complete
   transitionToIncomeCleanup(state);
 }
 
+export { processReveal, executeAllReveals };
+
+// CommonJS compatibility
 module.exports = {
   processReveal,
   executeAllReveals

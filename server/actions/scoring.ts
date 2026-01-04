@@ -4,16 +4,68 @@
  * Implements Section 1.1 (Victory), Section 12.2 (VP Scoring)
  */
 
+import type { GameState, PlayerState, LogEntry } from '@upship/api';
+
 const { GameRuleError } = require('../errors');
 const { TECH_CARD_BAG } = require('../config/constants');
+
+interface ActionResult {
+  newState: GameState;
+}
+
+interface TechCardDefinition {
+  id: string;
+  vp?: number;
+  [key: string]: unknown;
+}
+
+interface ScoreBreakdown {
+  previouslyAccumulated: number;
+  routes: number;
+  techCards: number;
+}
+
+interface PlayerScore {
+  total: number;
+  breakdown: ScoreBreakdown;
+  faction: string;
+}
+
+interface ExtendedRoute {
+  id: string;
+  claimed?: string;
+  vp?: number;
+}
+
+// Extended state with scoring
+type ScoringState = GameState & {
+  scores?: Record<string, PlayerScore>;
+  winner?: string;
+  hindenburgDisaster?: boolean;
+  progressThresholds?: {
+    age2: number;
+    age3: number;
+    end: number;
+  };
+  progressTrack?: number;
+  map?: {
+    routes?: ExtendedRoute[];
+  };
+};
+
+// Extended player state with VP
+type ScoringPlayerState = PlayerState & {
+  vp?: number;
+};
 
 /**
  * Get all tech card definitions flattened from all ages
  */
-function getAllTechCardDefinitions() {
-  const allTechCards = {};
+function getAllTechCardDefinitions(): Record<string, TechCardDefinition> {
+  const allTechCards: Record<string, TechCardDefinition> = {};
+  const techCardBag = TECH_CARD_BAG as Record<number, TechCardDefinition[]>;
   for (const age of [1, 2, 3]) {
-    for (const card of (TECH_CARD_BAG[age] || [])) {
+    for (const card of (techCardBag[age] || [])) {
       allTechCards[card.id] = card;
     }
   }
@@ -23,10 +75,8 @@ function getAllTechCardDefinitions() {
 /**
  * Calculate VP from tech cards based on their VP values per Section 12.2
  * Essential=0 VP, Useful=1 VP, Niche=2-3 VP
- * @param {string[]} cardIds - Array of tech card IDs
- * @returns {number} Total VP from tech cards
  */
-function calculateTechCardVPForScoring(cardIds) {
+function calculateTechCardVPForScoring(cardIds: string[]): number {
   const cardDefs = getAllTechCardDefinitions();
   let totalVP = 0;
 
@@ -40,13 +90,13 @@ function calculateTechCardVPForScoring(cardIds) {
   return totalVP;
 }
 
+type PlayerWithState = [string, PlayerScore, ScoringPlayerState];
+
 /**
  * Apply tiebreakers per Section 1.1
  * Order: 1) Income Track, 2) Cash on hand, 3) Ships on routes
- * @param {Object[]} sortedPlayers - Array of [playerId, scoreData, playerState] sorted by VP
- * @returns {Object[]} Re-sorted array with tiebreakers applied
  */
-function applyTiebreakers(sortedPlayers) {
+function applyTiebreakers(sortedPlayers: PlayerWithState[]): PlayerWithState[] {
   return sortedPlayers.sort((a, b) => {
     // First: Compare by total VP
     const vpDiff = b[1].total - a[1].total;
@@ -67,25 +117,26 @@ function applyTiebreakers(sortedPlayers) {
   });
 }
 
+interface CalculateScoresData {
+  forceEnd?: boolean;
+}
+
 /**
  * Calculate scores for all players
  * Per Section 12.2: VP comes from routes and technologies only
  * Cash and ships on routes are tiebreakers, NOT VP sources
- *
- * @param {Object} state - Game state (mutated)
- * @param {string} playerId - Acting player ID
- * @param {Object} data - Action data { forceEnd }
- * @returns {Object} { newState } or throws error
  */
-function processCalculateScores(state, playerId, data) {
+function processCalculateScores(state: GameState, playerId: string, data: CalculateScoresData | undefined): ActionResult {
+  const scoringState = state as ScoringState;
+
   // Check if game end conditions are met
-  const thresholds = state.progressThresholds || { age2: 4, age3: 8, end: 12 };
-  const progressTrack = state.progressTrack || 0;
+  const thresholds = scoringState.progressThresholds || { age2: 4, age3: 8, end: 12 };
+  const progressTrack = scoringState.progressTrack || 0;
   const forceEnd = data?.forceEnd === true; // Allow admin/debug override
 
   // Game ends when progress track reaches the end threshold OR Age 3 is complete
   // Or Hindenburg Disaster triggered
-  const gameCanEnd = progressTrack >= thresholds.end || state.age >= 3 || state.hindenburgDisaster;
+  const gameCanEnd = progressTrack >= thresholds.end || state.age >= 3 || scoringState.hindenburgDisaster;
 
   if (!gameCanEnd && !forceEnd) {
     throw new GameRuleError(
@@ -94,22 +145,27 @@ function processCalculateScores(state, playerId, data) {
     );
   }
 
-  const scores = {};
+  const scores: Record<string, PlayerScore> = {};
 
   for (const [pid, playerState] of Object.entries(state.players)) {
+    const scoringPlayerState = playerState as ScoringPlayerState;
     let totalVP = 0;
-    const breakdown = {};
+    const breakdown: ScoreBreakdown = {
+      previouslyAccumulated: 0,
+      routes: 0,
+      techCards: 0
+    };
 
     // Previously accumulated VP from age transitions per Section 12.2
     // Technologies and routes are "scored every Age" - VP accumulates
-    const previouslyAccumulated = playerState.vp || 0;
+    const previouslyAccumulated = scoringPlayerState.vp || 0;
     breakdown.previouslyAccumulated = previouslyAccumulated;
     totalVP += previouslyAccumulated;
 
     // VP from routes per Section 12.2 and Appendix F
     // Routes have explicit `vp` property per Appendix F specifications
     let routeVP = 0;
-    const routes = state.map?.routes || [];
+    const routes = scoringState.map?.routes || [];
     for (const route of routes) {
       if (route.claimed === pid) {
         routeVP += route.vp || 0;
@@ -135,33 +191,44 @@ function processCalculateScores(state, playerId, data) {
   }
 
   // Store scores in state
-  state.scores = scores;
+  scoringState.scores = scores;
 
   // Determine winner with tiebreakers per Section 1.1
   // Include playerState for tiebreaker calculations
-  const playersWithState = Object.entries(scores).map(([pid, scoreData]) => [
+  const playersWithState: PlayerWithState[] = Object.entries(scores).map(([pid, scoreData]) => [
     pid,
     scoreData,
-    state.players[pid]
+    state.players[pid] as ScoringPlayerState
   ]);
 
   const sortedPlayers = applyTiebreakers(playersWithState);
-  state.winner = sortedPlayers[0][0];
+  scoringState.winner = sortedPlayers[0][0];
 
   const winnerScore = scores[sortedPlayers[0][0]];
+  state.log = state.log || [];
   state.log.push({
     timestamp: new Date().toISOString(),
     message: `Game ended! Winner: ${winnerScore.faction} with ${winnerScore.total} VP`,
     type: 'system'
-  });
+  } as LogEntry);
 
   return { newState: state };
 }
 
+export {
+  processCalculateScores,
+  calculateTechCardVPForScoring,
+  applyTiebreakers
+};
+
+// Legacy alias for backwards compatibility during migration
+const calculateTechnologyVPForScoring = calculateTechCardVPForScoring;
+
+// CommonJS compatibility
 module.exports = {
   processCalculateScores,
   calculateTechCardVPForScoring,
   applyTiebreakers,
   // Legacy alias for backwards compatibility during migration
-  calculateTechnologyVPForScoring: calculateTechCardVPForScoring
+  calculateTechnologyVPForScoring
 };

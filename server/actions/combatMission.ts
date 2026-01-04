@@ -3,23 +3,107 @@
  * Per Section 10.5 and Appendix G
  */
 
+import type { GameState, PlayerState, Ship, LogEntry, HazardCard, Blueprint } from '@upship/api';
+
 const { GameRuleError, InsufficientFundsError } = require('../errors');
 const { refillMissionRow } = require('../data/combatMissions');
+
+interface ActionResult {
+  newState: GameState;
+}
+
+interface FlakResult {
+  destroyed: boolean;
+  reason: string;
+}
+
+interface ValidationResult {
+  valid: boolean;
+  failures: string[];
+}
+
+interface UsaRestrictionResult {
+  allowed: boolean;
+  reason?: string;
+}
+
+interface Mission {
+  id: string;
+  name: string;
+  income: number;
+  vp?: number;
+  range?: number;
+  speed?: number;
+  ceiling?: number;
+  reliability?: number;
+  special?: string;
+  specialBonus?: { income?: number };
+}
+
+interface ShipStats {
+  range?: number;
+  speed?: number;
+  ceiling?: number;
+  reliability?: number;
+  [key: string]: number | undefined;
+}
+
+// Extended types
+type CombatPlayerState = PlayerState & {
+  completedMissions?: Mission[];
+  hazardDeck?: HazardCard[];
+  hazardDiscardPile?: HazardCard[];
+  fireProtectionUsedThisAge?: boolean;
+};
+
+type CombatShip = Omit<Ship, 'pendingHazard'> & {
+  stats?: ShipStats;
+  pendingMissionId?: string;
+  armor?: number;
+  gasType?: 'hydrogen' | 'helium';
+  launchedAge?: number;
+  pendingHazard?: {
+    type?: string;
+    name?: string;
+    category?: string;
+    challengeType?: string;
+    difficulty?: number;
+    flak?: number;
+    engineerCost?: number;
+    noSave?: boolean;
+    hydrogenOnly?: boolean;
+    special?: string;
+    gasLossOnFailure?: boolean;
+    relevantStat?: number;
+    statName?: string;
+    engineersNeeded?: number;
+    autoPass?: boolean;
+    autoPassReason?: string | null;
+    heliumFireImmunity?: boolean;
+    conductiveCoveringImmunity?: boolean;
+    fireResistantFabricAvailable?: boolean;
+  } | null;
+};
+
+type CombatState = GameState & {
+  missionRow?: Mission[];
+};
+
+// Extended hazard card type with optional properties not in base HazardCard
+type ExtendedHazardCard = HazardCard & {
+  special?: string;
+  gasLossOnFailure?: boolean;
+  hazardType?: string;
+};
 
 /**
  * Resolve Flak Check after successful mission
  * Per Section 10.5: "If Flak > Armor, ship is destroyed. Max Armor is 4; 5 Flak always destroys."
- *
- * @param {Object} ship - Ship with armor stat
- * @param {Object} hazardCard - Hazard card with flak value
- * @returns {Object} { destroyed: boolean, reason?: string }
  */
-function resolveFlakCheck(ship, hazardCard) {
+function resolveFlakCheck(ship: CombatShip, hazardCard: HazardCard): FlakResult {
   const armor = ship.armor || 0;
   const flak = hazardCard.flak || 0;
 
-  // Per rules: "If Flak > Armor, ship is destroyed"
-  // Max Armor is 4, so Flak 5 always destroys
   if (flak > armor) {
     return {
       destroyed: true,
@@ -35,24 +119,21 @@ function resolveFlakCheck(ship, hazardCard) {
 
 /**
  * Check if ship meets mission requirements
- * @param {Object} shipStats - Ship's calculated stats
- * @param {Object} mission - Combat mission with requirements
- * @returns {Object} { valid: boolean, failures: string[] }
  */
-function validateMissionRequirements(shipStats, mission) {
-  const failures = [];
+function validateMissionRequirements(shipStats: ShipStats, mission: Mission): ValidationResult {
+  const failures: string[] = [];
 
-  if (mission.range && shipStats.range < mission.range) {
-    failures.push(`Range ${shipStats.range} < required ${mission.range}`);
+  if (mission.range && (shipStats.range || 0) < mission.range) {
+    failures.push(`Range ${shipStats.range || 0} < required ${mission.range}`);
   }
-  if (mission.speed && shipStats.speed < mission.speed) {
-    failures.push(`Speed ${shipStats.speed} < required ${mission.speed}`);
+  if (mission.speed && (shipStats.speed || 0) < mission.speed) {
+    failures.push(`Speed ${shipStats.speed || 0} < required ${mission.speed}`);
   }
-  if (mission.ceiling && shipStats.ceiling < mission.ceiling) {
-    failures.push(`Ceiling ${shipStats.ceiling} < required ${mission.ceiling}`);
+  if (mission.ceiling && (shipStats.ceiling || 0) < mission.ceiling) {
+    failures.push(`Ceiling ${shipStats.ceiling || 0} < required ${mission.ceiling}`);
   }
-  if (mission.reliability && shipStats.reliability < mission.reliability) {
-    failures.push(`Reliability ${shipStats.reliability} < required ${mission.reliability}`);
+  if (mission.reliability && (shipStats.reliability || 0) < mission.reliability) {
+    failures.push(`Reliability ${shipStats.reliability || 0} < required ${mission.reliability}`);
   }
 
   return {
@@ -64,13 +145,10 @@ function validateMissionRequirements(shipStats, mission) {
 /**
  * Process completing a combat mission
  * Per Appendix G: Award income, store for VP, refill Mission Row
- *
- * @param {Object} state - Game state (mutated)
- * @param {string} playerId - Player who completed the mission
- * @param {Object} mission - The completed mission
  */
-function processCompleteMission(state, playerId, mission) {
-  const playerState = state.players[playerId];
+function processCompleteMission(state: GameState, playerId: string, mission: Mission): void {
+  const playerState = state.players[playerId] as CombatPlayerState;
+  const combatState = state as CombatState;
 
   // Award income (increase Income Track)
   playerState.income = (playerState.income || 0) + mission.income;
@@ -82,10 +160,10 @@ function processCompleteMission(state, playerId, mission) {
   playerState.completedMissions.push({ ...mission });
 
   // Remove mission from Mission Row
-  if (state.missionRow) {
-    const missionIndex = state.missionRow.findIndex(m => m.id === mission.id);
+  if (combatState.missionRow) {
+    const missionIndex = combatState.missionRow.findIndex(m => m.id === mission.id);
     if (missionIndex !== -1) {
-      state.missionRow.splice(missionIndex, 1);
+      combatState.missionRow.splice(missionIndex, 1);
     }
 
     // Refill Mission Row to 6 cards
@@ -96,19 +174,16 @@ function processCompleteMission(state, playerId, mission) {
   state.log = state.log || [];
   state.log.push({
     timestamp: new Date().toISOString(),
-    message: `Completed mission: ${mission.name} (+${mission.income} income, ${mission.vp} VP)`,
+    message: `Completed mission: ${mission.name} (+${mission.income} income, ${mission.vp || 0} VP)`,
     playerId,
     type: 'action'
-  });
+  } as LogEntry);
 }
 
 /**
  * Calculate bonus income from special equipment
- * @param {Object} playerState - Player state with blueprint
- * @param {Object} mission - Mission with potential bonuses
- * @returns {number} Additional income from equipment bonuses
  */
-function calculateEquipmentBonus(playerState, mission) {
+function calculateEquipmentBonus(playerState: PlayerState, mission: Mission): number {
   let bonus = 0;
   const componentSlots = playerState.blueprint?.componentSlots || [];
 
@@ -127,17 +202,20 @@ function calculateEquipmentBonus(playerState, mission) {
   return bonus;
 }
 
+interface LaunchCombatMissionData {
+  shipId: string;
+  missionId: string;
+  gasType?: 'hydrogen' | 'helium';
+  _internal?: boolean;
+}
+
 /**
  * Process launching a ship for a combat mission in Age II
- *
- * @param {Object} state - Game state (mutated)
- * @param {string} playerId - Acting player ID
- * @param {Object} data - Action data { shipId, missionId, gasType }
- * @returns {Object} { newState }
  */
-function processLaunchCombatMission(state, playerId, data) {
+function processLaunchCombatMission(state: GameState, playerId: string, data: LaunchCombatMissionData): ActionResult {
   const { shipId, missionId, gasType = 'hydrogen' } = data;
-  const playerState = state.players[playerId];
+  const playerState = state.players[playerId] as CombatPlayerState;
+  const combatState = state as CombatState;
 
   // Verify we're in Age II
   if (state.age !== 2) {
@@ -145,19 +223,18 @@ function processLaunchCombatMission(state, playerId, data) {
   }
 
   // Check USA faction restriction per Section 13.3
-  // "Flaw: Late to enter war. Cannot acquire a combat mission until all other players have one."
   const usaRestriction = validateUsaMissionRestriction(state, playerId);
   if (!usaRestriction.allowed) {
-    throw new GameRuleError(usaRestriction.reason);
+    throw new GameRuleError(usaRestriction.reason!);
   }
 
   // Find the mission in the Mission Row
-  const missionIndex = state.missionRow?.findIndex(m => m.id === missionId);
+  const missionIndex = combatState.missionRow?.findIndex(m => m.id === missionId);
   if (missionIndex === -1 || missionIndex === undefined) {
     throw new GameRuleError(`Mission not found in Mission Row: ${missionId}`);
   }
 
-  const mission = state.missionRow[missionIndex];
+  const mission = combatState.missionRow![missionIndex];
 
   // Validate ship exists in hangar
   const ships = playerState.ships || [];
@@ -168,7 +245,7 @@ function processLaunchCombatMission(state, playerId, data) {
 
   // Calculate ship stats and validate mission requirements
   const { calculateBlueprintStats } = require('./launch');
-  const stats = calculateBlueprintStats(playerState.blueprint, state.age);
+  const stats: ShipStats = calculateBlueprintStats(playerState.blueprint, state.age);
 
   const validation = validateMissionRequirements(stats, mission);
   if (!validation.valid) {
@@ -182,7 +259,7 @@ function processLaunchCombatMission(state, playerId, data) {
 
   // Helium requires Helium Handling tech card
   if (gasType === 'helium') {
-    const hasHeliumHandling = playerState.techCards?.some(t =>
+    const hasHeliumHandling = playerState.techCards?.some((t: string | { id: string }) =>
       (typeof t === 'string' ? t : t.id) === 'helium_handling'
     );
     if (!hasHeliumHandling) {
@@ -210,15 +287,16 @@ function processLaunchCombatMission(state, playerId, data) {
   playerState.gasCubes[gasType] -= requiredCubes;
 
   // Set ship to awaiting hazard check
-  ships[shipIndex].status = 'awaiting_hazard';
-  ships[shipIndex].stats = stats;
-  ships[shipIndex].pendingMissionId = missionId;
-  ships[shipIndex].gasType = gasType;
-  ships[shipIndex].launchedAge = state.age;
+  const combatShip = ships[shipIndex] as CombatShip;
+  combatShip.status = 'awaiting_hazard';
+  combatShip.stats = stats;
+  combatShip.pendingMissionId = missionId;
+  combatShip.gasType = gasType;
+  combatShip.launchedAge = state.age;
 
   // Calculate armor for flak check
   const armor = calculateShipArmor(playerState.blueprint);
-  ships[shipIndex].armor = armor;
+  combatShip.armor = armor;
 
   state.log = state.log || [];
   state.log.push({
@@ -226,7 +304,7 @@ function processLaunchCombatMission(state, playerId, data) {
     message: `Launched ship for mission: ${mission.name} (Armor ${armor})`,
     playerId,
     type: 'action'
-  });
+  } as LogEntry);
 
   // Draw hazard card (same as route launches)
   const { shuffleArray } = require('../utils/random');
@@ -243,10 +321,10 @@ function processLaunchCombatMission(state, playerId, data) {
       message: 'Hazard deck exhausted - shuffled discard pile to create new deck',
       playerId,
       type: 'deck'
-    });
+    } as LogEntry);
   }
 
-  const hazard = playerState.hazardDeck.shift();
+  const hazard = playerState.hazardDeck!.shift()! as ExtendedHazardCard;
   playerState.hazardDiscardPile = playerState.hazardDiscardPile || [];
   playerState.hazardDiscardPile.push(hazard);
 
@@ -268,18 +346,18 @@ function processLaunchCombatMission(state, playerId, data) {
 
   // Check for Conductive Covering (auto-pass static discharge)
   const hasCondictiveCovering = playerState.blueprint?.fabricSlots?.some(
-    fabric => fabric === 'conductive_covering' || fabric?.id === 'conductive_covering'
+    (fabric: string | { id: string } | null) => fabric === 'conductive_covering' || (fabric && typeof fabric === 'object' && fabric.id === 'conductive_covering')
   );
   const autoPassCondictiveCovering = hazard.type === 'static_discharge' && hasCondictiveCovering;
 
   // Check for Fire-Resistant Fabric (once per age auto-pass fire)
   const hasFireResistantFabric = playerState.blueprint?.fabricSlots?.some(
-    fabric => fabric === 'fire_resistant_fabric' || fabric?.id === 'fire_resistant_fabric'
+    (fabric: string | { id: string } | null) => fabric === 'fire_resistant_fabric' || (fabric && typeof fabric === 'object' && fabric.id === 'fire_resistant_fabric')
   );
   const fireProtectionAvailable = isFireHazard && hasFireResistantFabric && !playerState.fireProtectionUsedThisAge;
 
   // Helper for auto-pass reason
-  const getAutoPassReason = (clearWeather, heliumFire, conductiveCovering, fireResistant) => {
+  const getAutoPassReason = (clearWeather: boolean, heliumFire: boolean, conductiveCovering: boolean, fireResistant: boolean): string | null => {
     if (clearWeather) return 'Clear Weather';
     if (heliumFire) return 'Fire Immunity (Helium)';
     if (conductiveCovering) return 'Conductive Covering';
@@ -288,30 +366,21 @@ function processLaunchCombatMission(state, playerId, data) {
   };
 
   // Store pending hazard on ship for client to respond
-  ships[shipIndex].pendingHazard = {
-    // Core hazard info
+  combatShip.pendingHazard = {
     type: hazard.type,
     name: hazard.name,
     category: hazard.category,
     challengeType,
     difficulty,
     flak: hazard.flak || 0,
-
-    // Fire hazard specific
     engineerCost: hazard.engineerCost,
     noSave: hazard.noSave,
     hydrogenOnly: hazard.hydrogenOnly,
-
-    // Special effects
     special: hazard.special,
     gasLossOnFailure: hazard.gasLossOnFailure,
-
-    // Ship stats for comparison
     relevantStat,
     statName: challengeType,
     engineersNeeded,
-
-    // Auto-pass flags
     autoPass: autoPassClearWeather,
     autoPassReason: getAutoPassReason(autoPassClearWeather, autoPassHeliumFire, autoPassCondictiveCovering, fireProtectionAvailable),
     heliumFireImmunity: autoPassHeliumFire,
@@ -320,7 +389,7 @@ function processLaunchCombatMission(state, playerId, data) {
   };
 
   // Build log message
-  const autoPassReason = ships[shipIndex].pendingHazard.autoPassReason;
+  const autoPassReason = getAutoPassReason(autoPassClearWeather, autoPassHeliumFire, autoPassCondictiveCovering, fireProtectionAvailable);
   const hazardDetails = autoPassReason
     ? ' (' + autoPassReason + ')'
     : ' (' + challengeType + ' ' + difficulty + ' vs ' + relevantStat + ', Flak ' + hazard.flak + ')';
@@ -330,7 +399,7 @@ function processLaunchCombatMission(state, playerId, data) {
     message: 'Hazard drawn: ' + hazard.name + hazardDetails,
     playerId,
     type: 'hazard'
-  });
+  } as LogEntry);
 
   return { newState: state };
 }
@@ -339,7 +408,7 @@ function processLaunchCombatMission(state, playerId, data) {
  * Calculate ship's Armor stat from blueprint
  * Per Section 10.5: Light Armor Plating (+1), Heavy Armor Plating (+2)
  */
-function calculateShipArmor(blueprint) {
+function calculateShipArmor(blueprint: Blueprint): number {
   let armor = 0;
   const componentSlots = blueprint?.componentSlots || [];
 
@@ -356,13 +425,9 @@ function calculateShipArmor(blueprint) {
  * Validate USA faction's late war entry restriction
  * Per Section 13.3: "Flaw: Late to enter war. Cannot acquire a combat
  * mission until all other players have one."
- *
- * @param {Object} state - Game state
- * @param {string} playerId - Player attempting to acquire mission
- * @returns {Object} { allowed: boolean, reason?: string }
  */
-function validateUsaMissionRestriction(state, playerId) {
-  const playerState = state.players[playerId];
+function validateUsaMissionRestriction(state: GameState, playerId: string): UsaRestrictionResult {
+  const playerState = state.players[playerId] as CombatPlayerState;
 
   // Only applies to USA faction
   if (playerState.faction !== 'usa') {
@@ -378,7 +443,7 @@ function validateUsaMissionRestriction(state, playerId) {
   for (const otherId of Object.keys(state.players)) {
     if (otherId === playerId) continue;
 
-    const otherPlayer = state.players[otherId];
+    const otherPlayer = state.players[otherId] as CombatPlayerState;
     const otherMissions = otherPlayer.completedMissions || [];
 
     if (otherMissions.length === 0) {
@@ -393,6 +458,17 @@ function validateUsaMissionRestriction(state, playerId) {
   return { allowed: true };
 }
 
+export {
+  resolveFlakCheck,
+  validateMissionRequirements,
+  processCompleteMission,
+  processLaunchCombatMission,
+  calculateEquipmentBonus,
+  calculateShipArmor,
+  validateUsaMissionRestriction
+};
+
+// CommonJS compatibility
 module.exports = {
   resolveFlakCheck,
   validateMissionRequirements,
