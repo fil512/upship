@@ -3,6 +3,8 @@
  * Extracted from gameState.js routes for better separation of concerns
  */
 
+import type { GameState, PlayerState, Card, LogEntry } from '@upship/api';
+
 const {
   TECH_TILES
 } = require('../data/upgrades');
@@ -26,16 +28,59 @@ const {
 // £2 → £3 → £4 → £5 → £6 → £8 → £10 → £15
 const HELIUM_PRICE_TRACK = [2, 3, 4, 5, 6, 8, 10, 15];
 
+// Tech tile stat structure
+interface TechTileStats {
+  speed?: number;
+  range?: number;
+  ceiling?: number;
+  reliability?: number;
+  luxury?: number;
+  [key: string]: number | undefined;
+}
+
+// Tech tile definition
+interface TechTile {
+  id: string;
+  name: string;
+  stats?: TechTileStats;
+  weight?: number;
+  [key: string]: unknown;
+}
+
+// Blueprint structure
+interface Blueprint {
+  age?: number;
+  frameSlots?: (string | null)[];
+  fabricSlots?: (string | null)[];
+  driveSlots?: (string | null)[];
+  componentSlots?: (string | null)[];
+  [key: string]: unknown;
+}
+
+// Card effect result
+interface CardEffectResult {
+  success: boolean;
+  message?: string;
+}
+
+// Location action result
+interface LocationActionResult {
+  success?: boolean;
+  message?: string;
+  error?: string;
+}
+
 /**
  * Add a log entry with automatic round/age context
- * @param {Object} state - Game state
- * @param {string} message - Log message
- * @param {string} [playerId] - Acting player ID
- * @param {string} [type='action'] - Log entry type
  */
-function addLogEntry(state, message, playerId = null, type = 'action') {
-  state.log = state.log || [];
-  const entry = {
+function addLogEntry(
+  state: GameState,
+  message: string,
+  playerId: string | null = null,
+  type: string = 'action'
+): void {
+  (state as GameState & { log: LogEntry[] }).log = (state as GameState & { log: LogEntry[] }).log || [];
+  const entry: LogEntry = {
     timestamp: new Date().toISOString(),
     message,
     type,
@@ -45,7 +90,7 @@ function addLogEntry(state, message, playerId = null, type = 'action') {
   if (playerId) {
     entry.playerId = playerId;
   }
-  state.log.push(entry);
+  (state as GameState & { log: LogEntry[] }).log.push(entry);
 }
 
 // TECH_CARD_BAG is imported from ../config/constants.js (single source of truth)
@@ -53,20 +98,20 @@ function addLogEntry(state, message, playerId = null, type = 'action') {
 
 // Filter state to hide other players' private information
 // Also excludes full log (fetched separately via /log endpoint)
-function filterStateForPlayer(state, playerId) {
-  const filtered = { ...state };
+function filterStateForPlayer(state: GameState, playerId: string): GameState & { logCount?: number } {
+  const filtered = { ...state } as GameState & { log: LogEntry[]; logCount?: number };
 
   // Exclude full log - only send count and last few entries for notifications
   // Full log is fetched on demand via GET /:gameId/log
   if (filtered.log) {
     const recentEntries = filtered.log.slice(-5); // Last 5 for recent activity display
     filtered.log = recentEntries;
-    filtered.logCount = state.log.length;
+    filtered.logCount = (state as GameState & { log: LogEntry[] }).log.length;
   }
 
   // For each player, hide their hand and deck from others
   if (filtered.players) {
-    filtered.players = {};
+    filtered.players = {} as Record<string, PlayerState>;
     for (const [pid, playerState] of Object.entries(state.players)) {
       if (pid === playerId) {
         // Show full state for requesting player
@@ -75,10 +120,10 @@ function filterStateForPlayer(state, playerId) {
         // Hide private info for other players
         filtered.players[pid] = {
           ...playerState,
-          hand: playerState.hand ? playerState.hand.length : 0, // Only show count
+          hand: playerState.hand ? playerState.hand.length : 0,
           deck: playerState.deck ? playerState.deck.length : 0,
           hazardDeck: playerState.hazardDeck ? playerState.hazardDeck.length : 0
-        };
+        } as unknown as PlayerState;
       }
     }
   }
@@ -86,11 +131,19 @@ function filterStateForPlayer(state, playerId) {
   return filtered;
 }
 
+// Player info for turn order calculation
+interface PlayerTurnInfo {
+  playerId: string;
+  income: number;
+  cash: number;
+  originalIndex: number;
+}
+
 // Calculate turn order for worker placement phase
 // Rules: Lowest income goes first, ties broken by lowest cash, then original player order
 // Ministry visitors from last round get priority (go first)
-function calculateTurnOrder(state) {
-  const players = Object.entries(state.players).map(([playerId, playerState]) => ({
+function calculateTurnOrder(state: GameState): string[] {
+  const players: PlayerTurnInfo[] = Object.entries(state.players).map(([playerId, playerState]) => ({
     playerId,
     income: playerState.income,
     cash: playerState.cash,
@@ -112,7 +165,7 @@ function calculateTurnOrder(state) {
   });
 
   // Ministry visitors go first (in the order they visited), then sorted players
-  const ministryPlayersSorted = ministryVisitors.filter(pid =>
+  const ministryPlayersSorted = ministryVisitors.filter((pid: string) =>
     players.some(p => p.playerId === pid)
   );
 
@@ -120,7 +173,7 @@ function calculateTurnOrder(state) {
 }
 
 // Get the current player who should place an agent (during worker_placement phase)
-function getCurrentPlacer(state) {
+function getCurrentPlacer(state: GameState): string | null {
   if (state.phase !== 'worker_placement') {
     return null;
   }
@@ -143,23 +196,23 @@ function getCurrentPlacer(state) {
 }
 
 // Advance to the next player who hasn't passed in worker placement
-function advanceToNextPlacer(state) {
+function advanceToNextPlacer(state: GameState): string | null {
   // Increment turn counter within the current round
-  state.turnInRound = (state.turnInRound || 1) + 1;
+  (state as GameState & { turnInRound: number }).turnInRound = ((state as GameState & { turnInRound: number }).turnInRound || 1) + 1;
 
-  const order = state.workerPlacement.placementOrder;
-  const passedPlayers = state.workerPlacement.passedPlayers;
-  let index = state.workerPlacement.currentPlacerIndex;
+  const order = state.workerPlacement!.placementOrder;
+  const passedPlayers = state.workerPlacement!.passedPlayers;
+  let index = state.workerPlacement!.currentPlacerIndex || 0;
 
   // Find next non-passed player
   for (let i = 0; i < order.length; i++) {
     index = (index + 1) % order.length;
     const playerId = order[index];
     if (!passedPlayers.includes(playerId)) {
-      state.workerPlacement.currentPlacerIndex = index;
+      state.workerPlacement!.currentPlacerIndex = index;
       // Reset the next player's action flag (they haven't taken action yet this turn)
       if (state.players[playerId]) {
-        state.players[playerId].hasTakenActionThisTurn = false;
+        (state.players[playerId] as PlayerState & { hasTakenActionThisTurn: boolean }).hasTakenActionThisTurn = false;
       }
       return playerId;
     }
@@ -170,13 +223,13 @@ function advanceToNextPlacer(state) {
 }
 
 // Check if all players have passed in worker placement
-function allPlayersPassed(state) {
+function allPlayersPassed(state: GameState): boolean {
   const passedPlayers = state.workerPlacement?.passedPlayers || [];
   return state.playerOrder.every(pid => passedPlayers.includes(pid));
 }
 
 // Shuffle array helper (Math.random() is appropriate for game card shuffling)
-function shuffleArray(array) {
+function shuffleArray<T>(array: T[]): T[] {
   const shuffled = [...array];
   for (let i = shuffled.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1)); // eslint-disable-line sonarjs/pseudo-random
@@ -185,8 +238,14 @@ function shuffleArray(array) {
   return shuffled;
 }
 
+// Extended state type for R&D board operations
+interface StateWithRnD extends GameState {
+  rnDBoard?: { available: unknown[] };
+  techCardBag?: unknown[];
+}
+
 // Refresh R&D Board with new tech cards
-function refreshRnDBoard(state) {
+function refreshRnDBoard(state: StateWithRnD): void {
   // Fill empty slots on R&D board from tech card bag
   const rnDBoard = state.rnDBoard || { available: [] };
   const targetSize = 6; // 6 tech cards available
@@ -199,50 +258,51 @@ function refreshRnDBoard(state) {
 }
 
 // Refresh Market Row with new cards
-function refreshMarketRow(state) {
+function refreshMarketRow(state: GameState): void {
   // Fill empty slots in market row from market deck
-  const marketRow = state.marketRow || [];
+  const extState = state as GameState & { marketRow?: Card[]; marketDeck?: Card[] };
+  const marketRow = extState.marketRow || [];
   const targetSize = 4; // 4 cards in market row
 
-  while (marketRow.length < targetSize && state.marketDeck && state.marketDeck.length > 0) {
-    marketRow.push(state.marketDeck.pop());
+  while (marketRow.length < targetSize && extState.marketDeck && extState.marketDeck.length > 0) {
+    marketRow.push(extState.marketDeck.pop()!);
   }
 
-  state.marketRow = marketRow;
+  extState.marketRow = marketRow;
 }
 
 // Get current helium price step index
-function getHeliumPriceIndex(price) {
+function getHeliumPriceIndex(price: number): number {
   const idx = HELIUM_PRICE_TRACK.indexOf(price);
   return idx >= 0 ? idx : 0;
 }
 
 // Advance helium market by N steps
-function advanceHeliumMarket(state, steps = 1) {
+function advanceHeliumMarket(state: GameState, steps: number = 1): void {
   const currentIdx = getHeliumPriceIndex(state.gasMarket.helium);
   const newIdx = Math.min(currentIdx + steps, HELIUM_PRICE_TRACK.length - 1);
   state.gasMarket.helium = HELIUM_PRICE_TRACK[newIdx];
 }
 
 // Reduce helium market by N steps
-function reduceHeliumMarket(state, steps = 1) {
+function reduceHeliumMarket(state: GameState, steps: number = 1): void {
   const currentIdx = getHeliumPriceIndex(state.gasMarket.helium);
   const newIdx = Math.max(currentIdx - steps, 0);
   state.gasMarket.helium = HELIUM_PRICE_TRACK[newIdx];
 }
 
 // Check if player has any cards that match available locations
-function hasPlayableCards(state, playerId) {
+function hasPlayableCards(state: GameState, playerId: string): boolean {
   const playerState = state.players[playerId];
   const hand = playerState.hand || [];
   const placements = state.groundBoard.placements || {};
 
   // Get list of unoccupied locations
   const availableLocations = Object.keys(GROUND_BOARD_LOCATIONS)
-    .filter(locId => !placements[locId]);
+    .filter((locId: string) => !placements[locId]);
 
   // Check if any card in hand matches any available location
-  for (const card of hand) {
+  for (const card of hand as Card[]) {
     const cardSymbol = card.symbol || 'any';
     for (const locId of availableLocations) {
       if (canPlaceAtLocation(cardSymbol, locId)) {
@@ -258,8 +318,17 @@ function hasPlayableCards(state, playerId) {
 // (transitionToRevealPhase, collectRevealResources, transitionToIncomeCleanup, startNewRound)
 
 // Process card effects when used for agent placement (Section 8.1)
-function processCardEffect(state, playerId, card, _locationId) {
-  const playerState = state.players[playerId];
+function processCardEffect(
+  state: GameState,
+  playerId: string,
+  card: Card,
+  _locationId: string
+): CardEffectResult {
+  const playerState = state.players[playerId] as PlayerState & {
+    bonusSwaps?: number;
+    researchDiscount?: number;
+    launchBonuses?: { statBonus?: number };
+  };
   const effect = card.effect;
 
   if (!effect || effect === 'None') {
@@ -274,18 +343,19 @@ function processCardEffect(state, playerId, card, _locationId) {
       playerState.bonusSwaps += 1;
       return { success: true, message: '+1 swap this action' };
 
-    case 'Draw 1 card':
+    case 'Draw 1 card': {
       // Draftsman: Draw 1 card immediately
       if (playerState.deck.length === 0 && playerState.discardPile.length > 0) {
         playerState.deck = shuffleArray([...playerState.discardPile]);
         playerState.discardPile = [];
       }
       if (playerState.deck.length > 0) {
-        const drawn = playerState.deck.pop();
-        playerState.hand.push(drawn);
-        return { success: true, message: `Drew ${drawn.name}` };
+        const drawn = playerState.deck.pop()!;
+        (playerState.hand as Card[]).push(drawn);
+        return { success: true, message: `Drew ${(drawn as Card).name}` };
       }
       return { success: true, message: 'No cards to draw' };
+    }
 
     case '-£1 Research cost':
       // Researcher: Research cost reduction
@@ -312,10 +382,19 @@ function processCardEffect(state, playerId, card, _locationId) {
   }
 }
 
+// Extended state with log array
+type StateWithLog = GameState & { log: LogEntry[] };
+
 // Execute the action associated with a Ground Board location
 // This is a dispatcher that calls the appropriate handler
-function executeLocationAction(state, playerId, locationId, _card) {
-  const playerState = state.players[playerId];
+function executeLocationAction(
+  state: GameState,
+  playerId: string,
+  locationId: string,
+  _card: Card
+): LocationActionResult {
+  const playerState = state.players[playerId] as PlayerState & { peekedHazard?: unknown };
+  const stateWithLog = state as StateWithLog;
 
   switch (locationId) {
     case 'research_institute':
@@ -356,7 +435,7 @@ function executeLocationAction(state, playerId, locationId, _card) {
       // 1. Draw 2 cards, discard 1
       // 2. Gain turn priority for next round
       // 3. Reduce Helium Market Track by 1 step
-      state.workerPlacement.ministryVisitors.push(playerId);
+      state.workerPlacement!.ministryVisitors.push(playerId);
 
       // Draw 2 cards
       const cardsToDraw = 2;
@@ -366,16 +445,16 @@ function executeLocationAction(state, playerId, locationId, _card) {
           playerState.discardPile = [];
         }
         if (playerState.deck.length > 0) {
-          playerState.hand.push(playerState.deck.pop());
+          (playerState.hand as Card[]).push(playerState.deck.pop()!);
         }
       }
 
       // Must discard 1 card - for now, auto-discard the last card drawn
       // (Player should choose via separate action, but auto-discard for simplicity)
-      if (playerState.hand.length > 0) {
-        const discarded = playerState.hand.pop();
+      if ((playerState.hand as Card[]).length > 0) {
+        const discarded = (playerState.hand as Card[]).pop()!;
         playerState.discardPile.push(discarded);
-        state.log.push({
+        stateWithLog.log.push({
           timestamp: new Date().toISOString(),
           message: `Drew 2 cards, discarded ${discarded.name}`,
           playerId,
@@ -385,7 +464,7 @@ function executeLocationAction(state, playerId, locationId, _card) {
 
       // Reduce Helium Market Track by 1 step
       reduceHeliumMarket(state, 1);
-      state.log.push({
+      stateWithLog.log.push({
         timestamp: new Date().toISOString(),
         message: `Ministry: Helium price reduced to £${state.gasMarket.helium}`,
         playerId,
@@ -414,12 +493,12 @@ function executeLocationAction(state, playerId, locationId, _card) {
 
       // Peek at top hazard card
       const hazardDeck = playerState.hazardDeck || [];
-      if (hazardDeck.length > 0) {
+      if ((hazardDeck as unknown[]).length > 0) {
         const topHazard = hazardDeck[0];
         // Store peeked card so player can decide to discard
-        playerState.peekedHazard = { ...topHazard };
+        playerState.peekedHazard = topHazard;
 
-        state.log.push({
+        stateWithLog.log.push({
           timestamp: new Date().toISOString(),
           message: `Weather Bureau: Peeked at top hazard (${topHazard.type}, difficulty ${topHazard.difficulty}). May discard with DISCARD_HAZARD action.`,
           playerId,
@@ -436,22 +515,35 @@ function executeLocationAction(state, playerId, locationId, _card) {
   }
 }
 
+// Tech card structure
+interface TechCard {
+  id: string;
+  name?: string;
+  age?: number;
+  [key: string]: unknown;
+}
+
+// Extended state for tech card operations
+interface StateWithTech extends GameState {
+  techCardBag?: TechCard[];
+}
+
 // Add new age tech cards to the tech card bag
-function addAgeTechCards(state, age) {
+function addAgeTechCards(state: StateWithTech, age: number): void {
   const newCards = TECH_CARD_BAG[age] || [];
   if (newCards.length > 0) {
     // Collect all tech cards already owned by any player
-    const ownedCards = new Set();
+    const ownedCards = new Set<string>();
     for (const pid of Object.keys(state.players || {})) {
-      for (const card of state.players[pid].techCards || []) {
+      for (const card of (state.players[pid] as PlayerState & { techCards?: string[] }).techCards || []) {
         ownedCards.add(card);
       }
     }
 
     // Filter out already-owned tech cards and add age marker
-    const cardsWithAge = newCards
-      .filter(t => !ownedCards.has(t.id))
-      .map(t => ({ ...t, age }));
+    const cardsWithAge = (newCards as TechCard[])
+      .filter((t: TechCard) => !ownedCards.has(t.id))
+      .map((t: TechCard) => ({ ...t, age }));
 
     // Shuffle and add to tech card bag
     state.techCardBag = state.techCardBag || [];
@@ -459,14 +551,20 @@ function addAgeTechCards(state, age) {
   }
 }
 
+// Extended state for R&D board operations (intersection to allow TechCard arrays)
+type StateWithRD = Omit<GameState, 'rdBoard' | 'techBag'> & {
+  rdBoard?: TechCard[];
+  techCardBag?: TechCard[];
+};
+
 // Refill R&D board from tech card bag (Section 4.1)
 // Age I: 4 cards, Age II: 5 cards, Age III: 6 cards
-function refillRDBoard(state) {
+function refillRDBoard(state: StateWithRD): void {
   state.rdBoard = state.rdBoard || [];
   state.techCardBag = state.techCardBag || [];
 
   // R&D Board size scales by Age
-  const rdBoardSize = {
+  const rdBoardSize: Record<number, number> = {
     1: 4,
     2: 5,
     3: 6
@@ -474,15 +572,15 @@ function refillRDBoard(state) {
   const targetSize = rdBoardSize[state.age] || 4;
 
   while (state.rdBoard.length < targetSize && state.techCardBag.length > 0) {
-    state.rdBoard.push(state.techCardBag.shift());
+    state.rdBoard.push(state.techCardBag.shift()!);
   }
 }
 
 // Calculate specialization discount based on techs in same track
-function calculateSpecializationDiscount(playerTechs, techType) {
+function calculateSpecializationDiscount(playerTechs: string[], techType: string): number {
   const techsInTrack = playerTechs.filter(t => {
     // Map tech IDs to types (rough approximation)
-    const techTypeMap = {
+    const techTypeMap: Record<string, string[]> = {
       structure: ['rigid_frame', 'duralumin_girders', 'wooden_framework', 'wire_bracing', 'steel_framework', 'internal_keel', 'geodetic_structure', 'modular_construction'],
       fabric: ['dining_saloon', 'rubberized_cotton', 'doped_canvas', 'goldbeater_skin', 'fireproof_coating', 'aluminum_doping', 'composite_covering'],
       drive: ['maybach_engine', 'daimler_engine', 'improved_propeller', 'dual_engine_mount', 'diesel_powerplant', 'streamlined_nacelle', 'supercharged_engine'],
@@ -501,26 +599,38 @@ function calculateSpecializationDiscount(playerTechs, techType) {
   return 0;
 }
 
-// Calculate ship stats from blueprint
-function calculateBlueprintStats(blueprint, age = 1) {
-  const AGE_BASELINES = {
-    1: { speed: 1, range: 1, ceiling: 0, reliability: 0 },
-    2: { speed: 2, range: 2, ceiling: 1, reliability: 1 },
-    3: { speed: 3, range: 3, ceiling: 2, reliability: 2 }
-  };
+// Ship stats structure
+interface ShipStats {
+  speed: number;
+  range: number;
+  ceiling: number;
+  reliability: number;
+  [key: string]: number;
+}
 
-  const stats = { ...AGE_BASELINES[age] };
+// Age baseline stats
+const AGE_BASELINES: Record<number, ShipStats> = {
+  1: { speed: 1, range: 1, ceiling: 0, reliability: 0 },
+  2: { speed: 2, range: 2, ceiling: 1, reliability: 1 },
+  3: { speed: 3, range: 3, ceiling: 2, reliability: 2 }
+};
+
+// Calculate ship stats from blueprint
+function calculateBlueprintStats(blueprint: Blueprint, age: number = 1): ShipStats {
+  const stats: ShipStats = { ...AGE_BASELINES[age] };
 
   // Add stats from tech tiles
-  const slots = ['frameSlots', 'fabricSlots', 'driveSlots', 'componentSlots'];
+  const slots: (keyof Blueprint)[] = ['frameSlots', 'fabricSlots', 'driveSlots', 'componentSlots'];
   for (const slotKey of slots) {
-    const slotArray = blueprint[slotKey] || [];
+    const slotArray = (blueprint[slotKey] as (string | null)[] | undefined) || [];
     for (const tileId of slotArray) {
       if (!tileId) continue;
-      const tile = TECH_TILES[tileId];
+      const tile = TECH_TILES[tileId] as TechTile | undefined;
       if (tile?.stats) {
         for (const [stat, value] of Object.entries(tile.stats)) {
-          stats[stat] = (stats[stat] || 0) + value;
+          if (value !== undefined) {
+            stats[stat] = (stats[stat] || 0) + value;
+          }
         }
       }
     }
@@ -530,14 +640,14 @@ function calculateBlueprintStats(blueprint, age = 1) {
 }
 
 // Calculate weight from blueprint
-function calculateBlueprintWeight(blueprint) {
+function calculateBlueprintWeight(blueprint: Blueprint): number {
   let weight = 0;
-  const slots = ['frameSlots', 'fabricSlots', 'driveSlots', 'componentSlots'];
+  const slots: (keyof Blueprint)[] = ['frameSlots', 'fabricSlots', 'driveSlots', 'componentSlots'];
   for (const slotKey of slots) {
-    const slotArray = blueprint[slotKey] || [];
+    const slotArray = (blueprint[slotKey] as (string | null)[] | undefined) || [];
     for (const tileId of slotArray) {
       if (!tileId) continue;
-      const tile = TECH_TILES[tileId];
+      const tile = TECH_TILES[tileId] as TechTile | undefined;
       if (tile?.weight) {
         weight += Math.abs(tile.weight);
       }
@@ -547,7 +657,7 @@ function calculateBlueprintWeight(blueprint) {
 }
 
 // Calculate required gas cubes based on weight (Lift must >= Weight, each cube = +5 Lift)
-function calculateRequiredGasCubes(blueprint) {
+function calculateRequiredGasCubes(blueprint: Blueprint): number {
   const weight = calculateBlueprintWeight(blueprint);
   // Minimum 1 gas cube, otherwise ceil(weight / 5)
   return Math.max(1, Math.ceil(weight / 5));

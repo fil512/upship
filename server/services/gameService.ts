@@ -1,20 +1,104 @@
-const { pool } = require('../db');
-const gameStateService = require('./gameStateService');
-const {
+/**
+ * Game Service
+ * Handles game lobby operations: create, join, leave, start
+ */
+
+import type { Faction, GameState } from '@upship/api';
+import type { PoolClient } from 'pg';
+import { pool } from '../db';
+import {
   NotFoundError,
   ForbiddenError,
   ValidationError,
   ConflictError
-} = require('../errors');
+} from '../errors';
 
-// Create a new game
-async function createGame(hostId, name, settings = {}) {
+// Use require for circular dependency with gameStateService
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const gameStateService = require('./gameStateService');
+
+// Game settings
+interface GameSettings {
+  minPlayers?: number;
+  maxPlayers?: number;
+  [key: string]: unknown;
+}
+
+// Database game row
+interface GameRow {
+  id: string;
+  name: string;
+  host_id: string;
+  status: 'waiting' | 'in_progress' | 'completed' | 'cancelled';
+  min_players: number;
+  max_players: number;
+  current_player_count: number;
+  settings: GameSettings;
+  created_at: Date;
+  started_at: Date | null;
+  host_username?: string;
+  players?: GamePlayer[];
+  game_state?: GameState;
+  my_faction?: Faction;
+}
+
+// Game player from database
+interface GamePlayerRow {
+  id: string;
+  game_id: string;
+  user_id: string;
+  faction: Faction | null;
+  player_order: number;
+}
+
+// Player info in game response
+interface GamePlayer {
+  id: string;
+  username: string;
+  faction: Faction | null;
+  playerOrder?: number;
+}
+
+// Game with players for API response
+interface GameWithPlayers extends Omit<GameRow, 'players'> {
+  players: GamePlayer[];
+}
+
+// User game with turn info
+interface UserGame extends Omit<GameRow, 'game_state'> {
+  isMyTurn: boolean;
+  age: number | null;
+  round: number | null;
+}
+
+// Filters for game list
+interface GameFilters {
+  status?: 'waiting' | 'in_progress' | 'completed';
+  limit?: number;
+}
+
+// Drop games result
+interface DropGamesResult {
+  deletedGames: number;
+  deletedStates: number;
+  deletedActions: number;
+  deletedPlayers: number;
+}
+
+/**
+ * Create a new game
+ */
+export async function createGame(
+  hostId: string,
+  name: string,
+  settings: GameSettings = {}
+): Promise<GameRow> {
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
 
     // Create the game
-    const gameResult = await client.query(
+    const gameResult = await client.query<GameRow>(
       `INSERT INTO games (name, host_id, min_players, max_players, settings)
        VALUES ($1, $2, $3, $4, $5)
        RETURNING *`,
@@ -39,8 +123,10 @@ async function createGame(hostId, name, settings = {}) {
   }
 }
 
-// Get list of games (with filters)
-async function getGames(filters = {}) {
+/**
+ * Get list of games (with filters)
+ */
+export async function getGames(filters: GameFilters = {}): Promise<GameWithPlayers[]> {
   let query = `
     SELECT g.*, u.username as host_username,
            COALESCE(
@@ -56,8 +142,8 @@ async function getGames(filters = {}) {
     LEFT JOIN users pu ON gp.user_id = pu.id
   `;
 
-  const conditions = [];
-  const params = [];
+  const conditions: string[] = [];
+  const params: unknown[] = [];
 
   if (filters.status) {
     params.push(filters.status);
@@ -75,13 +161,15 @@ async function getGames(filters = {}) {
     query += ` LIMIT $${params.length}`;
   }
 
-  const result = await pool.query(query, params);
+  const result = await pool.query<GameWithPlayers>(query, params);
   return result.rows;
 }
 
-// Get single game by ID
-async function getGameById(gameId) {
-  const result = await pool.query(
+/**
+ * Get single game by ID
+ */
+export async function getGameById(gameId: string): Promise<GameWithPlayers | null> {
+  const result = await pool.query<GameWithPlayers>(
     `SELECT g.*, u.username as host_username,
             COALESCE(
               json_agg(
@@ -105,14 +193,20 @@ async function getGameById(gameId) {
   return result.rows[0] || null;
 }
 
-// Join a game (optionally with faction selection)
-async function joinGame(gameId, userId, faction = null) {
+/**
+ * Join a game (optionally with faction selection)
+ */
+export async function joinGame(
+  gameId: string,
+  userId: string,
+  faction: Faction | null = null
+): Promise<GameWithPlayers | null> {
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
 
     // Check game exists and is waiting
-    const gameResult = await client.query(
+    const gameResult = await client.query<GameRow>(
       'SELECT * FROM games WHERE id = $1 FOR UPDATE',
       [gameId]
     );
@@ -168,8 +262,7 @@ async function joinGame(gameId, userId, faction = null) {
     );
 
     await client.query('COMMIT');
-    const result = await getGameById(gameId);
-    return result;
+    return await getGameById(gameId);
   } catch (error) {
     await client.query('ROLLBACK');
     throw error;
@@ -178,14 +271,16 @@ async function joinGame(gameId, userId, faction = null) {
   }
 }
 
-// Leave a game
-async function leaveGame(gameId, userId) {
+/**
+ * Leave a game
+ */
+export async function leaveGame(gameId: string, userId: string): Promise<GameWithPlayers | null> {
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
 
     // Check game exists and user is in it
-    const gameResult = await client.query(
+    const gameResult = await client.query<GameRow>(
       'SELECT * FROM games WHERE id = $1 FOR UPDATE',
       [gameId]
     );
@@ -226,8 +321,7 @@ async function leaveGame(gameId, userId) {
     }
 
     await client.query('COMMIT');
-    const result = await getGameById(gameId);
-    return result;
+    return await getGameById(gameId);
   } catch (error) {
     await client.query('ROLLBACK');
     throw error;
@@ -236,14 +330,20 @@ async function leaveGame(gameId, userId) {
   }
 }
 
-// Select faction (with transaction to prevent race conditions)
-async function selectFaction(gameId, userId, faction) {
+/**
+ * Select faction (with transaction to prevent race conditions)
+ */
+export async function selectFaction(
+  gameId: string,
+  userId: string,
+  faction: Faction
+): Promise<GameWithPlayers | null> {
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
 
     // Lock the game and check status
-    const gameResult = await client.query(
+    const gameResult = await client.query<{ status: string }>(
       'SELECT status FROM games WHERE id = $1 FOR UPDATE',
       [gameId]
     );
@@ -285,8 +385,7 @@ async function selectFaction(gameId, userId, faction) {
     );
 
     await client.query('COMMIT');
-    const result = await getGameById(gameId);
-    return result;
+    return await getGameById(gameId);
   } catch (error) {
     await client.query('ROLLBACK');
     throw error;
@@ -295,13 +394,15 @@ async function selectFaction(gameId, userId, faction) {
   }
 }
 
-// Start game (host only)
-async function startGame(gameId, userId) {
+/**
+ * Start game (host only)
+ */
+export async function startGame(gameId: string, userId: string): Promise<GameWithPlayers | null> {
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
 
-    const gameResult = await client.query(
+    const gameResult = await client.query<GameRow>(
       'SELECT * FROM games WHERE id = $1 FOR UPDATE',
       [gameId]
     );
@@ -325,7 +426,7 @@ async function startGame(gameId, userId) {
     }
 
     // Check all players have selected factions
-    const playersResult = await client.query(
+    const playersResult = await client.query<GamePlayerRow>(
       'SELECT * FROM game_players WHERE game_id = $1',
       [gameId]
     );
@@ -348,8 +449,7 @@ async function startGame(gameId, userId) {
     // Initialize game state (after transaction commits)
     await gameStateService.initializeGameState(gameId, playersResult.rows);
 
-    const result = await getGameById(gameId);
-    return result;
+    return await getGameById(gameId);
   } catch (error) {
     await client.query('ROLLBACK');
     throw error;
@@ -358,8 +458,10 @@ async function startGame(gameId, userId) {
   }
 }
 
-// Check if a user is a player in a game
-async function isPlayerInGame(gameId, userId) {
+/**
+ * Check if a user is a player in a game
+ */
+export async function isPlayerInGame(gameId: string, userId: string): Promise<boolean> {
   const result = await pool.query(
     'SELECT 1 FROM game_players WHERE game_id = $1 AND user_id = $2',
     [gameId, userId]
@@ -367,9 +469,11 @@ async function isPlayerInGame(gameId, userId) {
   return result.rows.length > 0;
 }
 
-// Get games for a specific user (with turn info for active games)
-async function getUserGames(userId) {
-  const result = await pool.query(
+/**
+ * Get games for a specific user (with turn info for active games)
+ */
+export async function getUserGames(userId: string): Promise<UserGame[]> {
+  const result = await pool.query<GameRow & { game_state: GameState | null }>(
     `SELECT g.*, u.username as host_username,
             gs.state as game_state,
             gp.faction as my_faction
@@ -385,8 +489,8 @@ async function getUserGames(userId) {
   // Process games to add isMyTurn flag and extract game info
   return result.rows.map(game => {
     let isMyTurn = false;
-    let age = null;
-    let round = null;
+    let age: number | null = null;
+    let round: number | null = null;
 
     if (game.status === 'in_progress' && game.game_state) {
       const state = game.game_state;
@@ -410,23 +514,25 @@ async function getUserGames(userId) {
     }
 
     // Remove game_state from response (too large for list view)
-    // eslint-disable-next-line no-unused-vars
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { game_state, ...gameWithoutState } = game;
     return { ...gameWithoutState, isMyTurn, age, round };
   });
 }
 
-// Drop all game data (admin/dev only)
-async function dropAllGames() {
+/**
+ * Drop all game data (admin/dev only)
+ */
+export async function dropAllGames(): Promise<DropGamesResult> {
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
 
     // Get counts before deletion for reporting
-    const gamesCount = await client.query('SELECT COUNT(*) FROM games');
-    const statesCount = await client.query('SELECT COUNT(*) FROM game_states');
-    const actionsCount = await client.query('SELECT COUNT(*) FROM game_actions');
-    const playersCount = await client.query('SELECT COUNT(*) FROM game_players');
+    const gamesCount = await client.query<{ count: string }>('SELECT COUNT(*) FROM games');
+    const statesCount = await client.query<{ count: string }>('SELECT COUNT(*) FROM game_states');
+    const actionsCount = await client.query<{ count: string }>('SELECT COUNT(*) FROM game_actions');
+    const playersCount = await client.query<{ count: string }>('SELECT COUNT(*) FROM game_players');
 
     // Delete from games - CASCADE will handle game_players, game_states, game_actions
     await client.query('DELETE FROM games');
@@ -447,6 +553,7 @@ async function dropAllGames() {
   }
 }
 
+// CommonJS compatibility
 module.exports = {
   createGame,
   getGames,

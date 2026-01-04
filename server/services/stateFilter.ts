@@ -3,22 +3,35 @@
  * Filters game state to hide private information from other players
  */
 
+import type { GameState, PlayerState, Card, HazardCard } from '@upship/api';
+
+// Filtered player state for opponents (hides private info)
+interface FilteredPlayerState extends Omit<PlayerState, 'hand' | 'deck' | 'hazardDeck' | 'peekedHazard'> {
+  hand: number | Card[];
+  deck: number | Card[];
+  hazardDeck: number | HazardCard[];
+  peekedHazard?: undefined;
+}
+
+// Filtered game state type
+interface FilteredGameState extends Omit<GameState, 'players'> {
+  players: Record<string, PlayerState | FilteredPlayerState>;
+}
+
 /**
  * Filter game state for a specific player
  * Hides private information (hand, deck, hazard deck) from opponents
  *
- * @param {Object} state - Full game state
- * @param {string} playerId - ID of the player viewing the state
- * @returns {Object} Filtered state safe to send to player
+ * @param state - Full game state
+ * @param playerId - ID of the player viewing the state
+ * @returns Filtered state safe to send to player
  */
-function filterStateForPlayer(state, playerId) {
+export function filterStateForPlayer(state: GameState | null, playerId: string): FilteredGameState | null {
   if (!state) return state;
 
-  const filtered = { ...state };
+  const filtered: FilteredGameState = { ...state, players: {} };
 
-  if (filtered.players) {
-    filtered.players = {};
-
+  if (state.players) {
     for (const [pid, playerState] of Object.entries(state.players)) {
       if (pid === playerId) {
         // Show full state to the owning player
@@ -44,17 +57,15 @@ function filterStateForPlayer(state, playerId) {
 /**
  * Filter game state for spectators (no private info for anyone)
  *
- * @param {Object} state - Full game state
- * @returns {Object} Filtered state safe for spectators
+ * @param state - Full game state
+ * @returns Filtered state safe for spectators
  */
-function filterStateForSpectator(state) {
+export function filterStateForSpectator(state: GameState | null): FilteredGameState | null {
   if (!state) return state;
 
-  const filtered = { ...state };
+  const filtered: FilteredGameState = { ...state, players: {} };
 
-  if (filtered.players) {
-    filtered.players = {};
-
+  if (state.players) {
     for (const [pid, playerState] of Object.entries(state.players)) {
       filtered.players[pid] = {
         ...playerState,
@@ -69,6 +80,7 @@ function filterStateForSpectator(state) {
   return filtered;
 }
 
+// CommonJS compatibility
 module.exports = {
   filterStateForPlayer,
   filterStateForSpectator

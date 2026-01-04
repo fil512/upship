@@ -4,6 +4,8 @@
  * Extracted from gameState.js routes for better separation of concerns
  */
 
+import type { GameState, PlayerState, Card, Ship, Route } from '@upship/api';
+
 const {
   TECH_TILES,
   TECH_CARDS
@@ -31,8 +33,101 @@ const {
   calculateRequiredGasCubes
 } = require('./gameStateHelpers');
 
+// Action result type
+interface ActionResult {
+  newState?: GameState;
+  error?: string;
+}
+
+// Log entry structure
+interface LogEntry {
+  timestamp: string;
+  message: string;
+  playerId?: string;
+  type: string;
+}
+
+// Extended game state with log
+type StateWithLog = GameState & { log: LogEntry[] };
+
+// Tech tile definition
+interface TechTile {
+  id: string;
+  name: string;
+  slotType: string;
+  age: number;
+  requiredCard: string;
+  hullCost?: number;
+  [key: string]: unknown;
+}
+
+// Tech card definition
+interface TechCard {
+  id: string;
+  name: string;
+  cost: number;
+  type?: string;
+  vp?: number;
+  [key: string]: unknown;
+}
+
+// Ship stats
+interface ShipStats {
+  speed: number;
+  range: number;
+  ceiling: number;
+  reliability: number;
+  luxury?: number;
+  [key: string]: number | undefined;
+}
+
+// Blueprint structure
+interface Blueprint {
+  frameSlots: (string | null)[];
+  fabricSlots: (string | null)[];
+  driveSlots: (string | null)[];
+  componentSlots: (string | null)[];
+  [key: string]: unknown;
+}
+
+// Hazard card structure
+interface HazardCardCheck {
+  type: string;
+  difficulty: number;
+  id?: string;
+}
+
+// Hazard check result
+interface HazardCheckResult {
+  hazardType: string;
+  difficulty: number;
+  safetyRating: number;
+  success: boolean;
+  timestamp: string;
+}
+
+// Score breakdown
+interface ScoreBreakdown {
+  routes: number;
+  techCards: number;
+  cash: number;
+  ships: number;
+}
+
+// Player score
+interface PlayerScore {
+  total: number;
+  breakdown: ScoreBreakdown;
+  faction: string;
+}
+
 // Main action dispatcher
-function processAction(state, playerId, actionType, data) {
+function processAction(
+  state: GameState,
+  playerId: string,
+  actionType: string,
+  data: Record<string, unknown>
+): ActionResult {
   const newState = structuredClone(state); // Deep clone (faster than JSON.parse/stringify)
   const playerState = newState.players[playerId];
 
@@ -130,19 +225,23 @@ function processAction(state, playerId, actionType, data) {
   }
 }
 
+// Extended player state with peekedHazard
+type PlayerWithPeekedHazard = PlayerState & { peekedHazard?: HazardCardCheck };
+
 // Discard a peeked hazard card (from Weather Bureau)
-function processDiscardHazard(state, playerId, _data) {
-  const playerState = state.players[playerId];
+function processDiscardHazard(state: GameState, playerId: string, _data: Record<string, unknown>): ActionResult {
+  const playerState = state.players[playerId] as PlayerWithPeekedHazard;
+  const stateWithLog = state as StateWithLog;
 
   if (!playerState.peekedHazard) {
     return { error: 'No peeked hazard to discard. Visit Weather Bureau first.' };
   }
 
   // Remove the top card from hazard deck
-  const hazardDeck = playerState.hazardDeck || [];
+  const hazardDeck = (playerState.hazardDeck || []) as HazardCardCheck[];
   if (hazardDeck.length > 0 && hazardDeck[0].id === playerState.peekedHazard.id) {
-    const discarded = hazardDeck.shift();
-    state.log.push({
+    const discarded = hazardDeck.shift()!;
+    stateWithLog.log.push({
       timestamp: new Date().toISOString(),
       message: `Discarded hazard: ${discarded.type} (difficulty ${discarded.difficulty})`,
       playerId,
@@ -156,18 +255,23 @@ function processDiscardHazard(state, playerId, _data) {
   return { newState: state };
 }
 
+// Extended state with marketCards
+type StateWithMarket = GameState & { marketCards?: Card[] };
+
 // Discard leftmost Market card (from Academy)
-function processDiscardMarketCard(state, playerId, _data) {
-  const marketCards = state.marketCards || [];
+function processDiscardMarketCard(state: GameState, playerId: string, _data: Record<string, unknown>): ActionResult {
+  const stateWithMarket = state as StateWithMarket;
+  const stateWithLog = state as StateWithLog;
+  const marketCards = stateWithMarket.marketCards || [];
 
   if (marketCards.length === 0) {
     return { error: 'Market row is empty' };
   }
 
   // Remove leftmost card
-  const discarded = marketCards.shift();
+  const discarded = marketCards.shift()!;
 
-  state.log.push({
+  stateWithLog.log.push({
     timestamp: new Date().toISOString(),
     message: `Discarded leftmost Market card: ${discarded.name}`,
     playerId,
@@ -177,21 +281,25 @@ function processDiscardMarketCard(state, playerId, _data) {
   return { newState: state };
 }
 
+// Extended player state with hasPassed and hasTakenActionThisTurn
+type PlayerWithFlags = PlayerState & { hasPassed?: boolean; hasTakenActionThisTurn?: boolean };
+
 // End turn - behavior depends on current phase
-function processEndTurn(state, playerId) {
-  const playerState = state.players[playerId];
+function processEndTurn(state: GameState, playerId: string): ActionResult {
+  const playerState = state.players[playerId] as PlayerWithFlags;
+  const stateWithLog = state as StateWithLog;
 
   switch (state.phase) {
     case 'worker_placement': {
       // During worker placement, END_TURN advances to next placer
       // Player is marked as passed for this round
       playerState.hasPassed = true;
-      if (!state.workerPlacement.passedPlayers.includes(playerId)) {
-        state.workerPlacement.passedPlayers.push(playerId);
+      if (!state.workerPlacement!.passedPlayers.includes(playerId)) {
+        state.workerPlacement!.passedPlayers.push(playerId);
       }
       playerState.hasTakenActionThisTurn = false;
 
-      state.log.push({
+      stateWithLog.log.push({
         timestamp: new Date().toISOString(),
         message: `${playerState.faction.toUpperCase()} ends their turn`,
         playerId,
@@ -209,10 +317,10 @@ function processEndTurn(state, playerId) {
 
     case 'reveal': {
       // During reveal phase, END_TURN signals done with tech/market purchases
-      state.revealPhase.techAcquisitionsComplete[playerId] = true;
-      state.revealPhase.marketPurchasesComplete[playerId] = true;
+      state.revealPhase!.techAcquisitionsComplete[playerId] = true;
+      state.revealPhase!.marketPurchasesComplete[playerId] = true;
 
-      state.log.push({
+      stateWithLog.log.push({
         timestamp: new Date().toISOString(),
         message: `${playerState.faction.toUpperCase()} finished reveal phase actions`,
         playerId,
@@ -221,8 +329,8 @@ function processEndTurn(state, playerId) {
 
       // Check if all players are done with reveal phase
       const allDone = state.playerOrder.every(pid =>
-        state.revealPhase.techAcquisitionsComplete[pid] &&
-        state.revealPhase.marketPurchasesComplete[pid]
+        state.revealPhase!.techAcquisitionsComplete[pid] &&
+        state.revealPhase!.marketPurchasesComplete[pid]
       );
 
       if (allDone) {
@@ -236,7 +344,7 @@ function processEndTurn(state, playerId) {
       // When all players done, start new round
       state.currentPlayerIndex = (state.currentPlayerIndex + 1) % state.playerOrder.length;
 
-      state.log.push({
+      stateWithLog.log.push({
         timestamp: new Date().toISOString(),
         message: `${playerState.faction.toUpperCase()} ended their turn`,
         playerId,
@@ -252,7 +360,7 @@ function processEndTurn(state, playerId) {
     default:
       // Fallback for any other phase - advance player
       state.currentPlayerIndex = (state.currentPlayerIndex + 1) % state.playerOrder.length;
-      state.log.push({
+      stateWithLog.log.push({
         timestamp: new Date().toISOString(),
         message: `Player ended their turn`,
         playerId,
@@ -263,10 +371,17 @@ function processEndTurn(state, playerId) {
   return { newState: state };
 }
 
+// Buy gas data
+interface BuyGasData {
+  gasType: 'hydrogen' | 'helium';
+  amount: number;
+}
+
 // Buy gas cubes
-function processBuyGas(state, playerId, data) {
-  const { gasType, amount } = data;
+function processBuyGas(state: GameState, playerId: string, data: Record<string, unknown>): ActionResult {
+  const { gasType, amount } = data as BuyGasData;
   const playerState = state.players[playerId];
+  const stateWithLog = state as StateWithLog;
 
   if (!['hydrogen', 'helium'].includes(gasType)) {
     return { error: 'Invalid gas type' };
@@ -274,7 +389,8 @@ function processBuyGas(state, playerId, data) {
 
   // Helium requires Helium Handling tech card (Section 4.4)
   if (gasType === 'helium') {
-    const hasHeliumHandling = playerState.techCards?.some(t => t.id === 'HELIUM_HANDLING');
+    const techCards = (playerState as PlayerState & { techCards?: { id: string }[] }).techCards;
+    const hasHeliumHandling = techCards?.some((t: { id: string }) => t.id === 'HELIUM_HANDLING');
     if (!hasHeliumHandling) {
       return { error: 'Cannot purchase Helium without Helium Handling tech card' };
     }
@@ -297,7 +413,7 @@ function processBuyGas(state, playerId, data) {
   }
   // Note: Hydrogen price is fixed at £1 per Section 4.4
 
-  state.log.push({
+  stateWithLog.log.push({
     timestamp: new Date().toISOString(),
     message: `Bought ${amount} ${gasType} for £${price}`,
     playerId,
@@ -307,17 +423,32 @@ function processBuyGas(state, playerId, data) {
   return { newState: state };
 }
 
-// Acquire technology from R&D board
-function processAcquireTechnology(state, playerId, data) {
-  const { techId } = data;
-  const playerState = state.players[playerId];
+// Tech acquisition data
+interface AcquireTechData {
+  techId: string;
+}
 
-  const cardIndex = state.rdBoard.findIndex(t => t.id === techId);
+// Extended state with tech card structures
+type StateWithTech = GameState & {
+  rdBoard: TechCard[];
+  techCardBag?: TechCard[];
+  progressTrack?: number;
+  progressThresholds?: { age2: number; age3: number; end: number };
+};
+
+// Acquire technology from R&D board
+function processAcquireTechnology(state: GameState, playerId: string, data: Record<string, unknown>): ActionResult {
+  const { techId } = data as AcquireTechData;
+  const playerState = state.players[playerId] as PlayerState & { techCards: string[] };
+  const stateWithTech = state as StateWithTech;
+  const stateWithLog = state as StateWithLog;
+
+  const cardIndex = stateWithTech.rdBoard.findIndex(t => t.id === techId);
   if (cardIndex === -1) {
     return { error: 'Tech card not available' };
   }
 
-  const card = state.rdBoard[cardIndex];
+  const card = stateWithTech.rdBoard[cardIndex];
 
   if (playerState.cash < card.cost) {
     return { error: 'Not enough cash' };
@@ -332,19 +463,19 @@ function processAcquireTechnology(state, playerId, data) {
   playerState.techCards.push(techId);
 
   // Remove from R&D board
-  state.rdBoard.splice(cardIndex, 1);
+  stateWithTech.rdBoard.splice(cardIndex, 1);
 
   // Draw replacement from tech card bag if available
-  if (state.techCardBag && state.techCardBag.length > 0) {
-    state.rdBoard.push(state.techCardBag.shift());
+  if (stateWithTech.techCardBag && stateWithTech.techCardBag.length > 0) {
+    stateWithTech.rdBoard.push(stateWithTech.techCardBag.shift()!);
   }
 
   // Advance progress track
-  state.progressTrack = (state.progressTrack || 0) + 1;
+  stateWithTech.progressTrack = (stateWithTech.progressTrack || 0) + 1;
 
   // Check for age transition
-  const thresholds = state.progressThresholds || { age2: 4, age3: 8, end: 12 };
-  if (state.age === 1 && state.progressTrack >= thresholds.age2) {
+  const thresholds = stateWithTech.progressThresholds || { age2: 4, age3: 8, end: 12 };
+  if (state.age === 1 && stateWithTech.progressTrack >= thresholds.age2) {
     state.age = 2;
     // Add Age 2 tech cards to the tech card bag
     addAgeTechCards(state, 2);
@@ -352,12 +483,12 @@ function processAcquireTechnology(state, playerId, data) {
     refillRDBoard(state);
     // Reset gas market prices for new age (Section 4.4: Helium resets to £2 at Age Transitions)
     state.gasMarket = { hydrogen: 1, helium: 2 };
-    state.log.push({
+    stateWithLog.log.push({
       timestamp: new Date().toISOString(),
       message: `Age II begins! New tech cards available. Gas market reset.`,
       type: 'system'
     });
-  } else if (state.age === 2 && state.progressTrack >= thresholds.age3) {
+  } else if (state.age === 2 && stateWithTech.progressTrack >= thresholds.age3) {
     state.age = 3;
     // Add Age 3 tech cards to the tech card bag
     addAgeTechCards(state, 3);
@@ -365,16 +496,16 @@ function processAcquireTechnology(state, playerId, data) {
     refillRDBoard(state);
     // Reset gas market prices for new age (Section 4.4: Helium resets to £2 at Age Transitions)
     state.gasMarket = { hydrogen: 1, helium: 2 };
-    state.log.push({
+    stateWithLog.log.push({
       timestamp: new Date().toISOString(),
       message: `Age III begins! Final era tech cards unlocked. Gas market reset.`,
       type: 'system'
     });
   }
 
-  state.log.push({
+  stateWithLog.log.push({
     timestamp: new Date().toISOString(),
-    message: `Acquired ${card.name} tech card. Progress: ${state.progressTrack}`,
+    message: `Acquired ${card.name} tech card. Progress: ${stateWithTech.progressTrack}`,
     playerId,
     type: 'action'
   });
@@ -382,27 +513,36 @@ function processAcquireTechnology(state, playerId, data) {
   return { newState: state };
 }
 
-// Install upgrade on blueprint
-function processInstallUpgrade(state, playerId, data) {
-  const { slotType, slotIndex, upgradeId } = data;
-  const playerState = state.players[playerId];
+// Install upgrade data
+interface InstallUpgradeData {
+  slotType: string;
+  slotIndex: number;
+  upgradeId: string;
+}
 
-  const slotKey = `${slotType}Slots`;
+// Install upgrade on blueprint
+function processInstallUpgrade(state: GameState, playerId: string, data: Record<string, unknown>): ActionResult {
+  const { slotType, slotIndex, upgradeId } = data as InstallUpgradeData;
+  const playerState = state.players[playerId] as PlayerState & { blueprint: Blueprint; techCards: string[] };
+  const stateWithLog = state as StateWithLog;
+
+  const slotKey = `${slotType}Slots` as keyof Blueprint;
   if (!playerState.blueprint[slotKey]) {
     return { error: 'Invalid slot type' };
   }
 
-  if (slotIndex < 0 || slotIndex >= playerState.blueprint[slotKey].length) {
+  const slots = playerState.blueprint[slotKey] as (string | null)[];
+  if (slotIndex < 0 || slotIndex >= slots.length) {
     return { error: 'Invalid slot index' };
   }
 
   // Check if slot is already occupied
-  if (playerState.blueprint[slotKey][slotIndex]) {
+  if (slots[slotIndex]) {
     return { error: 'Slot already occupied. Remove current upgrade first.' };
   }
 
   // Validate tech tile exists
-  const upgrade = TECH_TILES[upgradeId];
+  const upgrade = TECH_TILES[upgradeId] as TechTile | undefined;
   if (!upgrade) {
     return { error: 'Unknown tech tile' };
   }
@@ -419,14 +559,14 @@ function processInstallUpgrade(state, playerId, data) {
 
   // Validate player owns required tech card
   if (!playerState.techCards.includes(upgrade.requiredCard)) {
-    const card = TECH_CARDS[upgrade.requiredCard];
+    const card = TECH_CARDS[upgrade.requiredCard] as TechCard | undefined;
     return { error: `Requires ${card ? card.name : upgrade.requiredCard} tech card` };
   }
 
   // Install the upgrade
-  playerState.blueprint[slotKey][slotIndex] = upgradeId;
+  slots[slotIndex] = upgradeId;
 
-  state.log.push({
+  stateWithLog.log.push({
     timestamp: new Date().toISOString(),
     message: `Installed ${upgrade.name} in ${slotType} slot ${slotIndex + 1}`,
     playerId,
@@ -436,32 +576,40 @@ function processInstallUpgrade(state, playerId, data) {
   return { newState: state };
 }
 
-// Remove upgrade from blueprint
-function processRemoveUpgrade(state, playerId, data) {
-  const { slotType, slotIndex } = data;
-  const playerState = state.players[playerId];
+// Remove upgrade data
+interface RemoveUpgradeData {
+  slotType: string;
+  slotIndex: number;
+}
 
-  const slotKey = `${slotType}Slots`;
+// Remove upgrade from blueprint
+function processRemoveUpgrade(state: GameState, playerId: string, data: Record<string, unknown>): ActionResult {
+  const { slotType, slotIndex } = data as RemoveUpgradeData;
+  const playerState = state.players[playerId] as PlayerState & { blueprint: Blueprint };
+  const stateWithLog = state as StateWithLog;
+
+  const slotKey = `${slotType}Slots` as keyof Blueprint;
   if (!playerState.blueprint[slotKey]) {
     return { error: 'Invalid slot type' };
   }
 
-  if (slotIndex < 0 || slotIndex >= playerState.blueprint[slotKey].length) {
+  const slots = playerState.blueprint[slotKey] as (string | null)[];
+  if (slotIndex < 0 || slotIndex >= slots.length) {
     return { error: 'Invalid slot index' };
   }
 
-  const currentUpgrade = playerState.blueprint[slotKey][slotIndex];
+  const currentUpgrade = slots[slotIndex];
   if (!currentUpgrade) {
     return { error: 'Slot is already empty' };
   }
 
-  const upgrade = TECH_TILES[currentUpgrade];
+  const upgrade = TECH_TILES[currentUpgrade] as TechTile | undefined;
   const upgradeName = upgrade ? upgrade.name : currentUpgrade;
 
   // Remove the upgrade
-  playerState.blueprint[slotKey][slotIndex] = null;
+  slots[slotIndex] = null;
 
-  state.log.push({
+  stateWithLog.log.push({
     timestamp: new Date().toISOString(),
     message: `Removed ${upgradeName} from ${slotType} slot ${slotIndex + 1}`,
     playerId,
@@ -471,9 +619,13 @@ function processRemoveUpgrade(state, playerId, data) {
   return { newState: state };
 }
 
+// Extended player state with loans
+type PlayerWithLoans = PlayerState & { loans?: number };
+
 // Take a loan at The Bank
-function processTakeLoan(state, playerId, _data) {
-  const playerState = state.players[playerId];
+function processTakeLoan(state: GameState, playerId: string, _data: Record<string, unknown>): ActionResult {
+  const playerState = state.players[playerId] as PlayerWithLoans;
+  const stateWithLog = state as StateWithLog;
 
   // Limit maximum loans to 2
   const maxLoans = 2;
@@ -493,7 +645,7 @@ function processTakeLoan(state, playerId, _data) {
   // Track loan count for reference
   playerState.loans = currentLoans + 1;
 
-  state.log.push({
+  stateWithLog.log.push({
     timestamp: new Date().toISOString(),
     message: `Took loan ${playerState.loans}/${maxLoans}: gained £${loanAmount}, income reduced by ${incomePenalty}`,
     playerId,
@@ -504,7 +656,7 @@ function processTakeLoan(state, playerId, _data) {
 }
 
 // Collect income at end of round
-function processCollectIncome(state, playerId, _data) {
+function processCollectIncome(state: GameState, playerId: string, _data: Record<string, unknown>): ActionResult {
   // Income is now auto-collected when entering income phase
   // This action is kept for backwards compatibility but restricted to income phase
   if (state.phase !== 'income') {
@@ -512,6 +664,7 @@ function processCollectIncome(state, playerId, _data) {
   }
 
   const playerState = state.players[playerId];
+  const stateWithLog = state as StateWithLog;
 
   // Collect cash from income track
   const incomeGained = playerState.income;
@@ -524,7 +677,7 @@ function processCollectIncome(state, playerId, _data) {
   playerState.officers += officersGained;
   playerState.engineers += engineersGained;
 
-  state.log.push({
+  stateWithLog.log.push({
     timestamp: new Date().toISOString(),
     message: `Collected income: £${incomeGained}, +${officersGained} Officer(s), +${engineersGained} Engineer(s)`,
     playerId,
@@ -534,19 +687,26 @@ function processCollectIncome(state, playerId, _data) {
   return { newState: state };
 }
 
-// Play a card from hand
-function processPlayCard(state, playerId, data) {
-  const { cardIndex } = data;
-  const playerState = state.players[playerId];
+// Play card data
+interface PlayCardData {
+  cardIndex: number;
+}
 
-  if (cardIndex < 0 || cardIndex >= playerState.hand.length) {
+// Play a card from hand
+function processPlayCard(state: GameState, playerId: string, data: Record<string, unknown>): ActionResult {
+  const { cardIndex } = data as PlayCardData;
+  const playerState = state.players[playerId];
+  const stateWithLog = state as StateWithLog;
+  const hand = playerState.hand as Card[];
+
+  if (cardIndex < 0 || cardIndex >= hand.length) {
     return { error: 'Invalid card index' };
   }
 
-  const card = playerState.hand.splice(cardIndex, 1)[0];
-  playerState.discardPile.push(card);
+  const card = hand.splice(cardIndex, 1)[0];
+  (playerState.discardPile as Card[]).push(card);
 
-  state.log.push({
+  stateWithLog.log.push({
     timestamp: new Date().toISOString(),
     message: `Played ${card.name}`,
     playerId,
@@ -556,25 +716,36 @@ function processPlayCard(state, playerId, data) {
   return { newState: state };
 }
 
+// Draw cards data
+interface DrawCardsData {
+  count?: number;
+}
+
 // Draw cards
-function processDrawCards(state, playerId, data) {
-  const { count = 1 } = data;
+function processDrawCards(state: GameState, playerId: string, data: Record<string, unknown>): ActionResult {
+  const { count = 1 } = data as DrawCardsData;
   const playerState = state.players[playerId];
+  const stateWithLog = state as StateWithLog;
+  const hand = playerState.hand as Card[];
+  let deck = playerState.deck as Card[];
+  let discardPile = playerState.discardPile as Card[];
 
   for (let i = 0; i < count; i++) {
-    if (playerState.deck.length === 0) {
+    if (deck.length === 0) {
       // Shuffle discard pile into deck
-      if (playerState.discardPile.length === 0) break;
-      playerState.deck = shuffleArray(playerState.discardPile);
+      if (discardPile.length === 0) break;
+      playerState.deck = shuffleArray(discardPile);
+      deck = playerState.deck as Card[];
       playerState.discardPile = [];
+      discardPile = [];
     }
 
-    if (playerState.deck.length > 0) {
-      playerState.hand.push(playerState.deck.pop());
+    if (deck.length > 0) {
+      hand.push(deck.pop()!);
     }
   }
 
-  state.log.push({
+  stateWithLog.log.push({
     timestamp: new Date().toISOString(),
     message: `Drew ${count} card(s)`,
     playerId,
@@ -584,10 +755,25 @@ function processDrawCards(state, playerId, data) {
   return { newState: state };
 }
 
+// Place agent data
+interface PlaceAgentData {
+  locationId: string;
+  cardIndex?: number;
+}
+
+// Ground board location type
+interface GroundBoardLocation {
+  id: string;
+  name: string;
+  symbol: string;
+  [key: string]: unknown;
+}
+
 // Place an agent on a Ground Board location
-function processPlaceAgent(state, playerId, data) {
-  const { locationId, cardIndex } = data;
-  const playerState = state.players[playerId];
+function processPlaceAgent(state: GameState, playerId: string, data: Record<string, unknown>): ActionResult {
+  const { locationId, cardIndex } = data as PlaceAgentData;
+  const playerState = state.players[playerId] as PlayerWithFlags;
+  const stateWithLog = state as StateWithLog;
 
   // Validate phase
   if (state.phase !== 'worker_placement') {
@@ -611,7 +797,7 @@ function processPlaceAgent(state, playerId, data) {
   }
 
   // Check if location is valid
-  const location = GROUND_BOARD_LOCATIONS[locationId];
+  const location = GROUND_BOARD_LOCATIONS[locationId] as GroundBoardLocation | undefined;
   if (!location) {
     return { error: 'Invalid location' };
   }
@@ -627,11 +813,12 @@ function processPlaceAgent(state, playerId, data) {
     return { error: 'Must play a card to place an agent' };
   }
 
-  if (cardIndex >= playerState.hand.length) {
+  const hand = playerState.hand as Card[];
+  if (cardIndex >= hand.length) {
     return { error: 'Invalid card index' };
   }
 
-  const card = playerState.hand[cardIndex];
+  const card = hand[cardIndex];
 
   // Check if card symbol matches location
   if (!canPlaceAtLocation(card.symbol || 'any', locationId)) {
@@ -639,8 +826,8 @@ function processPlaceAgent(state, playerId, data) {
   }
 
   // Discard the card
-  const discardedCard = playerState.hand.splice(cardIndex, 1)[0];
-  playerState.discardPile.push(discardedCard);
+  const discardedCard = hand.splice(cardIndex, 1)[0];
+  (playerState.discardPile as Card[]).push(discardedCard);
 
   // Place the agent
   state.groundBoard.placements[locationId] = {
@@ -651,7 +838,7 @@ function processPlaceAgent(state, playerId, data) {
   // Decrement available agents
   playerState.agentsRemaining--;
 
-  state.log.push({
+  stateWithLog.log.push({
     timestamp: new Date().toISOString(),
     message: `Placed agent at ${location.name} using ${discardedCard.name}`,
     playerId,
@@ -661,7 +848,7 @@ function processPlaceAgent(state, playerId, data) {
   // Process card effects (Section 8.1)
   const cardEffectResult = processCardEffect(state, playerId, discardedCard, locationId);
   if (cardEffectResult.message) {
-    state.log.push({
+    stateWithLog.log.push({
       timestamp: new Date().toISOString(),
       message: `Card effect: ${cardEffectResult.message}`,
       playerId,
@@ -673,7 +860,7 @@ function processPlaceAgent(state, playerId, data) {
   const actionResult = executeLocationAction(state, playerId, locationId, discardedCard);
   if (actionResult.error) {
     // If location action fails, we still placed the agent but log the issue
-    state.log.push({
+    stateWithLog.log.push({
       timestamp: new Date().toISOString(),
       message: `Location action failed: ${actionResult.error}`,
       playerId,
@@ -689,8 +876,9 @@ function processPlaceAgent(state, playerId, data) {
 }
 
 // Pass action: Player chooses to stop placing agents this round
-function processPass(state, playerId) {
-  const playerState = state.players[playerId];
+function processPass(state: GameState, playerId: string): ActionResult {
+  const playerState = state.players[playerId] as PlayerWithFlags;
+  const stateWithLog = state as StateWithLog;
 
   // Validate phase
   if (state.phase !== 'worker_placement') {
@@ -710,9 +898,9 @@ function processPass(state, playerId) {
 
   // Mark as passed
   playerState.hasPassed = true;
-  state.workerPlacement.passedPlayers.push(playerId);
+  state.workerPlacement!.passedPlayers.push(playerId);
 
-  state.log.push({
+  stateWithLog.log.push({
     timestamp: new Date().toISOString(),
     message: `${playerState.faction.toUpperCase()} passes`,
     playerId,
@@ -730,12 +918,14 @@ function processPass(state, playerId) {
 }
 
 // Recall all agents (end of round)
-function processRecallAgents(state, _playerId, _data) {
+function processRecallAgents(state: GameState, _playerId: string, _data: Record<string, unknown>): ActionResult {
+  const stateWithLog = state as StateWithLog;
+
   if (state.groundBoard) {
     state.groundBoard.placements = {};
   }
 
-  state.log.push({
+  stateWithLog.log.push({
     timestamp: new Date().toISOString(),
     message: 'All agents recalled',
     type: 'system'
@@ -744,12 +934,19 @@ function processRecallAgents(state, _playerId, _data) {
   return { newState: state };
 }
 
-// Recruit crew at the Academy
-function processRecruitCrew(state, playerId, data) {
-  const { crewType, count = 1 } = data;
-  const playerState = state.players[playerId];
+// Recruit crew data
+interface RecruitCrewData {
+  crewType: 'officer' | 'engineer';
+  count?: number;
+}
 
-  const costs = {
+// Recruit crew at the Academy
+function processRecruitCrew(state: GameState, playerId: string, data: Record<string, unknown>): ActionResult {
+  const { crewType, count = 1 } = data as RecruitCrewData;
+  const playerState = state.players[playerId];
+  const stateWithLog = state as StateWithLog;
+
+  const costs: Record<string, number> = {
     officer: 2,
     engineer: 4
   };
@@ -772,7 +969,7 @@ function processRecruitCrew(state, playerId, data) {
     playerState.engineers += count;
   }
 
-  state.log.push({
+  stateWithLog.log.push({
     timestamp: new Date().toISOString(),
     message: `Recruited ${count} ${crewType}(s) for £${totalCost}`,
     playerId,
@@ -782,25 +979,31 @@ function processRecruitCrew(state, playerId, data) {
   return { newState: state };
 }
 
+// Build ship data
+interface BuildShipData {
+  count?: number;
+}
+
 // Build a ship at the Construction Hall
-function processBuildShip(state, playerId, data) {
-  const { count = 1 } = data;
-  const playerState = state.players[playerId];
+function processBuildShip(state: GameState, playerId: string, data: Record<string, unknown>): ActionResult {
+  const { count = 1 } = data as BuildShipData;
+  const playerState = state.players[playerId] as PlayerState & { blueprint: Blueprint; ships?: Ship[] };
+  const stateWithLog = state as StateWithLog;
 
   // Calculate hull cost from installed tech tiles
   let hullCost = 2; // Base cost
 
   // Add Frame hull costs
   for (const tileId of playerState.blueprint.frameSlots || []) {
-    if (tileId && TECH_TILES[tileId]?.hullCost) {
-      hullCost += TECH_TILES[tileId].hullCost;
+    if (tileId && (TECH_TILES[tileId] as TechTile)?.hullCost) {
+      hullCost += (TECH_TILES[tileId] as TechTile).hullCost!;
     }
   }
 
   // Add Fabric hull costs
   for (const tileId of playerState.blueprint.fabricSlots || []) {
-    if (tileId && TECH_TILES[tileId]?.hullCost) {
-      hullCost += TECH_TILES[tileId].hullCost;
+    if (tileId && (TECH_TILES[tileId] as TechTile)?.hullCost) {
+      hullCost += (TECH_TILES[tileId] as TechTile).hullCost!;
     }
   }
 
@@ -827,10 +1030,10 @@ function processBuildShip(state, playerId, data) {
       id: `ship_${Date.now()}_${i}`,
       status: 'hangar', // hangar, launched, damaged
       route: null
-    });
+    } as Ship);
   }
 
-  state.log.push({
+  stateWithLog.log.push({
     timestamp: new Date().toISOString(),
     message: `Built ${count} ship(s) for £${totalCost} (£${hullCost}/ship)`,
     playerId,
@@ -841,8 +1044,9 @@ function processBuildShip(state, playerId, data) {
 }
 
 // Upgrade Officer Income at Flight School
-function processUpgradeOfficerIncome(state, playerId, _data) {
+function processUpgradeOfficerIncome(state: GameState, playerId: string, _data: Record<string, unknown>): ActionResult {
   const playerState = state.players[playerId];
+  const stateWithLog = state as StateWithLog;
   const cost = 5;
 
   if (playerState.cash < cost) {
@@ -852,7 +1056,7 @@ function processUpgradeOfficerIncome(state, playerId, _data) {
   playerState.cash -= cost;
   playerState.officerIncome = (playerState.officerIncome || 0) + 1;
 
-  state.log.push({
+  stateWithLog.log.push({
     timestamp: new Date().toISOString(),
     message: `Upgraded Officer Income to ${playerState.officerIncome}/round for £${cost}`,
     playerId,
@@ -863,8 +1067,9 @@ function processUpgradeOfficerIncome(state, playerId, _data) {
 }
 
 // Upgrade Engineer Income at Technical Institute
-function processUpgradeEngineerIncome(state, playerId, _data) {
+function processUpgradeEngineerIncome(state: GameState, playerId: string, _data: Record<string, unknown>): ActionResult {
   const playerState = state.players[playerId];
+  const stateWithLog = state as StateWithLog;
   const cost = 6;
 
   if (playerState.cash < cost) {
@@ -874,7 +1079,7 @@ function processUpgradeEngineerIncome(state, playerId, _data) {
   playerState.cash -= cost;
   playerState.engineerIncome = (playerState.engineerIncome || 1) + 1;
 
-  state.log.push({
+  stateWithLog.log.push({
     timestamp: new Date().toISOString(),
     message: `Upgraded Engineer Income to ${playerState.engineerIncome}/round for £${cost}`,
     playerId,
@@ -884,9 +1089,13 @@ function processUpgradeEngineerIncome(state, playerId, _data) {
   return { newState: state };
 }
 
+// Extended player state with insurance
+type PlayerWithInsurance = PlayerState & { insurance?: number };
+
 // Buy insurance at Insurance Bureau
-function processBuyInsurance(state, playerId, _data) {
-  const playerState = state.players[playerId];
+function processBuyInsurance(state: GameState, playerId: string, _data: Record<string, unknown>): ActionResult {
+  const playerState = state.players[playerId] as PlayerWithInsurance;
+  const stateWithLog = state as StateWithLog;
 
   // Track insurance policies
   const currentPolicies = playerState.insurance || 0;
@@ -899,7 +1108,7 @@ function processBuyInsurance(state, playerId, _data) {
   playerState.income = Math.max(0, playerState.income - 1);
   playerState.insurance = currentPolicies + 1;
 
-  state.log.push({
+  stateWithLog.log.push({
     timestamp: new Date().toISOString(),
     message: `Purchased insurance policy (${playerState.insurance}/3). Income reduced by 1.`,
     playerId,
@@ -910,16 +1119,18 @@ function processBuyInsurance(state, playerId, _data) {
 }
 
 // Acquire technology using research points
-function processAcquireTechnologyResearch(state, playerId, data) {
-  const { techId } = data;
-  const playerState = state.players[playerId];
+function processAcquireTechnologyResearch(state: GameState, playerId: string, data: Record<string, unknown>): ActionResult {
+  const { techId } = data as AcquireTechData;
+  const playerState = state.players[playerId] as PlayerState & { techCards: string[]; research?: number };
+  const stateWithTech = state as StateWithTech;
+  const stateWithLog = state as StateWithLog;
 
-  const cardIndex = state.rdBoard.findIndex(t => t.id === techId);
+  const cardIndex = stateWithTech.rdBoard.findIndex(t => t.id === techId);
   if (cardIndex === -1) {
     return { error: 'Tech card not available on R&D Board' };
   }
 
-  const card = state.rdBoard[cardIndex];
+  const card = stateWithTech.rdBoard[cardIndex];
 
   // Check if player already has this tech card
   if (playerState.techCards.includes(techId)) {
@@ -927,7 +1138,7 @@ function processAcquireTechnologyResearch(state, playerId, data) {
   }
 
   // Calculate cost with specialization discount
-  const discount = calculateSpecializationDiscount(playerState.techCards, card.type);
+  const discount = calculateSpecializationDiscount(playerState.techCards, card.type || '');
   const cost = Math.max(0, card.cost - discount);
 
   // Calculate available research
@@ -950,38 +1161,38 @@ function processAcquireTechnologyResearch(state, playerId, data) {
   playerState.techCards.push(techId);
 
   // Remove from R&D board
-  state.rdBoard.splice(cardIndex, 1);
+  stateWithTech.rdBoard.splice(cardIndex, 1);
 
   // Draw replacement from tech card bag if available
-  if (state.techCardBag && state.techCardBag.length > 0) {
-    state.rdBoard.push(state.techCardBag.shift());
+  if (stateWithTech.techCardBag && stateWithTech.techCardBag.length > 0) {
+    stateWithTech.rdBoard.push(stateWithTech.techCardBag.shift()!);
   }
 
   // Advance progress track
-  state.progressTrack = (state.progressTrack || 0) + 1;
+  stateWithTech.progressTrack = (stateWithTech.progressTrack || 0) + 1;
 
   // Check for age transition
-  const thresholds = state.progressThresholds || { age2: 4, age3: 8, end: 12 };
-  if (state.age === 1 && state.progressTrack >= thresholds.age2) {
+  const thresholds = stateWithTech.progressThresholds || { age2: 4, age3: 8, end: 12 };
+  if (state.age === 1 && stateWithTech.progressTrack >= thresholds.age2) {
     state.age = 2;
     addAgeTechCards(state, 2);
     // Refill R&D board with new tech cards
     refillRDBoard(state);
     // Reset gas market prices for new age (Section 4.4: Helium resets to £2 at Age Transitions)
     state.gasMarket = { hydrogen: 1, helium: 2 };
-    state.log.push({
+    stateWithLog.log.push({
       timestamp: new Date().toISOString(),
       message: `Age II begins! New tech cards available. Gas market reset.`,
       type: 'system'
     });
-  } else if (state.age === 2 && state.progressTrack >= thresholds.age3) {
+  } else if (state.age === 2 && stateWithTech.progressTrack >= thresholds.age3) {
     state.age = 3;
     addAgeTechCards(state, 3);
     // Refill R&D board with new tech cards
     refillRDBoard(state);
     // Reset gas market prices for new age (Section 4.4: Helium resets to £2 at Age Transitions)
     state.gasMarket = { hydrogen: 1, helium: 2 };
-    state.log.push({
+    stateWithLog.log.push({
       timestamp: new Date().toISOString(),
       message: `Age III begins! Final era tech cards unlocked. Gas market reset.`,
       type: 'system'
@@ -989,9 +1200,9 @@ function processAcquireTechnologyResearch(state, playerId, data) {
   }
 
   const discountNote = discount > 0 ? ` (${discount} discount)` : '';
-  state.log.push({
+  stateWithLog.log.push({
     timestamp: new Date().toISOString(),
-    message: `Acquired ${card.name} for ${cost} research${discountNote}. Progress: ${state.progressTrack}`,
+    message: `Acquired ${card.name} for ${cost} research${discountNote}. Progress: ${stateWithTech.progressTrack}`,
     playerId,
     type: 'action'
   });
@@ -999,14 +1210,20 @@ function processAcquireTechnologyResearch(state, playerId, data) {
   return { newState: state };
 }
 
+// Gain research data
+interface GainResearchData {
+  amount?: number;
+}
+
 // Gain research points (from Research Institute or card effects)
-function processGainResearch(state, playerId, data) {
-  const { amount = 1 } = data;
-  const playerState = state.players[playerId];
+function processGainResearch(state: GameState, playerId: string, data: Record<string, unknown>): ActionResult {
+  const { amount = 1 } = data as GainResearchData;
+  const playerState = state.players[playerId] as PlayerState & { research?: number };
+  const stateWithLog = state as StateWithLog;
 
   playerState.research = (playerState.research || 0) + amount;
 
-  state.log.push({
+  stateWithLog.log.push({
     timestamp: new Date().toISOString(),
     message: `Gained ${amount} research point(s). Total saved: ${playerState.research}`,
     playerId,
@@ -1016,17 +1233,37 @@ function processGainResearch(state, playerId, data) {
   return { newState: state };
 }
 
+// Launch ship data
+interface LaunchShipData {
+  shipId: string;
+  routeId: string;
+  gasType?: 'hydrogen' | 'helium';
+}
+
+// Extended ship type with additional fields
+interface ExtendedShip extends Ship {
+  stats?: ShipStats;
+  launchedAge?: number;
+  gasType?: string;
+  routeId?: string;
+}
+
+// Extended state with map
+type StateWithMap = GameState & { map?: { routes?: Route[] } };
+
 // Launch a ship from hangar
-function processLaunchShip(state, playerId, data) {
-  const { shipId, routeId, gasType = 'hydrogen' } = data;
-  const playerState = state.players[playerId];
+function processLaunchShip(state: GameState, playerId: string, data: Record<string, unknown>): ActionResult {
+  const { shipId, routeId, gasType = 'hydrogen' } = data as LaunchShipData;
+  const playerState = state.players[playerId] as PlayerState & { blueprint: Blueprint; ships?: ExtendedShip[]; techCards?: { id: string }[] };
+  const stateWithMap = state as StateWithMap;
+  const stateWithLog = state as StateWithLog;
 
   // Step 1: Choose a target route (Section 6.1 Launchpad - must select route first)
   if (!routeId) {
     return { error: 'Must specify a route to launch to (routeId required)' };
   }
 
-  const route = state.map?.routes?.find(r => r.id === routeId);
+  const route = stateWithMap.map?.routes?.find(r => r.id === routeId);
   if (!route) {
     return { error: `Route not found: ${routeId}` };
   }
@@ -1035,11 +1272,11 @@ function processLaunchShip(state, playerId, data) {
   }
 
   // Calculate ship stats to validate against route requirements
-  const stats = calculateBlueprintStats(playerState.blueprint, state.age);
+  const stats: ShipStats = calculateBlueprintStats(playerState.blueprint, state.age);
 
   // Validate Range meets route distance requirement
-  if (stats.range < route.distance) {
-    return { error: `Ship Range (${stats.range}) does not meet route distance requirement (${route.distance})` };
+  if (stats.range < (route as Route & { distance?: number }).distance!) {
+    return { error: `Ship Range (${stats.range}) does not meet route distance requirement (${(route as Route & { distance?: number }).distance})` };
   }
 
   // Validate Speed meets route speed requirement (if any)
@@ -1056,7 +1293,7 @@ function processLaunchShip(state, playerId, data) {
 
   // Helium requires Helium Handling tech card (Section 4.4)
   if (gasType === 'helium') {
-    const hasHeliumHandling = playerState.techCards?.some(t => t.id === 'HELIUM_HANDLING');
+    const hasHeliumHandling = playerState.techCards?.some((t: { id: string }) => t.id === 'HELIUM_HANDLING');
     if (!hasHeliumHandling) {
       return { error: 'Cannot use Helium without Helium Handling tech card' };
     }
@@ -1117,7 +1354,7 @@ function processLaunchShip(state, playerId, data) {
 
   // Claim the route
   route.claimed = playerId;
-  route.claimedBy = {
+  (route as Route & { claimedBy?: { playerId: string; shipId: string; round: number } }).claimedBy = {
     playerId,
     shipId,
     round: state.round
@@ -1130,9 +1367,9 @@ function processLaunchShip(state, playerId, data) {
   const statParts = [`Range ${stats.range}`, `Speed ${stats.speed}`];
   if (stats.ceiling > 0) statParts.push(`Ceiling ${stats.ceiling}`);
   if (stats.reliability > 0) statParts.push(`Reliability ${stats.reliability}`);
-  if (stats.luxury > 0) statParts.push(`Luxury ${stats.luxury}`);
+  if (stats.luxury && stats.luxury > 0) statParts.push(`Luxury ${stats.luxury}`);
 
-  state.log.push({
+  stateWithLog.log.push({
     timestamp: new Date().toISOString(),
     message: `Launched ship to ${route.from} → ${route.to} (${requiredOfficers} Officer${requiredOfficers > 1 ? 's' : ''}, ${requiredCubes} ${gasType}): ${statParts.join(', ')} → +${route.income} income`,
     playerId,
@@ -1142,10 +1379,18 @@ function processLaunchShip(state, playerId, data) {
   return { newState: state };
 }
 
+// Claim route data
+interface ClaimRouteData {
+  shipId: string;
+  routeId: string;
+}
+
 // Claim a route with a launched ship
-function processClaimRoute(state, playerId, data) {
-  const { shipId, routeId } = data;
-  const playerState = state.players[playerId];
+function processClaimRoute(state: GameState, playerId: string, data: Record<string, unknown>): ActionResult {
+  const { shipId, routeId } = data as ClaimRouteData;
+  const playerState = state.players[playerId] as PlayerState & { ships?: ExtendedShip[] };
+  const stateWithMap = state as StateWithMap;
+  const stateWithLog = state as StateWithLog;
 
   // Find launched ship
   const ships = playerState.ships || [];
@@ -1158,7 +1403,7 @@ function processClaimRoute(state, playerId, data) {
   const ship = ships[shipIndex];
 
   // Find route
-  const route = state.map?.routes?.find(r => r.id === routeId);
+  const route = stateWithMap.map?.routes?.find(r => r.id === routeId);
   if (!route) {
     return { error: 'Route not found' };
   }
@@ -1170,8 +1415,8 @@ function processClaimRoute(state, playerId, data) {
 
   // Check ship meets route requirements
   const shipStats = ship.stats || { range: 1, speed: 1 };
-  if (shipStats.range < route.distance) {
-    return { error: `Ship range (${shipStats.range}) < route distance (${route.distance})` };
+  if (shipStats.range < (route as Route & { distance?: number }).distance!) {
+    return { error: `Ship range (${shipStats.range}) < route distance (${(route as Route & { distance?: number }).distance})` };
   }
   if (route.speed && shipStats.speed < route.speed) {
     return { error: `Ship speed (${shipStats.speed}) < route requirement (${route.speed})` };
@@ -1179,7 +1424,7 @@ function processClaimRoute(state, playerId, data) {
 
   // Claim the route
   route.claimed = playerId;
-  route.claimedBy = {
+  (route as Route & { claimedBy?: { playerId: string; shipId: string; round: number } }).claimedBy = {
     playerId,
     shipId,
     round: state.round
@@ -1192,7 +1437,7 @@ function processClaimRoute(state, playerId, data) {
   // Add route income to player
   playerState.income += route.income;
 
-  state.log.push({
+  stateWithLog.log.push({
     timestamp: new Date().toISOString(),
     message: `Claimed route ${route.from} → ${route.to} for +${route.income} income`,
     playerId,
@@ -1202,10 +1447,25 @@ function processClaimRoute(state, playerId, data) {
   return { newState: state };
 }
 
+// Hazard check data
+interface HazardCheckData {
+  shipId: string;
+}
+
+// Extended player with hazard check tracking
+type PlayerWithHazardCheck = PlayerState & {
+  ships?: ExtendedShip[];
+  hazardDeck?: HazardCardCheck[];
+  insurance?: number;
+  lastHazardCheck?: Record<string, HazardCheckResult>;
+};
+
 // Perform a hazard check for a ship on a route
-function processHazardCheck(state, playerId, data) {
-  const { shipId } = data;
-  const playerState = state.players[playerId];
+function processHazardCheck(state: GameState, playerId: string, data: Record<string, unknown>): ActionResult {
+  const { shipId } = data as HazardCheckData;
+  const playerState = state.players[playerId] as PlayerWithHazardCheck;
+  const stateWithMap = state as StateWithMap;
+  const stateWithLog = state as StateWithLog;
 
   // Find the ship
   const ships = playerState.ships || [];
@@ -1222,7 +1482,7 @@ function processHazardCheck(state, playerId, data) {
     return { error: 'No hazard cards remaining' };
   }
 
-  const hazard = playerState.hazardDeck.shift();
+  const hazard = playerState.hazardDeck.shift()!;
 
   // Calculate safety rating
   // Base reliability from ship stats + crew bonus (1 per officer)
@@ -1235,7 +1495,7 @@ function processHazardCheck(state, playerId, data) {
   const success = safetyRating >= hazard.difficulty;
 
   // Store hazard check result
-  const checkResult = {
+  const checkResult: HazardCheckResult = {
     hazardType: hazard.type,
     difficulty: hazard.difficulty,
     safetyRating,
@@ -1246,7 +1506,7 @@ function processHazardCheck(state, playerId, data) {
   if (success) {
     // Ship survives
     const heliumNote = heliumBonus > 0 ? ' (helium +1)' : '';
-    state.log.push({
+    stateWithLog.log.push({
       timestamp: new Date().toISOString(),
       message: `Hazard check PASSED: ${hazard.type} (${hazard.difficulty}) vs Safety ${safetyRating}${heliumNote}`,
       playerId,
@@ -1261,11 +1521,11 @@ function processHazardCheck(state, playerId, data) {
       ships[shipIndex].status = 'destroyed';
 
       // Remove income from the route
-      const route = state.map?.routes?.find(r => r.id === ship.routeId);
+      const route = stateWithMap.map?.routes?.find(r => r.id === ship.routeId);
       if (route) {
         playerState.income = Math.max(0, playerState.income - (route.income || 0));
         route.claimed = null;
-        route.claimedBy = null;
+        (route as Route & { claimedBy?: unknown }).claimedBy = null;
       }
 
       // Insurance mitigation (Section 12.7: Discard policy to recover ship to Launch Hangar)
@@ -1275,8 +1535,8 @@ function processHazardCheck(state, playerId, data) {
         playerState.insurance = insurancePolicies - 1;
         // Recover ship to hangar instead of destroying it
         ships[shipIndex].status = 'hangar';
-        ships[shipIndex].damaged = false;
-        state.log.push({
+        (ships[shipIndex] as ExtendedShip & { damaged?: boolean }).damaged = false;
+        stateWithLog.log.push({
           timestamp: new Date().toISOString(),
           message: `Insurance claim: ship recovered to Launch Hangar (${playerState.insurance} policies remaining)`,
           playerId,
@@ -1284,7 +1544,7 @@ function processHazardCheck(state, playerId, data) {
         });
       }
 
-      state.log.push({
+      stateWithLog.log.push({
         timestamp: new Date().toISOString(),
         message: `DISASTER! ${hazard.type} (${hazard.difficulty}) vs Safety ${safetyRating}. Ship destroyed!`,
         playerId,
@@ -1292,9 +1552,9 @@ function processHazardCheck(state, playerId, data) {
       });
     } else {
       // Ship damaged but survives
-      ships[shipIndex].damaged = true;
+      (ships[shipIndex] as ExtendedShip & { damaged?: boolean }).damaged = true;
 
-      state.log.push({
+      stateWithLog.log.push({
         timestamp: new Date().toISOString(),
         message: `Hazard check FAILED: ${hazard.type} (${hazard.difficulty}) vs Safety ${safetyRating}. Ship damaged.`,
         playerId,
@@ -1312,12 +1572,29 @@ function processHazardCheck(state, playerId, data) {
   return { newState: state };
 }
 
+// Calculate scores data
+interface CalculateScoresData {
+  forceEnd?: boolean;
+}
+
+// Extended state with scores
+type StateWithScores = GameState & {
+  scores?: Record<string, PlayerScore>;
+  winner?: string;
+  progressTrack?: number;
+  progressThresholds?: { age2: number; age3: number; end: number };
+};
+
 // Calculate scores for all players
-function processCalculateScores(state, playerId, data) {
+function processCalculateScores(state: GameState, _playerId: string, data: Record<string, unknown>): ActionResult {
+  const stateWithScores = state as StateWithScores;
+  const stateWithMap = state as StateWithMap;
+  const stateWithLog = state as StateWithLog;
+
   // Check if game end conditions are met
-  const thresholds = state.progressThresholds || { age2: 4, age3: 8, end: 12 };
-  const progressTrack = state.progressTrack || 0;
-  const forceEnd = data?.forceEnd === true; // Allow admin/debug override
+  const thresholds = stateWithScores.progressThresholds || { age2: 4, age3: 8, end: 12 };
+  const progressTrack = stateWithScores.progressTrack || 0;
+  const forceEnd = (data as CalculateScoresData)?.forceEnd === true; // Allow admin/debug override
 
   // Game ends when progress track reaches the end threshold OR Age 3 is complete
   const gameCanEnd = progressTrack >= thresholds.end || state.age >= 3;
@@ -1328,16 +1605,16 @@ function processCalculateScores(state, playerId, data) {
     };
   }
 
-  const scores = {};
+  const scores: Record<string, PlayerScore> = {};
 
   for (const [pid, playerState] of Object.entries(state.players)) {
     let totalVP = 0;
-    const breakdown = {};
+    const breakdown: ScoreBreakdown = { routes: 0, techCards: 0, cash: 0, ships: 0 };
 
     // VP from routes per Section 12.2 and Appendix F
     // Routes have explicit `vp` property per Appendix F specifications
     let routeVP = 0;
-    const routes = state.map?.routes || [];
+    const routes = stateWithMap.map?.routes || [];
     for (const route of routes) {
       if (route.claimed === pid) {
         routeVP += route.vp || 0;
@@ -1347,17 +1624,9 @@ function processCalculateScores(state, playerId, data) {
     totalVP += routeVP;
 
     // VP from tech cards
-    let techVP = 0;
-    for (const cardId of playerState.techCards) {
-      // Find tech card VP value (default 0)
-      const cardInfo = state.rdBoard?.find(t => t.id === cardId) ||
-                       state.techCardBag?.find(t => t.id === cardId) ||
-                       { vp: 0 };
-      techVP += cardInfo.vp || 0;
-    }
-    // Also check TECH_CARD_BAG data
+    const techCards = (playerState as PlayerState & { techCards?: string[] }).techCards || [];
     // For now, approximate 1 VP per 2 tech cards
-    techVP = Math.floor(playerState.techCards.length / 2);
+    const techVP = Math.floor(techCards.length / 2);
     breakdown.techCards = techVP;
     totalVP += techVP;
 
@@ -1367,7 +1636,8 @@ function processCalculateScores(state, playerId, data) {
     totalVP += cashVP;
 
     // VP from ships on routes (2 VP each)
-    const shipsOnRoutes = (playerState.ships || []).filter(s => s.status === 'on_route').length;
+    const ships = (playerState as PlayerState & { ships?: Ship[] }).ships || [];
+    const shipsOnRoutes = ships.filter(s => s.status === 'on_route').length;
     const shipVP = shipsOnRoutes * 2;
     breakdown.ships = shipVP;
     totalVP += shipVP;
@@ -1380,15 +1650,15 @@ function processCalculateScores(state, playerId, data) {
   }
 
   // Store scores in state
-  state.scores = scores;
+  stateWithScores.scores = scores;
 
   // Determine winner
   const sortedPlayers = Object.entries(scores)
     .sort((a, b) => b[1].total - a[1].total);
 
-  state.winner = sortedPlayers[0][0];
+  stateWithScores.winner = sortedPlayers[0][0];
 
-  state.log.push({
+  stateWithLog.log.push({
     timestamp: new Date().toISOString(),
     message: `Game ended! Winner: ${scores[sortedPlayers[0][0]].faction} with ${sortedPlayers[0][1].total} VP`,
     type: 'system'
@@ -1397,10 +1667,17 @@ function processCalculateScores(state, playerId, data) {
   return { newState: state };
 }
 
+// Buy market card data
+interface BuyMarketCardData {
+  cardId: string;
+}
+
 // Buy a card from the market using Influence (Section 6.2, 8.3)
-function processBuyMarketCard(state, playerId, data) {
-  const { cardId } = data;
+function processBuyMarketCard(state: GameState, playerId: string, data: Record<string, unknown>): ActionResult {
+  const { cardId } = data as BuyMarketCardData;
   const playerState = state.players[playerId];
+  const stateWithMarket = state as StateWithMarket;
+  const stateWithLog = state as StateWithLog;
 
   // Can only buy market cards during reveal phase
   if (state.phase !== 'reveal') {
@@ -1408,7 +1685,7 @@ function processBuyMarketCard(state, playerId, data) {
   }
 
   // Find card in market
-  const marketCards = state.marketCards || [];
+  const marketCards = stateWithMarket.marketCards || [];
   const cardIndex = marketCards.findIndex(c => c.id === cardId);
 
   if (cardIndex === -1) {
@@ -1416,7 +1693,7 @@ function processBuyMarketCard(state, playerId, data) {
   }
 
   const card = marketCards[cardIndex];
-  const cost = card.value || 3; // Default cost is 3 Influence
+  const cost = (card as Card & { value?: number }).value || 3; // Default cost is 3 Influence
 
   // Market cards cost Influence, not cash (Section 8.3)
   const availableInfluence = playerState.influence || 0;
@@ -1428,12 +1705,12 @@ function processBuyMarketCard(state, playerId, data) {
   playerState.influence -= cost;
 
   // Card goes to discard pile (Section 8.3)
-  playerState.discardPile.push(card);
+  (playerState.discardPile as Card[]).push(card);
 
   // Remove from market
-  state.marketCards.splice(cardIndex, 1);
+  marketCards.splice(cardIndex, 1);
 
-  state.log.push({
+  stateWithLog.log.push({
     timestamp: new Date().toISOString(),
     message: `Bought ${card.name} for ${cost} Influence`,
     playerId,

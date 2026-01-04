@@ -218,11 +218,11 @@ describe('GameStateService', () => {
       // Total: 3 starters, each used by 1 player
       // Non-starters: 9 techs * 3 copies = 27
       // Starters: 3 techs * 2 copies each (3-1) = 6
-      // Total in bag: 27 + 6 = 33, minus 4 on R&D board = 29 in techCardBag
-      const totalTechsInBag = result.rdBoard.length + result.techCardBag.length;
+      // Total in bag: 27 + 6 = 33, minus 4 on R&D board = 29 in techBag
+      const totalTechsInBag = result.rdBoard.length + result.techBag.length;
       expect(totalTechsInBag).toBe(33);
       expect(result.rdBoard.length).toBe(4);
-      expect(result.techCardBag.length).toBe(29);
+      expect(result.techBag.length).toBe(29);
     });
 
     it('should set correct progress thresholds for player count', async () => {

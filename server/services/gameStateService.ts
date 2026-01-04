@@ -1,11 +1,55 @@
+/**
+ * Game State Service
+ * Handles game state initialization, persistence, and retrieval
+ */
+
+import type { Faction, GameState, PlayerState, Card, HazardCard, Ship, Route } from '@upship/api';
+import type { PoolClient } from 'pg';
+
 const { pool } = require('../db');
 const { TECH_CARD_BAG } = require('../config/constants');
 const { TECH_TILES, calculateShipStats } = require('../data/upgrades');
 const { generateId } = require('../utils/random');
 
+// Blueprint structure
+interface Blueprint {
+  age: number;
+  frameSlots: (string | null)[];
+  fabricSlots: (string | null)[];
+  driveSlots: (string | null)[];
+  componentSlots: (string | null)[];
+}
+
+// Faction bonuses
+interface FactionBonuses {
+  structure?: number;
+  luxury?: number;
+  safety?: number;
+  speed?: number;
+  [key: string]: number | undefined;
+}
+
+// Starting tech tiles configuration
+interface StartingTechTiles {
+  frame?: string;
+  fabric?: string;
+  drive?: string;
+  component?: string;
+}
+
+// Faction configuration
+interface FactionConfig {
+  startingTechCards: string[];
+  startingTechTiles: StartingTechTiles;
+  bonuses: FactionBonuses;
+  bannedTechCards?: string[];
+  heliumMonopoly?: boolean;
+  lowCeiling?: boolean;
+}
+
 // Faction-specific starting configurations
 // Per rules Section 10: Each nation has unique starting tech cards and blueprint configuration
-const FACTION_CONFIG = {
+const FACTION_CONFIG: Record<string, FactionConfig> = {
   germany: {
     // Rules 10.1: Duralumin Framework, Goldbeater's Skin, Blaugas Fuel System
     startingTechCards: ['duralumin_girders', 'goldbeater_skin', 'blaugas_storage'],
@@ -57,9 +101,26 @@ const FACTION_CONFIG = {
   }
 };
 
+// Tech tile definition
+interface TechTile {
+  weight?: number;
+  lift?: number;
+  [key: string]: unknown;
+}
+
+// Ship stats from calculateShipStats
+interface ShipStats {
+  speed: number;
+  range: number;
+  ceiling: number;
+  reliability: number;
+  luxury: number;
+  [key: string]: number;
+}
+
 // Create initial player state
-function createPlayerState(faction) {
-  const config = FACTION_CONFIG[faction] || {};
+function createPlayerState(faction: Faction): PlayerState {
+  const config = FACTION_CONFIG[faction] || {} as FactionConfig;
 
   // USA starts with helium due to their Helium Monopoly advantage
   const startingGas = faction === 'usa'
@@ -70,29 +131,29 @@ function createPlayerState(faction) {
   const blueprint = createInitialBlueprint(faction);
 
   // Calculate ship stats from starting blueprint (per rules Section 3.2)
-  const shipStats = calculateShipStats(blueprint, config.bonuses || {}, 1);
+  const shipStats: ShipStats = calculateShipStats(blueprint, config.bonuses || {}, 1);
 
   // Calculate weight from frame/fabric tech tiles
   let weight = 0;
   for (const tileId of [...(blueprint.frameSlots || []), ...(blueprint.fabricSlots || [])]) {
-    if (tileId && TECH_TILES[tileId]?.weight) {
-      weight += TECH_TILES[tileId].weight;
+    if (tileId && (TECH_TILES[tileId] as TechTile)?.weight) {
+      weight += (TECH_TILES[tileId] as TechTile).weight!;
     }
   }
 
   // Calculate lift from frame/fabric tech tiles
   let lift = 0;
   for (const tileId of [...(blueprint.frameSlots || []), ...(blueprint.fabricSlots || [])]) {
-    if (tileId && TECH_TILES[tileId]?.lift) {
-      lift += TECH_TILES[tileId].lift;
+    if (tileId && (TECH_TILES[tileId] as TechTile)?.lift) {
+      lift += (TECH_TILES[tileId] as TechTile).lift!;
     }
   }
 
   // Create starting ship (per rules Section 3.2: each player starts with 1 airship)
   const startingShip = {
     id: generateId('ship'),
-    status: 'hangar',
-    route: null,
+    status: 'hangar' as const,
+    routeId: undefined as string | undefined,
     lift,
     weight,
     speed: shipStats.speed,
@@ -120,7 +181,7 @@ function createPlayerState(faction) {
     techCards: config.startingTechCards || [],
     ships: [startingShip], // Per rules Section 3.2: Start with 1 airship in hangar
     routes: [],
-    blueprint,
+    blueprint: blueprint as unknown as PlayerState['blueprint'],
     hand: [],
     deck: createStarterDeck(),
     discardPile: [],
@@ -129,15 +190,15 @@ function createPlayerState(faction) {
     // Faction-specific attributes
     heliumMonopoly: config.heliumMonopoly || false,
     bannedTechCards: config.bannedTechCards || []
-  };
+  } as PlayerState;
 }
 
 // Create initial blueprint for Age I with faction-specific pre-installed tech tiles
 // Per rules Section 10: Each faction has unique starting Blueprint configuration
 // Per rules Section 3.2: All Frame and Fabric slots must be filled to launch
 // Per rules Section 11.2: Players start with 2 H₂ cubes - "enough for an immediate launch"
-function createInitialBlueprint(faction) {
-  const config = FACTION_CONFIG[faction] || {};
+function createInitialBlueprint(faction: Faction): Blueprint {
+  const config = FACTION_CONFIG[faction] || {} as FactionConfig;
   const startingTechTiles = config.startingTechTiles || {};
 
   // Blueprint Configuration by Age (Section 3.2):
@@ -145,7 +206,7 @@ function createInitialBlueprint(faction) {
   // Age II: 1 Frame, 1 Fabric, 2 Drive, 2 Payload slots
   // Age III: 2 Frame, 2 Fabric, 2 Drive, 3 Payload slots
 
-  const blueprint = {
+  const blueprint: Blueprint = {
     age: 1,
     frameSlots: [null],      // Age I: 1 frame slot
     fabricSlots: [null],     // Age I: 1 fabric slot
@@ -175,9 +236,18 @@ function createInitialBlueprint(faction) {
   return blueprint;
 }
 
+// Starter card structure (separate from Card to allow flexibility in symbol values)
+interface StarterCard {
+  id: string;
+  name: string;
+  symbol: string;
+  reveal: { influence?: number; cash?: number; research?: number; officers?: number };
+  effect: string | null;
+}
+
 // Create starter deck of 10 cards (Section 11.3)
 // Distribution: 3 Wrench, 3 Coin, 3 Propeller, 1 Any
-function createStarterDeck() {
+function createStarterDeck(): Card[] {
   return [
     // 1 Any card
     { id: 'starter_1', name: 'Apprentice', symbol: 'any', reveal: { influence: 1 }, effect: 'None' },
@@ -193,7 +263,26 @@ function createStarterDeck() {
     { id: 'starter_8', name: 'Researcher', symbol: 'propeller', reveal: { research: 1 }, effect: '-£1 per Research' },
     { id: 'starter_9', name: 'Helmsman', symbol: 'propeller', reveal: { officers: 1 }, effect: '+1 ship stat' },
     { id: 'starter_10', name: 'Navigator', symbol: 'propeller', reveal: { influence: 1 }, effect: 'Look at top Hazard' }
-  ];
+  ] as Card[];
+}
+
+// Hazard card for deck creation
+interface HazardCardDef {
+  id: string;
+  type: string;
+  category: string;
+  name: string;
+  difficulty: number;
+  flak: number;
+  autoPass?: boolean;
+  challengeType?: string;
+  hazardType?: string;
+  special?: string;
+  gasLossOnFailure?: number;
+  payloadSlotModifier?: { threshold: number; difficultyIncrease: number };
+  hydrogenOnly?: boolean;
+  engineerCost?: number;
+  noSave?: boolean;
 }
 
 /**
@@ -215,8 +304,8 @@ function createStarterDeck() {
  * - 4 Flak: 3 cards (Armor 4 survives) - includes Critical Structural Stress
  * - 5 Flak: 2 cards (always destroys) - currently just 1 (Catastrophic Explosion)
  */
-function createHazardDeck() {
-  const hazards = [];
+function createHazardDeck(): HazardCard[] {
+  const hazards: HazardCardDef[] = [];
 
   // 4 Clear Weather cards (auto-pass) - all 0 Flak
   const clearWeatherNames = ['Clear Skies', 'Favorable Winds', 'Calm Conditions', 'Perfect Visibility'];
@@ -276,7 +365,7 @@ function createHazardDeck() {
   ];
 
   majorHazards.forEach((h, i) => {
-    const card = {
+    const card: HazardCardDef = {
       id: `major_${h.challengeType}_${i}`,
       type: `major_${h.challengeType}`,
       category: 'major',
@@ -357,11 +446,11 @@ function createHazardDeck() {
     flak: 4
   });
 
-  return shuffleArray(hazards);
+  return shuffleArray(hazards) as HazardCard[];
 }
 
 // Shuffle array helper (Math.random() is appropriate for game card shuffling)
-function shuffleArray(array) {
+function shuffleArray<T>(array: T[]): T[] {
   const shuffled = [...array];
   for (let i = shuffled.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1)); // eslint-disable-line sonarjs/pseudo-random
@@ -375,23 +464,36 @@ function shuffleArray(array) {
 
 // Progress Track thresholds by player count (Section 1.3)
 // Scaled for ~15 round games (Age 1: ~5 rounds, Age 2: ~5 rounds, Age 3: ~5 rounds)
-const PROGRESS_THRESHOLDS = {
+const PROGRESS_THRESHOLDS: Record<number, { age2: number; age3: number; end: number }> = {
   2: { age2: 2, age3: 4, end: 6 },
   3: { age2: 3, age3: 6, end: 9 },
   4: { age2: 4, age3: 8, end: 12 }
 };
 
+// Tech card structure
+interface TechCard {
+  id: string;
+  name?: string;
+  cost?: number;
+  age?: number;
+  [key: string]: unknown;
+}
+
 // Create tech card bag and R&D board together to avoid duplicates
 // Returns { rdBoard: [...], techCardBag: [...] }
 // Per Section 3.1: Include (N-1) copies of each card where N = player count
 // starterCounts: Map of cardId -> count of players who have it as a starter
-function createTechCardBagAndRDBoard(age = 1, playerCount = 4, starterCounts = {}) {
-  const bag = [];
+function createTechCardBagAndRDBoard(
+  age: number = 1,
+  playerCount: number = 4,
+  starterCounts: Record<string, number> = {}
+): { rdBoard: TechCard[]; techCardBag: TechCard[] } {
+  const bag: TechCard[] = [];
   const copiesPerCard = Math.max(1, playerCount - 1);
 
   // Add cards up to current age with appropriate copy counts
   for (let a = 1; a <= age; a++) {
-    for (const card of TECH_CARD_BAG[a]) {
+    for (const card of TECH_CARD_BAG[a] as TechCard[]) {
       // Calculate how many copies to add: (N-1) minus copies given as starters
       const startersUsed = starterCounts[card.id] || 0;
       const copiesToAdd = Math.max(0, copiesPerCard - startersUsed);
@@ -413,10 +515,24 @@ function createTechCardBagAndRDBoard(age = 1, playerCount = 4, starterCounts = {
 // Create initial market cards using the 30-card market deck from Appendix H
 // Returns { marketCards, marketDeck } where marketCards is the visible row of 5
 // and marketDeck is the remaining 25 cards to draw from
-function createMarketCards() {
+function createMarketCards(): { marketCards: Card[]; marketDeck: Card[] } {
   const { createMarketRow } = require('../data/marketCards');
   const { marketRow, marketDeck } = createMarketRow();
   return { marketCards: marketRow, marketDeck };
+}
+
+// City definition
+interface City {
+  type: 'major' | 'minor';
+  homeBase: string | null;
+}
+
+// Map definition
+interface GameMap {
+  name: string;
+  age: number;
+  routes: Route[];
+  cities: Record<string, City>;
 }
 
 /**
@@ -424,7 +540,7 @@ function createMarketCards() {
  * The Pioneer Era features 17 regional routes across Western Europe forming a fully connected network.
  * Each route has VP value matching Appendix F specifications.
  */
-function createAgeIMap() {
+function createAgeIMap(): GameMap {
   return {
     name: 'Western Europe',
     age: 1,
@@ -467,7 +583,7 @@ function createAgeIMap() {
         range: 3, speed: 1, ceiling: 0, income: 5, vp: 3, claimed: null },
       { id: 'route_imperial', name: 'Imperial Circuit', from: 'London', to: 'Berlin',
         range: 3, speed: 2, ceiling: 0, income: 6, vp: 3, claimed: null }
-    ],
+    ] as Route[],
     cities: {
       'Frankfurt': { type: 'major', homeBase: 'germany' },
       'Cologne': { type: 'minor', homeBase: null },
@@ -496,7 +612,7 @@ function createAgeIMap() {
  * The Atlantic Era features 21 hemispheric routes including luxury ocean crossings.
  * Each route has VP value and luxury requirement matching Appendix F specifications.
  */
-function createAgeIIIMap() {
+function createAgeIIIMap(): GameMap {
   return {
     name: 'The Atlantic',
     age: 3,
@@ -548,7 +664,7 @@ function createAgeIIIMap() {
         range: 4, speed: 3, ceiling: 2, income: 11, vp: 5, luxury: 2, claimed: null },
       { id: 'route_hindenburg', name: 'Hindenburg Route', from: 'Frankfurt', to: 'Lakehurst',
         range: 5, speed: 3, ceiling: 2, income: 12, vp: 6, luxury: 2, claimed: null }
-    ],
+    ] as Route[],
     cities: {
       'Rio de Janeiro': { type: 'major', homeBase: null },
       'Recife': { type: 'minor', homeBase: null },
@@ -575,9 +691,26 @@ function createAgeIIIMap() {
   };
 }
 
+// Game player row from database
+interface GamePlayerRow {
+  user_id: string;
+  faction: Faction;
+  [key: string]: unknown;
+}
+
+// Log entry structure
+interface LogEntry {
+  timestamp: string;
+  message: string;
+  type: string;
+}
+
 // Initialize game state when game starts
-async function initializeGameState(gameId, players) {
-  const client = await pool.connect();
+async function initializeGameState(
+  gameId: string,
+  players: GamePlayerRow[]
+): Promise<GameState> {
+  const client: PoolClient = await pool.connect();
 
   try {
     await client.query('BEGIN');
@@ -586,13 +719,13 @@ async function initializeGameState(gameId, players) {
     const playerOrder = shuffleArray(players.map(p => p.user_id));
 
     // Create player states
-    const playerStates = {};
+    const playerStates: Record<string, PlayerState> = {};
     for (const player of players) {
       playerStates[player.user_id] = createPlayerState(player.faction);
       // Draw initial hand of 5 cards
       const state = playerStates[player.user_id];
-      state.deck = shuffleArray(state.deck);
-      state.hand = state.deck.splice(0, 5);
+      state.deck = shuffleArray(state.deck as Card[]);
+      state.hand = (state.deck as Card[]).splice(0, 5);
     }
 
     // Determine player count for progress thresholds
@@ -600,9 +733,9 @@ async function initializeGameState(gameId, players) {
 
     // Count starting tech cards across all players
     // Per Section 3.1: Remove copies of faction starters equal to players who have them
-    const starterCounts = {};
+    const starterCounts: Record<string, number> = {};
     for (const pid of Object.keys(playerStates)) {
-      for (const card of playerStates[pid].techCards || []) {
+      for (const card of (playerStates[pid] as PlayerState & { techCards?: string[] }).techCards || []) {
         starterCounts[card] = (starterCounts[card] || 0) + 1;
       }
     }
@@ -619,10 +752,12 @@ async function initializeGameState(gameId, players) {
     const initialPlacementOrder = [...playerOrder];
 
     // Create initial game state
+    // Note: Server uses some different property names than API types (e.g., turn vs turnInRound)
+    // Cast through unknown to allow this flexibility during migration
     const gameState = {
       age: 1,
       round: 1,        // Increments each time all players complete a cycle
-      turnInRound: 1,  // Resets to 1 at start of each round, increments on each player action
+      turnInRound: 1,  // Resets to 1 at start of each round
       phase: 'worker_placement', // worker_placement, reveal, income_cleanup
       currentPlayerIndex: 0,
       playerOrder,
@@ -648,7 +783,7 @@ async function initializeGameState(gameId, players) {
         placements: {}            // locationId -> { playerId, cardUsed }
       },
       rdBoard,
-      techCardBag,
+      techBag: techCardBag,
       marketCards,
       marketDeck,
       progressTrack: 0,
@@ -660,7 +795,7 @@ async function initializeGameState(gameId, players) {
         message: 'Game started',
         type: 'system'
       }]
-    };
+    } as unknown as GameState;
 
     // Insert into game_states table
     await client.query(
@@ -679,12 +814,39 @@ async function initializeGameState(gameId, players) {
   }
 }
 
+// Game state wrapper returned from database
+interface GameStateWrapper {
+  id: number;
+  gameId: string;
+  version: number;
+  currentPlayerId: string;
+  phase: string;
+  turnNumber: number;
+  age: number;
+  state: GameState;
+  updatedAt: Date;
+}
+
+// Database row for game state
+interface GameStateRow {
+  id: number;
+  game_id: string;
+  version: number;
+  current_player_id: string;
+  phase: string;
+  turn_number: number;
+  age: number;
+  state: GameState;
+  updated_at: Date;
+  commit_point_version?: number;
+}
+
 // Get current game state
-async function getGameState(gameId) {
+async function getGameState(gameId: string): Promise<GameStateWrapper | null> {
   const result = await pool.query(
     `SELECT * FROM game_states WHERE game_id = $1`,
     [gameId]
-  );
+  ) as { rows: GameStateRow[] };
 
   if (result.rows.length === 0) {
     return null;
@@ -704,17 +866,35 @@ async function getGameState(gameId) {
   };
 }
 
+// Action data for recording
+interface ActionRecord {
+  playerId: string;
+  type: string;
+  data: unknown;
+}
+
+// Update result with version info
+interface UpdateResult extends GameState {
+  version: number;
+  isCommitPoint: boolean;
+}
+
 // Update game state with optimistic locking
 // If expectedVersion is provided, the update will fail if the current version doesn't match
 // This prevents race conditions where two concurrent requests both process based on the same state
-async function updateGameState(gameId, newState, action = null, expectedVersion = null) {
-  const client = await pool.connect();
+async function updateGameState(
+  gameId: string,
+  newState: GameState,
+  action: ActionRecord | null = null,
+  expectedVersion: number | null = null
+): Promise<UpdateResult> {
+  const client: PoolClient = await pool.connect();
 
   try {
     await client.query('BEGIN');
 
     // Get current state and version (for undo snapshot)
-    const current = await client.query(
+    const current = await client.query<{ state: GameState; version: number; commit_point_version: number }>(
       'SELECT state, version, commit_point_version FROM game_states WHERE game_id = $1 FOR UPDATE',
       [gameId]
     );
@@ -748,6 +928,8 @@ async function updateGameState(gameId, newState, action = null, expectedVersion 
     }
 
     // Update state, and commit_point_version if this action creates a commit point
+    // Use turnInRound for the turn_number field
+    const turnNumber = (newState as GameState & { turnInRound?: number }).turnInRound || 1;
     await client.query(
       `UPDATE game_states
        SET state = $1, version = $2,
@@ -761,7 +943,7 @@ async function updateGameState(gameId, newState, action = null, expectedVersion 
         newVersion,
         newState.playerOrder[newState.currentPlayerIndex],
         newState.phase,
-        newState.turn,
+        turnNumber,
         newState.age,
         gameId,
         isCommitPoint
@@ -795,8 +977,23 @@ async function updateGameState(gameId, newState, action = null, expectedVersion 
   }
 }
 
+// Game action row from database
+interface GameActionRow {
+  id: number;
+  game_id: string;
+  player_id: string;
+  action_type: string;
+  action_data: unknown;
+  state_version: number;
+  is_undone: boolean;
+  creates_commit_point: boolean;
+  previous_state: GameState | null;
+  created_at: Date;
+  username: string;
+}
+
 // Get action history for a game
-async function getGameActions(gameId, limit = 50) {
+async function getGameActions(gameId: string, limit: number = 50): Promise<GameActionRow[]> {
   const result = await pool.query(
     `SELECT ga.*, u.username
      FROM game_actions ga
@@ -805,7 +1002,7 @@ async function getGameActions(gameId, limit = 50) {
      ORDER BY ga.created_at DESC
      LIMIT $2`,
     [gameId, limit]
-  );
+  ) as { rows: GameActionRow[] };
 
   return result.rows;
 }

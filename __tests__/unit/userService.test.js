@@ -44,7 +44,7 @@ describe('UserService', () => {
       expect(result).toEqual({
         id: 1,
         username: 'newuser',
-        display_name: 'newuser'
+        displayName: 'newuser'
       });
     });
 

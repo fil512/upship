@@ -17,13 +17,14 @@ describe('Rules Compliance - Deck Building', () => {
       const fs = require('fs');
       const path = require('path');
       const content = fs.readFileSync(
-        path.join(__dirname, '../../../server/services/gameStateService.js'),
+        path.join(__dirname, '../../../server/services/gameStateService.ts'),
         'utf8'
       );
 
       // The starter deck should contain exactly 10 cards
       // We check if the createStarterDeck function returns 10 cards
-      const deckMatch = content.match(/function createStarterDeck\(\)\s*\{[\s\S]*?return\s*\[([\s\S]*?)\];/);
+      // Match both JS `function createStarterDeck() {` and TS `function createStarterDeck(): Type {`
+      const deckMatch = content.match(/function createStarterDeck\(\)[^{]*\{[\s\S]*?return\s*\[([\s\S]*?)\];/);
       expect(deckMatch).toBeTruthy();
 
       // Count the number of objects in the array (by counting 'id:')
@@ -35,7 +36,7 @@ describe('Rules Compliance - Deck Building', () => {
       const fs = require('fs');
       const path = require('path');
       const content = fs.readFileSync(
-        path.join(__dirname, '../../../server/services/gameStateService.js'),
+        path.join(__dirname, '../../../server/services/gameStateService.ts'),
         'utf8'
       );
 
@@ -55,7 +56,7 @@ describe('Rules Compliance - Deck Building', () => {
       const fs = require('fs');
       const path = require('path');
       const content = fs.readFileSync(
-        path.join(__dirname, '../../../server/services/gameStateService.js'),
+        path.join(__dirname, '../../../server/services/gameStateService.ts'),
         'utf8'
       );
 
