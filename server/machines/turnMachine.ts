@@ -8,32 +8,115 @@
  * - Launchpad: Activate → (LAUNCH_SHIP → RESPOND_TO_HAZARD)* → NO_MORE_LAUNCHES
  */
 
+import type { Card, HazardCard, GasType } from '@upship/api';
+
 const { createMachine, assign } = require('xstate');
+
+// Type definitions for machine context
+interface PendingLaunch {
+  shipId: string;
+  routeId: string;
+  gasType: GasType;
+  hazard: HazardCard | null;
+}
+
+interface TurnMachineContext {
+  playerId: string | null;
+  peekedHazard: HazardCard | null;
+  drawnCards: Card[];
+  launchpadActive: boolean;
+  pendingLaunch: PendingLaunch | null;
+}
+
+// Event types
+interface ActivateTurnEvent {
+  type: 'ACTIVATE_TURN';
+  playerId: string;
+}
+
+interface PlaceAgentEvent {
+  type: 'PLACE_AGENT';
+  locationId: string;
+  hazard?: HazardCard;
+  cards?: Card[];
+}
+
+interface RevealEvent {
+  type: 'REVEAL';
+}
+
+interface KeepHazardEvent {
+  type: 'KEEP_HAZARD';
+}
+
+interface DiscardHazardEvent {
+  type: 'DISCARD_HAZARD';
+}
+
+interface DiscardMinistryCardEvent {
+  type: 'DISCARD_MINISTRY_CARD';
+  cardIndex: number;
+}
+
+interface LaunchShipEvent {
+  type: 'LAUNCH_SHIP';
+  shipId: string;
+  routeId: string;
+  gasType: GasType;
+  hazard?: HazardCard;
+}
+
+interface NoMoreLaunchesEvent {
+  type: 'NO_MORE_LAUNCHES';
+}
+
+interface RespondToHazardEvent {
+  type: 'RESPOND_TO_HAZARD';
+  spendEngineers: boolean;
+}
+
+type TurnMachineEvent =
+  | ActivateTurnEvent
+  | PlaceAgentEvent
+  | RevealEvent
+  | KeepHazardEvent
+  | DiscardHazardEvent
+  | DiscardMinistryCardEvent
+  | LaunchShipEvent
+  | NoMoreLaunchesEvent
+  | RespondToHazardEvent;
+
+// Type for guard/action context
+interface GuardContext {
+  context: TurnMachineContext;
+  event: TurnMachineEvent;
+}
 
 /**
  * Guard functions for state transitions
  */
 const guards = {
-  isWeatherBureau: ({ event }) => event.locationId === 'weather-bureau',
-  isMinistry: ({ event }) => event.locationId === 'ministry',
-  isLaunchpad: ({ event }) => event.locationId === 'launchpad',
+  isWeatherBureau: ({ event }: GuardContext) => (event as PlaceAgentEvent).locationId === 'weather-bureau',
+  isMinistry: ({ event }: GuardContext) => (event as PlaceAgentEvent).locationId === 'ministry',
+  isLaunchpad: ({ event }: GuardContext) => (event as PlaceAgentEvent).locationId === 'launchpad',
 
-  isValidMinistryDiscard: ({ context, event }) => {
+  isValidMinistryDiscard: ({ context, event }: GuardContext) => {
     // Must discard one of the two drawn cards
-    const { cardIndex } = event;
+    const { cardIndex } = event as DiscardMinistryCardEvent;
     return context.drawnCards &&
            context.drawnCards.length === 2 &&
            (cardIndex === 0 || cardIndex === 1);
   },
 
-  canLaunch: ({ context, event }) => {
+  canLaunch: ({ context, event }: GuardContext) => {
     // Basic validation - detailed validation happens in action handler
+    const launchEvent = event as LaunchShipEvent;
     return context.launchpadActive &&
-           event.shipId &&
-           event.routeId;
+           launchEvent.shipId &&
+           launchEvent.routeId;
   },
 
-  hasShipAwaitingHazard: ({ context }) => {
+  hasShipAwaitingHazard: ({ context }: GuardContext) => {
     return context.pendingLaunch !== null &&
            context.pendingLaunch.hazard !== null;
   }
@@ -46,7 +129,7 @@ const guards = {
 const actions = {
   // Weather Bureau actions
   setPeekedHazard: assign({
-    peekedHazard: ({ event }) => event.hazard || null
+    peekedHazard: ({ event }: { event: PlaceAgentEvent }) => event.hazard || null
   }),
 
   clearPeekedHazard: assign({
@@ -55,7 +138,7 @@ const actions = {
 
   // Ministry actions
   setDrawnCards: assign({
-    drawnCards: ({ event }) => event.cards || []
+    drawnCards: ({ event }: { event: PlaceAgentEvent }) => event.cards || []
   }),
 
   clearDrawnCards: assign({
@@ -73,7 +156,7 @@ const actions = {
 
   // Launch flow actions
   setPendingLaunch: assign({
-    pendingLaunch: ({ event }) => ({
+    pendingLaunch: ({ event }: { event: LaunchShipEvent }) => ({
       shipId: event.shipId,
       routeId: event.routeId,
       gasType: event.gasType,
@@ -87,14 +170,14 @@ const actions = {
 
   // Context initialization
   setPlayerId: assign({
-    playerId: ({ event }) => event.playerId
+    playerId: ({ event }: { event: ActivateTurnEvent }) => event.playerId
   })
 };
 
 /**
  * Initial context for a new turn machine
  */
-const initialContext = {
+const initialContext: TurnMachineContext = {
   playerId: null,
   peekedHazard: null,
   drawnCards: [],
@@ -214,13 +297,16 @@ const turnMachine = createMachine({
   actions
 });
 
+// State value type
+type TurnStateValue = 'idle' | 'awaiting_action' | 'at_weather_bureau' | 'at_ministry' | 'at_launchpad' | 'awaiting_hazard';
+
 /**
  * Get allowed events for a given state
- * @param {string} stateValue - Current state value (e.g., 'awaiting_action')
- * @returns {string[]} - Array of allowed event types
+ * @param stateValue - Current state value (e.g., 'awaiting_action')
+ * @returns Array of allowed event types
  */
-function getAllowedEvents(stateValue) {
-  const allowedByState = {
+function getAllowedEvents(stateValue: TurnStateValue): string[] {
+  const allowedByState: Record<TurnStateValue, string[]> = {
     idle: ['ACTIVATE_TURN'],
     awaiting_action: ['PLACE_AGENT', 'REVEAL'],
     at_weather_bureau: ['KEEP_HAZARD', 'DISCARD_HAZARD'],
@@ -234,14 +320,31 @@ function getAllowedEvents(stateValue) {
 
 /**
  * Check if an event is allowed in the current state
- * @param {string} stateValue - Current state value
- * @param {string} eventType - Event type to check
- * @returns {boolean}
+ * @param stateValue - Current state value
+ * @param eventType - Event type to check
+ * @returns boolean
  */
-function isEventAllowed(stateValue, eventType) {
+function isEventAllowed(stateValue: TurnStateValue, eventType: string): boolean {
   return getAllowedEvents(stateValue).includes(eventType);
 }
 
+export {
+  turnMachine,
+  initialContext,
+  guards,
+  actions,
+  getAllowedEvents,
+  isEventAllowed
+};
+
+export type {
+  TurnMachineContext,
+  TurnMachineEvent,
+  TurnStateValue,
+  PendingLaunch
+};
+
+// CommonJS compatibility
 module.exports = {
   turnMachine,
   initialContext,

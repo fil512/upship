@@ -9,18 +9,78 @@
  * are valid for the current player.
  */
 
+import type { GameState, PlayerState, Ship, Card, HazardCard } from '@upship/api';
+
 const { getAllowedEvents } = require('./turnMachine');
+
+// Turn state values
+type TurnStateValue = 'idle' | 'awaiting_action' | 'at_weather_bureau' | 'at_ministry' | 'at_launchpad' | 'awaiting_hazard';
+
+// Extended player state with turn-specific properties
+type TurnPlayerState = PlayerState & {
+  peekedHazard?: HazardCard | null;
+  drawnMinistryCards?: Card[];
+};
+
+// Extended state with worker placement
+type TurnState = GameState & {
+  workerPlacement?: {
+    placementOrder?: string[];
+    currentPlacerIndex?: number;
+  };
+  launchpadActive?: Record<string, boolean>;
+};
+
+// Action context for UI
+interface ActionContext {
+  peekedHazard?: HazardCard | null;
+  drawnMinistryCards?: Card[];
+  shipAwaitingHazard?: Ship;
+  pendingHazard?: unknown;
+  pendingRouteId?: string;
+  launchableShips?: Ship[];
+}
+
+// Button configuration for UI
+interface ButtonConfig {
+  action: string;
+  label: string;
+  description: string;
+  icon: string;
+  primary: boolean;
+  requiresSelection: boolean;
+  selectionType?: string;
+  variant?: string;
+  disabled?: boolean;
+  disabledReason?: string;
+  actionData?: Record<string, unknown>;
+}
+
+// Player allowed actions result
+interface PlayerAllowedActionsResult {
+  turnState: TurnStateValue;
+  allowedActions: string[];
+  actionContext: ActionContext;
+}
+
+// Player UI state result
+interface PlayerUIStateResult extends PlayerAllowedActionsResult {
+  isMyTurn: boolean;
+  isBlocked: boolean;
+  prompt: string;
+  buttons: ButtonConfig[];
+}
 
 /**
  * Derive the current turn state for a player from game state
  *
- * @param {Object} state - Full game state
- * @param {string} playerId - Player ID to check
- * @returns {string} - One of: 'idle', 'awaiting_action', 'at_weather_bureau',
- *                     'at_ministry', 'at_launchpad', 'awaiting_hazard'
+ * @param state - Full game state
+ * @param playerId - Player ID to check
+ * @returns One of: 'idle', 'awaiting_action', 'at_weather_bureau',
+ *          'at_ministry', 'at_launchpad', 'awaiting_hazard'
  */
-function deriveTurnState(state, playerId) {
-  const playerState = state.players?.[playerId];
+function deriveTurnState(state: GameState, playerId: string): TurnStateValue {
+  const playerState = state.players?.[playerId] as TurnPlayerState | undefined;
   if (!playerState) {
     return 'idle';
   }
@@ -61,7 +121,8 @@ function deriveTurnState(state, playerId) {
   }
 
   // Check for at_launchpad: launchpad is active
-  if (state.launchpadActive?.[playerId]) {
+  const turnState = state as TurnState;
+  if (turnState.launchpadActive?.[playerId]) {
     return 'at_launchpad';
   }
 
@@ -76,14 +137,16 @@ function deriveTurnState(state, playerId) {
 /**
  * Check if it's a player's turn to act
  *
- * @param {Object} state - Game state
- * @param {string} playerId - Player ID
- * @returns {boolean}
+ * @param state - Game state
+ * @param playerId - Player ID
+ * @returns boolean
  */
-function isPlayersTurn(state, playerId) {
+function isPlayersTurn(state: GameState, playerId: string): boolean {
+  const turnState = state as TurnState;
+
   if (state.phase === 'worker_placement') {
-    const placementOrder = state.workerPlacement?.placementOrder || state.playerOrder;
-    const currentIndex = state.workerPlacement?.currentPlacerIndex || 0;
+    const placementOrder = turnState.workerPlacement?.placementOrder || state.playerOrder;
+    const currentIndex = turnState.workerPlacement?.currentPlacerIndex || 0;
     return placementOrder[currentIndex] === playerId;
   }
 
@@ -102,17 +165,17 @@ function isPlayersTurn(state, playerId) {
 /**
  * Get allowed actions for a player based on current game state
  *
- * @param {Object} state - Game state
- * @param {string} playerId - Player ID
- * @returns {Object} - { turnState, allowedActions, actionContext }
+ * @param state - Game state
+ * @param playerId - Player ID
+ * @returns { turnState, allowedActions, actionContext }
  */
-function getPlayerAllowedActions(state, playerId) {
+function getPlayerAllowedActions(state: GameState, playerId: string): PlayerAllowedActionsResult {
   const turnState = deriveTurnState(state, playerId);
   const allowedEvents = getAllowedEvents(turnState);
-  const playerState = state.players?.[playerId];
+  const playerState = state.players?.[playerId] as TurnPlayerState | undefined;
 
   // Build context for UI to use
-  const actionContext = {};
+  const actionContext: ActionContext = {};
 
   if (turnState === 'at_weather_bureau' && playerState?.peekedHazard) {
     actionContext.peekedHazard = playerState.peekedHazard;
@@ -127,7 +190,7 @@ function getPlayerAllowedActions(state, playerId) {
     if (ship) {
       actionContext.shipAwaitingHazard = ship;
       actionContext.pendingHazard = ship.pendingHazard;
-      actionContext.pendingRouteId = ship.pendingRouteId;
+      actionContext.pendingRouteId = (ship as Ship & { pendingRouteId?: string }).pendingRouteId;
     }
   }
 
@@ -145,12 +208,12 @@ function getPlayerAllowedActions(state, playerId) {
 /**
  * Map action types to UI button configurations
  *
- * @param {string[]} allowedActions - List of allowed action types
- * @param {Object} actionContext - Context data for actions
- * @returns {Object[]} - Array of button configurations
+ * @param allowedActions - List of allowed action types
+ * @param actionContext - Context data for actions
+ * @returns Array of button configurations
  */
-function mapActionsToButtons(allowedActions, actionContext = {}) {
-  const buttonConfigs = [];
+function mapActionsToButtons(allowedActions: string[], actionContext: ActionContext = {}): ButtonConfig[] {
+  const buttonConfigs: ButtonConfig[] = [];
 
   for (const action of allowedActions) {
     switch (action) {
@@ -181,7 +244,7 @@ function mapActionsToButtons(allowedActions, actionContext = {}) {
         buttonConfigs.push({
           action: 'KEEP_HAZARD',
           label: 'Keep Hazard',
-          description: `Keep "${actionContext.peekedHazard?.name || 'hazard'}" on top of deck`,
+          description: `Keep "${(actionContext.peekedHazard as HazardCard | undefined)?.name || 'hazard'}" on top of deck`,
           icon: 'keep',
           primary: false,
           requiresSelection: false,
@@ -193,7 +256,7 @@ function mapActionsToButtons(allowedActions, actionContext = {}) {
         buttonConfigs.push({
           action: 'DISCARD_HAZARD',
           label: 'Discard Hazard',
-          description: `Discard "${actionContext.peekedHazard?.name || 'hazard'}" from deck`,
+          description: `Discard "${(actionContext.peekedHazard as HazardCard | undefined)?.name || 'hazard'}" from deck`,
           icon: 'discard',
           primary: true,
           requiresSelection: false,
@@ -253,8 +316,8 @@ function mapActionsToButtons(allowedActions, actionContext = {}) {
       case 'RESPOND_TO_HAZARD':
         // Create buttons based on hazard type and player resources
         if (actionContext.pendingHazard) {
-          const hazard = actionContext.pendingHazard;
-          const canSpend = (actionContext.shipAwaitingHazard?.engineers || 0) > 0;
+          const hazard = actionContext.pendingHazard as { engineerCost?: number; name?: string };
+          const canSpend = ((actionContext.shipAwaitingHazard as Ship & { engineers?: number })?.engineers || 0) > 0;
 
           buttonConfigs.push({
             action: 'RESPOND_TO_HAZARD',
@@ -297,11 +360,11 @@ function mapActionsToButtons(allowedActions, actionContext = {}) {
 /**
  * Get complete UI state for a player
  *
- * @param {Object} state - Game state
- * @param {string} playerId - Player ID
- * @returns {Object} - Complete UI state including buttons
+ * @param state - Game state
+ * @param playerId - Player ID
+ * @returns Complete UI state including buttons
  */
-function getPlayerUIState(state, playerId) {
+function getPlayerUIState(state: GameState, playerId: string): PlayerUIStateResult {
   const { turnState, allowedActions, actionContext } = getPlayerAllowedActions(state, playerId);
   const buttons = mapActionsToButtons(allowedActions, actionContext);
 
@@ -313,36 +376,55 @@ function getPlayerUIState(state, playerId) {
 
   return {
     turnState,
+    allowedActions,
+    actionContext,
     isMyTurn: turnState !== 'idle',
     isBlocked,
     prompt,
-    buttons,
-    actionContext
+    buttons
   };
 }
 
 /**
  * Get a human-readable prompt for the current state
  */
-function getStatePrompt(turnState, actionContext) {
+function getStatePrompt(turnState: TurnStateValue, actionContext: ActionContext): string {
   switch (turnState) {
     case 'idle':
       return 'Waiting for your turn...';
     case 'awaiting_action':
       return 'Place an agent or reveal your hand';
     case 'at_weather_bureau':
-      return `Weather Bureau: Keep or discard "${actionContext.peekedHazard?.name || 'this hazard'}"?`;
+      return `Weather Bureau: Keep or discard "${(actionContext.peekedHazard as HazardCard | undefined)?.name || 'this hazard'}"?`;
     case 'at_ministry':
       return 'Ministry: Choose which card to keep';
     case 'at_launchpad':
       return 'Launchpad: Launch ships or finish';
     case 'awaiting_hazard':
-      return `Hazard Check: ${actionContext.pendingHazard?.name || 'Resolve hazard'}`;
+      return `Hazard Check: ${(actionContext.pendingHazard as { name?: string } | undefined)?.name || 'Resolve hazard'}`;
     default:
       return '';
   }
 }
 
+export {
+  deriveTurnState,
+  isPlayersTurn,
+  getPlayerAllowedActions,
+  mapActionsToButtons,
+  getPlayerUIState,
+  getStatePrompt
+};
+
+export type {
+  TurnStateValue,
+  ActionContext,
+  ButtonConfig,
+  PlayerAllowedActionsResult,
+  PlayerUIStateResult
+};
+
+// CommonJS compatibility
 module.exports = {
   deriveTurnState,
   isPlayersTurn,

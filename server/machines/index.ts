@@ -3,16 +3,35 @@
  * Central entry point for game state machines
  */
 
+import type { TurnMachineContext, TurnStateValue } from './turnMachine';
+
 const { createActor } = require('xstate');
 const { turnMachine, initialContext, getAllowedEvents, isEventAllowed } = require('./turnMachine');
 
+// Persisted machine state for database storage
+interface PersistedMachineState {
+  value: TurnStateValue;
+  context: TurnMachineContext;
+  status: 'active' | 'done' | 'error';
+}
+
+// Transition result
+interface TransitionResult {
+  newMachineState: PersistedMachineState;
+  allowed: boolean;
+}
+
+// Options for creating turn actor
+interface CreateTurnActorOptions {
+  playerId?: string;
+}
+
 /**
  * Create a new turn machine actor
- * @param {Object} options - Optional configuration
- * @param {string} options.playerId - Player ID to set in context
- * @returns {Object} - XState actor instance
+ * @param options - Optional configuration
+ * @returns XState actor instance
  */
-function createTurnActor(options = {}) {
+function createTurnActor(options: CreateTurnActorOptions = {}): unknown {
   const actor = createActor(turnMachine, {
     input: options.playerId ? { playerId: options.playerId } : undefined
   });
@@ -21,10 +40,10 @@ function createTurnActor(options = {}) {
 
 /**
  * Rehydrate a turn machine from persisted state
- * @param {Object} persistedState - Previously persisted machine state
- * @returns {Object} - XState actor instance restored to the persisted state
+ * @param persistedState - Previously persisted machine state
+ * @returns XState actor instance restored to the persisted state
  */
-function rehydrateTurnMachine(persistedState) {
+function rehydrateTurnMachine(persistedState: PersistedMachineState | null): unknown {
   if (!persistedState) {
     // No persisted state - create fresh machine in idle state
     return createTurnActor();
@@ -40,25 +59,25 @@ function rehydrateTurnMachine(persistedState) {
 
 /**
  * Get the persisted state from an actor for database storage
- * @param {Object} actor - XState actor instance
- * @returns {Object} - Serializable state object
+ * @param actor - XState actor instance
+ * @returns Serializable state object
  */
-function getPersistedState(actor) {
+function getPersistedState(actor: { getSnapshot: () => { value: TurnStateValue; context: TurnMachineContext; status: string } }): PersistedMachineState {
   const snapshot = actor.getSnapshot();
   return {
     value: snapshot.value,
     context: snapshot.context,
-    status: snapshot.status
+    status: snapshot.status as 'active' | 'done' | 'error'
   };
 }
 
 /**
  * Initialize turn machine state for a player
  * Called when setting up a new game or when a player doesn't have machine state
- * @param {string} playerId - Player ID
- * @returns {Object} - Initial machine state for persistence
+ * @param playerId - Player ID
+ * @returns Initial machine state for persistence
  */
-function initializeTurnMachineState(playerId) {
+function initializeTurnMachineState(playerId: string): PersistedMachineState {
   return {
     value: 'idle',
     context: {
@@ -71,10 +90,10 @@ function initializeTurnMachineState(playerId) {
 
 /**
  * Get allowed actions for a player based on their machine state
- * @param {Object} machineState - Persisted machine state
- * @returns {string[]} - Array of allowed action types
+ * @param machineState - Persisted machine state
+ * @returns Array of allowed action types
  */
-function getAllowedActionsForPlayer(machineState) {
+function getAllowedActionsForPlayer(machineState: PersistedMachineState | null): string[] {
   if (!machineState || !machineState.value) {
     return ['ACTIVATE_TURN']; // Idle state default
   }
@@ -84,11 +103,11 @@ function getAllowedActionsForPlayer(machineState) {
 
 /**
  * Check if an action is allowed for a player's current machine state
- * @param {Object} machineState - Persisted machine state
- * @param {string} actionType - Action type to check
- * @returns {boolean}
+ * @param machineState - Persisted machine state
+ * @param actionType - Action type to check
+ * @returns boolean
  */
-function isActionAllowed(machineState, actionType) {
+function isActionAllowed(machineState: PersistedMachineState | null, actionType: string): boolean {
   if (!machineState || !machineState.value) {
     return actionType === 'ACTIVATE_TURN';
   }
@@ -100,7 +119,7 @@ function isActionAllowed(machineState, actionType) {
  * Map game action types to machine event types
  * Most actions pass through unchanged, but some need mapping
  */
-const actionToEventMap = {
+const actionToEventMap: Record<string, string> = {
   PLACE_AGENT: 'PLACE_AGENT',
   REVEAL: 'REVEAL',
   KEEP_HAZARD: 'KEEP_HAZARD',
@@ -128,23 +147,32 @@ const machineControlledActions = new Set([
 
 /**
  * Check if an action type is controlled by the turn machine
- * @param {string} actionType - Action type to check
- * @returns {boolean}
+ * @param actionType - Action type to check
+ * @returns boolean
  */
-function isMachineControlledAction(actionType) {
+function isMachineControlledAction(actionType: string): boolean {
   return machineControlledActions.has(actionType);
 }
 
 /**
  * Process a state transition
- * @param {Object} machineState - Current persisted machine state
- * @param {string} eventType - Event type
- * @param {Object} eventData - Event data
- * @returns {Object} - { newMachineState, allowed }
+ * @param machineState - Current persisted machine state
+ * @param eventType - Event type
+ * @param eventData - Event data
+ * @returns { newMachineState, allowed }
  */
-function processTransition(machineState, eventType, eventData = {}) {
+function processTransition(
+  machineState: PersistedMachineState | null,
+  eventType: string,
+  eventData: Record<string, unknown> = {}
+): TransitionResult {
   // Rehydrate the machine
-  const actor = rehydrateTurnMachine(machineState);
+  const actor = rehydrateTurnMachine(machineState) as {
+    start: () => void;
+    stop: () => void;
+    send: (event: unknown) => void;
+    getSnapshot: () => { value: TurnStateValue; context: TurnMachineContext; status: string; can: (event: unknown) => boolean };
+  };
   actor.start();
 
   // Get current snapshot to check if transition is valid
@@ -159,7 +187,7 @@ function processTransition(machineState, eventType, eventData = {}) {
   if (!canTransition) {
     actor.stop();
     return {
-      newMachineState: machineState,
+      newMachineState: machineState || initializeTurnMachineState(''),
       allowed: false
     };
   }
@@ -175,6 +203,26 @@ function processTransition(machineState, eventType, eventData = {}) {
   };
 }
 
+export {
+  turnMachine,
+  createTurnActor,
+  rehydrateTurnMachine,
+  getPersistedState,
+  initializeTurnMachineState,
+  getAllowedActionsForPlayer,
+  isActionAllowed,
+  isMachineControlledAction,
+  processTransition,
+  actionToEventMap
+};
+
+export type {
+  PersistedMachineState,
+  TransitionResult,
+  CreateTurnActorOptions
+};
+
+// CommonJS compatibility
 module.exports = {
   turnMachine,
   createTurnActor,
