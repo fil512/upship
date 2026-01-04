@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+#!/usr/bin/env npx tsx
 
 /**
  * UP SHIP! Command-Line Client
@@ -19,6 +19,8 @@
  *   upship testpilot42 action <gameId> END_TURN
  */
 
+import type { IncomingMessage, RequestOptions } from 'http';
+
 const fs = require('fs');
 const path = require('path');
 const https = require('https');
@@ -28,17 +30,117 @@ const http = require('http');
 const DEFAULT_BASE_URL = process.env.UPSHIP_URL || 'https://upship-production.up.railway.app';
 const SESSION_DIR = path.join(process.cwd(), '.upship-sessions');
 
+// Session data structure
+interface Session {
+  userId: string;
+  username: string;
+  cookie: string;
+}
+
+// HTTP response structure
+interface ApiResponse {
+  status: number;
+  data: Record<string, unknown>;
+  cookie: string | null;
+}
+
+// Game state structures
+interface Ship {
+  id: string;
+  status: string;
+  stats?: { range: number; speed: number };
+  route?: string;
+}
+
+interface Card {
+  name: string;
+  symbol?: string;
+}
+
+interface Blueprint {
+  frameSlots: Array<string | null>;
+  fabricSlots: Array<string | null>;
+  driveSlots: Array<string | null>;
+  componentSlots: Array<string | null>;
+}
+
+interface PlayerState {
+  faction: string;
+  cash: number;
+  income: number;
+  officers: number;
+  engineers: number;
+  research?: number;
+  influence?: number;
+  gasCubes?: { hydrogen: number; helium: number };
+  hand?: Card[];
+  deck?: unknown[];
+  discardPile?: unknown[];
+  ships?: Ship[];
+  technologies?: string[];
+  blueprint?: Blueprint;
+  agentsRemaining?: number;
+}
+
+interface GameState {
+  age: number;
+  turn: number;
+  round: number;
+  phase: string;
+  playerOrder: string[];
+  currentPlayerIndex: number;
+  progressTrack?: number;
+  progressThresholds?: { age2: number; age3: number; end: number };
+  workerPlacement?: {
+    placementOrder: string[];
+    currentPlacerIndex: number;
+    passedPlayers: string[];
+  };
+  playersEndedTurn?: string[];
+  players: Record<string, PlayerState>;
+  gasMarket?: { hydrogen: number; helium: number };
+  groundBoard?: { placements: Record<string, { playerId: string; cardUsed?: string }> };
+  rdBoard?: Array<{ id: string; cost?: number }>;
+  log?: Array<{ timestamp: string; message: string }>;
+  map?: { routes: Route[] };
+}
+
+interface Route {
+  id: string;
+  from: string;
+  to: string;
+  distance: number;
+  speed?: number;
+  income: number;
+  claimed?: boolean;
+}
+
+interface Game {
+  id: string;
+  name: string;
+  status: string;
+  player_count?: number;
+}
+
+interface Technology {
+  id: string;
+  age: number;
+  cost?: number;
+  weight?: number;
+  stats?: Record<string, number>;
+}
+
 // Ensure session directory exists
 if (!fs.existsSync(SESSION_DIR)) {
   fs.mkdirSync(SESSION_DIR, { recursive: true });
 }
 
 // Session management
-function getSessionPath(username) {
+function getSessionPath(username: string): string {
   return path.join(SESSION_DIR, `${username}.json`);
 }
 
-function loadSession(username) {
+function loadSession(username: string): Session | null {
   const sessionPath = getSessionPath(username);
   if (fs.existsSync(sessionPath)) {
     return JSON.parse(fs.readFileSync(sessionPath, 'utf8'));
@@ -46,33 +148,33 @@ function loadSession(username) {
   return null;
 }
 
-function saveSession(username, sessionData) {
+function saveSession(username: string, sessionData: Session): void {
   const sessionPath = getSessionPath(username);
   fs.writeFileSync(sessionPath, JSON.stringify(sessionData, null, 2));
 }
 
-function deleteSession(username) {
+function deleteSession(username: string): void {
   const sessionPath = getSessionPath(username);
   if (fs.existsSync(sessionPath)) {
     fs.unlinkSync(sessionPath);
   }
 }
 
-function listSessions() {
+function listSessions(): string[] {
   if (!fs.existsSync(SESSION_DIR)) return [];
   return fs.readdirSync(SESSION_DIR)
-    .filter(f => f.endsWith('.json'))
-    .map(f => f.replace('.json', ''));
+    .filter((f: string) => f.endsWith('.json'))
+    .map((f: string) => f.replace('.json', ''));
 }
 
 // HTTP client
-function makeRequest(method, urlPath, body, cookie) {
+function makeRequest(method: string, urlPath: string, body?: Record<string, unknown> | null, cookie?: string): Promise<ApiResponse> {
   return new Promise((resolve, reject) => {
     const baseUrl = new URL(DEFAULT_BASE_URL);
     const isHttps = baseUrl.protocol === 'https:';
     const lib = isHttps ? https : http;
 
-    const options = {
+    const options: RequestOptions = {
       hostname: baseUrl.hostname,
       port: baseUrl.port || (isHttps ? 443 : 80),
       path: urlPath,
@@ -83,19 +185,19 @@ function makeRequest(method, urlPath, body, cookie) {
       }
     };
 
-    if (cookie) {
-      options.headers['Cookie'] = cookie;
+    if (cookie && options.headers) {
+      (options.headers as Record<string, string>)['Cookie'] = cookie;
     }
 
-    const req = lib.request(options, (res) => {
+    const req = lib.request(options, (res: IncomingMessage) => {
       let data = '';
 
-      res.on('data', chunk => { data += chunk; });
+      res.on('data', (chunk: Buffer) => { data += chunk; });
 
       res.on('end', () => {
         // Extract session cookie from response
         const setCookie = res.headers['set-cookie'];
-        let sessionCookie = null;
+        let sessionCookie: string | null = null;
         if (setCookie) {
           for (const c of setCookie) {
             if (c.startsWith('connect.sid=')) {
@@ -105,7 +207,7 @@ function makeRequest(method, urlPath, body, cookie) {
           }
         }
 
-        let parsed;
+        let parsed: Record<string, unknown>;
         try {
           parsed = data ? JSON.parse(data) : {};
         } catch (_e) { // eslint-disable-line sonarjs/no-ignored-exceptions -- Expected for non-JSON responses
@@ -113,7 +215,7 @@ function makeRequest(method, urlPath, body, cookie) {
         }
 
         resolve({
-          status: res.statusCode,
+          status: res.statusCode || 0,
           data: parsed,
           cookie: sessionCookie
         });
@@ -131,11 +233,11 @@ function makeRequest(method, urlPath, body, cookie) {
 }
 
 // API wrapper with session handling
-async function api(username, method, path, body = null) {
+async function api(username: string, method: string, urlPath: string, body: Record<string, unknown> | null = null): Promise<ApiResponse> {
   const session = loadSession(username);
   const cookie = session?.cookie;
 
-  const response = await makeRequest(method, path, body, cookie);
+  const response = await makeRequest(method, urlPath, body, cookie);
 
   // Update session cookie if we got a new one
   if (response.cookie && session) {
@@ -147,7 +249,7 @@ async function api(username, method, path, body = null) {
 }
 
 // Formatting helpers
-const COLORS = {
+const COLORS: Record<string, string> = {
   reset: '\x1b[0m',
   bright: '\x1b[1m',
   dim: '\x1b[2m',
@@ -161,40 +263,40 @@ const COLORS = {
   gray: '\x1b[90m'
 };
 
-const FACTION_COLORS = {
+const FACTION_COLORS: Record<string, string> = {
   germany: COLORS.yellow,
   britain: COLORS.blue,
   usa: COLORS.cyan,
   italy: COLORS.green
 };
 
-const GAME_STATUS_COLORS = {
+const GAME_STATUS_COLORS: Record<string, string> = {
   waiting: COLORS.yellow,
   active: COLORS.green,
   finished: COLORS.gray
 };
 
-const SHIP_STATUS_COLORS = {
+const SHIP_STATUS_COLORS: Record<string, string> = {
   hangar: COLORS.yellow,
   launched: COLORS.green,
   crashed: COLORS.red
 };
 
-function c(color, text) {
+function c(color: string, text: string | number): string {
   return `${color}${text}${COLORS.reset}`;
 }
 
-function formatCash(amount) {
+function formatCash(amount: number): string {
   return c(COLORS.green, `£${amount}`);
 }
 
-function formatFaction(faction) {
-  const color = FACTION_COLORS[faction] || COLORS.white;
+function formatFaction(faction: string | undefined): string {
+  const color = FACTION_COLORS[faction || ''] || COLORS.white;
   return c(color, faction?.toUpperCase() || 'NONE');
 }
 
-function formatPhase(phase) {
-  const phaseColors = {
+function formatPhase(phase: string | undefined): string {
+  const phaseColors: Record<string, string> = {
     worker_placement: COLORS.yellow,
     reveal: COLORS.blue,
     income_cleanup: COLORS.green,
@@ -205,20 +307,23 @@ function formatPhase(phase) {
     income: COLORS.green,
     cleanup: COLORS.gray
   };
-  const displayNames = {
+  const displayNames: Record<string, string> = {
     worker_placement: 'WORKER PLACEMENT',
     reveal: 'REVEAL',
     income_cleanup: 'INCOME & CLEANUP'
   };
-  const displayName = displayNames[phase] || phase?.toUpperCase() || 'UNKNOWN';
-  return c(phaseColors[phase] || COLORS.white, displayName);
+  const displayName = displayNames[phase || ''] || phase?.toUpperCase() || 'UNKNOWN';
+  return c(phaseColors[phase || ''] || COLORS.white, displayName);
 }
 
 // Command implementations
-const commands = {
+type CommandFunction = (usernameOrArgs: string | string[], args?: string[]) => Promise<void>;
+
+const commands: Record<string, CommandFunction> = {
   // Authentication
-  async login(args) {
-    const [username, password] = args;
+  async login(args: string | string[]): Promise<void> {
+    const argsArray = Array.isArray(args) ? args : [];
+    const [username, password] = argsArray;
     if (!username || !password) {
       console.log('Usage: upship login <username> <password>');
       return;
@@ -227,20 +332,22 @@ const commands = {
     const response = await makeRequest('POST', '/api/auth/login', { username, password });
 
     if (response.status === 200 && response.data.user) {
+      const user = response.data.user as { id: string; username: string };
       saveSession(username, {
-        userId: response.data.user.id,
-        username: response.data.user.username,
-        cookie: response.cookie
+        userId: user.id,
+        username: user.username,
+        cookie: response.cookie || ''
       });
       console.log(c(COLORS.green, `✓ Logged in as ${username}`));
-      console.log(`  User ID: ${response.data.user.id}`);
+      console.log(`  User ID: ${user.id}`);
     } else {
       console.log(c(COLORS.red, `✗ Login failed: ${response.data.error || 'Unknown error'}`));
     }
   },
 
-  async register(args) {
-    const [username, password] = args;
+  async register(args: string | string[]): Promise<void> {
+    const argsArray = Array.isArray(args) ? args : [];
+    const [username, password] = argsArray;
     if (!username || !password) {
       console.log('Usage: upship register <username> <password>');
       return;
@@ -249,10 +356,11 @@ const commands = {
     const response = await makeRequest('POST', '/api/auth/register', { username, password });
 
     if (response.status === 200 && response.data.user) {
+      const user = response.data.user as { id: string; username: string };
       saveSession(username, {
-        userId: response.data.user.id,
-        username: response.data.user.username,
-        cookie: response.cookie
+        userId: user.id,
+        username: user.username,
+        cookie: response.cookie || ''
       });
       console.log(c(COLORS.green, `✓ Registered and logged in as ${username}`));
     } else {
@@ -260,23 +368,26 @@ const commands = {
     }
   },
 
-  async logout(username) {
-    await api(username, 'POST', '/api/auth/logout');
-    deleteSession(username);
-    console.log(c(COLORS.green, `✓ Logged out ${username}`));
+  async logout(username: string | string[]): Promise<void> {
+    const user = typeof username === 'string' ? username : username[0];
+    await api(user, 'POST', '/api/auth/logout');
+    deleteSession(user);
+    console.log(c(COLORS.green, `✓ Logged out ${user}`));
   },
 
-  async whoami(username) {
-    const response = await api(username, 'GET', '/api/auth/me');
+  async whoami(username: string | string[]): Promise<void> {
+    const user = typeof username === 'string' ? username : username[0];
+    const response = await api(user, 'GET', '/api/auth/me');
     if (response.data.user) {
-      console.log(`Logged in as: ${c(COLORS.bright, response.data.user.username)}`);
-      console.log(`User ID: ${response.data.user.id}`);
+      const userData = response.data.user as { username: string; id: string };
+      console.log(`Logged in as: ${c(COLORS.bright, userData.username)}`);
+      console.log(`User ID: ${userData.id}`);
     } else {
       console.log(c(COLORS.red, 'Not logged in or session expired'));
     }
   },
 
-  async sessions() {
+  async sessions(): Promise<void> {
     const sessions = listSessions();
     if (sessions.length === 0) {
       console.log('No active sessions. Use: upship login <username> <password>');
@@ -285,18 +396,18 @@ const commands = {
     console.log(c(COLORS.bright, 'Active sessions:'));
     for (const username of sessions) {
       const session = loadSession(username);
-      console.log(`  ${c(COLORS.cyan, username)} (${session.userId})`);
+      console.log(`  ${c(COLORS.cyan, username)} (${session?.userId})`);
     }
   },
 
-  async reset() {
+  async reset(): Promise<void> {
     // Drop all game data (dev/test only)
     const response = await makeRequest('DELETE', '/api/admin/games');
 
     if (response.status === 200 && response.data.success) {
       console.log(c(COLORS.green, '✓ All game data has been deleted'));
       if (response.data.deleted) {
-        const d = response.data.deleted;
+        const d = response.data.deleted as { games?: number; states?: number; actions?: number };
         console.log(`  Games: ${d.games || 0}, States: ${d.states || 0}, Actions: ${d.actions || 0}`);
       }
     } else if (response.status === 403) {
@@ -308,26 +419,29 @@ const commands = {
   },
 
   // Game lobby
-  async games(username, args) {
-    const status = args[0] || 'all';
-    let response;
+  async games(username: string | string[], args?: string[]): Promise<void> {
+    const user = typeof username === 'string' ? username : username[0];
+    const status = args?.[0] || 'all';
+    let response: ApiResponse;
 
     if (status === 'mine') {
-      response = await api(username, 'GET', '/api/games/mine');
+      response = await api(user, 'GET', '/api/games/mine');
     } else if (status === 'all') {
       // Get both waiting and active games
-      const waiting = await api(username, 'GET', '/api/games?status=waiting');
-      const active = await api(username, 'GET', '/api/games?status=active');
+      const waiting = await api(user, 'GET', '/api/games?status=waiting');
+      const active = await api(user, 'GET', '/api/games?status=active');
       response = {
+        status: 200,
         data: {
-          games: [...(waiting.data.games || []), ...(active.data.games || [])]
-        }
+          games: [...((waiting.data.games || []) as Game[]), ...((active.data.games || []) as Game[])]
+        },
+        cookie: null
       };
     } else {
-      response = await api(username, 'GET', `/api/games?status=${status}`);
+      response = await api(user, 'GET', `/api/games?status=${status}`);
     }
 
-    const games = response.data.games || [];
+    const games = (response.data.games || []) as Game[];
 
     if (games.length === 0) {
       console.log('No games found.');
@@ -343,42 +457,47 @@ const commands = {
     }
   },
 
-  async create(username, args) {
-    const name = args.join(' ') || `Game ${Date.now()}`;
-    const response = await api(username, 'POST', '/api/games', { name });
+  async create(username: string | string[], args?: string[]): Promise<void> {
+    const user = typeof username === 'string' ? username : username[0];
+    const name = args?.join(' ') || `Game ${Date.now()}`;
+    const response = await api(user, 'POST', '/api/games', { name });
 
     if (response.status === 201 && response.data.game) {
-      console.log(c(COLORS.green, `✓ Created game: ${response.data.game.name}`));
-      console.log(`  Game ID: ${c(COLORS.cyan, response.data.game.id)}`);
+      const game = response.data.game as Game;
+      console.log(c(COLORS.green, `✓ Created game: ${game.name}`));
+      console.log(`  Game ID: ${c(COLORS.cyan, game.id)}`);
     } else {
       console.log(c(COLORS.red, `✗ Failed: ${response.data.error || 'Unknown error'}`));
     }
   },
 
-  async join(username, args) {
-    const [gameId] = args;
+  async join(username: string | string[], args?: string[]): Promise<void> {
+    const user = typeof username === 'string' ? username : username[0];
+    const [gameId] = args || [];
     if (!gameId) {
       console.log('Usage: upship <user> join <gameId>');
       return;
     }
 
-    const response = await api(username, 'POST', `/api/games/${gameId}/join`);
+    const response = await api(user, 'POST', `/api/games/${gameId}/join`);
 
     if (response.data.game) {
-      console.log(c(COLORS.green, `✓ Joined game: ${response.data.game.name}`));
+      const game = response.data.game as Game;
+      console.log(c(COLORS.green, `✓ Joined game: ${game.name}`));
     } else {
       console.log(c(COLORS.red, `✗ Failed: ${response.data.error || 'Unknown error'}`));
     }
   },
 
-  async leave(username, args) {
-    const [gameId] = args;
+  async leave(username: string | string[], args?: string[]): Promise<void> {
+    const user = typeof username === 'string' ? username : username[0];
+    const [gameId] = args || [];
     if (!gameId) {
       console.log('Usage: upship <user> leave <gameId>');
       return;
     }
 
-    const response = await api(username, 'POST', `/api/games/${gameId}/leave`);
+    const response = await api(user, 'POST', `/api/games/${gameId}/leave`);
 
     if (response.data.game) {
       console.log(c(COLORS.green, '✓ Left game'));
@@ -387,14 +506,15 @@ const commands = {
     }
   },
 
-  async faction(username, args) {
-    const [gameId, faction] = args;
+  async faction(username: string | string[], args?: string[]): Promise<void> {
+    const user = typeof username === 'string' ? username : username[0];
+    const [gameId, faction] = args || [];
     if (!gameId || !faction) {
       console.log('Usage: upship <user> faction <gameId> <germany|britain|usa|italy>');
       return;
     }
 
-    const response = await api(username, 'POST', `/api/games/${gameId}/faction`, { faction });
+    const response = await api(user, 'POST', `/api/games/${gameId}/faction`, { faction });
 
     if (response.data.game) {
       console.log(c(COLORS.green, `✓ Selected faction: ${formatFaction(faction)}`));
@@ -403,14 +523,15 @@ const commands = {
     }
   },
 
-  async start(username, args) {
-    const [gameId] = args;
+  async start(username: string | string[], args?: string[]): Promise<void> {
+    const user = typeof username === 'string' ? username : username[0];
+    const [gameId] = args || [];
     if (!gameId) {
       console.log('Usage: upship <user> start <gameId>');
       return;
     }
 
-    const response = await api(username, 'POST', `/api/games/${gameId}/start`);
+    const response = await api(user, 'POST', `/api/games/${gameId}/start`);
 
     if (response.data.game) {
       console.log(c(COLORS.green, '✓ Game started!'));
@@ -420,27 +541,29 @@ const commands = {
   },
 
   // Game state
-  async state(username, args) {
-    const [gameId] = args;
+  async state(username: string | string[], args?: string[]): Promise<void> {
+    const user = typeof username === 'string' ? username : username[0];
+    const [gameId] = args || [];
     if (!gameId) {
       console.log('Usage: upship <user> state <gameId>');
       return;
     }
 
-    const session = loadSession(username);
-    const response = await api(username, 'GET', `/api/state/${gameId}`);
+    const session = loadSession(user);
+    const response = await api(user, 'GET', `/api/state/${gameId}`);
 
     if (response.status !== 200) {
       console.log(c(COLORS.red, `✗ Failed: ${response.data.error || 'Unknown error'}`));
       return;
     }
 
-    const gs = response.data.gameState.state;
-    const myId = session.userId;
+    const gsWrapper = response.data.gameState as { state: GameState };
+    const gs = gsWrapper.state;
+    const myId = session?.userId || '';
     const myState = gs.players?.[myId];
 
     // Determine whose turn it is based on phase
-    let currentPlayerId;
+    let currentPlayerId: string | null = null;
     let isMyTurn = false;
     let isSimultaneous = false;
 
@@ -458,14 +581,14 @@ const commands = {
       currentPlayerId = null;
     } else {
       // Default: use currentPlayerIndex
-      currentPlayerId = gs.playerOrder?.[gs.currentPlayerIndex];
+      currentPlayerId = gs.playerOrder?.[gs.currentPlayerIndex] || null;
       isMyTurn = currentPlayerId === myId;
     }
 
     // Header
     const progress = gs.progressTrack || 0;
     const thresholds = gs.progressThresholds || { age2: 4, age3: 8, end: 12 };
-    const thresholdByAge = [null, thresholds.age2, thresholds.age3, thresholds.end];
+    const thresholdByAge: (number | null)[] = [null, thresholds.age2, thresholds.age3, thresholds.end];
     const nextThreshold = thresholdByAge[gs.age] || thresholds.end;
     console.log('');
     console.log(c(COLORS.bright, '═══════════════════════════════════════════════════════════════════════'));
@@ -484,7 +607,7 @@ const commands = {
     } else if (isMyTurn) {
       console.log(c(COLORS.green + COLORS.bright, '  >>> YOUR TURN <<<'));
     } else {
-      const currentPlayer = gs.players?.[currentPlayerId];
+      const currentPlayer = currentPlayerId ? gs.players?.[currentPlayerId] : null;
       console.log(c(COLORS.yellow, `  Waiting for: ${formatFaction(currentPlayer?.faction)}`));
     }
 
@@ -522,7 +645,7 @@ const commands = {
       console.log('└─────────────────────────────────────');
 
       // Show hand if present
-      if (myState.hand?.length > 0) {
+      if (myState.hand && myState.hand.length > 0) {
         console.log('');
         console.log(c(COLORS.bright, '┌─ Your Hand'));
         myState.hand.forEach((card, i) => {
@@ -535,7 +658,7 @@ const commands = {
       if ((myState.ships || []).length > 0) {
         console.log('');
         console.log(c(COLORS.bright, '┌─ Your Ships'));
-        for (const ship of myState.ships) {
+        for (const ship of myState.ships || []) {
           const statusColor = SHIP_STATUS_COLORS[ship.status] || COLORS.red;
           let shipInfo = `│ ${c(COLORS.cyan, ship.id)} │ ${c(statusColor, ship.status.toUpperCase())}`;
           if (ship.stats) {
@@ -583,7 +706,7 @@ const commands = {
     if ((gs.rdBoard || []).length > 0) {
       console.log('');
       console.log(c(COLORS.bright, '┌─ R&D Board (Available Technologies)'));
-      for (const tech of gs.rdBoard) {
+      for (const tech of gs.rdBoard || []) {
         const owned = myState?.technologies?.includes(tech.id) ? c(COLORS.green, ' [OWNED]') : '';
         console.log(`│ ${c(COLORS.cyan, tech.id.padEnd(22))} │ £${tech.cost || 0}${owned}`);
       }
@@ -605,23 +728,25 @@ const commands = {
     console.log('');
   },
 
-  async blueprint(username, args) {
-    const [gameId] = args;
+  async blueprint(username: string | string[], args?: string[]): Promise<void> {
+    const user = typeof username === 'string' ? username : username[0];
+    const [gameId] = args || [];
     if (!gameId) {
       console.log('Usage: upship <user> blueprint <gameId>');
       return;
     }
 
-    const session = loadSession(username);
-    const response = await api(username, 'GET', `/api/state/${gameId}`);
+    const session = loadSession(user);
+    const response = await api(user, 'GET', `/api/state/${gameId}`);
 
     if (response.status !== 200) {
       console.log(c(COLORS.red, `✗ Failed: ${response.data.error || 'Unknown error'}`));
       return;
     }
 
-    const gs = response.data.gameState.state;
-    const myState = gs.players?.[session.userId];
+    const gsWrapper = response.data.gameState as { state: GameState };
+    const gs = gsWrapper.state;
+    const myState = gs.players?.[session?.userId || ''];
 
     if (!myState) {
       console.log(c(COLORS.red, 'Player state not found'));
@@ -629,6 +754,10 @@ const commands = {
     }
 
     const bp = myState.blueprint;
+    if (!bp) {
+      console.log(c(COLORS.red, 'No blueprint found'));
+      return;
+    }
 
     console.log('');
     console.log(c(COLORS.bright, '═══════════════════════════════════════════════════════════════'));
@@ -636,10 +765,10 @@ const commands = {
     console.log(c(COLORS.bright, '═══════════════════════════════════════════════════════════════'));
 
     const slotTypes = [
-      { key: 'frameSlots', name: 'Frame', color: COLORS.red },
-      { key: 'fabricSlots', name: 'Fabric', color: COLORS.blue },
-      { key: 'driveSlots', name: 'Drive', color: COLORS.yellow },
-      { key: 'componentSlots', name: 'Component', color: COLORS.magenta }
+      { key: 'frameSlots' as const, name: 'Frame', color: COLORS.red },
+      { key: 'fabricSlots' as const, name: 'Fabric', color: COLORS.blue },
+      { key: 'driveSlots' as const, name: 'Drive', color: COLORS.yellow },
+      { key: 'componentSlots' as const, name: 'Component', color: COLORS.magenta }
     ];
 
     for (const { key, name, color } of slotTypes) {
@@ -656,21 +785,22 @@ const commands = {
     console.log('');
   },
 
-  async upgrades(username, args) {
-    const [gameId] = args;
+  async upgrades(username: string | string[], args?: string[]): Promise<void> {
+    const user = typeof username === 'string' ? username : username[0];
+    const [gameId] = args || [];
     if (!gameId) {
       console.log('Usage: upship <user> upgrades <gameId>');
       return;
     }
 
-    const response = await api(username, 'GET', `/api/state/${gameId}/upgrades`);
+    const response = await api(user, 'GET', `/api/state/${gameId}/upgrades`);
 
     if (response.status !== 200) {
       console.log(c(COLORS.red, `✗ Failed: ${response.data.error || 'Unknown error'}`));
       return;
     }
 
-    const { available } = response.data;
+    const { available } = response.data as { available: Record<string, Technology[]> };
 
     console.log('');
     console.log(c(COLORS.bright, 'Available Upgrades (based on your technologies):'));
@@ -706,22 +836,23 @@ const commands = {
     console.log('');
   },
 
-  async log(username, args) {
-    const [gameId, limitStr] = args;
+  async log(username: string | string[], args?: string[]): Promise<void> {
+    const user = typeof username === 'string' ? username : username[0];
+    const [gameId, limitStr] = args || [];
     if (!gameId) {
       console.log('Usage: upship <user> log <gameId> [limit]');
       return;
     }
 
-    const limit = parseInt(limitStr) || 20;
-    const response = await api(username, 'GET', `/api/state/${gameId}/actions?limit=${limit}`);
+    const limit = parseInt(limitStr || '') || 20;
+    const response = await api(user, 'GET', `/api/state/${gameId}/actions?limit=${limit}`);
 
     if (response.status !== 200) {
       console.log(c(COLORS.red, `✗ Failed: ${response.data.error || 'Unknown error'}`));
       return;
     }
 
-    const actions = response.data.actions || [];
+    const actions = (response.data.actions || []) as Array<{ created_at: string; action_type: string; action_data?: Record<string, unknown> }>;
 
     console.log('');
     console.log(c(COLORS.bright, `Game Log (last ${actions.length} actions):`));
@@ -735,8 +866,10 @@ const commands = {
   },
 
   // Game actions
-  async action(username, args) {
-    const [gameId, actionType, ...rest] = args;
+  async action(username: string | string[], args?: string[]): Promise<void> {
+    const user = typeof username === 'string' ? username : username[0];
+    const argsArray = args || [];
+    const [gameId, actionType, ...rest] = argsArray;
     if (!gameId || !actionType) {
       console.log('Usage: upship <user> action <gameId> <ACTION_TYPE> [key=value ...]');
       console.log('');
@@ -760,7 +893,7 @@ const commands = {
     }
 
     // Parse key=value pairs into actionData
-    const actionData = {};
+    const actionData: Record<string, unknown> = {};
     // Keys that should be parsed as arrays (comma-separated)
     const arrayKeys = ['techAcquisitions', 'marketPurchases', 'swaps'];
 
@@ -774,13 +907,13 @@ const commands = {
         // Try to parse as number or boolean
         else if (value === 'true') actionData[key] = true;
         else if (value === 'false') actionData[key] = false;
-        else if (!isNaN(value)) actionData[key] = parseInt(value);
+        else if (!isNaN(Number(value))) actionData[key] = parseInt(value);
         else actionData[key] = value;
       }
     }
 
     // Map shorthand keys to API expected keys
-    const keyMap = {
+    const keyMap: Record<string, string> = {
       type: 'gasType',
       amt: 'amount',
       idx: 'cardIndex',
@@ -799,7 +932,7 @@ const commands = {
       }
     }
 
-    const response = await api(username, 'POST', `/api/state/${gameId}/action`, {
+    const response = await api(user, 'POST', `/api/state/${gameId}/action`, {
       actionType,
       actionData
     });
@@ -808,7 +941,8 @@ const commands = {
       console.log(c(COLORS.green, `✓ ${actionType} executed successfully`));
 
       // Show latest log entry
-      const logs = response.data.gameState?.state?.log || [];
+      const gameState = response.data.gameState as { state?: { log?: Array<{ message: string }> } };
+      const logs = gameState?.state?.log || [];
       if (logs.length > 0) {
         const latest = logs[logs.length - 1];
         console.log(`  ${c(COLORS.gray, latest.message)}`);
@@ -820,12 +954,14 @@ const commands = {
   },
 
   // Shorthand actions
-  async endturn(username, args) {
-    return commands.action(username, [args[0], 'END_TURN']);
+  async endturn(username: string | string[], args?: string[]): Promise<void> {
+    const argsArray = args || [];
+    return commands.action(username, [argsArray[0], 'END_TURN']);
   },
 
-  async reveal(username, args) {
-    const [gameId, techList, cardList] = args;
+  async reveal(username: string | string[], args?: string[]): Promise<void> {
+    const user = typeof username === 'string' ? username : username[0];
+    const [gameId, techList, cardList] = args || [];
     if (!gameId) {
       console.log('Usage: upship <user> reveal <gameId> [techId1,techId2,...] [cardId1,cardId2,...]');
       console.log('');
@@ -845,11 +981,12 @@ const commands = {
     if (cardList && cardList.trim()) {
       actionArgs.push(`marketPurchases=${cardList}`);
     }
-    return commands.action(username, actionArgs);
+    return commands.action(user, actionArgs);
   },
 
-  async nolaunches(username, args) {
-    const [gameId] = args;
+  async nolaunches(username: string | string[], args?: string[]): Promise<void> {
+    const user = typeof username === 'string' ? username : username[0];
+    const [gameId] = args || [];
     if (!gameId) {
       console.log('Usage: upship <user> nolaunches <gameId>');
       console.log('');
@@ -857,11 +994,12 @@ const commands = {
       console.log('This advances the turn to the next player.');
       return;
     }
-    return commands.action(username, [gameId, 'NO_MORE_LAUNCHES']);
+    return commands.action(user, [gameId, 'NO_MORE_LAUNCHES']);
   },
 
-  async place(username, args) {
-    const [gameId, locationId, cardIndex, ...extraParams] = args;
+  async place(username: string | string[], args?: string[]): Promise<void> {
+    const user = typeof username === 'string' ? username : username[0];
+    const [gameId, locationId, cardIndex, ...extraParams] = args || [];
     if (!gameId || !locationId || cardIndex === undefined) {
       console.log('Usage: upship <user> place <gameId> <locationId> <cardIndex> [params...]');
       console.log('');
@@ -883,91 +1021,101 @@ const commands = {
         actionArgs.push(param);
       }
     }
-    return commands.action(username, actionArgs);
+    return commands.action(user, actionArgs);
   },
 
-  async buygas(username, args) {
-    const [gameId, gasType, amount] = args;
+  async buygas(username: string | string[], args?: string[]): Promise<void> {
+    const user = typeof username === 'string' ? username : username[0];
+    const [gameId, gasType, amount] = args || [];
     if (!gameId || !gasType) {
       console.log('Usage: upship <user> buygas <gameId> <hydrogen|helium> [amount]');
       return;
     }
-    return commands.action(username, [gameId, 'BUY_GAS', `gasType=${gasType}`, `amount=${amount || 1}`]);
+    return commands.action(user, [gameId, 'BUY_GAS', `gasType=${gasType}`, `amount=${amount || 1}`]);
   },
 
-  async loan(username, args) {
-    return commands.action(username, [args[0], 'TAKE_LOAN']);
+  async loan(username: string | string[], args?: string[]): Promise<void> {
+    const argsArray = args || [];
+    return commands.action(username, [argsArray[0], 'TAKE_LOAN']);
   },
 
-  async draw(username, args) {
-    const [gameId, count] = args;
-    return commands.action(username, [gameId, 'DRAW_CARDS', `count=${count || 1}`]);
+  async draw(username: string | string[], args?: string[]): Promise<void> {
+    const user = typeof username === 'string' ? username : username[0];
+    const [gameId, count] = args || [];
+    return commands.action(user, [gameId, 'DRAW_CARDS', `count=${count || 1}`]);
   },
 
-  async build(username, args) {
-    const [gameId, count] = args;
-    return commands.action(username, [gameId, 'BUILD_SHIP', `count=${count || 1}`]);
+  async build(username: string | string[], args?: string[]): Promise<void> {
+    const user = typeof username === 'string' ? username : username[0];
+    const [gameId, count] = args || [];
+    return commands.action(user, [gameId, 'BUILD_SHIP', `count=${count || 1}`]);
   },
 
-  async recruit(username, args) {
-    const [gameId, crewType, count] = args;
+  async recruit(username: string | string[], args?: string[]): Promise<void> {
+    const user = typeof username === 'string' ? username : username[0];
+    const [gameId, crewType, count] = args || [];
     if (!gameId || !crewType) {
       console.log('Usage: upship <user> recruit <gameId> <officer|engineer> [count]');
       return;
     }
-    return commands.action(username, [gameId, 'RECRUIT_CREW', `crewType=${crewType}`, `count=${count || 1}`]);
+    return commands.action(user, [gameId, 'RECRUIT_CREW', `crewType=${crewType}`, `count=${count || 1}`]);
   },
 
-  async load(_username, _args) {
+  async load(_username: string | string[], _args?: string[]): Promise<void> {
     console.log(`${COLORS.yellow}Note: Gas loading is no longer needed.${COLORS.reset}`);
     console.log('Gas cubes are automatically spent from your reserve when you launch.');
     console.log('Use: upship <user> launch <gameId> <shipId> <routeId> [hydrogen|helium]');
   },
 
-  async launch(username, args) {
-    const [gameId, shipId, routeId, gasType = 'hydrogen'] = args;
+  async launch(username: string | string[], args?: string[]): Promise<void> {
+    const user = typeof username === 'string' ? username : username[0];
+    const [gameId, shipId, routeId, gasType = 'hydrogen'] = args || [];
     if (!gameId || !shipId || !routeId) {
       console.log('Usage: upship <user> launch <gameId> <shipId> <routeId> [hydrogen|helium]');
       console.log('  Launch a ship to claim a route. Gas type defaults to hydrogen.');
       console.log('  Use "upship <user> routes <gameId>" to see available routes.');
       return;
     }
-    return commands.action(username, [gameId, 'LAUNCH_SHIP', `shipId=${shipId}`, `routeId=${routeId}`, `gasType=${gasType}`]);
+    return commands.action(user, [gameId, 'LAUNCH_SHIP', `shipId=${shipId}`, `routeId=${routeId}`, `gasType=${gasType}`]);
   },
 
-  async tech(username, args) {
-    const [gameId, techId] = args;
+  async tech(username: string | string[], args?: string[]): Promise<void> {
+    const user = typeof username === 'string' ? username : username[0];
+    const [gameId, techId] = args || [];
     if (!gameId || !techId) {
       console.log('Usage: upship <user> tech <gameId> <techId>');
       return;
     }
-    return commands.action(username, [gameId, 'ACQUIRE_TECHNOLOGY', `tech=${techId}`]);
+    return commands.action(user, [gameId, 'ACQUIRE_TECHNOLOGY', `tech=${techId}`]);
   },
 
-  async install(username, args) {
-    const [gameId, slotType, slotIndex, upgradeId] = args;
+  async install(username: string | string[], args?: string[]): Promise<void> {
+    const user = typeof username === 'string' ? username : username[0];
+    const [gameId, slotType, slotIndex, upgradeId] = args || [];
     if (!gameId || !slotType || slotIndex === undefined || !upgradeId) {
       console.log('Usage: upship <user> install <gameId> <frame|fabric|drive|component> <slotIndex> <upgradeId>');
       return;
     }
-    return commands.action(username, [gameId, 'INSTALL_UPGRADE', `slotType=${slotType}`, `slotIndex=${slotIndex}`, `upgradeId=${upgradeId}`]);
+    return commands.action(user, [gameId, 'INSTALL_UPGRADE', `slotType=${slotType}`, `slotIndex=${slotIndex}`, `upgradeId=${upgradeId}`]);
   },
 
-  async routes(username, args) {
-    const [gameId] = args;
+  async routes(username: string | string[], args?: string[]): Promise<void> {
+    const user = typeof username === 'string' ? username : username[0];
+    const [gameId] = args || [];
     if (!gameId) {
       console.log('Usage: upship <user> routes <gameId>');
       return;
     }
 
-    const response = await api(username, 'GET', `/api/state/${gameId}`);
+    const response = await api(user, 'GET', `/api/state/${gameId}`);
 
     if (response.status !== 200) {
       console.log(c(COLORS.red, `✗ Failed: ${response.data.error || 'Unknown error'}`));
       return;
     }
 
-    const state = response.data.gameState.state;
+    const gsWrapper = response.data.gameState as { state: GameState };
+    const state = gsWrapper.state;
     const routes = state.map?.routes || [];
 
     console.log('');
@@ -985,14 +1133,14 @@ const commands = {
     console.log('');
   },
 
-  async claim(_username, _args) {
+  async claim(_username: string | string[], _args?: string[]): Promise<void> {
     console.log(`${COLORS.yellow}Note: Route claiming is now part of the launch action.${COLORS.reset}`);
     console.log('Use: upship <user> launch <gameId> <shipId> <routeId> [hydrogen|helium]');
     console.log('Ships are launched directly to routes (per Section 7.2 of the rules).');
   },
 
   // Help
-  help() {
+  help(): Promise<void> {
     console.log(`
 ${c(COLORS.bright, 'UP SHIP! CLI')} - Command-line client for playtesting
 
@@ -1042,11 +1190,12 @@ ${c(COLORS.yellow, 'Actions (generic):')}
 ${c(COLORS.gray, 'Environment Variables:')}
   UPSHIP_URL - API base URL (default: https://upship-production.up.railway.app)
 `);
+    return Promise.resolve();
   }
 };
 
 // Main entry point
-async function main() {
+async function main(): Promise<void> {
   const args = process.argv.slice(2);
 
   if (args.length === 0 || args[0] === 'help' || args[0] === '--help' || args[0] === '-h') {
@@ -1093,7 +1242,8 @@ async function main() {
     try {
       await commands[command](username, cmdArgs);
     } catch (error) {
-      console.log(c(COLORS.red, `Error: ${error.message}`));
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.log(c(COLORS.red, `Error: ${errorMessage}`));
       if (process.env.DEBUG) {
         console.error(error);
       }

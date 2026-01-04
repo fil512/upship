@@ -26,8 +26,8 @@
     "dev:setup": "npm run db:up && sleep 2 && npm run migrate:local && npm run dev:local",
     "cli": "client/.env/bin/python3 cli/upship_cli.py",
     "cli:local": "UPSHIP_URL=http://localhost:3000 client/.env/bin/python3 cli/upship_cli.py",
-    "cli:js": "node cli/upship.js",
-    "cli:js:local": "DOTENV_CONFIG_PATH=.env.development node -r dotenv/config cli/upship.js",
+    "cli:js": "npx tsx cli/upship.ts",
+    "cli:js:local": "DOTENV_CONFIG_PATH=.env.development npx tsx cli/upship.ts",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
@@ -36,7 +36,7 @@
     "code-cleanup": "eslint server/ cli/ --ext .js,.ts --rule 'sonarjs/no-identical-functions: error' --rule 'sonarjs/no-duplicated-branches: error' --rule 'sonarjs/cognitive-complexity: [warn, 20]'"
   },
   "bin": {
-    "upship": "./cli/upship.js"
+    "upship": "./cli/upship.ts"
   },
   "keywords": [
     "boardgame",
