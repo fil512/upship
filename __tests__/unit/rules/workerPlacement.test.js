@@ -4,7 +4,8 @@
  */
 
 const { createTestGameState } = require('../../fixtures/testData');
-const { processCardEffect } = require('../../../server/actions/worker');
+const { processCardEffect, processPlaceAgent } = require('../../../server/actions/worker');
+const { getCurrentPlacer } = require('../../../server/actions/helpers/turnOrder');
 
 describe('Rules Compliance - Worker Placement', () => {
 
@@ -183,6 +184,66 @@ describe('Rules Compliance - Worker Placement', () => {
       // Researcher should set £1 research discount
       expect(result.success).toBe(true);
       expect(state.players['1'].researchDiscount).toBe(1);
+    });
+  });
+
+  describe('Turn order after PLACE_AGENT', () => {
+    it('should advance to next player after placing agent', () => {
+      // Setup a 4-player game in worker placement phase
+      const state = createTestGameState();
+      state.phase = 'worker_placement';
+      state.playerOrder = ['1', '2', '3', '4'];
+      state.workerPlacement = {
+        placementOrder: ['1', '2', '3', '4'],
+        currentPlacerIndex: 0,
+        passedPlayers: []
+      };
+      state.groundBoard = { placements: {} };
+
+      // Player 1 has 2 agents and cards
+      state.players['1'].agentsRemaining = 2;
+      state.players['1'].hasPassed = false;
+      state.players['1'].hand = [
+        { id: 'card1', name: 'Clerk', symbol: 'coin', effect: 'None' }
+      ];
+
+      // Verify player 1 is current placer
+      expect(getCurrentPlacer(state)).toBe('1');
+
+      // Player 1 places an agent
+      processPlaceAgent(state, '1', { locationId: 'academy', cardIndex: 0, crewType: 'officers', crewCount: 1 });
+
+      // After placing, turn should advance to player 2
+      expect(getCurrentPlacer(state)).toBe('2');
+    });
+
+    it('should prevent same player from placing twice in a row', () => {
+      // Setup a 4-player game
+      const state = createTestGameState();
+      state.phase = 'worker_placement';
+      state.playerOrder = ['1', '2', '3', '4'];
+      state.workerPlacement = {
+        placementOrder: ['1', '2', '3', '4'],
+        currentPlacerIndex: 0,
+        passedPlayers: []
+      };
+      state.groundBoard = { placements: {} };
+
+      // Player 1 has 2 agents and 2 cards (both coin symbol)
+      state.players['1'].agentsRemaining = 2;
+      state.players['1'].hasPassed = false;
+      state.players['1'].hand = [
+        { id: 'card1', name: 'Clerk', symbol: 'coin', effect: 'None' },
+        { id: 'card2', name: 'Purser', symbol: 'coin', effect: 'None' }
+      ];
+
+      // Player 1 places first agent at academy (coin location)
+      processPlaceAgent(state, '1', { locationId: 'academy', cardIndex: 0, crewType: 'officers', crewCount: 1 });
+
+      // Player 1 tries to place second agent immediately at flight_school (also coin) - should fail
+      expect(() => {
+        processPlaceAgent(state, '1', { locationId: 'flight_school', cardIndex: 0, crewType: 'engineers', crewCount: 1 });
+      }).toThrow(/not your turn/i);
     });
   });
 });

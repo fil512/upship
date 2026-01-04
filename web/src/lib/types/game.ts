@@ -203,6 +203,7 @@ export interface PlayerState {
 	deck: Card[];
 	discardPile: Card[];
 	hazardDeck: HazardCard[];
+	peekedHazard?: HazardCard;
 	bonuses: Record<string, number>;
 	loans?: number;
 	insurance?: number;

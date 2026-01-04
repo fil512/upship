@@ -373,6 +373,9 @@
 	$: pendingHazard = shipAwaitingHazard?.pendingHazard;
 	$: canAffordEngineers = ($myState?.engineers || 0) >= (pendingHazard?.engineersNeeded || 0);
 
+	// Peeked hazard - from Navigator card or Weather Bureau
+	$: peekedHazard = $myState?.peekedHazard;
+
 	async function handleRespondToHazard(spendEngineers: boolean) {
 		if (!shipAwaitingHazard) return;
 		const result = await sendAction({
@@ -650,6 +653,22 @@
 			<aside class="sidebar right">
 				<div class="panel actions">
 					<h3>Actions</h3>
+					{#if peekedHazard}
+						<!-- Peeked Hazard Display - from Navigator card or Weather Bureau -->
+						<div class="peeked-hazard-panel">
+							<h4>👁️ Peeked Hazard</h4>
+							<div class="peeked-hazard-card">
+								<p class="hazard-name">{peekedHazard.name || peekedHazard.type}</p>
+								<p class="hazard-details">
+									Type: {peekedHazard.category || 'unknown'} | Difficulty: {peekedHazard.difficulty || '?'}
+								</p>
+								{#if peekedHazard.engineerCost}
+									<p class="hazard-cost">Engineers needed: {peekedHazard.engineerCost}</p>
+								{/if}
+							</div>
+							<p class="peeked-hint">This is the top card of your hazard deck.</p>
+						</div>
+					{/if}
 					{#if $isMyTurn}
 						{#if $turnInfo.canUndo}
 							<button class="btn secondary w-full" on:click={handleUndo}>
@@ -1283,6 +1302,52 @@
 
 	.action-hint.error {
 		color: var(--color-error);
+	}
+
+	/* Peeked Hazard Panel - from Navigator or Weather Bureau */
+	.peeked-hazard-panel {
+		display: flex;
+		flex-direction: column;
+		gap: var(--spacing-xs);
+		padding: var(--spacing-sm);
+		background: rgba(59, 130, 246, 0.1);
+		border: 2px solid var(--color-primary);
+		border-radius: var(--radius-md);
+		margin-bottom: var(--spacing-sm);
+	}
+
+	.peeked-hazard-panel h4 {
+		margin: 0;
+		font-size: 0.9rem;
+		color: var(--color-primary);
+	}
+
+	.peeked-hazard-card {
+		display: flex;
+		flex-direction: column;
+		gap: var(--spacing-xs);
+		background: rgba(0, 0, 0, 0.2);
+		padding: var(--spacing-xs);
+		border-radius: var(--radius-sm);
+	}
+
+	.peeked-hazard-card .hazard-details {
+		font-size: 0.8rem;
+		color: var(--color-text-secondary);
+		margin: 0;
+	}
+
+	.peeked-hazard-card .hazard-cost {
+		font-size: 0.8rem;
+		color: var(--color-warning);
+		margin: 0;
+	}
+
+	.peeked-hint {
+		font-size: 0.75rem;
+		color: var(--color-text-muted);
+		font-style: italic;
+		margin: 0;
 	}
 
 	/* Hazard Panel */

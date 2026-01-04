@@ -7,7 +7,7 @@ const logger = require('../logger');
 const { GameRuleError } = require('../errors');
 const { shuffleArray } = require('../utils/random');
 const { GROUND_BOARD_LOCATIONS, canPlaceAtLocation } = require('../data/groundBoard');
-const { getCurrentPlacer } = require('./helpers/turnOrder');
+const { getCurrentPlacer, advanceToNextPlacer } = require('./helpers/turnOrder');
 const { reduceHeliumMarket } = require('./helpers/marketHelpers');
 const { WEATHER_BUREAU_COST } = require('../config/constants');
 const { processBuildShip } = require('./building');
@@ -690,8 +690,10 @@ function processPlaceAgent(state, playerId, data) {
   }
 
   // Mark that player has taken an action this turn (for Undo/End Turn UI)
-  // Player must explicitly click End Turn to advance to next placer
   playerState.hasTakenActionThisTurn = true;
+
+  // Auto-advance to next placer (turn order enforcement)
+  advanceToNextPlacer(state);
 
   return { newState: state };
 }

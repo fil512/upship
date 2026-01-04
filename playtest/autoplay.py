@@ -284,7 +284,7 @@ def get_current_turn_faction(game_id: str) -> str | None:
     phase = state.phase
 
     # During worker placement, use the current placer's faction
-    if phase == "WORKER_PLACEMENT":
+    if phase and phase.lower() == "worker_placement":
         return get_current_placer_faction(game_id)
 
     # During other phases, use current_player_index
