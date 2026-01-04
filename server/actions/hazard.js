@@ -475,7 +475,7 @@ function resolveHazardSuccess(state, playerId, shipIndex, route, hazard, message
     route.claimedBy = {
       playerId,
       shipId: ships[shipIndex].id,
-      turn: state.turn
+      round: state.round
     };
     playerState.income += route.income || 0;
 

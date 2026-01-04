@@ -127,8 +127,8 @@ describe('GameStateService', () => {
       expect(mockClient.query).toHaveBeenCalledWith('COMMIT');
       expect(result).toBeDefined();
       expect(result.age).toBe(1);
-      expect(result.turn).toBe(1);
       expect(result.round).toBe(1);
+      expect(result.turnInRound).toBe(1);
       expect(result.phase).toBe('worker_placement');
     });
 

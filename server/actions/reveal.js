@@ -40,6 +40,9 @@ function allPlayersPassed(state) {
  * @param {Object} state - Game state (mutated)
  */
 function advanceToNextPlacer(state) {
+  // Increment turn counter within the current round
+  state.turnInRound = (state.turnInRound || 1) + 1;
+
   const placementOrder = state.workerPlacement?.placementOrder || state.playerOrder;
   let nextIndex = (state.workerPlacement.currentPlacerIndex + 1) % placementOrder.length;
 

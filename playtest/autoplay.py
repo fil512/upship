@@ -13,7 +13,7 @@ from client import GameState
 from .config import PLAYERS, DEFAULT_MAX_TURNS
 from .client import get_client, get_game_id, login_all_players, get_faction_from_player
 from .logging import get_logger
-from .state import get_state, get_phase, get_age, check_game_ended, get_state_fingerprint, get_current_placer
+from .state import get_state, get_phase, get_age, check_game_ended, get_state_fingerprint, get_current_placer, get_current_placer_faction
 from .phases import (
     handle_worker_placement_round, handle_reveal_phase, handle_income_cleanup_phase,
     handle_age_transition_design_bureau
@@ -81,7 +81,7 @@ class StuckDetector:
 
         if state:
             lines.append(f"\nPhase: {state.phase}")
-            lines.append(f"Age: {state.age} | Turn: {state.turn} | Round: {state.round}")
+            lines.append(f"Age: {state.age} | Round: {state.round}")
             lines.append(f"Progress Track: {state.progress_track}")
 
             wp = state.worker_placement
@@ -228,7 +228,7 @@ def autoplay(num_turns: int | None = None, game_id: str | None = None) -> None:
                 # Show current game status
                 state = get_state(game_id)
                 if state:
-                    print(f"  Age: {state.age} | Turn: {state.turn} | Progress: {state.progress_track}")
+                    print(f"  Age: {state.age} | Round: {state.round} | Progress: {state.progress_track}")
 
                 if num_turns and turn_count >= num_turns:
                     print(f"\n{'='*60}")
@@ -283,12 +283,9 @@ def get_current_turn_faction(game_id: str) -> str | None:
 
     phase = state.phase
 
-    # During worker placement, use the current placer
+    # During worker placement, use the current placer's faction
     if phase == "WORKER_PLACEMENT":
-        current_player = get_current_placer(game_id)
-        if current_player:
-            return get_faction_from_player(current_player)
-        return None
+        return get_current_placer_faction(game_id)
 
     # During other phases, use current_player_index
     current_idx = state.current_player_index
@@ -347,7 +344,7 @@ def autoplay_until(target_faction: str, game_id: str | None = None) -> bool:
             print(f"\n>>> It's {target_faction.upper()}'s turn!")
             print(f"    Phase: {phase}")
             if state:
-                print(f"    Age: {state.age} | Turn: {state.turn} | Round: {state.round}")
+                print(f"    Age: {state.age} | Round: {state.round}")
             return True
 
         # Check for game end
@@ -366,14 +363,13 @@ def autoplay_until(target_faction: str, game_id: str | None = None) -> bool:
         phase = get_phase(game_id)
 
         if phase == "WORKER_PLACEMENT":
-            current_placer = get_current_placer(game_id)
-            if current_placer:
-                placer_faction = get_faction_from_player(current_placer)
-                if placer_faction == target_faction:
-                    # It's the target's turn
-                    print(f"\n>>> It's {target_faction.upper()}'s turn!")
-                    print(f"    Phase: Worker Placement")
-                    return True
+            # Check if it's the target faction's turn (works for both AI and human)
+            placer_faction = get_current_placer_faction(game_id)
+            if placer_faction == target_faction:
+                # It's the target's turn
+                print(f"\n>>> It's {target_faction.upper()}'s turn!")
+                print(f"    Phase: Worker Placement")
+                return True
 
             if handle_worker_placement_round(game_id, logger):
                 stuck_detector.reset()

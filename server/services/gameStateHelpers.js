@@ -113,6 +113,9 @@ function getCurrentPlacer(state) {
 
 // Advance to the next player who hasn't passed in worker placement
 function advanceToNextPlacer(state) {
+  // Increment turn counter within the current round
+  state.turnInRound = (state.turnInRound || 1) + 1;
+
   const order = state.workerPlacement.placementOrder;
   const passedPlayers = state.workerPlacement.passedPlayers;
   let index = state.workerPlacement.currentPlacerIndex;

@@ -270,7 +270,7 @@
 				<div class="game-info">
 					<span class="age">Age {$gameState.age}</span>
 					<span class="separator">|</span>
-					<span class="turn">Turn {$gameState.turn}</span>
+					<span class="turn">Round {$gameState.round}</span>
 					<span class="separator">|</span>
 					<span class="phase">{$currentPhaseName}</span>
 				</div>

@@ -3,8 +3,8 @@
  * END_TURN action processor
  */
 
-const { transitionToIncomeCleanup, startNewRound, transitionToRevealPhase } = require('./helpers/phaseTransition');
-const { advanceToNextPlacer, allPlayersPassed } = require('./helpers/turnOrder');
+const { transitionToIncomeCleanup, startNewRound } = require('./helpers/phaseTransition');
+const { advanceToNextPlacer } = require('./helpers/turnOrder');
 const { refreshMarketRow, refreshRnDBoard } = require('./helpers/marketHelpers');
 
 /**
@@ -19,11 +19,9 @@ function processEndTurn(state, playerId) {
 
   switch (state.phase) {
     case 'worker_placement': {
-      // During worker placement, END_TURN marks player as passed and advances to next placer
-      playerState.hasPassed = true;
-      if (!state.workerPlacement.passedPlayers.includes(playerId)) {
-        state.workerPlacement.passedPlayers.push(playerId);
-      }
+      // During worker placement, END_TURN just advances to next placer
+      // It does NOT mark the player as passed - only REVEAL does that
+      // Per terminology: Round = all players reveal, Turn = single player action
       playerState.hasTakenActionThisTurn = false;
 
       state.log.push({
@@ -33,12 +31,8 @@ function processEndTurn(state, playerId) {
         type: 'turn'
       });
 
-      // Check if all players passed, transition to reveal; otherwise advance to next placer
-      if (allPlayersPassed(state)) {
-        transitionToRevealPhase(state);
-      } else {
-        advanceToNextPlacer(state);
-      }
+      // Just advance to next placer - don't mark as passed
+      advanceToNextPlacer(state);
       break;
     }
 

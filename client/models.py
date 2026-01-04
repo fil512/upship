@@ -384,8 +384,8 @@ class GameState:
     """The full game state."""
     game_id: str
     age: int = 1
-    turn: int = 1
-    round: int = 1
+    round: int = 1         # Increments each time all players complete a cycle
+    turn_in_round: int = 1 # Resets to 1 at start of each round (internal use)
     phase: str = 'worker_placement'
     progress_track: int = 0
     current_player_id: str | None = None
@@ -442,8 +442,8 @@ class GameState:
         return cls(
             game_id=game_id,
             age=data.get('age', 1),
-            turn=data.get('turn', 1),
             round=data.get('round', 1),
+            turn_in_round=data.get('turnInRound', 1),
             phase=data.get('phase', 'worker_placement'),
             progress_track=data.get('progressTrack', 0),
             current_player_id=current_player_id,

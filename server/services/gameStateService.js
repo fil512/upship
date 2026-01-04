@@ -621,8 +621,8 @@ async function initializeGameState(gameId, players) {
     // Create initial game state
     const gameState = {
       age: 1,
-      turn: 1,
-      round: 1,
+      round: 1,        // Increments each time all players complete a cycle
+      turnInRound: 1,  // Resets to 1 at start of each round, increments on each player action
       phase: 'worker_placement', // worker_placement, reveal, income_cleanup
       currentPlayerIndex: 0,
       playerOrder,

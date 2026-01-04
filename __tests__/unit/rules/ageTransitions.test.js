@@ -14,16 +14,16 @@ describe('Rules Compliance - Age Transitions', () => {
       const state = createTestGameState();
 
       // Set turn to 11 (past TURNS_PER_AGE of 10) but progress track at 0
-      state.turn = 10;
+      state.round = 10;
       state.age = 1;
       state.progressTrack = 2; // Well below threshold of 4 for 4 players
       state.progressThresholds = { age2: 4, age3: 8, end: 12 };
 
-      // Start new round should increment turn but NOT change age
+      // Start new round should increment round but NOT change age
       startNewRound(state);
 
-      // Turn should be 11 now
-      expect(state.turn).toBe(11);
+      // Round should be 11 now
+      expect(state.round).toBe(11);
       // Age should still be 1 (NOT changed based on turns)
       expect(state.age).toBe(1);
     });
@@ -31,7 +31,7 @@ describe('Rules Compliance - Age Transitions', () => {
     it('should transition age when Progress Track reaches threshold per Section 1.3', () => {
       const state = createTestGameState();
 
-      state.turn = 5;
+      state.round = 5;
       state.age = 1;
       state.progressTrack = 4; // Exactly at Age II threshold for 4 players
       state.progressThresholds = { age2: 4, age3: 8, end: 12 };
@@ -53,7 +53,7 @@ describe('Rules Compliance - Age Transitions', () => {
 
     it('should reset player agentsRemaining to their actual agent count', () => {
       const state = createTestGameState();
-      state.turn = 1;
+      state.round = 1;
 
       // Set up a player with 3 agents (earned 3rd)
       state.players['1'].agents = 3;

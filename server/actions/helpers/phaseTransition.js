@@ -280,8 +280,8 @@ function triggerFinalScoring(state) {
  * @param {Object} state - Game state (mutated)
  */
 function startNewRound(state) {
-  state.turn++;
-  state.round = 1;
+  state.round++;
+  state.turnInRound = 1;
 
   // Per Section 5.2 step 3: Check Age Transition based on Progress Track
   // Age transitions are triggered by Progress Track thresholds, NOT turn count
@@ -382,7 +382,7 @@ function startNewRound(state) {
 
   state.log.push({
     timestamp: new Date().toISOString(),
-    message: `Turn ${state.turn} begins. Worker Placement phase started.`,
+    message: `Round ${state.round} begins. Worker Placement phase started.`,
     type: 'phase'
   });
 }

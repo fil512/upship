@@ -978,11 +978,13 @@ When Catastrophic Explosion occurs during a Luxury Launch in Age III using Hydro
 | **Reliability** | Ship stat for mechanical soundness | §4.2 |
 | **Research** | Resource for acquiring Technologies (Research Level + Engineers + cards) | §9.1 |
 | **Research Level** | Track showing base Research when you Reveal | §4.6 |
+| **Round** | A complete cycle where all players take turns until everyone has revealed; ends with Income & Cleanup | §5 |
 | **Route** | Connection between cities on the map | §10, Appendix E |
 | **Slot** | Empty space for Tech Tile installation | §4.2 |
 | **Speed** | Ship stat for velocity | §4.2 |
 | **Technology** | Tile representing acquired knowledge | §9.1 |
 | **Tech Tile** | Tile installed on Blueprint | §9.2 |
+| **Turn** | A single player action: either place an Agent OR Reveal | §5.1 |
 | **Victory Points** | Scoring currency (highest wins) | §1.1 |
 | **Weight** | Total weight of Blueprint components | §4.2 |
 

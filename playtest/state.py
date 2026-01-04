@@ -11,7 +11,7 @@ from typing import Any
 
 from client import GameState, Player, Ship, Blueprint, Route, Card, CombatMission
 
-from .config import PLAYERS
+from .config import PLAYERS, is_ai_faction
 from .client import get_client, get_game_id, get_player_user_id, get_faction_from_player, get_manifest
 
 
@@ -213,7 +213,8 @@ def get_current_placer(game_id: str) -> str | None:
         game_id: The game ID.
 
     Returns:
-        Player username (e.g., 'playtest_germany') or None.
+        Player username (e.g., 'playtest_germany') for AI players, or None for human players.
+        This ensures the caller can use the returned username for API calls.
     """
     state = get_state(game_id)
     if not state or not state.worker_placement:
@@ -227,18 +228,54 @@ def get_current_placer(game_id: str) -> str | None:
     if 0 <= idx < len(wp.placement_order):
         current_user_id = wp.placement_order[idx]
 
-        # Find the player username for this user ID
+        # Get the faction of the current player
+        player_data = state.get_player(current_user_id)
+        if player_data and player_data.faction:
+            faction = player_data.faction.lower()
+
+            # Check if this faction is AI-controlled
+            if not is_ai_faction(faction):
+                # Human player's turn - return None to signal caller should skip
+                return None
+
+            # Return the playtest username for this faction
+            return f"playtest_{faction}"
+
+        # Fallback: try to find by exact user ID match
         for player in PLAYERS:
             user_id = get_player_user_id(player)
             if user_id == current_user_id:
                 return player
 
-        # Also check by matching faction
-        for player in PLAYERS:
-            faction = get_faction_from_player(player)
-            player_data = state.get_player(current_user_id)
-            if player_data and player_data.faction == faction:
-                return player
+    return None
+
+
+def get_current_placer_faction(game_id: str) -> str | None:
+    """Get the faction of the current placer (during worker_placement phase).
+
+    Unlike get_current_placer(), this returns the faction regardless of
+    whether the player is AI or human.
+
+    Args:
+        game_id: The game ID.
+
+    Returns:
+        Faction name (e.g., 'germany', 'britain') or None.
+    """
+    state = get_state(game_id)
+    if not state or not state.worker_placement:
+        return None
+
+    wp = state.worker_placement
+    if not wp.placement_order:
+        return None
+
+    idx = wp.current_placer_index
+    if 0 <= idx < len(wp.placement_order):
+        current_user_id = wp.placement_order[idx]
+        player_data = state.get_player(current_user_id)
+        if player_data and player_data.faction:
+            return player_data.faction.lower()
 
     return None
 
@@ -580,8 +617,8 @@ def get_state_fingerprint(game_id: str) -> tuple[str, GameState | None]:
 
     fingerprint = {
         'phase': state.phase,
-        'turn': state.turn,
         'round': state.round,
+        'turn_in_round': state.turn_in_round,
         'age': state.age,
         'progress': state.progress_track,
         'placements': placements_count,

@@ -491,7 +491,7 @@ function completeAgeTransition(state) {
 
   state.log.push({
     timestamp: new Date().toISOString(),
-    message: `Turn ${state.turn} begins. Worker Placement phase started.`,
+    message: `Round ${state.round} begins. Worker Placement phase started.`,
     type: 'phase'
   });
 }

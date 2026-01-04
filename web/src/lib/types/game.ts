@@ -256,8 +256,8 @@ export interface RevealPhaseState {
 // Full game state
 export interface GameState {
 	age: number;
-	turn: number;
-	round: number;
+	round: number;        // Increments each time all players complete a cycle
+	turnInRound: number;  // Resets to 1 at start of each round (internal use)
 	phase: GamePhase;
 	currentPlayerIndex: number;
 	playerOrder: string[];

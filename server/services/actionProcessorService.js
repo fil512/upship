@@ -1120,7 +1120,7 @@ function processLaunchShip(state, playerId, data) {
   route.claimedBy = {
     playerId,
     shipId,
-    turn: state.turn
+    round: state.round
   };
 
   // Increase income from the route
@@ -1182,7 +1182,7 @@ function processClaimRoute(state, playerId, data) {
   route.claimedBy = {
     playerId,
     shipId,
-    turn: state.turn
+    round: state.round
   };
 
   // Update ship to on-route status

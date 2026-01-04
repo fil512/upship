@@ -14,7 +14,6 @@ const LOAN_INCOME_PENALTY = 3;
 const MIN_INCOME = -10;  // Debt limit per Section 5.3
 
 // Game Progression
-const TURNS_PER_AGE = 10;
 const HAND_SIZE = 5;
 const INITIAL_AGENTS = 2;  // Per rules Section 2.1: Start with 2 agents, 3rd earned at Officer Income +3
 
@@ -164,7 +163,6 @@ module.exports = {
   MIN_INCOME,
 
   // Game Progression
-  TURNS_PER_AGE,
   HAND_SIZE,
   INITIAL_AGENTS,
 

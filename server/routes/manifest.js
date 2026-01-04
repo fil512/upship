@@ -19,7 +19,6 @@ const {
   MAX_LOANS,
   LOAN_AMOUNT,
   LOAN_INCOME_PENALTY,
-  TURNS_PER_AGE,
   HAND_SIZE,
   INITIAL_AGENTS,
   RD_BOARD_SIZE,
@@ -81,7 +80,6 @@ router.get('/', (req, res) => {
       loanIncomePenalty: LOAN_INCOME_PENALTY,
 
       // Game Progression
-      turnsPerAge: TURNS_PER_AGE,
       handSize: HAND_SIZE,
       initialAgents: INITIAL_AGENTS,
 

@@ -40,7 +40,7 @@ def show_status(game_id: str = None, player: str = None) -> None:
 
     print(f"\n=== UP SHIP! Game Status ===")
     print(f"Game ID: {game_id}")
-    print(f"Age: {state.age} | Turn: {state.turn} | Round: {state.round}")
+    print(f"Age: {state.age} | Round: {state.round}")
     print(f"Phase: {state.phase}")
     print(f"Progress Track: {state.progress_track}")
 
@@ -102,14 +102,15 @@ def show_summary(game_id: str = None) -> None:
         return
 
     print("=== UP SHIP! Game Summary ===\n")
-    print(f"Age: {state.age} | Turn: {state.turn} | Phase: {state.phase}")
+    print(f"Age: {state.age} | Round: {state.round} | Phase: {state.phase}")
 
     print("\n" + "=" * 60)
     print(f"{'Player':<12} {'Cash':>6} {'Income':>7} {'Ships':>6} {'H₂':>4} {'He':>4} {'Res':>4} {'Tech':>5}")
     print("=" * 60)
 
-    for player in PLAYERS:
-        player_data = get_player_data(player, game_id)
+    # Use actual players from game state, not hardcoded PLAYERS list
+    for player_id in state.player_order:
+        player_data = state.get_player(player_id)
         if not player_data:
             continue
 
@@ -128,12 +129,15 @@ def show_summary(game_id: str = None) -> None:
     print("=" * 60)
 
     print("\n=== Ships by Player ===")
-    for player in PLAYERS:
-        ships_by_status = get_player_ships(player, game_id)
-        faction = get_faction_from_player(player).upper()
-        hangar = len(ships_by_status['hangar'])
-        launched = len(ships_by_status['launched'])
-        on_route = len(ships_by_status['on_route'])
+    for player_id in state.player_order:
+        player_data = state.get_player(player_id)
+        if not player_data:
+            continue
+        faction = (player_data.faction or 'unknown').upper()
+        ships = player_data.ships or []
+        hangar = len([s for s in ships if s.status == 'hangar'])
+        launched = len([s for s in ships if s.status == 'launched'])
+        on_route = len([s for s in ships if s.status == 'on_route'])
         print(f"{faction}: Hangar={hangar}, Launched={launched}, On Route={on_route}")
 
 
