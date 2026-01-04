@@ -23,7 +23,19 @@ jest.mock('../../server/services/gameService', () => ({
   getUserGames: jest.fn()
 }));
 
+// Mock gameStateService for start game broadcast
+jest.mock('../../server/services/gameStateService', () => ({
+  getGameState: jest.fn()
+}));
+
+// Mock socket module for broadcast functions
+jest.mock('../../server/socket', () => ({
+  broadcastLobbyUpdate: jest.fn(),
+  broadcastGameStarted: jest.fn()
+}));
+
 const gameService = require('../../server/services/gameService');
+const gameStateService = require('../../server/services/gameStateService');
 const gamesRouter = require('../../server/routes/games');
 const { errorHandler } = require('../../server/middleware/errorHandler');
 const {
@@ -235,7 +247,27 @@ describe('Games Routes', () => {
         .post('/api/games/1/join');
 
       expect(res.status).toBe(200);
-      expect(gameService.joinGame).toHaveBeenCalledWith('1', 1);
+      expect(gameService.joinGame).toHaveBeenCalledWith('1', 1, undefined);
+    });
+
+    it('should join a game with faction', async () => {
+      gameService.joinGame.mockResolvedValue({ id: 1, players: [{ id: 1 }, { id: 2, faction: 'germany' }] });
+
+      const res = await request(app)
+        .post('/api/games/1/join')
+        .send({ faction: 'germany' });
+
+      expect(res.status).toBe(200);
+      expect(gameService.joinGame).toHaveBeenCalledWith('1', 1, 'germany');
+    });
+
+    it('should reject invalid faction', async () => {
+      const res = await request(app)
+        .post('/api/games/1/join')
+        .send({ faction: 'invalid' });
+
+      expect(res.status).toBe(400);
+      expect(res.body.error).toContain('Invalid faction');
     });
 
     it('should return 404 if game not found', async () => {
@@ -349,6 +381,7 @@ describe('Games Routes', () => {
   describe('POST /api/games/:id/start', () => {
     it('should start game', async () => {
       gameService.startGame.mockResolvedValue({ id: 1, status: 'in_progress' });
+      gameStateService.getGameState.mockResolvedValue({ state: { players: {} }, version: 1 });
 
       const res = await request(app)
         .post('/api/games/1/start');

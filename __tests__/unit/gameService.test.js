@@ -179,7 +179,7 @@ describe('GameService', () => {
 
       expect(mockClient.query).toHaveBeenCalledWith(
         expect.stringContaining('INSERT INTO game_players'),
-        [1, 2, 2] // game_id, user_id, player_order
+        [1, 2, 2, null] // game_id, user_id, player_order, faction
       );
       expect(result).toBeDefined();
     });

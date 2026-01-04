@@ -30,6 +30,8 @@
 	let isLoading = true;
 	let error = '';
 	let refreshInterval: ReturnType<typeof setInterval>;
+	let selectedFaction: string | null = null; // For non-players selecting faction before joining
+	let isJoining = false;
 
 	$: isHost = game?.host_id === $user?.id;
 	$: isPlayer = game?.players.some((p) => p.id === $user?.id) ?? false;
@@ -40,6 +42,7 @@
 		(game?.current_player_count ?? 0) >= 2 &&
 		game?.players.every((p) => p.faction);
 	$: canJoin = !isPlayer && game?.status === 'waiting' && (game?.current_player_count ?? 0) < 4;
+	$: takenFactions = game?.players.filter((p) => p.faction).map((p) => p.faction) ?? [];
 
 	async function loadGame() {
 		try {
@@ -65,10 +68,15 @@
 	}
 
 	async function handleJoin() {
+		if (!selectedFaction) return;
+
+		isJoining = true;
 		try {
 			const res = await fetch(`/api/games/${gameId}/join`, {
 				method: 'POST',
-				credentials: 'include'
+				headers: { 'Content-Type': 'application/json' },
+				credentials: 'include',
+				body: JSON.stringify({ faction: selectedFaction })
 			});
 
 			if (!res.ok) {
@@ -76,10 +84,16 @@
 				throw new Error(data.error || 'Failed to join');
 			}
 
-			await loadGame();
+			// Navigate directly to game page (waiting room mode)
+			goto(`/game/${gameId}`);
 		} catch (err) {
 			error = err instanceof Error ? err.message : 'Failed to join game';
+			isJoining = false;
 		}
+	}
+
+	function handleFactionPreselect(event: CustomEvent<{ faction: string }>) {
+		selectedFaction = event.detail.faction;
 	}
 
 	async function handleLeave() {
@@ -173,20 +187,36 @@
 
 		<PlayerList players={game.players} hostId={game.host_id} />
 
-		{#if isPlayer && game.status === 'waiting'}
+		<!-- Faction selector for non-players wanting to join -->
+		{#if canJoin}
+			<div class="faction-section">
+				<h3>Choose Your Faction to Join</h3>
+				<FactionSelector
+					selectedFaction={selectedFaction}
+					{takenFactions}
+					on:select={handleFactionPreselect}
+				/>
+			</div>
+		{/if}
+
+		<!-- Faction selector for players who joined without faction (legacy/host) -->
+		{#if isPlayer && game.status === 'waiting' && !myFaction}
 			<div class="faction-section">
 				<h3>Select Your Faction</h3>
 				<FactionSelector
 					selectedFaction={myFaction}
-					takenFactions={game.players.filter((p) => p.faction).map((p) => p.faction)}
+					{takenFactions}
 					on:select={handleFactionSelect}
 				/>
 			</div>
 		{/if}
 
 		<div class="actions">
-			{#if canJoin}
-				<button class="btn" on:click={handleJoin}>Join Game</button>
+			<!-- JOIN button for non-players (only after selecting faction) -->
+			{#if canJoin && selectedFaction}
+				<button class="btn btn-success" on:click={handleJoin} disabled={isJoining}>
+					{isJoining ? 'Joining...' : 'JOIN'}
+				</button>
 			{/if}
 
 			{#if isPlayer && !isHost}

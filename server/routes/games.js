@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const { requireAuth } = require('../auth');
 const gameService = require('../services/gameService');
+const gameStateService = require('../services/gameStateService');
+const { broadcastLobbyUpdate, broadcastGameStarted } = require('../socket');
 const { NotFoundError, ValidationError } = require('../errors');
 
 // All game routes require authentication
@@ -64,10 +66,25 @@ router.post('/', async (req, res, next) => {
   }
 });
 
-// Join game
+// Join game (optionally with faction selection)
 router.post('/:id/join', async (req, res, next) => {
   try {
-    const game = await gameService.joinGame(req.params.id, req.session.userId);
+    const { faction } = req.body;
+    const validFactions = ['germany', 'britain', 'usa', 'italy'];
+
+    // Validate faction if provided
+    if (faction && !validFactions.includes(faction)) {
+      throw new ValidationError('Invalid faction. Must be: germany, britain, usa, or italy');
+    }
+
+    const game = await gameService.joinGame(req.params.id, req.session.userId, faction);
+
+    // Broadcast lobby update to waiting players
+    const io = req.app.get('io');
+    if (io) {
+      broadcastLobbyUpdate(io, req.params.id, game);
+    }
+
     res.json({ game });
   } catch (error) {
     next(error);
@@ -78,6 +95,13 @@ router.post('/:id/join', async (req, res, next) => {
 router.post('/:id/leave', async (req, res, next) => {
   try {
     const game = await gameService.leaveGame(req.params.id, req.session.userId);
+
+    // Broadcast lobby update to remaining players
+    const io = req.app.get('io');
+    if (io && game.status === 'waiting') {
+      broadcastLobbyUpdate(io, req.params.id, game);
+    }
+
     res.json({ game });
   } catch (error) {
     next(error);
@@ -95,6 +119,13 @@ router.post('/:id/faction', async (req, res, next) => {
     }
 
     const game = await gameService.selectFaction(req.params.id, req.session.userId, faction);
+
+    // Broadcast lobby update to waiting players
+    const io = req.app.get('io');
+    if (io) {
+      broadcastLobbyUpdate(io, req.params.id, game);
+    }
+
     res.json({ game });
   } catch (error) {
     next(error);
@@ -105,6 +136,16 @@ router.post('/:id/faction', async (req, res, next) => {
 router.post('/:id/start', async (req, res, next) => {
   try {
     const game = await gameService.startGame(req.params.id, req.session.userId);
+
+    // Get the initial game state to broadcast
+    const gameState = await gameStateService.getGameState(req.params.id);
+
+    // Broadcast game-started to all waiting players
+    const io = req.app.get('io');
+    if (io && gameState) {
+      broadcastGameStarted(io, req.params.id, gameState.state);
+    }
+
     res.json({ game });
   } catch (error) {
     next(error);

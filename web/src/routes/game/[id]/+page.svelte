@@ -19,9 +19,10 @@
 		resetGameState,
 		turnInfo
 	} from '$lib/stores/gameState';
-	import { connect, disconnect, connected, sendAction, onlinePlayers, gameError } from '$lib/stores/socket';
+	import { connect, disconnect, connected, sendAction, onlinePlayers, gameError, connectToLobby, lobbyGame, inLobby } from '$lib/stores/socket';
 	import { toasts, showToast } from '$lib/stores/ui';
 	import type { Card } from '$lib/types/game';
+	import type { LobbyGame } from '$lib/types/socket';
 
 	// UI Components
 	import ToastContainer from '$lib/components/ui/ToastContainer.svelte';
@@ -53,12 +54,24 @@
 
 	$: gameId = $page.params.id;
 
+	// Page modes: loading, waiting (lobby), playing (game), error
+	type PageMode = 'loading' | 'waiting' | 'playing' | 'error';
+	let pageMode: PageMode = 'loading';
 	let loadingState = true;
 	let connectionError: string | null = null;
 	let selectedCardIndex: number | null = null;
 	let selectedCardSymbol: string | null = null;
+	let isStartingGame = false;
 
 	let unsubscribe: (() => void) | null = null;
+
+	// Derived: is user the host?
+	$: isHost = $lobbyGame?.host_id === $user?.id;
+	$: canStartGame =
+		isHost &&
+		$lobbyGame?.status === 'waiting' &&
+		($lobbyGame?.current_player_count ?? 0) >= 2 &&
+		$lobbyGame?.players.every((p) => p.faction);
 
 	onMount(() => {
 		if (!$user) {
@@ -74,26 +87,70 @@
 			})
 			.catch(() => setDevMode(false));
 
-		// Set game ID and connect via Socket.io
-		if (gameId && $user.id) {
-			setGameId(gameId);
-			connect(gameId, $user.id);
-		}
+		// First, check game status via REST API
+		const initializeGame = async () => {
+			if (!gameId) {
+				pageMode = 'error';
+				loadingState = false;
+				return;
+			}
 
-		// Wait for connection
-		unsubscribe = connected.subscribe((isConnected) => {
-			if (isConnected) {
+			try {
+				const res = await fetch(`/api/games/${gameId}`, { credentials: 'include' });
+				if (!res.ok) {
+					throw new Error('Game not found');
+				}
+				const { game } = await res.json();
+
+				setGameId(gameId);
+
+				if (game.status === 'waiting') {
+					// Game hasn't started yet - show waiting room
+					pageMode = 'waiting';
+					loadingState = false;
+
+					// Connect to lobby for real-time updates
+					connectToLobby(gameId, () => {
+						// Callback when game starts
+						pageMode = 'playing';
+					});
+				} else if (game.status === 'in_progress') {
+					// Game is in progress - connect normally
+					pageMode = 'playing';
+
+					if ($user?.id) {
+						connect(gameId, $user.id);
+					}
+
+					// Wait for connection
+					unsubscribe = connected.subscribe((isConnected) => {
+						if (isConnected) {
+							loadingState = false;
+						}
+					});
+
+					// Timeout for connection
+					setTimeout(() => {
+						if (loadingState && pageMode === 'playing') {
+							connectionError = 'Connection timeout';
+							loadingState = false;
+							pageMode = 'error';
+						}
+					}, 10000);
+				} else {
+					// Game is completed or cancelled
+					connectionError = `Game is ${game.status}`;
+					pageMode = 'error';
+					loadingState = false;
+				}
+			} catch (err) {
+				connectionError = err instanceof Error ? err.message : 'Failed to load game';
+				pageMode = 'error';
 				loadingState = false;
 			}
-		});
+		};
 
-		// Timeout for connection
-		setTimeout(() => {
-			if (loadingState) {
-				connectionError = 'Connection timeout';
-				loadingState = false;
-			}
-		}, 10000);
+		initializeGame();
 
 		return () => {
 			if (unsubscribe) unsubscribe();
@@ -107,6 +164,29 @@
 
 	function handleBackToLobby() {
 		goto('/');
+	}
+
+	async function handleStartGame() {
+		if (!canStartGame || isStartingGame) return;
+
+		isStartingGame = true;
+		try {
+			const res = await fetch(`/api/games/${gameId}/start`, {
+				method: 'POST',
+				credentials: 'include'
+			});
+
+			if (!res.ok) {
+				const data = await res.json();
+				throw new Error(data.error || 'Failed to start game');
+			}
+
+			// Game started - Socket.io will broadcast game-started event
+			// and the callback will set pageMode to 'playing'
+		} catch (err) {
+			showToast(err instanceof Error ? err.message : 'Failed to start game', 'error');
+			isStartingGame = false;
+		}
 	}
 
 	function handlePlayerSwitch(event: Event) {
@@ -158,11 +238,54 @@
 		}
 	}
 
+	async function handleReveal() {
+		// REVEAL exits worker placement - player reveals their remaining cards
+		// and can optionally pre-select tech/market purchases
+		const result = await sendAction({ actionType: 'REVEAL', actionData: {} });
+		if (!result.success) {
+			showToast(result.error || 'Failed to reveal', 'error');
+		}
+	}
+
 	async function handleUndo() {
 		const result = await sendAction({ actionType: 'UNDO', actionData: {} });
 		if (!result.success) {
 			showToast(result.error || 'Failed to undo', 'error');
 		}
+	}
+
+	// Launch handlers (launchpad active)
+	async function handleLaunchShip() {
+		if (!selectedShip || !selectedRouteId || !selectedGasType) {
+			showToast('Select gas type and route first', 'error');
+			return;
+		}
+		const result = await sendAction({
+			actionType: 'LAUNCH_SHIP',
+			actionData: {
+				shipId: selectedShip.id,
+				routeId: selectedRouteId,
+				gasType: selectedGasType
+			}
+		});
+		if (result.success) {
+			selectedRouteId = null;
+			selectedGasType = null;
+			showToast('Ship launched!', 'success');
+		} else {
+			showToast(result.error || 'Failed to launch ship', 'error');
+		}
+	}
+
+	async function handleDoneLaunching() {
+		const result = await sendAction({ actionType: 'NO_MORE_LAUNCHES', actionData: {} });
+		if (!result.success) {
+			showToast(result.error || 'Failed to end launches', 'error');
+		}
+	}
+
+	function handleRouteSelect(event: CustomEvent<{ routeId: string }>) {
+		selectedRouteId = event.detail.routeId;
 	}
 
 	// Market purchase handlers (reveal phase)
@@ -228,6 +351,42 @@
 	$: rawHand = $myState?.hand;
 	$: otherPlayerCardCount = typeof rawHand === 'number' ? rawHand : 0;
 
+	// Launchpad state - when active, show launch UI
+	$: isLaunchpadActive = $gameState?.launchpadActive?.[$effectiveUserId] === true;
+	$: myShips = $myState?.ships || [];
+	$: launchableShips = myShips.filter((s) => s.status === 'hangar');
+	$: selectedShip = launchableShips[0] || null; // Auto-select first ship in hangar
+	$: launchGasRequired = selectedShip ? (shipStats?.gas || 1) : 1;
+	$: canAffordHydrogen = ($myState?.gasCubes?.hydrogen || 0) >= launchGasRequired;
+	$: canAffordHelium = ($myState?.gasCubes?.helium || 0) >= launchGasRequired;
+	let selectedRouteId: string | null = null;
+	let selectedGasType: 'hydrogen' | 'helium' | null = null;
+
+	// Auto-switch to Map tab when gas is selected during launch
+	function selectGasType(gasType: 'hydrogen' | 'helium') {
+		selectedGasType = gasType;
+		activeTab = 'map';
+	}
+
+	// Hazard response state - ship awaiting hazard response
+	$: shipAwaitingHazard = myShips.find((s) => s.status === 'awaiting_hazard' && s.pendingHazard);
+	$: pendingHazard = shipAwaitingHazard?.pendingHazard;
+	$: canAffordEngineers = ($myState?.engineers || 0) >= (pendingHazard?.engineersNeeded || 0);
+
+	async function handleRespondToHazard(spendEngineers: boolean) {
+		if (!shipAwaitingHazard) return;
+		const result = await sendAction({
+			actionType: 'RESPOND_TO_HAZARD',
+			actionData: {
+				shipId: shipAwaitingHazard.id,
+				spendEngineers
+			}
+		});
+		if (!result.success) {
+			showToast(result.error || 'Failed to respond to hazard', 'error');
+		}
+	}
+
 	// Market/reveal phase derived values
 	$: isRevealPhase = $gameState?.phase === 'reveal';
 	$: isMarketInteractive = isRevealPhase && $isMyTurn;
@@ -245,16 +404,70 @@
 	<title>UP SHIP! - Game</title>
 </svelte:head>
 
-{#if loadingState}
+{#if pageMode === 'loading' || loadingState}
 	<div class="loading-screen">
 		<div class="spinner"></div>
 		<p>Connecting to game...</p>
 	</div>
-{:else if connectionError || $gameError}
+{:else if pageMode === 'error' || connectionError || $gameError}
 	<div class="error-screen">
 		<h2>{$gameError ? 'Game Error' : 'Connection Error'}</h2>
 		<p>{$gameError || connectionError}</p>
 		<button class="btn" on:click={handleBackToLobby}>Back to Lobby</button>
+	</div>
+{:else if pageMode === 'waiting'}
+	<!-- Waiting Room -->
+	<div class="waiting-room">
+		<div class="waiting-content">
+			<button class="back-btn" on:click={handleBackToLobby}>&larr; Back to Lobby</button>
+
+			<h1>{$lobbyGame?.name || 'Game Lobby'}</h1>
+
+			<div class="waiting-message">
+				<div class="spinner small"></div>
+				<p>Waiting for game to start...</p>
+			</div>
+
+			<div class="player-list-section">
+				<h3>Players ({$lobbyGame?.current_player_count || 0}/4)</h3>
+				<div class="player-cards">
+					{#each $lobbyGame?.players || [] as player}
+						<div class="player-card" class:host={player.id === $lobbyGame?.host_id}>
+							<span class="player-name">{player.username}</span>
+							{#if player.id === $lobbyGame?.host_id}
+								<span class="host-badge">Host</span>
+							{/if}
+							{#if player.faction}
+								<span class="faction-badge {player.faction}">{player.faction}</span>
+							{:else}
+								<span class="faction-pending">Selecting...</span>
+							{/if}
+						</div>
+					{/each}
+					{#each Array(4 - ($lobbyGame?.current_player_count || 0)) as _, i}
+						<div class="player-card empty">
+							<span class="empty-slot">Waiting for player...</span>
+						</div>
+					{/each}
+				</div>
+			</div>
+
+			<div class="waiting-actions">
+				{#if canStartGame}
+					<button class="btn btn-success" on:click={handleStartGame} disabled={isStartingGame}>
+						{isStartingGame ? 'Starting...' : 'Start Game'}
+					</button>
+				{:else if isHost}
+					<button class="btn" disabled>
+						{#if ($lobbyGame?.current_player_count ?? 0) < 2}
+							Waiting for more players...
+						{:else}
+							Waiting for faction selection...
+						{/if}
+					</button>
+				{/if}
+			</div>
+		</div>
 	</div>
 {:else if !$gameState}
 	<div class="loading-screen">
@@ -405,8 +618,12 @@
 								{allPlayerShips}
 								missionRow={$gameState?.missionRow || []}
 								myFaction={$myState?.faction}
-								selectable={$isMyTurn}
+								selectable={$isMyTurn && isLaunchpadActive}
+								on:selectRoute={(e) => { selectedRouteId = e.detail.route?.id || e.detail.routeId; }}
 							/>
+							{#if isLaunchpadActive && selectedRouteId}
+								<p class="route-selected">Selected route: {selectedRouteId}</p>
+							{/if}
 						</div>
 					{:else if activeTab === 'blueprint'}
 						<div class="blueprint-tab">
@@ -439,17 +656,117 @@
 								Undo {$turnInfo.lastActionType || ''}
 							</button>
 						{/if}
-						{#if $turnInfo.canEndTurn}
+						{#if shipAwaitingHazard && pendingHazard}
+							<!-- Hazard Response UI - ship awaiting hazard check -->
+							<div class="hazard-panel">
+								<h4>⚠️ Hazard Check</h4>
+								<div class="hazard-card">
+									<p class="hazard-name">{pendingHazard.name}</p>
+									{#if pendingHazard.autoPassReason}
+										<p class="hazard-auto-pass">Auto-pass: {pendingHazard.autoPassReason}</p>
+										<button class="btn primary w-full" on:click={() => handleRespondToHazard(false)}>
+											Continue
+										</button>
+									{:else if pendingHazard.engineersNeeded > 0}
+										<p class="hazard-requirement">
+											Requires: {pendingHazard.engineersNeeded} Engineers
+										</p>
+										<p class="hazard-available">
+											You have: {$myState?.engineers || 0} Engineers
+										</p>
+										<div class="hazard-buttons">
+											{#if canAffordEngineers}
+												<button class="btn primary w-full" on:click={() => handleRespondToHazard(true)}>
+													Spend {pendingHazard.engineersNeeded} Engineers (Pass)
+												</button>
+											{/if}
+											<button class="btn secondary w-full" on:click={() => handleRespondToHazard(false)}>
+												{canAffordEngineers ? 'Decline (Fail Check)' : 'Fail Check (Not Enough Engineers)'}
+											</button>
+										</div>
+									{:else}
+										<p class="hazard-info">No engineers needed.</p>
+										<button class="btn primary w-full" on:click={() => handleRespondToHazard(false)}>
+											Continue
+										</button>
+									{/if}
+								</div>
+							</div>
+						{:else if isLaunchpadActive}
+							<!-- Launch UI - shown when at launchpad -->
+							<div class="launch-panel">
+								<h4>Launch Ship</h4>
+
+								{#if launchableShips.length === 0}
+									<p class="action-hint">No ships in hangar to launch</p>
+								{:else if !selectedGasType}
+									<!-- Step 1: Gas selection via clickable slots -->
+									<p class="action-hint">Select gas type for launch:</p>
+									<div class="gas-slots">
+										{#if canAffordHydrogen}
+											<button
+												class="gas-slot hydrogen"
+												on:click={() => selectGasType('hydrogen')}
+											>
+												{#each Array(launchGasRequired) as _}
+													<span class="gas-icon hydrogen">H₂</span>
+												{/each}
+											</button>
+										{/if}
+										{#if canAffordHelium}
+											<button
+												class="gas-slot helium"
+												on:click={() => selectGasType('helium')}
+											>
+												{#each Array(launchGasRequired) as _}
+													<span class="gas-icon helium">He</span>
+												{/each}
+											</button>
+										{/if}
+										{#if !canAffordHydrogen && !canAffordHelium}
+											<p class="action-hint error">Not enough gas to launch!</p>
+										{/if}
+									</div>
+								{:else if !selectedRouteId}
+									<!-- Step 2: Route selection (on Map tab) -->
+									<p class="action-hint">
+										Using {selectedGasType}. Select a route on the Map.
+									</p>
+									<button class="btn secondary w-full" on:click={() => { selectedGasType = null; }}>
+										Change Gas Type
+									</button>
+								{:else}
+									<!-- Step 3: Ready to launch -->
+									<p class="action-hint">Ready to launch!</p>
+									<p class="route-info">Route: {selectedRouteId}</p>
+									<button class="btn primary w-full" on:click={handleLaunchShip}>
+										Launch Ship
+									</button>
+									<button class="btn secondary w-full" on:click={() => { selectedRouteId = null; }}>
+										Change Route
+									</button>
+								{/if}
+
+								<button class="btn secondary w-full" style="margin-top: var(--spacing-sm);" on:click={handleDoneLaunching}>
+									Exit Launchpad (No More Launches)
+								</button>
+							</div>
+						{:else if isWorkerPlacementPhase}
+							<!-- Reveal button - always available during worker placement -->
+							<button class="btn primary w-full" on:click={handleReveal}>
+								Reveal
+							</button>
+						{:else if $turnInfo.canEndTurn}
 							<button class="btn w-full" on:click={handleEndTurn}>End Turn</button>
 						{/if}
 					{/if}
 
-					{#if isWorkerPlacementPhase}
+					{#if isWorkerPlacementPhase && !isLaunchpadActive}
 						<p class="action-hint">
 							{#if selectedCardIndex !== null}
 								Select a location to place your agent
 							{:else}
-								Select a card from your hand
+								Select a card, or click Reveal to exit worker placement
 							{/if}
 						</p>
 					{:else if $gameState.phase === 'reveal'}
@@ -495,6 +812,122 @@
 
 	.error-screen h2 {
 		color: var(--color-error);
+	}
+
+	/* Waiting Room */
+	.waiting-room {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		min-height: 100vh;
+		background: var(--color-bg-primary);
+		padding: var(--spacing-lg);
+	}
+
+	.waiting-content {
+		max-width: 600px;
+		width: 100%;
+		text-align: center;
+	}
+
+	.waiting-content h1 {
+		font-size: 2rem;
+		margin-bottom: var(--spacing-lg);
+		color: var(--color-accent-gold);
+	}
+
+	.waiting-message {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: var(--spacing-md);
+		margin-bottom: var(--spacing-xl);
+		color: var(--color-text-secondary);
+	}
+
+	.spinner.small {
+		width: 20px;
+		height: 20px;
+	}
+
+	.player-list-section {
+		background: var(--color-bg-card);
+		border-radius: var(--radius-lg);
+		padding: var(--spacing-lg);
+		margin-bottom: var(--spacing-lg);
+	}
+
+	.player-list-section h3 {
+		font-size: 1rem;
+		margin-bottom: var(--spacing-md);
+		color: var(--color-text-secondary);
+	}
+
+	.player-cards {
+		display: flex;
+		flex-direction: column;
+		gap: var(--spacing-sm);
+	}
+
+	.player-card {
+		display: flex;
+		align-items: center;
+		gap: var(--spacing-sm);
+		padding: var(--spacing-sm) var(--spacing-md);
+		background: var(--color-bg-tertiary);
+		border-radius: var(--radius-md);
+	}
+
+	.player-card.empty {
+		opacity: 0.5;
+	}
+
+	.player-name {
+		flex: 1;
+		text-align: left;
+		font-weight: 500;
+	}
+
+	.host-badge {
+		font-size: 0.75rem;
+		padding: 2px 6px;
+		background: var(--color-accent-gold);
+		color: var(--color-bg-primary);
+		border-radius: var(--radius-sm);
+		text-transform: uppercase;
+	}
+
+	.faction-badge {
+		font-size: 0.75rem;
+		padding: 2px 8px;
+		border-radius: var(--radius-sm);
+		text-transform: capitalize;
+	}
+
+	.faction-badge.germany { background: var(--color-faction-germany, #2d2d2d); color: white; }
+	.faction-badge.britain { background: var(--color-faction-britain, #1a365d); color: white; }
+	.faction-badge.usa { background: var(--color-faction-usa, #2f4f4f); color: white; }
+	.faction-badge.italy { background: var(--color-faction-italy, #5c4033); color: white; }
+
+	.faction-pending {
+		font-size: 0.75rem;
+		color: var(--color-text-muted);
+		font-style: italic;
+	}
+
+	.empty-slot {
+		color: var(--color-text-muted);
+		font-style: italic;
+	}
+
+	.waiting-actions {
+		margin-top: var(--spacing-lg);
+	}
+
+	.waiting-content .back-btn {
+		position: absolute;
+		top: var(--spacing-md);
+		left: var(--spacing-md);
 	}
 
 	.game-container {
@@ -766,6 +1199,161 @@
 		.game-layout {
 			grid-template-columns: 180px 1fr 300px;
 		}
+	}
+
+	/* Launch Panel */
+	.launch-panel {
+		display: flex;
+		flex-direction: column;
+		gap: var(--spacing-sm);
+		padding: var(--spacing-sm);
+		background: var(--color-bg-tertiary);
+		border-radius: var(--radius-md);
+		margin-bottom: var(--spacing-sm);
+	}
+
+	.launch-panel h4 {
+		margin: 0 0 var(--spacing-xs) 0;
+		font-size: 0.9rem;
+		color: var(--color-accent-gold);
+	}
+
+	.gas-slots {
+		display: flex;
+		gap: var(--spacing-sm);
+		justify-content: center;
+	}
+
+	.gas-slot {
+		display: flex;
+		gap: 4px;
+		padding: var(--spacing-sm) var(--spacing-md);
+		border: 2px solid transparent;
+		border-radius: var(--radius-md);
+		cursor: pointer;
+		transition: all var(--transition-fast);
+	}
+
+	.gas-slot.hydrogen {
+		background: rgba(59, 130, 246, 0.2);
+		border-color: #3b82f6;
+	}
+
+	.gas-slot.hydrogen:hover {
+		background: rgba(59, 130, 246, 0.4);
+		transform: scale(1.05);
+	}
+
+	.gas-slot.helium {
+		background: rgba(168, 85, 247, 0.2);
+		border-color: #a855f7;
+	}
+
+	.gas-slot.helium:hover {
+		background: rgba(168, 85, 247, 0.4);
+		transform: scale(1.05);
+	}
+
+	.gas-icon {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 24px;
+		height: 24px;
+		border-radius: 50%;
+		font-size: 0.7rem;
+		font-weight: bold;
+	}
+
+	.gas-icon.hydrogen {
+		background: #3b82f6;
+		color: white;
+	}
+
+	.gas-icon.helium {
+		background: #a855f7;
+		color: white;
+	}
+
+	.route-info {
+		font-size: 0.8rem;
+		color: var(--color-text-secondary);
+		margin: var(--spacing-xs) 0;
+	}
+
+	.action-hint.error {
+		color: var(--color-error);
+	}
+
+	/* Hazard Panel */
+	.hazard-panel {
+		display: flex;
+		flex-direction: column;
+		gap: var(--spacing-sm);
+		padding: var(--spacing-sm);
+		background: rgba(239, 68, 68, 0.1);
+		border: 2px solid var(--color-error);
+		border-radius: var(--radius-md);
+		margin-bottom: var(--spacing-sm);
+	}
+
+	.hazard-panel h4 {
+		margin: 0;
+		font-size: 1rem;
+		color: var(--color-error);
+	}
+
+	.hazard-card {
+		display: flex;
+		flex-direction: column;
+		gap: var(--spacing-xs);
+	}
+
+	.hazard-name {
+		font-weight: bold;
+		font-size: 0.9rem;
+		color: var(--color-text-primary);
+		margin: 0;
+	}
+
+	.hazard-auto-pass {
+		font-size: 0.8rem;
+		color: var(--color-success);
+		margin: 0;
+	}
+
+	.hazard-requirement {
+		font-size: 0.85rem;
+		color: var(--color-warning);
+		margin: 0;
+	}
+
+	.hazard-available {
+		font-size: 0.8rem;
+		color: var(--color-text-secondary);
+		margin: 0;
+	}
+
+	.hazard-info {
+		font-size: 0.8rem;
+		color: var(--color-text-secondary);
+		margin: 0;
+	}
+
+	.hazard-buttons {
+		display: flex;
+		flex-direction: column;
+		gap: var(--spacing-xs);
+		margin-top: var(--spacing-xs);
+	}
+
+	.route-selected {
+		margin-top: var(--spacing-sm);
+		padding: var(--spacing-xs) var(--spacing-sm);
+		background: var(--color-info);
+		border-radius: var(--radius-sm);
+		font-size: 0.75rem;
+		color: white;
 	}
 
 	@media (max-width: 900px) {

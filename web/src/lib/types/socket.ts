@@ -24,6 +24,11 @@ export interface ServerToClientEvents {
 	'turn-changed': (data: TurnChangedData) => void;
 	'your-turn': () => void;
 	'phase-changed': (data: PhaseChangedData) => void;
+
+	// Lobby events (waiting room)
+	'lobby-sync': (data: LobbySyncData) => void;
+	'lobby-update': (data: LobbyUpdateData) => void;
+	'lobby-error': (data: LobbyErrorData) => void;
 }
 
 // Client to server events
@@ -31,6 +36,7 @@ export interface ClientToServerEvents {
 	// Room management
 	'join-game': (data: JoinGameData) => void;
 	'leave-game': (data: LeaveGameData) => void;
+	'join-lobby': (data: JoinLobbyData) => void;
 
 	// Game actions
 	'game-action': (data: GameAction, callback: (response: ActionResponse) => void) => void;
@@ -104,4 +110,34 @@ export interface SocketConnectionState {
 	connecting: boolean;
 	error: string | null;
 	reconnectAttempts: number;
+}
+
+// Re-export LobbyPlayer from game.ts to avoid duplication
+export type { LobbyPlayer } from './game';
+import type { LobbyPlayer } from './game';
+
+export interface LobbyGame {
+	id: string;
+	name: string;
+	status: string;
+	host_id: string;
+	current_player_count: number;
+	max_players: number;
+	players: LobbyPlayer[];
+}
+
+export interface LobbySyncData {
+	game: LobbyGame;
+}
+
+export interface LobbyUpdateData {
+	game: LobbyGame;
+}
+
+export interface LobbyErrorData {
+	error: string;
+}
+
+export interface JoinLobbyData {
+	gameId: string;
 }

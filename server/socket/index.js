@@ -5,6 +5,7 @@
 
 const { Server } = require('socket.io');
 const gameStateService = require('../services/gameStateService');
+const gameService = require('../services/gameService');
 const { filterStateForPlayer } = require('../services/gameStateHelpers');
 const { processAction } = require('../actions');
 const { executeUndo, getUndoInfo } = require('../actions/undo');
@@ -86,11 +87,65 @@ function initializeSocket(server, sessionMiddleware) {
       }
     });
 
+    // Join lobby room for waiting games (before game starts)
+    socket.on('join-lobby', async ({ gameId }) => {
+      try {
+        // Get game info from games table (not game_states)
+        const game = await gameService.getGameById(gameId);
+
+        if (!game) {
+          socket.emit('lobby-error', { error: 'Game not found' });
+          return;
+        }
+
+        // Verify user is a player in this game
+        const isPlayer = game.players.some(p => p.id === userId);
+        if (!isPlayer) {
+          socket.emit('lobby-error', { error: 'Not a player in this game' });
+          return;
+        }
+
+        // Store game info on socket
+        socket.gameId = gameId;
+        socket.playerId = userId;
+        socket.inLobby = true;
+
+        // Join the lobby room
+        socket.join(`lobby:${gameId}`);
+
+        // Track presence
+        handlePlayerJoin(io, gameId, userId, socket.id);
+
+        // Send current lobby state
+        socket.emit('lobby-sync', {
+          game: {
+            id: game.id,
+            name: game.name,
+            status: game.status,
+            host_id: game.host_id,
+            current_player_count: game.current_player_count,
+            max_players: game.max_players,
+            players: game.players
+          }
+        });
+
+        logger.info({ gameId, playerId: userId }, 'Player joined lobby room');
+      } catch (error) {
+        logger.error({ error, gameId }, 'Error joining lobby');
+        socket.emit('lobby-error', { error: 'Failed to join lobby' });
+      }
+    });
+
     // Handle game actions
     socket.on('game-action', async (action, callback) => {
       const { gameId, playerId } = socket;
 
+      // Debug logging for action receipt
+      console.log(`[SOCKET] game-action received: ${action.actionType} from ${playerId} in game ${gameId}`);
+      console.log(`[SOCKET] action data:`, JSON.stringify(action.actionData));
+
       if (!gameId || !playerId) {
+        console.log(`[SOCKET] REJECTED: Not in a game (gameId=${gameId}, playerId=${playerId})`);
         callback({ success: false, error: 'Not in a game' });
         return;
       }
@@ -139,9 +194,11 @@ function initializeSocket(server, sessionMiddleware) {
         }
 
         if (!skipTurnCheck && currentPlayerId !== effectiveUserId) {
+          console.log(`[SOCKET] REJECTED: Not your turn (currentPlayer=${currentPlayerId}, effectiveUser=${effectiveUserId})`);
           callback({ success: false, error: 'Not your turn' });
           return;
         }
+        console.log(`[SOCKET] Turn check passed for ${effectiveUserId}`);
 
         // Handle UNDO specially
         if (action.actionType === 'UNDO') {
@@ -194,7 +251,7 @@ function initializeSocket(server, sessionMiddleware) {
         const playerState = result.newState.players[effectiveUserId];
 
         // Send response to acting player with turn info
-        callback({
+        const responsePayload = {
           success: true,
           state: filterStateForPlayer(newGameState, playerId),
           version: newGameState.version,
@@ -204,7 +261,9 @@ function initializeSocket(server, sessionMiddleware) {
             lastActionType: undoInfo.lastActionType,
             canEndTurn: playerState?.hasTakenActionThisTurn || false
           }
-        });
+        };
+        console.log(`[SOCKET] Sending callback to ${playerId} with version ${newGameState.version}`);
+        callback(responsePayload);
 
         logger.info({ gameId, playerId, actionType: action.actionType }, 'Action processed');
       } catch (error) {
@@ -321,12 +380,18 @@ function broadcastPresence(io, gameId) {
  * Broadcast state update to all players in a game (filtered per player)
  */
 function broadcastStateUpdate(io, gameId, newState, version, actionType) {
+  console.log(`[BROADCAST] Broadcasting ${actionType} v${version} to game:${gameId}`);
   const room = io.sockets.adapter.rooms.get(`game:${gameId}`);
-  if (!room) return;
+  if (!room) {
+    console.log(`[BROADCAST] No room found for game:${gameId}`);
+    return;
+  }
 
+  console.log(`[BROADCAST] Room has ${room.size} clients`);
   for (const socketId of room) {
     const socket = io.sockets.sockets.get(socketId);
     if (socket && socket.playerId) {
+      console.log(`[BROADCAST] Sending to ${socket.playerId}`);
       socket.emit('state-update', {
         state: filterStateForPlayer(newState, socket.playerId),
         version,
@@ -376,25 +441,61 @@ function checkAndNotifyChanges(io, gameId, oldState, newState) {
 }
 
 /**
- * Broadcast game started event
+ * Broadcast game started event to both lobby and game rooms
  */
 function broadcastGameStarted(io, gameId, state) {
-  const room = io.sockets.adapter.rooms.get(`game:${gameId}`);
-  if (!room) return;
-
-  for (const socketId of room) {
-    const socket = io.sockets.sockets.get(socketId);
-    if (socket && socket.playerId) {
-      socket.emit('game-started', {
-        state: filterStateForPlayer(state, socket.playerId)
-      });
+  // Notify lobby room
+  const lobbyRoom = io.sockets.adapter.rooms.get(`lobby:${gameId}`);
+  if (lobbyRoom) {
+    for (const socketId of lobbyRoom) {
+      const socket = io.sockets.sockets.get(socketId);
+      if (socket && socket.playerId) {
+        socket.emit('game-started', {
+          state: filterStateForPlayer(state, socket.playerId)
+        });
+        // Move socket from lobby to game room
+        socket.leave(`lobby:${gameId}`);
+        socket.join(`game:${gameId}`);
+        socket.inLobby = false;
+      }
     }
   }
+
+  // Also notify game room (for any direct connections)
+  const gameRoom = io.sockets.adapter.rooms.get(`game:${gameId}`);
+  if (gameRoom) {
+    for (const socketId of gameRoom) {
+      const socket = io.sockets.sockets.get(socketId);
+      if (socket && socket.playerId) {
+        socket.emit('game-started', {
+          state: filterStateForPlayer(state, socket.playerId)
+        });
+      }
+    }
+  }
+}
+
+/**
+ * Broadcast lobby update (player joined/left, faction changed)
+ */
+function broadcastLobbyUpdate(io, gameId, game) {
+  io.to(`lobby:${gameId}`).emit('lobby-update', {
+    game: {
+      id: game.id,
+      name: game.name,
+      status: game.status,
+      host_id: game.host_id,
+      current_player_count: game.current_player_count,
+      max_players: game.max_players,
+      players: game.players
+    }
+  });
 }
 
 module.exports = {
   initializeSocket,
   broadcastStateUpdate,
   broadcastGameStarted,
+  broadcastLobbyUpdate,
   broadcastPresence
 };

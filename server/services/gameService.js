@@ -105,8 +105,8 @@ async function getGameById(gameId) {
   return result.rows[0] || null;
 }
 
-// Join a game
-async function joinGame(gameId, userId) {
+// Join a game (optionally with faction selection)
+async function joinGame(gameId, userId, faction = null) {
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
@@ -141,12 +141,24 @@ async function joinGame(gameId, userId) {
       throw new ConflictError('Already in this game');
     }
 
-    // Add player
+    // If faction provided, check it's not already taken
+    if (faction) {
+      const existingFaction = await client.query(
+        'SELECT user_id FROM game_players WHERE game_id = $1 AND faction = $2',
+        [gameId, faction]
+      );
+
+      if (existingFaction.rows.length > 0) {
+        throw new ConflictError('Faction already taken');
+      }
+    }
+
+    // Add player (with faction if provided)
     const playerOrder = game.current_player_count + 1;
     await client.query(
-      `INSERT INTO game_players (game_id, user_id, player_order)
-       VALUES ($1, $2, $3)`,
-      [gameId, userId, playerOrder]
+      `INSERT INTO game_players (game_id, user_id, player_order, faction)
+       VALUES ($1, $2, $3, $4)`,
+      [gameId, userId, playerOrder, faction]
     );
 
     // Update player count

@@ -25,6 +25,13 @@ export const gameError = writable<string | null>(null);
 // Online players in current game
 export const onlinePlayers = writable<string[]>([]);
 
+// Lobby state for waiting games
+import type { LobbyGame } from '$lib/types/socket';
+
+export const lobbyGame = writable<LobbyGame | null>(null);
+export const lobbyError = writable<string | null>(null);
+export const inLobby = writable<boolean>(false);
+
 // Convenience derived stores
 export const connected = {
 	subscribe: (fn: (value: boolean) => void) => {
@@ -169,14 +176,113 @@ export function connect(gameId: string, playerId: string): void {
 	});
 }
 
+// Callback for when game starts from lobby
+let onGameStartedCallback: ((state: unknown) => void) | null = null;
+
 /**
- * Disconnect from current game
+ * Connect to a game lobby (for waiting games, before game starts)
+ */
+export function connectToLobby(gameId: string, onGameStarted?: (state: unknown) => void): void {
+	// Already connected to this game
+	if (socket?.connected && currentGameId === gameId) {
+		return;
+	}
+
+	// Disconnect from any existing connection
+	disconnect();
+
+	currentGameId = gameId;
+	onGameStartedCallback = onGameStarted || null;
+
+	connectionState.update((s) => ({
+		...s,
+		connecting: true,
+		error: null
+	}));
+
+	inLobby.set(true);
+
+	socket = io({
+		path: '/socket.io',
+		reconnection: true,
+		reconnectionAttempts: 10,
+		reconnectionDelay: 1000,
+		reconnectionDelayMax: 5000,
+		withCredentials: true,
+		transports: ['websocket', 'polling']
+	});
+
+	// Connection events
+	socket.on('connect', () => {
+		connectionState.set({
+			connected: true,
+			connecting: false,
+			error: null,
+			reconnectAttempts: 0
+		});
+
+		// Join the lobby room
+		socket?.emit('join-lobby', { gameId });
+	});
+
+	socket.on('disconnect', (reason) => {
+		connectionState.update((s) => ({
+			...s,
+			connected: false,
+			error: reason === 'io server disconnect' ? 'Server disconnected' : null
+		}));
+	});
+
+	socket.on('connect_error', (error) => {
+		connectionState.update((s) => ({
+			...s,
+			connecting: false,
+			error: error.message,
+			reconnectAttempts: s.reconnectAttempts + 1
+		}));
+	});
+
+	// Lobby events
+	socket.on('lobby-sync', ({ game }) => {
+		lobbyGame.set(game);
+	});
+
+	socket.on('lobby-update', ({ game }) => {
+		lobbyGame.set(game);
+	});
+
+	socket.on('lobby-error', ({ error }) => {
+		lobbyError.set(error);
+	});
+
+	// Presence events
+	socket.on('presence-update', ({ onlinePlayers: players }) => {
+		onlinePlayers.set(players);
+	});
+
+	// Game started - transition from lobby to game
+	socket.on('game-started', ({ state }) => {
+		inLobby.set(false);
+		lobbyGame.set(null);
+		updateGameState(state, 1);
+		showToast('Game Started!', 'success');
+
+		// Call the callback if provided
+		if (onGameStartedCallback) {
+			onGameStartedCallback(state);
+		}
+	});
+}
+
+/**
+ * Disconnect from current game or lobby
  */
 export function disconnect(): void {
 	if (socket) {
 		socket.disconnect();
 		socket = null;
 		currentGameId = null;
+		onGameStartedCallback = null;
 		connectionState.set({
 			connected: false,
 			connecting: false,
@@ -185,6 +291,9 @@ export function disconnect(): void {
 		});
 		onlinePlayers.set([]);
 		gameError.set(null);
+		lobbyGame.set(null);
+		lobbyError.set(null);
+		inLobby.set(false);
 	}
 }
 
@@ -206,7 +315,9 @@ export async function sendAction(action: GameAction): Promise<ActionResponse> {
 	}
 
 	return new Promise((resolve) => {
+		console.log(`[CLIENT] Sending action: ${actionToSend.actionType}`);
 		socket!.emit('game-action', actionToSend, (response) => {
+			console.log(`[CLIENT] Action callback received:`, { success: response.success, version: response.version, error: response.error });
 			if (response.success && response.state && response.version !== undefined) {
 				updateGameState(response.state, response.version);
 			}
