@@ -3,89 +3,104 @@
  * Functions for managing gas market and R&D/Market boards
  */
 
+import type { GameState, Technology } from '@upship/api';
+
 const { HELIUM_PRICE_TRACK, RD_BOARD_SIZE, MARKET_ROW_SIZE } = require('../../config/constants');
+
+// Re-export for consumers that import from this module
+export { HELIUM_PRICE_TRACK };
+
+// Extended state for market operations (use intersection to allow flexible types)
+type MarketState = Omit<GameState, 'marketCards'> & {
+  techCardBag?: Technology[];
+  marketCards?: unknown[];
+  marketDeck?: unknown[];
+};
 
 /**
  * Get current helium price step index
- *
- * @param {number} price - Current helium price
- * @returns {number} Index in HELIUM_PRICE_TRACK
  */
-function getHeliumPriceIndex(price) {
-  const idx = HELIUM_PRICE_TRACK.indexOf(price);
+function getHeliumPriceIndex(price: number): number {
+  const idx = (HELIUM_PRICE_TRACK as number[]).indexOf(price);
   return idx >= 0 ? idx : 0;
 }
 
 /**
  * Advance helium market price by N steps
- *
- * @param {Object} state - Game state (mutated)
- * @param {number} steps - Number of steps to advance (default 1)
  */
-function advanceHeliumMarket(state, steps = 1) {
+function advanceHeliumMarket(state: MarketState, steps: number = 1): void {
   const currentIdx = getHeliumPriceIndex(state.gasMarket.helium);
-  const newIdx = Math.min(currentIdx + steps, HELIUM_PRICE_TRACK.length - 1);
-  state.gasMarket.helium = HELIUM_PRICE_TRACK[newIdx];
+  const newIdx = Math.min(currentIdx + steps, (HELIUM_PRICE_TRACK as number[]).length - 1);
+  state.gasMarket.helium = (HELIUM_PRICE_TRACK as number[])[newIdx];
 }
 
 /**
  * Reduce helium market price by N steps
- *
- * @param {Object} state - Game state (mutated)
- * @param {number} steps - Number of steps to reduce (default 1)
  */
-function reduceHeliumMarket(state, steps = 1) {
+function reduceHeliumMarket(state: MarketState, steps: number = 1): void {
   const currentIdx = getHeliumPriceIndex(state.gasMarket.helium);
   const newIdx = Math.max(currentIdx - steps, 0);
-  state.gasMarket.helium = HELIUM_PRICE_TRACK[newIdx];
+  state.gasMarket.helium = (HELIUM_PRICE_TRACK as number[])[newIdx];
 }
 
 /**
  * Refresh R&D Board with new tech cards from tech card bag
- *
- * @param {Object} state - Game state (mutated)
  */
-function refreshRnDBoard(state) {
+function refreshRnDBoard(state: MarketState): void {
   // Fill empty slots on R&D board from tech card bag
   // NOTE: Must use state.rdBoard (not state.rnDBoard) - this is where all
   // tech acquisition logic reads from. See bug-notes.md for details.
   state.rdBoard = state.rdBoard || [];
   state.techCardBag = state.techCardBag || [];
 
-  const targetSize = RD_BOARD_SIZE[state.age] || 4;
+  const rdBoardSizeConfig = RD_BOARD_SIZE as Record<number, number>;
+  const targetSize = rdBoardSizeConfig[state.age] || 4;
 
   while (state.rdBoard.length < targetSize && state.techCardBag.length > 0) {
-    state.rdBoard.push(state.techCardBag.shift());
+    const card = state.techCardBag.shift();
+    if (card) {
+      state.rdBoard.push(card);
+    }
   }
 }
 
 /**
  * Refresh Market Row with new cards from market deck
- *
- * @param {Object} state - Game state (mutated)
  */
-function refreshMarketRow(state) {
+function refreshMarketRow(state: MarketState): void {
   // Fill empty slots in market row from market deck
   // NOTE: Must use state.marketCards (not state.marketRow) - this is where
   // all market card purchase logic reads from. See cards.js processBuyMarketCard.
   state.marketCards = state.marketCards || [];
   state.marketDeck = state.marketDeck || [];
 
-  while (state.marketCards.length < MARKET_ROW_SIZE && state.marketDeck.length > 0) {
-    state.marketCards.push(state.marketDeck.pop());
+  const marketRowSize = MARKET_ROW_SIZE as number;
+  while (state.marketCards.length < marketRowSize && state.marketDeck.length > 0) {
+    const card = state.marketDeck.pop();
+    if (card) {
+      state.marketCards.push(card);
+    }
   }
 }
 
 /**
  * Refill R&D board from tech card bag (used during age transitions)
  * Note: This is an alias for refreshRnDBoard - they do the same thing.
- *
- * @param {Object} state - Game state (mutated)
  */
-function refillRDBoard(state) {
+function refillRDBoard(state: MarketState): void {
   refreshRnDBoard(state);
 }
 
+export {
+  getHeliumPriceIndex,
+  advanceHeliumMarket,
+  reduceHeliumMarket,
+  refreshRnDBoard,
+  refreshMarketRow,
+  refillRDBoard
+};
+
+// CommonJS compatibility
 module.exports = {
   getHeliumPriceIndex,
   advanceHeliumMarket,

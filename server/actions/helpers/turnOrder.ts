@@ -3,18 +3,24 @@
  * Functions for managing player turn order during different phases
  */
 
+import type { GameState, PlayerState } from '@upship/api';
+
+interface PlayerOrderInfo {
+  playerId: string;
+  income: number;
+  cash: number;
+  originalIndex: number;
+}
+
 /**
  * Calculate turn order for worker placement phase
  * Rules per Section 5.1:
  * 1. The player with the First Player pawn goes first
  * 2. Ministry visitors this round claim the First Player token (for next turn order calculation)
  * 3. Remaining players go in lowest income order (ties broken by lowest cash, then original order)
- *
- * @param {Object} state - Game state
- * @returns {string[]} Array of player IDs in turn order
  */
-function calculateTurnOrder(state) {
-  const players = Object.entries(state.players).map(([playerId, playerState]) => ({
+function calculateTurnOrder(state: GameState): string[] {
+  const players: PlayerOrderInfo[] = Object.entries(state.players).map(([playerId, playerState]) => ({
     playerId,
     income: playerState.income,
     cash: playerState.cash,
@@ -55,11 +61,8 @@ function calculateTurnOrder(state) {
 
 /**
  * Get the current player who should place an agent (during worker_placement phase)
- *
- * @param {Object} state - Game state
- * @returns {string|null} Player ID or null if not in worker placement
  */
-function getCurrentPlacer(state) {
+function getCurrentPlacer(state: GameState): string | null {
   if (state.phase !== 'worker_placement') {
     return null;
   }
@@ -81,13 +84,21 @@ function getCurrentPlacer(state) {
   return null;
 }
 
+// Extended state type with mutable workerPlacement (intersection to allow optional properties)
+type MutableState = GameState & {
+  turnInRound?: number;
+  workerPlacement?: {
+    placementOrder: string[];
+    passedPlayers: string[];
+    currentPlacerIndex: number;
+    ministryVisitors?: string[];
+  };
+};
+
 /**
  * Advance to the next player who hasn't passed in worker placement
- *
- * @param {Object} state - Game state (mutated)
- * @returns {string|null} Next player ID or null if all have passed
  */
-function advanceToNextPlacer(state) {
+function advanceToNextPlacer(state: MutableState): string | null {
   // Increment turn counter within the current round
   state.turnInRound = (state.turnInRound || 1) + 1;
 
@@ -102,12 +113,13 @@ function advanceToNextPlacer(state) {
     if (!passedPlayers.includes(playerId)) {
       // Ensure workerPlacement exists before updating
       if (!state.workerPlacement) {
-        state.workerPlacement = { placementOrder: order, passedPlayers: [], currentPlacerIndex: 0 };
+        state.workerPlacement = { placementOrder: order, passedPlayers: [], currentPlacerIndex: 0, ministryVisitors: [] };
       }
       state.workerPlacement.currentPlacerIndex = index;
       // Reset the next player's action flag
-      if (state.players[playerId]) {
-        state.players[playerId].hasTakenActionThisTurn = false;
+      const player = state.players[playerId] as PlayerState & { hasTakenActionThisTurn?: boolean };
+      if (player) {
+        player.hasTakenActionThisTurn = false;
       }
       return playerId;
     }
@@ -119,15 +131,20 @@ function advanceToNextPlacer(state) {
 
 /**
  * Check if all players have passed in worker placement
- *
- * @param {Object} state - Game state
- * @returns {boolean} True if all players have passed
  */
-function allPlayersPassed(state) {
+function allPlayersPassed(state: GameState): boolean {
   const passedPlayers = state.workerPlacement?.passedPlayers || [];
   return state.playerOrder.every(pid => passedPlayers.includes(pid));
 }
 
+export {
+  calculateTurnOrder,
+  getCurrentPlacer,
+  advanceToNextPlacer,
+  allPlayersPassed
+};
+
+// CommonJS compatibility
 module.exports = {
   calculateTurnOrder,
   getCurrentPlacer,

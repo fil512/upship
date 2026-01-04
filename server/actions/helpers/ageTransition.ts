@@ -3,57 +3,93 @@
  * Implementation of Section 12 - Age Transitions
  */
 
+import type { GameState, PlayerState, Technology, Ship, Route, Card, LogEntry } from '@upship/api';
+
 const { TECH_CARD_BAG, HAND_SIZE, INITIAL_AGENTS } = require('../../config/constants');
 const { setupMissionRow } = require('../../data/combatMissions');
 const { shuffleArray } = require('../../utils/random');
 const { calculateTurnOrder } = require('./turnOrder');
 const { refreshRnDBoard, refreshMarketRow, refillRDBoard } = require('./marketHelpers');
 
+// Internal tech card type with VP and income (from TECH_CARD_BAG constants)
+interface TechCardWithMeta {
+  id: string;
+  name: string;
+  type: string;
+  cost: number;
+  vp: number;
+  income: number;
+  age?: number;
+  [key: string]: unknown;
+}
+
+// Tech card bag type
+type TechCardBag = Record<number, TechCardWithMeta[]>;
+
+// Extended state for age transitions
+interface AgeTransitionState extends GameState {
+  techCardBag?: Technology[];
+  missionRow?: unknown[];
+  missionDeck?: unknown[];
+  ageTransitionDesignBureau?: {
+    newAge: number;
+    currentPlayerIndex: number;
+    completedPlayers: string[];
+  };
+}
+
+// Extended player state (intersection to allow optional properties)
+type ExtendedPlayerState = PlayerState & {
+  agents?: number;
+  agentsRemaining?: number;
+  hasPassed?: boolean;
+  fireProtectionUsedThisAge?: boolean;
+};
+
 /**
  * Add new age tech cards to the tech card bag
  * Per Section 3.1: Include (N-1) copies of each tech card where N = player count
- *
- * @param {Object} state - Game state (mutated)
- * @param {number} age - Age number (2 or 3)
  */
-function addAgeTechCards(state, age) {
-  const newCards = TECH_CARD_BAG[age] || [];
+function addAgeTechCards(state: AgeTransitionState, age: number): void {
+  const techBag = TECH_CARD_BAG as TechCardBag;
+  const newCards = techBag[age] || [];
   if (newCards.length === 0) return;
 
-  const playerCount = state.playerCount || Object.keys(state.players || {}).length;
+  const playerCount = Object.keys(state.players || {}).length;
   const copiesPerCard = Math.max(1, playerCount - 1);
 
   // Count how many copies of each tech card are already owned
-  const ownedCounts = {};
+  const ownedCounts: Record<string, number> = {};
   for (const pid of Object.keys(state.players || {})) {
-    for (const card of state.players[pid].techCards || []) {
-      ownedCounts[card] = (ownedCounts[card] || 0) + 1;
+    for (const cardId of state.players[pid].techCards || []) {
+      ownedCounts[cardId] = (ownedCounts[cardId] || 0) + 1;
     }
   }
 
   // Add (N-1) - ownedCount copies of each new age tech card
-  const cardsToAdd = [];
+  const cardsToAdd: Technology[] = [];
   for (const card of newCards) {
     const ownedCount = ownedCounts[card.id] || 0;
     const copiesToAdd = Math.max(0, copiesPerCard - ownedCount);
 
     for (let i = 0; i < copiesToAdd; i++) {
-      cardsToAdd.push({ ...card, age });
+      cardsToAdd.push({ ...card, age } as unknown as Technology);
     }
   }
 
   // Shuffle and add to tech card bag
   state.techCardBag = state.techCardBag || [];
-  state.techCardBag.push(...shuffleArray(cardsToAdd));
+  state.techCardBag.push(...(shuffleArray(cardsToAdd) as Technology[]));
 }
 
 /**
  * Get all tech card definitions flattened from all ages
  */
-function getAllTechCardDefinitions() {
-  const allCards = {};
+function getAllTechCardDefinitions(): Record<string, TechCardWithMeta> {
+  const techBag = TECH_CARD_BAG as TechCardBag;
+  const allCards: Record<string, TechCardWithMeta> = {};
   for (const age of [1, 2, 3]) {
-    for (const card of (TECH_CARD_BAG[age] || [])) {
+    for (const card of (techBag[age] || [])) {
       allCards[card.id] = card;
     }
   }
@@ -62,10 +98,8 @@ function getAllTechCardDefinitions() {
 
 /**
  * Calculate VP from tech cards based on their VP values per Section 12.2
- * @param {string[]} cardIds - Array of tech card IDs
- * @returns {number} Total VP from tech cards
  */
-function calculateTechCardVP(cardIds) {
+function calculateTechCardVP(cardIds: string[]): number {
   const cardDefs = getAllTechCardDefinitions();
   let totalVP = 0;
 
@@ -82,12 +116,9 @@ function calculateTechCardVP(cardIds) {
 /**
  * Calculate VP from claimed routes per Section 12.2 and Appendix F
  * Routes have explicit `vp` property per Appendix F specifications
- * @param {Object} state - Game state
- * @param {string} playerId - Player ID
- * @returns {number} Total VP from routes
  */
-function calculateRouteVP(state, playerId) {
-  const routes = state.map?.routes || [];
+function calculateRouteVP(state: AgeTransitionState, playerId: string): number {
+  const routes = (state.map?.routes || []) as Array<Route & { claimed?: string }>;
   let totalVP = 0;
 
   for (const route of routes) {
@@ -99,13 +130,16 @@ function calculateRouteVP(state, playerId) {
   return totalVP;
 }
 
+interface VPBreakdown {
+  routes: number;
+  techCards: number;
+  total: number;
+}
+
 /**
  * Score VP for a player at age transition per Section 12.1 and 12.2
- * @param {Object} state - Game state
- * @param {string} playerId - Player ID
- * @returns {Object} VP breakdown { routes, techCards, total }
  */
-function scoreAgeVP(state, playerId) {
+function scoreAgeVP(state: AgeTransitionState, playerId: string): VPBreakdown {
   const playerState = state.players[playerId];
 
   const routeVP = calculateRouteVP(state, playerId);
@@ -120,9 +154,8 @@ function scoreAgeVP(state, playerId) {
 
 /**
  * Score VP for all players during age transition
- * @param {Object} state - Game state (mutated)
  */
-function scoreAllPlayersVP(state) {
+function scoreAllPlayersVP(state: AgeTransitionState): void {
   for (const playerId of Object.keys(state.players)) {
     const vpScored = scoreAgeVP(state, playerId);
     state.players[playerId].vp = (state.players[playerId].vp || 0) + vpScored.total;
@@ -132,16 +165,15 @@ function scoreAllPlayersVP(state) {
       message: `Age ${state.age} scoring: ${vpScored.routes} VP from routes, ${vpScored.techCards} VP from tech cards`,
       playerId,
       type: 'scoring'
-    });
+    } as LogEntry);
   }
 }
 
 /**
  * Recover ships and officers at age transition per Section 12.1 step 2
  * Ships return to hangar (max 3), officers return based on age
- * @param {Object} state - Game state (mutated)
  */
-function recoverShipsAndOfficers(state) {
+function recoverShipsAndOfficers(state: AgeTransitionState): void {
   const currentAge = state.age;
   const MAX_HANGAR_CAPACITY = 3;
 
@@ -154,16 +186,16 @@ function recoverShipsAndOfficers(state) {
 
     for (const ship of shipsOnRoutes) {
       if (shipsRecovered >= MAX_HANGAR_CAPACITY) {
-        // Ship is lost - remove from player's ships
-        ship.status = 'lost';
+        // Ship is lost - mark as destroyed
+        (ship as { status: string }).status = 'destroyed';
       } else {
         // Return ship to hangar
-        ship.status = 'in_hangar';
-        ship.routeId = null;
+        (ship as { status: string }).status = 'hangar';
+        ship.routeId = undefined;
         shipsRecovered++;
 
         // Recover officers based on ship's age
-        const shipAge = ship.age || currentAge;
+        const shipAge = (ship as Ship & { age?: number }).age || currentAge;
         officersRecovered += shipAge === 1 ? 1 : 2;
       }
     }
@@ -176,7 +208,7 @@ function recoverShipsAndOfficers(state) {
         message: `Recovered ${shipsRecovered} ships and ${officersRecovered} officers`,
         playerId,
         type: 'age_transition'
-      });
+      } as LogEntry);
     }
   }
 }
@@ -184,10 +216,8 @@ function recoverShipsAndOfficers(state) {
 /**
  * Calculate tech card income from owned tech cards
  * Per Section 12.1: Sum income values from all tech cards
- * @param {string[]} cardIds - Array of tech card IDs
- * @returns {number} Total income from tech cards
  */
-function calculateTechCardIncome(cardIds) {
+function calculateTechCardIncome(cardIds: string[]): number {
   const cardDefs = getAllTechCardDefinitions();
   let totalIncome = 0;
 
@@ -205,19 +235,18 @@ function calculateTechCardIncome(cardIds) {
  * Calculate transition income per Section 12.1 step 3
  * New Income = (income from Technology tiles) - (£1 per route lost)
  * Minimum £0
- * @param {Object} state - Game state (mutated)
  */
-function calculateTransitionIncome(state) {
+function calculateTransitionIncome(state: AgeTransitionState): void {
   for (const playerId of Object.keys(state.players)) {
     const playerState = state.players[playerId];
 
     // Count routes being lost
-    const routes = state.map?.routes || [];
+    const routes = (state.map?.routes || []) as Array<Route & { claimed?: string }>;
     const routesLost = routes.filter(r => r.claimed === playerId).length;
 
     // Calculate income from tech cards per Section 12.1 step 3
     // Each tech card has an income value (1-3 per Appendix C)
-    const techIncome = calculateTechCardIncome(playerState.techCards);
+    const techIncome = calculateTechCardIncome(playerState.techCards || []);
 
     // Per Section 12.1 step 3: "New Income = (income from Technology tiles) - (£1 per route lost)"
     // This REPLACES the old income, not adds to it
@@ -230,7 +259,7 @@ function calculateTransitionIncome(state) {
       message: `Income reset: £${techIncome} from tech cards - £${routesLost} route loss penalty = £${newIncome}`,
       playerId,
       type: 'age_transition'
-    });
+    } as LogEntry);
   }
 }
 
@@ -238,7 +267,7 @@ function calculateTransitionIncome(state) {
  * Blueprint slot configurations by age per Section 4.2
  * Note: Italy has -1 componentSlots in Ages II and III (Section 13.4)
  */
-const BLUEPRINT_SLOTS = {
+const BLUEPRINT_SLOTS: Record<number, { frameSlots: number; fabricSlots: number; driveSlots: number; componentSlots: number }> = {
   1: { frameSlots: 1, fabricSlots: 1, driveSlots: 1, componentSlots: 1 },
   2: { frameSlots: 1, fabricSlots: 1, driveSlots: 2, componentSlots: 2 },
   3: { frameSlots: 2, fabricSlots: 2, driveSlots: 2, componentSlots: 3 }
@@ -249,7 +278,7 @@ const BLUEPRINT_SLOTS = {
  * Applies Italy's "Compact Design" flaw: -1 Payload slot in Ages II and III
  * Per Section 13.4 and Section 13.5
  */
-function getBlueprintSlotsForFaction(age, faction) {
+function getBlueprintSlotsForFaction(age: number, faction: string): { frameSlots: number; fabricSlots: number; driveSlots: number; componentSlots: number } {
   const baseSlots = { ...BLUEPRINT_SLOTS[age] };
 
   // Italy's Compact Design flaw: one fewer Payload slot in Ages II and III
@@ -262,10 +291,8 @@ function getBlueprintSlotsForFaction(age, faction) {
 
 /**
  * Expand blueprint slots for new age per Section 12.1 step 4
- * @param {Object} state - Game state (mutated)
- * @param {number} newAge - The age transitioning to
  */
-function expandBlueprintSlots(state, newAge) {
+function expandBlueprintSlots(state: AgeTransitionState, newAge: number): void {
   if (!BLUEPRINT_SLOTS[newAge]) return;
 
   for (const playerId of Object.keys(state.players)) {
@@ -276,19 +303,21 @@ function expandBlueprintSlots(state, newAge) {
     const slotConfig = getBlueprintSlotsForFaction(newAge, playerState.faction);
 
     // Update age
-    blueprint.age = newAge;
+    (blueprint as { age?: number }).age = newAge;
 
     // Expand each slot type while preserving existing upgrades
-    for (const slotType of ['frameSlots', 'fabricSlots', 'driveSlots', 'componentSlots']) {
+    const slotTypes = ['frameSlots', 'fabricSlots', 'driveSlots', 'componentSlots'] as const;
+    const blueprintAny = blueprint as unknown as Record<string, (string | null)[]>;
+    for (const slotType of slotTypes) {
       const targetSize = slotConfig[slotType];
-      const currentSlots = blueprint[slotType] || [];
+      const currentSlots = blueprintAny[slotType] || [];
 
       // Add null slots to reach target size
       while (currentSlots.length < targetSize) {
         currentSlots.push(null);
       }
 
-      blueprint[slotType] = currentSlots;
+      blueprintAny[slotType] = currentSlots;
     }
 
     state.log.push({
@@ -296,27 +325,25 @@ function expandBlueprintSlots(state, newAge) {
       message: `Blueprint upgraded to Age ${newAge}`,
       playerId,
       type: 'age_transition'
-    });
+    } as LogEntry);
   }
 }
 
 /**
  * Reset Fire-Resistant Fabric protection for new age per GAP-046
  * Per Appendix D: Fire-Resistant Fabric grants "Once per Age, treat one Fire hazard as auto-pass"
- * @param {Object} state - Game state (mutated)
  */
-function resetFireProtection(state) {
+function resetFireProtection(state: AgeTransitionState): void {
   for (const playerId of Object.keys(state.players)) {
-    state.players[playerId].fireProtectionUsedThisAge = false;
+    (state.players[playerId] as ExtendedPlayerState).fireProtectionUsedThisAge = false;
   }
 }
 
 /**
  * Apply Britain's Red Tape flaw per Section 13.2
  * Reduce income by 1 at each age transition
- * @param {Object} state - Game state (mutated)
  */
-function applyBritainRedTape(state) {
+function applyBritainRedTape(state: AgeTransitionState): void {
   for (const playerId of Object.keys(state.players)) {
     const playerState = state.players[playerId];
 
@@ -328,7 +355,7 @@ function applyBritainRedTape(state) {
         message: `Red Tape: Income reduced by 1 (bureaucratic overhead)`,
         playerId,
         type: 'faction_flaw'
-      });
+      } as LogEntry);
     }
   }
 }
@@ -336,10 +363,8 @@ function applyBritainRedTape(state) {
 /**
  * Start age transition - performs steps 1-4 and enters free Design Bureau phase
  * Per Section 12.1 step 5: Each player gets a free Design Bureau action
- * @param {Object} state - Game state (mutated)
- * @param {number} newAge - The age to transition to
  */
-function startAgeTransition(state, newAge) {
+function startAgeTransition(state: AgeTransitionState, newAge: number): void {
   // Step 1: Score VP for routes and technologies
   scoreAllPlayersVP(state);
 
@@ -365,15 +390,14 @@ function startAgeTransition(state, newAge) {
     timestamp: new Date().toISOString(),
     message: `Age transition to Age ${newAge} - Free Blueprint Upgrade phase begins`,
     type: 'system'
-  });
+  } as LogEntry);
 }
 
 /**
  * Complete age transition after free Design Bureau phase
  * Called when all players have completed their free swaps
- * @param {Object} state - Game state (mutated)
  */
-function completeAgeTransition(state) {
+function completeAgeTransition(state: AgeTransitionState): void {
   const newAge = state.ageTransitionDesignBureau?.newAge || state.age + 1;
 
   // Apply faction-specific flaws
@@ -392,7 +416,7 @@ function completeAgeTransition(state) {
     state.map = createAgeIIIMap();
   } else if (state.map && state.map.routes) {
     // Age II keeps same map but clears claims
-    for (const route of state.map.routes) {
+    for (const route of state.map.routes as Array<Route & { claimed?: string | null }>) {
       route.claimed = null;
     }
   }
@@ -400,7 +424,7 @@ function completeAgeTransition(state) {
   // Set up combat missions for Age II, or clear them for Age III
   if (newAge === 2) {
     // Per Section 10.5 and Appendix G: Set up Combat Mission Row for Age II
-    const { missionRow, missionDeck } = setupMissionRow();
+    const { missionRow, missionDeck } = setupMissionRow() as { missionRow: unknown[]; missionDeck: unknown[] };
     state.missionRow = missionRow;
     state.missionDeck = missionDeck;
 
@@ -408,7 +432,7 @@ function completeAgeTransition(state) {
       timestamp: new Date().toISOString(),
       message: `Combat Mission Row established with 6 missions.`,
       type: 'system'
-    });
+    } as LogEntry);
   } else if (newAge === 3) {
     // Clear combat missions when leaving Age II
     delete state.missionRow;
@@ -435,8 +459,8 @@ function completeAgeTransition(state) {
 
   // Reset worker placement state for all players
   for (const playerId of state.playerOrder) {
-    const playerState = state.players[playerId];
-    playerState.agentsRemaining = playerState.agents || INITIAL_AGENTS;
+    const playerState = state.players[playerId] as ExtendedPlayerState;
+    playerState.agentsRemaining = playerState.agents || (INITIAL_AGENTS as number);
     playerState.hasPassed = false;
   }
 
@@ -451,8 +475,8 @@ function completeAgeTransition(state) {
     currentPlacerIndex: 0
   };
 
-  // Reset reveal phase tracking
-  state.revealPhase = {
+  // Reset reveal phase
+  (state as GameState & { revealPhase?: unknown }).revealPhase = {
     revealedHands: {},
     resourcesCollected: {},
     techAcquisitionsComplete: {},
@@ -462,17 +486,20 @@ function completeAgeTransition(state) {
   // Draw cards to hand size of 5 for each player
   for (const playerId of state.playerOrder) {
     const playerState = state.players[playerId];
-    const cardsNeeded = HAND_SIZE - (playerState.hand?.length || 0);
+    const cardsNeeded = (HAND_SIZE as number) - (playerState.hand?.length || 0);
 
     for (let i = 0; i < cardsNeeded; i++) {
       if (playerState.deck.length === 0 && playerState.discardPile.length > 0) {
         // Reshuffle discard into deck
-        playerState.deck = shuffleArray([...playerState.discardPile]);
+        playerState.deck = shuffleArray([...playerState.discardPile]) as Card[];
         playerState.discardPile = [];
       }
 
       if (playerState.deck.length > 0) {
-        playerState.hand.push(playerState.deck.pop());
+        const card = playerState.deck.pop();
+        if (card) {
+          playerState.hand.push(card);
+        }
       }
     }
   }
@@ -487,25 +514,45 @@ function completeAgeTransition(state) {
     timestamp: new Date().toISOString(),
     message: `=== Age ${newAge} begins! ===`,
     type: 'system'
-  });
+  } as LogEntry);
 
   state.log.push({
     timestamp: new Date().toISOString(),
     message: `Round ${state.round} begins. Worker Placement phase started.`,
     type: 'phase'
-  });
+  } as LogEntry);
 }
 
 /**
  * Perform full age transition per Section 12.1
  * This starts the transition; completeAgeTransition finishes it after Design Bureau phase
- * @param {Object} state - Game state (mutated)
- * @param {number} newAge - The age to transition to
  */
-function performAgeTransition(state, newAge) {
+function performAgeTransition(state: AgeTransitionState, newAge: number): void {
   startAgeTransition(state, newAge);
 }
 
+export {
+  calculateTechCardVP,
+  calculateRouteVP,
+  scoreAgeVP,
+  scoreAllPlayersVP,
+  recoverShipsAndOfficers,
+  calculateTransitionIncome,
+  expandBlueprintSlots,
+  applyBritainRedTape,
+  resetFireProtection,
+  performAgeTransition,
+  startAgeTransition,
+  completeAgeTransition,
+  getBlueprintSlotsForFaction,
+  BLUEPRINT_SLOTS
+};
+
+// Legacy aliases for backwards compatibility during migration
+export const calculateTechnologyVP = calculateTechCardVP;
+export const addAgeTechnologies = addAgeTechCards;
+
+// CommonJS compatibility
 module.exports = {
   calculateTechCardVP,
   calculateRouteVP,

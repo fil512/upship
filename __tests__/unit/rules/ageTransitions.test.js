@@ -145,7 +145,7 @@ describe('Rules Compliance - Age Transitions', () => {
       performAgeTransition(state, 2);
 
       // Ships should be returned to hangar
-      expect(state.players['1'].ships.filter(s => s.status === 'in_hangar').length).toBe(2);
+      expect(state.players['1'].ships.filter(s => s.status === 'hangar').length).toBe(2);
 
       // Officers should be recovered (1 per Age I ship)
       expect(state.players['1'].officers).toBe(2);
@@ -185,7 +185,7 @@ describe('Rules Compliance - Age Transitions', () => {
       performAgeTransition(state, 2);
 
       // Only 3 ships should be in hangar (max capacity)
-      const shipsInHangar = state.players['1'].ships.filter(s => s.status === 'in_hangar');
+      const shipsInHangar = state.players['1'].ships.filter(s => s.status === 'hangar');
       expect(shipsInHangar.length).toBe(3);
 
       // Only 3 officers recovered (from the 3 ships that fit in hangar)

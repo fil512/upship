@@ -3,18 +3,47 @@
  * Functions for transitioning between game phases
  */
 
+import type { GameState, PlayerState, Card, LogEntry } from '@upship/api';
+
 const { shuffleArray } = require('../../utils/random');
 const { calculateTurnOrder } = require('./turnOrder');
 const { refreshRnDBoard, refreshMarketRow } = require('./marketHelpers');
 const { HAND_SIZE, INITIAL_AGENTS, MIN_INCOME, LOAN_AMOUNT, LOAN_INCOME_PENALTY } = require('../../config/constants');
 const { performAgeTransition } = require('./ageTransition');
 
+// Extended state type for phase transitions (use intersection to allow optional properties)
+type PhaseState = GameState & {
+  turnInRound?: number;
+  gameEndAfterRound?: boolean;
+  gameEndReason?: string;
+  progressThresholds?: {
+    age2: number;
+    age3: number;
+    end: number;
+  };
+  revealPhase?: {
+    revealedHands: Record<string, Card[]>;
+    resourcesCollected: Record<string, boolean>;
+    techAcquisitionsComplete: Record<string, boolean>;
+    marketPurchasesComplete: Record<string, boolean>;
+  };
+};
+
+// Extended player state for transition (use intersection to allow optional properties)
+type TransitionPlayerState = PlayerState & {
+  researchLevel?: number;
+  officerIncome?: number;
+  engineerIncome?: number;
+  loans?: number;
+  agentsRemaining?: number;
+  hasPassed?: boolean;
+  agents?: number;
+};
+
 /**
  * Transition from worker placement to reveal phase
- *
- * @param {Object} state - Game state (mutated)
  */
-function transitionToRevealPhase(state) {
+function transitionToRevealPhase(state: PhaseState): void {
   state.phase = 'reveal';
 
   // Initialize reveal phase tracking
@@ -40,22 +69,38 @@ function transitionToRevealPhase(state) {
     type: 'phase',
     round: state.round,
     age: state.age
-  });
+  } as LogEntry);
 
   // Auto-collect resources from revealed cards
   collectRevealResources(state);
 }
 
+// Card reveal data structure
+interface RevealData {
+  research?: number;
+  influence?: number;
+  hydrogen?: number;
+  helium?: number;
+  cash?: number;
+  officers?: number;
+  engineers?: number;
+  gas?: number;
+}
+
+// Card with reveal bonus
+interface RevealCard extends Card {
+  reveal?: RevealData;
+  revealBonus?: RevealData;
+}
+
 /**
  * Collect resources from revealed cards (Research, Influence, Gas, Cash, Officers, Engineers)
  * Per Section 5.1: Research = Research Level + Engineers in Barracks + card bonuses
- *
- * @param {Object} state - Game state (mutated)
  */
-function collectRevealResources(state) {
+function collectRevealResources(state: PhaseState): void {
   for (const playerId of state.playerOrder) {
-    const playerState = state.players[playerId];
-    const revealedCards = state.revealPhase.revealedHands[playerId] || [];
+    const playerState = state.players[playerId] as TransitionPlayerState;
+    const revealedCards = (state.revealPhase?.revealedHands[playerId] || []) as RevealCard[];
 
     let researchGained = 0;
     let influenceGained = 0;
@@ -100,9 +145,11 @@ function collectRevealResources(state) {
     playerState.officers += officersGained;
     playerState.engineers += engineersGained;
 
-    state.revealPhase.resourcesCollected[playerId] = true;
+    if (state.revealPhase) {
+      state.revealPhase.resourcesCollected[playerId] = true;
+    }
 
-    const resourceLog = [];
+    const resourceLog: string[] = [];
     if (researchGained > 0) resourceLog.push(`${researchGained} Research`);
     if (influenceGained > 0) resourceLog.push(`${influenceGained} Influence`);
     if (cashGained > 0) resourceLog.push(`£${cashGained}`);
@@ -119,7 +166,7 @@ function collectRevealResources(state) {
         type: 'reveal',
         round: state.round,
         age: state.age
-      });
+      } as LogEntry);
     }
   }
 }
@@ -127,10 +174,8 @@ function collectRevealResources(state) {
 /**
  * Transition from Reveal phase to Income & Cleanup phase
  * Per Section 5.2: Net income = Income Track - Engineers in Barracks (upkeep)
- *
- * @param {Object} state - Game state (mutated)
  */
-function transitionToIncomeCleanup(state) {
+function transitionToIncomeCleanup(state: PhaseState): void {
   state.phase = 'income_cleanup';
 
   state.log.push({
@@ -139,11 +184,11 @@ function transitionToIncomeCleanup(state) {
     type: 'phase',
     round: state.round,
     age: state.age
-  });
+  } as LogEntry);
 
   // Process income collection for all players simultaneously
   for (const playerId of state.playerOrder) {
-    const playerState = state.players[playerId];
+    const playerState = state.players[playerId] as TransitionPlayerState;
 
     // Per Section 5.2: "Gain £ equal to your Income Track minus Engineers in Barracks"
     // This is NET income - upkeep is subtracted from income, not from cash
@@ -160,7 +205,7 @@ function transitionToIncomeCleanup(state) {
         type: 'income',
         round: state.round,
         age: state.age
-      });
+      } as LogEntry);
     } else {
       // Negative net income: must pay the difference from cash
       const deficit = Math.abs(netIncome);
@@ -173,7 +218,7 @@ function transitionToIncomeCleanup(state) {
           type: 'income',
           round: state.round,
           age: state.age
-        });
+        } as LogEntry);
       } else {
         // GAP-082: Cannot pay full deficit from cash - handle loans and potential bankruptcy
         // Per Section 5.3: Must take loans until solvent, or go bankrupt if loans would exceed limit
@@ -188,7 +233,7 @@ function transitionToIncomeCleanup(state) {
           type: 'income',
           round: state.round,
           age: state.age
-        });
+        } as LogEntry);
 
         // Initialize loans counter if not present
         if (typeof playerState.loans !== 'number') {
@@ -199,8 +244,8 @@ function transitionToIncomeCleanup(state) {
         let currentIncome = playerState.income;
         while (remainingDebt > 0) {
           // Check if taking a loan would exceed the debt limit
-          const potentialNewIncome = currentIncome - LOAN_INCOME_PENALTY;
-          if (potentialNewIncome < MIN_INCOME) {
+          const potentialNewIncome = currentIncome - (LOAN_INCOME_PENALTY as number);
+          if (potentialNewIncome < (MIN_INCOME as number)) {
             // Bankruptcy! Cannot take loan without exceeding debt limit
             // Per Section 5.3: lose 10 VP and reset Income Track to 0
             const vpLost = Math.min(10, playerState.vp || 0);
@@ -214,14 +259,14 @@ function transitionToIncomeCleanup(state) {
               type: 'bankruptcy',
               round: state.round,
               age: state.age
-            });
+            } as LogEntry);
             break;
           }
 
           // Take a loan
           playerState.loans++;
-          playerState.cash += LOAN_AMOUNT;
-          currentIncome -= LOAN_INCOME_PENALTY;
+          playerState.cash += LOAN_AMOUNT as number;
+          currentIncome -= LOAN_INCOME_PENALTY as number;
           playerState.income = currentIncome;
 
           state.log.push({
@@ -231,7 +276,7 @@ function transitionToIncomeCleanup(state) {
             type: 'loan',
             round: state.round,
             age: state.age
-          });
+          } as LogEntry);
 
           // Pay off remaining debt from the loan money
           if (playerState.cash >= remainingDebt) {
@@ -259,7 +304,7 @@ function transitionToIncomeCleanup(state) {
         type: 'income',
         round: state.round,
         age: state.age
-      });
+      } as LogEntry);
     }
 
     // Discard remaining hand
@@ -282,9 +327,8 @@ function transitionToIncomeCleanup(state) {
 /**
  * Trigger final scoring and determine winner
  * Called when game end conditions are met per Section 1.2
- * @param {Object} state - Game state (mutated)
  */
-function triggerFinalScoring(state) {
+function triggerFinalScoring(state: PhaseState): void {
   const { processCalculateScores } = require('../scoring');
   // Call scoring with forceEnd since we've already validated the game end condition
   processCalculateScores(state, state.playerOrder[0], { forceEnd: true });
@@ -294,10 +338,8 @@ function triggerFinalScoring(state) {
  * Start a new round (called after Income & Cleanup)
  * Per Section 5.2: Check Age Transition during Income & Cleanup phase
  * Per Section 1.2: Check game end conditions
- *
- * @param {Object} state - Game state (mutated)
  */
-function startNewRound(state) {
+function startNewRound(state: PhaseState): void {
   state.round++;
   state.turnInRound = 1;
 
@@ -305,7 +347,7 @@ function startNewRound(state) {
   // Age transitions are triggered by Progress Track thresholds, NOT turn count
   const thresholds = state.progressThresholds || { age2: 4, age3: 8, end: 12 };
   let needsAgeTransition = false;
-  let newAge = null;
+  let newAge: number | null = null;
 
   // Per Section 1.2: Check game end via Progress Track FIRST
   // "The Rise of Fixed-Wing Aircraft: The Progress Track reaches its threshold."
@@ -320,7 +362,7 @@ function startNewRound(state) {
       type: 'game_end',
       round: state.round,
       age: state.age
-    });
+    } as LogEntry);
 
     // Trigger final scoring
     triggerFinalScoring(state);
@@ -335,7 +377,7 @@ function startNewRound(state) {
     newAge = 3;
   }
 
-  if (needsAgeTransition) {
+  if (needsAgeTransition && newAge !== null) {
     // Use complete age transition implementation which includes:
     // - VP scoring, ship/officer recovery, income adjustment
     // - Blueprint slot expansion
@@ -352,8 +394,8 @@ function startNewRound(state) {
   // Reset worker placement state for all players
   // Each player gets back their own number of agents (2 or 3 if earned)
   for (const playerId of state.playerOrder) {
-    const playerState = state.players[playerId];
-    playerState.agentsRemaining = playerState.agents || INITIAL_AGENTS;
+    const playerState = state.players[playerId] as TransitionPlayerState;
+    playerState.agentsRemaining = playerState.agents || (INITIAL_AGENTS as number);
     playerState.hasPassed = false;
   }
 
@@ -379,17 +421,20 @@ function startNewRound(state) {
   // Draw cards to hand size of 5 for each player
   for (const playerId of state.playerOrder) {
     const playerState = state.players[playerId];
-    const cardsNeeded = HAND_SIZE - (playerState.hand?.length || 0);
+    const cardsNeeded = (HAND_SIZE as number) - (playerState.hand?.length || 0);
 
     for (let i = 0; i < cardsNeeded; i++) {
       if (playerState.deck.length === 0 && playerState.discardPile.length > 0) {
         // Reshuffle discard into deck
-        playerState.deck = shuffleArray([...playerState.discardPile]);
+        playerState.deck = shuffleArray([...playerState.discardPile]) as Card[];
         playerState.discardPile = [];
       }
 
       if (playerState.deck.length > 0) {
-        playerState.hand.push(playerState.deck.pop());
+        const card = playerState.deck.pop();
+        if (card) {
+          playerState.hand.push(card);
+        }
       }
     }
   }
@@ -406,9 +451,17 @@ function startNewRound(state) {
     type: 'phase',
     round: state.round,
     age: state.age
-  });
+  } as LogEntry);
 }
 
+export {
+  transitionToRevealPhase,
+  collectRevealResources,
+  transitionToIncomeCleanup,
+  startNewRound
+};
+
+// CommonJS compatibility
 module.exports = {
   transitionToRevealPhase,
   collectRevealResources,
