@@ -4,7 +4,10 @@
  * Implements hazard checks per Section 8.2, fire hazards per Section 8.3, and Hindenburg Disaster (Section 1.2)
  */
 
-import type { GameState, PlayerState, Ship, Route, LogEntry, HazardCard, Blueprint } from '@upship/api';
+import type { GameState, PlayerState, Ship, Route, LogEntry, HazardCard } from '@upship/api';
+
+// Type alias for slot entries (can be string ID or object with id)
+type SlotEntry = string | { id: string } | null;
 
 const { GameRuleError } = require('../errors');
 const { applyCityBonus, CITY_BONUSES } = require('../data/cities');
@@ -212,7 +215,7 @@ function processHazardCheck(state: GameState, playerId: string, data: HazardChec
 
   const playerBlueprint = playerState.blueprint;
   const hasCondictiveCovering = playerBlueprint?.fabricSlots?.some(
-    (fabric: string | { id: string } | null) => fabric === 'conductive_covering' || (fabric && typeof fabric === 'object' && fabric.id === 'conductive_covering')
+    (fabric: SlotEntry) => fabric === 'conductive_covering' || (fabric && typeof fabric === 'object' && fabric.id === 'conductive_covering')
   );
 
   if (hazard.type === 'static_discharge' && hasCondictiveCovering) {
@@ -221,7 +224,7 @@ function processHazardCheck(state: GameState, playerId: string, data: HazardChec
   }
 
   const hasRapidDescentSystem = playerBlueprint?.componentSlots?.some(
-    (comp: string | { id: string } | null) => comp === 'rapid_descent_system' || (comp && typeof comp === 'object' && comp.id === 'rapid_descent_system')
+    (comp: SlotEntry) => comp === 'rapid_descent_system' || (comp && typeof comp === 'object' && comp.id === 'rapid_descent_system')
   );
 
   const extendedHazard = hazard as HazardCard & { hazardType?: string };
@@ -231,7 +234,7 @@ function processHazardCheck(state: GameState, playerId: string, data: HazardChec
   }
 
   const hasFireResistantFabric = playerBlueprint?.fabricSlots?.some(
-    (fabric: string | { id: string } | null) => fabric === 'fire_resistant_fabric' || (fabric && typeof fabric === 'object' && fabric.id === 'fire_resistant_fabric')
+    (fabric: SlotEntry) => fabric === 'fire_resistant_fabric' || (fabric && typeof fabric === 'object' && fabric.id === 'fire_resistant_fabric')
   );
   const fireProtectionAvailable = hasFireResistantFabric && !playerState.fireProtectionUsedThisAge;
 
@@ -259,7 +262,7 @@ function processHazardCheck(state: GameState, playerId: string, data: HazardChec
 
   let weatherPenalty = 0;
   const hasFlexibleFrame = playerBlueprint?.frameSlots?.some(
-    (frame: string | { id: string } | null) => frame === 'flexible_frame' || (frame && typeof frame === 'object' && frame.id === 'flexible_frame')
+    (frame: SlotEntry) => frame === 'flexible_frame' || (frame && typeof frame === 'object' && frame.id === 'flexible_frame')
   );
   const isWeatherHazard = extendedHazard.hazardType === 'weather';
 

@@ -5,7 +5,7 @@
  * Note: Swap limits have been removed - players can make unlimited modifications
  */
 
-import type { GameState, PlayerState, LogEntry, Blueprint, SlotType } from '@upship/api';
+import type { GameState, LogEntry, Blueprint } from '@upship/api';
 
 const { GameRuleError, InsufficientFundsError } = require('../errors');
 const { TECH_TILES, TECH_CARDS } = require('../data/upgrades');

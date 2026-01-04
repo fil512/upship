@@ -3,10 +3,13 @@
  * BUY_GAS action processor
  */
 
-import type { GameState, PlayerState, LogEntry } from '@upship/api';
+import type { GameState, LogEntry } from '@upship/api';
 
 const { GameRuleError, InsufficientFundsError } = require('../errors');
 const { advanceHeliumMarket } = require('./helpers/marketHelpers');
+
+// Type alias for component slot entries (can be string ID or object with id)
+type ComponentSlotEntry = string | { id: string } | null;
 
 interface BuyGasData {
   gasType: 'hydrogen' | 'helium';
@@ -71,9 +74,9 @@ function processBuyGas(state: GameState, playerId: string, data: BuyGasData): Ac
   let price = state.gasMarket[gasType] * amount;
 
   // GAP-076: Reclamation System provides -£2 Lifting Gas cost per Appendix D
-  const componentSlots = (playerState.blueprint as { componentSlots?: (string | { id: string } | null)[] })?.componentSlots;
+  const componentSlots = (playerState.blueprint as { componentSlots?: ComponentSlotEntry[] })?.componentSlots;
   const hasReclamationSystem = componentSlots?.some(
-    (comp: string | { id: string } | null) => comp === 'reclamation_system' || (comp && typeof comp === 'object' && comp.id === 'reclamation_system')
+    (comp: ComponentSlotEntry) => comp === 'reclamation_system' || (comp && typeof comp === 'object' && comp.id === 'reclamation_system')
   );
   if (hasReclamationSystem) {
     price = Math.max(0, price - 2);
@@ -81,7 +84,7 @@ function processBuyGas(state: GameState, playerId: string, data: BuyGasData): Ac
 
   // GAP-077: Exhaust Condensers provides -£3 Helium cost per Appendix D (USA specialty)
   const hasExhaustCondensers = componentSlots?.some(
-    (comp: string | { id: string } | null) => comp === 'exhaust_condensers' || (comp && typeof comp === 'object' && comp.id === 'exhaust_condensers')
+    (comp: ComponentSlotEntry) => comp === 'exhaust_condensers' || (comp && typeof comp === 'object' && comp.id === 'exhaust_condensers')
   );
   if (hasExhaustCondensers && gasType === 'helium') {
     price = Math.max(0, price - 3);

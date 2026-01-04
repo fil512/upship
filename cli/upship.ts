@@ -578,7 +578,7 @@ const commands: Record<string, CommandFunction> = {
       isSimultaneous = true;
       const playersEndedTurn = gs.playersEndedTurn || [];
       isMyTurn = !playersEndedTurn.includes(myId);
-      currentPlayerId = null;
+      // currentPlayerId stays null (already initialized to null)
     } else {
       // Default: use currentPlayerIndex
       currentPlayerId = gs.playerOrder?.[gs.currentPlayerIndex] || null;

@@ -7,7 +7,7 @@
  * When all players have revealed, resources are collected and acquisitions processed
  */
 
-import type { GameState, PlayerState, LogEntry } from '@upship/api';
+import type { GameState, LogEntry } from '@upship/api';
 
 const { GameRuleError } = require('../errors');
 const {
