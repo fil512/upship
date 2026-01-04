@@ -140,12 +140,10 @@ function initializeSocket(server, sessionMiddleware) {
     socket.on('game-action', async (action, callback) => {
       const { gameId, playerId } = socket;
 
-      // Debug logging for action receipt
-      console.log(`[SOCKET] game-action received: ${action.actionType} from ${playerId} in game ${gameId}`);
-      console.log(`[SOCKET] action data:`, JSON.stringify(action.actionData));
+      logger.debug({ gameId, playerId, actionType: action.actionType }, 'Game action received');
 
       if (!gameId || !playerId) {
-        console.log(`[SOCKET] REJECTED: Not in a game (gameId=${gameId}, playerId=${playerId})`);
+        logger.warn({ gameId, playerId }, 'Action rejected: not in a game');
         callback({ success: false, error: 'Not in a game' });
         return;
       }
@@ -194,11 +192,10 @@ function initializeSocket(server, sessionMiddleware) {
         }
 
         if (!skipTurnCheck && currentPlayerId !== effectiveUserId) {
-          console.log(`[SOCKET] REJECTED: Not your turn (currentPlayer=${currentPlayerId}, effectiveUser=${effectiveUserId})`);
+          logger.debug({ currentPlayerId, effectiveUserId }, 'Action rejected: not your turn');
           callback({ success: false, error: 'Not your turn' });
           return;
         }
-        console.log(`[SOCKET] Turn check passed for ${effectiveUserId}`);
 
         // Handle UNDO specially
         if (action.actionType === 'UNDO') {
@@ -262,7 +259,6 @@ function initializeSocket(server, sessionMiddleware) {
             canEndTurn: playerState?.hasTakenActionThisTurn || false
           }
         };
-        console.log(`[SOCKET] Sending callback to ${playerId} with version ${newGameState.version}`);
         callback(responsePayload);
 
         logger.info({ gameId, playerId, actionType: action.actionType }, 'Action processed');
@@ -380,18 +376,16 @@ function broadcastPresence(io, gameId) {
  * Broadcast state update to all players in a game (filtered per player)
  */
 function broadcastStateUpdate(io, gameId, newState, version, actionType) {
-  console.log(`[BROADCAST] Broadcasting ${actionType} v${version} to game:${gameId}`);
   const room = io.sockets.adapter.rooms.get(`game:${gameId}`);
   if (!room) {
-    console.log(`[BROADCAST] No room found for game:${gameId}`);
+    logger.debug({ gameId }, 'No room found for broadcast');
     return;
   }
 
-  console.log(`[BROADCAST] Room has ${room.size} clients`);
+  logger.debug({ gameId, actionType, version, clientCount: room.size }, 'Broadcasting state update');
   for (const socketId of room) {
     const socket = io.sockets.sockets.get(socketId);
     if (socket && socket.playerId) {
-      console.log(`[BROADCAST] Sending to ${socket.playerId}`);
       socket.emit('state-update', {
         state: filterStateForPlayer(newState, socket.playerId),
         version,

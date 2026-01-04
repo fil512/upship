@@ -22,13 +22,11 @@ For testing the production site:
 
 ## Browser Testing (MCP)
 
-When using Claude in Chrome MCP tools for browser automation testing:
-1. `mcp__claude-in-chrome__tabs_context_mcp` - See available tabs
-2. `mcp__claude-in-chrome__navigate` - Navigate to production URL
-3. `mcp__claude-in-chrome__computer` with `action: "screenshot"` - Take screenshots
-4. `mcp__claude-in-chrome__find` - Find elements with natural language
-5. `mcp__claude-in-chrome__form_input` - Fill forms
-6. `mcp__claude-in-chrome__read_page` - Read accessibility tree
+Two browser automation options are available for UI playtesting:
+- `/playtest-ui` - Uses Chrome DevTools MCP (`mcp__chrome-devtools__*` tools)
+- `/playtest-ui-claude` - Uses Claude in Chrome MCP (`mcp__claude-in-chrome__*` tools)
+
+See the respective command files in `.claude/commands/` for detailed tool references.
 
 ## Troubleshooting Deployments
 
@@ -287,6 +285,13 @@ Action types include: `END_TURN`, `BUY_GAS`, `INSTALL_UPGRADE`, `BUILD_SHIP`, `L
 - **Row locking** with `FOR UPDATE` to prevent race conditions
 - **State versioning** via `game_states.version` counter
 - **Audit log** in `game_actions` table for replay/debugging
+
+### State Machines (XState)
+
+XState manages complex multi-step action flows in `server/machines/`. Used for:
+- Player turn state (tracking multi-step actions like worker placement → location action)
+- Phase transitions requiring intermediate states
+- Actions that need user confirmation or additional input mid-flow
 
 ## Document Structure
 

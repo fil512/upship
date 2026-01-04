@@ -33,7 +33,7 @@ const {
 
 // Main action dispatcher
 function processAction(state, playerId, actionType, data) {
-  const newState = JSON.parse(JSON.stringify(state)); // Deep clone
+  const newState = structuredClone(state); // Deep clone (faster than JSON.parse/stringify)
   const playerState = newState.players[playerId];
 
   if (!playerState) {

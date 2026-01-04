@@ -23,6 +23,7 @@ module.exports = [
         setInterval: 'readonly',
         clearInterval: 'readonly',
         URL: 'readonly',
+        structuredClone: 'readonly',
         // Jest globals
         describe: 'readonly',
         it: 'readonly',

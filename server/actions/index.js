@@ -114,8 +114,8 @@ const ACTION_HANDLERS = {
  * @throws {GameRuleError} If action is invalid or cannot be performed
  */
 function processAction(state, playerId, actionType, data) {
-  // Deep clone state to avoid mutations on error
-  const newState = JSON.parse(JSON.stringify(state));
+  // Deep clone state to avoid mutations on error (structuredClone is faster than JSON.parse/stringify)
+  const newState = structuredClone(state);
   const playerState = newState.players[playerId];
 
   if (!playerState) {
