@@ -340,6 +340,7 @@ See `plans/overview.md` for the 27-phase implementation plan tracking progress f
 - `game-state` - Reducers, validation, phase management, undo/redo
 - `game-database` - PostgreSQL schemas, JSONB, transactions, migrations
 - `board-game-ui` - SVG boards, drag-drop, responsive layouts, animations
+- `ui-design-expert` - Visual polish, colors, typography, CSS patterns, screenshot review
 
 ## Utility Scripts
 
