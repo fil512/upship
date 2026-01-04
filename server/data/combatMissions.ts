@@ -3,10 +3,43 @@
  * Per Appendix G: 20 Combat Mission cards for The Great War
  */
 
+import type { GameState, PlayerState } from '@upship/api';
+
+export type CombatMissionType =
+  | 'bombing_run'
+  | 'reconnaissance'
+  | 'resupply'
+  | 'naval_patrol'
+  | 'artillery_observation';
+
+export interface SpecialBonus {
+  income?: number;
+  vp?: number;
+  range?: number;
+  description: string;
+}
+
+export interface CombatMission {
+  id: string;
+  name: string;
+  type: CombatMissionType;
+  range: number;
+  speed?: number;
+  ceiling?: number;
+  reliability?: number;
+  income: number;
+  vp: number;
+  bonusVp?: number;
+  special: string | null;
+  specialBonus?: SpecialBonus;
+}
+
+/* eslint-disable sonarjs/pseudo-random */
+
 /**
  * All 20 Combat Mission cards per Appendix G
  */
-const COMBAT_MISSIONS = [
+export const COMBAT_MISSIONS: CombatMission[] = [
   // Bombing Runs (6 cards)
   {
     id: 'railway_bombardment',
@@ -250,13 +283,13 @@ const COMBAT_MISSIONS = [
 
 /**
  * Create a shuffled combat mission deck
- * @returns {Array} Shuffled array of mission cards
+ * @returns Shuffled array of mission cards
  */
-function createCombatMissionDeck() {
+export function createCombatMissionDeck(): CombatMission[] {
   const deck = [...COMBAT_MISSIONS];
   // Fisher-Yates shuffle (Math.random() is appropriate for game card shuffling)
   for (let i = deck.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1)); // eslint-disable-line sonarjs/pseudo-random
+    const j = Math.floor(Math.random() * (i + 1));
     [deck[i], deck[j]] = [deck[j], deck[i]];
   }
   return deck;
@@ -265,9 +298,9 @@ function createCombatMissionDeck() {
 /**
  * Set up the Mission Row for Age II
  * Per Appendix G: "deal 6 missions face-up to form the Mission Row"
- * @returns {Object} { missionRow, missionDeck }
+ * @returns { missionRow, missionDeck }
  */
-function setupMissionRow() {
+export function setupMissionRow(): { missionRow: CombatMission[]; missionDeck: CombatMission[] } {
   const deck = createCombatMissionDeck();
   const missionRow = deck.splice(0, 6);
   return {
@@ -276,22 +309,34 @@ function setupMissionRow() {
   };
 }
 
+interface GameStateWithMissions extends GameState {
+  missionRow: CombatMission[];
+  missionDeck: CombatMission[];
+}
+
+interface PlayerStateWithMissions extends PlayerState {
+  completedMissions?: CombatMission[];
+}
+
 /**
  * Refill the Mission Row to 6 cards
  * Per Appendix G: "After each successful mission, refill to 6 cards"
- * @param {Object} state - Game state with missionRow and missionDeck
+ * @param state - Game state with missionRow and missionDeck
  */
-function refillMissionRow(state) {
+export function refillMissionRow(state: GameStateWithMissions): void {
   while (state.missionRow.length < 6 && state.missionDeck.length > 0) {
-    state.missionRow.push(state.missionDeck.shift());
+    const mission = state.missionDeck.shift();
+    if (mission) {
+      state.missionRow.push(mission);
+    }
   }
 
   // If deck is empty and we still need cards, shuffle completed missions
   if (state.missionRow.length < 6) {
     // Gather all completed missions from all players
-    const completedMissions = [];
+    const completedMissions: CombatMission[] = [];
     for (const playerId of Object.keys(state.players)) {
-      const player = state.players[playerId];
+      const player = state.players[playerId] as PlayerStateWithMissions;
       if (player.completedMissions) {
         completedMissions.push(...player.completedMissions.map(m => ({ ...m })));
       }
@@ -300,19 +345,23 @@ function refillMissionRow(state) {
     if (completedMissions.length > 0) {
       // Shuffle completed missions
       for (let i = completedMissions.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1)); // eslint-disable-line sonarjs/pseudo-random
+        const j = Math.floor(Math.random() * (i + 1));
         [completedMissions[i], completedMissions[j]] = [completedMissions[j], completedMissions[i]];
       }
       state.missionDeck = completedMissions;
 
       // Continue refilling
       while (state.missionRow.length < 6 && state.missionDeck.length > 0) {
-        state.missionRow.push(state.missionDeck.shift());
+        const mission = state.missionDeck.shift();
+        if (mission) {
+          state.missionRow.push(mission);
+        }
       }
     }
   }
 }
 
+// CommonJS compatibility
 module.exports = {
   COMBAT_MISSIONS,
   createCombatMissionDeck,

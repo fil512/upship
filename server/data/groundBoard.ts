@@ -8,7 +8,33 @@
  * - any: Special cards that work anywhere
  */
 
-const GROUND_BOARD_LOCATIONS = {
+import type { CardSymbol } from '@upship/api';
+
+export interface LocationAction {
+  type: string;
+  cost?: number | string;
+  effect: string;
+  swaps?: number;
+  maxShips?: number;
+  officerCost?: number;
+  engineerCost?: number;
+  minOfficers?: number;
+  maxOfficers?: number;
+  hydrogenPrice?: number;
+  heliumPrice?: string;
+  maxPolicies?: number;
+}
+
+export interface GroundBoardLocation {
+  id: string;
+  name: string;
+  symbol: CardSymbol;
+  position: number;
+  description: string;
+  action: LocationAction;
+}
+
+export const GROUND_BOARD_LOCATIONS: Record<string, GroundBoardLocation> = {
   research_institute: {
     id: 'research_institute',
     name: 'Research Institute',
@@ -172,7 +198,7 @@ const GROUND_BOARD_LOCATIONS = {
 };
 
 // Symbol icons for display
-const SYMBOL_ICONS = {
+export const SYMBOL_ICONS: Record<CardSymbol, string> = {
   wrench: '🔧',
   coin: '🪙',
   propeller: '⚙️',
@@ -180,7 +206,7 @@ const SYMBOL_ICONS = {
 };
 
 // Symbol colors for styling
-const SYMBOL_COLORS = {
+export const SYMBOL_COLORS: Record<CardSymbol, string> = {
   wrench: '#4a9eff', // Blue
   coin: '#ffc107', // Gold
   propeller: '#4caf50', // Green
@@ -190,7 +216,7 @@ const SYMBOL_COLORS = {
 /**
  * Get locations by symbol type
  */
-function getLocationsBySymbol(symbol) {
+export function getLocationsBySymbol(symbol: CardSymbol): GroundBoardLocation[] {
   if (symbol === 'any') {
     return Object.values(GROUND_BOARD_LOCATIONS);
   }
@@ -200,7 +226,7 @@ function getLocationsBySymbol(symbol) {
 /**
  * Check if a card can be used at a location
  */
-function canPlaceAtLocation(cardSymbol, locationId) {
+export function canPlaceAtLocation(cardSymbol: CardSymbol, locationId: string): boolean {
   if (cardSymbol === 'any') return true;
 
   const location = GROUND_BOARD_LOCATIONS[locationId];
@@ -209,6 +235,7 @@ function canPlaceAtLocation(cardSymbol, locationId) {
   return location.symbol === cardSymbol;
 }
 
+// CommonJS compatibility
 module.exports = {
   GROUND_BOARD_LOCATIONS,
   SYMBOL_ICONS,

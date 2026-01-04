@@ -6,7 +6,7 @@ module.exports = {
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json'],
   moduleNameMapper: {
-    '^@upship/api$': '<rootDir>/api/src'
+    '^@upship/api$': '<rootDir>/api/src/index.ts'
   },
   collectCoverageFrom: [
     'server/**/*.{js,ts}',

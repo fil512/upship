@@ -3,7 +3,21 @@
  * One-time bonus when claiming a route, choose one endpoint city
  */
 
-const CITY_BONUSES = {
+import type { PlayerState, GameState } from '@upship/api';
+
+export interface CityBonus {
+  cash?: number;
+  influence?: number;
+  research?: number;
+  officers?: number;
+  engineers?: number;
+  hydrogen?: number;
+  gasAny?: number;
+  freeUpgradeSwap?: number;
+  drawCard?: number;
+}
+
+export const CITY_BONUSES: Record<string, CityBonus> = {
   // Age I Cities (Section 10.4)
   London: { cash: 3 },                    // +£3
   Paris: { influence: 1 },                // +1 Influence
@@ -36,19 +50,20 @@ const CITY_BONUSES = {
 
 /**
  * Apply a city bonus to a player
- * @param {Object} playerState - Player state object (mutated)
- * @param {string} cityName - Name of the city
- * @param {Object} state - Full game state (for logging)
- * @param {string} playerId - Player ID (for logging)
- * @returns {Object} Bonus applied (for logging)
+ * @returns Bonus applied (for logging), or null if no bonus
  */
-function applyCityBonus(playerState, cityName, state, playerId) {
+export function applyCityBonus(
+  playerState: PlayerState,
+  cityName: string,
+  state?: GameState,
+  playerId?: string
+): CityBonus | null {
   const bonus = CITY_BONUSES[cityName];
   if (!bonus || Object.keys(bonus).length === 0) {
     return null; // No bonus for this city
   }
 
-  const appliedBonus = {};
+  const appliedBonus: CityBonus = {};
 
   if (bonus.cash) {
     playerState.cash = (playerState.cash || 0) + bonus.cash;
@@ -91,7 +106,8 @@ function applyCityBonus(playerState, cityName, state, playerId) {
 
   if (bonus.freeUpgradeSwap) {
     // Grant one free swap (tracked as pending bonus)
-    playerState.freeSwaps = (playerState.freeSwaps || 0) + bonus.freeUpgradeSwap;
+    (playerState as PlayerState & { freeSwaps?: number }).freeSwaps =
+      ((playerState as PlayerState & { freeSwaps?: number }).freeSwaps || 0) + bonus.freeUpgradeSwap;
     appliedBonus.freeUpgradeSwap = bonus.freeUpgradeSwap;
   }
 
@@ -100,7 +116,9 @@ function applyCityBonus(playerState, cityName, state, playerId) {
     if (playerState.deck && playerState.deck.length > 0) {
       const card = playerState.deck.shift();
       playerState.hand = playerState.hand || [];
-      playerState.hand.push(card);
+      if (card) {
+        playerState.hand.push(card);
+      }
       appliedBonus.drawCard = 1;
     }
   }
@@ -122,4 +140,5 @@ function applyCityBonus(playerState, cityName, state, playerId) {
   return appliedBonus;
 }
 
+// CommonJS compatibility
 module.exports = { CITY_BONUSES, applyCityBonus };

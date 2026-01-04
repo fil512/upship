@@ -17,7 +17,32 @@
  * - reveal: Resources gained when revealed during Reveal Phase
  */
 
-const MARKET_CARDS = [
+import type { CardSymbol } from '@upship/api';
+
+export type MarketCardCategory = 'technical' | 'political' | 'research' | 'organizations';
+
+export interface MarketCardReveal {
+  cash?: number;
+  influence?: number;
+  research?: number;
+  officers?: number;
+  engineers?: number;
+  gas?: number;
+}
+
+export interface MarketCard {
+  id: string;
+  name: string;
+  category: MarketCardCategory;
+  cost: number;
+  symbol: CardSymbol;
+  effect: string | null;
+  reveal: MarketCardReveal;
+}
+
+/* eslint-disable sonarjs/pseudo-random */
+
+export const MARKET_CARDS: MarketCard[] = [
   // === TECHNICAL PERSONNEL (10 Agent Cards) ===
   {
     id: 'market_chief_engineer',
@@ -299,14 +324,14 @@ const MARKET_CARDS = [
 
 /**
  * Create a shuffled market deck from the card definitions
- * @returns {Array} Shuffled array of market cards
+ * @returns Shuffled array of market cards
  */
-function createMarketDeck() {
+export function createMarketDeck(): MarketCard[] {
   const deck = MARKET_CARDS.map(card => ({ ...card }));
 
   // Shuffle the deck (Math.random() is appropriate for game card shuffling)
   for (let i = deck.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1)); // eslint-disable-line sonarjs/pseudo-random
+    const j = Math.floor(Math.random() * (i + 1));
     [deck[i], deck[j]] = [deck[j], deck[i]];
   }
 
@@ -315,14 +340,15 @@ function createMarketDeck() {
 
 /**
  * Create the initial market row (5 cards)
- * @returns {Object} { marketRow, marketDeck }
+ * @returns { marketRow, marketDeck }
  */
-function createMarketRow() {
+export function createMarketRow(): { marketRow: MarketCard[]; marketDeck: MarketCard[] } {
   const deck = createMarketDeck();
   const marketRow = deck.splice(0, 5);
   return { marketRow, marketDeck: deck };
 }
 
+// CommonJS compatibility
 module.exports = {
   MARKET_CARDS,
   createMarketDeck,

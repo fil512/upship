@@ -28,13 +28,9 @@ describe('Rules Compliance - Market Deck', () => {
   });
 
   describe('GAP-041: Market Deck Composition per Appendix H', () => {
-    // Helper to dynamically require the module
+    // Helper to get market card data
     const getMarketCardData = () => {
-      // Clear require cache to get fresh data
-      const path = require('path');
-      const modulePath = path.join(__dirname, '../../../server/data/marketCards.js');
-      delete require.cache[require.resolve(modulePath)];
-      return require(modulePath);
+      return require('../../../server/data/marketCards');
     };
 
     it('should have exactly 30 market cards per Appendix H', () => {

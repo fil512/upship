@@ -1,11 +1,15 @@
-const { Pool } = require('pg');
-const logger = require('../logger');
+import { Pool, PoolClient, QueryResult, PoolConfig } from 'pg';
+import type { Logger } from 'pino';
+
+// Use require for CommonJS compatibility
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const logger = require('../logger') as Logger;
 
 // Child logger for database operations
 const dbLogger = logger.child({ component: 'db' });
 
 // Connection pool configuration
-const pool = new Pool({
+const poolConfig: PoolConfig = {
   connectionString: process.env.DATABASE_URL,
   max: 20,                      // Maximum connections in pool
   idleTimeoutMillis: 30000,     // Close idle connections after 30s
@@ -13,19 +17,21 @@ const pool = new Pool({
   ssl: process.env.NODE_ENV === 'production'
     ? { rejectUnauthorized: false }
     : false
-});
+};
+
+export const pool = new Pool(poolConfig);
 
 // Log pool errors
-pool.on('error', (err) => {
+pool.on('error', (err: Error) => {
   dbLogger.error({ err }, 'Unexpected database pool error');
 });
 
 /**
  * Check database connectivity
- * @returns {Promise<boolean>} true if connected, false otherwise
+ * @returns true if connected, false otherwise
  */
-async function healthCheck() {
-  let client;
+export async function healthCheck(): Promise<boolean> {
+  let client: PoolClient | undefined;
   try {
     client = await pool.connect();
     await client.query('SELECT 1');
@@ -40,13 +46,13 @@ async function healthCheck() {
 
 /**
  * Execute a query with optional parameters
- * @param {string} text - SQL query
- * @param {Array} params - Query parameters
- * @returns {Promise<QueryResult>}
+ * @param text - SQL query
+ * @param params - Query parameters
+ * @returns QueryResult
  */
-async function query(text, params) {
+export async function query<T = unknown>(text: string, params?: unknown[]): Promise<QueryResult<T>> {
   const start = Date.now();
-  const result = await pool.query(text, params);
+  const result = await pool.query<T>(text, params);
   const duration = Date.now() - start;
 
   // Log at debug level (controlled by LOG_LEVEL env var)
@@ -61,12 +67,13 @@ async function query(text, params) {
 
 /**
  * Get a client from the pool for transactions
- * @returns {Promise<PoolClient>}
+ * @returns PoolClient
  */
-async function getClient() {
+export async function getClient(): Promise<PoolClient> {
   return pool.connect();
 }
 
+// CommonJS compatibility
 module.exports = {
   pool,
   query,

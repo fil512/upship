@@ -14,7 +14,102 @@
  * - age: minimum age when available (1, 2, or 3)
  */
 
-const TECH_TILES = {
+import type { Faction } from '@upship/api';
+
+// Slot property names (matching Blueprint interface)
+export type SlotPropertyName = 'frameSlots' | 'fabricSlots' | 'driveSlots' | 'componentSlots';
+
+export type TechTileType = 'drive' | 'frame' | 'fabric' | 'gas' | 'component';
+
+export interface TechTileStats {
+  speed?: number;
+  range?: number;
+  ceiling?: number;
+  reliability?: number;
+  luxury?: number;
+  income?: number;
+  lift?: number;
+  armor?: number;
+}
+
+export interface TechTile {
+  id: string;
+  name: string;
+  type: TechTileType;
+  slotType: SlotPropertyName;
+  requiredCard: string;
+  weight: number;
+  hullCost?: number;
+  stats: TechTileStats;
+  special: string | null;
+  age: number;
+}
+
+export type TechCardType =
+  | 'structure'
+  | 'fabric'
+  | 'gas'
+  | 'drive'
+  | 'component'
+  | 'special';
+
+export interface TechCard {
+  id: string;
+  name: string;
+  type: TechCardType;
+  cost: number;
+  age: number;
+  faction?: Faction;
+  vp?: number;
+}
+
+export interface AgeBaseline {
+  name: string;
+  speed: number;
+  range: number;
+  ceiling: number;
+  reliability: number;
+  frameSlots: number;
+  fabricSlots: number;
+  driveSlots: number;
+  componentSlots: number;
+}
+
+export interface Blueprint {
+  frameSlots?: (string | null)[];
+  fabricSlots?: (string | null)[];
+  driveSlots?: (string | null)[];
+  componentSlots?: (string | null)[];
+  gasSockets?: string[];
+}
+
+export interface ShipStats {
+  speed: number;
+  range: number;
+  ceiling: number;
+  reliability: number;
+  luxury: number;
+  income: number;
+  weight: number;
+  hullCost: number;
+}
+
+export interface FactionBonuses {
+  speed?: number;
+  range?: number;
+  ceiling?: number;
+  reliability?: number;
+  luxury?: number;
+}
+
+export interface LaunchCheck {
+  canLaunch: boolean;
+  lift: number;
+  weight: number;
+  message: string;
+}
+
+export const TECH_TILES: Record<string, TechTile> = {
   // === PROPULSION/DRIVE UPGRADES ===
   basic_engine: {
     id: 'basic_engine',
@@ -752,7 +847,7 @@ const TECH_TILES = {
  * Tech Card Definitions
  * Maps tech card IDs to their tech tile unlock and metadata
  */
-const TECH_CARDS = {
+export const TECH_CARDS: Record<string, TechCard> = {
   // Faction starting techs (pre-printed on player boards, cost 0, don't advance Progress)
   // Germany starting techs
   duralumin_girders: { id: 'duralumin_girders', name: 'Duralumin Framework', type: 'structure', cost: 0, age: 1, faction: 'germany' },
@@ -852,7 +947,7 @@ const TECH_CARDS = {
 /**
  * Age-specific baseline stats
  */
-const AGE_BASELINES = {
+export const AGE_BASELINES: Record<number, AgeBaseline> = {
   1: {
     name: 'Pioneer Era',
     speed: 1,
@@ -888,14 +983,21 @@ const AGE_BASELINES = {
   }
 };
 
+export interface AvailableTechTiles {
+  driveSlots: TechTile[];
+  frameSlots: TechTile[];
+  fabricSlots: TechTile[];
+  componentSlots: TechTile[];
+}
+
 /**
  * Get available tech tiles for a player based on owned tech cards
- * @param {Array} playerTechCards - List of tech card IDs the player owns
- * @param {number} currentAge - Current game age (1, 2, or 3)
- * @returns {Object} Tech tiles grouped by slot type
+ * @param playerTechCards - List of tech card IDs the player owns
+ * @param currentAge - Current game age (1, 2, or 3)
+ * @returns Tech tiles grouped by slot type
  */
-function getAvailableTechTiles(playerTechCards, currentAge) {
-  const available = {
+export function getAvailableTechTiles(playerTechCards: string[], currentAge: number): AvailableTechTiles {
+  const available: AvailableTechTiles = {
     driveSlots: [],
     frameSlots: [],
     fabricSlots: [],
@@ -917,15 +1019,15 @@ function getAvailableTechTiles(playerTechCards, currentAge) {
 
 /**
  * Calculate ship stats from installed tech tiles
- * @param {Object} blueprint - Player's blueprint with installed tech tiles
- * @param {Object} factionBonuses - Faction-specific stat bonuses
- * @param {number} age - Current age for baseline stats
- * @returns {Object} Calculated stats
+ * @param blueprint - Player's blueprint with installed tech tiles
+ * @param factionBonuses - Faction-specific stat bonuses
+ * @param age - Current age for baseline stats
+ * @returns Calculated stats
  */
-function calculateShipStats(blueprint, factionBonuses = {}, age = 1) {
+export function calculateShipStats(blueprint: Blueprint, factionBonuses: FactionBonuses = {}, age = 1): ShipStats {
   const baseline = AGE_BASELINES[age];
 
-  const stats = {
+  const stats: ShipStats = {
     speed: baseline.speed + (factionBonuses.speed || 0),
     range: baseline.range + (factionBonuses.range || 0),
     ceiling: baseline.ceiling + (factionBonuses.ceiling || 0),
@@ -937,7 +1039,8 @@ function calculateShipStats(blueprint, factionBonuses = {}, age = 1) {
   };
 
   // Sum stats from all installed tech tiles
-  const allSlots = ['frameSlots', 'fabricSlots', 'driveSlots', 'componentSlots'];
+  const allSlots: (keyof Pick<Blueprint, 'frameSlots' | 'fabricSlots' | 'driveSlots' | 'componentSlots'>)[] =
+    ['frameSlots', 'fabricSlots', 'driveSlots', 'componentSlots'];
 
   for (const slotKey of allSlots) {
     const slots = blueprint[slotKey] || [];
@@ -949,7 +1052,10 @@ function calculateShipStats(blueprint, factionBonuses = {}, age = 1) {
 
       // Add tech tile stats
       for (const [stat, value] of Object.entries(tile.stats || {})) {
-        stats[stat] = (stats[stat] || 0) + value;
+        const statKey = stat as keyof ShipStats;
+        if (typeof stats[statKey] === 'number' && typeof value === 'number') {
+          (stats[statKey] as number) += value;
+        }
       }
 
       // Add weight (negative values reduce lift budget)
@@ -967,10 +1073,10 @@ function calculateShipStats(blueprint, factionBonuses = {}, age = 1) {
 
 /**
  * Calculate lift from gas cubes
- * @param {Object} gasSockets - Gas cubes placed on frame
- * @returns {number} Total lift
+ * @param gasSockets - Gas cubes placed on frame
+ * @returns Total lift
  */
-function calculateLift(gasSockets) {
+export function calculateLift(gasSockets: string[] | undefined): number {
   let lift = 0;
   for (const cube of gasSockets || []) {
     if (cube === 'hydrogen' || cube === 'helium') {
@@ -982,12 +1088,12 @@ function calculateLift(gasSockets) {
 
 /**
  * Check if ship can launch (physics check)
- * @param {Object} blueprint - Player's blueprint
- * @param {Object} factionBonuses - Faction bonuses
- * @param {number} age - Current age
- * @returns {Object} { canLaunch, lift, weight, message }
+ * @param blueprint - Player's blueprint
+ * @param factionBonuses - Faction bonuses
+ * @param age - Current age
+ * @returns { canLaunch, lift, weight, message }
  */
-function canLaunch(blueprint, factionBonuses = {}, age = 1) {
+export function canLaunch(blueprint: Blueprint, factionBonuses: FactionBonuses = {}, age = 1): LaunchCheck {
   const stats = calculateShipStats(blueprint, factionBonuses, age);
   const lift = calculateLift(blueprint.gasSockets);
 
@@ -1032,6 +1138,7 @@ function canLaunch(blueprint, factionBonuses = {}, age = 1) {
   };
 }
 
+// CommonJS compatibility
 module.exports = {
   TECH_TILES,
   TECH_CARDS,

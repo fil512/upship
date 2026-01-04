@@ -26,8 +26,11 @@ export type GasType = 'hydrogen' | 'helium';
 // Card symbols for worker placement
 export type CardSymbol = 'wrench' | 'coin' | 'propeller' | 'any';
 
-// Slot types for blueprint
+// Slot types for blueprint (short form for UI/display)
 export type SlotType = 'frame' | 'fabric' | 'drive' | 'component';
+
+// Slot property names (used in Blueprint interface and upgrade data)
+export type SlotPropertyName = 'frameSlots' | 'fabricSlots' | 'driveSlots' | 'componentSlots';
 
 // Blueprint structure - represents factory capability
 export interface Blueprint {

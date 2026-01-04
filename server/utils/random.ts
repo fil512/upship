@@ -11,11 +11,8 @@
 /**
  * Fisher-Yates shuffle algorithm
  * Returns a new shuffled array without modifying the original
- *
- * @param {Array} array - Array to shuffle
- * @returns {Array} New shuffled array
  */
-function shuffleArray(array) {
+export function shuffleArray<T>(array: T[]): T[] {
   const shuffled = [...array];
   for (let i = shuffled.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
@@ -26,11 +23,8 @@ function shuffleArray(array) {
 
 /**
  * Pick a random element from an array
- *
- * @param {Array} array - Array to pick from
- * @returns {*} Random element or undefined if array is empty
  */
-function pickRandom(array) {
+export function pickRandom<T>(array: T[]): T | undefined {
   if (!array || array.length === 0) {
     return undefined;
   }
@@ -39,14 +33,12 @@ function pickRandom(array) {
 
 /**
  * Generate a unique ID with timestamp
- *
- * @param {string} prefix - Prefix for the ID
- * @returns {string} Unique ID
  */
-function generateId(prefix = 'id') {
+export function generateId(prefix = 'id'): string {
   return `${prefix}_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
 }
 
+// CommonJS compatibility
 module.exports = {
   shuffleArray,
   pickRandom,
