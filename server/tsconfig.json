@@ -7,14 +7,12 @@
     "rootDir": ".",
     "strict": true,
     "esModuleInterop": true,
-    "allowJs": true,
-    "checkJs": false,
     "skipLibCheck": true,
     "resolveJsonModule": true,
     "declaration": false,
     "forceConsistentCasingInFileNames": true,
     "noEmit": true
   },
-  "include": ["**/*.ts", "**/*.js"],
+  "include": ["**/*.ts"],
   "exclude": ["node_modules", "dist"]
 }
