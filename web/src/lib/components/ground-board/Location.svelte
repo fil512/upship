@@ -16,8 +16,8 @@
 	// Cost and benefit data for each location
 	// resourceBadge: array of {type, value} for ResourceBadge display
 	// icons: simple icon display without numbers
-	type CostItem = { icon: IconName; amount?: string } | { resourceBadge: Array<{ type: 'cash' | 'officers'; value: number }> };
-	type BenefitItem = { icon: IconName; icon2?: IconName; separator?: boolean } | { resourceBadge: { type: 'officers' | 'engineers'; count: number }; icon2Badge?: { type: 'officers' | 'engineers'; count: number }; separator?: boolean };
+	type CostItem = { icon: IconName; amount?: string } | { resourceBadge: Array<{ type: 'cash' | 'officers'; value: number }>; separator?: string };
+	type BenefitItem = { icon: IconName; icon2?: IconName; separator?: boolean; resourceBadge?: { type: 'officers' | 'engineers'; count: number }; arrow?: boolean } | { resourceBadge: { type: 'officers' | 'engineers'; count: number }; icon2Badge?: { type: 'officers' | 'engineers'; count: number }; separator?: boolean };
 
 	const LOCATION_DATA: Record<
 		string,
@@ -48,14 +48,14 @@
 		},
 		flight_school: {
 			costs: [{ resourceBadge: [{ type: 'cash', value: 5 }] }],
-			benefits: [{ icon: 'income' }, { resourceBadge: { type: 'officers', count: 1 } }]
+			benefits: [{ icon: 'income', resourceBadge: { type: 'officers', count: 1 }, arrow: true }]
 		},
 		technical_institute: {
 			costs: [{ resourceBadge: [{ type: 'cash', value: 6 }] }],
-			benefits: [{ icon: 'income' }, { resourceBadge: { type: 'engineers', count: 1 } }]
+			benefits: [{ icon: 'income', resourceBadge: { type: 'engineers', count: 1 }, arrow: true }]
 		},
 		government_liaison: {
-			costs: [{ resourceBadge: [{ type: 'officers', value: 1 }, { type: 'officers', value: 3 }] }],
+			costs: [{ resourceBadge: [{ type: 'officers', value: 1 }, { type: 'officers', value: 3 }], separator: '-' }],
 			benefits: [{ icon: 'cash' }]
 		},
 		ministry: {
@@ -77,8 +77,12 @@
 	};
 
 	// Type guards
-	function hasResourceBadge(item: CostItem): item is { resourceBadge: Array<{ type: 'cash' | 'officers'; value: number }> } {
+	function hasResourceBadge(item: CostItem): item is { resourceBadge: Array<{ type: 'cash' | 'officers'; value: number }>; separator?: string } {
 		return 'resourceBadge' in item;
+	}
+
+	function hasIconWithArrow(item: BenefitItem): item is { icon: IconName; resourceBadge: { type: 'officers' | 'engineers'; count: number }; arrow: true } {
+		return 'icon' in item && 'arrow' in item && item.arrow === true;
 	}
 
 	function hasBenefitResourceBadge(item: BenefitItem): item is { resourceBadge: { type: 'officers' | 'engineers'; count: number }; icon2Badge?: { type: 'officers' | 'engineers'; count: number }; separator?: boolean } {
@@ -127,12 +131,12 @@
 			{#if hasResourceBadge(cost)}
 				<div class="cost-item resource-cost">
 					{#each cost.resourceBadge as badge, i}
-						{#if i > 0}<span class="cost-separator">/</span>{/if}
+						{#if i > 0}<span class="cost-separator">{cost.separator || '/'}</span>{/if}
 						<ResourceBadge type={badge.type} value={badge.value} size={14} />
 					{/each}
 				</div>
 			{:else}
-				<div class="cost-item" title={cost.icon}>
+				<div class="cost-item icon-cost" title={cost.icon}>
 					<Icon name={cost.icon} size={14} />
 					{#if cost.amount}
 						<span class="cost-amount">{cost.amount}</span>
@@ -164,7 +168,10 @@
 				<div class="location-benefit">
 					{#each locationData.benefits as benefit}
 						<div class="benefit-item">
-							{#if hasBenefitResourceBadge(benefit)}
+							{#if hasIconWithArrow(benefit)}
+								<Icon name={benefit.icon} size={18} color="var(--color-text-primary)" />
+								<ResourceBadge type={benefit.resourceBadge.type} value={benefit.resourceBadge.count} size={16} />
+							{:else if hasBenefitResourceBadge(benefit)}
 								<ResourceBadge type={benefit.resourceBadge.type} value={benefit.resourceBadge.count} size={16} />
 								{#if benefit.separator}
 									<span class="benefit-separator">/</span>
@@ -224,8 +231,8 @@
 
 	/* Cost bar on the left */
 	.location-cost-bar {
-		width: 40px;
-		min-width: 40px;
+		width: 64px;
+		min-width: 64px;
 		background: var(--color-bg-tertiary);
 		border-right: 2px solid var(--symbol-color);
 		padding: var(--spacing-xs);
@@ -260,7 +267,15 @@
 
 	.resource-cost {
 		display: flex;
+		flex-direction: row;
+		flex-wrap: wrap;
 		align-items: center;
+		justify-content: center;
+		gap: 2px;
+	}
+
+	.icon-cost {
+		flex-direction: row;
 		gap: 2px;
 	}
 
@@ -316,6 +331,12 @@
 		font-size: 1rem;
 		font-weight: 300;
 		color: var(--color-text-muted);
+	}
+
+	.benefit-arrow {
+		font-size: 1rem;
+		font-weight: 700;
+		color: var(--color-accent-gold);
 	}
 
 	.place-hint {
