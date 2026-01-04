@@ -26,12 +26,43 @@ const {
 // £2 → £3 → £4 → £5 → £6 → £8 → £10 → £15
 const HELIUM_PRICE_TRACK = [2, 3, 4, 5, 6, 8, 10, 15];
 
+/**
+ * Add a log entry with automatic round/age context
+ * @param {Object} state - Game state
+ * @param {string} message - Log message
+ * @param {string} [playerId] - Acting player ID
+ * @param {string} [type='action'] - Log entry type
+ */
+function addLogEntry(state, message, playerId = null, type = 'action') {
+  state.log = state.log || [];
+  const entry = {
+    timestamp: new Date().toISOString(),
+    message,
+    type,
+    round: state.round || 1,
+    age: state.age || 1
+  };
+  if (playerId) {
+    entry.playerId = playerId;
+  }
+  state.log.push(entry);
+}
+
 // TECH_CARD_BAG is imported from ../config/constants.js (single source of truth)
 // See constants.js for the full 54-card definition per Appendix C
 
 // Filter state to hide other players' private information
+// Also excludes full log (fetched separately via /log endpoint)
 function filterStateForPlayer(state, playerId) {
   const filtered = { ...state };
+
+  // Exclude full log - only send count and last few entries for notifications
+  // Full log is fetched on demand via GET /:gameId/log
+  if (filtered.log) {
+    const recentEntries = filtered.log.slice(-5); // Last 5 for recent activity display
+    filtered.log = recentEntries;
+    filtered.logCount = state.log.length;
+  }
 
   // For each player, hide their hand and deck from others
   if (filtered.players) {
@@ -547,6 +578,9 @@ module.exports = {
   getHeliumPriceIndex,
   advanceHeliumMarket,
   reduceHeliumMarket,
+
+  // Logging helper
+  addLogEntry,
 
   // Worker placement helpers
   hasPlayableCards,

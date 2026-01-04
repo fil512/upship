@@ -128,6 +128,26 @@ router.get('/:gameId/actions', requireGamePlayer, async (req, res, next) => {
   }
 });
 
+// Get full game log (lazy-loaded by UI)
+router.get('/:gameId/log', requireGamePlayer, async (req, res, next) => {
+  try {
+    const { gameId } = req.params;
+    const gameState = await gameStateService.getGameState(gameId);
+
+    if (!gameState) {
+      throw new NotFoundError('Game state');
+    }
+
+    // Return full log - not filtered since log is public information
+    res.json({
+      log: gameState.state.log || [],
+      count: (gameState.state.log || []).length
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 // Get undo info for UI
 router.get('/:gameId/undo-info', requireGamePlayer, async (req, res, next) => {
   try {

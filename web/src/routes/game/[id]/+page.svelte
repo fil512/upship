@@ -673,7 +673,7 @@
 						</div>
 					{:else if activeTab === 'log'}
 						<div class="log-tab">
-							<GameLog log={$gameState.log || []} maxEntries={50} />
+							<GameLog gameId={gameId} logCount={$gameState.logCount || 0} />
 						</div>
 					{:else if activeTab === 'map'}
 						<div class="map-tab">

@@ -28,7 +28,9 @@ function processEndTurn(state, playerId) {
         timestamp: new Date().toISOString(),
         message: `${playerState.faction.toUpperCase()} ended their turn`,
         playerId,
-        type: 'turn'
+        type: 'turn',
+        round: state.round,
+        age: state.age
       });
 
       // Just advance to next placer - don't mark as passed
@@ -59,7 +61,9 @@ function processEndTurn(state, playerId) {
             timestamp: new Date().toISOString(),
             message: `Purchased ${card.name} for ${purchase.cost} Influence`,
             playerId,
-            type: 'action'
+            type: 'action',
+            round: state.round,
+            age: state.age
           });
         }
       }
@@ -85,7 +89,9 @@ function processEndTurn(state, playerId) {
             timestamp: new Date().toISOString(),
             message: `Acquired ${card.name} for ${acquisition.cost} Research`,
             playerId,
-            type: 'action'
+            type: 'action',
+            round: state.round,
+            age: state.age
           });
         }
       }
@@ -103,7 +109,9 @@ function processEndTurn(state, playerId) {
         timestamp: new Date().toISOString(),
         message: `${playerState.faction.toUpperCase()} finished reveal phase`,
         playerId,
-        type: 'turn'
+        type: 'turn',
+        round: state.round,
+        age: state.age
       });
 
       // Check if all players are done with reveal phase
@@ -127,7 +135,9 @@ function processEndTurn(state, playerId) {
         timestamp: new Date().toISOString(),
         message: `${playerState.faction.toUpperCase()} ended their turn`,
         playerId,
-        type: 'turn'
+        type: 'turn',
+        round: state.round,
+        age: state.age
       });
 
       if (state.currentPlayerIndex === 0) {
@@ -143,7 +153,9 @@ function processEndTurn(state, playerId) {
         timestamp: new Date().toISOString(),
         message: `Player ended their turn`,
         playerId,
-        type: 'turn'
+        type: 'turn',
+        round: state.round,
+        age: state.age
       });
   }
 

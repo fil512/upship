@@ -148,6 +148,9 @@ export interface LogEntry {
 	timestamp: string;
 	message: string;
 	type?: string;
+	round?: number;
+	age?: number;
+	playerId?: string;
 }
 
 // Ground board placements type
@@ -291,7 +294,8 @@ export interface GameState {
 	progressThresholds: { age2: number; age3: number; end: number };
 	gasMarket: { hydrogen: number; helium: number };
 	map: GameMap;
-	log: LogEntry[];
+	log: LogEntry[];      // Last 5 entries only (full log fetched on demand)
+	logCount?: number;    // Total log entry count
 	vp?: number;
 }
 

@@ -37,7 +37,9 @@ function transitionToRevealPhase(state) {
   state.log.push({
     timestamp: new Date().toISOString(),
     message: 'All players have passed. Entering Reveal phase.',
-    type: 'phase'
+    type: 'phase',
+    round: state.round,
+    age: state.age
   });
 
   // Auto-collect resources from revealed cards
@@ -114,7 +116,9 @@ function collectRevealResources(state) {
         timestamp: new Date().toISOString(),
         message: `${playerState.faction.toUpperCase()} collected: ${resourceLog.join(', ')}`,
         playerId,
-        type: 'reveal'
+        type: 'reveal',
+        round: state.round,
+        age: state.age
       });
     }
   }
@@ -132,7 +136,9 @@ function transitionToIncomeCleanup(state) {
   state.log.push({
     timestamp: new Date().toISOString(),
     message: 'Entering Income & Cleanup phase',
-    type: 'phase'
+    type: 'phase',
+    round: state.round,
+    age: state.age
   });
 
   // Process income collection for all players simultaneously
@@ -151,7 +157,9 @@ function transitionToIncomeCleanup(state) {
         timestamp: new Date().toISOString(),
         message: `${playerState.faction.toUpperCase()} collected £${netIncome} (£${grossIncome} income - £${engineerUpkeep} engineer upkeep)`,
         playerId,
-        type: 'income'
+        type: 'income',
+        round: state.round,
+        age: state.age
       });
     } else {
       // Negative net income: must pay the difference from cash
@@ -162,7 +170,9 @@ function transitionToIncomeCleanup(state) {
           timestamp: new Date().toISOString(),
           message: `${playerState.faction.toUpperCase()} paid £${deficit} (£${engineerUpkeep} upkeep exceeds £${grossIncome} income)`,
           playerId,
-          type: 'income'
+          type: 'income',
+          round: state.round,
+          age: state.age
         });
       } else {
         // GAP-082: Cannot pay full deficit from cash - handle loans and potential bankruptcy
@@ -175,7 +185,9 @@ function transitionToIncomeCleanup(state) {
           timestamp: new Date().toISOString(),
           message: `${playerState.faction.toUpperCase()} cannot pay full upkeep: paid £${canPay}, needs £${remainingDebt} more`,
           playerId,
-          type: 'income'
+          type: 'income',
+          round: state.round,
+          age: state.age
         });
 
         // Initialize loans counter if not present
@@ -199,7 +211,9 @@ function transitionToIncomeCleanup(state) {
               timestamp: new Date().toISOString(),
               message: `${playerState.faction.toUpperCase()} is BANKRUPT! Cannot take loans (income would drop below ${MIN_INCOME}). Lost ${vpLost} VP, income reset to 0.`,
               playerId,
-              type: 'bankruptcy'
+              type: 'bankruptcy',
+              round: state.round,
+              age: state.age
             });
             break;
           }
@@ -214,7 +228,9 @@ function transitionToIncomeCleanup(state) {
             timestamp: new Date().toISOString(),
             message: `${playerState.faction.toUpperCase()} took loan #${playerState.loans}: gained £${LOAN_AMOUNT}, income reduced to £${playerState.income}`,
             playerId,
-            type: 'loan'
+            type: 'loan',
+            round: state.round,
+            age: state.age
           });
 
           // Pay off remaining debt from the loan money
@@ -240,7 +256,9 @@ function transitionToIncomeCleanup(state) {
         timestamp: new Date().toISOString(),
         message: `${playerState.faction.toUpperCase()} gained +${officersGained} Officer(s), +${engineersGained} Engineer(s)`,
         playerId,
-        type: 'income'
+        type: 'income',
+        round: state.round,
+        age: state.age
       });
     }
 
@@ -299,7 +317,9 @@ function startNewRound(state) {
     state.log.push({
       timestamp: new Date().toISOString(),
       message: `Progress Track reached ${state.progressTrack}/${thresholds.end}. The Rise of Fixed-Wing Aircraft signals the end of the airship era!`,
-      type: 'game_end'
+      type: 'game_end',
+      round: state.round,
+      age: state.age
     });
 
     // Trigger final scoring
@@ -383,7 +403,9 @@ function startNewRound(state) {
   state.log.push({
     timestamp: new Date().toISOString(),
     message: `Round ${state.round} begins. Worker Placement phase started.`,
-    type: 'phase'
+    type: 'phase',
+    round: state.round,
+    age: state.age
   });
 }
 
