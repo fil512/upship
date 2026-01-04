@@ -1,3 +1,10 @@
-<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="#9ca3af">
-  <path d="M3 21h4V10H3v11zM17 21h4V10h-4v11zM10 21h4V3h-4v18z"/>
+<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <!-- Politics: Capitol -->
+  <path d="M12 2L6 8v4h12V8l-6-6z" fill="#9ca3af"/> <!-- Dome -->
+  <rect x="4" y="12" width="16" height="2" fill="#9ca3af"/> <!-- Roof -->
+  <rect x="5" y="14" width="2" height="6" fill="#9ca3af"/> <!-- Column -->
+  <rect x="9" y="14" width="2" height="6" fill="#9ca3af"/> <!-- Column -->
+  <rect x="13" y="14" width="2" height="6" fill="#9ca3af"/> <!-- Column -->
+  <rect x="17" y="14" width="2" height="6" fill="#9ca3af"/> <!-- Column -->
+  <rect x="2" y="20" width="20" height="2" fill="#9ca3af"/> <!-- Base -->
 </svg>

@@ -1,6 +1,7 @@
-<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#9ca3af" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-  <rect x="6" y="4" width="12" height="16" rx="2"/>
-  <path d="M10 4V2h4v2"/>
-  <path d="M6 10h12"/>
-  <path d="M6 14h12"/>
+<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <!-- Gas: Canister -->
+  <path d="M7 6V4c0-1.1.9-2 2-2h6c1.1 0 2 .9 2 2v2h2v14c0 1.1-.9 2-2 2H7c-1.1 0-2-.9-2-2V6h2zm3-2h4v2h-4V4z" fill="#9ca3af"/>
+  <rect x="6" y="8" width="12" height="2" fill="#9ca3af" opacity="0.6"/>
+  <rect x="6" y="12" width="12" height="2" fill="#9ca3af" opacity="0.6"/>
+  <rect x="6" y="16" width="12" height="2" fill="#9ca3af" opacity="0.6"/>
 </svg>

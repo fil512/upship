@@ -1,4 +1,5 @@
-<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#4caf50" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-  <path d="M12 19V5"/>
-  <path d="M5 12l7-7 7 7"/>
+<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <!-- Art Deco Arrow -->
+  <path d="M12 2L4 10h5v12h6V10h5L12 2z" fill="#4caf50"/>
+  <path d="M12 4.8L15.2 8h-1.7v12h-3V8H8.8L12 4.8z" fill="#81c784" opacity="0.5"/>
 </svg>

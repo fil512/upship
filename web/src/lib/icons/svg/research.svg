@@ -1,3 +1,8 @@
 <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-  <rect x="2" y="2" width="20" height="20" rx="2" fill="#888888"/>
+  <!-- Research: Stylized Square -->
+  <rect x="4" y="4" width="16" height="16" fill="#888888"/>
+  <rect x="6" y="6" width="12" height="12" fill="none" stroke="#666" stroke-width="1"/>
+  <rect x="9" y="9" width="6" height="6" fill="#aaa"/>
+  <!-- Corner accents -->
+  <path d="M4 4h4v4H4zM16 4h4v4h-4zM4 16h4v4H4zM16 16h4v4h-4z" fill="#777"/>
 </svg>

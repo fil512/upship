@@ -1,3 +1,6 @@
-<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#9ca3af" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-  <path d="M12 2l2.4 7.4H22l-6 4.6 2.3 7-6.3-4.6L5.7 21l2.3-7-6-4.6h7.6z"/>
+<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <!-- Luxury: Gem -->
+  <path d="M12 2L2 9h20L12 2z" fill="#9ca3af"/>
+  <path d="M2 9l10 13 10-13H2z" fill="#9ca3af" opacity="0.8"/>
+  <path d="M7 9l5 13 5-13H7z" fill="#fff" opacity="0.2"/>
 </svg>

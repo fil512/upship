@@ -1,5 +1,6 @@
 <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-  <rect x="2" y="4" width="20" height="16" rx="2" fill="#000"/>
-  <rect x="2" y="9.33" width="20" height="5.33" fill="#DD0000"/>
-  <rect x="2" y="14.66" width="20" height="5.34" rx="0 0 2 2" fill="#FFCC00"/>
+  <!-- Germany: Horizontal Stripes -->
+  <rect x="0" y="0" width="24" height="8" fill="#000000"/>
+  <rect x="0" y="8" width="24" height="8" fill="#DD0000"/>
+  <rect x="0" y="16" width="24" height="8" fill="#FFCC00"/>
 </svg>
