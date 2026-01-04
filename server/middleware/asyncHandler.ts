@@ -3,12 +3,20 @@
  * Wraps async route handlers to automatically catch errors and forward to Express error handler
  */
 
+import type { Request, Response, NextFunction, RequestHandler } from 'express';
+
+type AsyncRequestHandler = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => Promise<unknown>;
+
 /**
  * Wrap an async function to catch any errors and pass them to next()
  * This eliminates the need for try-catch blocks in every route handler
  *
- * @param {Function} fn - Async route handler function
- * @returns {Function} Express middleware function
+ * @param fn - Async route handler function
+ * @returns Express middleware function
  *
  * @example
  * router.get('/users/:id', asyncHandler(async (req, res) => {
@@ -17,10 +25,13 @@
  *   res.json(user);
  * }));
  */
-function asyncHandler(fn) {
-  return (req, res, next) => {
+function asyncHandler(fn: AsyncRequestHandler): RequestHandler {
+  return (req: Request, res: Response, next: NextFunction): void => {
     Promise.resolve(fn(req, res, next)).catch(next);
   };
 }
 
+export default asyncHandler;
+
+// CommonJS compatibility
 module.exports = asyncHandler;

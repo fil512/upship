@@ -3,9 +3,40 @@
  * Provides reusable authorization checks for game-related routes
  */
 
-const { pool } = require('../db');
+import type { Request, Response, NextFunction } from 'express';
+import type { GameState as ApiGameState } from '@upship/api';
+import { ForbiddenError, NotFoundError, NotYourTurnError } from '../errors';
+import { pool } from '../db';
+
+// Use require for CommonJS compatibility
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 const gameStateService = require('../services/gameStateService');
-const { ForbiddenError, NotFoundError, NotYourTurnError } = require('../errors');
+
+// Game player row from database
+interface GamePlayerRow {
+  game_id: string;
+  user_id: string;
+  faction: string | null;
+  status: string;
+  host_id: string;
+  [key: string]: unknown;
+}
+
+// Game state wrapper from service
+interface GameStateWrapper {
+  id: number;
+  gameId: string;
+  version: number;
+  state: ApiGameState;
+  [key: string]: unknown;
+}
+
+// Extended request type for middleware that adds properties
+type GameAuthRequest = Request & {
+  session: { userId: string };
+  gamePlayer?: GamePlayerRow;
+  gameState?: GameStateWrapper;
+};
 
 /**
  * Verify user is a player in the specified game
@@ -16,16 +47,22 @@ const { ForbiddenError, NotFoundError, NotYourTurnError } = require('../errors')
  *   // req.gamePlayer contains the player's game_players row
  * }));
  */
-async function requireGamePlayer(req, res, next) {
+export async function requireGamePlayer(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  const authReq = req as GameAuthRequest;
   const { gameId } = req.params;
-  const userId = req.session.userId;
+  const userId = authReq.session.userId;
 
   if (!gameId) {
-    return next(new ForbiddenError('Game ID is required'));
+    next(new ForbiddenError('Game ID is required'));
+    return;
   }
 
   try {
-    const result = await pool.query(`
+    const result = await pool.query<GamePlayerRow>(`
       SELECT gp.*, g.status, g.host_id
       FROM game_players gp
       JOIN games g ON g.id = gp.game_id
@@ -33,10 +70,11 @@ async function requireGamePlayer(req, res, next) {
     `, [gameId, userId]);
 
     if (result.rows.length === 0) {
-      return next(new ForbiddenError('Not a player in this game'));
+      next(new ForbiddenError('Not a player in this game'));
+      return;
     }
 
-    req.gamePlayer = result.rows[0];
+    authReq.gamePlayer = result.rows[0];
     next();
   } catch (error) {
     next(error);
@@ -50,13 +88,21 @@ async function requireGamePlayer(req, res, next) {
  * @example
  * router.post('/:gameId/start', requireGamePlayer, requireGameHost, asyncHandler(...));
  */
-async function requireGameHost(req, res, next) {
-  if (!req.gamePlayer) {
-    return next(new Error('requireGameHost must be used after requireGamePlayer'));
+export async function requireGameHost(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  const authReq = req as GameAuthRequest;
+
+  if (!authReq.gamePlayer) {
+    next(new Error('requireGameHost must be used after requireGamePlayer'));
+    return;
   }
 
-  if (req.gamePlayer.host_id !== req.session.userId) {
-    return next(new ForbiddenError('Only the host can perform this action'));
+  if (authReq.gamePlayer.host_id !== authReq.session.userId) {
+    next(new ForbiddenError('Only the host can perform this action'));
+    return;
   }
 
   next();
@@ -76,21 +122,27 @@ async function requireGameHost(req, res, next) {
  *   // req.gameState contains the current game state
  * }));
  */
-async function requirePlayerTurn(req, res, next) {
+export async function requirePlayerTurn(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  const authReq = req as GameAuthRequest;
   const { gameId } = req.params;
-  const userId = req.session.userId;
+  const userId = authReq.session.userId;
 
   try {
-    const gameState = await gameStateService.getGameState(gameId);
+    const gameState = await gameStateService.getGameState(gameId) as GameStateWrapper | null;
 
     if (!gameState) {
-      return next(new NotFoundError('Game'));
+      next(new NotFoundError('Game'));
+      return;
     }
 
     const state = gameState.state;
 
     // Determine current player based on phase
-    let currentPlayerId;
+    let currentPlayerId: string | undefined;
     let skipTurnCheck = false;
 
     if (state.phase === 'worker_placement' && state.workerPlacement?.placementOrder) {
@@ -104,10 +156,11 @@ async function requirePlayerTurn(req, res, next) {
     }
 
     if (!skipTurnCheck && currentPlayerId !== userId) {
-      return next(new NotYourTurnError());
+      next(new NotYourTurnError());
+      return;
     }
 
-    req.gameState = gameState;
+    authReq.gameState = gameState;
     next();
   } catch (error) {
     next(error);
@@ -123,23 +176,30 @@ async function requirePlayerTurn(req, res, next) {
  *   // req.gameState contains the current game state
  * }));
  */
-async function loadGameState(req, res, next) {
+export async function loadGameState(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  const authReq = req as GameAuthRequest;
   const { gameId } = req.params;
 
   try {
-    const gameState = await gameStateService.getGameState(gameId);
+    const gameState = await gameStateService.getGameState(gameId) as GameStateWrapper | null;
 
     if (!gameState) {
-      return next(new NotFoundError('Game state'));
+      next(new NotFoundError('Game state'));
+      return;
     }
 
-    req.gameState = gameState;
+    authReq.gameState = gameState;
     next();
   } catch (error) {
     next(error);
   }
 }
 
+// CommonJS compatibility
 module.exports = {
   requireGamePlayer,
   requireGameHost,

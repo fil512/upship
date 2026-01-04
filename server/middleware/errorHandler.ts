@@ -3,12 +3,25 @@
  * Handles all errors and returns appropriate HTTP responses
  */
 
-const logger = require('../logger');
-const {
+import type { Request, Response, NextFunction, ErrorRequestHandler } from 'express';
+import type { Logger } from 'pino';
+
+// Use require for CommonJS compatibility
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const logger = require('../logger') as Logger;
+
+import {
   isAppError,
   isPostgresError,
-  fromPostgresError
-} = require('../errors');
+  fromPostgresError,
+  AppError
+} from '../errors';
+
+// Extended error type for body-parser errors
+interface ParseError extends Error {
+  type?: string;
+  statusCode?: number;
+}
 
 /**
  * Express error handling middleware
@@ -19,24 +32,33 @@ const {
  * - PostgreSQL errors (converts to appropriate response)
  * - Unknown errors (returns 500 without leaking details)
  */
-function errorHandler(err, req, res, next) {
+export const errorHandler: ErrorRequestHandler = (
+  err: ParseError | AppError | Error,
+  req: Request,
+  res: Response,
+  next: NextFunction
+): void => {
+  // Type assertion for optional properties
+  const reqWithLog = req as Request & { log?: Logger; session?: { userId?: string } };
   // If headers already sent, delegate to default Express error handler
   if (res.headersSent) {
-    return next(err);
+    next(err);
+    return;
   }
 
   // Log error with request context
   // Use req.log if available (from pino-http), otherwise fall back to main logger
-  const log = req.log || logger;
+  const log = reqWithLog.log || logger;
   const logContext = {
     method: req.method,
     path: req.path,
-    userId: req.session?.userId || 'anonymous',
+    userId: reqWithLog.session?.userId || 'anonymous',
     err // Pino serializes error objects automatically
   };
 
   // Log at appropriate level based on error type
-  if (err.statusCode >= 500 || !isAppError(err)) {
+  const statusCode = (err as AppError).statusCode;
+  if (statusCode >= 500 || !isAppError(err)) {
     log.error(logContext, err.message);
   } else if (process.env.NODE_ENV !== 'production') {
     log.warn(logContext, err.message);
@@ -44,41 +66,45 @@ function errorHandler(err, req, res, next) {
 
   // Handle custom application errors
   if (isAppError(err)) {
-    return res.status(err.statusCode).json(err.toJSON());
+    res.status(err.statusCode).json(err.toJSON());
+    return;
   }
 
   // Handle PostgreSQL errors
   if (isPostgresError(err)) {
     const appError = fromPostgresError(err);
-    return res.status(appError.statusCode).json(appError.toJSON());
+    res.status(appError.statusCode).json(appError.toJSON());
+    return;
   }
 
   // Handle validation errors from express-validator or similar
-  if (err.type === 'entity.parse.failed') {
-    return res.status(400).json({
+  if ((err as ParseError).type === 'entity.parse.failed') {
+    res.status(400).json({
       error: 'Invalid JSON in request body',
       code: 'INVALID_JSON'
     });
+    return;
   }
 
   // Unknown errors - don't leak internal details
-  return res.status(500).json({
+  res.status(500).json({
     error: 'Internal server error',
     code: 'INTERNAL_ERROR'
   });
-}
+};
 
 /**
  * 404 handler for unmatched routes
  * Register before error handler: app.use(notFoundHandler)
  */
-function notFoundHandler(req, res, _next) {
+export function notFoundHandler(req: Request, res: Response, _next: NextFunction): void {
   res.status(404).json({
     error: 'Route not found',
     code: 'ROUTE_NOT_FOUND'
   });
 }
 
+// CommonJS compatibility
 module.exports = {
   errorHandler,
   notFoundHandler
