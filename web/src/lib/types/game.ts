@@ -179,6 +179,15 @@ export interface PendingPurchase {
 	cost: number;
 }
 
+// Turn state machine states (for multi-step flows)
+export type TurnState =
+	| 'idle' // Not this player's turn
+	| 'awaiting_action' // Player's turn, can place agent or reveal
+	| 'at_weather_bureau' // Must KEEP_HAZARD or DISCARD_HAZARD
+	| 'at_ministry' // Must DISCARD_MINISTRY_CARD
+	| 'at_launchpad' // Can LAUNCH_SHIP or NO_MORE_LAUNCHES
+	| 'awaiting_hazard'; // Must RESPOND_TO_HAZARD
+
 // Player state
 export interface PlayerState {
 	faction: Faction;
@@ -204,6 +213,7 @@ export interface PlayerState {
 	discardPile: Card[];
 	hazardDeck: HazardCard[];
 	peekedHazard?: HazardCard;
+	drawnMinistryCards?: Card[]; // Cards drawn at Ministry (must discard one)
 	bonuses: Record<string, number>;
 	loans?: number;
 	insurance?: number;

@@ -40,6 +40,8 @@ export type ActionType =
 	| 'UNDO_MARKET_PURCHASE'
 	// Card management
 	| 'DISCARD_HAZARD'
+	| 'KEEP_HAZARD'
+	| 'DISCARD_MINISTRY_CARD'
 	| 'DISCARD_MARKET_CARD'
 	// Economy
 	| 'TAKE_LOAN'
@@ -131,6 +133,13 @@ export interface DiscardHazardActionData {
 	cardIndex: number;
 }
 
+// No data needed - just confirms keeping the peeked hazard
+export type KeepHazardActionData = Record<string, never>;
+
+export interface DiscardMinistryCardActionData {
+	cardIndex: 0 | 1; // Index of card to discard from drawnMinistryCards
+}
+
 export interface DiscardMarketCardActionData {
 	cardIndex: number;
 }
@@ -171,6 +180,8 @@ export type ActionData =
 	| TakeLoanActionData
 	| BuyInsuranceActionData
 	| DiscardHazardActionData
+	| KeepHazardActionData
+	| DiscardMinistryCardActionData
 	| DiscardMarketCardActionData
 	| Record<string, unknown>;
 

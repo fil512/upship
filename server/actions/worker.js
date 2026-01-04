@@ -440,29 +440,27 @@ function executeLocationAction(state, playerId, locationId, _card, options = {})
       // GAP-081: Set persistent First Player token when visiting Ministry (Section 6.9)
       state.firstPlayer = playerId;
 
-      // Draw 2 cards
-      const cardsToDraw = 2;
-      for (let i = 0; i < cardsToDraw; i++) {
+      // Draw 2 cards to temporary storage (player must choose which to discard)
+      const drawnCards = [];
+      for (let i = 0; i < 2; i++) {
         if (playerState.deck.length === 0 && playerState.discardPile.length > 0) {
           playerState.deck = shuffleArray([...playerState.discardPile]);
           playerState.discardPile = [];
         }
         if (playerState.deck.length > 0) {
-          playerState.hand.push(playerState.deck.pop());
+          drawnCards.push(playerState.deck.pop());
         }
       }
 
-      // Must discard 1 card - auto-discard the last card drawn
-      if (playerState.hand.length > 0) {
-        const discarded = playerState.hand.pop();
-        playerState.discardPile.push(discarded);
-        state.log.push({
-          timestamp: new Date().toISOString(),
-          message: `Drew 2 cards, discarded ${discarded.name}`,
-          playerId,
-          type: 'action'
-        });
-      }
+      // Store drawn cards for player to choose from
+      playerState.drawnMinistryCards = drawnCards;
+
+      state.log.push({
+        timestamp: new Date().toISOString(),
+        message: `Ministry: Drew ${drawnCards.length} cards. Choose one to discard with DISCARD_MINISTRY_CARD.`,
+        playerId,
+        type: 'action'
+      });
 
       // Reduce Helium Market Track by 1 step
       reduceHeliumMarket(state, 1);
@@ -473,7 +471,12 @@ function executeLocationAction(state, playerId, locationId, _card, options = {})
         type: 'action'
       });
 
-      return { success: true, message: 'Gained turn priority. Drew 2, discarded 1. Helium market reduced.' };
+      // Multi-step flow: player must call DISCARD_MINISTRY_CARD
+      return {
+        success: true,
+        message: `Gained turn priority. Drew ${drawnCards.length} cards. Choose DISCARD_MINISTRY_CARD(cardIndex: 0 or 1). Helium market reduced.`,
+        skipTurnAdvance: true  // Don't advance turn until discard is made
+      };
     }
 
     case 'gas_depot': {
@@ -515,12 +518,17 @@ function executeLocationAction(state, playerId, locationId, _card, options = {})
 
         state.log.push({
           timestamp: new Date().toISOString(),
-          message: `Weather Bureau: Peeked at top hazard (${topHazard.type}, difficulty ${topHazard.difficulty}). May discard with DISCARD_HAZARD action.`,
+          message: `Weather Bureau: Peeked at top hazard (${topHazard.type}, difficulty ${topHazard.difficulty}). Choose KEEP_HAZARD or DISCARD_HAZARD.`,
           playerId,
           type: 'action'
         });
 
-        return { success: true, message: `Peeked: ${topHazard.type} (difficulty ${topHazard.difficulty}). Use DISCARD_HAZARD to discard it.` };
+        // Multi-step flow: player must call KEEP_HAZARD or DISCARD_HAZARD
+        return {
+          success: true,
+          message: `Peeked: ${topHazard.type} (difficulty ${topHazard.difficulty}). Choose KEEP_HAZARD or DISCARD_HAZARD.`,
+          skipTurnAdvance: true  // Don't advance turn until decision is made
+        };
       }
       return { success: true, message: 'Hazard deck is empty' };
     }

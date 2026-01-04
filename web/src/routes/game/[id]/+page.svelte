@@ -41,6 +41,7 @@
 	import PlayersList from '$lib/components/sidebar/PlayersList.svelte';
 	import GameLog from '$lib/components/sidebar/GameLog.svelte';
 	import BudgetDisplay from '$lib/components/sidebar/BudgetDisplay.svelte';
+	import ActionButtons from '$lib/components/ui/ActionButtons.svelte';
 
 	// Market Components
 	import MarketSection from '$lib/components/market/MarketSection.svelte';
@@ -390,6 +391,69 @@
 		}
 	}
 
+	// Handle actions from ActionButtons component (state machine driven)
+	async function handleStateMachineAction(event: CustomEvent<{ action: string; actionData?: Record<string, unknown> }>) {
+		const { action, actionData } = event.detail;
+		let result;
+
+		switch (action) {
+			case 'PLACE_AGENT':
+				// This requires selection - don't handle directly, let existing flow work
+				showToast('Select a card and location to place agent', 'info');
+				return;
+
+			case 'REVEAL':
+				result = await sendAction({ actionType: 'REVEAL', actionData: {} });
+				break;
+
+			case 'KEEP_HAZARD':
+				result = await sendAction({ actionType: 'KEEP_HAZARD', actionData: {} });
+				break;
+
+			case 'DISCARD_HAZARD':
+				result = await sendAction({ actionType: 'DISCARD_HAZARD', actionData: {} });
+				break;
+
+			case 'DISCARD_MINISTRY_CARD':
+				result = await sendAction({
+					actionType: 'DISCARD_MINISTRY_CARD',
+					actionData: { cardIndex: actionData?.cardIndex ?? 0 }
+				});
+				break;
+
+			case 'LAUNCH_SHIP':
+				// This requires selection - guide user
+				showToast('Select gas type and route to launch', 'info');
+				return;
+
+			case 'NO_MORE_LAUNCHES':
+				result = await sendAction({ actionType: 'NO_MORE_LAUNCHES', actionData: {} });
+				break;
+
+			case 'RESPOND_TO_HAZARD':
+				if (!shipAwaitingHazard) {
+					showToast('No ship awaiting hazard response', 'error');
+					return;
+				}
+				result = await sendAction({
+					actionType: 'RESPOND_TO_HAZARD',
+					actionData: {
+						shipId: shipAwaitingHazard.id,
+						spendEngineers: actionData?.spendEngineers ?? false
+					}
+				});
+				break;
+
+			default:
+				showToast(`Unknown action: ${action}`, 'error');
+				return;
+		}
+
+		if (result && !result.success) {
+			showToast(result.error || `Failed to ${action}`, 'error');
+		}
+	}
+
 	// Market/reveal phase derived values
 	$: isRevealPhase = $gameState?.phase === 'reveal';
 	$: isMarketInteractive = isRevealPhase && $isMyTurn;
@@ -651,6 +715,9 @@
 
 			<!-- Right sidebar - Hand and Actions -->
 			<aside class="sidebar right">
+				<!-- State Machine Driven Action Buttons -->
+				<ActionButtons on:action={handleStateMachineAction} />
+
 				<div class="panel actions">
 					<h3>Actions</h3>
 					{#if peekedHazard}

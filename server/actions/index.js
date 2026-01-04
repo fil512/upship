@@ -16,7 +16,7 @@ const { processRespondToHazard } = require('./hazard');
 const { processPlaceAgent, processRecallAgents } = require('./worker');
 const { processTakeLoan, processBuyInsurance, processCollectIncome } = require('./economy');
 const { processRecruitCrew, processUpgradeOfficerIncome, processUpgradeEngineerIncome } = require('./crew');
-const { processPlayCard, processDrawCards, processBuyMarketCard, processDiscardHazard, processDiscardMarketCard } = require('./cards');
+const { processPlayCard, processDrawCards, processBuyMarketCard, processDiscardHazard, processKeepHazard, processDiscardMinistryCard, processDiscardMarketCard } = require('./cards');
 const { processEndTurn } = require('./turn');
 const { processCalculateScores } = require('./scoring');
 const { processReveal } = require('./reveal');
@@ -82,6 +82,8 @@ const ACTION_HANDLERS = {
   DRAW_CARDS: processDrawCards,
   BUY_MARKET_CARD: processBuyMarketCard,
   DISCARD_HAZARD: processDiscardHazard,
+  KEEP_HAZARD: processKeepHazard,
+  DISCARD_MINISTRY_CARD: processDiscardMinistryCard,
   DISCARD_MARKET_CARD: processDiscardMarketCard,
 
   // Tentative purchases during reveal phase
