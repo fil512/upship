@@ -9,6 +9,8 @@
  *   node server/db/migrate.js status - Show migration status
  */
 
+import type { PoolClient } from 'pg';
+
 require('dotenv').config();
 
 const fs = require('fs');
@@ -24,7 +26,7 @@ const MIGRATIONS_DIR = path.join(__dirname, 'migrations');
 /**
  * Ensure migrations tracking table exists
  */
-async function ensureMigrationsTable(client) {
+async function ensureMigrationsTable(client: PoolClient): Promise<void> {
   await client.query(`
     CREATE TABLE IF NOT EXISTS migrations (
       id SERIAL PRIMARY KEY,
@@ -37,26 +39,26 @@ async function ensureMigrationsTable(client) {
 /**
  * Get list of applied migrations
  */
-async function getAppliedMigrations(client) {
+async function getAppliedMigrations(client: PoolClient): Promise<string[]> {
   const result = await client.query('SELECT name FROM migrations ORDER BY id');
-  return result.rows.map(row => row.name);
+  return result.rows.map((row: { name: string }) => row.name);
 }
 
 /**
  * Get list of pending migrations
  */
-async function getPendingMigrations(applied) {
+async function getPendingMigrations(applied: string[]): Promise<string[]> {
   const files = fs.readdirSync(MIGRATIONS_DIR)
-    .filter(f => f.endsWith('.sql'))
+    .filter((f: string) => f.endsWith('.sql'))
     .sort();
 
-  return files.filter(f => !applied.includes(f));
+  return files.filter((f: string) => !applied.includes(f));
 }
 
 /**
  * Run a single migration file
  */
-async function runMigration(client, filename) {
+async function runMigration(client: PoolClient, filename: string): Promise<void> {
   const filepath = path.join(MIGRATIONS_DIR, filename);
   const sql = fs.readFileSync(filepath, 'utf8');
 
@@ -72,7 +74,7 @@ async function runMigration(client, filename) {
 /**
  * Rollback the last migration
  */
-async function rollbackMigration(client) {
+async function rollbackMigration(client: PoolClient): Promise<void> {
   const result = await client.query(
     'SELECT name FROM migrations ORDER BY id DESC LIMIT 1'
   );
@@ -104,26 +106,26 @@ async function rollbackMigration(client) {
 /**
  * Show migration status
  */
-async function showStatus(client) {
+async function showStatus(client: PoolClient): Promise<void> {
   const applied = await getAppliedMigrations(client);
   const pending = await getPendingMigrations(applied);
 
   migrateLogger.info({ applied: applied.length, pending: pending.length }, 'Migration status');
 
   if (applied.length > 0) {
-    applied.forEach(m => migrateLogger.info({ migration: m, status: 'applied' }, 'Applied'));
+    applied.forEach((m: string) => migrateLogger.info({ migration: m, status: 'applied' }, 'Applied'));
   }
 
   if (pending.length > 0) {
-    pending.forEach(m => migrateLogger.info({ migration: m, status: 'pending' }, 'Pending'));
+    pending.forEach((m: string) => migrateLogger.info({ migration: m, status: 'pending' }, 'Pending'));
   }
 }
 
 /**
  * Run all pending migrations (can be called from app startup)
  */
-async function runMigrations() {
-  let client;
+async function runMigrations(): Promise<void> {
+  let client: PoolClient | undefined;
 
   try {
     client = await pool.connect();
@@ -159,9 +161,9 @@ async function runMigrations() {
 /**
  * Main CLI runner
  */
-async function main() {
+async function main(): Promise<void> {
   const command = process.argv[2] || 'up';
-  let client;
+  let client: PoolClient | undefined;
 
   try {
     switch (command) {

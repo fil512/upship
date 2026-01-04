@@ -1,3 +1,7 @@
+import type { Request, Response, NextFunction } from 'express';
+import type { Server as HttpServer } from 'http';
+import type { Server as SocketIOServer } from 'socket.io';
+
 require('dotenv').config();
 
 const http = require('http');
@@ -17,12 +21,19 @@ const manifestRoutes = require('./routes/manifest');
 const adminRoutes = require('./routes/admin');
 const { errorHandler, notFoundHandler } = require('./middleware/errorHandler');
 
+// Extended request with session
+interface RequestWithSession extends Request {
+  session?: {
+    userId?: string;
+  };
+}
+
 // Check for SvelteKit build (production uses this, dev uses separate server)
 const svelteKitBuildPath = path.join(__dirname, '..', 'web', 'build');
 const hasSvelteKitBuild = fs.existsSync(path.join(svelteKitBuildPath, 'handler.js'));
 
 const app = express();
-const server = http.createServer(app);
+const server: HttpServer = http.createServer(app);
 const PORT = process.env.PORT || 3000;
 
 // Create session middleware once to share with Socket.io
@@ -39,12 +50,12 @@ app.use(express.json());
 app.use(pinoHttp({
   logger,
   // Customize logged request properties
-  customProps: (req) => ({
+  customProps: (req: RequestWithSession) => ({
     userId: req.session?.userId || 'anonymous'
   }),
   // Skip logging for health checks in production
   autoLogging: {
-    ignore: (req) => req.url === '/health' && process.env.NODE_ENV === 'production'
+    ignore: (req: Request) => req.url === '/health' && process.env.NODE_ENV === 'production'
   }
 }));
 app.use(sessionMiddleware);
@@ -55,7 +66,7 @@ if (hasSvelteKitBuild) {
 }
 
 // Initialize Socket.io with shared session
-const io = initializeSocket(server, sessionMiddleware);
+const io: SocketIOServer = initializeSocket(server, sessionMiddleware);
 
 // Make io available to routes if needed (e.g., for broadcasting)
 app.set('io', io);
@@ -68,9 +79,9 @@ app.use('/api/manifest', manifestRoutes);
 app.use('/api/admin', adminRoutes);
 
 // Health check endpoint for Railway (includes database status)
-app.get('/health', async (req, res) => {
+app.get('/health', async (req: Request, res: Response) => {
   try {
-    const dbHealthy = await db.healthCheck();
+    const dbHealthy: boolean = await db.healthCheck();
 
     const status = {
       status: dbHealthy ? 'healthy' : 'degraded',
@@ -90,7 +101,7 @@ app.get('/health', async (req, res) => {
 });
 
 // API endpoint placeholder
-app.get('/api/status', (req, res) => {
+app.get('/api/status', (req: Request, res: Response) => {
   res.json({
     game: 'UP SHIP!',
     version: '1.0.0',
@@ -100,17 +111,18 @@ app.get('/api/status', (req, res) => {
 });
 
 // Environment info endpoint (for dev-only features in frontend)
-app.get('/api/env', (req, res) => {
+app.get('/api/env', (req: Request, res: Response) => {
   res.json({
     isDev: process.env.NODE_ENV !== 'production'
   });
 });
 
 // SvelteKit handler for all non-API routes (loaded dynamically in start())
-let svelteKitHandler = null;
+type SvelteKitHandler = (req: Request, res: Response, next: NextFunction) => void;
+let svelteKitHandler: SvelteKitHandler | null = null;
 
 // Catch-all route: use SvelteKit handler if available
-app.use((req, res, next) => {
+app.use((req: Request, res: Response, next: NextFunction) => {
   if (svelteKitHandler) {
     svelteKitHandler(req, res, next);
   } else {
@@ -124,7 +136,7 @@ app.use(notFoundHandler);
 app.use(errorHandler);
 
 // Run migrations then start server
-async function start() {
+async function start(): Promise<void> {
   try {
     logger.info('Running database migrations...');
     await runMigrations();
@@ -157,4 +169,7 @@ if (require.main === module) {
   start();
 }
 
+export { app, server, io };
+
+// CommonJS compatibility
 module.exports = { app, server, io };

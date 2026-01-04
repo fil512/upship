@@ -3,6 +3,11 @@
  * Handles real-time game updates and player presence
  */
 
+import type { Server as HttpServer } from 'http';
+import type { RequestHandler } from 'express';
+import type { Server as SocketIOServer, Socket } from 'socket.io';
+import type { GameState, Ship } from '@upship/api';
+
 const { Server } = require('socket.io');
 const gameStateService = require('../services/gameStateService');
 const gameService = require('../services/gameService');
@@ -11,20 +16,81 @@ const { processAction } = require('../actions');
 const { executeUndo, getUndoInfo } = require('../actions/undo');
 const logger = require('../logger');
 
+// Extended socket with game-specific properties
+interface GameSocket extends Socket {
+  gameId?: string | null;
+  playerId?: string | null;
+  inLobby?: boolean;
+  request: Socket['request'] & {
+    session?: {
+      userId?: string;
+    };
+  };
+}
+
+// Extended player state with turn tracking
+interface ExtendedPlayerState {
+  hasTakenActionThisTurn?: boolean;
+  ships?: Ship[];
+  [key: string]: unknown;
+}
+
+// Game state wrapper
+interface GameStateWrapper {
+  state: GameState & {
+    workerPlacement?: {
+      currentPlacerIndex?: number;
+      placementOrder?: string[];
+    };
+    ageTransitionDesignBureau?: {
+      currentPlayerIndex?: number;
+    };
+  };
+  version: number;
+  isCommitPoint?: boolean;
+}
+
+// Game info from service
+interface Game {
+  id: string;
+  name: string;
+  status: string;
+  host_id: string;
+  current_player_count: number;
+  max_players: number;
+  players: Array<{ id: string; faction?: string }>;
+}
+
+// Action request
+interface GameAction {
+  actionType: string;
+  actionData?: Record<string, unknown>;
+  asUserId?: string;
+}
+
+// Undo result
+interface UndoResult {
+  newState: GameState;
+  undoneAction: string;
+}
+
+// Undo info
+interface UndoInfo {
+  canUndo: boolean;
+  lastActionType?: string;
+}
+
 // Track online players per game: Map<gameId, Map<playerId, socketId>>
-const gamePresence = new Map();
+const gamePresence: Map<string, Map<string, string>> = new Map();
 
 // Grace period timers for disconnects: Map<`gameId:playerId`, timeoutId>
-const disconnectTimers = new Map();
+const disconnectTimers: Map<string, ReturnType<typeof setTimeout>> = new Map();
 
 /**
  * Initialize Socket.io with the HTTP server
- * @param {http.Server} server - HTTP server instance
- * @param {Function} sessionMiddleware - Express session middleware
- * @returns {Server} Socket.io server instance
  */
-function initializeSocket(server, sessionMiddleware) {
-  const io = new Server(server, {
+function initializeSocket(server: HttpServer, sessionMiddleware: RequestHandler): SocketIOServer {
+  const io: SocketIOServer = new Server(server, {
     cors: {
       origin: process.env.CLIENT_URL || 'http://localhost:5173',
       credentials: true
@@ -36,7 +102,7 @@ function initializeSocket(server, sessionMiddleware) {
   // Share Express session with Socket.io
   io.engine.use(sessionMiddleware);
 
-  io.on('connection', (socket) => {
+  io.on('connection', (socket: GameSocket) => {
     const userId = socket.request.session?.userId;
 
     if (!userId) {
@@ -48,10 +114,10 @@ function initializeSocket(server, sessionMiddleware) {
     logger.info({ userId, socketId: socket.id }, 'Socket connected');
 
     // Join game room
-    socket.on('join-game', async ({ gameId, playerId }) => {
+    socket.on('join-game', async ({ gameId, playerId }: { gameId: string; playerId: string }) => {
       try {
         // Verify user is a player in this game
-        const gameState = await gameStateService.getGameState(gameId);
+        const gameState: GameStateWrapper | null = await gameStateService.getGameState(gameId);
 
         if (!gameState) {
           socket.emit('action-error', { error: 'Game not found' });
@@ -88,10 +154,10 @@ function initializeSocket(server, sessionMiddleware) {
     });
 
     // Join lobby room for waiting games (before game starts)
-    socket.on('join-lobby', async ({ gameId }) => {
+    socket.on('join-lobby', async ({ gameId }: { gameId: string }) => {
       try {
         // Get game info from games table (not game_states)
-        const game = await gameService.getGameById(gameId);
+        const game: Game | null = await gameService.getGameById(gameId);
 
         if (!game) {
           socket.emit('lobby-error', { error: 'Game not found' });
@@ -137,7 +203,7 @@ function initializeSocket(server, sessionMiddleware) {
     });
 
     // Handle game actions
-    socket.on('game-action', async (action, callback) => {
+    socket.on('game-action', async (action: GameAction, callback: (response: Record<string, unknown>) => void) => {
       const { gameId, playerId } = socket;
 
       logger.debug({ gameId, playerId, actionType: action.actionType }, 'Game action received');
@@ -149,7 +215,7 @@ function initializeSocket(server, sessionMiddleware) {
       }
 
       try {
-        const gameState = await gameStateService.getGameState(gameId);
+        const gameState: GameStateWrapper | null = await gameStateService.getGameState(gameId);
 
         if (!gameState) {
           callback({ success: false, error: 'Game not found' });
@@ -165,7 +231,7 @@ function initializeSocket(server, sessionMiddleware) {
           : playerId;
 
         // Verify it's this player's turn (similar to HTTP route logic)
-        let currentPlayerId;
+        let currentPlayerId: string;
         let skipTurnCheck = false;
 
         if (state.phase === 'worker_placement' && state.workerPlacement?.placementOrder) {
@@ -173,6 +239,7 @@ function initializeSocket(server, sessionMiddleware) {
           currentPlayerId = state.workerPlacement.placementOrder[wpIndex];
         } else if (state.phase === 'reveal') {
           skipTurnCheck = true;
+          currentPlayerId = effectiveUserId;
         } else if (state.phase === 'age_transition_design_bureau' && state.ageTransitionDesignBureau) {
           const transitionIndex = state.ageTransitionDesignBureau.currentPlayerIndex || 0;
           currentPlayerId = state.playerOrder[transitionIndex];
@@ -183,7 +250,7 @@ function initializeSocket(server, sessionMiddleware) {
         // Special cases that bypass turn check
         if (action.actionType === 'RESPOND_TO_HAZARD') {
           const playerState = state.players[effectiveUserId];
-          const hasAwaitingHazard = playerState?.ships?.some(s => s.status === 'awaiting_hazard');
+          const hasAwaitingHazard = playerState?.ships?.some((s: Ship) => s.status === 'awaiting_hazard');
           if (hasAwaitingHazard) skipTurnCheck = true;
         }
 
@@ -199,14 +266,14 @@ function initializeSocket(server, sessionMiddleware) {
 
         // Handle UNDO specially
         if (action.actionType === 'UNDO') {
-          const undoResult = await executeUndo(gameId, effectiveUserId);
+          const undoResult: UndoResult = await executeUndo(gameId, effectiveUserId);
 
           // Broadcast to all players
           broadcastStateUpdate(io, gameId, undoResult.newState, gameState.version + 1, 'UNDO');
 
           // Get updated undo info after the undo
-          const undoInfo = await getUndoInfo(gameId, effectiveUserId);
-          const playerState = undoResult.newState.players[effectiveUserId];
+          const undoInfo: UndoInfo = await getUndoInfo(gameId, effectiveUserId);
+          const playerState = undoResult.newState.players[effectiveUserId] as unknown as ExtendedPlayerState | undefined;
 
           callback({
             success: true,
@@ -231,21 +298,21 @@ function initializeSocket(server, sessionMiddleware) {
         }
 
         // Save the new state
-        const newGameState = await gameStateService.updateGameState(gameId, result.newState, {
+        const newGameState: GameStateWrapper = await gameStateService.updateGameState(gameId, result.newState, {
           playerId: effectiveUserId,
           type: action.actionType,
           data: action.actionData
         });
 
         // Broadcast to all players in the game
-        broadcastStateUpdate(io, gameId, newGameState, newGameState.version, action.actionType);
+        broadcastStateUpdate(io, gameId, newGameState as unknown as GameState, newGameState.version, action.actionType);
 
         // Check for turn/phase changes and notify
         checkAndNotifyChanges(io, gameId, state, result.newState);
 
         // Get undo info for the acting player
-        const undoInfo = await getUndoInfo(gameId, effectiveUserId);
-        const playerState = result.newState.players[effectiveUserId];
+        const undoInfo: UndoInfo = await getUndoInfo(gameId, effectiveUserId);
+        const playerState = result.newState.players[effectiveUserId] as unknown as ExtendedPlayerState | undefined;
 
         // Send response to acting player with turn info
         const responsePayload = {
@@ -264,7 +331,8 @@ function initializeSocket(server, sessionMiddleware) {
         logger.info({ gameId, playerId, actionType: action.actionType }, 'Action processed');
       } catch (error) {
         logger.error({ error, gameId, action }, 'Error processing game action');
-        callback({ success: false, error: error.message || 'Action failed' });
+        const errorMessage = error instanceof Error ? error.message : 'Action failed';
+        callback({ success: false, error: errorMessage });
       }
     });
 
@@ -275,12 +343,12 @@ function initializeSocket(server, sessionMiddleware) {
       if (!gameId || !playerId) return;
 
       try {
-        const gameState = await gameStateService.getGameState(gameId);
+        const gameState: GameStateWrapper | null = await gameStateService.getGameState(gameId);
 
         if (gameState) {
           // Get undo info for this player
-          const undoInfo = await getUndoInfo(gameId, playerId);
-          const playerState = gameState.state.players[playerId];
+          const undoInfo: UndoInfo = await getUndoInfo(gameId, playerId);
+          const playerState = gameState.state.players[playerId] as unknown as ExtendedPlayerState | undefined;
 
           socket.emit('state-sync', {
             state: filterStateForPlayer(gameState.state, playerId),
@@ -298,8 +366,8 @@ function initializeSocket(server, sessionMiddleware) {
     });
 
     // Handle leave game
-    socket.on('leave-game', ({ gameId }) => {
-      if (socket.gameId === gameId) {
+    socket.on('leave-game', ({ gameId }: { gameId: string }) => {
+      if (socket.gameId === gameId && socket.playerId) {
         socket.leave(`game:${gameId}`);
         handlePlayerDisconnect(io, gameId, socket.playerId);
         socket.gameId = null;
@@ -322,11 +390,11 @@ function initializeSocket(server, sessionMiddleware) {
 /**
  * Handle player joining a game
  */
-function handlePlayerJoin(io, gameId, playerId, socketId) {
+function handlePlayerJoin(io: SocketIOServer, gameId: string, playerId: string, socketId: string): void {
   // Clear any disconnect timer
   const timerKey = `${gameId}:${playerId}`;
   if (disconnectTimers.has(timerKey)) {
-    clearTimeout(disconnectTimers.get(timerKey));
+    clearTimeout(disconnectTimers.get(timerKey)!);
     disconnectTimers.delete(timerKey);
   }
 
@@ -334,7 +402,7 @@ function handlePlayerJoin(io, gameId, playerId, socketId) {
   if (!gamePresence.has(gameId)) {
     gamePresence.set(gameId, new Map());
   }
-  gamePresence.get(gameId).set(playerId, socketId);
+  gamePresence.get(gameId)!.set(playerId, socketId);
 
   // Broadcast presence update
   broadcastPresence(io, gameId);
@@ -343,7 +411,7 @@ function handlePlayerJoin(io, gameId, playerId, socketId) {
 /**
  * Handle player disconnecting from a game
  */
-function handlePlayerDisconnect(io, gameId, playerId) {
+function handlePlayerDisconnect(io: SocketIOServer, gameId: string, playerId: string): void {
   const timerKey = `${gameId}:${playerId}`;
 
   // Give grace period before marking offline (30 seconds)
@@ -365,7 +433,7 @@ function handlePlayerDisconnect(io, gameId, playerId) {
 /**
  * Broadcast presence update to all players in a game
  */
-function broadcastPresence(io, gameId) {
+function broadcastPresence(io: SocketIOServer, gameId: string): void {
   const players = gamePresence.get(gameId);
   const onlinePlayers = players ? Array.from(players.keys()) : [];
 
@@ -375,7 +443,7 @@ function broadcastPresence(io, gameId) {
 /**
  * Broadcast state update to all players in a game (filtered per player)
  */
-function broadcastStateUpdate(io, gameId, newState, version, actionType) {
+function broadcastStateUpdate(io: SocketIOServer, gameId: string, newState: GameState, version: number, actionType: string): void {
   const room = io.sockets.adapter.rooms.get(`game:${gameId}`);
   if (!room) {
     logger.debug({ gameId }, 'No room found for broadcast');
@@ -384,7 +452,7 @@ function broadcastStateUpdate(io, gameId, newState, version, actionType) {
 
   logger.debug({ gameId, actionType, version, clientCount: room.size }, 'Broadcasting state update');
   for (const socketId of room) {
-    const socket = io.sockets.sockets.get(socketId);
+    const socket = io.sockets.sockets.get(socketId) as GameSocket | undefined;
     if (socket && socket.playerId) {
       socket.emit('state-update', {
         state: filterStateForPlayer(newState, socket.playerId),
@@ -395,10 +463,18 @@ function broadcastStateUpdate(io, gameId, newState, version, actionType) {
   }
 }
 
+// Extended state for checking changes
+type ExtendedGameState = GameState & {
+  workerPlacement?: {
+    currentPlacerIndex?: number;
+    placementOrder?: string[];
+  };
+};
+
 /**
  * Check for turn/phase changes and send notifications
  */
-function checkAndNotifyChanges(io, gameId, oldState, newState) {
+function checkAndNotifyChanges(io: SocketIOServer, gameId: string, oldState: ExtendedGameState, newState: ExtendedGameState): void {
   // Check for phase change
   if (oldState.phase !== newState.phase) {
     io.to(`game:${gameId}`).emit('phase-changed', {
@@ -408,7 +484,7 @@ function checkAndNotifyChanges(io, gameId, oldState, newState) {
   }
 
   // Check for turn change
-  const getPlayerId = (state) => {
+  const getPlayerId = (state: ExtendedGameState): string => {
     if (state.phase === 'worker_placement' && state.workerPlacement?.placementOrder) {
       return state.workerPlacement.placementOrder[state.workerPlacement.currentPlacerIndex || 0];
     }
@@ -428,7 +504,7 @@ function checkAndNotifyChanges(io, gameId, oldState, newState) {
     // Notify the new current player it's their turn
     const players = gamePresence.get(gameId);
     if (players && players.has(newPlayerId)) {
-      const socketId = players.get(newPlayerId);
+      const socketId = players.get(newPlayerId)!;
       io.to(socketId).emit('your-turn');
     }
   }
@@ -437,12 +513,12 @@ function checkAndNotifyChanges(io, gameId, oldState, newState) {
 /**
  * Broadcast game started event to both lobby and game rooms
  */
-function broadcastGameStarted(io, gameId, state) {
+function broadcastGameStarted(io: SocketIOServer, gameId: string, state: GameState): void {
   // Notify lobby room
   const lobbyRoom = io.sockets.adapter.rooms.get(`lobby:${gameId}`);
   if (lobbyRoom) {
     for (const socketId of lobbyRoom) {
-      const socket = io.sockets.sockets.get(socketId);
+      const socket = io.sockets.sockets.get(socketId) as GameSocket | undefined;
       if (socket && socket.playerId) {
         socket.emit('game-started', {
           state: filterStateForPlayer(state, socket.playerId)
@@ -459,7 +535,7 @@ function broadcastGameStarted(io, gameId, state) {
   const gameRoom = io.sockets.adapter.rooms.get(`game:${gameId}`);
   if (gameRoom) {
     for (const socketId of gameRoom) {
-      const socket = io.sockets.sockets.get(socketId);
+      const socket = io.sockets.sockets.get(socketId) as GameSocket | undefined;
       if (socket && socket.playerId) {
         socket.emit('game-started', {
           state: filterStateForPlayer(state, socket.playerId)
@@ -472,7 +548,7 @@ function broadcastGameStarted(io, gameId, state) {
 /**
  * Broadcast lobby update (player joined/left, faction changed)
  */
-function broadcastLobbyUpdate(io, gameId, game) {
+function broadcastLobbyUpdate(io: SocketIOServer, gameId: string, game: Game): void {
   io.to(`lobby:${gameId}`).emit('lobby-update', {
     game: {
       id: game.id,
@@ -486,6 +562,15 @@ function broadcastLobbyUpdate(io, gameId, game) {
   });
 }
 
+export {
+  initializeSocket,
+  broadcastStateUpdate,
+  broadcastGameStarted,
+  broadcastLobbyUpdate,
+  broadcastPresence
+};
+
+// CommonJS compatibility
 module.exports = {
   initializeSocket,
   broadcastStateUpdate,
