@@ -14,11 +14,39 @@ GAME_FILE = PROJECT_ROOT / ".upship-current-game"
 HUMAN_FACTION_FILE = PROJECT_ROOT / ".upship-human-faction"
 LOG_FILE_TRACKER = PROJECT_ROOT / ".upship-current-log"
 LOGS_DIR = PROJECT_ROOT / "logs"
+CONFIG_FILE = PROJECT_ROOT / ".upship-config"
 PASSWORD = "test123456"
 
+
+def _load_config_file() -> dict:
+    """Load configuration from .upship-config file.
+
+    Returns:
+        Dictionary of key=value pairs from the config file.
+    """
+    config = {}
+    if CONFIG_FILE.exists():
+        for line in CONFIG_FILE.read_text().splitlines():
+            line = line.strip()
+            if line and not line.startswith('#') and '=' in line:
+                key, value = line.split('=', 1)
+                config[key.strip()] = value.strip()
+    return config
+
+
+# Load config from file
+_file_config = _load_config_file()
+
 # Server configuration
-# Use local server if UPSHIP_LOCAL=1 or --local flag
-USE_LOCAL = os.environ.get("UPSHIP_LOCAL") == "1" or "--local" in sys.argv
+# Use local server if:
+# 1. UPSHIP_LOCAL=1 in .upship-config file, OR
+# 2. UPSHIP_LOCAL=1 environment variable, OR
+# 3. --local flag on command line
+USE_LOCAL = (
+    _file_config.get("UPSHIP_LOCAL") == "1" or
+    os.environ.get("UPSHIP_LOCAL") == "1" or
+    "--local" in sys.argv
+)
 API_BASE = "http://localhost:3000" if USE_LOCAL else "https://upship-production.up.railway.app"
 # Frontend URL (SvelteKit dev server on 5173, production served from Express on 3000)
 FRONTEND_URL = "http://localhost:5173" if USE_LOCAL else "https://upship-production.up.railway.app"

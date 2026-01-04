@@ -324,6 +324,54 @@ def run_action(player: str, command: str, *args, game_id: str = None) -> None:
             result = client.reveal(player, game_id)
         elif command_lower == 'nolaunches':
             result = client.no_more_launches(player, game_id)
+        elif command_lower == 'place':
+            # place <locationId> <cardIndex> [extra params...]
+            if len(args) < 2:
+                print("Usage: place <locationId> <cardIndex> [key=value ...]")
+                return
+            location_id = args[0]
+            card_index = int(args[1])
+            extra_kwargs = {}
+            for arg in args[2:]:
+                if '=' in arg:
+                    key, value = arg.split('=', 1)
+                    if value.lower() in ('true', 'false'):
+                        extra_kwargs[key] = value.lower() == 'true'
+                    else:
+                        try:
+                            extra_kwargs[key] = int(value)
+                        except ValueError:
+                            extra_kwargs[key] = value
+            result = client.place_agent(player, game_id, location_id, card_index, **extra_kwargs)
+        elif command_lower == 'build':
+            # build [count]
+            count = int(args[0]) if args else 1
+            result = client.build_ship(player, game_id, count)
+        elif command_lower == 'buygas':
+            # buygas <gasType> [amount]
+            if len(args) < 1:
+                print("Usage: buygas <hydrogen|helium> [amount]")
+                return
+            gas_type = args[0]
+            amount = int(args[1]) if len(args) > 1 else 1
+            result = client.buy_gas(player, game_id, gas_type, amount)
+        elif command_lower == 'recruit':
+            # recruit <crewType> [count]
+            if len(args) < 1:
+                print("Usage: recruit <officer|engineer> [count]")
+                return
+            crew_type = args[0]
+            count = int(args[1]) if len(args) > 1 else 1
+            result = client.recruit_crew(player, game_id, crew_type, count)
+        elif command_lower == 'install':
+            # install <slotType> <slotIndex> <upgradeId>
+            if len(args) < 3:
+                print("Usage: install <frame|fabric|drive|component> <slotIndex> <upgradeId>")
+                return
+            slot_type, slot_index, upgrade_id = args[0], int(args[1]), args[2]
+            result = client.install_upgrade(player, game_id, slot_type, slot_index, upgrade_id)
+        elif command_lower == 'loan':
+            result = client.take_loan(player, game_id)
         else:
             # Try as generic action
             action_type = command.upper()

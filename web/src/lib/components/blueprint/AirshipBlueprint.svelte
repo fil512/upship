@@ -469,6 +469,15 @@
 			</span>
 		</div>
 	</div>
+
+	<!-- Contextual hint -->
+	<div class="context-hint">
+		<span class="hint-icon">&#128161;</span>
+		<span class="hint-text">
+			Visit <strong>Hangar</strong> during Worker Placement to build ships from this design.
+			Click any slot to modify your blueprint at the <strong>Design Bureau</strong>.
+		</span>
+	</div>
 </div>
 
 <style>
@@ -617,5 +626,31 @@
 
 	.icon-legend :global(.icon-wrapper) {
 		flex-shrink: 0;
+	}
+
+	.context-hint {
+		display: flex;
+		align-items: flex-start;
+		gap: var(--spacing-sm);
+		margin-top: var(--spacing-md);
+		padding: var(--spacing-sm) var(--spacing-md);
+		background: rgba(59, 130, 246, 0.1);
+		border: 1px solid rgba(59, 130, 246, 0.3);
+		border-radius: var(--radius-md);
+	}
+
+	.hint-icon {
+		font-size: 1rem;
+		line-height: 1.4;
+	}
+
+	.hint-text {
+		font-size: 0.75rem;
+		color: var(--color-text-secondary);
+		line-height: 1.4;
+	}
+
+	.hint-text strong {
+		color: var(--color-accent-gold);
 	}
 </style>
