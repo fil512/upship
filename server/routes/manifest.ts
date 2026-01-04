@@ -4,8 +4,10 @@
  * Clients should fetch this once on startup and cache it.
  */
 
+import type { Request, Response, Router } from 'express';
+
 const express = require('express');
-const router = express.Router();
+const router: Router = express.Router();
 
 const { UPGRADES, TECHNOLOGIES } = require('../data/upgrades');
 const {
@@ -51,7 +53,7 @@ const {
  * GET /api/manifest
  * Returns all static game data for client caching
  */
-router.get('/', (req, res) => {
+router.get('/', (req: Request, res: Response) => {
   res.json({
     // Version for cache invalidation
     version: '1.0.0',
@@ -123,4 +125,7 @@ router.get('/', (req, res) => {
   });
 });
 
+export default router;
+
+// CommonJS compatibility
 module.exports = router;

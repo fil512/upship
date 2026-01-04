@@ -4,8 +4,12 @@
  * Business logic has been extracted to services for better separation of concerns
  */
 
+import type { Request, Response, NextFunction, Router, Application } from 'express';
+import type { Server as SocketIOServer } from 'socket.io';
+import type { GameState, PlayerState, Ship } from '@upship/api';
+
 const express = require('express');
-const router = express.Router();
+const router: Router = express.Router();
 const { requireAuth } = require('../auth');
 const { requireGamePlayer } = require('../middleware/gameAccess');
 const gameStateService = require('../services/gameStateService');
@@ -30,14 +34,72 @@ const { processAction } = require('../actions');
 const { executeUndo, getUndoInfo } = require('../actions/undo');
 const { broadcastStateUpdate } = require('../socket');
 
+// Extended request with session and app
+interface AuthenticatedRequest extends Request {
+  session: Request['session'] & {
+    userId: string;
+  };
+  app: Application & {
+    get(name: 'io'): SocketIOServer | undefined;
+  };
+}
+
+// Game state wrapper
+interface GameStateWrapper {
+  state: GameState & {
+    workerPlacement?: {
+      currentPlacerIndex?: number;
+      placementOrder?: string[];
+    };
+    ageTransitionDesignBureau?: {
+      currentPlayerIndex?: number;
+    };
+    groundBoard?: {
+      placements?: Record<string, unknown>;
+    };
+    log?: Array<{ timestamp: string; message: string; type?: string }>;
+  };
+  version: number;
+}
+
+// Extended player state
+type ExtendedPlayerState = PlayerState & {
+  techCards?: string[];
+};
+
+// Game action data
+interface ActionData {
+  [key: string]: unknown;
+}
+
+// Action request body
+interface ActionRequestBody {
+  actionType?: string;
+  actionData?: ActionData;
+  asUserId?: string;
+}
+
+// Undo result
+interface UndoResult {
+  newState: GameState;
+  undoneAction: string;
+}
+
+// Undo info
+interface UndoInfo {
+  canUndo: boolean;
+  lastAction?: string;
+}
+
 // All game state routes require authentication
 router.use(requireAuth);
 
 // Get game state
-router.get('/:gameId', requireGamePlayer, async (req, res, next) => {
+router.get('/:gameId', requireGamePlayer, async (req: Request, res: Response, next: NextFunction) => {
   try {
+    const authReq = req as AuthenticatedRequest;
     const { gameId } = req.params;
-    const gameState = await gameStateService.getGameState(gameId);
+    const gameState: GameStateWrapper | null = await gameStateService.getGameState(gameId);
 
     if (!gameState) {
       throw new NotFoundError('Game state');
@@ -50,7 +112,7 @@ router.get('/:gameId', requireGamePlayer, async (req, res, next) => {
     // Filter state to only show what this player should see (unless dev mode)
     const filteredState = (isDev && devModeRequested)
       ? gameState.state
-      : filterStateForPlayer(gameState.state, req.session.userId);
+      : filterStateForPlayer(gameState.state, authReq.session.userId);
 
     res.json({
       gameState: {
@@ -64,16 +126,17 @@ router.get('/:gameId', requireGamePlayer, async (req, res, next) => {
 });
 
 // Get available upgrades for a player
-router.get('/:gameId/upgrades', requireGamePlayer, async (req, res, next) => {
+router.get('/:gameId/upgrades', requireGamePlayer, async (req: Request, res: Response, next: NextFunction) => {
   try {
+    const authReq = req as AuthenticatedRequest;
     const { gameId } = req.params;
-    const gameState = await gameStateService.getGameState(gameId);
+    const gameState: GameStateWrapper | null = await gameStateService.getGameState(gameId);
 
     if (!gameState) {
       throw new NotFoundError('Game state');
     }
 
-    const playerState = gameState.state.players[req.session.userId];
+    const playerState = gameState.state.players[authReq.session.userId] as ExtendedPlayerState | undefined;
     if (!playerState) {
       throw new NotFoundError('Player state');
     }
@@ -96,10 +159,10 @@ router.get('/:gameId/upgrades', requireGamePlayer, async (req, res, next) => {
 });
 
 // Get Ground Board data
-router.get('/:gameId/ground-board', requireGamePlayer, async (req, res, next) => {
+router.get('/:gameId/ground-board', requireGamePlayer, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { gameId } = req.params;
-    const gameState = await gameStateService.getGameState(gameId);
+    const gameState: GameStateWrapper | null = await gameStateService.getGameState(gameId);
 
     if (!gameState) {
       throw new NotFoundError('Game state');
@@ -116,10 +179,10 @@ router.get('/:gameId/ground-board', requireGamePlayer, async (req, res, next) =>
 });
 
 // Get action history
-router.get('/:gameId/actions', requireGamePlayer, async (req, res, next) => {
+router.get('/:gameId/actions', requireGamePlayer, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { gameId } = req.params;
-    const limit = parseInt(req.query.limit) || 50;
+    const limit = parseInt(req.query.limit as string) || 50;
 
     const actions = await gameStateService.getGameActions(gameId, limit);
     res.json({ actions });
@@ -129,10 +192,10 @@ router.get('/:gameId/actions', requireGamePlayer, async (req, res, next) => {
 });
 
 // Get full game log (lazy-loaded by UI)
-router.get('/:gameId/log', requireGamePlayer, async (req, res, next) => {
+router.get('/:gameId/log', requireGamePlayer, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { gameId } = req.params;
-    const gameState = await gameStateService.getGameState(gameId);
+    const gameState: GameStateWrapper | null = await gameStateService.getGameState(gameId);
 
     if (!gameState) {
       throw new NotFoundError('Game state');
@@ -149,12 +212,13 @@ router.get('/:gameId/log', requireGamePlayer, async (req, res, next) => {
 });
 
 // Get undo info for UI
-router.get('/:gameId/undo-info', requireGamePlayer, async (req, res, next) => {
+router.get('/:gameId/undo-info', requireGamePlayer, async (req: Request, res: Response, next: NextFunction) => {
   try {
+    const authReq = req as AuthenticatedRequest;
     const { gameId } = req.params;
-    const userId = req.session.userId;
+    const userId = authReq.session.userId;
 
-    const undoInfo = await getUndoInfo(gameId, userId);
+    const undoInfo: UndoInfo = await getUndoInfo(gameId, userId);
     res.json(undoInfo);
   } catch (error) {
     next(error);
@@ -162,17 +226,18 @@ router.get('/:gameId/undo-info', requireGamePlayer, async (req, res, next) => {
 });
 
 // Perform a game action
-router.post('/:gameId/action', requireGamePlayer, async (req, res, next) => {
+router.post('/:gameId/action', requireGamePlayer, async (req: Request, res: Response, next: NextFunction) => {
   try {
+    const authReq = req as AuthenticatedRequest;
     const { gameId } = req.params;
-    const { actionType, actionData, asUserId } = req.body;
+    const { actionType, actionData, asUserId } = req.body as ActionRequestBody;
 
     if (!actionType) {
       throw new ValidationError('Action type is required');
     }
 
     // Get current game state
-    const gameState = await gameStateService.getGameState(gameId);
+    const gameState: GameStateWrapper | null = await gameStateService.getGameState(gameId);
 
     if (!gameState) {
       throw new NotFoundError('Game');
@@ -184,14 +249,14 @@ router.post('/:gameId/action', requireGamePlayer, async (req, res, next) => {
     // Only allowed in non-production environment AND only for the game host
     // SECURITY: This prevents unauthorized players from cheating via impersonation
     const isDev = process.env.NODE_ENV !== 'production';
-    let effectiveUserId = req.session.userId;
+    let effectiveUserId = authReq.session.userId;
 
     if (isDev && asUserId && state.players[asUserId]) {
       // Verify the requesting user is the game host before allowing impersonation
       const gameService = require('../services/gameService');
       const game = await gameService.getGameById(gameId);
 
-      if (game && game.host_id === req.session.userId) {
+      if (game && game.host_id === authReq.session.userId) {
         // Only the game host can impersonate other players in dev mode
         effectiveUserId = asUserId;
       }
@@ -202,7 +267,7 @@ router.post('/:gameId/action', requireGamePlayer, async (req, res, next) => {
     // - Worker placement: use workerPlacement.currentPlacerIndex
     // - Reveal phase: all players can act (simultaneous)
     // - Other phases: use currentPlayerIndex
-    let currentPlayerId;
+    let currentPlayerId: string;
     let skipTurnCheck = false;
 
     if (state.phase === 'worker_placement' && state.workerPlacement?.placementOrder) {
@@ -211,6 +276,7 @@ router.post('/:gameId/action', requireGamePlayer, async (req, res, next) => {
     } else if (state.phase === 'reveal') {
       // Reveal phase allows all players to act simultaneously
       skipTurnCheck = true;
+      currentPlayerId = effectiveUserId;
     } else if (state.phase === 'age_transition_design_bureau' && state.ageTransitionDesignBureau) {
       // Age transition phase uses its own player index
       const transitionIndex = state.ageTransitionDesignBureau.currentPlayerIndex || 0;
@@ -222,7 +288,7 @@ router.post('/:gameId/action', requireGamePlayer, async (req, res, next) => {
     // Special case: RESPOND_TO_HAZARD is allowed if the player has a ship awaiting hazard
     if (actionType === 'RESPOND_TO_HAZARD') {
       const playerState = state.players[effectiveUserId];
-      const hasAwaitingHazard = playerState?.ships?.some(s => s.status === 'awaiting_hazard');
+      const hasAwaitingHazard = playerState?.ships?.some((s: Ship) => s.status === 'awaiting_hazard');
       if (hasAwaitingHazard) {
         skipTurnCheck = true;
       }
@@ -239,16 +305,16 @@ router.post('/:gameId/action', requireGamePlayer, async (req, res, next) => {
 
     // Special handling for UNDO - bypasses normal action processing
     if (actionType === 'UNDO') {
-      const undoResult = await executeUndo(gameId, effectiveUserId);
-      const undoInfo = await getUndoInfo(gameId, effectiveUserId);
+      const undoResult: UndoResult = await executeUndo(gameId, effectiveUserId);
+      const undoInfo: UndoInfo = await getUndoInfo(gameId, effectiveUserId);
 
       // Broadcast undo to all connected players via Socket.io
-      const io = req.app.get('io');
+      const io = authReq.app.get('io');
       if (io) {
         broadcastStateUpdate(io, gameId, undoResult.newState, gameState.version + 1, 'UNDO');
       }
 
-      return res.json({
+      res.json({
         success: true,
         undoneAction: undoResult.undoneAction,
         undoInfo,
@@ -257,6 +323,7 @@ router.post('/:gameId/action', requireGamePlayer, async (req, res, next) => {
           state: filterStateForPlayer(undoResult.newState, effectiveUserId)
         }
       });
+      return;
     }
 
     // Process the action using the extracted service
@@ -280,7 +347,7 @@ router.post('/:gameId/action', requireGamePlayer, async (req, res, next) => {
     );
 
     // Broadcast state update to all connected players via Socket.io
-    const io = req.app.get('io');
+    const io = authReq.app.get('io');
     if (io) {
       broadcastStateUpdate(io, gameId, newState, newState.version || 1, actionType);
     }
@@ -298,4 +365,7 @@ router.post('/:gameId/action', requireGamePlayer, async (req, res, next) => {
   }
 });
 
+export default router;
+
+// CommonJS compatibility
 module.exports = router;
