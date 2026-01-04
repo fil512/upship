@@ -8,7 +8,61 @@ Orchestrates comprehensive UI playtesting across 4 phases with progress tracking
 2. **Both servers running:**
    - Express API: http://localhost:3000
    - SvelteKit Frontend: http://localhost:5173
-3. **Game setup:** Run `UPSHIP_LOCAL=1 python -m playtest setup` before testing
+3. **Game setup:** Run `python -m playtest setup` before testing (uses local server via .upship-config)
+
+## Allowed Tools and Commands
+
+This skill is allowed to run the following commands without additional permission:
+- `python -m playtest *` - All playtest commands (setup, status, action, autoplay, etc.)
+- Chrome DevTools MCP tools (`mcp__chrome-devtools__*`)
+
+## IMPORTANT: Use Playtest Tool, NOT CLI
+
+**ALWAYS use the `python -m playtest` commands for game operations. NEVER use `npm run cli`.**
+
+The playtest tool provides:
+- Automatic session management for all players
+- Proper game state caching
+- Strategic AI autoplay
+- Integrated logging
+
+If a function is missing from the playtest tool, it should be added to `playtest/__main__.py` and documented here before use.
+
+### Playtest Commands Reference
+
+```bash
+# Game setup
+python -m playtest setup                  # Create new 4-player game
+python -m playtest setup-interactive      # Create game for human + 3 AI
+
+# Game status
+python -m playtest status [player]        # Show game status
+python -m playtest summary                # Show all players' summary
+python -m playtest whose-turn             # Show whose turn it is
+python -m playtest routes                 # Show available routes
+python -m playtest debug                  # Show raw game state
+
+# Game actions
+python -m playtest action <player> <cmd>  # Run single action
+python -m playtest autoplay [turns]       # Run AI until game ends
+python -m playtest autoturn <faction>     # Play one turn for faction
+python -m playtest endphase               # All players end turn/pass
+python -m playtest launch <player> <ship> <route> [gas]  # Launch ship
+
+# Utilities
+python -m playtest gameid                 # Print current game ID
+python -m playtest sessions               # List active sessions
+python -m playtest tail [lines]           # Show playtest log
+```
+
+### Adding Missing Playtest Functions
+
+If you need a game action that's not available in the playtest tool:
+1. Check if it exists in `client/client.py` (the Python client library)
+2. If it exists in the client, add a wrapper in `playtest/__main__.py`
+3. If it doesn't exist in the client, first add it to `client/client.py`
+4. Document the new command in this file
+5. Use the new command for testing
 
 ## Workflow
 
