@@ -695,8 +695,11 @@ function createAgeIIIMap(): GameMap {
 
 // Game player row from database
 interface GamePlayerRow {
-  user_id: string;
+  id: string;           // game_players.id (unique for both humans and bots)
+  user_id: string | null; // NULL for bots
   faction: Faction;
+  is_bot: boolean;
+  bot_name: string | null;
   [key: string]: unknown;
 }
 
@@ -718,15 +721,24 @@ async function initializeGameState(
   try {
     await client.query('BEGIN');
 
+    // Get player IDs - use game_players.id for bots, user_id for humans
+    const getPlayerId = (p: GamePlayerRow): string => p.is_bot ? p.id : (p.user_id as string);
+
     // Determine player order randomly
-    const playerOrder = shuffleArray(players.map(p => p.user_id));
+    const playerOrder = shuffleArray(players.map(getPlayerId));
 
     // Create player states
     const playerStates: Record<string, PlayerState> = {};
     for (const player of players) {
-      playerStates[player.user_id] = createPlayerState(player.faction);
+      const playerId = getPlayerId(player);
+      playerStates[playerId] = createPlayerState(player.faction);
+      // Add bot info if this is a bot player
+      if (player.is_bot) {
+        playerStates[playerId].isBot = true;
+        playerStates[playerId].botName = player.bot_name || undefined;
+      }
       // Draw initial hand of 5 cards
-      const state = playerStates[player.user_id];
+      const state = playerStates[playerId];
       state.deck = shuffleArray(state.deck as Card[]);
       state.hand = (state.deck as Card[]).splice(0, 5);
     }

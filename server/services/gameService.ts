@@ -45,9 +45,11 @@ interface GameRow {
 interface GamePlayerRow {
   id: string;
   game_id: string;
-  user_id: string;
+  user_id: string | null;
   faction: Faction | null;
   player_order: number;
+  is_bot: boolean;
+  bot_name: string | null;
 }
 
 // Player info in game response
@@ -56,6 +58,8 @@ interface GamePlayer {
   username: string;
   faction: Faction | null;
   playerOrder?: number;
+  isBot?: boolean;
+  botName?: string;
 }
 
 // Game with players for API response
@@ -130,9 +134,15 @@ export async function getGames(filters: GameFilters = {}): Promise<GameWithPlaye
     SELECT g.*, u.username as host_username,
            COALESCE(
              json_agg(
-               json_build_object('id', gp.user_id, 'username', pu.username, 'faction', gp.faction)
+               json_build_object(
+                 'id', COALESCE(gp.user_id::text, gp.id::text),
+                 'username', COALESCE(pu.username, gp.bot_name),
+                 'faction', gp.faction,
+                 'isBot', gp.is_bot,
+                 'botName', gp.bot_name
+               )
                ORDER BY gp.player_order
-             ) FILTER (WHERE gp.user_id IS NOT NULL),
+             ) FILTER (WHERE gp.id IS NOT NULL),
              '[]'
            ) as players
     FROM games g
@@ -173,12 +183,14 @@ export async function getGameById(gameId: string): Promise<GameWithPlayers | nul
             COALESCE(
               json_agg(
                 json_build_object(
-                  'id', gp.user_id,
-                  'username', pu.username,
+                  'id', COALESCE(gp.user_id::text, gp.id::text),
+                  'username', COALESCE(pu.username, gp.bot_name),
                   'faction', gp.faction,
-                  'playerOrder', gp.player_order
+                  'playerOrder', gp.player_order,
+                  'isBot', gp.is_bot,
+                  'botName', gp.bot_name
                 ) ORDER BY gp.player_order
-              ) FILTER (WHERE gp.user_id IS NOT NULL),
+              ) FILTER (WHERE gp.id IS NOT NULL),
               '[]'
             ) as players
      FROM games g
@@ -520,6 +532,190 @@ export async function getUserGames(userId: string): Promise<UserGame[]> {
 }
 
 /**
+ * Add a bot to a game (host only)
+ */
+export async function addBot(
+  gameId: string,
+  hostId: string,
+  faction: Faction
+): Promise<GameWithPlayers | null> {
+  // Import bot names dynamically to avoid circular dependencies
+  const { getFirstAvailableBotName } = require('../data/botNames');
+
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+
+    // Check game exists and requester is host
+    const gameResult = await client.query<GameRow>(
+      'SELECT * FROM games WHERE id = $1 FOR UPDATE',
+      [gameId]
+    );
+
+    if (gameResult.rows.length === 0) {
+      throw new NotFoundError('Game');
+    }
+
+    const game = gameResult.rows[0];
+
+    if (game.host_id !== hostId) {
+      throw new ForbiddenError('Only the host can add bots');
+    }
+
+    if (game.status !== 'waiting') {
+      throw new ValidationError('Cannot add bots to a game in progress');
+    }
+
+    if (game.current_player_count >= game.max_players) {
+      throw new ValidationError('Game is full');
+    }
+
+    // Check faction not already taken
+    const existingFaction = await client.query(
+      'SELECT id FROM game_players WHERE game_id = $1 AND faction = $2',
+      [gameId, faction]
+    );
+
+    if (existingFaction.rows.length > 0) {
+      throw new ConflictError('Faction already taken');
+    }
+
+    // Get existing bot names in this game to avoid duplicates
+    const existingBots = await client.query<{ bot_name: string }>(
+      'SELECT bot_name FROM game_players WHERE game_id = $1 AND is_bot = TRUE',
+      [gameId]
+    );
+    const usedNames = existingBots.rows.map(r => r.bot_name);
+
+    // Get a bot name for this faction
+    const botName = getFirstAvailableBotName(faction, usedNames);
+
+    // Add bot as player
+    const playerOrder = game.current_player_count + 1;
+    await client.query(
+      `INSERT INTO game_players (game_id, user_id, player_order, faction, is_bot, bot_name)
+       VALUES ($1, NULL, $2, $3, TRUE, $4)`,
+      [gameId, playerOrder, faction, botName]
+    );
+
+    // Update player count
+    await client.query(
+      'UPDATE games SET current_player_count = current_player_count + 1 WHERE id = $1',
+      [gameId]
+    );
+
+    await client.query('COMMIT');
+    return await getGameById(gameId);
+  } catch (error) {
+    await client.query('ROLLBACK');
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
+/**
+ * Remove a bot from a game (host only)
+ */
+export async function removeBot(
+  gameId: string,
+  hostId: string,
+  botPlayerId: string
+): Promise<GameWithPlayers | null> {
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+
+    // Check game exists and requester is host
+    const gameResult = await client.query<GameRow>(
+      'SELECT * FROM games WHERE id = $1 FOR UPDATE',
+      [gameId]
+    );
+
+    if (gameResult.rows.length === 0) {
+      throw new NotFoundError('Game');
+    }
+
+    const game = gameResult.rows[0];
+
+    if (game.host_id !== hostId) {
+      throw new ForbiddenError('Only the host can remove bots');
+    }
+
+    if (game.status !== 'waiting') {
+      throw new ValidationError('Cannot remove bots from a game in progress');
+    }
+
+    // Check bot exists and is a bot
+    const botResult = await client.query(
+      'SELECT id, is_bot FROM game_players WHERE game_id = $1 AND id = $2',
+      [gameId, botPlayerId]
+    );
+
+    if (botResult.rows.length === 0) {
+      throw new NotFoundError('Player');
+    }
+
+    if (!botResult.rows[0].is_bot) {
+      throw new ValidationError('Player is not a bot');
+    }
+
+    // Remove bot
+    await client.query(
+      'DELETE FROM game_players WHERE id = $1',
+      [botPlayerId]
+    );
+
+    // Update player count
+    await client.query(
+      'UPDATE games SET current_player_count = current_player_count - 1 WHERE id = $1',
+      [gameId]
+    );
+
+    await client.query('COMMIT');
+    return await getGameById(gameId);
+  } catch (error) {
+    await client.query('ROLLBACK');
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
+/**
+ * Check if a player (by game_players.id) is a bot
+ */
+export async function isBot(playerId: string): Promise<boolean> {
+  const result = await pool.query<{ is_bot: boolean }>(
+    'SELECT is_bot FROM game_players WHERE id = $1',
+    [playerId]
+  );
+  return result.rows[0]?.is_bot || false;
+}
+
+/**
+ * Get all bot player IDs in a game
+ */
+export async function getBotsInGame(gameId: string): Promise<string[]> {
+  const result = await pool.query<{ id: string }>(
+    'SELECT id FROM game_players WHERE game_id = $1 AND is_bot = TRUE',
+    [gameId]
+  );
+  return result.rows.map(r => r.id);
+}
+
+/**
+ * Get player info by game_players.id (for bots and humans)
+ */
+export async function getPlayerById(playerId: string): Promise<GamePlayerRow | null> {
+  const result = await pool.query<GamePlayerRow>(
+    'SELECT * FROM game_players WHERE id = $1',
+    [playerId]
+  );
+  return result.rows[0] || null;
+}
+
+/**
  * Drop all game data (admin/dev only)
  */
 export async function dropAllGames(): Promise<DropGamesResult> {
@@ -563,5 +759,10 @@ module.exports = {
   startGame,
   getUserGames,
   isPlayerInGame,
-  dropAllGames
+  dropAllGames,
+  addBot,
+  removeBot,
+  isBot,
+  getBotsInGame,
+  getPlayerById
 };

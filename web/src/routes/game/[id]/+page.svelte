@@ -46,8 +46,25 @@
 	// Market Components
 	import MarketSection from '$lib/components/market/MarketSection.svelte';
 
+	// Modals
+	import LocationActionModal from '$lib/components/modals/LocationActionModal.svelte';
+
 	// Utilities
 	import { calculateShipStats } from '$lib/utils/shipStats';
+
+	// Locations that require parameter input before placing agent
+	const LOCATIONS_REQUIRING_PARAMS: Record<string, string> = {
+		gas_depot: 'Gas Depot',
+		academy: 'Academy',
+		government_liaison: 'Government Liaison',
+		research_institute: 'Research Institute',
+		construction_hall: 'Hangar'
+	};
+
+	// State for location action modal
+	let showLocationModal = false;
+	let pendingLocationId: string | null = null;
+	let pendingLocationName: string = '';
 
 	// Center pane tabs
 	type CenterTab = 'actions' | 'log' | 'map' | 'blueprint';
@@ -216,11 +233,33 @@
 			return;
 		}
 
+		const locationId = event.detail.locationId;
+
+		// Check if this location requires parameter input
+		if (LOCATIONS_REQUIRING_PARAMS[locationId]) {
+			pendingLocationId = locationId;
+			pendingLocationName = LOCATIONS_REQUIRING_PARAMS[locationId];
+			showLocationModal = true;
+			return;
+		}
+
+		// Send action directly for locations that don't require params
+		await sendPlaceAgentAction(locationId, {});
+	}
+
+	// Send the PLACE_AGENT action with optional params
+	async function sendPlaceAgentAction(locationId: string, params: Record<string, unknown>) {
+		if (selectedCardIndex === null) {
+			showToast('Select a card first', 'warning');
+			return;
+		}
+
 		const result = await sendAction({
 			actionType: 'PLACE_AGENT',
 			actionData: {
-				locationId: event.detail.locationId,
-				cardIndex: selectedCardIndex
+				locationId,
+				cardIndex: selectedCardIndex,
+				...params
 			}
 		});
 
@@ -230,6 +269,23 @@
 		} else {
 			showToast(result.error || 'Failed to place agent', 'error');
 		}
+	}
+
+	// Handle location modal confirmation
+	function handleLocationModalConfirm(event: CustomEvent<{ params: Record<string, unknown> }>) {
+		if (pendingLocationId) {
+			sendPlaceAgentAction(pendingLocationId, event.detail.params);
+		}
+		showLocationModal = false;
+		pendingLocationId = null;
+		pendingLocationName = '';
+	}
+
+	// Handle location modal cancellation
+	function handleLocationModalCancel() {
+		showLocationModal = false;
+		pendingLocationId = null;
+		pendingLocationName = '';
 	}
 
 	async function handleEndTurn() {
@@ -499,10 +555,13 @@
 				<h3>Players ({$lobbyGame?.current_player_count || 0}/4)</h3>
 				<div class="player-cards">
 					{#each $lobbyGame?.players || [] as player}
-						<div class="player-card" class:host={player.id === $lobbyGame?.host_id}>
-							<span class="player-name">{player.username}</span>
+						<div class="player-card" class:host={player.id === $lobbyGame?.host_id} class:bot={player.isBot}>
+							<span class="player-name">{player.isBot ? player.botName : player.username}</span>
 							{#if player.id === $lobbyGame?.host_id}
 								<span class="host-badge">Host</span>
+							{/if}
+							{#if player.isBot}
+								<span class="bot-badge">Bot</span>
 							{/if}
 							{#if player.faction}
 								<span class="faction-badge {player.faction}">{player.faction}</span>
@@ -560,8 +619,10 @@
 				{#if $isMyTurn}
 					<div class="turn-indicator your-turn">Your Turn</div>
 				{:else}
+					{@const waitingPlayer = $allPlayers.find((p) => p.id === $currentPlayerId)}
 					<div class="turn-indicator waiting">
-						Waiting for {$allPlayers.find((p) => p.id === $currentPlayerId)?.faction || 'player'}
+						Waiting for {waitingPlayer?.botName || waitingPlayer?.faction || 'player'}
+						{#if waitingPlayer?.isBot}<span class="bot-tag">(Bot)</span>{/if}
 					</div>
 				{/if}
 			</div>
@@ -571,7 +632,7 @@
 					<select class="dev-switcher" value={$effectiveUserId} on:change={handlePlayerSwitch}>
 						{#each $allPlayers as player}
 							<option value={player.id}>
-								{player.faction} ({player.id === $user?.id ? 'You' : 'AI'})
+								{player.botName || player.faction} ({player.id === $user?.id ? 'You' : player.isBot ? 'Bot' : 'AI'})
 							</option>
 						{/each}
 					</select>
@@ -883,6 +944,15 @@
 	</div>
 
 	<ToastContainer />
+
+	{#if showLocationModal && pendingLocationId}
+		<LocationActionModal
+			locationId={pendingLocationId}
+			locationName={pendingLocationName}
+			on:confirm={handleLocationModalConfirm}
+			on:cancel={handleLocationModalCancel}
+		/>
+	{/if}
 {/if}
 
 <style>
@@ -981,6 +1051,19 @@
 		color: var(--color-bg-primary);
 		border-radius: var(--radius-sm);
 		text-transform: uppercase;
+	}
+
+	.bot-badge {
+		font-size: 0.75rem;
+		padding: 2px 6px;
+		background: var(--color-info, #3b82f6);
+		color: white;
+		border-radius: var(--radius-sm);
+		text-transform: uppercase;
+	}
+
+	.player-card.bot {
+		border-left-style: dashed;
 	}
 
 	.faction-badge {
@@ -1092,6 +1175,12 @@
 	.turn-indicator.waiting {
 		background: var(--color-bg-hover);
 		color: var(--color-text-secondary);
+	}
+
+	.bot-tag {
+		color: var(--color-info, #3b82f6);
+		font-size: 0.75rem;
+		margin-left: var(--spacing-xs);
 	}
 
 	.dev-switcher {

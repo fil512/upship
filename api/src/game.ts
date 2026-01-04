@@ -197,6 +197,8 @@ export type TurnState =
 // Player state
 export interface PlayerState {
 	faction: Faction;
+	isBot?: boolean;
+	botName?: string;
 	cash: number;
 	income: number;
 	officerIncome: number;
@@ -331,6 +333,8 @@ export interface LobbyPlayer {
 	id: string;
 	username: string;
 	faction: Faction | null;
+	isBot?: boolean;
+	botName?: string;
 }
 
 // Turn info for Undo/End Turn buttons

@@ -44,12 +44,17 @@
 						<span class="faction-name" style:color={borderColor}>
 							{player.faction || 'Unknown'}
 						</span>
-						<span class="online-dot" class:online={isOnline(playerId)}></span>
+						{#if !player.isBot}
+							<span class="online-dot" class:online={isOnline(playerId)}></span>
+						{/if}
 						{#if playerId === currentPlayerId}
 							<span class="badge turn">Turn</span>
 						{/if}
 						{#if playerId === myPlayerId}
 							<span class="badge you">You</span>
+						{/if}
+						{#if player.isBot}
+							<span class="badge bot">Bot</span>
 						{/if}
 					</div>
 
@@ -176,6 +181,11 @@
 	.badge.you {
 		background: var(--color-accent-gold);
 		color: var(--color-bg-primary);
+	}
+
+	.badge.bot {
+		background: var(--color-info, #3b82f6);
+		color: white;
 	}
 
 	.pawns {

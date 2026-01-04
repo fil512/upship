@@ -33,6 +33,7 @@ const { filterStateForPlayer } = require('../services/gameStateHelpers');
 const { processAction } = require('../actions');
 const { executeUndo, getUndoInfo } = require('../actions/undo');
 const { broadcastStateUpdate } = require('../socket');
+const { checkAndExecuteBotMoves } = require('../services/botExecutor');
 
 // Extended request with session and app
 interface AuthenticatedRequest extends Request {
@@ -350,6 +351,14 @@ router.post('/:gameId/action', requireGamePlayer, async (req: Request, res: Resp
     const io = authReq.app.get('io');
     if (io) {
       broadcastStateUpdate(io, gameId, newState, newState.version || 1, actionType);
+
+      // Check if next player is a bot and execute their moves
+      // Run async to not block the response
+      setImmediate(() => {
+        checkAndExecuteBotMoves(io, gameId).catch((err: Error) => {
+          console.error('Bot execution error:', err);
+        });
+      });
     }
 
     res.json({

@@ -8,6 +8,7 @@ const { requireAuth } = require('../auth');
 const gameService = require('../services/gameService');
 const gameStateService = require('../services/gameStateService');
 const { broadcastLobbyUpdate, broadcastGameStarted } = require('../socket');
+const { checkAndExecuteBotMoves } = require('../services/botExecutor');
 const { NotFoundError, ValidationError } = require('../errors');
 
 // Extended request with session and app
@@ -195,6 +196,49 @@ router.post('/:id/faction', async (req: Request, res: Response, next: NextFuncti
   }
 });
 
+// Add bot to game (host only)
+router.post('/:id/bot', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const authReq = req as AuthenticatedRequest;
+    const { faction } = req.body as { faction?: string };
+    const validFactions = ['germany', 'britain', 'usa', 'italy'];
+
+    if (!faction || !validFactions.includes(faction)) {
+      throw new ValidationError('Invalid faction. Must be: germany, britain, usa, or italy');
+    }
+
+    const game: Game = await gameService.addBot(req.params.id, authReq.session.userId, faction);
+
+    // Broadcast lobby update to waiting players
+    const io = authReq.app.get('io');
+    if (io) {
+      broadcastLobbyUpdate(io, req.params.id, game);
+    }
+
+    res.json({ game });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Remove bot from game (host only)
+router.delete('/:id/bot/:botId', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const authReq = req as AuthenticatedRequest;
+    const game: Game = await gameService.removeBot(req.params.id, authReq.session.userId, req.params.botId);
+
+    // Broadcast lobby update to waiting players
+    const io = authReq.app.get('io');
+    if (io) {
+      broadcastLobbyUpdate(io, req.params.id, game);
+    }
+
+    res.json({ game });
+  } catch (error) {
+    next(error);
+  }
+});
+
 // Start game (host only)
 router.post('/:id/start', async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -208,6 +252,13 @@ router.post('/:id/start', async (req: Request, res: Response, next: NextFunction
     const io = authReq.app.get('io');
     if (io && gameState) {
       broadcastGameStarted(io, req.params.id, gameState.state);
+
+      // Check if first player is a bot and execute their moves
+      setImmediate(() => {
+        checkAndExecuteBotMoves(io, req.params.id).catch((err: Error) => {
+          console.error('Bot execution error after game start:', err);
+        });
+      });
     }
 
     res.json({ game });
