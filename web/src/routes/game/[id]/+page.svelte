@@ -48,7 +48,11 @@
 
 	// Utilities
 	import { calculateShipStats } from '$lib/utils/shipStats';
+	import { getAvailableTilesForPlayer } from '$lib/utils/techCardToTiles';
+	import { TECH_TILES } from '$lib/data/techTiles';
 	import Icon from '$lib/components/ui/Icon.svelte';
+	import TechTileSelector from '$lib/components/blueprint/TechTileSelector.svelte';
+	import type { Blueprint as BlueprintType } from '$lib/types/game';
 
 	// Locations that require parameter input before placing agent
 	const LOCATIONS_REQUIRING_PARAMS: Record<string, string> = {
@@ -63,6 +67,12 @@
 	let showLocationModal = false;
 	let pendingLocationId: string | null = null;
 	let pendingLocationName: string = '';
+
+	// Design Bureau mode state
+	let designBureauMode = false;
+	let pendingBlueprint: BlueprintType | null = null;
+	let selectedTechTileId: string | null = null;
+	let designBureauCardIndex: number | null = null;
 
 	// Center pane tabs
 	type CenterTab = 'actions' | 'log' | 'map' | 'blueprint';
@@ -219,6 +229,19 @@
 		}
 
 		const locationId = event.detail.locationId;
+
+		// Design Bureau: enter interactive blueprint editing mode
+		if (locationId === 'design_bureau') {
+			if ($myState?.blueprint) {
+				designBureauMode = true;
+				pendingBlueprint = structuredClone($myState.blueprint);
+				designBureauCardIndex = selectedCardIndex;
+				selectedCardIndex = null;
+				selectedCardSymbol = null;
+				activeTab = 'blueprint';
+			}
+			return;
+		}
 
 		// Check if this location requires parameter input
 		if (LOCATIONS_REQUIRING_PARAMS[locationId]) {
@@ -416,8 +439,9 @@
 	$: progressThresholds = $gameState?.progressThresholds || { age2: 4, age3: 8, end: 12 };
 	$: progressTrack = $gameState?.progressTrack || 0;
 
-	// Handle blueprint slot click
+	// Handle blueprint slot click (normal mode - not design bureau)
 	function handleBlueprintSlotClick(event: CustomEvent<{ slotType: string; index: number; upgrade: string | null }>) {
+		if (designBureauMode) return; // Handled by placeTile event in design bureau mode
 		const { slotType, index, upgrade } = event.detail;
 		openModal('upgrade', {
 			slotType,
@@ -425,6 +449,60 @@
 			currentUpgrade: upgrade,
 			age: $gameState?.age || 1
 		});
+	}
+
+	// Design Bureau mode handlers
+	$: availableTechTiles = designBureauMode
+		? getAvailableTilesForPlayer($myState?.techCards || [], $gameState?.age || 1)
+		: null;
+
+	$: previewShipStats = designBureauMode && pendingBlueprint
+		? calculateShipStats(pendingBlueprint)
+		: null;
+
+	function handleTechTileSelect(event: CustomEvent<{ tileId: string }>) {
+		selectedTechTileId = event.detail.tileId;
+	}
+
+	function handlePlaceTile(event: CustomEvent<{ slotType: string; index: number; tileId: string }>) {
+		if (!pendingBlueprint) return;
+		const { slotType, index, tileId } = event.detail;
+		const slotKey = `${slotType}Slots` as keyof BlueprintType;
+		const slots = pendingBlueprint[slotKey] as (string | null)[];
+		if (slots && index < slots.length) {
+			slots[index] = tileId;
+			pendingBlueprint = pendingBlueprint; // Trigger reactivity
+		}
+		selectedTechTileId = null; // Clear selection after placement
+	}
+
+	async function handleDesignBureauDone() {
+		if (!pendingBlueprint || designBureauCardIndex === null) return;
+
+		const result = await sendAction({
+			actionType: 'PLACE_AGENT',
+			actionData: {
+				locationId: 'design_bureau',
+				cardIndex: designBureauCardIndex,
+				blueprint: pendingBlueprint
+			}
+		});
+
+		if (result.success) {
+			designBureauMode = false;
+			pendingBlueprint = null;
+			selectedTechTileId = null;
+			designBureauCardIndex = null;
+		} else {
+			showToast(result.error || 'Failed to update blueprint', 'error');
+		}
+	}
+
+	function handleDesignBureauCancel() {
+		designBureauMode = false;
+		pendingBlueprint = null;
+		selectedTechTileId = null;
+		designBureauCardIndex = null;
 	}
 
 	// Launchpad state - when active, show launch UI
@@ -795,7 +873,25 @@
 						</div>
 					{:else if activeTab === 'blueprint'}
 						<div class="blueprint-tab">
-							{#if $myState?.blueprint}
+							{#if designBureauMode && pendingBlueprint}
+								<!-- Design Bureau editing mode -->
+								<AirshipBlueprint
+									blueprint={pendingBlueprint}
+									age={$gameState?.age || 1}
+									editMode={true}
+									selectedTileId={selectedTechTileId}
+									on:slotClick={handleBlueprintSlotClick}
+									on:placeTile={handlePlaceTile}
+								/>
+								{#if availableTechTiles}
+									<TechTileSelector
+										tiles={availableTechTiles}
+										selectedTileId={selectedTechTileId}
+										on:select={handleTechTileSelect}
+									/>
+								{/if}
+							{:else if $myState?.blueprint}
+								<!-- Normal view mode -->
 								<AirshipBlueprint
 									blueprint={$myState.blueprint}
 									age={$gameState?.age || 1}
@@ -818,7 +914,29 @@
 			<aside class="sidebar right">
 				<div class="panel actions">
 					<!-- Instruction text at top -->
-					{#if isInPurchaseSelection && !isLaunchpadActive && !shipAwaitingHazard}
+					{#if designBureauMode}
+						<!-- Design Bureau editing mode -->
+						<p class="action-instruction">
+							{#if selectedTechTileId}
+								Click a highlighted slot to place the tile
+							{:else}
+								Select a tech tile below, then click a slot
+							{/if}
+						</p>
+						{#if previewShipStats}
+							<div class="design-bureau-stats">
+								<ShipStats stats={previewShipStats} />
+							</div>
+						{/if}
+						<div class="design-bureau-buttons">
+							<button class="btn primary w-full" on:click={handleDesignBureauDone}>
+								Done
+							</button>
+							<button class="btn secondary w-full" on:click={handleDesignBureauCancel}>
+								Cancel
+							</button>
+						</div>
+					{:else if isInPurchaseSelection && !isLaunchpadActive && !shipAwaitingHazard}
 						<!-- Purchase selection mode (after clicking Reveal) -->
 						<p class="action-instruction">Choose Agent and Tech cards to purchase</p>
 						<div class="reveal-row">
@@ -1766,6 +1884,17 @@
 		border-radius: var(--radius-sm);
 		font-size: 0.75rem;
 		color: white;
+	}
+
+	/* Design Bureau Mode */
+	.design-bureau-stats {
+		margin-bottom: var(--spacing-sm);
+	}
+
+	.design-bureau-buttons {
+		display: flex;
+		flex-direction: column;
+		gap: var(--spacing-xs);
 	}
 
 	@media (max-width: 900px) {

@@ -3,16 +3,37 @@
 	import type { Blueprint } from '$lib/types/game';
 	import { icons, type IconName } from '$lib/icons';
 	import Icon from '$lib/components/ui/Icon.svelte';
+	import { TECH_TILES } from '$lib/data/techTiles';
 
 	export let blueprint: Blueprint;
 	export let age: number = 1;
+	export let editMode: boolean = false;
+	export let selectedTileId: string | null = null;
 
 	const dispatch = createEventDispatcher<{
 		slotClick: { slotType: string; index: number; upgrade: string | null };
+		placeTile: { slotType: string; index: number; tileId: string };
 	}>();
 
+	// Determine which slot type the selected tile can go into
+	$: selectedTileSlotType = selectedTileId ? TECH_TILES[selectedTileId]?.slotType : null;
+
 	function handleSlotClick(slotType: string, index: number, upgrade: string | null) {
+		if (editMode && selectedTileId && selectedTileSlotType) {
+			// In edit mode with a tile selected - try to place it
+			const slotKey = `${slotType}Slots`;
+			if (slotKey === selectedTileSlotType) {
+				dispatch('placeTile', { slotType, index, tileId: selectedTileId });
+			}
+			return;
+		}
 		dispatch('slotClick', { slotType, index, upgrade });
+	}
+
+	// Check if a slot is a valid target for the selected tile
+	function isValidTarget(slotType: string): boolean {
+		if (!editMode || !selectedTileId || !selectedTileSlotType) return false;
+		return `${slotType}Slots` === selectedTileSlotType;
 	}
 
 	/**
@@ -283,6 +304,7 @@
 						rx="6"
 						class="slot"
 						class:filled={upgrade !== null}
+						class:valid-target={isValidTarget('fabric')}
 						style="--slot-color: {slotColors.fabric}"
 					/>
 					{#if info}
@@ -325,6 +347,7 @@
 						rx="6"
 						class="slot"
 						class:filled={upgrade !== null}
+						class:valid-target={isValidTarget('frame')}
 						style="--slot-color: {slotColors.frame}"
 					/>
 					{#if info}
@@ -367,6 +390,7 @@
 						rx="6"
 						class="slot"
 						class:filled={upgrade !== null}
+						class:valid-target={isValidTarget('drive')}
 						style="--slot-color: {slotColors.drive}"
 					/>
 					{#if info}
@@ -409,6 +433,7 @@
 						rx="6"
 						class="slot"
 						class:filled={upgrade !== null}
+						class:valid-target={isValidTarget('component')}
 						style="--slot-color: {slotColors.component}"
 					/>
 					{#if info}
@@ -555,6 +580,21 @@
 	.slot.filled {
 		fill: color-mix(in srgb, var(--slot-color) 20%, rgba(30, 41, 59, 0.9));
 		stroke-dasharray: none;
+	}
+
+	.slot.valid-target {
+		stroke-width: 3;
+		stroke-dasharray: none;
+		animation: pulse-target 1s ease-in-out infinite;
+	}
+
+	@keyframes pulse-target {
+		0%, 100% {
+			fill: color-mix(in srgb, var(--slot-color) 30%, transparent);
+		}
+		50% {
+			fill: color-mix(in srgb, var(--slot-color) 50%, transparent);
+		}
 	}
 
 	.slot-name {

@@ -68,3 +68,38 @@ export function formatStats(stats: Record<string, number>): string {
 export function getSlotTypeLabel(slotType: string): string {
   return SLOT_TYPE_LABELS[slotType] || slotType;
 }
+
+export interface AvailableTilesBySlot {
+  frameSlots: TechTile[];
+  fabricSlots: TechTile[];
+  driveSlots: TechTile[];
+  componentSlots: TechTile[];
+}
+
+/**
+ * Get all tech tiles available to a player based on their owned tech cards and current age.
+ * Tiles are grouped by slot type for easy rendering.
+ * @param techCards Array of tech card IDs the player owns
+ * @param currentAge Current game age (1, 2, or 3)
+ * @returns Object with tiles grouped by slot type
+ */
+export function getAvailableTilesForPlayer(techCards: string[], currentAge: number): AvailableTilesBySlot {
+  const result: AvailableTilesBySlot = {
+    frameSlots: [],
+    fabricSlots: [],
+    driveSlots: [],
+    componentSlots: []
+  };
+
+  for (const tile of Object.values(TECH_TILES)) {
+    // Check if player owns the required card and tile is available in current age
+    if (techCards.includes(tile.requiredCard) && tile.age <= currentAge) {
+      // Add to appropriate slot type array
+      if (tile.slotType in result) {
+        result[tile.slotType as keyof AvailableTilesBySlot].push(tile);
+      }
+    }
+  }
+
+  return result;
+}

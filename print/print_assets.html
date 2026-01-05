@@ -1,0 +1,3222 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Up Ship! Print Assets</title>
+        <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Roboto+Slab:wght@300;400;700&display=swap');
+
+    @page {
+        size: letter;
+        margin: 0.25in;
+    }
+    
+    body {
+        font-family: 'Roboto Slab', serif;
+        background-color: white;
+        color: #1a1a1a;
+        margin: 0;
+        padding: 0;
+    }
+
+    .page-break {
+        page-break-after: always;
+    }
+    
+    h1 {
+        font-family: 'Cinzel', serif;
+        text-align: center;
+        border-bottom: 2px solid #333;
+        margin-bottom: 20px;
+    }
+    
+    p { text-align: center; font-style: italic; }
+
+    /* CARD STYLES (2.5 x 3.5 inches) */
+    .card-sheet {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 2px; /* Minimal gap for cutting lines */
+        justify-content: center;
+        width: 100%;
+    }
+
+    .card {
+        width: 2.5in;
+        height: 3.5in;
+        border: 1px dashed #ccc; /* Cutting guide */
+        position: relative;
+        overflow: hidden;
+        background-color: #fdfbf7; /* Cream/Paper */
+        box-sizing: border-box;
+        padding: 0.15in;
+        display: flex;
+        flex-direction: column;
+        margin: 2px;
+    }
+
+    .card-inner {
+        border: 2px solid #003366; /* Blueprint Blue */
+        border-radius: 0.1in;
+        height: 100%;
+        width: 100%;
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+        padding: 0.1in;
+    }
+    
+    .card-header {
+        font-family: 'Cinzel', serif;
+        font-weight: 700;
+        font-size: 10pt;
+        text-align: center;
+        text-transform: uppercase;
+        margin-bottom: 0.05in;
+        color: #003366;
+        border-bottom: 1px solid #003366;
+        padding-bottom: 0.05in;
+        min-height: 0.3in;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .card-type {
+        font-family: 'Playfair Display', serif;
+        font-style: italic;
+        font-size: 7pt;
+        text-align: center;
+        color: #666;
+        margin-bottom: 0.1in;
+    }
+
+    .card-body {
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        font-size: 9pt;
+        line-height: 1.2;
+    }
+
+    .card-footer {
+        margin-top: auto;
+        border-top: 1px solid #003366;
+        padding-top: 0.05in;
+        display: flex;
+        justify-content: space-around;
+        font-size: 7pt;
+    }
+
+    /* SPECIFIC CARD TYPES */
+    .market-card .cost-badge {
+        position: absolute;
+        top: 0.05in;
+        right: 0.05in;
+        background: #003366;
+        color: white;
+        width: 0.25in;
+        height: 0.25in;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 10pt;
+        z-index: 10;
+        border: 2px solid #fff;
+    }
+
+    .mission-card { background-color: #f4f8fb; }
+    .hazard-card { background-color: #fff5f5; }
+    
+    .hazard-card .card-inner { border-color: #8b0000; }
+    .hazard-card .card-header { color: #8b0000; border-bottom-color: #8b0000; }
+
+    /* ICONS */
+    .icon-svg {
+        width: 20px;
+        height: 20px;
+        display: inline-block;
+        vertical-align: middle;
+    }
+    
+    /* TECH TILES (Square ~1.5 inch) */
+    .tile-sheet {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 2px;
+        justify-content: center;
+    }
+    
+    .tile {
+        width: 1.5in;
+        height: 1.5in;
+        border: 1px dashed #999;
+        background: #e6e6e6;
+        padding: 5px;
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 7pt;
+        text-align: center;
+        position: relative;
+    }
+    
+    .tile-inner {
+        border: 2px solid #333;
+        width: 100%;
+        height: 100%;
+        border-radius: 4px;
+        box-sizing: border-box;
+        padding: 2px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        background: white;
+    }
+    
+    .tile.propulsion .tile-inner { border-color: #1976d2; background: #e3f2fd; }
+    .tile.frame .tile-inner { border-color: #5d4037; background: #efebe9; }
+    .tile.fabric .tile-inner { border-color: #7b1fa2; background: #f3e5f5; }
+    .tile.gas .tile-inner { border-color: #fbc02d; background: #fffde7; }
+    .tile.payload .tile-inner { border-color: #388e3c; background: #e8f5e9; }
+
+    .tile-name {
+        font-weight: bold;
+        font-size: 8pt;
+        line-height: 1;
+        margin-top: 2px;
+    }
+    
+    .tile-stats {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 2px;
+    }
+    
+    .stat-badge {
+        background: rgba(255,255,255,0.7);
+        border: 1px solid #666;
+        border-radius: 2px;
+        padding: 1px 2px;
+        font-size: 6pt;
+        font-weight: bold;
+    }
+    </style>
+    </head>
+    <body>
+        <h1>Market Cards (Agent Deck)</h1>
+        <p>30 Cards</p>
+        <div class="card-sheet">
+        <div class="card market-card">
+            <div class="cost-badge">4</div>
+            <div class="card-inner">
+                <div class="card-header">Chief Engineer</div>
+                <div class="card-type">Technical Personnel</div>
+                
+                <div class="card-body">
+                    <div style="margin-bottom: 0.1in; transform: scale(1.5);"><svg class="icon-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <!-- Wrench: Standard FontAwesome Style -->
+  <path d="M22.7 19l-9.1-9.1c.9-2.3.4-5-1.5-6.9-2-2-5-2.4-7.4-1.3L9 6 6 9 1.6 4.7C.4 7.1.9 10.1 2.9 12.1c1.9 1.9 4.6 2.4 6.9 1.5l9.1 9.1c.4.4 1 .4 1.4 0l2.3-2.3c.5-.4.5-1.1.1-1.4z" fill="#4a9eff"/>
+</svg>
+</div>
+                    <div style="font-style: italic;">No Effect</div>
+                </div>
+                
+                <div class="card-footer">
+                    <div style="font-weight:bold; margin-right:5px; font-size:6pt; align-self:center;">REVEAL:</div>
+                    <div style="display:flex; gap:5px; align-items:center;">
+                        <div style="display:flex;align-items:center;"><svg class="icon-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <!-- Hard Hat -->
+  <path d="M2 14c0-5.5 4.5-10 10-10s10 4.5 10 10v2H2v-2z" fill="#ffa726"/>
+  <!-- Rim -->
+  <path d="M1 16h22v2H1z" fill="#f57c00"/>
+  <!-- Structural Ribs -->
+  <path d="M12 4v10" fill="none" stroke="#fb8c00" stroke-width="1.5"/>
+  <path d="M6.5 6.5c1.5 3 1.5 7.5 1.5 9.5" fill="none" stroke="#fb8c00" stroke-width="1.5"/>
+  <path d="M17.5 6.5c-1.5 3-1.5 7.5-1.5 9.5" fill="none" stroke="#fb8c00" stroke-width="1.5"/>
+</svg> <span style="font-weight:bold;margin-left:2px;">1</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card market-card">
+            <div class="cost-badge">5</div>
+            <div class="card-inner">
+                <div class="card-header">Test Pilot</div>
+                <div class="card-type">Technical Personnel</div>
+                
+                <div class="card-body">
+                    <div style="margin-bottom: 0.1in; transform: scale(1.5);"><svg class="icon-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Single Propeller Blade Definition -->
+    <path id="blade" d="M12 12 C 11 12 10 9 10 5 C 10 3 11 2 12 2 C 13 2 14 3 14 5 C 14 9 13 12 12 12 Z" fill="#ffffff" stroke="#ccc" stroke-width="0.5"/>
+  </defs>
+  
+  <!-- Three rotated instances -->
+  <use href="#blade"/>
+  <use href="#blade" transform="rotate(120 12 12)"/>
+  <use href="#blade" transform="rotate(240 12 12)"/>
+  
+  <!-- Center Hub -->
+  <circle cx="12" cy="12" r="2" fill="#e0e0e0" stroke="#999" stroke-width="1"/>
+</svg></div>
+                    <div style="font-style: italic;">+2 Reliability for this launch</div>
+                </div>
+                
+                <div class="card-footer">
+                    <div style="font-weight:bold; margin-right:5px; font-size:6pt; align-self:center;">REVEAL:</div>
+                    <div style="display:flex; gap:5px; align-items:center;">
+                        <div style="display:flex;align-items:center;"><svg class="icon-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <!-- Captain Silhouette -->
+  <defs>
+    <clipPath id="cap-clip">
+      <rect x="0" y="0" width="24" height="24"/>
+    </clipPath>
+  </defs>
+  <!-- Shoulders -->
+  <path d="M4 24v-4c0-3 4-5 8-5s8 2 8 5v4H4z" fill="#e0e0e0"/>
+  <!-- Head -->
+  <circle cx="12" cy="10" r="4.5" fill="#e0e0e0"/>
+  <!-- Cap Visor -->
+  <path d="M5 9c0-1 2-2 7-2s7 1 7 2" fill="none" stroke="#333" stroke-width="1.5"/>
+  <!-- Cap Top -->
+  <path d="M6 7c0-3 2.5-5 6-5s6 2 6 5H6z" fill="#e0e0e0"/>
+  <!-- Gold Band -->
+  <rect x="6" y="7" width="12" height="1.5" fill="#f1c40f"/>
+  <!-- Epaulettes -->
+  <rect x="5" y="16" width="4" height="2" fill="#f1c40f"/>
+  <rect x="15" y="16" width="4" height="2" fill="#f1c40f"/>
+</svg> <span style="font-weight:bold;margin-left:2px;">1</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card market-card">
+            <div class="cost-badge">3</div>
+            <div class="card-inner">
+                <div class="card-header">Navigator</div>
+                <div class="card-type">Technical Personnel</div>
+                
+                <div class="card-body">
+                    <div style="margin-bottom: 0.1in; transform: scale(1.5);"><svg class="icon-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Single Propeller Blade Definition -->
+    <path id="blade" d="M12 12 C 11 12 10 9 10 5 C 10 3 11 2 12 2 C 13 2 14 3 14 5 C 14 9 13 12 12 12 Z" fill="#ffffff" stroke="#ccc" stroke-width="0.5"/>
+  </defs>
+  
+  <!-- Three rotated instances -->
+  <use href="#blade"/>
+  <use href="#blade" transform="rotate(120 12 12)"/>
+  <use href="#blade" transform="rotate(240 12 12)"/>
+  
+  <!-- Center Hub -->
+  <circle cx="12" cy="12" r="2" fill="#e0e0e0" stroke="#999" stroke-width="1"/>
+</svg></div>
+                    <div style="font-style: italic;">+1 Range for this launch</div>
+                </div>
+                
+                <div class="card-footer">
+                    <div style="font-weight:bold; margin-right:5px; font-size:6pt; align-self:center;">REVEAL:</div>
+                    <div style="display:flex; gap:5px; align-items:center;">
+                        <div style="display:flex;align-items:center;"><svg class="icon-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <!-- Art Deco Coin -->
+  <circle cx="12" cy="12" r="11" fill="#888888" stroke="#555" stroke-width="1"/>
+  <circle cx="12" cy="12" r="8.5" fill="none" stroke="#666" stroke-width="0.5"/>
+  <circle cx="12" cy="12" r="8" fill="none" stroke="#666" stroke-width="0.5" stroke-dasharray="1 1"/>
+  <!-- Pound Symbol -->
+  <path d="M10 8c0-1.65 1.35-3 3-3s2.5 1 2.5 1" fill="none" stroke="#1a1a2e" stroke-width="2" stroke-linecap="round"/>
+  <path d="M13 5c-1.65 0-3 1.35-3 3 0 1.5 1 2.5 2 3.5l-2 4.5h6" fill="none" stroke="#1a1a2e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  <line x1="9" y1="11" x2="15" y2="11" stroke="#1a1a2e" stroke-width="2"/>
+</svg> <span style="font-weight:bold;margin-left:2px;">1</span></div><div style="display:flex;align-items:center;"><svg class="icon-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <!-- Influence: Diamond -->
+  <path d="M12 2L22 12L12 22L2 12Z" fill="#888888" stroke="#666" stroke-width="1"/>
+  <path d="M12 5L19 12L12 19L5 12Z" fill="none" stroke="#666" stroke-width="1"/>
+</svg> <span style="font-weight:bold;margin-left:2px;">1</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card market-card">
+            <div class="cost-badge">4</div>
+            <div class="card-inner">
+                <div class="card-header">Weather Expert</div>
+                <div class="card-type">Technical Personnel</div>
+                
+                <div class="card-body">
+                    <div style="margin-bottom: 0.1in; transform: scale(1.5);"><svg class="icon-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Single Propeller Blade Definition -->
+    <path id="blade" d="M12 12 C 11 12 10 9 10 5 C 10 3 11 2 12 2 C 13 2 14 3 14 5 C 14 9 13 12 12 12 Z" fill="#ffffff" stroke="#ccc" stroke-width="0.5"/>
+  </defs>
+  
+  <!-- Three rotated instances -->
+  <use href="#blade"/>
+  <use href="#blade" transform="rotate(120 12 12)"/>
+  <use href="#blade" transform="rotate(240 12 12)"/>
+  
+  <!-- Center Hub -->
+  <circle cx="12" cy="12" r="2" fill="#e0e0e0" stroke="#999" stroke-width="1"/>
+</svg></div>
+                    <div style="font-style: italic;">Ignore Weather hazards this launch</div>
+                </div>
+                
+                <div class="card-footer">
+                    <div style="font-weight:bold; margin-right:5px; font-size:6pt; align-self:center;">REVEAL:</div>
+                    <div style="display:flex; gap:5px; align-items:center;">
+                        <div style="display:flex;align-items:center;"><svg class="icon-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <!-- Hard Hat -->
+  <path d="M2 14c0-5.5 4.5-10 10-10s10 4.5 10 10v2H2v-2z" fill="#ffa726"/>
+  <!-- Rim -->
+  <path d="M1 16h22v2H1z" fill="#f57c00"/>
+  <!-- Structural Ribs -->
+  <path d="M12 4v10" fill="none" stroke="#fb8c00" stroke-width="1.5"/>
+  <path d="M6.5 6.5c1.5 3 1.5 7.5 1.5 9.5" fill="none" stroke="#fb8c00" stroke-width="1.5"/>
+  <path d="M17.5 6.5c-1.5 3-1.5 7.5-1.5 9.5" fill="none" stroke="#fb8c00" stroke-width="1.5"/>
+</svg> <span style="font-weight:bold;margin-left:2px;">1</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card market-card">
+            <div class="cost-badge">3</div>
+            <div class="card-inner">
+                <div class="card-header">Gas Engineer</div>
+                <div class="card-type">Technical Personnel</div>
+                
+                <div class="card-body">
+                    <div style="margin-bottom: 0.1in; transform: scale(1.5);"><svg class="icon-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <!-- Wrench: Standard FontAwesome Style -->
+  <path d="M22.7 19l-9.1-9.1c.9-2.3.4-5-1.5-6.9-2-2-5-2.4-7.4-1.3L9 6 6 9 1.6 4.7C.4 7.1.9 10.1 2.9 12.1c1.9 1.9 4.6 2.4 6.9 1.5l9.1 9.1c.4.4 1 .4 1.4 0l2.3-2.3c.5-.4.5-1.1.1-1.4z" fill="#4a9eff"/>
+</svg>
+</div>
+                    <div style="font-style: italic;">Install Gas "upgrade": -1 Weight</div>
+                </div>
+                
+                <div class="card-footer">
+                    <div style="font-weight:bold; margin-right:5px; font-size:6pt; align-self:center;">REVEAL:</div>
+                    <div style="display:flex; gap:5px; align-items:center;">
+                        <div style="display:flex;align-items:center;"><svg class="icon-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <!-- Gas: Canister -->
+  <path d="M7 6V4c0-1.1.9-2 2-2h6c1.1 0 2 .9 2 2v2h2v14c0 1.1-.9 2-2 2H7c-1.1 0-2-.9-2-2V6h2zm3-2h4v2h-4V4z" fill="#9ca3af"/>
+  <rect x="6" y="8" width="12" height="2" fill="#9ca3af" opacity="0.6"/>
+  <rect x="6" y="12" width="12" height="2" fill="#9ca3af" opacity="0.6"/>
+  <rect x="6" y="16" width="12" height="2" fill="#9ca3af" opacity="0.6"/>
+</svg> <span style="font-weight:bold;margin-left:2px;">1</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card market-card">
+            <div class="cost-badge">3</div>
+            <div class="card-inner">
+                <div class="card-header">Engine Specialist</div>
+                <div class="card-type">Technical Personnel</div>
+                
+                <div class="card-body">
+                    <div style="margin-bottom: 0.1in; transform: scale(1.5);"><svg class="icon-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <!-- Wrench: Standard FontAwesome Style -->
+  <path d="M22.7 19l-9.1-9.1c.9-2.3.4-5-1.5-6.9-2-2-5-2.4-7.4-1.3L9 6 6 9 1.6 4.7C.4 7.1.9 10.1 2.9 12.1c1.9 1.9 4.6 2.4 6.9 1.5l9.1 9.1c.4.4 1 .4 1.4 0l2.3-2.3c.5-.4.5-1.1.1-1.4z" fill="#4a9eff"/>
+</svg>
+</div>
+                    <div style="font-style: italic;">Install Propulsion "upgrade": -1 Weight</div>
+                </div>
+                
+                <div class="card-footer">
+                    <div style="font-weight:bold; margin-right:5px; font-size:6pt; align-self:center;">REVEAL:</div>
+                    <div style="display:flex; gap:5px; align-items:center;">
+                        <div style="display:flex;align-items:center;"><svg class="icon-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <!-- Art Deco Coin -->
+  <circle cx="12" cy="12" r="11" fill="#888888" stroke="#555" stroke-width="1"/>
+  <circle cx="12" cy="12" r="8.5" fill="none" stroke="#666" stroke-width="0.5"/>
+  <circle cx="12" cy="12" r="8" fill="none" stroke="#666" stroke-width="0.5" stroke-dasharray="1 1"/>
+  <!-- Pound Symbol -->
+  <path d="M10 8c0-1.65 1.35-3 3-3s2.5 1 2.5 1" fill="none" stroke="#1a1a2e" stroke-width="2" stroke-linecap="round"/>
+  <path d="M13 5c-1.65 0-3 1.35-3 3 0 1.5 1 2.5 2 3.5l-2 4.5h6" fill="none" stroke="#1a1a2e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  <line x1="9" y1="11" x2="15" y2="11" stroke="#1a1a2e" stroke-width="2"/>
+</svg> <span style="font-weight:bold;margin-left:2px;">1</span></div><div style="display:flex;align-items:center;"><svg class="icon-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <!-- Research: Stylized Square -->
+  <rect x="4" y="4" width="16" height="16" fill="#888888"/>
+  <rect x="6" y="6" width="12" height="12" fill="none" stroke="#666" stroke-width="1"/>
+  <rect x="9" y="9" width="6" height="6" fill="#aaa"/>
+  <!-- Corner accents -->
+  <path d="M4 4h4v4H4zM16 4h4v4h-4zM4 16h4v4H4zM16 16h4v4h-4z" fill="#777"/>
+</svg> <span style="font-weight:bold;margin-left:2px;">1</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card market-card">
+            <div class="cost-badge">4</div>
+            <div class="card-inner">
+                <div class="card-header">Safety Inspector</div>
+                <div class="card-type">Technical Personnel</div>
+                
+                <div class="card-body">
+                    <div style="margin-bottom: 0.1in; transform: scale(1.5);"><svg class="icon-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <!-- Wrench: Standard FontAwesome Style -->
+  <path d="M22.7 19l-9.1-9.1c.9-2.3.4-5-1.5-6.9-2-2-5-2.4-7.4-1.3L9 6 6 9 1.6 4.7C.4 7.1.9 10.1 2.9 12.1c1.9 1.9 4.6 2.4 6.9 1.5l9.1 9.1c.4.4 1 .4 1.4 0l2.3-2.3c.5-.4.5-1.1.1-1.4z" fill="#4a9eff"/>
+</svg>
+</div>
+                    <div style="font-style: italic;">+2 Reliability for this launch</div>
+                </div>
+                
+                <div class="card-footer">
+                    <div style="font-weight:bold; margin-right:5px; font-size:6pt; align-self:center;">REVEAL:</div>
+                    <div style="display:flex; gap:5px; align-items:center;">
+                        <div style="display:flex;align-items:center;"><svg class="icon-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <!-- Hard Hat -->
+  <path d="M2 14c0-5.5 4.5-10 10-10s10 4.5 10 10v2H2v-2z" fill="#ffa726"/>
+  <!-- Rim -->
+  <path d="M1 16h22v2H1z" fill="#f57c00"/>
+  <!-- Structural Ribs -->
+  <path d="M12 4v10" fill="none" stroke="#fb8c00" stroke-width="1.5"/>
+  <path d="M6.5 6.5c1.5 3 1.5 7.5 1.5 9.5" fill="none" stroke="#fb8c00" stroke-width="1.5"/>
+  <path d="M17.5 6.5c-1.5 3-1.5 7.5-1.5 9.5" fill="none" stroke="#fb8c00" stroke-width="1.5"/>
+</svg> <span style="font-weight:bold;margin-left:2px;">1</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card market-card">
+            <div class="cost-badge">2</div>
+            <div class="card-inner">
+                <div class="card-header">Ground Crew Chief</div>
+                <div class="card-type">Technical Personnel</div>
+                
+                <div class="card-body">
+                    <div style="margin-bottom: 0.1in; transform: scale(1.5);"><svg class="icon-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <!-- Wrench: Standard FontAwesome Style -->
+  <path d="M22.7 19l-9.1-9.1c.9-2.3.4-5-1.5-6.9-2-2-5-2.4-7.4-1.3L9 6 6 9 1.6 4.7C.4 7.1.9 10.1 2.9 12.1c1.9 1.9 4.6 2.4 6.9 1.5l9.1 9.1c.4.4 1 .4 1.4 0l2.3-2.3c.5-.4.5-1.1.1-1.4z" fill="#4a9eff"/>
+</svg>
+</div>
+                    <div style="font-style: italic;">-2 Hull Cost</div>
+                </div>
+                
+                <div class="card-footer">
+                    <div style="font-weight:bold; margin-right:5px; font-size:6pt; align-self:center;">REVEAL:</div>
+                    <div style="display:flex; gap:5px; align-items:center;">
+                        <div style="display:flex;align-items:center;"><svg class="icon-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <!-- Art Deco Coin -->
+  <circle cx="12" cy="12" r="11" fill="#888888" stroke="#555" stroke-width="1"/>
+  <circle cx="12" cy="12" r="8.5" fill="none" stroke="#666" stroke-width="0.5"/>
+  <circle cx="12" cy="12" r="8" fill="none" stroke="#666" stroke-width="0.5" stroke-dasharray="1 1"/>
+  <!-- Pound Symbol -->
+  <path d="M10 8c0-1.65 1.35-3 3-3s2.5 1 2.5 1" fill="none" stroke="#1a1a2e" stroke-width="2" stroke-linecap="round"/>
+  <path d="M13 5c-1.65 0-3 1.35-3 3 0 1.5 1 2.5 2 3.5l-2 4.5h6" fill="none" stroke="#1a1a2e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  <line x1="9" y1="11" x2="15" y2="11" stroke="#1a1a2e" stroke-width="2"/>
+</svg> <span style="font-weight:bold;margin-left:2px;">2</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card market-card">
+            <div class="cost-badge">3</div>
+            <div class="card-inner">
+                <div class="card-header">Structural Engineer</div>
+                <div class="card-type">Technical Personnel</div>
+                
+                <div class="card-body">
+                    <div style="margin-bottom: 0.1in; transform: scale(1.5);"><svg class="icon-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <!-- Wrench: Standard FontAwesome Style -->
+  <path d="M22.7 19l-9.1-9.1c.9-2.3.4-5-1.5-6.9-2-2-5-2.4-7.4-1.3L9 6 6 9 1.6 4.7C.4 7.1.9 10.1 2.9 12.1c1.9 1.9 4.6 2.4 6.9 1.5l9.1 9.1c.4.4 1 .4 1.4 0l2.3-2.3c.5-.4.5-1.1.1-1.4z" fill="#4a9eff"/>
+</svg>
+</div>
+                    <div style="font-style: italic;">Install Structure "upgrade": +1 Lift</div>
+                </div>
+                
+                <div class="card-footer">
+                    <div style="font-weight:bold; margin-right:5px; font-size:6pt; align-self:center;">REVEAL:</div>
+                    <div style="display:flex; gap:5px; align-items:center;">
+                        <div style="display:flex;align-items:center;"><svg class="icon-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <!-- Research: Stylized Square -->
+  <rect x="4" y="4" width="16" height="16" fill="#888888"/>
+  <rect x="6" y="6" width="12" height="12" fill="none" stroke="#666" stroke-width="1"/>
+  <rect x="9" y="9" width="6" height="6" fill="#aaa"/>
+  <!-- Corner accents -->
+  <path d="M4 4h4v4H4zM16 4h4v4h-4zM4 16h4v4H4zM16 16h4v4h-4z" fill="#777"/>
+</svg> <span style="font-weight:bold;margin-left:2px;">1</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card market-card">
+            <div class="cost-badge">3</div>
+            <div class="card-inner">
+                <div class="card-header">Fuel Specialist</div>
+                <div class="card-type">Technical Personnel</div>
+                
+                <div class="card-body">
+                    <div style="margin-bottom: 0.1in; transform: scale(1.5);"><svg class="icon-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <!-- Wrench: Standard FontAwesome Style -->
+  <path d="M22.7 19l-9.1-9.1c.9-2.3.4-5-1.5-6.9-2-2-5-2.4-7.4-1.3L9 6 6 9 1.6 4.7C.4 7.1.9 10.1 2.9 12.1c1.9 1.9 4.6 2.4 6.9 1.5l9.1 9.1c.4.4 1 .4 1.4 0l2.3-2.3c.5-.4.5-1.1.1-1.4z" fill="#4a9eff"/>
+</svg>
+</div>
+                    <div style="font-style: italic;">-2 Lifting Gas cost</div>
+                </div>
+                
+                <div class="card-footer">
+                    <div style="font-weight:bold; margin-right:5px; font-size:6pt; align-self:center;">REVEAL:</div>
+                    <div style="display:flex; gap:5px; align-items:center;">
+                        <div style="display:flex;align-items:center;"><svg class="icon-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <!-- Gas: Canister -->
+  <path d="M7 6V4c0-1.1.9-2 2-2h6c1.1 0 2 .9 2 2v2h2v14c0 1.1-.9 2-2 2H7c-1.1 0-2-.9-2-2V6h2zm3-2h4v2h-4V4z" fill="#9ca3af"/>
+  <rect x="6" y="8" width="12" height="2" fill="#9ca3af" opacity="0.6"/>
+  <rect x="6" y="12" width="12" height="2" fill="#9ca3af" opacity="0.6"/>
+  <rect x="6" y="16" width="12" height="2" fill="#9ca3af" opacity="0.6"/>
+</svg> <span style="font-weight:bold;margin-left:2px;">1</span></div><div style="display:flex;align-items:center;"><svg class="icon-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <!-- Art Deco Coin -->
+  <circle cx="12" cy="12" r="11" fill="#888888" stroke="#555" stroke-width="1"/>
+  <circle cx="12" cy="12" r="8.5" fill="none" stroke="#666" stroke-width="0.5"/>
+  <circle cx="12" cy="12" r="8" fill="none" stroke="#666" stroke-width="0.5" stroke-dasharray="1 1"/>
+  <!-- Pound Symbol -->
+  <path d="M10 8c0-1.65 1.35-3 3-3s2.5 1 2.5 1" fill="none" stroke="#1a1a2e" stroke-width="2" stroke-linecap="round"/>
+  <path d="M13 5c-1.65 0-3 1.35-3 3 0 1.5 1 2.5 2 3.5l-2 4.5h6" fill="none" stroke="#1a1a2e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  <line x1="9" y1="11" x2="15" y2="11" stroke="#1a1a2e" stroke-width="2"/>
+</svg> <span style="font-weight:bold;margin-left:2px;">1</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card market-card">
+            <div class="cost-badge">5</div>
+            <div class="card-inner">
+                <div class="card-header">The Aristocrat</div>
+                <div class="card-type">Political/Financial</div>
+                
+                <div class="card-body">
+                    <div style="margin-bottom: 0.1in; transform: scale(1.5);"><svg class="icon-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <!-- Coin: Gold Solid Circle -->
+  <circle cx="12" cy="12" r="10" fill="#ffc107"/>
+  <circle cx="12" cy="12" r="8" fill="none" stroke="#ffca28" stroke-width="2"/>
+</svg></div>
+                    <div style="font-style: italic;">Gain 5</div>
+                </div>
+                
+                <div class="card-footer">
+                    <div style="font-weight:bold; margin-right:5px; font-size:6pt; align-self:center;">REVEAL:</div>
+                    <div style="display:flex; gap:5px; align-items:center;">
+                        <div style="display:flex;align-items:center;"><svg class="icon-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <!-- Influence: Diamond -->
+  <path d="M12 2L22 12L12 22L2 12Z" fill="#888888" stroke="#666" stroke-width="1"/>
+  <path d="M12 5L19 12L12 19L5 12Z" fill="none" stroke="#666" stroke-width="1"/>
+</svg> <span style="font-weight:bold;margin-left:2px;">3</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card market-card">
+            <div class="cost-badge">6</div>
+            <div class="card-inner">
+                <div class="card-header">Industrial Magnate</div>
+                <div class="card-type">Political/Financial</div>
+                
+                <div class="card-body">
+                    <div style="margin-bottom: 0.1in; transform: scale(1.5);"><svg class="icon-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <!-- Any: Asterisk -->
+  <path d="M12 2v20M2 12h20M4.93 4.93l14.14 14.14M4.93 19.07L19.07 4.93" fill="none" stroke="#c4a35a" stroke-width="4" stroke-linecap="round"/>
+</svg></div>
+                    <div style="font-style: italic;">Gain 3</div>
+                </div>
+                
+                <div class="card-footer">
+                    <div style="font-weight:bold; margin-right:5px; font-size:6pt; align-self:center;">REVEAL:</div>
+                    <div style="display:flex; gap:5px; align-items:center;">
+                        <div style="display:flex;align-items:center;"><svg class="icon-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <!-- Influence: Diamond -->
+  <path d="M12 2L22 12L12 22L2 12Z" fill="#888888" stroke="#666" stroke-width="1"/>
+  <path d="M12 5L19 12L12 19L5 12Z" fill="none" stroke="#666" stroke-width="1"/>
+</svg> <span style="font-weight:bold;margin-left:2px;">4</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card market-card">
+            <div class="cost-badge">5</div>
+            <div class="card-inner">
+                <div class="card-header">Government Minister</div>
+                <div class="card-type">Political/Financial</div>
+                
+                <div class="card-body">
+                    <div style="margin-bottom: 0.1in; transform: scale(1.5);"><svg class="icon-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Single Propeller Blade Definition -->
+    <path id="blade" d="M12 12 C 11 12 10 9 10 5 C 10 3 11 2 12 2 C 13 2 14 3 14 5 C 14 9 13 12 12 12 Z" fill="#ffffff" stroke="#ccc" stroke-width="0.5"/>
+  </defs>
+  
+  <!-- Three rotated instances -->
+  <use href="#blade"/>
+  <use href="#blade" transform="rotate(120 12 12)"/>
+  <use href="#blade" transform="rotate(240 12 12)"/>
+  
+  <!-- Center Hub -->
+  <circle cx="12" cy="12" r="2" fill="#e0e0e0" stroke="#999" stroke-width="1"/>
+</svg></div>
+                    <div style="font-style: italic;">Take 2 Ministry actions</div>
+                </div>
+                
+                <div class="card-footer">
+                    <div style="font-weight:bold; margin-right:5px; font-size:6pt; align-self:center;">REVEAL:</div>
+                    <div style="display:flex; gap:5px; align-items:center;">
+                        <div style="display:flex;align-items:center;"><svg class="icon-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <!-- Influence: Diamond -->
+  <path d="M12 2L22 12L12 22L2 12Z" fill="#888888" stroke="#666" stroke-width="1"/>
+  <path d="M12 5L19 12L12 19L5 12Z" fill="none" stroke="#666" stroke-width="1"/>
+</svg> <span style="font-weight:bold;margin-left:2px;">2</span></div><div style="display:flex;align-items:center;"><svg class="icon-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <!-- Art Deco Coin -->
+  <circle cx="12" cy="12" r="11" fill="#888888" stroke="#555" stroke-width="1"/>
+  <circle cx="12" cy="12" r="8.5" fill="none" stroke="#666" stroke-width="0.5"/>
+  <circle cx="12" cy="12" r="8" fill="none" stroke="#666" stroke-width="0.5" stroke-dasharray="1 1"/>
+  <!-- Pound Symbol -->
+  <path d="M10 8c0-1.65 1.35-3 3-3s2.5 1 2.5 1" fill="none" stroke="#1a1a2e" stroke-width="2" stroke-linecap="round"/>
+  <path d="M13 5c-1.65 0-3 1.35-3 3 0 1.5 1 2.5 2 3.5l-2 4.5h6" fill="none" stroke="#1a1a2e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  <line x1="9" y1="11" x2="15" y2="11" stroke="#1a1a2e" stroke-width="2"/>
+</svg> <span style="font-weight:bold;margin-left:2px;">1</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card market-card">
+            <div class="cost-badge">4</div>
+            <div class="card-inner">
+                <div class="card-header">Shipping Tycoon</div>
+                <div class="card-type">Political/Financial</div>
+                
+                <div class="card-body">
+                    <div style="margin-bottom: 0.1in; transform: scale(1.5);"><svg class="icon-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Single Propeller Blade Definition -->
+    <path id="blade" d="M12 12 C 11 12 10 9 10 5 C 10 3 11 2 12 2 C 13 2 14 3 14 5 C 14 9 13 12 12 12 Z" fill="#ffffff" stroke="#ccc" stroke-width="0.5"/>
+  </defs>
+  
+  <!-- Three rotated instances -->
+  <use href="#blade"/>
+  <use href="#blade" transform="rotate(120 12 12)"/>
+  <use href="#blade" transform="rotate(240 12 12)"/>
+  
+  <!-- Center Hub -->
+  <circle cx="12" cy="12" r="2" fill="#e0e0e0" stroke="#999" stroke-width="1"/>
+</svg></div>
+                    <div style="font-style: italic;">+2 Income from this route</div>
+                </div>
+                
+                <div class="card-footer">
+                    <div style="font-weight:bold; margin-right:5px; font-size:6pt; align-self:center;">REVEAL:</div>
+                    <div style="display:flex; gap:5px; align-items:center;">
+                        <div style="display:flex;align-items:center;"><svg class="icon-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <!-- Influence: Diamond -->
+  <path d="M12 2L22 12L12 22L2 12Z" fill="#888888" stroke="#666" stroke-width="1"/>
+  <path d="M12 5L19 12L12 19L5 12Z" fill="none" stroke="#666" stroke-width="1"/>
+</svg> <span style="font-weight:bold;margin-left:2px;">3</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card market-card">
+            <div class="cost-badge">4</div>
+            <div class="card-inner">
+                <div class="card-header">Press Baron</div>
+                <div class="card-type">Political/Financial</div>
+                
+                <div class="card-body">
+                    <div style="margin-bottom: 0.1in; transform: scale(1.5);"><svg class="icon-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <!-- Any: Asterisk -->
+  <path d="M12 2v20M2 12h20M4.93 4.93l14.14 14.14M4.93 19.07L19.07 4.93" fill="none" stroke="#c4a35a" stroke-width="4" stroke-linecap="round"/>
+</svg></div>
+                    <div style="font-style: italic;">No action effect</div>
+                </div>
+                
+                <div class="card-footer">
+                    <div style="font-weight:bold; margin-right:5px; font-size:6pt; align-self:center;">REVEAL:</div>
+                    <div style="display:flex; gap:5px; align-items:center;">
+                        <div style="display:flex;align-items:center;"><svg class="icon-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <!-- Influence: Diamond -->
+  <path d="M12 2L22 12L12 22L2 12Z" fill="#888888" stroke="#666" stroke-width="1"/>
+  <path d="M12 5L19 12L12 19L5 12Z" fill="none" stroke="#666" stroke-width="1"/>
+</svg> <span style="font-weight:bold;margin-left:2px;">2</span></div><div style="display:flex;align-items:center;"><svg class="icon-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <!-- Art Deco Coin -->
+  <circle cx="12" cy="12" r="11" fill="#888888" stroke="#555" stroke-width="1"/>
+  <circle cx="12" cy="12" r="8.5" fill="none" stroke="#666" stroke-width="0.5"/>
+  <circle cx="12" cy="12" r="8" fill="none" stroke="#666" stroke-width="0.5" stroke-dasharray="1 1"/>
+  <!-- Pound Symbol -->
+  <path d="M10 8c0-1.65 1.35-3 3-3s2.5 1 2.5 1" fill="none" stroke="#1a1a2e" stroke-width="2" stroke-linecap="round"/>
+  <path d="M13 5c-1.65 0-3 1.35-3 3 0 1.5 1 2.5 2 3.5l-2 4.5h6" fill="none" stroke="#1a1a2e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  <line x1="9" y1="11" x2="15" y2="11" stroke="#1a1a2e" stroke-width="2"/>
+</svg> <span style="font-weight:bold;margin-left:2px;">2</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card market-card">
+            <div class="cost-badge">3</div>
+            <div class="card-inner">
+                <div class="card-header">Foreign Investor</div>
+                <div class="card-type">Political/Financial</div>
+                
+                <div class="card-body">
+                    <div style="margin-bottom: 0.1in; transform: scale(1.5);"><svg class="icon-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <!-- Coin: Gold Solid Circle -->
+  <circle cx="12" cy="12" r="10" fill="#ffc107"/>
+  <circle cx="12" cy="12" r="8" fill="none" stroke="#ffca28" stroke-width="2"/>
+</svg></div>
+                    <div style="font-style: italic;">Loan gives 35 instead of 30</div>
+                </div>
+                
+                <div class="card-footer">
+                    <div style="font-weight:bold; margin-right:5px; font-size:6pt; align-self:center;">REVEAL:</div>
+                    <div style="display:flex; gap:5px; align-items:center;">
+                        <div style="display:flex;align-items:center;"><svg class="icon-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <!-- Influence: Diamond -->
+  <path d="M12 2L22 12L12 22L2 12Z" fill="#888888" stroke="#666" stroke-width="1"/>
+  <path d="M12 5L19 12L12 19L5 12Z" fill="none" stroke="#666" stroke-width="1"/>
+</svg> <span style="font-weight:bold;margin-left:2px;">2</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card market-card">
+            <div class="cost-badge">3</div>
+            <div class="card-inner">
+                <div class="card-header">Insurance Agent</div>
+                <div class="card-type">Political/Financial</div>
+                
+                <div class="card-body">
+                    <div style="margin-bottom: 0.1in; transform: scale(1.5);"><svg class="icon-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <!-- Coin: Gold Solid Circle -->
+  <circle cx="12" cy="12" r="10" fill="#ffc107"/>
+  <circle cx="12" cy="12" r="8" fill="none" stroke="#ffca28" stroke-width="2"/>
+</svg></div>
+                    <div style="font-style: italic;">Gain 1 Insurance policy</div>
+                </div>
+                
+                <div class="card-footer">
+                    <div style="font-weight:bold; margin-right:5px; font-size:6pt; align-self:center;">REVEAL:</div>
+                    <div style="display:flex; gap:5px; align-items:center;">
+                        <div style="display:flex;align-items:center;"><svg class="icon-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <!-- Influence: Diamond -->
+  <path d="M12 2L22 12L12 22L2 12Z" fill="#888888" stroke="#666" stroke-width="1"/>
+  <path d="M12 5L19 12L12 19L5 12Z" fill="none" stroke="#666" stroke-width="1"/>
+</svg> <span style="font-weight:bold;margin-left:2px;">2</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card market-card">
+            <div class="cost-badge">2</div>
+            <div class="card-inner">
+                <div class="card-header">Bureaucrat</div>
+                <div class="card-type">Political/Financial</div>
+                
+                <div class="card-body">
+                    <div style="margin-bottom: 0.1in; transform: scale(1.5);"><svg class="icon-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Single Propeller Blade Definition -->
+    <path id="blade" d="M12 12 C 11 12 10 9 10 5 C 10 3 11 2 12 2 C 13 2 14 3 14 5 C 14 9 13 12 12 12 Z" fill="#ffffff" stroke="#ccc" stroke-width="0.5"/>
+  </defs>
+  
+  <!-- Three rotated instances -->
+  <use href="#blade"/>
+  <use href="#blade" transform="rotate(120 12 12)"/>
+  <use href="#blade" transform="rotate(240 12 12)"/>
+  
+  <!-- Center Hub -->
+  <circle cx="12" cy="12" r="2" fill="#e0e0e0" stroke="#999" stroke-width="1"/>
+</svg></div>
+                    <div style="font-style: italic;">Go first in turn order next round</div>
+                </div>
+                
+                <div class="card-footer">
+                    <div style="font-weight:bold; margin-right:5px; font-size:6pt; align-self:center;">REVEAL:</div>
+                    <div style="display:flex; gap:5px; align-items:center;">
+                        <div style="display:flex;align-items:center;"><svg class="icon-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <!-- Influence: Diamond -->
+  <path d="M12 2L22 12L12 22L2 12Z" fill="#888888" stroke="#666" stroke-width="1"/>
+  <path d="M12 5L19 12L12 19L5 12Z" fill="none" stroke="#666" stroke-width="1"/>
+</svg> <span style="font-weight:bold;margin-left:2px;">2</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card market-card">
+            <div class="cost-badge">2</div>
+            <div class="card-inner">
+                <div class="card-header">Union Representative</div>
+                <div class="card-type">Political/Financial</div>
+                
+                <div class="card-body">
+                    <div style="margin-bottom: 0.1in; transform: scale(1.5);"><svg class="icon-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <!-- Coin: Gold Solid Circle -->
+  <circle cx="12" cy="12" r="10" fill="#ffc107"/>
+  <circle cx="12" cy="12" r="8" fill="none" stroke="#ffca28" stroke-width="2"/>
+</svg></div>
+                    <div style="font-style: italic;">-1 per crew recruited this action</div>
+                </div>
+                
+                <div class="card-footer">
+                    <div style="font-weight:bold; margin-right:5px; font-size:6pt; align-self:center;">REVEAL:</div>
+                    <div style="display:flex; gap:5px; align-items:center;">
+                        <div style="display:flex;align-items:center;"><svg class="icon-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <!-- Influence: Diamond -->
+  <path d="M12 2L22 12L12 22L2 12Z" fill="#888888" stroke="#666" stroke-width="1"/>
+  <path d="M12 5L19 12L12 19L5 12Z" fill="none" stroke="#666" stroke-width="1"/>
+</svg> <span style="font-weight:bold;margin-left:2px;">1</span></div><div style="display:flex;align-items:center;"><svg class="icon-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <!-- Captain Silhouette -->
+  <defs>
+    <clipPath id="cap-clip">
+      <rect x="0" y="0" width="24" height="24"/>
+    </clipPath>
+  </defs>
+  <!-- Shoulders -->
+  <path d="M4 24v-4c0-3 4-5 8-5s8 2 8 5v4H4z" fill="#e0e0e0"/>
+  <!-- Head -->
+  <circle cx="12" cy="10" r="4.5" fill="#e0e0e0"/>
+  <!-- Cap Visor -->
+  <path d="M5 9c0-1 2-2 7-2s7 1 7 2" fill="none" stroke="#333" stroke-width="1.5"/>
+  <!-- Cap Top -->
+  <path d="M6 7c0-3 2.5-5 6-5s6 2 6 5H6z" fill="#e0e0e0"/>
+  <!-- Gold Band -->
+  <rect x="6" y="7" width="12" height="1.5" fill="#f1c40f"/>
+  <!-- Epaulettes -->
+  <rect x="5" y="16" width="4" height="2" fill="#f1c40f"/>
+  <rect x="15" y="16" width="4" height="2" fill="#f1c40f"/>
+</svg> <span style="font-weight:bold;margin-left:2px;">1</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card market-card">
+            <div class="cost-badge">3</div>
+            <div class="card-inner">
+                <div class="card-header">Customs Official</div>
+                <div class="card-type">Political/Financial</div>
+                
+                <div class="card-body">
+                    <div style="margin-bottom: 0.1in; transform: scale(1.5);"><svg class="icon-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Single Propeller Blade Definition -->
+    <path id="blade" d="M12 12 C 11 12 10 9 10 5 C 10 3 11 2 12 2 C 13 2 14 3 14 5 C 14 9 13 12 12 12 Z" fill="#ffffff" stroke="#ccc" stroke-width="0.5"/>
+  </defs>
+  
+  <!-- Three rotated instances -->
+  <use href="#blade"/>
+  <use href="#blade" transform="rotate(120 12 12)"/>
+  <use href="#blade" transform="rotate(240 12 12)"/>
+  
+  <!-- Center Hub -->
+  <circle cx="12" cy="12" r="2" fill="#e0e0e0" stroke="#999" stroke-width="1"/>
+</svg></div>
+                    <div style="font-style: italic;">Claim route even if tied</div>
+                </div>
+                
+                <div class="card-footer">
+                    <div style="font-weight:bold; margin-right:5px; font-size:6pt; align-self:center;">REVEAL:</div>
+                    <div style="display:flex; gap:5px; align-items:center;">
+                        <div style="display:flex;align-items:center;"><svg class="icon-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <!-- Influence: Diamond -->
+  <path d="M12 2L22 12L12 22L2 12Z" fill="#888888" stroke="#666" stroke-width="1"/>
+  <path d="M12 5L19 12L12 19L5 12Z" fill="none" stroke="#666" stroke-width="1"/>
+</svg> <span style="font-weight:bold;margin-left:2px;">2</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card market-card">
+            <div class="cost-badge">4</div>
+            <div class="card-inner">
+                <div class="card-header">University Partnership</div>
+                <div class="card-type">Research Personnel</div>
+                
+                <div class="card-body">
+                    <div style="margin-bottom: 0.1in; transform: scale(1.5);"><svg class="icon-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Single Propeller Blade Definition -->
+    <path id="blade" d="M12 12 C 11 12 10 9 10 5 C 10 3 11 2 12 2 C 13 2 14 3 14 5 C 14 9 13 12 12 12 Z" fill="#ffffff" stroke="#ccc" stroke-width="0.5"/>
+  </defs>
+  
+  <!-- Three rotated instances -->
+  <use href="#blade"/>
+  <use href="#blade" transform="rotate(120 12 12)"/>
+  <use href="#blade" transform="rotate(240 12 12)"/>
+  
+  <!-- Center Hub -->
+  <circle cx="12" cy="12" r="2" fill="#e0e0e0" stroke="#999" stroke-width="1"/>
+</svg></div>
+                    <div style="font-style: italic;">-2 per Technology this round</div>
+                </div>
+                
+                <div class="card-footer">
+                    <div style="font-weight:bold; margin-right:5px; font-size:6pt; align-self:center;">REVEAL:</div>
+                    <div style="display:flex; gap:5px; align-items:center;">
+                        <div style="display:flex;align-items:center;"><svg class="icon-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <!-- Research: Stylized Square -->
+  <rect x="4" y="4" width="16" height="16" fill="#888888"/>
+  <rect x="6" y="6" width="12" height="12" fill="none" stroke="#666" stroke-width="1"/>
+  <rect x="9" y="9" width="6" height="6" fill="#aaa"/>
+  <!-- Corner accents -->
+  <path d="M4 4h4v4H4zM16 4h4v4h-4zM4 16h4v4H4zM16 16h4v4h-4z" fill="#777"/>
+</svg> <span style="font-weight:bold;margin-left:2px;">2</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card market-card">
+            <div class="cost-badge">3</div>
+            <div class="card-inner">
+                <div class="card-header">Patent Attorney</div>
+                <div class="card-type">Research Personnel</div>
+                
+                <div class="card-body">
+                    <div style="margin-bottom: 0.1in; transform: scale(1.5);"><svg class="icon-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Single Propeller Blade Definition -->
+    <path id="blade" d="M12 12 C 11 12 10 9 10 5 C 10 3 11 2 12 2 C 13 2 14 3 14 5 C 14 9 13 12 12 12 Z" fill="#ffffff" stroke="#ccc" stroke-width="0.5"/>
+  </defs>
+  
+  <!-- Three rotated instances -->
+  <use href="#blade"/>
+  <use href="#blade" transform="rotate(120 12 12)"/>
+  <use href="#blade" transform="rotate(240 12 12)"/>
+  
+  <!-- Center Hub -->
+  <circle cx="12" cy="12" r="2" fill="#e0e0e0" stroke="#999" stroke-width="1"/>
+</svg></div>
+                    <div style="font-style: italic;">-1 to Technology Research cost</div>
+                </div>
+                
+                <div class="card-footer">
+                    <div style="font-weight:bold; margin-right:5px; font-size:6pt; align-self:center;">REVEAL:</div>
+                    <div style="display:flex; gap:5px; align-items:center;">
+                        <div style="display:flex;align-items:center;"><svg class="icon-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <!-- Influence: Diamond -->
+  <path d="M12 2L22 12L12 22L2 12Z" fill="#888888" stroke="#666" stroke-width="1"/>
+  <path d="M12 5L19 12L12 19L5 12Z" fill="none" stroke="#666" stroke-width="1"/>
+</svg> <span style="font-weight:bold;margin-left:2px;">2</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card market-card">
+            <div class="cost-badge">2</div>
+            <div class="card-inner">
+                <div class="card-header">Research Assistant</div>
+                <div class="card-type">Research Personnel</div>
+                
+                <div class="card-body">
+                    <div style="margin-bottom: 0.1in; transform: scale(1.5);"><svg class="icon-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Single Propeller Blade Definition -->
+    <path id="blade" d="M12 12 C 11 12 10 9 10 5 C 10 3 11 2 12 2 C 13 2 14 3 14 5 C 14 9 13 12 12 12 Z" fill="#ffffff" stroke="#ccc" stroke-width="0.5"/>
+  </defs>
+  
+  <!-- Three rotated instances -->
+  <use href="#blade"/>
+  <use href="#blade" transform="rotate(120 12 12)"/>
+  <use href="#blade" transform="rotate(240 12 12)"/>
+  
+  <!-- Center Hub -->
+  <circle cx="12" cy="12" r="2" fill="#e0e0e0" stroke="#999" stroke-width="1"/>
+</svg></div>
+                    <div style="font-style: italic;">+1 Research this round</div>
+                </div>
+                
+                <div class="card-footer">
+                    <div style="font-weight:bold; margin-right:5px; font-size:6pt; align-self:center;">REVEAL:</div>
+                    <div style="display:flex; gap:5px; align-items:center;">
+                        <div style="display:flex;align-items:center;"><svg class="icon-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <!-- Influence: Diamond -->
+  <path d="M12 2L22 12L12 22L2 12Z" fill="#888888" stroke="#666" stroke-width="1"/>
+  <path d="M12 5L19 12L12 19L5 12Z" fill="none" stroke="#666" stroke-width="1"/>
+</svg> <span style="font-weight:bold;margin-left:2px;">1</span></div><div style="display:flex;align-items:center;"><svg class="icon-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <!-- Research: Stylized Square -->
+  <rect x="4" y="4" width="16" height="16" fill="#888888"/>
+  <rect x="6" y="6" width="12" height="12" fill="none" stroke="#666" stroke-width="1"/>
+  <rect x="9" y="9" width="6" height="6" fill="#aaa"/>
+  <!-- Corner accents -->
+  <path d="M4 4h4v4H4zM16 4h4v4h-4zM4 16h4v4H4zM16 16h4v4h-4z" fill="#777"/>
+</svg> <span style="font-weight:bold;margin-left:2px;">1</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card market-card">
+            <div class="cost-badge">3</div>
+            <div class="card-inner">
+                <div class="card-header">Technical Library</div>
+                <div class="card-type">Research Personnel</div>
+                
+                <div class="card-body">
+                    <div style="margin-bottom: 0.1in; transform: scale(1.5);"><svg class="icon-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Single Propeller Blade Definition -->
+    <path id="blade" d="M12 12 C 11 12 10 9 10 5 C 10 3 11 2 12 2 C 13 2 14 3 14 5 C 14 9 13 12 12 12 Z" fill="#ffffff" stroke="#ccc" stroke-width="0.5"/>
+  </defs>
+  
+  <!-- Three rotated instances -->
+  <use href="#blade"/>
+  <use href="#blade" transform="rotate(120 12 12)"/>
+  <use href="#blade" transform="rotate(240 12 12)"/>
+  
+  <!-- Center Hub -->
+  <circle cx="12" cy="12" r="2" fill="#e0e0e0" stroke="#999" stroke-width="1"/>
+</svg></div>
+                    <div style="font-style: italic;">Look at top 3 R&D tiles; reorder them</div>
+                </div>
+                
+                <div class="card-footer">
+                    <div style="font-weight:bold; margin-right:5px; font-size:6pt; align-self:center;">REVEAL:</div>
+                    <div style="display:flex; gap:5px; align-items:center;">
+                        <div style="display:flex;align-items:center;"><svg class="icon-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <!-- Research: Stylized Square -->
+  <rect x="4" y="4" width="16" height="16" fill="#888888"/>
+  <rect x="6" y="6" width="12" height="12" fill="none" stroke="#666" stroke-width="1"/>
+  <rect x="9" y="9" width="6" height="6" fill="#aaa"/>
+  <!-- Corner accents -->
+  <path d="M4 4h4v4H4zM16 4h4v4h-4zM4 16h4v4H4zM16 16h4v4h-4z" fill="#777"/>
+</svg> <span style="font-weight:bold;margin-left:2px;">2</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card market-card">
+            <div class="cost-badge">4</div>
+            <div class="card-inner">
+                <div class="card-header">Foreign Consultant</div>
+                <div class="card-type">Research Personnel</div>
+                
+                <div class="card-body">
+                    <div style="margin-bottom: 0.1in; transform: scale(1.5);"><svg class="icon-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Single Propeller Blade Definition -->
+    <path id="blade" d="M12 12 C 11 12 10 9 10 5 C 10 3 11 2 12 2 C 13 2 14 3 14 5 C 14 9 13 12 12 12 Z" fill="#ffffff" stroke="#ccc" stroke-width="0.5"/>
+  </defs>
+  
+  <!-- Three rotated instances -->
+  <use href="#blade"/>
+  <use href="#blade" transform="rotate(120 12 12)"/>
+  <use href="#blade" transform="rotate(240 12 12)"/>
+  
+  <!-- Center Hub -->
+  <circle cx="12" cy="12" r="2" fill="#e0e0e0" stroke="#999" stroke-width="1"/>
+</svg></div>
+                    <div style="font-style: italic;">Acquire Tech another player owns (pay double)</div>
+                </div>
+                
+                <div class="card-footer">
+                    <div style="font-weight:bold; margin-right:5px; font-size:6pt; align-self:center;">REVEAL:</div>
+                    <div style="display:flex; gap:5px; align-items:center;">
+                        <div style="display:flex;align-items:center;"><svg class="icon-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <!-- Research: Stylized Square -->
+  <rect x="4" y="4" width="16" height="16" fill="#888888"/>
+  <rect x="6" y="6" width="12" height="12" fill="none" stroke="#666" stroke-width="1"/>
+  <rect x="9" y="9" width="6" height="6" fill="#aaa"/>
+  <!-- Corner accents -->
+  <path d="M4 4h4v4H4zM16 4h4v4h-4zM4 16h4v4H4zM16 16h4v4h-4z" fill="#777"/>
+</svg> <span style="font-weight:bold;margin-left:2px;">1</span></div><div style="display:flex;align-items:center;"><svg class="icon-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <!-- Art Deco Coin -->
+  <circle cx="12" cy="12" r="11" fill="#888888" stroke="#555" stroke-width="1"/>
+  <circle cx="12" cy="12" r="8.5" fill="none" stroke="#666" stroke-width="0.5"/>
+  <circle cx="12" cy="12" r="8" fill="none" stroke="#666" stroke-width="0.5" stroke-dasharray="1 1"/>
+  <!-- Pound Symbol -->
+  <path d="M10 8c0-1.65 1.35-3 3-3s2.5 1 2.5 1" fill="none" stroke="#1a1a2e" stroke-width="2" stroke-linecap="round"/>
+  <path d="M13 5c-1.65 0-3 1.35-3 3 0 1.5 1 2.5 2 3.5l-2 4.5h6" fill="none" stroke="#1a1a2e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  <line x1="9" y1="11" x2="15" y2="11" stroke="#1a1a2e" stroke-width="2"/>
+</svg> <span style="font-weight:bold;margin-left:2px;">1</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card market-card">
+            <div class="cost-badge">6</div>
+            <div class="card-inner">
+                <div class="card-header">Royal Geographic Society</div>
+                <div class="card-type">Organization</div>
+                
+                <div class="card-body">
+                    <div style="margin-bottom: 0.1in; transform: scale(1.5);"><svg class="icon-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <!-- Wrench: Standard FontAwesome Style -->
+  <path d="M22.7 19l-9.1-9.1c.9-2.3.4-5-1.5-6.9-2-2-5-2.4-7.4-1.3L9 6 6 9 1.6 4.7C.4 7.1.9 10.1 2.9 12.1c1.9 1.9 4.6 2.4 6.9 1.5l9.1 9.1c.4.4 1 .4 1.4 0l2.3-2.3c.5-.4.5-1.1.1-1.4z" fill="#4a9eff"/>
+</svg>
+</div>
+                    <div style="font-style: italic;">Install 1 Upgrade ignoring Tech requirement</div>
+                </div>
+                
+                <div class="card-footer">
+                    <div style="font-weight:bold; margin-right:5px; font-size:6pt; align-self:center;">REVEAL:</div>
+                    <div style="display:flex; gap:5px; align-items:center;">
+                        <div style="display:flex;align-items:center;"><svg class="icon-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <!-- Hard Hat -->
+  <path d="M2 14c0-5.5 4.5-10 10-10s10 4.5 10 10v2H2v-2z" fill="#ffa726"/>
+  <!-- Rim -->
+  <path d="M1 16h22v2H1z" fill="#f57c00"/>
+  <!-- Structural Ribs -->
+  <path d="M12 4v10" fill="none" stroke="#fb8c00" stroke-width="1.5"/>
+  <path d="M6.5 6.5c1.5 3 1.5 7.5 1.5 9.5" fill="none" stroke="#fb8c00" stroke-width="1.5"/>
+  <path d="M17.5 6.5c-1.5 3-1.5 7.5-1.5 9.5" fill="none" stroke="#fb8c00" stroke-width="1.5"/>
+</svg> <span style="font-weight:bold;margin-left:2px;">1</span></div><div style="display:flex;align-items:center;"><svg class="icon-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <!-- Influence: Diamond -->
+  <path d="M12 2L22 12L12 22L2 12Z" fill="#888888" stroke="#666" stroke-width="1"/>
+  <path d="M12 5L19 12L12 19L5 12Z" fill="none" stroke="#666" stroke-width="1"/>
+</svg> <span style="font-weight:bold;margin-left:2px;">2</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card market-card">
+            <div class="cost-badge">5</div>
+            <div class="card-inner">
+                <div class="card-header">Combat Veteran</div>
+                <div class="card-type">Organization</div>
+                
+                <div class="card-body">
+                    <div style="margin-bottom: 0.1in; transform: scale(1.5);"><svg class="icon-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Single Propeller Blade Definition -->
+    <path id="blade" d="M12 12 C 11 12 10 9 10 5 C 10 3 11 2 12 2 C 13 2 14 3 14 5 C 14 9 13 12 12 12 Z" fill="#ffffff" stroke="#ccc" stroke-width="0.5"/>
+  </defs>
+  
+  <!-- Three rotated instances -->
+  <use href="#blade"/>
+  <use href="#blade" transform="rotate(120 12 12)"/>
+  <use href="#blade" transform="rotate(240 12 12)"/>
+  
+  <!-- Center Hub -->
+  <circle cx="12" cy="12" r="2" fill="#e0e0e0" stroke="#999" stroke-width="1"/>
+</svg></div>
+                    <div style="font-style: italic;">Gain 8; Combat "missions": +2 Income</div>
+                </div>
+                
+                <div class="card-footer">
+                    <div style="font-weight:bold; margin-right:5px; font-size:6pt; align-self:center;">REVEAL:</div>
+                    <div style="display:flex; gap:5px; align-items:center;">
+                        <div style="display:flex;align-items:center;"><svg class="icon-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <!-- Captain Silhouette -->
+  <defs>
+    <clipPath id="cap-clip">
+      <rect x="0" y="0" width="24" height="24"/>
+    </clipPath>
+  </defs>
+  <!-- Shoulders -->
+  <path d="M4 24v-4c0-3 4-5 8-5s8 2 8 5v4H4z" fill="#e0e0e0"/>
+  <!-- Head -->
+  <circle cx="12" cy="10" r="4.5" fill="#e0e0e0"/>
+  <!-- Cap Visor -->
+  <path d="M5 9c0-1 2-2 7-2s7 1 7 2" fill="none" stroke="#333" stroke-width="1.5"/>
+  <!-- Cap Top -->
+  <path d="M6 7c0-3 2.5-5 6-5s6 2 6 5H6z" fill="#e0e0e0"/>
+  <!-- Gold Band -->
+  <rect x="6" y="7" width="12" height="1.5" fill="#f1c40f"/>
+  <!-- Epaulettes -->
+  <rect x="5" y="16" width="4" height="2" fill="#f1c40f"/>
+  <rect x="15" y="16" width="4" height="2" fill="#f1c40f"/>
+</svg> <span style="font-weight:bold;margin-left:2px;">1</span></div><div style="display:flex;align-items:center;"><svg class="icon-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <!-- Art Deco Coin -->
+  <circle cx="12" cy="12" r="11" fill="#888888" stroke="#555" stroke-width="1"/>
+  <circle cx="12" cy="12" r="8.5" fill="none" stroke="#666" stroke-width="0.5"/>
+  <circle cx="12" cy="12" r="8" fill="none" stroke="#666" stroke-width="0.5" stroke-dasharray="1 1"/>
+  <!-- Pound Symbol -->
+  <path d="M10 8c0-1.65 1.35-3 3-3s2.5 1 2.5 1" fill="none" stroke="#1a1a2e" stroke-width="2" stroke-linecap="round"/>
+  <path d="M13 5c-1.65 0-3 1.35-3 3 0 1.5 1 2.5 2 3.5l-2 4.5h6" fill="none" stroke="#1a1a2e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  <line x1="9" y1="11" x2="15" y2="11" stroke="#1a1a2e" stroke-width="2"/>
+</svg> <span style="font-weight:bold;margin-left:2px;">1</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card market-card">
+            <div class="cost-badge">5</div>
+            <div class="card-inner">
+                <div class="card-header">Luxury Travel Agency</div>
+                <div class="card-type">Organization</div>
+                
+                <div class="card-body">
+                    <div style="margin-bottom: 0.1in; transform: scale(1.5);"><svg class="icon-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Single Propeller Blade Definition -->
+    <path id="blade" d="M12 12 C 11 12 10 9 10 5 C 10 3 11 2 12 2 C 13 2 14 3 14 5 C 14 9 13 12 12 12 Z" fill="#ffffff" stroke="#ccc" stroke-width="0.5"/>
+  </defs>
+  
+  <!-- Three rotated instances -->
+  <use href="#blade"/>
+  <use href="#blade" transform="rotate(120 12 12)"/>
+  <use href="#blade" transform="rotate(240 12 12)"/>
+  
+  <!-- Center Hub -->
+  <circle cx="12" cy="12" r="2" fill="#e0e0e0" stroke="#999" stroke-width="1"/>
+</svg></div>
+                    <div style="font-style: italic;">+1 Luxury stat for this launch</div>
+                </div>
+                
+                <div class="card-footer">
+                    <div style="font-weight:bold; margin-right:5px; font-size:6pt; align-self:center;">REVEAL:</div>
+                    <div style="display:flex; gap:5px; align-items:center;">
+                        <div style="display:flex;align-items:center;"><svg class="icon-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <!-- Influence: Diamond -->
+  <path d="M12 2L22 12L12 22L2 12Z" fill="#888888" stroke="#666" stroke-width="1"/>
+  <path d="M12 5L19 12L12 19L5 12Z" fill="none" stroke="#666" stroke-width="1"/>
+</svg> <span style="font-weight:bold;margin-left:2px;">3</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card market-card">
+            <div class="cost-badge">4</div>
+            <div class="card-inner">
+                <div class="card-header">Aviation Club</div>
+                <div class="card-type">Organization</div>
+                
+                <div class="card-body">
+                    <div style="margin-bottom: 0.1in; transform: scale(1.5);"><svg class="icon-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <!-- Coin: Gold Solid Circle -->
+  <circle cx="12" cy="12" r="10" fill="#ffc107"/>
+  <circle cx="12" cy="12" r="8" fill="none" stroke="#ffca28" stroke-width="2"/>
+</svg></div>
+                    <div style="font-style: italic;">Recruit 1 Officer free</div>
+                </div>
+                
+                <div class="card-footer">
+                    <div style="font-weight:bold; margin-right:5px; font-size:6pt; align-self:center;">REVEAL:</div>
+                    <div style="display:flex; gap:5px; align-items:center;">
+                        <div style="display:flex;align-items:center;"><svg class="icon-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <!-- Influence: Diamond -->
+  <path d="M12 2L22 12L12 22L2 12Z" fill="#888888" stroke="#666" stroke-width="1"/>
+  <path d="M12 5L19 12L12 19L5 12Z" fill="none" stroke="#666" stroke-width="1"/>
+</svg> <span style="font-weight:bold;margin-left:2px;">2</span></div><div style="display:flex;align-items:center;"><svg class="icon-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <!-- Captain Silhouette -->
+  <defs>
+    <clipPath id="cap-clip">
+      <rect x="0" y="0" width="24" height="24"/>
+    </clipPath>
+  </defs>
+  <!-- Shoulders -->
+  <path d="M4 24v-4c0-3 4-5 8-5s8 2 8 5v4H4z" fill="#e0e0e0"/>
+  <!-- Head -->
+  <circle cx="12" cy="10" r="4.5" fill="#e0e0e0"/>
+  <!-- Cap Visor -->
+  <path d="M5 9c0-1 2-2 7-2s7 1 7 2" fill="none" stroke="#333" stroke-width="1.5"/>
+  <!-- Cap Top -->
+  <path d="M6 7c0-3 2.5-5 6-5s6 2 6 5H6z" fill="#e0e0e0"/>
+  <!-- Gold Band -->
+  <rect x="6" y="7" width="12" height="1.5" fill="#f1c40f"/>
+  <!-- Epaulettes -->
+  <rect x="5" y="16" width="4" height="2" fill="#f1c40f"/>
+  <rect x="15" y="16" width="4" height="2" fill="#f1c40f"/>
+</svg> <span style="font-weight:bold;margin-left:2px;">1</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card market-card">
+            <div class="cost-badge">4</div>
+            <div class="card-inner">
+                <div class="card-header">Engineering Guild</div>
+                <div class="card-type">Organization</div>
+                
+                <div class="card-body">
+                    <div style="margin-bottom: 0.1in; transform: scale(1.5);"><svg class="icon-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <!-- Coin: Gold Solid Circle -->
+  <circle cx="12" cy="12" r="10" fill="#ffc107"/>
+  <circle cx="12" cy="12" r="8" fill="none" stroke="#ffca28" stroke-width="2"/>
+</svg></div>
+                    <div style="font-style: italic;">Recruit 1 Engineer at -1</div>
+                </div>
+                
+                <div class="card-footer">
+                    <div style="font-weight:bold; margin-right:5px; font-size:6pt; align-self:center;">REVEAL:</div>
+                    <div style="display:flex; gap:5px; align-items:center;">
+                        <div style="display:flex;align-items:center;"><svg class="icon-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <!-- Influence: Diamond -->
+  <path d="M12 2L22 12L12 22L2 12Z" fill="#888888" stroke="#666" stroke-width="1"/>
+  <path d="M12 5L19 12L12 19L5 12Z" fill="none" stroke="#666" stroke-width="1"/>
+</svg> <span style="font-weight:bold;margin-left:2px;">1</span></div><div style="display:flex;align-items:center;"><svg class="icon-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <!-- Hard Hat -->
+  <path d="M2 14c0-5.5 4.5-10 10-10s10 4.5 10 10v2H2v-2z" fill="#ffa726"/>
+  <!-- Rim -->
+  <path d="M1 16h22v2H1z" fill="#f57c00"/>
+  <!-- Structural Ribs -->
+  <path d="M12 4v10" fill="none" stroke="#fb8c00" stroke-width="1.5"/>
+  <path d="M6.5 6.5c1.5 3 1.5 7.5 1.5 9.5" fill="none" stroke="#fb8c00" stroke-width="1.5"/>
+  <path d="M17.5 6.5c-1.5 3-1.5 7.5-1.5 9.5" fill="none" stroke="#fb8c00" stroke-width="1.5"/>
+</svg> <span style="font-weight:bold;margin-left:2px;">1</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        </div>
+        
+        <div class="page-break"></div>
+        <h1>Combat Missions (Age II)</h1>
+        <p>20 Cards</p>
+        <div class="card-sheet">
+        <div class="card mission-card">
+            <div class="card-inner">
+                <div class="card-header">Railway Bombardment</div>
+                <div class="card-type">Bombing Run</div>
+                
+                <div class="card-body">
+                    <div style="font-size: 8pt; border-bottom: 1px solid #ccc; width: 100%; margin-bottom: 5px; padding-bottom: 5px;">
+                        <b>REQUIREMENTS</b><br>
+                        Range 2, Ceiling 1, Reliability 2
+                    </div>
+                    <div style="font-size: 9pt;">
+                        <b>REWARDS</b><br>
+                        Income: £6<br>
+                        VP: 1
+                        
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mission-card">
+            <div class="card-inner">
+                <div class="card-header">Factory Strike</div>
+                <div class="card-type">Bombing Run</div>
+                
+                <div class="card-body">
+                    <div style="font-size: 8pt; border-bottom: 1px solid #ccc; width: 100%; margin-bottom: 5px; padding-bottom: 5px;">
+                        <b>REQUIREMENTS</b><br>
+                        Range 3, Ceiling 2, Reliability 2
+                    </div>
+                    <div style="font-size: 9pt;">
+                        <b>REWARDS</b><br>
+                        Income: £8<br>
+                        VP: 2
+                        
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mission-card">
+            <div class="card-inner">
+                <div class="card-header">Port Assault</div>
+                <div class="card-type">Bombing Run</div>
+                
+                <div class="card-body">
+                    <div style="font-size: 8pt; border-bottom: 1px solid #ccc; width: 100%; margin-bottom: 5px; padding-bottom: 5px;">
+                        <b>REQUIREMENTS</b><br>
+                        Range 3, Ceiling 1, Reliability 3
+                    </div>
+                    <div style="font-size: 9pt;">
+                        <b>REWARDS</b><br>
+                        Income: £8<br>
+                        VP: 2
+                        
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mission-card">
+            <div class="card-inner">
+                <div class="card-header">Deep Strike Mission</div>
+                <div class="card-type">Bombing Run</div>
+                
+                <div class="card-body">
+                    <div style="font-size: 8pt; border-bottom: 1px solid #ccc; width: 100%; margin-bottom: 5px; padding-bottom: 5px;">
+                        <b>REQUIREMENTS</b><br>
+                        Range 4, Ceiling 2, Reliability 2
+                    </div>
+                    <div style="font-size: 9pt;">
+                        <b>REWARDS</b><br>
+                        Income: £10<br>
+                        VP: 3
+                        <br><span style="color:#003366; font-size:8pt;">+£2 with Bombing Equipment</span>
+                        <br><span style="color:#003366; font-size:8pt;">bombing_equipment_bonus</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mission-card">
+            <div class="card-inner">
+                <div class="card-header">Strategic Bombardment</div>
+                <div class="card-type">Bombing Run</div>
+                
+                <div class="card-body">
+                    <div style="font-size: 8pt; border-bottom: 1px solid #ccc; width: 100%; margin-bottom: 5px; padding-bottom: 5px;">
+                        <b>REQUIREMENTS</b><br>
+                        Range 4, Ceiling 2, Reliability 3
+                    </div>
+                    <div style="font-size: 9pt;">
+                        <b>REWARDS</b><br>
+                        Income: £11<br>
+                        VP: 4
+                        <br><span style="color:#003366; font-size:8pt;">+£3 with Bombing Equipment</span>
+                        <br><span style="color:#003366; font-size:8pt;">bombing_equipment_bonus</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mission-card">
+            <div class="card-inner">
+                <div class="card-header">Capital Raid</div>
+                <div class="card-type">Bombing Run</div>
+                
+                <div class="card-body">
+                    <div style="font-size: 8pt; border-bottom: 1px solid #ccc; width: 100%; margin-bottom: 5px; padding-bottom: 5px;">
+                        <b>REQUIREMENTS</b><br>
+                        Range 5, Ceiling 3, Reliability 3
+                    </div>
+                    <div style="font-size: 9pt;">
+                        <b>REWARDS</b><br>
+                        Income: £14<br>
+                        VP: 5
+                        <br><span style="color:#003366; font-size:8pt;">"Prestige": +1 bonus VP</span>
+                        <br><span style="color:#003366; font-size:8pt;">prestige</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mission-card">
+            <div class="card-inner">
+                <div class="card-header">Front Line Survey</div>
+                <div class="card-type">Reconnaissance</div>
+                
+                <div class="card-body">
+                    <div style="font-size: 8pt; border-bottom: 1px solid #ccc; width: 100%; margin-bottom: 5px; padding-bottom: 5px;">
+                        <b>REQUIREMENTS</b><br>
+                        Range 2, Speed 2, Ceiling 1
+                    </div>
+                    <div style="font-size: 9pt;">
+                        <b>REWARDS</b><br>
+                        Income: £5<br>
+                        VP: 1
+                        
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mission-card">
+            <div class="card-inner">
+                <div class="card-header">Artillery Spotting</div>
+                <div class="card-type">Reconnaissance</div>
+                
+                <div class="card-body">
+                    <div style="font-size: 8pt; border-bottom: 1px solid #ccc; width: 100%; margin-bottom: 5px; padding-bottom: 5px;">
+                        <b>REQUIREMENTS</b><br>
+                        Range 2, Speed 1, Ceiling 2
+                    </div>
+                    <div style="font-size: 9pt;">
+                        <b>REWARDS</b><br>
+                        Income: £5<br>
+                        VP: 1
+                        
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mission-card">
+            <div class="card-inner">
+                <div class="card-header">Enemy Position Mapping</div>
+                <div class="card-type">Reconnaissance</div>
+                
+                <div class="card-body">
+                    <div style="font-size: 8pt; border-bottom: 1px solid #ccc; width: 100%; margin-bottom: 5px; padding-bottom: 5px;">
+                        <b>REQUIREMENTS</b><br>
+                        Range 3, Speed 2, Ceiling 2
+                    </div>
+                    <div style="font-size: 9pt;">
+                        <b>REWARDS</b><br>
+                        Income: £7<br>
+                        VP: 2
+                        
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mission-card">
+            <div class="card-inner">
+                <div class="card-header">Strategic Photography</div>
+                <div class="card-type">Reconnaissance</div>
+                
+                <div class="card-body">
+                    <div style="font-size: 8pt; border-bottom: 1px solid #ccc; width: 100%; margin-bottom: 5px; padding-bottom: 5px;">
+                        <b>REQUIREMENTS</b><br>
+                        Range 4, Speed 2, Ceiling 3
+                    </div>
+                    <div style="font-size: 9pt;">
+                        <b>REWARDS</b><br>
+                        Income: £9<br>
+                        VP: 3
+                        
+                        <br><span style="color:#003366; font-size:8pt;">bonus_vp</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mission-card">
+            <div class="card-inner">
+                <div class="card-header">Deep Reconnaissance</div>
+                <div class="card-type">Reconnaissance</div>
+                
+                <div class="card-body">
+                    <div style="font-size: 8pt; border-bottom: 1px solid #ccc; width: 100%; margin-bottom: 5px; padding-bottom: 5px;">
+                        <b>REQUIREMENTS</b><br>
+                        Range 4, Speed 3, Ceiling 2
+                    </div>
+                    <div style="font-size: 9pt;">
+                        <b>REWARDS</b><br>
+                        Income: £10<br>
+                        VP: 3
+                        <br><span style="color:#003366; font-size:8pt;">Draw 2 Hazard cards, choose 1</span>
+                        <br><span style="color:#003366; font-size:8pt;">draw_two_hazards</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mission-card">
+            <div class="card-inner">
+                <div class="card-header">Field Hospital Supply</div>
+                <div class="card-type">Resupply</div>
+                
+                <div class="card-body">
+                    <div style="font-size: 8pt; border-bottom: 1px solid #ccc; width: 100%; margin-bottom: 5px; padding-bottom: 5px;">
+                        <b>REQUIREMENTS</b><br>
+                        Range 2, Speed 1, Reliability 2
+                    </div>
+                    <div style="font-size: 9pt;">
+                        <b>REWARDS</b><br>
+                        Income: £5<br>
+                        VP: 1
+                        
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mission-card">
+            <div class="card-inner">
+                <div class="card-header">Ammunition Delivery</div>
+                <div class="card-type">Resupply</div>
+                
+                <div class="card-body">
+                    <div style="font-size: 8pt; border-bottom: 1px solid #ccc; width: 100%; margin-bottom: 5px; padding-bottom: 5px;">
+                        <b>REQUIREMENTS</b><br>
+                        Range 3, Speed 2, Reliability 2
+                    </div>
+                    <div style="font-size: 9pt;">
+                        <b>REWARDS</b><br>
+                        Income: £7<br>
+                        VP: 2
+                        
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mission-card">
+            <div class="card-inner">
+                <div class="card-header">Forward Base Resupply</div>
+                <div class="card-type">Resupply</div>
+                
+                <div class="card-body">
+                    <div style="font-size: 8pt; border-bottom: 1px solid #ccc; width: 100%; margin-bottom: 5px; padding-bottom: 5px;">
+                        <b>REQUIREMENTS</b><br>
+                        Range 3, Speed 1, Reliability 3
+                    </div>
+                    <div style="font-size: 9pt;">
+                        <b>REWARDS</b><br>
+                        Income: £7<br>
+                        VP: 2
+                        
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mission-card">
+            <div class="card-inner">
+                <div class="card-header">Emergency Provisions</div>
+                <div class="card-type">Resupply</div>
+                
+                <div class="card-body">
+                    <div style="font-size: 8pt; border-bottom: 1px solid #ccc; width: 100%; margin-bottom: 5px; padding-bottom: 5px;">
+                        <b>REQUIREMENTS</b><br>
+                        Range 4, Speed 3, Reliability 2
+                    </div>
+                    <div style="font-size: 9pt;">
+                        <b>REWARDS</b><br>
+                        Income: £9<br>
+                        VP: 3
+                        
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mission-card">
+            <div class="card-inner">
+                <div class="card-header">Siege Relief</div>
+                <div class="card-type">Resupply</div>
+                
+                <div class="card-body">
+                    <div style="font-size: 8pt; border-bottom: 1px solid #ccc; width: 100%; margin-bottom: 5px; padding-bottom: 5px;">
+                        <b>REQUIREMENTS</b><br>
+                        Range 4, Speed 2, Reliability 3
+                    </div>
+                    <div style="font-size: 9pt;">
+                        <b>REWARDS</b><br>
+                        Income: £10<br>
+                        VP: 3
+                        
+                        <br><span style="color:#003366; font-size:8pt;">bonus_vp</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mission-card">
+            <div class="card-inner">
+                <div class="card-header">Coastal Patrol</div>
+                <div class="card-type">Naval Patrol</div>
+                
+                <div class="card-body">
+                    <div style="font-size: 8pt; border-bottom: 1px solid #ccc; width: 100%; margin-bottom: 5px; padding-bottom: 5px;">
+                        <b>REQUIREMENTS</b><br>
+                        Range 3, Speed 2, Reliability 2
+                    </div>
+                    <div style="font-size: 9pt;">
+                        <b>REWARDS</b><br>
+                        Income: £6<br>
+                        VP: 1
+                        <br><span style="color:#003366; font-size:8pt;">Ignore 1 Weather hazard</span>
+                        <br><span style="color:#003366; font-size:8pt;">ignore_weather</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mission-card">
+            <div class="card-inner">
+                <div class="card-header">Submarine Hunter</div>
+                <div class="card-type">Naval Patrol</div>
+                
+                <div class="card-body">
+                    <div style="font-size: 8pt; border-bottom: 1px solid #ccc; width: 100%; margin-bottom: 5px; padding-bottom: 5px;">
+                        <b>REQUIREMENTS</b><br>
+                        Range 4, Speed 2, Reliability 3
+                    </div>
+                    <div style="font-size: 9pt;">
+                        <b>REWARDS</b><br>
+                        Income: £9<br>
+                        VP: 3
+                        <br><span style="color:#003366; font-size:8pt;">+£2 with Communications Suite</span>
+                        <br><span style="color:#003366; font-size:8pt;">communications_bonus</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mission-card">
+            <div class="card-inner">
+                <div class="card-header">Battery Direction</div>
+                <div class="card-type">Artillery Observation</div>
+                
+                <div class="card-body">
+                    <div style="font-size: 8pt; border-bottom: 1px solid #ccc; width: 100%; margin-bottom: 5px; padding-bottom: 5px;">
+                        <b>REQUIREMENTS</b><br>
+                        Range 2, Ceiling 2, Reliability 2
+                    </div>
+                    <div style="font-size: 9pt;">
+                        <b>REWARDS</b><br>
+                        Income: £6<br>
+                        VP: 1
+                        
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mission-card">
+            <div class="card-inner">
+                <div class="card-header">Long-Range Observation</div>
+                <div class="card-type">Artillery Observation</div>
+                
+                <div class="card-body">
+                    <div style="font-size: 8pt; border-bottom: 1px solid #ccc; width: 100%; margin-bottom: 5px; padding-bottom: 5px;">
+                        <b>REQUIREMENTS</b><br>
+                        Range 3, Ceiling 3, Reliability 2
+                    </div>
+                    <div style="font-size: 9pt;">
+                        <b>REWARDS</b><br>
+                        Income: £8<br>
+                        VP: 2
+                        <br><span style="color:#003366; font-size:8pt;">+1 Range with Spotter Gondola</span>
+                        <br><span style="color:#003366; font-size:8pt;">spotter_gondola_bonus</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        </div>
+        
+        <div class="page-break"></div>
+        <h1>Hazard Deck (Player Personal Deck)</h1>
+        <p><i>Print 4 copies of this set (one per player). 27 Cards per deck.</i></p>
+        <div class="card-sheet">
+        <div class="card hazard-card">
+            <div class="card-inner">
+                <div class="card-header">Clear Weather</div>
+                <div class="card-type">WEATHER</div>
+                
+                <div class="card-body">
+                    <div style="font-size:14pt; font-weight:bold; margin-bottom:5px;">Difficulty 0</div>
+                    
+                    <div style="margin-top:10px; font-size:8pt;">Auto-pass.</div>
+                </div>
+                
+                <div class="card-footer">
+                    <div style="font-weight:bold;">FLAK: 0</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card hazard-card">
+            <div class="card-inner">
+                <div class="card-header">Clear Weather</div>
+                <div class="card-type">WEATHER</div>
+                
+                <div class="card-body">
+                    <div style="font-size:14pt; font-weight:bold; margin-bottom:5px;">Difficulty 0</div>
+                    
+                    <div style="margin-top:10px; font-size:8pt;">Auto-pass.</div>
+                </div>
+                
+                <div class="card-footer">
+                    <div style="font-weight:bold;">FLAK: 0</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card hazard-card">
+            <div class="card-inner">
+                <div class="card-header">Clear Weather</div>
+                <div class="card-type">WEATHER</div>
+                
+                <div class="card-body">
+                    <div style="font-size:14pt; font-weight:bold; margin-bottom:5px;">Difficulty 0</div>
+                    
+                    <div style="margin-top:10px; font-size:8pt;">Auto-pass.</div>
+                </div>
+                
+                <div class="card-footer">
+                    <div style="font-weight:bold;">FLAK: 0</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card hazard-card">
+            <div class="card-inner">
+                <div class="card-header">Clear Weather</div>
+                <div class="card-type">WEATHER</div>
+                
+                <div class="card-body">
+                    <div style="font-size:14pt; font-weight:bold; margin-bottom:5px;">Difficulty 0</div>
+                    
+                    <div style="margin-top:10px; font-size:8pt;">Auto-pass.</div>
+                </div>
+                
+                <div class="card-footer">
+                    <div style="font-weight:bold;">FLAK: 0</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card hazard-card">
+            <div class="card-inner">
+                <div class="card-header">Light Turbulence</div>
+                <div class="card-type">WEATHER</div>
+                
+                <div class="card-body">
+                    <div style="font-size:14pt; font-weight:bold; margin-bottom:5px;">Difficulty 2</div>
+                    <div>Test: <b>Speed</b></div>
+                    <div style="margin-top:10px; font-size:8pt;"></div>
+                </div>
+                
+                <div class="card-footer">
+                    <div style="font-weight:bold;">FLAK: 0</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card hazard-card">
+            <div class="card-inner">
+                <div class="card-header">Minor Engine Trouble</div>
+                <div class="card-type">MECHANICAL</div>
+                
+                <div class="card-body">
+                    <div style="font-size:14pt; font-weight:bold; margin-bottom:5px;">Difficulty 2</div>
+                    <div>Test: <b>Reliability</b></div>
+                    <div style="margin-top:10px; font-size:8pt;"></div>
+                </div>
+                
+                <div class="card-footer">
+                    <div style="font-weight:bold;">FLAK: 1</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card hazard-card">
+            <div class="card-inner">
+                <div class="card-header">Crosswind</div>
+                <div class="card-type">WEATHER</div>
+                
+                <div class="card-body">
+                    <div style="font-size:14pt; font-weight:bold; margin-bottom:5px;">Difficulty 3</div>
+                    <div>Test: <b>Speed</b></div>
+                    <div style="margin-top:10px; font-size:8pt;"></div>
+                </div>
+                
+                <div class="card-footer">
+                    <div style="font-weight:bold;">FLAK: 0</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card hazard-card">
+            <div class="card-inner">
+                <div class="card-header">Gas Leak</div>
+                <div class="card-type">MECHANICAL</div>
+                
+                <div class="card-body">
+                    <div style="font-size:14pt; font-weight:bold; margin-bottom:5px;">Difficulty 3</div>
+                    <div>Test: <b>Reliability</b></div>
+                    <div style="margin-top:10px; font-size:8pt;"></div>
+                </div>
+                
+                <div class="card-footer">
+                    <div style="font-weight:bold;">FLAK: 1</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card hazard-card">
+            <div class="card-inner">
+                <div class="card-header">Low Visibility</div>
+                <div class="card-type">WEATHER</div>
+                
+                <div class="card-body">
+                    <div style="font-size:14pt; font-weight:bold; margin-bottom:5px;">Difficulty 2</div>
+                    <div>Test: <b>Ceiling</b></div>
+                    <div style="margin-top:10px; font-size:8pt;"></div>
+                </div>
+                
+                <div class="card-footer">
+                    <div style="font-weight:bold;">FLAK: 1</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card hazard-card">
+            <div class="card-inner">
+                <div class="card-header">Fuel Concern</div>
+                <div class="card-type">SUPPLY</div>
+                
+                <div class="card-body">
+                    <div style="font-size:14pt; font-weight:bold; margin-bottom:5px;">Difficulty 3</div>
+                    <div>Test: <b>Range</b></div>
+                    <div style="margin-top:10px; font-size:8pt;"></div>
+                </div>
+                
+                <div class="card-footer">
+                    <div style="font-weight:bold;">FLAK: 0</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card hazard-card">
+            <div class="card-inner">
+                <div class="card-header">Headwind</div>
+                <div class="card-type">WEATHER</div>
+                
+                <div class="card-body">
+                    <div style="font-size:14pt; font-weight:bold; margin-bottom:5px;">Difficulty 3</div>
+                    <div>Test: <b>Speed</b></div>
+                    <div style="margin-top:10px; font-size:8pt;"></div>
+                </div>
+                
+                <div class="card-footer">
+                    <div style="font-weight:bold;">FLAK: 1</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card hazard-card">
+            <div class="card-inner">
+                <div class="card-header">Structural Stress</div>
+                <div class="card-type">MECHANICAL</div>
+                
+                <div class="card-body">
+                    <div style="font-size:14pt; font-weight:bold; margin-bottom:5px;">Difficulty 2</div>
+                    <div>Test: <b>Reliability</b></div>
+                    <div style="margin-top:10px; font-size:8pt;"></div>
+                </div>
+                
+                <div class="card-footer">
+                    <div style="font-weight:bold;">FLAK: 2</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card hazard-card">
+            <div class="card-inner">
+                <div class="card-header">Strong Headwind</div>
+                <div class="card-type">WEATHER</div>
+                
+                <div class="card-body">
+                    <div style="font-size:14pt; font-weight:bold; margin-bottom:5px;">Difficulty 4</div>
+                    <div>Test: <b>Speed</b></div>
+                    <div style="margin-top:10px; font-size:8pt;"></div>
+                </div>
+                
+                <div class="card-footer">
+                    <div style="font-weight:bold;">FLAK: 2</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card hazard-card">
+            <div class="card-inner">
+                <div class="card-header">Icing Conditions</div>
+                <div class="card-type">WEATHER</div>
+                
+                <div class="card-body">
+                    <div style="font-size:14pt; font-weight:bold; margin-bottom:5px;">Difficulty 4</div>
+                    <div>Test: <b>Ceiling</b></div>
+                    <div style="margin-top:10px; font-size:8pt;">Fail: Lose 1 Gas</div>
+                </div>
+                
+                <div class="card-footer">
+                    <div style="font-weight:bold;">FLAK: 2</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card hazard-card">
+            <div class="card-inner">
+                <div class="card-header">Engine Failure</div>
+                <div class="card-type">MECHANICAL</div>
+                
+                <div class="card-body">
+                    <div style="font-size:14pt; font-weight:bold; margin-bottom:5px;">Difficulty 5</div>
+                    <div>Test: <b>Reliability</b></div>
+                    <div style="margin-top:10px; font-size:8pt;"></div>
+                </div>
+                
+                <div class="card-footer">
+                    <div style="font-weight:bold;">FLAK: 3</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card hazard-card">
+            <div class="card-inner">
+                <div class="card-header">Storm System</div>
+                <div class="card-type">WEATHER</div>
+                
+                <div class="card-body">
+                    <div style="font-size:14pt; font-weight:bold; margin-bottom:5px;">Difficulty 5</div>
+                    <div>Test: <b>Speed</b></div>
+                    <div style="margin-top:10px; font-size:8pt;"></div>
+                </div>
+                
+                <div class="card-footer">
+                    <div style="font-weight:bold;">FLAK: 3</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card hazard-card">
+            <div class="card-inner">
+                <div class="card-header">Structural Damage</div>
+                <div class="card-type">MECHANICAL</div>
+                
+                <div class="card-body">
+                    <div style="font-size:14pt; font-weight:bold; margin-bottom:5px;">Difficulty 4</div>
+                    <div>Test: <b>Reliability</b></div>
+                    <div style="margin-top:10px; font-size:8pt;"></div>
+                </div>
+                
+                <div class="card-footer">
+                    <div style="font-weight:bold;">FLAK: 4</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card hazard-card">
+            <div class="card-inner">
+                <div class="card-header">Navigation Error</div>
+                <div class="card-type">SUPPLY</div>
+                
+                <div class="card-body">
+                    <div style="font-size:14pt; font-weight:bold; margin-bottom:5px;">Difficulty 4</div>
+                    <div>Test: <b>Range</b></div>
+                    <div style="margin-top:10px; font-size:8pt;"></div>
+                </div>
+                
+                <div class="card-footer">
+                    <div style="font-weight:bold;">FLAK: 3</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card hazard-card">
+            <div class="card-inner">
+                <div class="card-header">Squall Line</div>
+                <div class="card-type">WEATHER</div>
+                
+                <div class="card-body">
+                    <div style="font-size:14pt; font-weight:bold; margin-bottom:5px;">Difficulty 5</div>
+                    <div>Test: <b>Reliability</b></div>
+                    <div style="margin-top:10px; font-size:8pt;">+1 Diff if 3+ Payload</div>
+                </div>
+                
+                <div class="card-footer">
+                    <div style="font-weight:bold;">FLAK: 3</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card hazard-card">
+            <div class="card-inner">
+                <div class="card-header">Severe Icing</div>
+                <div class="card-type">WEATHER</div>
+                
+                <div class="card-body">
+                    <div style="font-size:14pt; font-weight:bold; margin-bottom:5px;">Difficulty 5</div>
+                    <div>Test: <b>Ceiling</b></div>
+                    <div style="margin-top:10px; font-size:8pt;">Fail: Lose 2 Gas</div>
+                </div>
+                
+                <div class="card-footer">
+                    <div style="font-weight:bold;">FLAK: 2</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card hazard-card">
+            <div class="card-inner">
+                <div class="card-header">Engine Fire</div>
+                <div class="card-type">FIRE</div>
+                
+                <div class="card-body">
+                    <div style="font-size:14pt; font-weight:bold; margin-bottom:5px;">AUTO-PASS</div>
+                    
+                    <div style="margin-top:10px; font-size:8pt;">Spend 1 Engineer -> Damaged. Fail -> Crash.</div>
+                </div>
+                
+                <div class="card-footer">
+                    <div style="font-weight:bold;">FLAK: 2</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card hazard-card">
+            <div class="card-inner">
+                <div class="card-header">Engine Fire</div>
+                <div class="card-type">FIRE</div>
+                
+                <div class="card-body">
+                    <div style="font-size:14pt; font-weight:bold; margin-bottom:5px;">AUTO-PASS</div>
+                    
+                    <div style="margin-top:10px; font-size:8pt;">Spend 1 Engineer -> Damaged. Fail -> Crash.</div>
+                </div>
+                
+                <div class="card-footer">
+                    <div style="font-weight:bold;">FLAK: 2</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card hazard-card">
+            <div class="card-inner">
+                <div class="card-header">Gas Cell Rupture</div>
+                <div class="card-type">FIRE</div>
+                
+                <div class="card-body">
+                    <div style="font-size:14pt; font-weight:bold; margin-bottom:5px;">AUTO-PASS</div>
+                    
+                    <div style="margin-top:10px; font-size:8pt;">Spend 2 Engineers -> Damaged. Fail -> Crash.</div>
+                </div>
+                
+                <div class="card-footer">
+                    <div style="font-weight:bold;">FLAK: 3</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card hazard-card">
+            <div class="card-inner">
+                <div class="card-header">Gas Cell Rupture</div>
+                <div class="card-type">FIRE</div>
+                
+                <div class="card-body">
+                    <div style="font-size:14pt; font-weight:bold; margin-bottom:5px;">AUTO-PASS</div>
+                    
+                    <div style="margin-top:10px; font-size:8pt;">Spend 2 Engineers -> Damaged. Fail -> Crash.</div>
+                </div>
+                
+                <div class="card-footer">
+                    <div style="font-weight:bold;">FLAK: 3</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card hazard-card">
+            <div class="card-inner">
+                <div class="card-header">Static Discharge</div>
+                <div class="card-type">FIRE</div>
+                
+                <div class="card-body">
+                    <div style="font-size:14pt; font-weight:bold; margin-bottom:5px;">AUTO-PASS</div>
+                    
+                    <div style="margin-top:10px; font-size:8pt;">Diff 4 Reliability check. Fail -> Crash.</div>
+                </div>
+                
+                <div class="card-footer">
+                    <div style="font-weight:bold;">FLAK: 4</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card hazard-card">
+            <div class="card-inner">
+                <div class="card-header">Catastrophic Explosion</div>
+                <div class="card-type">FIRE</div>
+                
+                <div class="card-body">
+                    <div style="font-size:14pt; font-weight:bold; margin-bottom:5px;">AUTO-PASS</div>
+                    
+                    <div style="margin-top:10px; font-size:8pt;">CRASH. Age III Luxury = Hindenburg.</div>
+                </div>
+                
+                <div class="card-footer">
+                    <div style="font-weight:bold;">FLAK: 5</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card hazard-card">
+            <div class="card-inner">
+                <div class="card-header">Critical Structural Stress</div>
+                <div class="card-type">MECHANICAL</div>
+                
+                <div class="card-body">
+                    <div style="font-size:14pt; font-weight:bold; margin-bottom:5px;">AUTO-PASS</div>
+                    
+                    <div style="margin-top:10px; font-size:8pt;">Spend 2 Engineers -> Damaged. Fail -> Crash.</div>
+                </div>
+                
+                <div class="card-footer">
+                    <div style="font-weight:bold;">FLAK: 4</div>
+                </div>
+            </div>
+        </div>
+        </div>
+        
+        <div class="page-break"></div>
+        <h1>Tech Tiles</h1>
+        <p><i>Print multiple copies as per rules (N-1 per player count).</i></p>
+        <div class="tile-sheet">
+        <div class="tile component">
+            <div class="tile-inner">
+                <div style="font-size:6pt; text-transform:uppercase; color:#666;">component</div>
+                <div class="tile-name">Spotter Gondola</div>
+                <div class="tile-stats">
+                    <div class="stat-badge" title="income">Income:1</div>
+                </div>
+                <div style="font-weight:bold; color: #d32f2f; font-size:7pt;">Weight: 1</div>
+                <div style="font-size:6pt; font-style:italic; line-height:1; overflow:hidden;">
+                    
+                </div>
+                <div style="font-size:6pt; margin-top:2px;">Age 1</div>
+            </div>
+        </div>
+        
+        <div class="tile component">
+            <div class="tile-inner">
+                <div style="font-size:6pt; text-transform:uppercase; color:#666;">component</div>
+                <div class="tile-name">Postal Service</div>
+                <div class="tile-stats">
+                    <div class="stat-badge" title="income">Income:2</div>
+                </div>
+                <div style="font-weight:bold; color: #d32f2f; font-size:7pt;">Weight: 1</div>
+                <div style="font-size:6pt; font-style:italic; line-height:1; overflow:hidden;">
+                    
+                </div>
+                <div style="font-size:6pt; margin-top:2px;">Age 1</div>
+            </div>
+        </div>
+        
+        <div class="tile component">
+            <div class="tile-inner">
+                <div style="font-size:6pt; text-transform:uppercase; color:#666;">component</div>
+                <div class="tile-name">External Cargo</div>
+                <div class="tile-stats">
+                    <div class="stat-badge" title="income">Income:2</div>
+                </div>
+                <div style="font-weight:bold; color: #d32f2f; font-size:7pt;">Weight: 2</div>
+                <div style="font-size:6pt; font-style:italic; line-height:1; overflow:hidden;">
+                    
+                </div>
+                <div style="font-size:6pt; margin-top:2px;">Age 1</div>
+            </div>
+        </div>
+        
+        <div class="tile component">
+            <div class="tile-inner">
+                <div style="font-size:6pt; text-transform:uppercase; color:#666;">component</div>
+                <div class="tile-name">Observation Deck (Legacy)</div>
+                <div class="tile-stats">
+                    <div class="stat-badge" title="income">Income:1</div>
+                </div>
+                <div style="font-weight:bold; color: #d32f2f; font-size:7pt;">Weight: 1</div>
+                <div style="font-size:6pt; font-style:italic; line-height:1; overflow:hidden;">
+                    
+                </div>
+                <div style="font-size:6pt; margin-top:2px;">Age 1</div>
+            </div>
+        </div>
+        
+        <div class="tile component">
+            <div class="tile-inner">
+                <div style="font-size:6pt; text-transform:uppercase; color:#666;">component</div>
+                <div class="tile-name">Cargo Hold (Legacy)</div>
+                <div class="tile-stats">
+                    <div class="stat-badge" title="income">Income:2</div>
+                </div>
+                <div style="font-weight:bold; color: #d32f2f; font-size:7pt;">Weight: 2</div>
+                <div style="font-size:6pt; font-style:italic; line-height:1; overflow:hidden;">
+                    
+                </div>
+                <div style="font-size:6pt; margin-top:2px;">Age 1</div>
+            </div>
+        </div>
+        
+        <div class="tile component">
+            <div class="tile-inner">
+                <div style="font-size:6pt; text-transform:uppercase; color:#666;">component</div>
+                <div class="tile-name">Mail Compartment (Legacy)</div>
+                <div class="tile-stats">
+                    <div class="stat-badge" title="income">Income:2</div>
+                </div>
+                <div style="font-weight:bold; color: #d32f2f; font-size:7pt;">Weight: 1</div>
+                <div style="font-size:6pt; font-style:italic; line-height:1; overflow:hidden;">
+                    
+                </div>
+                <div style="font-size:6pt; margin-top:2px;">Age 1</div>
+            </div>
+        </div>
+        
+        <div class="tile component">
+            <div class="tile-inner">
+                <div style="font-size:6pt; text-transform:uppercase; color:#666;">component</div>
+                <div class="tile-name">Basic Cabin</div>
+                <div class="tile-stats">
+                    <div class="stat-badge" title="income">Income:2</div><div class="stat-badge" title="luxury">Luxury:1</div>
+                </div>
+                <div style="font-weight:bold; color: #d32f2f; font-size:7pt;">Weight: 2</div>
+                <div style="font-size:6pt; font-style:italic; line-height:1; overflow:hidden;">
+                    
+                </div>
+                <div style="font-size:6pt; margin-top:2px;">Age 2</div>
+            </div>
+        </div>
+        
+        <div class="tile component">
+            <div class="tile-inner">
+                <div style="font-size:6pt; text-transform:uppercase; color:#666;">component</div>
+                <div class="tile-name">Bombing Equipment</div>
+                <div class="tile-stats">
+                    
+                </div>
+                <div style="font-weight:bold; color: #d32f2f; font-size:7pt;">Weight: 3</div>
+                <div style="font-size:6pt; font-style:italic; line-height:1; overflow:hidden;">
+                    combat_income_bonus
+                </div>
+                <div style="font-size:6pt; margin-top:2px;">Age 2</div>
+            </div>
+        </div>
+        
+        <div class="tile component">
+            <div class="tile-inner">
+                <div style="font-size:6pt; text-transform:uppercase; color:#666;">component</div>
+                <div class="tile-name">Sparrowhawk Hangar</div>
+                <div class="tile-stats">
+                    
+                </div>
+                <div style="font-weight:bold; color: #d32f2f; font-size:7pt;">Weight: 3</div>
+                <div style="font-size:6pt; font-style:italic; line-height:1; overflow:hidden;">
+                    ignore_route_requirement
+                </div>
+                <div style="font-size:6pt; margin-top:2px;">Age 2</div>
+            </div>
+        </div>
+        
+        <div class="tile component">
+            <div class="tile-inner">
+                <div style="font-size:6pt; text-transform:uppercase; color:#666;">component</div>
+                <div class="tile-name">Communications Suite</div>
+                <div class="tile-stats">
+                    <div class="stat-badge" title="reliability">Reliability:1</div>
+                </div>
+                <div style="font-weight:bold; color: #d32f2f; font-size:7pt;">Weight: 1</div>
+                <div style="font-size:6pt; font-style:italic; line-height:1; overflow:hidden;">
+                    navigation_bonus
+                </div>
+                <div style="font-size:6pt; margin-top:2px;">Age 2</div>
+            </div>
+        </div>
+        
+        <div class="tile component">
+            <div class="tile-inner">
+                <div style="font-size:6pt; text-transform:uppercase; color:#666;">component</div>
+                <div class="tile-name">Light Armor Plating</div>
+                <div class="tile-stats">
+                    <div class="stat-badge" title="armor">Armor:1</div>
+                </div>
+                <div style="font-weight:bold; color: #d32f2f; font-size:7pt;">Weight: 2</div>
+                <div style="font-size:6pt; font-style:italic; line-height:1; overflow:hidden;">
+                    
+                </div>
+                <div style="font-size:6pt; margin-top:2px;">Age 2</div>
+            </div>
+        </div>
+        
+        <div class="tile component">
+            <div class="tile-inner">
+                <div style="font-size:6pt; text-transform:uppercase; color:#666;">component</div>
+                <div class="tile-name">Heavy Armor Plating</div>
+                <div class="tile-stats">
+                    <div class="stat-badge" title="armor">Armor:2</div>
+                </div>
+                <div style="font-weight:bold; color: #d32f2f; font-size:7pt;">Weight: 3</div>
+                <div style="font-size:6pt; font-style:italic; line-height:1; overflow:hidden;">
+                    
+                </div>
+                <div style="font-size:6pt; margin-top:2px;">Age 2</div>
+            </div>
+        </div>
+        
+        <div class="tile component">
+            <div class="tile-inner">
+                <div style="font-size:6pt; text-transform:uppercase; color:#666;">component</div>
+                <div class="tile-name">Imperial Mast</div>
+                <div class="tile-stats">
+                    
+                </div>
+                <div style="font-weight:bold; color: #d32f2f; font-size:7pt;">Weight: 1</div>
+                <div style="font-size:6pt; font-style:italic; line-height:1; overflow:hidden;">
+                    british_territories_home
+                </div>
+                <div style="font-size:6pt; margin-top:2px;">Age 2</div>
+            </div>
+        </div>
+        
+        <div class="tile component">
+            <div class="tile-inner">
+                <div style="font-size:6pt; text-transform:uppercase; color:#666;">component</div>
+                <div class="tile-name">Radio Room (Legacy)</div>
+                <div class="tile-stats">
+                    <div class="stat-badge" title="reliability">Reliability:1</div>
+                </div>
+                <div style="font-weight:bold; color: #d32f2f; font-size:7pt;">Weight: 1</div>
+                <div style="font-size:6pt; font-style:italic; line-height:1; overflow:hidden;">
+                    navigation_bonus
+                </div>
+                <div style="font-size:6pt; margin-top:2px;">Age 2</div>
+            </div>
+        </div>
+        
+        <div class="tile component">
+            <div class="tile-inner">
+                <div style="font-size:6pt; text-transform:uppercase; color:#666;">component</div>
+                <div class="tile-name">Luxury Cabin</div>
+                <div class="tile-stats">
+                    <div class="stat-badge" title="income">Income:3</div><div class="stat-badge" title="luxury">Luxury:2</div>
+                </div>
+                <div style="font-weight:bold; color: #d32f2f; font-size:7pt;">Weight: 3</div>
+                <div style="font-size:6pt; font-style:italic; line-height:1; overflow:hidden;">
+                    
+                </div>
+                <div style="font-size:6pt; margin-top:2px;">Age 3</div>
+            </div>
+        </div>
+        
+        <div class="tile component">
+            <div class="tile-inner">
+                <div style="font-size:6pt; text-transform:uppercase; color:#666;">component</div>
+                <div class="tile-name">Restaurant</div>
+                <div class="tile-stats">
+                    <div class="stat-badge" title="income">Income:2</div><div class="stat-badge" title="luxury">Luxury:2</div>
+                </div>
+                <div style="font-weight:bold; color: #d32f2f; font-size:7pt;">Weight: 2</div>
+                <div style="font-size:6pt; font-style:italic; line-height:1; overflow:hidden;">
+                    
+                </div>
+                <div style="font-size:6pt; margin-top:2px;">Age 3</div>
+            </div>
+        </div>
+        
+        <div class="tile component">
+            <div class="tile-inner">
+                <div style="font-size:6pt; text-transform:uppercase; color:#666;">component</div>
+                <div class="tile-name">Observation Lounge</div>
+                <div class="tile-stats">
+                    <div class="stat-badge" title="income">Income:1</div><div class="stat-badge" title="luxury">Luxury:3</div>
+                </div>
+                <div style="font-weight:bold; color: #d32f2f; font-size:7pt;">Weight: 2</div>
+                <div style="font-size:6pt; font-style:italic; line-height:1; overflow:hidden;">
+                    
+                </div>
+                <div style="font-size:6pt; margin-top:2px;">Age 3</div>
+            </div>
+        </div>
+        
+        <div class="tile component">
+            <div class="tile-inner">
+                <div style="font-size:6pt; text-transform:uppercase; color:#666;">component</div>
+                <div class="tile-name">Private Berths</div>
+                <div class="tile-stats">
+                    <div class="stat-badge" title="income">Income:2</div><div class="stat-badge" title="luxury">Luxury:1</div>
+                </div>
+                <div style="font-weight:bold; color: #d32f2f; font-size:7pt;">Weight: 2</div>
+                <div style="font-size:6pt; font-style:italic; line-height:1; overflow:hidden;">
+                    
+                </div>
+                <div style="font-size:6pt; margin-top:2px;">Age 3</div>
+            </div>
+        </div>
+        
+        <div class="tile component">
+            <div class="tile-inner">
+                <div style="font-size:6pt; text-transform:uppercase; color:#666;">component</div>
+                <div class="tile-name">Pressurized Lounge</div>
+                <div class="tile-stats">
+                    <div class="stat-badge" title="income">Income:1</div><div class="stat-badge" title="luxury">Luxury:2</div>
+                </div>
+                <div style="font-weight:bold; color: #d32f2f; font-size:7pt;">Weight: 2</div>
+                <div style="font-size:6pt; font-style:italic; line-height:1; overflow:hidden;">
+                    requires_helium
+                </div>
+                <div style="font-size:6pt; margin-top:2px;">Age 3</div>
+            </div>
+        </div>
+        
+        <div class="tile component">
+            <div class="tile-inner">
+                <div style="font-size:6pt; text-transform:uppercase; color:#666;">component</div>
+                <div class="tile-name">Dining Saloon (Legacy)</div>
+                <div class="tile-stats">
+                    <div class="stat-badge" title="income">Income:2</div><div class="stat-badge" title="luxury">Luxury:2</div>
+                </div>
+                <div style="font-weight:bold; color: #d32f2f; font-size:7pt;">Weight: 2</div>
+                <div style="font-size:6pt; font-style:italic; line-height:1; overflow:hidden;">
+                    
+                </div>
+                <div style="font-size:6pt; margin-top:2px;">Age 3</div>
+            </div>
+        </div>
+        
+        <div class="tile component">
+            <div class="tile-inner">
+                <div style="font-size:6pt; text-transform:uppercase; color:#666;">component</div>
+                <div class="tile-name">Luxury Lounge (Legacy)</div>
+                <div class="tile-stats">
+                    <div class="stat-badge" title="income">Income:3</div><div class="stat-badge" title="luxury">Luxury:2</div>
+                </div>
+                <div style="font-weight:bold; color: #d32f2f; font-size:7pt;">Weight: 3</div>
+                <div style="font-size:6pt; font-style:italic; line-height:1; overflow:hidden;">
+                    
+                </div>
+                <div style="font-size:6pt; margin-top:2px;">Age 3</div>
+            </div>
+        </div>
+        
+        <div class="tile component">
+            <div class="tile-inner">
+                <div style="font-size:6pt; text-transform:uppercase; color:#666;">component</div>
+                <div class="tile-name">Navigation Suite</div>
+                <div class="tile-stats">
+                    <div class="stat-badge" title="reliability">Reliability:2</div><div class="stat-badge" title="range">Range:1</div>
+                </div>
+                <div style="font-weight:bold; color: #d32f2f; font-size:7pt;">Weight: 1</div>
+                <div style="font-size:6pt; font-style:italic; line-height:1; overflow:hidden;">
+                    
+                </div>
+                <div style="font-size:6pt; margin-top:2px;">Age 3</div>
+            </div>
+        </div>
+        
+        <div class="tile component">
+            <div class="tile-inner">
+                <div style="font-size:6pt; text-transform:uppercase; color:#666;">component</div>
+                <div class="tile-name">Pressurized Cabin (Legacy)</div>
+                <div class="tile-stats">
+                    <div class="stat-badge" title="income">Income:1</div><div class="stat-badge" title="luxury">Luxury:2</div>
+                </div>
+                <div style="font-weight:bold; color: #d32f2f; font-size:7pt;">Weight: 2</div>
+                <div style="font-size:6pt; font-style:italic; line-height:1; overflow:hidden;">
+                    requires_helium
+                </div>
+                <div style="font-size:6pt; margin-top:2px;">Age 3</div>
+            </div>
+        </div>
+        
+        <div class="tile drive">
+            <div class="tile-inner">
+                <div style="font-size:6pt; text-transform:uppercase; color:#666;">drive</div>
+                <div class="tile-name">Basic Engine</div>
+                <div class="tile-stats">
+                    <div class="stat-badge" title="speed">Speed:1</div>
+                </div>
+                <div style="font-weight:bold; color: #d32f2f; font-size:7pt;">Weight: 1</div>
+                <div style="font-size:6pt; font-style:italic; line-height:1; overflow:hidden;">
+                    
+                </div>
+                <div style="font-size:6pt; margin-top:2px;">Age 1</div>
+            </div>
+        </div>
+        
+        <div class="tile drive">
+            <div class="tile-inner">
+                <div style="font-size:6pt; text-transform:uppercase; color:#666;">drive</div>
+                <div class="tile-name">Efficient Propeller</div>
+                <div class="tile-stats">
+                    <div class="stat-badge" title="speed">Speed:1</div><div class="stat-badge" title="range">Range:1</div>
+                </div>
+                <div style="font-weight:bold; color: #d32f2f; font-size:7pt;">Weight: 1</div>
+                <div style="font-size:6pt; font-style:italic; line-height:1; overflow:hidden;">
+                    
+                </div>
+                <div style="font-size:6pt; margin-top:2px;">Age 1</div>
+            </div>
+        </div>
+        
+        <div class="tile drive">
+            <div class="tile-inner">
+                <div style="font-size:6pt; text-transform:uppercase; color:#666;">drive</div>
+                <div class="tile-name">Maybach CX Engine</div>
+                <div class="tile-stats">
+                    <div class="stat-badge" title="speed">Speed:2</div><div class="stat-badge" title="range">Range:1</div>
+                </div>
+                <div style="font-weight:bold; color: #d32f2f; font-size:7pt;">Weight: 2</div>
+                <div style="font-size:6pt; font-style:italic; line-height:1; overflow:hidden;">
+                    
+                </div>
+                <div style="font-size:6pt; margin-top:2px;">Age 1</div>
+            </div>
+        </div>
+        
+        <div class="tile drive">
+            <div class="tile-inner">
+                <div style="font-size:6pt; text-transform:uppercase; color:#666;">drive</div>
+                <div class="tile-name">Twin Engine</div>
+                <div class="tile-stats">
+                    <div class="stat-badge" title="speed">Speed:2</div><div class="stat-badge" title="reliability">Reliability:1</div>
+                </div>
+                <div style="font-weight:bold; color: #d32f2f; font-size:7pt;">Weight: 3</div>
+                <div style="font-size:6pt; font-style:italic; line-height:1; overflow:hidden;">
+                    
+                </div>
+                <div style="font-size:6pt; margin-top:2px;">Age 2</div>
+            </div>
+        </div>
+        
+        <div class="tile drive">
+            <div class="tile-inner">
+                <div style="font-size:6pt; text-transform:uppercase; color:#666;">drive</div>
+                <div class="tile-name">Diesel Engine</div>
+                <div class="tile-stats">
+                    <div class="stat-badge" title="range">Range:2</div><div class="stat-badge" title="reliability">Reliability:1</div>
+                </div>
+                <div style="font-weight:bold; color: #d32f2f; font-size:7pt;">Weight: 2</div>
+                <div style="font-size:6pt; font-style:italic; line-height:1; overflow:hidden;">
+                    
+                </div>
+                <div style="font-size:6pt; margin-top:2px;">Age 2</div>
+            </div>
+        </div>
+        
+        <div class="tile drive">
+            <div class="tile-inner">
+                <div style="font-size:6pt; text-transform:uppercase; color:#666;">drive</div>
+                <div class="tile-name">Vectored Thrust</div>
+                <div class="tile-stats">
+                    <div class="stat-badge" title="speed">Speed:1</div><div class="stat-badge" title="ceiling">Ceiling:1</div>
+                </div>
+                <div style="font-weight:bold; color: #d32f2f; font-size:7pt;">Weight: 2</div>
+                <div style="font-size:6pt; font-style:italic; line-height:1; overflow:hidden;">
+                    
+                </div>
+                <div style="font-size:6pt; margin-top:2px;">Age 2</div>
+            </div>
+        </div>
+        
+        <div class="tile drive">
+            <div class="tile-inner">
+                <div style="font-size:6pt; text-transform:uppercase; color:#666;">drive</div>
+                <div class="tile-name">Balanced Propulsion</div>
+                <div class="tile-stats">
+                    <div class="stat-badge" title="speed">Speed:2</div><div class="stat-badge" title="reliability">Reliability:1</div>
+                </div>
+                <div style="font-weight:bold; color: #d32f2f; font-size:7pt;">Weight: 2</div>
+                <div style="font-size:6pt; font-style:italic; line-height:1; overflow:hidden;">
+                    
+                </div>
+                <div style="font-size:6pt; margin-top:2px;">Age 2</div>
+            </div>
+        </div>
+        
+        <div class="tile drive">
+            <div class="tile-inner">
+                <div style="font-size:6pt; text-transform:uppercase; color:#666;">drive</div>
+                <div class="tile-name">Aerodynamic Engine</div>
+                <div class="tile-stats">
+                    <div class="stat-badge" title="speed">Speed:3</div>
+                </div>
+                <div style="font-weight:bold; color: #d32f2f; font-size:7pt;">Weight: 2</div>
+                <div style="font-size:6pt; font-style:italic; line-height:1; overflow:hidden;">
+                    
+                </div>
+                <div style="font-size:6pt; margin-top:2px;">Age 3</div>
+            </div>
+        </div>
+        
+        <div class="tile drive">
+            <div class="tile-inner">
+                <div style="font-size:6pt; text-transform:uppercase; color:#666;">drive</div>
+                <div class="tile-name">High-Altitude Engine</div>
+                <div class="tile-stats">
+                    <div class="stat-badge" title="speed">Speed:2</div><div class="stat-badge" title="ceiling">Ceiling:2</div>
+                </div>
+                <div style="font-weight:bold; color: #d32f2f; font-size:7pt;">Weight: 3</div>
+                <div style="font-size:6pt; font-style:italic; line-height:1; overflow:hidden;">
+                    
+                </div>
+                <div style="font-size:6pt; margin-top:2px;">Age 3</div>
+            </div>
+        </div>
+        
+        <div class="tile drive">
+            <div class="tile-inner">
+                <div style="font-size:6pt; text-transform:uppercase; color:#666;">drive</div>
+                <div class="tile-name">Hybrid Powerplant</div>
+                <div class="tile-stats">
+                    <div class="stat-badge" title="range">Range:3</div><div class="stat-badge" title="reliability">Reliability:1</div>
+                </div>
+                <div style="font-weight:bold; color: #d32f2f; font-size:7pt;">Weight: 3</div>
+                <div style="font-size:6pt; font-style:italic; line-height:1; overflow:hidden;">
+                    
+                </div>
+                <div style="font-size:6pt; margin-top:2px;">Age 3</div>
+            </div>
+        </div>
+        
+        <div class="tile drive">
+            <div class="tile-inner">
+                <div style="font-size:6pt; text-transform:uppercase; color:#666;">drive</div>
+                <div class="tile-name">Adaptive Propeller</div>
+                <div class="tile-stats">
+                    <div class="stat-badge" title="speed">Speed:1</div><div class="stat-badge" title="range">Range:2</div>
+                </div>
+                <div style="font-weight:bold; color: #d32f2f; font-size:7pt;">Weight: 2</div>
+                <div style="font-size:6pt; font-style:italic; line-height:1; overflow:hidden;">
+                    
+                </div>
+                <div style="font-size:6pt; margin-top:2px;">Age 3</div>
+            </div>
+        </div>
+        
+        <div class="tile fabric">
+            <div class="tile-inner">
+                <div style="font-size:6pt; text-transform:uppercase; color:#666;">fabric</div>
+                <div class="tile-name">Cotton Envelope</div>
+                <div class="tile-stats">
+                    
+                </div>
+                
+                <div style="font-size:6pt; font-style:italic; line-height:1; overflow:hidden;">
+                    
+                </div>
+                <div style="font-size:6pt; margin-top:2px;">Age 1</div>
+            </div>
+        </div>
+        
+        <div class="tile fabric">
+            <div class="tile-inner">
+                <div style="font-size:6pt; text-transform:uppercase; color:#666;">fabric</div>
+                <div class="tile-name">Doped Covering</div>
+                <div class="tile-stats">
+                    <div class="stat-badge" title="speed">Speed:1</div>
+                </div>
+                
+                <div style="font-size:6pt; font-style:italic; line-height:1; overflow:hidden;">
+                    improved_aerodynamics
+                </div>
+                <div style="font-size:6pt; margin-top:2px;">Age 1</div>
+            </div>
+        </div>
+        
+        <div class="tile fabric">
+            <div class="tile-inner">
+                <div style="font-size:6pt; text-transform:uppercase; color:#666;">fabric</div>
+                <div class="tile-name">Premium Envelope</div>
+                <div class="tile-stats">
+                    <div class="stat-badge" title="reliability">Reliability:1</div><div class="stat-badge" title="range">Range:1</div>
+                </div>
+                
+                <div style="font-size:6pt; font-style:italic; line-height:1; overflow:hidden;">
+                    best_gas_tightness
+                </div>
+                <div style="font-size:6pt; margin-top:2px;">Age 1</div>
+            </div>
+        </div>
+        
+        <div class="tile fabric">
+            <div class="tile-inner">
+                <div style="font-size:6pt; text-transform:uppercase; color:#666;">fabric</div>
+                <div class="tile-name">Fire-Resistant Fabric</div>
+                <div class="tile-stats">
+                    <div class="stat-badge" title="reliability">Reliability:1</div>
+                </div>
+                <div style="font-weight:bold; color: #d32f2f; font-size:7pt;">Weight: 1</div>
+                <div style="font-size:6pt; font-style:italic; line-height:1; overflow:hidden;">
+                    fire_protection
+                </div>
+                <div style="font-size:6pt; margin-top:2px;">Age 2</div>
+            </div>
+        </div>
+        
+        <div class="tile fabric">
+            <div class="tile-inner">
+                <div style="font-size:6pt; text-transform:uppercase; color:#666;">fabric</div>
+                <div class="tile-name">Reflective Covering</div>
+                <div class="tile-stats">
+                    <div class="stat-badge" title="reliability">Reliability:1</div>
+                </div>
+                
+                <div style="font-size:6pt; font-style:italic; line-height:1; overflow:hidden;">
+                    heat_protection
+                </div>
+                <div style="font-size:6pt; margin-top:2px;">Age 2</div>
+            </div>
+        </div>
+        
+        <div class="tile fabric">
+            <div class="tile-inner">
+                <div style="font-size:6pt; text-transform:uppercase; color:#666;">fabric</div>
+                <div class="tile-name">Conductive Covering</div>
+                <div class="tile-stats">
+                    <div class="stat-badge" title="reliability">Reliability:1</div>
+                </div>
+                
+                <div style="font-size:6pt; font-style:italic; line-height:1; overflow:hidden;">
+                    static_immunity
+                </div>
+                <div style="font-size:6pt; margin-top:2px;">Age 2</div>
+            </div>
+        </div>
+        
+        <div class="tile fabric">
+            <div class="tile-inner">
+                <div style="font-size:6pt; text-transform:uppercase; color:#666;">fabric</div>
+                <div class="tile-name">Synthetic Envelope</div>
+                <div class="tile-stats">
+                    <div class="stat-badge" title="reliability">Reliability:1</div><div class="stat-badge" title="range">Range:1</div>
+                </div>
+                
+                <div style="font-size:6pt; font-style:italic; line-height:1; overflow:hidden;">
+                    
+                </div>
+                <div style="font-size:6pt; margin-top:2px;">Age 3</div>
+            </div>
+        </div>
+        
+        <div class="tile fabric">
+            <div class="tile-inner">
+                <div style="font-size:6pt; text-transform:uppercase; color:#666;">fabric</div>
+                <div class="tile-name">Advanced Fabric</div>
+                <div class="tile-stats">
+                    <div class="stat-badge" title="reliability">Reliability:2</div>
+                </div>
+                
+                <div style="font-size:6pt; font-style:italic; line-height:1; overflow:hidden;">
+                    multi_layer
+                </div>
+                <div style="font-size:6pt; margin-top:2px;">Age 3</div>
+            </div>
+        </div>
+        
+        <div class="tile frame">
+            <div class="tile-inner">
+                <div style="font-size:6pt; text-transform:uppercase; color:#666;">frame</div>
+                <div class="tile-name">Wooden Frame</div>
+                <div class="tile-stats">
+                    <div class="stat-badge" title="reliability">Reliability:1</div>
+                </div>
+                <div style="font-weight:bold; color: #d32f2f; font-size:7pt;">Weight: 2</div>
+                <div style="font-size:6pt; font-style:italic; line-height:1; overflow:hidden;">
+                    
+                </div>
+                <div style="font-size:6pt; margin-top:2px;">Age 1</div>
+            </div>
+        </div>
+        
+        <div class="tile frame">
+            <div class="tile-inner">
+                <div style="font-size:6pt; text-transform:uppercase; color:#666;">frame</div>
+                <div class="tile-name">Tensioned Frame</div>
+                <div class="tile-stats">
+                    <div class="stat-badge" title="ceiling">Ceiling:1</div>
+                </div>
+                <div style="font-weight:bold; color: #d32f2f; font-size:7pt;">Weight: 1</div>
+                <div style="font-size:6pt; font-style:italic; line-height:1; overflow:hidden;">
+                    
+                </div>
+                <div style="font-size:6pt; margin-top:2px;">Age 1</div>
+            </div>
+        </div>
+        
+        <div class="tile frame">
+            <div class="tile-inner">
+                <div style="font-size:6pt; text-transform:uppercase; color:#666;">frame</div>
+                <div class="tile-name">Duralumin Frame</div>
+                <div class="tile-stats">
+                    <div class="stat-badge" title="reliability">Reliability:2</div><div class="stat-badge" title="ceiling">Ceiling:1</div>
+                </div>
+                <div style="font-weight:bold; color: #d32f2f; font-size:7pt;">Weight: 2</div>
+                <div style="font-size:6pt; font-style:italic; line-height:1; overflow:hidden;">
+                    
+                </div>
+                <div style="font-size:6pt; margin-top:2px;">Age 1</div>
+            </div>
+        </div>
+        
+        <div class="tile frame">
+            <div class="tile-inner">
+                <div style="font-size:6pt; text-transform:uppercase; color:#666;">frame</div>
+                <div class="tile-name">Flexible Frame</div>
+                <div class="tile-stats">
+                    <div class="stat-badge" title="ceiling">Ceiling:1</div>
+                </div>
+                
+                <div style="font-size:6pt; font-style:italic; line-height:1; overflow:hidden;">
+                    weather_penalty
+                </div>
+                <div style="font-size:6pt; margin-top:2px;">Age 1</div>
+            </div>
+        </div>
+        
+        <div class="tile frame">
+            <div class="tile-inner">
+                <div style="font-size:6pt; text-transform:uppercase; color:#666;">frame</div>
+                <div class="tile-name">Steel Frame</div>
+                <div class="tile-stats">
+                    <div class="stat-badge" title="reliability">Reliability:2</div>
+                </div>
+                <div style="font-weight:bold; color: #d32f2f; font-size:7pt;">Weight: 3</div>
+                <div style="font-size:6pt; font-style:italic; line-height:1; overflow:hidden;">
+                    heavy_but_cheap
+                </div>
+                <div style="font-size:6pt; margin-top:2px;">Age 2</div>
+            </div>
+        </div>
+        
+        <div class="tile frame">
+            <div class="tile-inner">
+                <div style="font-size:6pt; text-transform:uppercase; color:#666;">frame</div>
+                <div class="tile-name">Semi-Rigid Keel</div>
+                <div class="tile-stats">
+                    <div class="stat-badge" title="reliability">Reliability:1</div>
+                </div>
+                <div style="font-weight:bold; color: #d32f2f; font-size:7pt;">Weight: 2</div>
+                <div style="font-size:6pt; font-style:italic; line-height:1; overflow:hidden;">
+                    italy_specialty
+                </div>
+                <div style="font-size:6pt; margin-top:2px;">Age 2</div>
+            </div>
+        </div>
+        
+        <div class="tile frame">
+            <div class="tile-inner">
+                <div style="font-size:6pt; text-transform:uppercase; color:#666;">frame</div>
+                <div class="tile-name">Streamlined Hull</div>
+                <div class="tile-stats">
+                    <div class="stat-badge" title="lift">Lift:2</div>
+                </div>
+                <div style="font-weight:bold; color: #d32f2f; font-size:7pt;">Weight: 1</div>
+                <div style="font-size:6pt; font-style:italic; line-height:1; overflow:hidden;">
+                    
+                </div>
+                <div style="font-size:6pt; margin-top:2px;">Age 2</div>
+            </div>
+        </div>
+        
+        <div class="tile frame">
+            <div class="tile-inner">
+                <div style="font-size:6pt; text-transform:uppercase; color:#666;">frame</div>
+                <div class="tile-name">Geodetic Frame</div>
+                <div class="tile-stats">
+                    <div class="stat-badge" title="reliability">Reliability:2</div><div class="stat-badge" title="ceiling">Ceiling:1</div>
+                </div>
+                <div style="font-weight:bold; color: #d32f2f; font-size:7pt;">Weight: 1</div>
+                <div style="font-size:6pt; font-style:italic; line-height:1; overflow:hidden;">
+                    lightest_expensive
+                </div>
+                <div style="font-size:6pt; margin-top:2px;">Age 3</div>
+            </div>
+        </div>
+        
+        <div class="tile frame">
+            <div class="tile-inner">
+                <div style="font-size:6pt; text-transform:uppercase; color:#666;">frame</div>
+                <div class="tile-name">Modular Frame</div>
+                <div class="tile-stats">
+                    
+                </div>
+                <div style="font-weight:bold; color: #d32f2f; font-size:7pt;">Weight: 1</div>
+                <div style="font-size:6pt; font-style:italic; line-height:1; overflow:hidden;">
+                    
+                </div>
+                <div style="font-size:6pt; margin-top:2px;">Age 3</div>
+            </div>
+        </div>
+        
+        <div class="tile frame">
+            <div class="tile-inner">
+                <div style="font-size:6pt; text-transform:uppercase; color:#666;">frame</div>
+                <div class="tile-name">Aerodynamic Lift System</div>
+                <div class="tile-stats">
+                    <div class="stat-badge" title="lift">Lift:4</div>
+                </div>
+                <div style="font-weight:bold; color: #d32f2f; font-size:7pt;">Weight: 2</div>
+                <div style="font-size:6pt; font-style:italic; line-height:1; overflow:hidden;">
+                    
+                </div>
+                <div style="font-size:6pt; margin-top:2px;">Age 3</div>
+            </div>
+        </div>
+        
+        <div class="tile gas">
+            <div class="tile-inner">
+                <div style="font-size:6pt; text-transform:uppercase; color:#666;">gas</div>
+                <div class="tile-name">Pressure Control</div>
+                <div class="tile-stats">
+                    <div class="stat-badge" title="ceiling">Ceiling:1</div>
+                </div>
+                <div style="font-weight:bold; color: #d32f2f; font-size:7pt;">Weight: 1</div>
+                <div style="font-size:6pt; font-style:italic; line-height:1; overflow:hidden;">
+                    
+                </div>
+                <div style="font-size:6pt; margin-top:2px;">Age 1</div>
+            </div>
+        </div>
+        
+        <div class="tile gas">
+            <div class="tile-inner">
+                <div style="font-size:6pt; text-transform:uppercase; color:#666;">gas</div>
+                <div class="tile-name">Altitude Ballonets</div>
+                <div class="tile-stats">
+                    <div class="stat-badge" title="ceiling">Ceiling:1</div>
+                </div>
+                <div style="font-weight:bold; color: #d32f2f; font-size:7pt;">Weight: 1</div>
+                <div style="font-size:6pt; font-style:italic; line-height:1; overflow:hidden;">
+                    
+                </div>
+                <div style="font-size:6pt; margin-top:2px;">Age 1</div>
+            </div>
+        </div>
+        
+        <div class="tile gas">
+            <div class="tile-inner">
+                <div style="font-size:6pt; text-transform:uppercase; color:#666;">gas</div>
+                <div class="tile-name">Compartmented Gas</div>
+                <div class="tile-stats">
+                    <div class="stat-badge" title="lift">Lift:2</div><div class="stat-badge" title="reliability">Reliability:1</div>
+                </div>
+                <div style="font-weight:bold; color: #d32f2f; font-size:7pt;">Weight: 1</div>
+                <div style="font-size:6pt; font-style:italic; line-height:1; overflow:hidden;">
+                    
+                </div>
+                <div style="font-size:6pt; margin-top:2px;">Age 2</div>
+            </div>
+        </div>
+        
+        <div class="tile gas">
+            <div class="tile-inner">
+                <div style="font-size:6pt; text-transform:uppercase; color:#666;">gas</div>
+                <div class="tile-name">Helium Gas Cell</div>
+                <div class="tile-stats">
+                    
+                </div>
+                <div style="font-weight:bold; color: #d32f2f; font-size:7pt;">Weight: 1</div>
+                <div style="font-size:6pt; font-style:italic; line-height:1; overflow:hidden;">
+                    fire_immunity
+                </div>
+                <div style="font-size:6pt; margin-top:2px;">Age 2</div>
+            </div>
+        </div>
+        
+        <div class="tile gas">
+            <div class="tile-inner">
+                <div style="font-size:6pt; text-transform:uppercase; color:#666;">gas</div>
+                <div class="tile-name">Blaugas Tank</div>
+                <div class="tile-stats">
+                    <div class="stat-badge" title="range">Range:1</div>
+                </div>
+                
+                <div style="font-size:6pt; font-style:italic; line-height:1; overflow:hidden;">
+                    gas_retention
+                </div>
+                <div style="font-size:6pt; margin-top:2px;">Age 2</div>
+            </div>
+        </div>
+        
+        <div class="tile gas">
+            <div class="tile-inner">
+                <div style="font-size:6pt; text-transform:uppercase; color:#666;">gas</div>
+                <div class="tile-name">Smart Valving</div>
+                <div class="tile-stats">
+                    <div class="stat-badge" title="reliability">Reliability:1</div><div class="stat-badge" title="ceiling">Ceiling:1</div>
+                </div>
+                <div style="font-weight:bold; color: #d32f2f; font-size:7pt;">Weight: 1</div>
+                <div style="font-size:6pt; font-style:italic; line-height:1; overflow:hidden;">
+                    
+                </div>
+                <div style="font-size:6pt; margin-top:2px;">Age 2</div>
+            </div>
+        </div>
+        
+        <div class="tile gas">
+            <div class="tile-inner">
+                <div style="font-size:6pt; text-transform:uppercase; color:#666;">gas</div>
+                <div class="tile-name">High-Ceiling Gas</div>
+                <div class="tile-stats">
+                    <div class="stat-badge" title="lift">Lift:3</div><div class="stat-badge" title="ceiling">Ceiling:2</div>
+                </div>
+                <div style="font-weight:bold; color: #d32f2f; font-size:7pt;">Weight: 2</div>
+                <div style="font-size:6pt; font-style:italic; line-height:1; overflow:hidden;">
+                    
+                </div>
+                <div style="font-size:6pt; margin-top:2px;">Age 3</div>
+            </div>
+        </div>
+        
+        <div class="tile gas">
+            <div class="tile-inner">
+                <div style="font-size:6pt; text-transform:uppercase; color:#666;">gas</div>
+                <div class="tile-name">Redundant Cells</div>
+                <div class="tile-stats">
+                    <div class="stat-badge" title="lift">Lift:4</div><div class="stat-badge" title="reliability">Reliability:2</div>
+                </div>
+                <div style="font-weight:bold; color: #d32f2f; font-size:7pt;">Weight: 2</div>
+                <div style="font-size:6pt; font-style:italic; line-height:1; overflow:hidden;">
+                    
+                </div>
+                <div style="font-size:6pt; margin-top:2px;">Age 3</div>
+            </div>
+        </div>
+        
+        <div class="tile gas">
+            <div class="tile-inner">
+                <div style="font-size:6pt; text-transform:uppercase; color:#666;">gas</div>
+                <div class="tile-name">Rapid Descent System</div>
+                <div class="tile-stats">
+                    <div class="stat-badge" title="reliability">Reliability:2</div>
+                </div>
+                <div style="font-weight:bold; color: #d32f2f; font-size:7pt;">Weight: 1</div>
+                <div style="font-size:6pt; font-style:italic; line-height:1; overflow:hidden;">
+                    weather_auto_pass
+                </div>
+                <div style="font-size:6pt; margin-top:2px;">Age 3</div>
+            </div>
+        </div>
+        
+        <div class="tile gas">
+            <div class="tile-inner">
+                <div style="font-size:6pt; text-transform:uppercase; color:#666;">gas</div>
+                <div class="tile-name">Reclamation System</div>
+                <div class="tile-stats">
+                    <div class="stat-badge" title="range">Range:2</div>
+                </div>
+                <div style="font-weight:bold; color: #d32f2f; font-size:7pt;">Weight: 1</div>
+                <div style="font-size:6pt; font-style:italic; line-height:1; overflow:hidden;">
+                    gas_cost_reduction
+                </div>
+                <div style="font-size:6pt; margin-top:2px;">Age 3</div>
+            </div>
+        </div>
+        
+        <div class="tile gas">
+            <div class="tile-inner">
+                <div style="font-size:6pt; text-transform:uppercase; color:#666;">gas</div>
+                <div class="tile-name">Exhaust Condensers</div>
+                <div class="tile-stats">
+                    
+                </div>
+                <div style="font-weight:bold; color: #d32f2f; font-size:7pt;">Weight: 2</div>
+                <div style="font-size:6pt; font-style:italic; line-height:1; overflow:hidden;">
+                    helium_cost_reduction
+                </div>
+                <div style="font-size:6pt; margin-top:2px;">Age 3</div>
+            </div>
+        </div>
+        </div>
+    </body>
+    </html>
+    
