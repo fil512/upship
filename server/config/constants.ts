@@ -19,8 +19,8 @@ export const MIN_INCOME = -10;  // Debt limit per Section 5.3
 export const HAND_SIZE = 5;
 export const INITIAL_AGENTS = 2;  // Per rules Section 2.1: Start with 2 agents, 3rd earned at Officer Income +3
 
-// R&D Board sizes by age
-export const RD_BOARD_SIZE: Record<number, number> = { 1: 4, 2: 5, 3: 6 };
+// R&D Board size (5 tiles for all ages, matching Market Row)
+export const RD_BOARD_SIZE = 5;
 // Market Row size per Section 3.1: "deal 5 cards face-up to form the Market Row"
 export const MARKET_ROW_SIZE = 5;
 

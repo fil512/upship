@@ -53,8 +53,7 @@ function refreshRnDBoard(state: MarketState): void {
   state.rdBoard = state.rdBoard || [];
   state.techCardBag = state.techCardBag || [];
 
-  const rdBoardSizeConfig = RD_BOARD_SIZE as Record<number, number>;
-  const targetSize = rdBoardSizeConfig[state.age] || 4;
+  const targetSize = RD_BOARD_SIZE as number;
 
   while (state.rdBoard.length < targetSize && state.techCardBag.length > 0) {
     const card = state.techCardBag.shift();

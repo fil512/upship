@@ -99,7 +99,7 @@ When the marker reaches an Age threshold, that Age ends after the current round.
    - Remove copies of faction starting technologies equal to the number of players who have them.
    - *Example: If Germany and USA both start with Duralumin Girders, remove 2 copies from the bag.*
    - Shuffle all Age I tiles together to form the Technology Bag.
-4. Place the **R&D Board** and draw 4 Technology tiles from the Age I bag to fill it.
+4. Place the **R&D Board** and draw 5 Technology tiles from the Age I bag to fill it.
 5. Organize the **Tech Tile Supply** by type.
 6. Set the **Progress Track** marker to 0.
 7. Set up **Officer** and **Engineer** token supplies.
@@ -562,13 +562,7 @@ Technologies represent patents and manufacturing capability. Acquire them from t
 
 ### The R&D Board
 
-Draw tiles to fill the board after each player's Reveal turn:
-
-| Age | Tiles Available |
-|-----|-----------------|
-| I | 4 |
-| II | 5 |
-| III | 6 |
+Draw tiles to fill the board to 5 after each player's Reveal turn (same as Market Row).
 
 At each Age Transition, new Age tiles are **added** to the bag—all previous Ages remain available.
 
