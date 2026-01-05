@@ -7,10 +7,7 @@ import type {
   GameState,
   PlayerState,
   Card,
-  Route,
-  Ship,
-  Blueprint,
-  Technology
+  Ship
 } from '@upship/api';
 
 // Import game data for slot type lookup
@@ -88,24 +85,11 @@ function getUpgradeForTech(techId: string): { id: string; slotType: string } | n
 }
 
 /**
- * Get slot type property name from short form
- */
-function getSlotPropertyName(slotType: string): string {
-  const mapping: Record<string, string> = {
-    'frame': 'frameSlots',
-    'fabric': 'fabricSlots',
-    'drive': 'driveSlots',
-    'component': 'componentSlots'
-  };
-  return mapping[slotType] || slotType;
-}
-
-/**
  * Calculate ship stats from blueprint
  */
 export function calculateShipStats(
   ship: Ship,
-  player: PlayerState
+  _player: PlayerState
 ): { lift: number; weight: number; range: number; speed: number; ceiling: number; reliability: number } {
   // Ships have their stats calculated at build time
   // Use the stats directly from the ship object
@@ -498,14 +482,16 @@ function buildLocationAction(
     case 'construction_hall':
       return { buildCount: 1 };
 
-    case 'design_bureau':
+    case 'design_bureau': {
       const swaps = getDesignBureauSwaps(player, state.age || 1);
       return swaps.length > 0 ? { swaps } : undefined;
+    }
 
-    case 'gas_depot':
+    case 'gas_depot': {
       // USA uses helium, others use hydrogen
       const gasType = player.faction === 'usa' ? 'helium' : 'hydrogen';
       return { gasType, gasAmount: 3 };
+    }
 
     case 'academy':
       return { crewType: 'officer', crewCount: 1 };

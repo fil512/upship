@@ -40,9 +40,11 @@ export function getRandomBotName(faction: Faction, usedNames: string[] = []): st
 
   if (available.length === 0) {
     // Fallback if all names used (shouldn't happen with max 4 players)
+    // eslint-disable-next-line sonarjs/pseudo-random
     return `Bot ${faction.charAt(0).toUpperCase()}${faction.slice(1)} ${Math.floor(Math.random() * 100)}`;
   }
 
+  // eslint-disable-next-line sonarjs/pseudo-random
   return available[Math.floor(Math.random() * available.length)];
 }
 

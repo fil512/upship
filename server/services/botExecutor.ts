@@ -283,7 +283,7 @@ async function executeBotRevealPhase(
   io: SocketIOServer,
   gameId: string,
   state: GameState,
-  version: number
+  _version: number
 ): Promise<boolean> {
   let anyActionExecuted = false;
 
@@ -364,7 +364,7 @@ async function executeBotAction(
   botId: string,
   actionType: string,
   actionData: Record<string, unknown>,
-  expectedVersion: number
+  _expectedVersion: number
 ): Promise<boolean> {
   try {
     // Get current state

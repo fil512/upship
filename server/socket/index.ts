@@ -333,11 +333,8 @@ function initializeSocket(server: HttpServer, sessionMiddleware: RequestHandler)
 
         // Check if next player is a bot and execute their moves
         // Run async to not block the response
-        setImmediate(() => {
-          checkAndExecuteBotMoves(io, gameId).catch((err: Error) => {
-            logger.error({ err, gameId }, 'Bot execution error');
-          });
-        });
+        // eslint-disable-next-line sonarjs/no-nested-functions
+        setImmediate(() => checkAndExecuteBotMoves(io, gameId).catch((err: Error) => logger.error({ err, gameId }, 'Bot execution error')));
       } catch (error) {
         logger.error({ error, gameId, action }, 'Error processing game action');
         const errorMessage = error instanceof Error ? error.message : 'Action failed';
