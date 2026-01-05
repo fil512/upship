@@ -415,8 +415,9 @@ function resolveFireHazard(state: GameState, playerId: string, shipIndex: number
 
 /**
  * Resolve successful hazard check - ship claims route or completes mission
+ * @param cityChoice - Optional city choice from RESPOND_TO_HAZARD action (takes precedence over ship.pendingCityChoice)
  */
-function resolveHazardSuccess(state: GameState, playerId: string, shipIndex: number, route: ExtendedRoute | undefined, hazard: HazardCard, message: string): ActionResult {
+function resolveHazardSuccess(state: GameState, playerId: string, shipIndex: number, route: ExtendedRoute | undefined, hazard: HazardCard, message: string, cityChoice?: string): ActionResult {
   const playerState = state.players[playerId] as HazardPlayerState;
   const hazardState = state as HazardState;
   const ships = playerState.ships as HazardShip[];
@@ -492,7 +493,8 @@ function resolveHazardSuccess(state: GameState, playerId: string, shipIndex: num
     playerState.income += route.income || 0;
 
     if (CITY_BONUSES) {
-      const cityName = pendingCityChoice || route.to || route.from;
+      // Prefer cityChoice from action, fall back to pendingCityChoice, then route endpoint
+      const cityName = cityChoice || pendingCityChoice || route.to || route.from;
       applyCityBonus(playerState, cityName, state, playerId);
     }
   }
@@ -532,13 +534,14 @@ function resolveHazardAbort(state: GameState, playerId: string, shipIndex: numbe
 interface RespondToHazardData {
   shipId: string;
   spendEngineers?: boolean;
+  cityChoice?: string;  // Which route endpoint to receive city bonus from
 }
 
 /**
  * Process player's response to a pending hazard check
  */
 function processRespondToHazard(state: GameState, playerId: string, data: RespondToHazardData): ActionResult {
-  const { shipId } = data;
+  const { shipId, cityChoice } = data;
   const spendEngineers = data.spendEngineers === true;
   const playerState = state.players[playerId] as HazardPlayerState;
   const hazardState = state as HazardState;
@@ -582,18 +585,18 @@ function processRespondToHazard(state: GameState, playerId: string, data: Respon
 
   if (hazard.autoPass || hazard.autoPassReason === 'Clear Weather') {
     delete ships[shipIndex].pendingHazard;
-    return resolveHazardSuccess(state, playerId, shipIndex, route, hazard, 'Clear Weather - Auto Pass');
+    return resolveHazardSuccess(state, playerId, shipIndex, route, hazard, 'Clear Weather - Auto Pass', cityChoice);
   }
 
   if (hazard.heliumFireImmunity) {
     delete ships[shipIndex].pendingHazard;
-    return resolveHazardSuccess(state, playerId, shipIndex, route, hazard, 'Fire Immunity (Helium) - Auto Pass');
+    return resolveHazardSuccess(state, playerId, shipIndex, route, hazard, 'Fire Immunity (Helium) - Auto Pass', cityChoice);
   }
 
   if (hazard.conductiveCoveringImmunity) {
     delete ships[shipIndex].pendingHazard;
     return resolveHazardSuccess(state, playerId, shipIndex, route, hazard,
-      'Static Discharge - Auto Pass (Conductive Covering grounds electrical charge)');
+      'Static Discharge - Auto Pass (Conductive Covering grounds electrical charge)', cityChoice);
   }
 
   if (hazard.fireResistantFabricAvailable) {
@@ -608,7 +611,7 @@ function processRespondToHazard(state: GameState, playerId: string, data: Respon
     } as LogEntry);
 
     return resolveHazardSuccess(state, playerId, shipIndex, route, hazard,
-      'Fire Hazard - Auto Pass (Fire-Resistant Fabric, once per Age)');
+      'Fire Hazard - Auto Pass (Fire-Resistant Fabric, once per Age)', cityChoice);
   }
 
   if (hazard.noSave || hazard.type === 'catastrophic_explosion') {
@@ -658,7 +661,7 @@ function processRespondToHazard(state: GameState, playerId: string, data: Respon
       playerState.engineers -= engineersNeeded;
       delete ships[shipIndex].pendingHazard;
       return resolveHazardSuccess(state, playerId, shipIndex, route, hazard,
-        `Static Discharge Reliability check passed: ${reliabilityStat + engineersNeeded} >= ${hazard.difficulty}`);
+        `Static Discharge Reliability check passed: ${reliabilityStat + engineersNeeded} >= ${hazard.difficulty}`, cityChoice);
     } else if (!spendEngineers || availableEngineers < engineersNeeded) {
       return resolveFireCrash(state, playerId, shipIndex, hazard);
     }
@@ -671,14 +674,14 @@ function processRespondToHazard(state: GameState, playerId: string, data: Respon
   if (engineersNeeded === 0) {
     delete ships[shipIndex].pendingHazard;
     return resolveHazardSuccess(state, playerId, shipIndex, route, hazard,
-      `${hazard.statName?.toUpperCase() || 'CHECK'} passed: ${relevantStat} >= ${hazard.difficulty}`);
+      `${hazard.statName?.toUpperCase() || 'CHECK'} passed: ${relevantStat} >= ${hazard.difficulty}`, cityChoice);
   }
 
   if (spendEngineers && availableEngineers >= engineersNeeded) {
     playerState.engineers -= engineersNeeded;
     delete ships[shipIndex].pendingHazard;
     return resolveHazardSuccess(state, playerId, shipIndex, route, hazard,
-      `${hazard.statName?.toUpperCase() || 'CHECK'} passed: ${relevantStat} + ${engineersNeeded} engineers >= ${hazard.difficulty}`);
+      `${hazard.statName?.toUpperCase() || 'CHECK'} passed: ${relevantStat} + ${engineersNeeded} engineers >= ${hazard.difficulty}`, cityChoice);
   } else {
     delete ships[shipIndex].pendingHazard;
     return resolveHazardAbort(state, playerId, shipIndex, hazard,

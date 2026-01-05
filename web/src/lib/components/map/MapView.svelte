@@ -17,10 +17,13 @@
   const dispatch = createEventDispatcher<{
     claimRoute: { route: Route };
     claimMission: { mission: Mission };
+    selectRoute: { route: Route };
   }>();
 
   function handleRouteSelect(event: CustomEvent<{ route: Route }>) {
+    // Forward both events - claimRoute for route claiming, selectRoute for launchpad
     dispatch('claimRoute', event.detail);
+    dispatch('selectRoute', event.detail);
   }
 
   function handleMissionSelect(event: CustomEvent<{ mission: Mission }>) {

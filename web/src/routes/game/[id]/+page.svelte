@@ -297,40 +297,57 @@
 	}
 
 	// Launch handlers (launchpad active)
-	function handleLaunchShip() {
+	// City modal state for hazard response
+	let pendingHazardResponse: { spendEngineers: boolean } | null = null;
+
+	async function handleLaunchShip() {
 		if (!selectedShip || !selectedRouteId || !selectedGasType) {
 			showToast('Select gas type and route first', 'error');
 			return;
 		}
-		// Show city selection modal before launching
-		showCityModal = true;
-	}
-
-	async function handleCitySelect(event: CustomEvent<{ city: string }>) {
-		showCityModal = false;
-		if (!selectedShip || !selectedRouteId || !selectedGasType) {
-			return;
-		}
+		// Send LAUNCH_SHIP directly - city choice happens after hazard check
 		const result = await sendAction({
 			actionType: 'LAUNCH_SHIP',
 			actionData: {
 				shipId: selectedShip.id,
 				routeId: selectedRouteId,
-				gasType: selectedGasType,
-				cityChoice: event.detail.city
+				gasType: selectedGasType
 			}
 		});
 		if (result.success) {
 			selectedRouteId = null;
 			selectedGasType = null;
-			showToast('Ship launched!', 'success');
+			// Hazard panel will show next - don't show success toast yet
 		} else {
 			showToast(result.error || 'Failed to launch ship', 'error');
 		}
 	}
 
+	// Called when city is selected after hazard check passes
+	async function handleCitySelect(event: CustomEvent<{ city: string }>) {
+		showCityModal = false;
+		if (!shipAwaitingHazard || !pendingHazardResponse) {
+			return;
+		}
+		const result = await sendAction({
+			actionType: 'RESPOND_TO_HAZARD',
+			actionData: {
+				shipId: shipAwaitingHazard.id,
+				spendEngineers: pendingHazardResponse.spendEngineers,
+				cityChoice: event.detail.city
+			}
+		});
+		pendingHazardResponse = null;
+		if (result.success) {
+			showToast('Ship launched successfully!', 'success');
+		} else {
+			showToast(result.error || 'Failed to respond to hazard', 'error');
+		}
+	}
+
 	function handleCityModalCancel() {
 		showCityModal = false;
+		pendingHazardResponse = null;
 	}
 
 	async function handleDoneLaunching() {
@@ -435,21 +452,39 @@
 	$: shipAwaitingHazard = myShips.find((s) => s.status === 'awaiting_hazard' && s.pendingHazard);
 	$: pendingHazard = shipAwaitingHazard?.pendingHazard;
 	$: canAffordEngineers = ($myState?.engineers || 0) >= (pendingHazard?.engineersNeeded || 0);
+	// Route for city choice modal during hazard response
+	$: hazardRoute = shipAwaitingHazard?.pendingRouteId
+		? routes.find((r) => r.id === shipAwaitingHazard.pendingRouteId)
+		: null;
 
 	// Peeked hazard - from Navigator card or Weather Bureau
 	$: peekedHazard = $myState?.peekedHazard;
 
 	async function handleRespondToHazard(spendEngineers: boolean) {
 		if (!shipAwaitingHazard) return;
-		const result = await sendAction({
-			actionType: 'RESPOND_TO_HAZARD',
-			actionData: {
-				shipId: shipAwaitingHazard.id,
-				spendEngineers
+
+		// Determine if hazard will pass (need city choice) or fail (no city needed)
+		const hazard = pendingHazard;
+		const willPass = hazard?.autoPassReason ||
+			hazard?.engineersNeeded === 0 ||
+			(spendEngineers && canAffordEngineers);
+
+		if (willPass) {
+			// Show city modal - city choice needed for successful launch
+			pendingHazardResponse = { spendEngineers };
+			showCityModal = true;
+		} else {
+			// Hazard fails - no city choice needed
+			const result = await sendAction({
+				actionType: 'RESPOND_TO_HAZARD',
+				actionData: {
+					shipId: shipAwaitingHazard.id,
+					spendEngineers
+				}
+			});
+			if (!result.success) {
+				showToast(result.error || 'Failed to respond to hazard', 'error');
 			}
-		});
-		if (!result.success) {
-			showToast(result.error || 'Failed to respond to hazard', 'error');
 		}
 	}
 
@@ -990,10 +1025,10 @@
 		/>
 	{/if}
 
-	{#if showCityModal && selectedRoute}
+	{#if showCityModal && hazardRoute}
 		<CitySelectionModal
-			fromCity={selectedRoute.from || 'Unknown'}
-			toCity={selectedRoute.to || 'Unknown'}
+			fromCity={hazardRoute.from || 'Unknown'}
+			toCity={hazardRoute.to || 'Unknown'}
 			on:select={handleCitySelect}
 			on:cancel={handleCityModalCancel}
 		/>

@@ -71,6 +71,14 @@ export interface HazardCard {
 	hydrogenOnly?: boolean;
 	engineerCost?: number;
 	noSave?: boolean;
+	// Extended fields added during hazard resolution
+	autoPassReason?: string | null;
+	engineersNeeded?: number;
+	relevantStat?: number;
+	statName?: string;
+	heliumFireImmunity?: boolean;
+	conductiveCoveringImmunity?: boolean;
+	fireResistantFabricAvailable?: boolean;
 }
 
 // Ship stats
