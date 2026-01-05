@@ -140,11 +140,20 @@ function initializeSocket(server: HttpServer, sessionMiddleware: RequestHandler)
         // Track presence
         handlePlayerJoin(io, gameId, playerId, socket.id);
 
-        // Send initial state sync
+        // Get undo info for this player
+        const undoInfo: UndoInfo = await getUndoInfo(gameId, playerId);
+        const playerState = gameState.state.players[playerId] as unknown as ExtendedPlayerState | undefined;
+
+        // Send initial state sync with turnInfo
         const filteredState = filterStateForPlayer(gameState.state, playerId);
         socket.emit('state-sync', {
           state: filteredState,
-          version: gameState.version
+          version: gameState.version,
+          turnInfo: {
+            canUndo: undoInfo.canUndo,
+            lastActionType: undoInfo.lastActionType,
+            canEndTurn: playerState?.hasTakenActionThisTurn || false
+          }
         });
 
         logger.info({ gameId, playerId }, 'Player joined game room');

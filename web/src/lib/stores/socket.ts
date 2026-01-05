@@ -114,6 +114,9 @@ export function connect(gameId: string, playerId: string): void {
 		const currentVersion = get(gameVersion);
 		if (version > currentVersion) {
 			updateGameState(state, version);
+			// Reset turnInfo on state-update since it could be stale
+			// (my undo state is only valid from my own action callbacks)
+			updateTurnInfo({ canUndo: false, lastActionType: null, canEndTurn: false });
 		}
 	});
 
