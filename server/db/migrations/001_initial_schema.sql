@@ -1,5 +1,5 @@
 -- Complete database schema for UP SHIP! online board game
--- This is a collapsed schema combining all migrations
+-- Consolidated schema (no migrations needed - fresh install)
 
 -- Users table
 CREATE TABLE users (
@@ -40,6 +40,7 @@ CREATE TABLE games (
 
 -- Game players (join table with faction selection)
 -- Factions: germany, britain, usa, italy
+-- Supports both human players (user_id set) and bots (is_bot=TRUE, user_id=NULL)
 CREATE TABLE game_players (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   game_id UUID REFERENCES games(id) ON DELETE CASCADE,
@@ -47,18 +48,31 @@ CREATE TABLE game_players (
   faction VARCHAR(50),
   player_order INTEGER,
   joined_at TIMESTAMP DEFAULT NOW(),
+  is_bot BOOLEAN DEFAULT FALSE NOT NULL,
+  bot_name VARCHAR(50),
 
   UNIQUE(game_id, user_id),
   UNIQUE(game_id, player_order),
-  UNIQUE(game_id, faction)
+  UNIQUE(game_id, faction),
+
+  -- Bots must have a bot_name, humans must not
+  CONSTRAINT check_bot_name CHECK (
+    (is_bot = TRUE AND bot_name IS NOT NULL) OR (is_bot = FALSE AND bot_name IS NULL)
+  ),
+  -- Bots have NULL user_id, humans have non-NULL user_id
+  CONSTRAINT check_bot_user_id CHECK (
+    (is_bot = TRUE AND user_id IS NULL) OR (is_bot = FALSE AND user_id IS NOT NULL)
+  )
 );
 
 -- Game state (JSONB for complex nested state)
+-- Note: current_player_id has no FK constraint because it can reference
+-- either users.id (human) or game_players.id (bot)
 CREATE TABLE game_states (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   game_id UUID REFERENCES games(id) ON DELETE CASCADE UNIQUE,
   version INTEGER DEFAULT 1,
-  current_player_id UUID REFERENCES users(id),
+  current_player_id UUID,
   phase VARCHAR(50),
   turn_number INTEGER DEFAULT 1,
   age INTEGER DEFAULT 1,
@@ -71,10 +85,12 @@ COMMENT ON COLUMN game_states.commit_point_version IS
   'State version of last commit point; cannot undo actions at or before this version';
 
 -- Action history (for replay, undo, and debugging)
+-- Note: player_id has no FK constraint because it can reference
+-- either users.id (human) or game_players.id (bot)
 CREATE TABLE game_actions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   game_id UUID REFERENCES games(id) ON DELETE CASCADE,
-  player_id UUID REFERENCES users(id),
+  player_id UUID,
   action_type VARCHAR(50) NOT NULL,
   action_data JSONB NOT NULL,
   state_version INTEGER NOT NULL,
@@ -98,6 +114,7 @@ CREATE INDEX idx_games_status ON games(status);
 CREATE INDEX idx_games_host ON games(host_id);
 CREATE INDEX idx_game_players_user ON game_players(user_id);
 CREATE INDEX idx_game_players_game ON game_players(game_id);
+CREATE INDEX idx_game_players_bots ON game_players(game_id) WHERE is_bot = TRUE;
 CREATE INDEX idx_game_actions_game ON game_actions(game_id);
 CREATE INDEX idx_game_actions_created ON game_actions(created_at);
 CREATE INDEX idx_game_states_game ON game_states(game_id);
@@ -116,6 +133,7 @@ DROP INDEX IF EXISTS idx_users_username;
 DROP INDEX IF EXISTS idx_game_states_game;
 DROP INDEX IF EXISTS idx_game_actions_created;
 DROP INDEX IF EXISTS idx_game_actions_game;
+DROP INDEX IF EXISTS idx_game_players_bots;
 DROP INDEX IF EXISTS idx_game_players_game;
 DROP INDEX IF EXISTS idx_game_players_user;
 DROP INDEX IF EXISTS idx_games_host;
