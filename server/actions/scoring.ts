@@ -212,6 +212,9 @@ function processCalculateScores(state: GameState, playerId: string, data: Calcul
     type: 'system'
   } as LogEntry);
 
+  // Set phase to game_complete to stop the game loop
+  state.phase = 'game_complete';
+
   return { newState: state };
 }
 

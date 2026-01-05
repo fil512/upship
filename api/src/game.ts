@@ -8,7 +8,8 @@ export type GamePhase =
 	| 'worker_placement'
 	| 'reveal'
 	| 'income_cleanup'
-	| 'age_transition_design_bureau';
+	| 'age_transition_design_bureau'
+	| 'game_complete';
 
 // Ship status
 export type ShipStatus =
@@ -109,6 +110,7 @@ export interface Ship {
 	routeId?: string;
 	pendingHazard?: HazardCard;
 	pendingRouteId?: string;
+	pendingMissionId?: string;
 	officers?: number;
 	engineers?: number;
 	upgrades?: string[];
