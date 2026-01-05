@@ -162,11 +162,19 @@ async function executeBotWorkerPlacement(
 
   logger.info({ gameId, botId, agentsRemaining: player.agentsRemaining, handSize: player.hand?.length }, 'BOT EXECUTOR: Player state');
 
+  // Check if bot has already revealed (hasPassed = true)
+  if (player.hasPassed) {
+    logger.info({ gameId, botId }, 'BOT EXECUTOR: Bot has already revealed, finishing purchase selection');
+    // Bot has revealed and needs to finish purchase selection
+    // For now, bots don't select purchases interactively, so just end turn
+    return await executeBotAction(io, gameId, botId, 'END_TURN', {}, version);
+  }
+
   // Check if bot has agents remaining
   if ((player.agentsRemaining || 0) <= 0) {
-    logger.info({ gameId, botId }, 'BOT EXECUTOR: No agents remaining, ending turn');
-    // Bot must reveal/end turn
-    return await executeBotAction(io, gameId, botId, 'END_TURN', {}, version);
+    logger.info({ gameId, botId }, 'BOT EXECUTOR: No agents remaining, must reveal');
+    // Bot has no agents but hasn't revealed yet - must call REVEAL
+    return await executeBotAction(io, gameId, botId, 'REVEAL', {}, version);
   }
 
   // Find strategic placement

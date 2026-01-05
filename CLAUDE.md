@@ -342,6 +342,22 @@ python -m playtest output [num_lines]        # Show Claude background task outpu
 
 ## Working with This Project
 
+### Icons in the Web Interface
+
+When the web interface requires an icon, **always use icons from `web/src/lib/icons/svg/`**. See `web/src/lib/icons/svg/README.md` for the complete reference of available icons and their intended usage.
+
+Key icon categories:
+- **Resources**: `cash.svg`, `income.svg`, `officers.svg`, `engineers.svg`, `hydrogen.svg`, `helium.svg`, `vp.svg`, `research.svg`, `influence.svg`
+- **Card Symbols**: `wrench.svg` (technical), `coin.svg` (business), `propeller.svg` (operations), `any.svg` (wild)
+- **Factions**: `germany.svg`, `britain.svg`, `usa.svg`, `italy.svg`
+- **Ship Stats**: `lift.svg`, `weight.svg`, `speed.svg`, `range.svg`, `ceiling.svg`, `reliability.svg`, `luxury.svg`
+- **Game Mechanics**: `ship.svg`, `launch.svg`, `route.svg`, `technology.svg`, `upgrade.svg`, `hazard.svg`, `insurance.svg`, `blueprint.svg`, `eye.svg`, `gas.svg`
+
+Icon requirements:
+- All icons use `viewBox="0 0 24 24"` (24×24 design grid)
+- Colors are baked into SVGs except player-colored icons which use `currentColor`
+- Design for legibility at 10px (smallest display size)
+
 ### When Editing Rules
 - Cross-references use section numbers frequently
 - Key interconnected sections to keep consistent:

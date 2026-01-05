@@ -65,10 +65,10 @@ mcp__chrome-devtools__new_page url="http://localhost:5173/"
 # 2. Take snapshot to see login form
 mcp__chrome-devtools__take_snapshot
 
-# 3. Login as test user (or register if needed)
-# Username: kenny (or any existing user)
-mcp__chrome-devtools__fill uid="<username_uid>" value="kenny"
-mcp__chrome-devtools__fill uid="<password_uid>" value="<password>"
+# 3. Login as playtest user
+# Username: playtest_bot / Password: test123456
+mcp__chrome-devtools__fill uid="<username_uid>" value="playtest_bot"
+mcp__chrome-devtools__fill uid="<password_uid>" value="test123456"
 mcp__chrome-devtools__click uid="<login_button_uid>"
 
 # 4. Wait for lobby to load

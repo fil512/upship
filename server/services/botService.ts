@@ -73,8 +73,8 @@ function findPlayableCard(
  */
 function getUpgradeForTech(techId: string): { id: string; slotType: string } | null {
   // Map tech IDs to their corresponding upgrade and slot type
-  // The upgrade ID is typically the same as the tech ID for most technologies
-  const upgrade = UPGRADES.find((u: { id: string }) => u.id === techId);
+  // UPGRADES is a Record<string, TechTile> so we look up by key directly
+  const upgrade = UPGRADES[techId];
   if (upgrade) {
     return {
       id: upgrade.id,
