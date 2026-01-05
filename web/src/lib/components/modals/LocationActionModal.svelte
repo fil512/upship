@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte';
 	import { myState } from '$lib/stores/gameState';
+	import Icon from '$lib/components/ui/Icon.svelte';
 
 	export let locationId: string;
 	export let locationName: string;
@@ -110,7 +111,7 @@
 							class:selected={gasType === 'hydrogen'}
 							on:click={() => (gasType = 'hydrogen')}
 						>
-							<span class="gas-icon hydrogen">H₂</span>
+							<Icon name="hydrogen" size={32} />
 							Hydrogen
 						</button>
 						<button
@@ -118,7 +119,7 @@
 							class:selected={gasType === 'helium'}
 							on:click={() => (gasType = 'helium')}
 						>
-							<span class="gas-icon helium">He</span>
+							<Icon name="helium" size={32} />
 							Helium
 						</button>
 					</div>
@@ -162,7 +163,7 @@
 							class:selected={crewType === 'officer'}
 							on:click={() => (crewType = 'officer')}
 						>
-							<span class="crew-icon officer">⚓</span>
+							<Icon name="officers" size={32} />
 							Officer (£{OFFICER_COST} each)
 						</button>
 						<button
@@ -170,7 +171,7 @@
 							class:selected={crewType === 'engineer'}
 							on:click={() => (crewType = 'engineer')}
 						>
-							<span class="crew-icon engineer">🔧</span>
+							<Icon name="engineers" size={32} />
 							Engineer (£{ENGINEER_COST} each)
 						</button>
 					</div>
@@ -420,31 +421,6 @@
 	.option-btn.selected {
 		border-color: var(--color-accent-gold);
 		background: rgba(212, 175, 55, 0.1);
-	}
-
-	.gas-icon {
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		width: 32px;
-		height: 32px;
-		border-radius: 50%;
-		font-size: 0.875rem;
-		font-weight: bold;
-	}
-
-	.gas-icon.hydrogen {
-		background: #3b82f6;
-		color: white;
-	}
-
-	.gas-icon.helium {
-		background: #a855f7;
-		color: white;
-	}
-
-	.crew-icon {
-		font-size: 1.5rem;
 	}
 
 	.number-selector {

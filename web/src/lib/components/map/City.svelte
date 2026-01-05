@@ -2,6 +2,8 @@
   import { createEventDispatcher } from 'svelte';
   import { FACTION_COLORS } from '$lib/data/mapConfig';
   import { CITY_BONUSES, type CityPosition, type CityBonus } from '$lib/data/cityCoordinates';
+  import Icon from '$lib/components/ui/Icon.svelte';
+  import type { IconName } from '$lib/icons';
 
   export let name: string;
   export let position: CityPosition;
@@ -13,34 +15,42 @@
   // Get bonus for this city
   $: bonus = CITY_BONUSES[name] as CityBonus | undefined;
 
-  // Sizes for markers - larger if showing bonus
-  $: size = bonus ? 20 : (type === 'major' ? 14 : 10);
+  // Sizes for markers - larger if showing bonus (doubled for visibility)
+  $: size = bonus ? 40 : (type === 'major' ? 28 : 20);
   $: homeBaseColor = homeBase ? FACTION_COLORS[homeBase] : null;
 
   // Label offset based on position preference
   $: labelOffset = getLabelOffset(position.labelPosition, size);
 
-  // Get icon/symbol for bonus type
-  function getBonusDisplay(b: CityBonus): { icon: string; color: string } {
+  // Map bonus type to icon name (null means use text instead)
+  function getBonusIconName(b: CityBonus): IconName | null {
+    switch (b.type) {
+      case 'officer':
+        return 'officers';
+      case 'engineer':
+        return 'engineers';
+      case 'research':
+        return 'research';
+      case 'influence':
+        return 'influence';
+      case 'gas':
+        return 'gas';
+      default:
+        return null; // money, card, swap use text
+    }
+  }
+
+  // Get text display for non-icon bonuses
+  function getBonusText(b: CityBonus): { text: string; color: string } {
     switch (b.type) {
       case 'money':
-        return { icon: b.value.toString(), color: '#fbbf24' }; // Gold
-      case 'officer':
-        return { icon: '⚓', color: '#60a5fa' }; // Blue - naval/officer
-      case 'engineer':
-        return { icon: '🔧', color: '#f97316' }; // Orange - wrench
-      case 'research':
-        return { icon: '💡', color: '#a78bfa' }; // Purple - lightbulb
-      case 'influence':
-        return { icon: '◆', color: '#ec4899' }; // Pink - diamond
-      case 'gas':
-        return { icon: '⬡', color: '#22d3ee' }; // Cyan - hexagon for gas
+        return { text: b.value.toString(), color: '#fbbf24' };
       case 'card':
-        return { icon: '🃏', color: '#f8fafc' }; // White
+        return { text: '📋', color: '#f8fafc' };
       case 'swap':
-        return { icon: '⇄', color: '#10b981' }; // Green - exchange
+        return { text: '⇄', color: '#10b981' };
       default:
-        return { icon: '?', color: '#94a3b8' };
+        return { text: '?', color: '#94a3b8' };
     }
   }
 
@@ -97,16 +107,31 @@
       stroke="#64748b"
       stroke-width="1.5"
     />
-    <text
-      class="bonus-icon"
-      text-anchor="middle"
-      dominant-baseline="central"
-      font-size={bonus.type === 'money' ? '12' : '11'}
-      font-weight="700"
-      fill={getBonusDisplay(bonus).color}
-    >
-      {getBonusDisplay(bonus).icon}
-    </text>
+    {#if getBonusIconName(bonus)}
+      <!-- Use SVG Icon for officer, engineer, research, influence, gas -->
+      <foreignObject
+        x={-size / 2 + 4}
+        y={-size / 2 + 4}
+        width={size - 8}
+        height={size - 8}
+      >
+        <div class="icon-container">
+          <Icon name={getBonusIconName(bonus)} size={size - 12} />
+        </div>
+      </foreignObject>
+    {:else}
+      <!-- Use text for money, card, swap -->
+      <text
+        class="bonus-icon"
+        text-anchor="middle"
+        dominant-baseline="central"
+        font-size={bonus.type === 'money' ? '22' : '20'}
+        font-weight="700"
+        fill={getBonusText(bonus).color}
+      >
+        {getBonusText(bonus).text}
+      </text>
+    {/if}
   {:else}
     <!-- Regular city marker -->
     <circle
@@ -156,6 +181,15 @@
     font-family: var(--font-sans);
     pointer-events: none;
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+  }
+
+  .icon-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
   }
 
   .home-base-ring {

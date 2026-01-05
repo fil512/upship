@@ -12,6 +12,7 @@
   export let cities: Record<string, { type: string; homeBase: string | null }> = {};
   export let ships: Ship[] = [];
   export let allPlayerShips: { ship: Ship; faction: string }[] = [];
+  export let playerFactions: Record<string, string> = {};
   export let myFaction: string | undefined = undefined;
   export let selectable: boolean = false;
 
@@ -63,15 +64,21 @@
       const homeBase = FACTION_HOME_BASES[faction]?.[currentAge];
       if (homeBase && cityPos[homeBase]) {
         const city = cityPos[homeBase];
-        // Offset below the home base city, stagger by ship index
-        const index = myShips.filter((s) => s.status === 'hangar').indexOf(ship);
-        return { x: city.x + (index % 3) * 25 - 25, y: city.y + 30 + Math.floor(index / 3) * 18 };
+        // Get all hangar ships from the same faction to calculate position offset
+        const factionHangarShips = allShips
+          .filter((s) => s.faction === faction && s.ship.status === 'hangar')
+          .map((s) => s.ship);
+        const index = factionHangarShips.findIndex((s) => s.id === ship.id);
+        const safeIndex = index >= 0 ? index : 0;
+        return { x: city.x + (safeIndex % 3) * 25 - 25, y: city.y + 30 + Math.floor(safeIndex / 3) * 18 };
       }
+      // Fallback for hangar ships without valid home base
       return { x: 50, y: dims.height - 50 };
     }
 
-    // Ships on route go to route midpoint (straight line)
-    if ((ship.status === 'on_route' || ship.status === 'awaiting_hazard') && ship.routeId) {
+    // Ships with a routeId (on_route, awaiting_hazard, crashed, destroyed, damaged)
+    // go to route midpoint - this keeps crashed ships visible where they crashed
+    if (ship.routeId) {
       const route = gameRoutes.find((r) => r.id === ship.routeId);
       if (route && route.from && route.to) {
         const from = cityPos[route.from];
@@ -93,7 +100,14 @@
       }
     }
 
-    // Default fallback
+    // Ships without routeId and not in hangar go to home base as fallback
+    const homeBase = FACTION_HOME_BASES[faction]?.[currentAge];
+    if (homeBase && cityPos[homeBase]) {
+      const city = cityPos[homeBase];
+      return { x: city.x, y: city.y + 50 };
+    }
+
+    // Ultimate fallback (should rarely happen)
     return { x: 50, y: dims.height - 50 };
   }
 
@@ -125,7 +139,7 @@
   <!-- Routes layer (bottom) -->
   <g class="routes-layer">
     {#each routes as route (route.id)}
-      <Route {route} cities={cityPositions} {selectable} on:select={handleRouteSelect} />
+      <Route {route} cities={cityPositions} {playerFactions} {selectable} on:select={handleRouteSelect} />
     {/each}
   </g>
 
@@ -144,9 +158,12 @@
     {/each}
   </g>
 
-  <!-- Ships layer (top) -->
+  <!-- Ships layer (top) - only show ships actively on route -->
   <g class="ships-layer">
-    {#each allPlayerShips as { ship, faction } (ship.id)}
+    {#each allPlayerShips.filter(({ ship }) =>
+      ship.status === 'on_route' ||
+      ship.status === 'awaiting_hazard'
+    ) as { ship, faction } (ship.id)}
       <MapShip {ship} {faction} position={shipPositions.get(ship.id) || { x: 50, y: dimensions.height - 50 }} />
     {/each}
   </g>

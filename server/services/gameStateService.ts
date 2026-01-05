@@ -565,7 +565,9 @@ function createAgeIMap(): GameMap {
         range: 1, speed: 0, ceiling: 0, income: 3, vp: 2, claimed: null },
       // Range 2 routes (medium distance)
       { id: 'route_london_paris', name: 'London-Paris', from: 'London', to: 'Paris',
-        range: 2, speed: 2, ceiling: 0, income: 5, vp: 3, claimed: null },
+        range: 2, speed: 2, ceiling: 0, income: 5, vp: 3, claimed: null, track: 1 },
+      { id: 'route_london_paris_2', name: 'London-Paris', from: 'London', to: 'Paris',
+        range: 2, speed: 2, ceiling: 0, income: 5, vp: 3, claimed: null, track: 2 },
       { id: 'route_north_sea', name: 'North Sea Run', from: 'Hamburg', to: 'Amsterdam',
         range: 2, speed: 1, ceiling: 0, income: 4, vp: 2, claimed: null },
       { id: 'route_baltic', name: 'Baltic Passage', from: 'Hamburg', to: 'Copenhagen',
@@ -652,7 +654,9 @@ function createAgeIIIMap(): GameMap {
       { id: 'route_trans_amazon', name: 'Trans-Amazon', from: 'Rio de Janeiro', to: 'Manaus',
         range: 4, speed: 1, ceiling: 0, income: 7, vp: 3, luxury: 0, claimed: null },
       { id: 'route_north_atlantic_express', name: 'North Atlantic Express', from: 'New York', to: 'London',
-        range: 4, speed: 2, ceiling: 2, income: 8, vp: 4, luxury: 0, claimed: null },
+        range: 4, speed: 2, ceiling: 2, income: 8, vp: 4, luxury: 0, claimed: null, track: 1 },
+      { id: 'route_north_atlantic_express_2', name: 'North Atlantic Express', from: 'New York', to: 'London',
+        range: 4, speed: 2, ceiling: 2, income: 8, vp: 4, luxury: 0, claimed: null, track: 2 },
       // Luxury Routes
       { id: 'route_empire_state_express', name: 'Empire State Express', from: 'New York', to: 'Chicago',
         range: 3, speed: 3, ceiling: 1, income: 8, vp: 4, luxury: 1, claimed: null },
@@ -663,7 +667,9 @@ function createAgeIIIMap(): GameMap {
       { id: 'route_graf_zeppelin', name: 'Graf Zeppelin Route', from: 'Rio de Janeiro', to: 'Friedrichshafen',
         range: 5, speed: 2, ceiling: 2, income: 10, vp: 5, luxury: 1, claimed: null },
       { id: 'route_transatlantic_luxury', name: 'Transatlantic Luxury', from: 'London', to: 'New York',
-        range: 4, speed: 3, ceiling: 2, income: 11, vp: 5, luxury: 2, claimed: null },
+        range: 4, speed: 3, ceiling: 2, income: 11, vp: 5, luxury: 2, claimed: null, track: 1 },
+      { id: 'route_transatlantic_luxury_2', name: 'Transatlantic Luxury', from: 'London', to: 'New York',
+        range: 4, speed: 3, ceiling: 2, income: 11, vp: 5, luxury: 2, claimed: null, track: 2 },
       { id: 'route_hindenburg', name: 'Hindenburg Route', from: 'Frankfurt', to: 'Lakehurst',
         range: 5, speed: 3, ceiling: 2, income: 12, vp: 6, luxury: 2, claimed: null }
     ] as Route[],

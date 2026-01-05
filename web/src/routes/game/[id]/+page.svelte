@@ -44,9 +44,11 @@
 
 	// Modals
 	import LocationActionModal from '$lib/components/modals/LocationActionModal.svelte';
+	import CitySelectionModal from '$lib/components/modals/CitySelectionModal.svelte';
 
 	// Utilities
 	import { calculateShipStats } from '$lib/utils/shipStats';
+	import Icon from '$lib/components/ui/Icon.svelte';
 
 	// Locations that require parameter input before placing agent
 	const LOCATIONS_REQUIRING_PARAMS: Record<string, string> = {
@@ -295,9 +297,18 @@
 	}
 
 	// Launch handlers (launchpad active)
-	async function handleLaunchShip() {
+	function handleLaunchShip() {
 		if (!selectedShip || !selectedRouteId || !selectedGasType) {
 			showToast('Select gas type and route first', 'error');
+			return;
+		}
+		// Show city selection modal before launching
+		showCityModal = true;
+	}
+
+	async function handleCitySelect(event: CustomEvent<{ city: string }>) {
+		showCityModal = false;
+		if (!selectedShip || !selectedRouteId || !selectedGasType) {
 			return;
 		}
 		const result = await sendAction({
@@ -305,7 +316,8 @@
 			actionData: {
 				shipId: selectedShip.id,
 				routeId: selectedRouteId,
-				gasType: selectedGasType
+				gasType: selectedGasType,
+				cityChoice: event.detail.city
 			}
 		});
 		if (result.success) {
@@ -315,6 +327,10 @@
 		} else {
 			showToast(result.error || 'Failed to launch ship', 'error');
 		}
+	}
+
+	function handleCityModalCancel() {
+		showCityModal = false;
 	}
 
 	async function handleDoneLaunching() {
@@ -371,8 +387,17 @@
 		(player.ships || []).map((ship) => ({ ship, faction: player.faction }))
 	);
 
+	// Player ID to faction mapping (for route claim colors)
+	$: playerFactions = Object.fromEntries(
+		Object.entries($gameState?.players || {}).map(([playerId, player]) => [playerId, player.faction])
+	);
+
 	// Ship stats from blueprint
 	$: shipStats = calculateShipStats($myState?.blueprint);
+
+	// Game advancement track
+	$: progressThresholds = $gameState?.progressThresholds || { age2: 4, age3: 8, end: 12 };
+	$: progressTrack = $gameState?.progressTrack || 0;
 
 	// Handle blueprint slot click
 	function handleBlueprintSlotClick(event: CustomEvent<{ slotType: string; index: number; upgrade: string | null }>) {
@@ -395,6 +420,10 @@
 	$: canAffordHelium = ($myState?.gasCubes?.helium || 0) >= launchGasRequired;
 	let selectedRouteId: string | null = null;
 	let selectedGasType: 'hydrogen' | 'helium' | null = null;
+
+	// City selection modal state
+	let showCityModal = false;
+	$: selectedRoute = routes.find((r) => r.id === selectedRouteId);
 
 	// Auto-switch to Map tab when gas is selected during launch
 	function selectGasType(gasType: 'hydrogen' | 'helium') {
@@ -572,7 +601,38 @@
 				</div>
 			</div>
 
+			<!-- Game Advancement Track -->
 			<div class="header-center">
+				<div class="advancement-track">
+					{#each Array(progressThresholds.end + 1) as _, i}
+						<div
+							class="track-space"
+							class:current={i === progressTrack}
+							class:passed={i < progressTrack}
+							class:milestone={i === progressThresholds.age2 ||
+								i === progressThresholds.age3 ||
+								i === progressThresholds.end}
+							class:age2={i === progressThresholds.age2}
+							class:age3={i === progressThresholds.age3}
+							class:game-end={i === progressThresholds.end}
+						>
+							{#if i === progressTrack}
+								<span class="marker">●</span>
+							{:else if i === progressThresholds.age2}
+								<span class="milestone-label">II</span>
+							{:else if i === progressThresholds.age3}
+								<span class="milestone-label">III</span>
+							{:else if i === progressThresholds.end}
+								<span class="milestone-label">⚑</span>
+							{:else}
+								<span class="space-dot">·</span>
+							{/if}
+						</div>
+					{/each}
+				</div>
+			</div>
+
+			<div class="header-right">
 				{#if $isMyTurn}
 					<div class="turn-indicator your-turn">Your Turn</div>
 				{:else}
@@ -582,9 +642,6 @@
 						{#if waitingPlayer?.isBot}<span class="bot-tag">(Bot)</span>{/if}
 					</div>
 				{/if}
-			</div>
-
-			<div class="header-right">
 				<div class="online-indicator">
 					<span class="online-dot"></span>
 					{$onlinePlayers.length} online
@@ -691,6 +748,7 @@
 								{cities}
 								ships={$myState?.ships || []}
 								{allPlayerShips}
+								{playerFactions}
 								missionRow={$gameState?.missionRow || []}
 								myFaction={$myState?.faction}
 								selectable={$isMyTurn && isLaunchpadActive}
@@ -852,7 +910,7 @@
 												on:click={() => selectGasType('hydrogen')}
 											>
 												{#each Array(launchGasRequired) as _}
-													<span class="gas-icon hydrogen">H₂</span>
+													<Icon name="hydrogen" size={24} />
 												{/each}
 											</button>
 										{/if}
@@ -862,7 +920,7 @@
 												on:click={() => selectGasType('helium')}
 											>
 												{#each Array(launchGasRequired) as _}
-													<span class="gas-icon helium">He</span>
+													<Icon name="helium" size={24} />
 												{/each}
 											</button>
 										{/if}
@@ -929,6 +987,15 @@
 			locationName={pendingLocationName}
 			on:confirm={handleLocationModalConfirm}
 			on:cancel={handleLocationModalCancel}
+		/>
+	{/if}
+
+	{#if showCityModal && selectedRoute}
+		<CitySelectionModal
+			fromCity={selectedRoute.from || 'Unknown'}
+			toCity={selectedRoute.to || 'Unknown'}
+			on:select={handleCitySelect}
+			on:cancel={handleCityModalCancel}
 		/>
 	{/if}
 {/if}
@@ -1094,11 +1161,16 @@
 		border-bottom: 1px solid var(--color-bg-hover);
 	}
 
-	.header-left,
-	.header-right {
+	.header-left {
 		display: flex;
 		align-items: center;
 		gap: var(--spacing-md);
+	}
+
+	.header-right {
+		display: flex;
+		align-items: center;
+		gap: var(--spacing-sm);
 	}
 
 	.back-btn {
@@ -1174,6 +1246,86 @@
 		height: 8px;
 		background: var(--color-success);
 		border-radius: 50%;
+	}
+
+	/* Advancement Track */
+	.advancement-track {
+		display: flex;
+		align-items: center;
+		gap: 2px;
+		padding: var(--spacing-xs) var(--spacing-sm);
+		background: var(--color-bg-secondary);
+		border-radius: var(--radius-md);
+		border: 1px solid var(--color-bg-hover);
+	}
+
+	.track-space {
+		width: 20px;
+		height: 20px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		font-size: 0.7rem;
+		color: var(--color-text-muted);
+		border-radius: 3px;
+		transition: all var(--transition-fast);
+	}
+
+	.track-space.passed {
+		background: var(--color-bg-hover);
+	}
+
+	.track-space.current {
+		background: var(--color-success);
+		color: var(--color-bg-primary);
+		font-weight: bold;
+		animation: pulse 2s ease-in-out infinite;
+	}
+
+	.track-space.current .marker {
+		font-size: 0.9rem;
+	}
+
+	.track-space.milestone {
+		width: 24px;
+		border: 1px solid var(--color-text-muted);
+	}
+
+	.track-space.age2 {
+		border-color: var(--color-info);
+		color: var(--color-info);
+	}
+
+	.track-space.age3 {
+		border-color: var(--color-accent-gold);
+		color: var(--color-accent-gold);
+	}
+
+	.track-space.game-end {
+		border-color: var(--color-warning);
+		color: var(--color-warning);
+	}
+
+	.track-space.passed.milestone {
+		background: var(--color-bg-hover);
+	}
+
+	.track-space.passed.age2 {
+		background: color-mix(in srgb, var(--color-info) 30%, transparent);
+	}
+
+	.track-space.passed.age3 {
+		background: color-mix(in srgb, var(--color-accent-gold) 30%, transparent);
+	}
+
+	.milestone-label {
+		font-weight: 600;
+		font-size: 0.65rem;
+	}
+
+	.space-dot {
+		font-size: 1rem;
+		line-height: 1;
 	}
 
 	/* Layout */
@@ -1452,27 +1604,6 @@
 	.gas-slot.helium:hover {
 		background: rgba(168, 85, 247, 0.4);
 		transform: scale(1.05);
-	}
-
-	.gas-icon {
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		width: 24px;
-		height: 24px;
-		border-radius: 50%;
-		font-size: 0.7rem;
-		font-weight: bold;
-	}
-
-	.gas-icon.hydrogen {
-		background: #3b82f6;
-		color: white;
-	}
-
-	.gas-icon.helium {
-		background: #a855f7;
-		color: white;
 	}
 
 	.route-info {

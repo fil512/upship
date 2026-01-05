@@ -6,6 +6,7 @@
 
   export let route: Route;
   export let cities: Record<string, CityPosition>;
+  export let playerFactions: Record<string, string> = {};
   export let selectable: boolean = false;
 
   const dispatch = createEventDispatcher<{ select: { route: Route } }>();
@@ -14,13 +15,40 @@
   $: to = cities[route.to || ''];
   $: isValid = from && to;
 
-  // Straight line path
-  $: path = isValid ? `M ${from.x} ${from.y} L ${to.x} ${to.y}` : '';
+  // Calculate perpendicular offset for double tracks
+  // track=1: offset to one side, track=2: offset to other side, undefined: centered
+  $: trackOffset = isValid ? calculateTrackOffset(from, to, route.track) : { x: 0, y: 0 };
+
+  function calculateTrackOffset(fromPos: CityPosition, toPos: CityPosition, track?: number): { x: number; y: number } {
+    if (!track) return { x: 0, y: 0 }; // Single track, no offset
+
+    const dx = toPos.x - fromPos.x;
+    const dy = toPos.y - fromPos.y;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+    if (distance === 0) return { x: 0, y: 0 };
+
+    // Perpendicular direction (rotate 90 degrees)
+    const perpX = -dy / distance;
+    const perpY = dx / distance;
+
+    // Offset: track 1 goes one way, track 2 goes the other
+    const offsetDistance = 6; // pixels apart
+    const direction = track === 1 ? -1 : 1;
+
+    return { x: perpX * offsetDistance * direction, y: perpY * offsetDistance * direction };
+  }
+
+  // Apply track offset to city positions
+  $: offsetFrom = isValid ? { x: from.x + trackOffset.x, y: from.y + trackOffset.y } : from;
+  $: offsetTo = isValid ? { x: to.x + trackOffset.x, y: to.y + trackOffset.y } : to;
+
+  // Straight line path (with track offset applied)
+  $: path = isValid ? `M ${offsetFrom.x} ${offsetFrom.y} L ${offsetTo.x} ${offsetTo.y}` : '';
 
   // Shortened path for highlight (stops 15px before each city)
-  $: shortenedPath = isValid ? calculateShortenedPath(from, to, 15) : '';
+  $: shortenedPath = isValid ? calculateShortenedPath(offsetFrom, offsetTo, 15) : '';
 
-  function calculateShortenedPath(fromPos: CityPosition, toPos: CityPosition, inset: number): string {
+  function calculateShortenedPath(fromPos: { x: number; y: number }, toPos: { x: number; y: number }, inset: number): string {
     const dx = toPos.x - fromPos.x;
     const dy = toPos.y - fromPos.y;
     const distance = Math.sqrt(dx * dx + dy * dy);
@@ -39,9 +67,9 @@
     return `M ${startX} ${startY} L ${endX} ${endY}`;
   }
 
-  // Midpoint for label positioning
-  $: midX = isValid ? (from.x + to.x) / 2 : 0;
-  $: midY = isValid ? (from.y + to.y) / 2 : 0;
+  // Midpoint for label positioning (use offset positions for double tracks)
+  $: midX = isValid ? (offsetFrom.x + offsetTo.x) / 2 : 0;
+  $: midY = isValid ? (offsetFrom.y + offsetTo.y) / 2 : 0;
 
   // Calculate perpendicular offset for label (beside the line, not on it)
   $: labelOffset = isValid ? calculateLabelOffset(from, to) : { x: 0, y: 0 };
@@ -61,8 +89,10 @@
   }
 
   // Determine stroke color based on claim status
-  $: strokeColor = route.claimed
-    ? FACTION_COLORS[route.claimed] || '#888'
+  // route.claimed is a playerId, so look up their faction
+  $: claimedFaction = route.claimed ? playerFactions[route.claimed] : null;
+  $: strokeColor = claimedFaction
+    ? FACTION_COLORS[claimedFaction] || '#888'
     : '#64748b'; // Lighter slate gray for unclaimed (more visible)
 
   // Thicker lines: 8px claimed, 6px unclaimed
@@ -129,21 +159,9 @@
       opacity={route.claimed ? 1 : 0.8}
     />
 
-    <!-- Label beside the line -->
-    <g transform="translate({midX + labelOffset.x}, {midY + labelOffset.y})">
-      {#if route.claimed}
-        <!-- Claimed: show ship icon in faction color -->
-        <text
-          class="claimed-icon"
-          text-anchor="middle"
-          dominant-baseline="central"
-          font-size="20"
-          fill={strokeColor}
-        >
-          ✈
-        </text>
-      {:else}
-        <!-- Unclaimed: show requirements and income on one row -->
+    <!-- Label beside the line (only for unclaimed routes) -->
+    {#if !route.claimed}
+      <g transform="translate({midX + labelOffset.x}, {midY + labelOffset.y})">
         <text
           class="route-label"
           text-anchor="middle"
@@ -154,8 +172,8 @@
           <tspan fill="#94a3b8">{requirements}</tspan>
           <tspan fill="#4ade80"> +£{route.income}</tspan>
         </text>
-      {/if}
-    </g>
+      </g>
+    {/if}
   </g>
 {/if}
 
@@ -192,11 +210,5 @@
     text-shadow:
       0 0 4px rgba(0, 0, 0, 1),
       0 1px 3px rgba(0, 0, 0, 0.9);
-  }
-
-  .claimed-icon {
-    text-shadow:
-      0 0 6px rgba(0, 0, 0, 0.8),
-      0 2px 4px rgba(0, 0, 0, 0.6);
   }
 </style>

@@ -437,6 +437,18 @@ function processLaunchShip(state: GameState, playerId: string, data: LaunchShipD
     throw new GameRuleError(`Route ${route.from} → ${route.to} is already claimed`);
   }
 
+  // Double track restriction: same player cannot claim both tracks
+  if (route.track) {
+    const otherTrack = mapState?.routes?.find(r =>
+      r.from === route.from && r.to === route.to &&
+      r.track && r.track !== route.track &&
+      r.claimed === playerId
+    );
+    if (otherTrack) {
+      throw new GameRuleError(`You already own the other track of ${route.from} → ${route.to}. The same player cannot claim both tracks of a double-track route.`);
+    }
+  }
+
   // Calculate ship stats to validate against route requirements
   const stats = calculateBlueprintStats(playerState.blueprint, state.age);
 
@@ -732,6 +744,18 @@ function processClaimRoute(state: GameState, playerId: string, data: ClaimRouteD
   // Check if route already claimed
   if (route.claimed) {
     throw new GameRuleError('Route already claimed');
+  }
+
+  // Double track restriction: same player cannot claim both tracks
+  if (route.track) {
+    const otherTrack = mapState?.routes?.find(r =>
+      r.from === route.from && r.to === route.to &&
+      r.track && r.track !== route.track &&
+      r.claimed === playerId
+    );
+    if (otherTrack) {
+      throw new GameRuleError(`You already own the other track of ${route.from} → ${route.to}. The same player cannot claim both tracks of a double-track route.`);
+    }
   }
 
   // Check ship meets route requirements

@@ -9,6 +9,7 @@
   export let cities: Record<string, { type: string; homeBase: string | null }> = {};
   export let ships: Ship[] = [];
   export let allPlayerShips: { ship: Ship; faction: string }[] = [];
+  export let playerFactions: Record<string, string> = {};
   export let missionRow: Mission[] = [];
   export let myFaction: string | undefined = undefined;
   export let selectable: boolean = false;
@@ -46,6 +47,7 @@
       {cities}
       {ships}
       {allPlayerShips}
+      {playerFactions}
       {myFaction}
       {selectable}
       on:selectRoute={handleRouteSelect}

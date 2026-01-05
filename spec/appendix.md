@@ -550,25 +550,25 @@ Routes connect cities on the map boards. Each route has stat requirements that y
 
 The Pioneer Era features 17 regional routes across Western Europe forming a fully connected network. Early airship technology limits range and reliability.
 
-| Route | From | To | Range | Speed | Other | Income | VP | Notes |
-|-------|------|-----|-------|-------|-------|--------|-----|-------|
-| London Gateway | London | Dover | 1 | — | — | £2 | 1 | Channel feeder |
-| Channel Crossing | Calais | Dover | 1 | 1 | — | £3 | 2 | First international |
-| Rhine Valley | Frankfurt | Cologne | 1 | — | — | £2 | 1 | Starter route |
-| Low Countries | Brussels | Amsterdam | 1 | 1 | — | £3 | 2 | Connects Benelux |
-| Paris Express | Paris | Brussels | 1 | 1 | — | £3 | 2 | — |
-| Rhineland | Brussels | Cologne | 1 | 1 | — | £3 | 2 | Rhine access |
-| Lake Constance | Friedrichshafen | Zurich | 1 | — | — | £3 | 2 | Alpine approach |
-| London–Paris | London | Paris | 2 | 2 | — | £5 | 3 | Double track |
-| North Sea Run | Hamburg | Amsterdam | 2 | 1 | — | £4 | 2 | — |
-| Baltic Passage | Hamburg | Copenhagen | 2 | 1 | — | £4 | 2 | — |
-| Alpine Transit | Zurich | Milan | 2 | — | Ceiling 1 | £4 | 2 | Mountain crossing |
-| Mediterranean Link | Marseille | Barcelona | 2 | 1 | — | £4 | 2 | — |
-| German Alps | Frankfurt | Friedrichshafen | 2 | — | Ceiling 1 | £4 | 2 | Germany's backbone |
-| Rome Approach | Milan | Rome | 2 | 1 | Ceiling 1 | £5 | 3 | Italy's home |
-| Riviera Express | Paris | Marseille | 3 | 1 | — | £4 | 2 | French corridor |
-| Berlin–Vienna | Berlin | Vienna | 3 | 1 | — | £5 | 3 | — |
-| Imperial Circuit | London | Berlin | 3 | 2 | — | £6 | 3 | Prestige route |
+| Route | From | To | Range | Speed | Other | Income | VP | Tracks | Notes |
+|-------|------|-----|-------|-------|-------|--------|-----|--------|-------|
+| London Gateway | London | Dover | 1 | — | — | £2 | 1 | 1 | Channel feeder |
+| Channel Crossing | Calais | Dover | 1 | 1 | — | £3 | 2 | 1 | First international |
+| Rhine Valley | Frankfurt | Cologne | 1 | — | — | £2 | 1 | 1 | Starter route |
+| Low Countries | Brussels | Amsterdam | 1 | 1 | — | £3 | 2 | 1 | Connects Benelux |
+| Paris Express | Paris | Brussels | 1 | 1 | — | £3 | 2 | 1 | — |
+| Rhineland | Brussels | Cologne | 1 | 1 | — | £3 | 2 | 1 | Rhine access |
+| Lake Constance | Friedrichshafen | Zurich | 1 | — | — | £3 | 2 | 1 | Alpine approach |
+| London–Paris | London | Paris | 2 | 2 | — | £5 | 3 | 2 | — |
+| North Sea Run | Hamburg | Amsterdam | 2 | 1 | — | £4 | 2 | 1 | — |
+| Baltic Passage | Hamburg | Copenhagen | 2 | 1 | — | £4 | 2 | 1 | — |
+| Alpine Transit | Zurich | Milan | 2 | — | Ceiling 1 | £4 | 2 | 1 | Mountain crossing |
+| Mediterranean Link | Marseille | Barcelona | 2 | 1 | — | £4 | 2 | 1 | — |
+| German Alps | Frankfurt | Friedrichshafen | 2 | — | Ceiling 1 | £4 | 2 | 1 | Germany's backbone |
+| Rome Approach | Milan | Rome | 2 | 1 | Ceiling 1 | £5 | 3 | 1 | Italy's home |
+| Riviera Express | Paris | Marseille | 3 | 1 | — | £4 | 2 | 1 | French corridor |
+| Berlin–Vienna | Berlin | Vienna | 3 | 1 | — | £5 | 3 | 1 | — |
+| Imperial Circuit | London | Berlin | 3 | 2 | — | £6 | 3 | 1 | Prestige route |
 
 **Age I Route Summary:**
 - Range 1: 7 routes (starter/regional)
@@ -581,29 +581,29 @@ The Pioneer Era features 17 regional routes across Western Europe forming a full
 
 The Atlantic Era features 21 hemispheric routes including luxury ocean crossings forming a fully connected global network. Advanced technology enables intercontinental travel.
 
-| Route | From | To | Range | Speed | Ceiling | Luxury | Income | VP | Notes |
-|-------|------|-----|-------|-------|---------|--------|--------|-----|-------|
-| Eastern Gateway | New York | Lakehurst | 1 | — | — | — | £4 | 2 | NJ connection |
-| German Hub | Frankfurt | Friedrichshafen | 1 | 1 | — | — | £4 | 2 | Zeppelin corridor |
-| South Atlantic | Rio de Janeiro | Recife | 2 | 1 | — | — | £5 | 2 | Brazil domestic |
-| Caribbean Connection | Miami | Havana | 2 | 1 | — | — | £5 | 2 | — |
-| Pacific Coast | Los Angeles | San Francisco | 2 | 1 | 1 | — | £5 | 2 | — |
-| Rio–Buenos Aires | Rio de Janeiro | Buenos Aires | 3 | 1 | — | — | £5 | 2 | South America link |
-| European Trunk | London | Berlin | 3 | 2 | 1 | — | £6 | 3 | — |
-| Eastern Seaboard | New York | Miami | 3 | 2 | — | — | £6 | 3 | — |
-| North Sea Express | London | Oslo | 3 | 1 | 1 | — | £6 | 3 | Nordic connection |
-| **Around Cape Horn** | Buenos Aires | Valparaíso | 3 | 2 | 3 | — | £7 | 3 | High altitude |
-| **Arctic Explorer** | Oslo | Svalbard | 3 | 1 | 3 | — | £7 | 3 | Extreme conditions |
-| Transcontinental | Chicago | Los Angeles | 4 | 2 | 1 | — | £7 | 3 | Coast to coast |
-| Mediterranean Express | Rome | Cairo | 4 | 2 | 1 | — | £7 | 3 | — |
-| Trans-Amazon | Rio de Janeiro | Manaus | 4 | 1 | — | — | £7 | 3 | Jungle route |
-| North Atlantic Express | New York | London | 4 | 2 | 2 | — | £8 | 4 | Double track |
-| **Empire State Express** | New York | Chicago | 3 | 3 | 1 | 1 | £8 | 4 | Luxury; American prestige |
-| **Imperial Airship Route** | London | Cairo | 4 | 2 | 2 | 1 | £9 | 4 | Luxury; British specialty |
-| **California Clipper** | Los Angeles | Honolulu | 5 | 2 | 1 | 1 | £10 | 5 | Luxury; Pacific crossing |
-| **Graf Zeppelin Route** | Rio de Janeiro | Friedrichshafen | 5 | 2 | 2 | 1 | £10 | 5 | Luxury |
-| **Transatlantic Luxury** | London | New York | 4 | 3 | 2 | 2 | £11 | 5 | Luxury; Double track |
-| **Hindenburg Route** | Frankfurt | Lakehurst | 5 | 3 | 2 | 2 | £12 | 6 | Luxury; Hydrogen risk |
+| Route | From | To | Range | Speed | Ceiling | Luxury | Income | VP | Tracks | Notes |
+|-------|------|-----|-------|-------|---------|--------|--------|-----|--------|-------|
+| Eastern Gateway | New York | Lakehurst | 1 | — | — | — | £4 | 2 | 1 | NJ connection |
+| German Hub | Frankfurt | Friedrichshafen | 1 | 1 | — | — | £4 | 2 | 1 | Zeppelin corridor |
+| South Atlantic | Rio de Janeiro | Recife | 2 | 1 | — | — | £5 | 2 | 1 | Brazil domestic |
+| Caribbean Connection | Miami | Havana | 2 | 1 | — | — | £5 | 2 | 1 | — |
+| Pacific Coast | Los Angeles | San Francisco | 2 | 1 | 1 | — | £5 | 2 | 1 | — |
+| Rio–Buenos Aires | Rio de Janeiro | Buenos Aires | 3 | 1 | — | — | £5 | 2 | 1 | South America link |
+| European Trunk | London | Berlin | 3 | 2 | 1 | — | £6 | 3 | 1 | — |
+| Eastern Seaboard | New York | Miami | 3 | 2 | — | — | £6 | 3 | 1 | — |
+| North Sea Express | London | Oslo | 3 | 1 | 1 | — | £6 | 3 | 1 | Nordic connection |
+| **Around Cape Horn** | Buenos Aires | Valparaíso | 3 | 2 | 3 | — | £7 | 3 | 1 | High altitude |
+| **Arctic Explorer** | Oslo | Svalbard | 3 | 1 | 3 | — | £7 | 3 | 1 | Extreme conditions |
+| Transcontinental | Chicago | Los Angeles | 4 | 2 | 1 | — | £7 | 3 | 1 | Coast to coast |
+| Mediterranean Express | Rome | Cairo | 4 | 2 | 1 | — | £7 | 3 | 1 | — |
+| Trans-Amazon | Rio de Janeiro | Manaus | 4 | 1 | — | — | £7 | 3 | 1 | Jungle route |
+| North Atlantic Express | New York | London | 4 | 2 | 2 | — | £8 | 4 | 2 | — |
+| **Empire State Express** | New York | Chicago | 3 | 3 | 1 | 1 | £8 | 4 | 1 | Luxury; American prestige |
+| **Imperial Airship Route** | London | Cairo | 4 | 2 | 2 | 1 | £9 | 4 | 1 | Luxury; British specialty |
+| **California Clipper** | Los Angeles | Honolulu | 5 | 2 | 1 | 1 | £10 | 5 | 1 | Luxury; Pacific crossing |
+| **Graf Zeppelin Route** | Rio de Janeiro | Friedrichshafen | 5 | 2 | 2 | 1 | £10 | 5 | 1 | Luxury |
+| **Transatlantic Luxury** | London | New York | 4 | 3 | 2 | 2 | £11 | 5 | 2 | Luxury |
+| **Hindenburg Route** | Frankfurt | Lakehurst | 5 | 3 | 2 | 2 | £12 | 6 | 1 | Luxury; Hydrogen risk |
 
 **Age III Route Summary:**
 - Standard routes: 13

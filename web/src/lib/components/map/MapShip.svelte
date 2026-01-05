@@ -82,16 +82,6 @@
     </g>
   {/if}
 
-  <!-- Gas type indicator -->
-  {#if ship.gasType}
-    <circle
-      cx={-SHIP_SIZE.width / 2 - 4}
-      cy={-SHIP_SIZE.height / 2}
-      r="4"
-      fill={ship.gasType === 'hydrogen' ? '#60a5fa' : '#fbbf24'}
-    />
-  {/if}
-
   <!-- Ship ID label (on hover this would show more details) -->
   <title>
     Ship {ship.id.slice(0, 4)} - {ship.status}

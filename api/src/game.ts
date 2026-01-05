@@ -123,6 +123,7 @@ export interface Route {
 	luxury?: number;
 	bonus?: string;
 	claimed?: string | null; // playerId or null
+	track?: number; // 1 or 2 for double tracks (undefined = single track)
 }
 
 // Combat Mission (Age II)

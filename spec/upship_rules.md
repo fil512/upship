@@ -636,7 +636,9 @@ Each route shows minimum stats your Blueprint must meet. Below are some examples
 | Type | Capacity |
 |------|----------|
 | Single Track | 1 player only |
-| Double Track | Up to 2 players |
+| Double Track | Up to 2 different players |
+
+**Double Track Restriction:** The same player may not claim both tracks of a double-track route. Each track must be claimed by a different player. On the map, double tracks are shown as two parallel lines between cities.
 
 ## 10.3 Route Income
 
