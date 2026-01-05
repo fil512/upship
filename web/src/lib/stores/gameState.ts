@@ -14,24 +14,10 @@ export const turnInfo = writable<TurnInfo>({
 	canEndTurn: false
 });
 
-// Dev mode for player switching
-export const isDevMode = writable(false);
-export const viewingAsUserId = writable<string | null>(null);
-// When true, we have unfiltered state and should ignore filtered socket updates
-export const hasUnfilteredState = writable(false);
-
 /**
- * The effective user ID - either the real user or dev mode override
+ * The effective user ID (for use in derived stores)
  */
-export const effectiveUserId = derived(
-	[user, viewingAsUserId, isDevMode],
-	([$user, $viewingAsUserId, $isDevMode]) => {
-		if ($isDevMode && $viewingAsUserId) {
-			return $viewingAsUserId;
-		}
-		return $user?.id ?? null;
-	}
-);
+export const effectiveUserId = derived([user], ([$user]) => $user?.id ?? null);
 
 /**
  * Current player's state
@@ -160,56 +146,10 @@ export function setGameId(id: string): void {
 }
 
 /**
- * Enable or disable dev mode
- */
-export function setDevMode(enabled: boolean): void {
-	isDevMode.set(enabled);
-	if (!enabled) {
-		viewingAsUserId.set(null);
-		hasUnfilteredState.set(false);
-	}
-}
-
-/**
- * Fetch unfiltered game state (dev mode)
- */
-export async function fetchUnfilteredState(): Promise<void> {
-	const currentGameId = get(gameId);
-	if (!currentGameId) return;
-
-	try {
-		const response = await fetch(`/api/games/state/${currentGameId}?devMode=true`);
-		if (response.ok) {
-			const data = await response.json();
-			if (data.gameState?.state) {
-				gameState.set(data.gameState.state);
-				gameVersion.set(data.gameState.version || get(gameVersion));
-				hasUnfilteredState.set(true);
-			}
-		}
-	} catch (error) {
-		console.error('Failed to fetch dev mode state:', error);
-	}
-}
-
-/**
- * Switch to viewing as a different player (dev mode only)
- * Refetches game state with devMode=true to get unfiltered state
- */
-export async function switchToPlayer(playerId: string): Promise<void> {
-	if (!get(isDevMode)) return;
-
-	viewingAsUserId.set(playerId);
-	await fetchUnfilteredState();
-}
-
-/**
  * Reset game state (when leaving a game)
  */
 export function resetGameState(): void {
 	gameState.set(null);
 	gameVersion.set(0);
 	gameId.set(null);
-	viewingAsUserId.set(null);
-	hasUnfilteredState.set(false);
 }

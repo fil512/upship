@@ -110,13 +110,6 @@ app.get('/api/status', (req: Request, res: Response) => {
   });
 });
 
-// Environment info endpoint (for dev-only features in frontend)
-app.get('/api/env', (req: Request, res: Response) => {
-  res.json({
-    isDev: process.env.NODE_ENV !== 'production'
-  });
-});
-
 // SvelteKit handler for all non-API routes (loaded dynamically in start())
 type SvelteKitHandler = (req: Request, res: Response, next: NextFunction) => void;
 let svelteKitHandler: SvelteKitHandler | null = null;

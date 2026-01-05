@@ -6,7 +6,7 @@ import type {
 	SocketConnectionState
 } from '$lib/types/socket';
 import type { GameAction, ActionResponse } from '$lib/types/actions';
-import { updateGameState, updateTurnInfo, gameVersion, effectiveUserId, isDevMode, hasUnfilteredState, fetchUnfilteredState } from './gameState';
+import { updateGameState, updateTurnInfo, gameVersion } from './gameState';
 import { showToast } from './ui';
 
 type TypedSocket = Socket<ServerToClientEvents, ClientToServerEvents>;
@@ -104,13 +104,7 @@ export function connect(gameId: string, playerId: string): void {
 
 	// Game state events
 	socket.on('state-sync', ({ state, version, turnInfo }) => {
-		// In dev mode with unfiltered state, re-fetch to preserve full visibility
-		if (get(isDevMode) && get(hasUnfilteredState)) {
-			fetchUnfilteredState();
-		} else {
-			updateGameState(state, version);
-		}
-		// Update turn info if provided
+		updateGameState(state, version);
 		if (turnInfo) {
 			updateTurnInfo(turnInfo);
 		}
@@ -119,12 +113,7 @@ export function connect(gameId: string, playerId: string): void {
 	socket.on('state-update', ({ state, version, action }) => {
 		const currentVersion = get(gameVersion);
 		if (version > currentVersion) {
-			// In dev mode with unfiltered state, re-fetch to preserve full visibility
-			if (get(isDevMode) && get(hasUnfilteredState)) {
-				fetchUnfilteredState();
-			} else {
-				updateGameState(state, version);
-			}
+			updateGameState(state, version);
 		}
 	});
 
@@ -305,18 +294,9 @@ export async function sendAction(action: GameAction): Promise<ActionResponse> {
 		return { success: false, error: 'Not connected to game' };
 	}
 
-	// Add dev mode user override if applicable
-	const actionToSend = { ...action };
-	if (get(isDevMode)) {
-		const userId = get(effectiveUserId);
-		if (userId) {
-			actionToSend.asUserId = userId;
-		}
-	}
-
 	return new Promise((resolve) => {
-		console.log(`[CLIENT] Sending action: ${actionToSend.actionType}`);
-		socket!.emit('game-action', actionToSend, (response) => {
+		console.log(`[CLIENT] Sending action: ${action.actionType}`);
+		socket!.emit('game-action', action, (response) => {
 			console.log(`[CLIENT] Action callback received:`, { success: response.success, version: response.version, error: response.error });
 			if (response.success && response.state && response.version !== undefined) {
 				updateGameState(response.state, response.version);

@@ -11,9 +11,6 @@
 		currentPhaseName,
 		currentPlayerId,
 		allPlayers,
-		isDevMode,
-		setDevMode,
-		switchToPlayer,
 		effectiveUserId,
 		setGameId,
 		resetGameState,
@@ -96,14 +93,6 @@
 			goto('/');
 			return;
 		}
-
-		// Check dev mode asynchronously
-		fetch('/api/env')
-			.then((res) => (res.ok ? res.json() : null))
-			.then((data) => {
-				if (data) setDevMode(data.isDev);
-			})
-			.catch(() => setDevMode(false));
 
 		// First, check game status via REST API
 		const initializeGame = async () => {
@@ -205,11 +194,6 @@
 			showToast(err instanceof Error ? err.message : 'Failed to start game', 'error');
 			isStartingGame = false;
 		}
-	}
-
-	function handlePlayerSwitch(event: Event) {
-		const select = event.target as HTMLSelectElement;
-		switchToPlayer(select.value);
 	}
 
 	// Card selection for worker placement
@@ -401,12 +385,6 @@
 			age: $gameState?.age || 1
 		});
 	}
-
-	// Check if viewing another player (in dev mode)
-	$: isViewingOtherPlayer = $isDevMode && $effectiveUserId !== $user?.id;
-	// Get raw hand value - might be a number if viewing filtered state
-	$: rawHand = $myState?.hand;
-	$: otherPlayerCardCount = typeof rawHand === 'number' ? rawHand : 0;
 
 	// Launchpad state - when active, show launch UI
 	$: isLaunchpadActive = $gameState?.launchpadActive?.[$effectiveUserId] === true;
@@ -628,16 +606,6 @@
 			</div>
 
 			<div class="header-right">
-				{#if $isDevMode}
-					<select class="dev-switcher" value={$effectiveUserId} on:change={handlePlayerSwitch}>
-						{#each $allPlayers as player}
-							<option value={player.id}>
-								{player.botName || player.faction} ({player.id === $user?.id ? 'You' : player.isBot ? 'Bot' : 'AI'})
-							</option>
-						{/each}
-					</select>
-				{/if}
-
 				<div class="online-indicator">
 					<span class="online-dot"></span>
 					{$onlinePlayers.length} online
@@ -935,8 +903,6 @@
 					selectable={$isMyTurn && isWorkerPlacementPhase}
 					deckSize={typeof $myState?.deck === 'number' ? $myState.deck : ($myState?.deck?.length || 0)}
 					discardSize={typeof $myState?.discardPile === 'number' ? $myState.discardPile : ($myState?.discardPile?.length || 0)}
-					{isViewingOtherPlayer}
-					{otherPlayerCardCount}
 					on:selectCard={handleCardSelect}
 				/>
 			</aside>
@@ -1181,15 +1147,6 @@
 		color: var(--color-info, #3b82f6);
 		font-size: 0.75rem;
 		margin-left: var(--spacing-xs);
-	}
-
-	.dev-switcher {
-		padding: var(--spacing-xs) var(--spacing-sm);
-		background: var(--color-bg-tertiary);
-		border: 1px solid var(--color-bg-hover);
-		border-radius: var(--radius-md);
-		color: var(--color-text-primary);
-		font-size: 0.75rem;
 	}
 
 	.online-indicator {

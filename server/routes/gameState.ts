@@ -77,7 +77,6 @@ interface ActionData {
 interface ActionRequestBody {
   actionType?: string;
   actionData?: ActionData;
-  asUserId?: string;
 }
 
 // Undo result
@@ -106,14 +105,8 @@ router.get('/:gameId', requireGamePlayer, async (req: Request, res: Response, ne
       throw new NotFoundError('Game state');
     }
 
-    // In dev mode with devMode query param, return full unfiltered state for player switching
-    const isDev = process.env.NODE_ENV !== 'production';
-    const devModeRequested = req.query.devMode === 'true';
-
-    // Filter state to only show what this player should see (unless dev mode)
-    const filteredState = (isDev && devModeRequested)
-      ? gameState.state
-      : filterStateForPlayer(gameState.state, authReq.session.userId);
+    // Filter state to only show what this player should see
+    const filteredState = filterStateForPlayer(gameState.state, authReq.session.userId);
 
     res.json({
       gameState: {
@@ -231,7 +224,7 @@ router.post('/:gameId/action', requireGamePlayer, async (req: Request, res: Resp
   try {
     const authReq = req as AuthenticatedRequest;
     const { gameId } = req.params;
-    const { actionType, actionData, asUserId } = req.body as ActionRequestBody;
+    const { actionType, actionData } = req.body as ActionRequestBody;
 
     if (!actionType) {
       throw new ValidationError('Action type is required');
@@ -245,24 +238,7 @@ router.post('/:gameId/action', requireGamePlayer, async (req: Request, res: Resp
     }
 
     const state = gameState.state;
-
-    // Dev mode impersonation: allow asUserId to override session userId
-    // Only allowed in non-production environment AND only for the game host
-    // SECURITY: This prevents unauthorized players from cheating via impersonation
-    const isDev = process.env.NODE_ENV !== 'production';
-    let effectiveUserId = authReq.session.userId;
-
-    if (isDev && asUserId && state.players[asUserId]) {
-      // Verify the requesting user is the game host before allowing impersonation
-      const gameService = require('../services/gameService');
-      const game = await gameService.getGameById(gameId);
-
-      if (game && game.host_id === authReq.session.userId) {
-        // Only the game host can impersonate other players in dev mode
-        effectiveUserId = asUserId;
-      }
-      // If not host, silently ignore impersonation request (use their own userId)
-    }
+    const effectiveUserId = authReq.session.userId;
 
     // Verify it's this player's turn
     // - Worker placement: use workerPlacement.currentPlacerIndex
