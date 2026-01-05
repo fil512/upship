@@ -62,11 +62,12 @@ describe('Rules Compliance - Routes and City Bonuses', () => {
       expect(gameStateService.createAgeIIIMap).toBeDefined();
     });
 
-    it('should have 21 Age III routes forming a fully connected network', () => {
+    it('should have 23 Age III routes forming a fully connected network', () => {
       const gameStateService = require('../../../server/services/gameStateService');
       const map = gameStateService.createAgeIIIMap();
-      // 21 routes: 13 standard + 8 luxury routes (fully connected network per Appendix F)
-      expect(map.routes.length).toBe(21);
+      // 23 routes: 13 standard + 8 luxury + 2 extra tracks for double-track routes
+      // Double tracks: North Atlantic Express (2), Transatlantic Luxury (2)
+      expect(map.routes.length).toBe(23);
     });
 
     it('should have correct Hindenburg Route as highest VP route', () => {
@@ -86,11 +87,11 @@ describe('Rules Compliance - Routes and City Bonuses', () => {
       const gameStateService = require('../../../server/services/gameStateService');
       const map = gameStateService.createAgeIIIMap();
 
-      // Per Appendix F, 6 routes have luxury requirements:
+      // Per Appendix F, 7 route entries have luxury requirements (6 unique + 1 double track):
       // Empire State Express (1), Imperial Airship Route (1), California Clipper (1),
-      // Graf Zeppelin Route (1), Transatlantic Luxury (2), Hindenburg Route (2)
+      // Graf Zeppelin Route (1), Transatlantic Luxury (2) x2 tracks, Hindenburg Route (2)
       const luxuryRoutes = map.routes.filter(r => r.luxury && r.luxury > 0);
-      expect(luxuryRoutes.length).toBe(6);
+      expect(luxuryRoutes.length).toBe(7);
     });
 
     it('should have all Age III routes with vp property', () => {
