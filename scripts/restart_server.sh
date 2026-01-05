@@ -10,17 +10,36 @@ set -e
 
 echo "Restarting local development servers..."
 
-# Kill any existing servers on port 3000 (Express) and 5173 (SvelteKit)
+# Kill any existing servers - be very thorough
 echo "Stopping any existing servers..."
+
+# Kill processes by port (may not catch all)
 lsof -ti:3000 | xargs kill -9 2>/dev/null || true
 lsof -ti:5173 | xargs kill -9 2>/dev/null || true
 
-# Also kill any lingering npm dev processes
-pkill -f "npm run dev:local" 2>/dev/null || true
-pkill -f "npm run dev -w web" 2>/dev/null || true
-pkill -f "tsx.*server/index.ts" 2>/dev/null || true
-pkill -f "vite dev" 2>/dev/null || true
-sleep 1
+# Kill by process pattern - be aggressive with patterns
+pkill -9 -f "npm run dev:local" 2>/dev/null || true
+pkill -9 -f "npm run dev -w web" 2>/dev/null || true
+pkill -9 -f "tsx.*server/index" 2>/dev/null || true
+pkill -9 -f "tsx watch.*server" 2>/dev/null || true
+pkill -9 -f "vite dev" 2>/dev/null || true
+pkill -9 -f "node.*svelte-kit" 2>/dev/null || true
+
+# Wait for processes to die
+sleep 2
+
+# Double-check ports are free
+if lsof -ti:3000 > /dev/null 2>&1; then
+    echo "Warning: Port 3000 still in use, force killing..."
+    lsof -ti:3000 | xargs kill -9 2>/dev/null || true
+    sleep 1
+fi
+
+if lsof -ti:5173 > /dev/null 2>&1; then
+    echo "Warning: Port 5173 still in use, force killing..."
+    lsof -ti:5173 | xargs kill -9 2>/dev/null || true
+    sleep 1
+fi
 
 # Run database migrations
 echo "Running database migrations..."

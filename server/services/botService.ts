@@ -71,16 +71,18 @@ function findPlayableCard(
 
 /**
  * Get upgrade info for a technology ID
+ * Tech card IDs (e.g., 'internal_keel') map to upgrade tile IDs (e.g., 'semi_rigid_keel')
+ * via the 'requiredCard' field on upgrade tiles
  */
 function getUpgradeForTech(techId: string): { id: string; slotType: string } | null {
-  // Map tech IDs to their corresponding upgrade and slot type
-  // UPGRADES is a Record<string, TechTile> so we look up by key directly
-  const upgrade = UPGRADES[techId];
-  if (upgrade) {
-    return {
-      id: upgrade.id,
-      slotType: upgrade.slotType
-    };
+  // Search for the upgrade tile that requires this tech card
+  for (const [upgradeId, upgrade] of Object.entries(UPGRADES)) {
+    if (upgrade.requiredCard === techId) {
+      return {
+        id: upgradeId,
+        slotType: upgrade.slotType
+      };
+    }
   }
   return null;
 }
@@ -164,12 +166,13 @@ export function getDesignBureauBlueprint(
   for (const techId of technologies) {
     const upgradeInfo = getUpgradeForTech(techId);
     if (upgradeInfo) {
+      // slotType is 'frameSlots', 'fabricSlots', 'driveSlots', etc.
       const slotType = upgradeInfo.slotType;
-      if (slotType === 'frame') {
+      if (slotType === 'frameSlots') {
         frameUpgrades.push(upgradeInfo.id);
-      } else if (slotType === 'fabric') {
+      } else if (slotType === 'fabricSlots') {
         fabricUpgrades.push(upgradeInfo.id);
-      } else if (slotType === 'drive') {
+      } else if (slotType === 'driveSlots') {
         if (!installedDriveUpgrades.has(upgradeInfo.id)) {
           driveUpgrades.push(upgradeInfo.id);
         }

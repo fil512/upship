@@ -28,6 +28,9 @@
 
   function handleMissionSelect(event: CustomEvent<{ mission: Mission }>) {
     dispatch('claimMission', event.detail);
+    // Also dispatch selectRoute for launchpad compatibility (mission acts as a route)
+    const mission = event.detail.mission;
+    dispatch('selectRoute', { route: { id: mission.id, ...mission } as unknown as Route });
   }
 
   // Check if player has any ships in hangar

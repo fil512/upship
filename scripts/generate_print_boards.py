@@ -1,32 +1,11 @@
 import os
 import re
+import graphviz
 
 # Paths
 DATA_DIR = 'server/data'
 SPEC_PATH = 'spec/appendix.md'
 PRINT_DIR = 'print'
-
-CITY_COORDS_AGE1 = {
-    'London': (25, 30), 'Dover': (30, 32), 'Calais': (32, 34),
-    'Paris': (30, 50), 'Brussels': (38, 38), 'Amsterdam': (42, 28),
-    'Cologne': (45, 40), 'Frankfurt': (50, 45), 'Hamburg': (50, 20),
-    'Copenhagen': (55, 15), 'Berlin': (65, 30), 'Vienna': (70, 55),
-    'Zurich': (50, 60), 'Milan': (52, 70), 'Marseille': (40, 75),
-    'Barcelona': (30, 85), 'Rome': (60, 80), 'Friedrichshafen': (55, 62)
-}
-
-CITY_COORDS_AGE3 = {
-    'New York': (15, 35), 'Lakehurst': (14, 37), 'Chicago': (10, 35),
-    'Miami': (12, 55), 'Havana': (12, 60), 'Los Angeles': (5, 45),
-    'San Francisco': (2, 40), 'Honolulu': (0, 55), 
-    'London': (80, 25), 'Paris': (82, 30), 'Berlin': (90, 25),
-    'Frankfurt': (88, 28), 'Friedrichshafen': (89, 32),
-    'Oslo': (85, 15), 'Svalbard': (88, 5),
-    'Rome': (90, 40), 'Cairo': (95, 50),
-    'Rio de Janeiro': (35, 80), 'Recife': (40, 70), 'Manaus': (30, 70),
-    'Buenos Aires': (30, 90), 'Valparaíso': (25, 90),
-    'Bombay': (100, 60)
-}
 
 def parse_ts_file(file_path):
     with open(file_path, "r", encoding="utf-8") as f:
@@ -40,6 +19,24 @@ def parse_ts_file(file_path):
     data_str = re.sub(r"(\w+):", r"'\1':", data_str)
     try: return eval(data_str)
     except: return []
+
+def parse_city_bonuses(file_path):
+    with open(file_path, "r", encoding="utf-8") as f:
+        content = f.read()
+    content = re.sub(r"/\*.*?\*/", "", content, flags=re.DOTALL)
+    content = re.sub(r"//.*", "", content)
+    match = re.search(r"export const CITY_BONUSES\s*:\s*Record<string, CityBonus>\s*=\s*({.*?});", content, flags=re.DOTALL)
+    if not match: return {}
+    data_str = match.group(1)
+    data_str = data_str.replace("true", "True").replace("false", "False").replace("null", "None")
+    data_str = re.sub(r"(\w+):", r"'\1':", data_str)
+    # Remove trailing commas
+    data_str = re.sub(r",\s*([\}\]])", r"\1", data_str)
+    try:
+        return eval(data_str)
+    except Exception as e:
+        print(f"Error parsing city bonuses: {e}")
+        return {}
 
 def parse_routes_from_spec():
     with open(SPEC_PATH, "r", encoding="utf-8") as f:
@@ -73,23 +70,37 @@ def get_icon_svg(name, color=None):
             return svg
     except: return "<span>[{}]</span>".format(name)
 
-def generate_map_svg(routes, coords, width_in=10, height_in=7):
-    lines, texts, circles = [], [], []
+def generate_map_svg_with_graphviz(routes, city_bonuses):
+    dot = graphviz.Graph('map', engine='dot')
+    dot.attr('graph', rankdir='LR', splines='true', overlap='false', size="10,7!")
+    dot.attr('node', shape='circle', style='filled', fillcolor='black', fontcolor='white', fontsize='10')
+    dot.attr('edge', fontsize='8')
+
+    cities = set()
     for r in routes:
-        c1, c2 = coords.get(r["from"], (0,0)), coords.get(r["to"], (0,0))
-        if c1 == (0,0) or c2 == (0,0): continue
-        lines.append('<line x1="{}" y1="{}" x2="{}" y2="{}" stroke="#999" stroke-width="0.5" stroke-dasharray="1 0.5" />'.format(c1[0], c1[1], c2[0], c2[1]))
-        mx, my = (c1[0]+c2[0])/2, (c1[1]+c2[1])/2
-        texts.append('<text x="{}" y="{}" font-size="2" text-anchor="middle" fill="#333" style="font-family:sans-serif;">{}</text>'.format(mx, my, r["name"]))
-    drawn = set()
+        cities.add(r["from"])
+        cities.add(r["to"])
+
+    for city in cities:
+        bonus_str = ""
+        if city in city_bonuses and city_bonuses[city]:
+            bonus = city_bonuses[city]
+            if "cash" in bonus: bonus_str += f"£{bonus['cash']}"
+            if "influence" in bonus: bonus_str += f"★{bonus['influence']}"
+            if "research" in bonus: bonus_str += f"💡{bonus['research']}"
+            if "officers" in bonus: bonus_str += f"O{bonus['officers']}"
+            if "engineers" in bonus: bonus_str += f"E{bonus['engineers']}"
+            if "hydrogen" in bonus: bonus_str += f"H{bonus['hydrogen']}"
+            if "gasAny" in bonus: bonus_str += f"G{bonus['gasAny']}"
+            if "freeUpgradeSwap" in bonus: bonus_str += "S"
+            if "drawCard" in bonus: bonus_str += "🃏"
+        
+        dot.node(city, label=f"{city}\n{bonus_str.strip()}")
+
     for r in routes:
-        for city in [r["from"], r["to"]]:
-            if city in drawn or city not in coords: continue
-            drawn.add(city)
-            x, y = coords[city]
-            circles.append('<circle cx="{}" cy="{}" r="1" fill="#000" />'.format(x, y))
-            circles.append('<text x="{}" y="{}" font-size="2.5" text-anchor="middle" font-weight="bold" fill="#000">{}</text>'.format(x, y-2, city))
-    return '<svg width="{}in" height="{}in" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="border:1px solid #333; background:#eef;">{}</svg>'.format(width_in, height_in, "".join(lines + texts + circles))
+        dot.edge(r["from"], r["to"], label=r["name"])
+
+    return dot.pipe(format='svg').decode('utf-8')
 
 def generate_player_board_html():
     return """
@@ -148,9 +159,10 @@ def generate_ground_board_html(locs_dict):
 def main():
     print("Loading data for boards...")
     ground_locs = parse_ts_file(os.path.join(DATA_DIR, "groundBoard.ts"))
+    city_bonuses = parse_city_bonuses(os.path.join(DATA_DIR, "cities.ts"))
     routes_age1, routes_age3 = parse_routes_from_spec()
     css = "@page { size: 11in 17in; margin: 0.5in; } body { font-family: sans-serif; } .page-break { page-break-after: always; } .board { border: 4px solid #333; padding: 20px; box-sizing: border-box; background: #fdfbf7; } .ground-board { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; height: 10in; } .gb-location { border: 2px solid #666; padding: 15px; display: flex; flex-direction: column; align-items: center; text-align: center; background: white; border-radius: 8px; } .gb-header { font-weight: bold; margin-bottom: 10px; font-size: 14pt; font-family: serif; border-bottom: 1px solid #ccc; width: 100%; } .gb-icon { margin: 10px 0; transform: scale(2); } .gb-body { font-size: 10pt; } .player-board { height: 8in; width: 11in; display: flex; flex-direction: column; } .pb-header { font-size: 24pt; text-align: center; border-bottom: 2px solid #333; margin-bottom: 15px; } .pb-grid { display: grid; grid-template-columns: 1fr 1.5fr 1fr; gap: 15px; flex-grow: 1; } .pb-drawing-office, .pb-blueprint, .pb-right { border: 2px solid #ccc; padding: 10px; background: white; border-radius: 5px; } .pb-barracks { border: 2px solid #ccc; margin-top: 15px; padding: 10px; height: 1.5in; background: white; border-radius: 5px; } h3 { margin-top: 0; border-bottom: 1px solid #eee; font-size: 12pt; text-align: center; color: #555; } .track { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #eee; padding: 5px 0; } .stat-row { display: flex; align-items: center; gap: 10px; margin-bottom: 5px; }"
-    html = '<!DOCTYPE html><html><head><title>Up Ship! Boards</title><style>{}</style></head><body><h1>Ground Board</h1>{}<div class="page-break"></div><h1>Player Board</h1><p><i>Print 4 copies.</i></p>{}<div class="page-break"></div><h1>Map: Age I</h1>{}<div class="page-break"></div><h1>Map: Age III</h1>{}</body></html>'.format(css, generate_ground_board_html(ground_locs), generate_player_board_html(), generate_map_svg(routes_age1, CITY_COORDS_AGE1, 10, 7), generate_map_svg(routes_age3, CITY_COORDS_AGE3, 10, 7))
+    html = '<!DOCTYPE html><html><head><title>Up Ship! Boards</title><style>{}</style></head><body><h1>Ground Board</h1>{}<div class="page-break"></div><h1>Player Board</h1><p><i>Print 4 copies.</i></p>{}<div class="page-break"></div><h1>Map: Age I</h1>{}<div class="page-break"></div><h1>Map: Age III</h1>{}</body></html>'.format(css, generate_ground_board_html(ground_locs), generate_player_board_html(), generate_map_svg_with_graphviz(routes_age1, city_bonuses), generate_map_svg_with_graphviz(routes_age3, city_bonuses))
     with open(os.path.join(PRINT_DIR, "print_boards.html"), "w", encoding="utf-8") as f:
         f.write(html)
     print("Generated print/print_boards.html")
