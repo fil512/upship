@@ -22,6 +22,34 @@ Different functions operate on different property names that should refer to the
 
 **Fix**: Changed `refreshRnDBoard()` to use `state.rdBoard` consistently.
 
+### Example: Tech Bag Property Mismatch (2026-01-05)
+
+**Symptom**: Tech cards never replenished on the R&D board. Round 2 showed only 1 tech card instead of 4.
+
+**Root Cause**: Initialization used one property name, but helper functions used a different name:
+- `gameStateService.ts` initialized state with `techBag: techCardBag` (property named `techBag`)
+- `refreshRnDBoard()` and other helpers read from `state.techCardBag` (non-existent property)
+
+**Affected files** (all reading from wrong property):
+- `server/actions/helpers/marketHelpers.ts`
+- `server/actions/helpers/ageTransition.ts`
+- `server/services/gameStateHelpers.ts`
+- `server/actions/technology.ts`
+- `server/services/actionProcessorService.ts`
+
+**Result**:
+- `state.techCardBag` was always `undefined` (property doesn't exist)
+- Fallback `state.techCardBag = state.techCardBag || []` created empty array
+- No cards ever moved from tech bag to R&D board
+- Players ran out of tech cards to acquire
+
+**Why this was hard to catch**:
+- The code initialized the fallback array, so no runtime errors occurred
+- TypeScript interfaces defined `techCardBag?` as optional, masking the issue
+- The API type (`api/src/game.ts`) correctly used `techBag`, but extended interfaces overrode it
+
+**Fix**: Changed all files to use `state.techBag` consistently. Updated tests that also used wrong name.
+
 ### How to Hunt for Similar Bugs
 
 1. **Search for property name variations**:
@@ -40,11 +68,20 @@ Different functions operate on different property names that should refer to the
    - `techBag` vs `TechBag` vs `technologyBag`
    - `marketRow` vs `MarketRow` vs `marketCards`
 
-3. **Verify read/write symmetry**:
+3. **Check for optional property overrides that mask bugs**:
+   ```bash
+   # Find extended interfaces that make properties optional
+   grep -rE "interface.*extends.*\{" server/ --include="*.ts" -A 5 | grep "?"
+
+   # Compare to API type definitions
+   grep -rE "^\s+\w+:" api/src/game.ts | head -50
+   ```
+
+4. **Verify read/write symmetry**:
    - For each property written, verify it's read by corresponding logic
    - For each property read, verify it's written by initialization logic
 
-4. **Look for orphaned properties**:
+5. **Look for orphaned properties**:
    - Properties that are written but never read
    - Properties that are read but never written (would cause undefined errors)
 
@@ -55,7 +92,7 @@ Based on this bug, these state properties should be audited for consistency:
 | Canonical Name | Potential Variants | Status |
 |---------------|-------------------|--------|
 | `rdBoard` | `rnDBoard`, `RDBoard`, `rdBoardAvailable` | FIXED |
-| `techBag` | `technologyBag`, `TechBag` | TODO |
+| `techBag` | `techCardBag`, `technologyBag`, `TechBag` | FIXED 2026-01-05 |
 | `marketRow` | `marketCards`, `MarketRow` | TODO |
 | `marketDeck` | `MarketDeck` | TODO |
 | `groundBoard` | `GroundBoard`, `ground_board` | TODO |
