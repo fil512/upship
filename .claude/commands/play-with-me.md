@@ -106,42 +106,18 @@ When it's kenny's turn, prompt:
 
 After kenny confirms, run `autoplay-until britain` again to play AI turns.
 
-## Playtest Commands Reference
+## Command Reference
+
+See **`playtest/README.md`** for complete playtest command reference.
+
+Key commands for interactive play:
 
 | Command | Description |
 |---------|-------------|
 | `whose-turn` | Show whose turn it is |
 | `summary` | Show all players' status table |
-| `status [player]` | Detailed status for a player |
-| `autoplay-until <faction>` | Play AI turns until faction's turn |
-| `autoturn <faction>` | Play one turn for faction |
-| `autoplay [turns]` | Auto-play N turns (all players) |
-| `routes` | Show available routes |
-| `endphase` | All players end turn/pass |
-| `action <player> <cmd>` | Execute single action |
-
-## Manual Action Commands
-
-If you need finer control over AI actions:
-
-| Action | Command |
-|--------|---------|
-| Place agent | `action playtest_germany place <location> <cardIndex>` |
-| Pass/Reveal | `action playtest_germany pass` |
-| End turn | `action playtest_germany endturn` |
-| Buy gas | `action playtest_germany buygas hydrogen 3` |
-| Build ship | `action playtest_germany build 1` |
-
-## Location IDs
-
-**Technical (wrench):**
-- `research-institute`, `design-bureau`, `construction-hall`
-
-**Operations (propeller):**
-- `launchpad`, `ministry`, `gas-depot`, `weather-bureau`
-
-**Business (coin):**
-- `academy`, `flight-school`, `technical-institute`, `the-bank`, `insurance-bureau`
+| `autoplay-until britain` | Play AI turns until kenny's turn |
+| `autoturn <faction>` | Play one turn for a specific faction |
 
 ## Turn Notification Template
 

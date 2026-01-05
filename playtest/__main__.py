@@ -2,8 +2,8 @@
 
 Usage:
     python -m playtest setup                 # Create new 4-player game (all AI)
-    python -m playtest setup-bots            # Create game with 1 human + 3 bots
-    python -m playtest setup-interactive     # Create game for human (kenny) + 3 AI
+    python -m playtest setup-bots            # Create game with playtest_britain + 3 server bots
+    python -m playtest setup-interactive     # For /play-with-me: kenny + 3 AI
     python -m playtest start                 # Start the current game (host action)
     python -m playtest autoplay [num_turns]  # Run AI until game ends
     python -m playtest autoplay-until <faction>  # Run AI until faction's turn

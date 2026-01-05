@@ -324,29 +324,13 @@ It runs until the game **finishes** or gets **stuck** (detecting design flaws).
 
 **Claude must ALWAYS use this tool instead of the CLI.** If a command is missing, add it to the playtest tool.
 
-```bash
-python -m playtest setup                     # Setup new 4-player game (all AI)
-python -m playtest setup-interactive         # Setup game for kenny + 3 AI players
-python -m playtest autoplay                  # Run until game ends or gets stuck
-python -m playtest autoplay [num_turns]      # Run for N turns max
-python -m playtest status [player]           # Show game status
-python -m playtest summary                   # Show all players' status table
-python -m playtest endphase                  # All players end turn/pass
-python -m playtest action <player> <cmd>     # Run single action
-python -m playtest debug                     # Show raw game state
-python -m playtest gameid                    # Print current game ID
-python -m playtest routes                    # Show available routes
-python -m playtest launch <player> <shipId> <routeId> [gas]  # Launch ship
-python -m playtest tail [num_lines]          # Show last N lines of playtest log
-python -m playtest output [num_lines]        # Show Claude background task output
-```
+See **`playtest/README.md`** for complete command reference and documentation.
 
-**Features:**
-- Game end detection (winner/scores when game finishes)
-- Stuck detection with verbose diagnostics (identifies design flaws)
-- Strategic bot logic (prioritizes building, launching, resources)
-- Correct phase handling (worker_placement, reveal, income_cleanup)
-- Runs without permission prompts (unlike CLI)
+Quick start:
+```bash
+python -m playtest setup      # Setup new 4-player game (all AI)
+python -m playtest autoplay   # Run until game ends or gets stuck
+```
 
 ## Working with This Project
 
