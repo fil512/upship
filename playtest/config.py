@@ -17,6 +17,10 @@ LOGS_DIR = PROJECT_ROOT / "logs"
 CONFIG_FILE = PROJECT_ROOT / ".upship-config"
 PASSWORD = "test123456"
 
+# Superuser credentials (for viewing any game state)
+SUPERUSER = "superuser"
+SUPERUSER_PASSWORD = "superuser123"
+
 
 def _load_config_file() -> dict:
     """Load configuration from .upship-config file.

@@ -10,7 +10,8 @@ from pathlib import Path
 from client import list_sessions as client_list_sessions
 
 from .config import PLAYERS, PROJECT_ROOT
-from .client import get_client, get_game_id, get_faction_from_player
+from .client import get_client, get_game_id, get_faction_from_player, login_superuser
+from .config import SUPERUSER
 from .logging import get_logger
 from .state import get_state, get_player_data, get_player_ships, get_player_id, get_ship_details
 
@@ -155,8 +156,20 @@ def debug_state(game_id: str = None) -> None:
 
     client = get_client()
 
+    # Try playtest_germany first, fall back to superuser if not a player
+    user_to_use = "playtest_germany"
     try:
         raw_state = client._api_get("playtest_germany", f"/api/state/{game_id}")
+    except Exception as e:
+        if "Not a player" in str(e) or "not a player" in str(e).lower():
+            print("Not a playtest game - using superuser...")
+            login_superuser()
+            user_to_use = SUPERUSER
+            raw_state = client._api_get(SUPERUSER, f"/api/state/{game_id}")
+        else:
+            raise
+
+    try:
 
         print("=== Raw Game State Debug ===\n")
         print(f"Game ID: {game_id}")
@@ -172,6 +185,12 @@ def debug_state(game_id: str = None) -> None:
         print(f"Phase: {phase}")
         print(f"Age: {age} | Turn: {turn} | Round: {state_data.get('round')}")
         print(f"Current Player Index: {state_data.get('currentPlayerIndex')}")
+
+        # Progress Track info
+        progress_track = state_data.get('progressTrack', 'NOT SET')
+        progress_thresholds = state_data.get('progressThresholds', 'NOT SET')
+        print(f"\nProgress Track: {progress_track}")
+        print(f"Progress Thresholds: {progress_thresholds}")
 
         wp = state_data.get('workerPlacement', {})
         print(f"Worker Placement: {wp}")

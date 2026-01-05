@@ -7,7 +7,7 @@ import type { Faction, GameState, PlayerState, Card, HazardCard, Route } from '@
 import type { PoolClient } from 'pg';
 
 const { pool } = require('../db');
-const { TECH_CARD_BAG } = require('../config/constants');
+const { TECH_CARD_BAG, PROGRESS_THRESHOLDS } = require('../config/constants');
 const { TECH_TILES, calculateShipStats } = require('../data/upgrades');
 const { generateId } = require('../utils/random');
 
@@ -461,16 +461,8 @@ function shuffleArray<T>(array: T[]): T[] {
   return shuffled;
 }
 
-// TECH_CARD_BAG is imported from ../config/constants.js (single source of truth)
-// See constants.js for the full 54-card definition per Appendix C
-
-// Progress Track thresholds by player count (Section 1.3)
-// Scaled for ~15 round games (Age 1: ~5 rounds, Age 2: ~5 rounds, Age 3: ~5 rounds)
-const PROGRESS_THRESHOLDS: Record<number, { age2: number; age3: number; end: number }> = {
-  2: { age2: 2, age3: 4, end: 6 },
-  3: { age2: 3, age3: 6, end: 9 },
-  4: { age2: 4, age3: 8, end: 12 }
-};
+// TECH_CARD_BAG and PROGRESS_THRESHOLDS are imported from ../config/constants.ts
+// See constants.ts for definitions per Section 1.3 and Appendix C
 
 // Tech card structure
 interface TechCard {

@@ -233,8 +233,8 @@ describe('GameStateService', () => {
 
       const result = await initializeGameState(1, players);
 
-      // 4 players
-      expect(result.progressThresholds).toEqual({ age2: 4, age3: 8, end: 12 });
+      // 4 players - per Section 1.3 of the rules
+      expect(result.progressThresholds).toEqual({ age2: 8, age3: 16, end: 24 });
     });
 
     it('should rollback on error', async () => {

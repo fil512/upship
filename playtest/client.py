@@ -11,7 +11,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from client import UpshipClient, AuthenticationError, SessionNotFoundError, Manifest
-from .config import API_BASE, GAME_FILE, PLAYERS, PASSWORD, USE_LOCAL
+from .config import API_BASE, GAME_FILE, PLAYERS, PASSWORD, USE_LOCAL, SUPERUSER, SUPERUSER_PASSWORD
 
 
 # Shared client instance
@@ -122,3 +122,21 @@ def get_faction_from_player(player: str) -> str:
         The faction name (e.g., 'germany')
     """
     return player.replace('playtest_', '')
+
+
+def login_superuser() -> None:
+    """Login as superuser for viewing any game state.
+
+    The superuser can bypass player checks to view any game's state,
+    useful for debugging games you're not a player in.
+    """
+    client = get_client()
+    try:
+        client.login(SUPERUSER, SUPERUSER_PASSWORD)
+        print(f"Logged in as superuser")
+    except AuthenticationError as e:
+        print(f"Superuser login failed: {e}")
+        raise
+    except Exception as e:
+        print(f"Superuser login error: {e}")
+        raise
