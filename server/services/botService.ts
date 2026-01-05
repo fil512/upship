@@ -11,7 +11,8 @@ import type {
 } from '@upship/api';
 
 // Import game data for slot type lookup
-const { UPGRADES } = require('../data/upgrades');
+import type { TechTile } from '../data/upgrades';
+const { UPGRADES } = require('../data/upgrades') as { UPGRADES: Record<string, TechTile> };
 const { GROUND_BOARD_LOCATIONS } = require('../data/groundBoard');
 
 // Types for bot decisions
@@ -115,7 +116,7 @@ export function calculateShipStats(
  */
 export function getDesignBureauBlueprint(
   player: PlayerState,
-  currentAge: number = 1,
+  _currentAge: number = 1,
   isAgeTransition: boolean = false
 ): BlueprintChanges | null {
   if (!player || !player.blueprint) {
