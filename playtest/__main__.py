@@ -18,10 +18,12 @@ Usage:
     python -m playtest debug                 # Show raw game state
     python -m playtest sessions              # List active sessions
     python -m playtest gameid                # Print current game ID
+    python -m playtest setgame <game_id>     # Set current game ID (for debugging)
     python -m playtest tail [num_lines]      # Show playtest log tail
     python -m playtest output [num_lines]    # Show Claude task output
     python -m playtest healthcheck [timeout] # Wait for server to be healthy
     python -m playtest reset                 # Drop all game data (dev only)
+    python -m playtest poke                  # Trigger bot execution (for stuck games)
 """
 
 import sys
@@ -696,6 +698,14 @@ def main():
         else:
             print("No current game")
 
+    elif cmd == "setgame":
+        if len(sys.argv) < 3:
+            print("Usage: playtest setgame <game_id>")
+            return
+        new_game_id = sys.argv[2]
+        save_game_id(new_game_id)
+        print(f"✓ Current game set to: {new_game_id}")
+
     elif cmd == "launch":
         if len(sys.argv) < 5:
             print("Usage: playtest launch <player> <shipId> <routeId> [gasType]")
@@ -738,6 +748,29 @@ def main():
     elif cmd == "reset":
         success = reset_games()
         sys.exit(0 if success else 1)
+
+    elif cmd == "poke":
+        game_id = get_game_id()
+        if not game_id:
+            print("No current game. Run 'setup' or 'setgame' first.")
+            return
+        client = get_client()
+        try:
+            # Login as superuser for access
+            client.login("superuser", "superuser123")
+            result = client.poke_bots("superuser", game_id)
+            if result.get('success'):
+                print(f"✓ Bot execution triggered for game {game_id}")
+                diag = result.get('diagnostics', {})
+                print(f"  Phase: {diag.get('phase')}")
+                print(f"  Age: {diag.get('age')}")
+                if diag.get('ageTransitionState'):
+                    ats = diag['ageTransitionState']
+                    print(f"  Age Transition: player index {ats.get('currentPlayerIndex')}, completed: {ats.get('completedPlayers')}")
+            else:
+                print(f"✗ Poke failed: {result}")
+        except Exception as e:
+            print(f"✗ Error: {e}")
 
     else:
         print(f"Unknown command: {cmd}")

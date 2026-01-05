@@ -350,6 +350,36 @@ router.post('/:gameId/action', requireGamePlayer, async (req: Request, res: Resp
   }
 });
 
+// Poke endpoint - triggers bot execution for stuck games
+router.post('/:gameId/poke', requireGamePlayer, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const authReq = req as AuthenticatedRequest;
+    const { gameId } = req.params;
+
+    // Get current game state for diagnostics
+    const gameState: GameStateWrapper | null = await gameStateService.getGameState(gameId);
+    const diagnostics: Record<string, unknown> = {
+      phase: gameState?.state?.phase,
+      age: gameState?.state?.age,
+      currentPlayerIndex: gameState?.state?.currentPlayerIndex,
+      ageTransitionState: (gameState?.state as GameStateWrapper['state'])?.ageTransitionDesignBureau
+    };
+
+    const io = authReq.app.get('io');
+    if (io) {
+      // Trigger bot execution
+      console.log('[POKE] Triggering bot execution for game:', gameId, 'state:', diagnostics);
+      await checkAndExecuteBotMoves(io, gameId);
+      console.log('[POKE] Bot execution completed');
+    }
+
+    res.json({ success: true, message: 'Bot execution triggered', diagnostics });
+  } catch (error) {
+    console.error('[POKE] Error:', error);
+    next(error);
+  }
+});
+
 export default router;
 
 // CommonJS compatibility

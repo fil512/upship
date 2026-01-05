@@ -1,0 +1,213 @@
+<!DOCTYPE html><html><head><title>Up Ship! Boards</title><style>@page { size: 11in 17in; margin: 0.5in; } body { font-family: sans-serif; } .page-break { page-break-after: always; } .board { border: 4px solid #333; padding: 20px; box-sizing: border-box; background: #fdfbf7; } .ground-board { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; height: 10in; } .gb-location { border: 2px solid #666; padding: 15px; display: flex; flex-direction: column; align-items: center; text-align: center; background: white; border-radius: 8px; } .gb-header { font-weight: bold; margin-bottom: 10px; font-size: 14pt; font-family: serif; border-bottom: 1px solid #ccc; width: 100%; } .gb-icon { margin: 10px 0; transform: scale(2); } .gb-body { font-size: 10pt; } .player-board { height: 8in; width: 11in; display: flex; flex-direction: column; } .pb-header { font-size: 24pt; text-align: center; border-bottom: 2px solid #333; margin-bottom: 15px; } .pb-grid { display: grid; grid-template-columns: 1fr 1.5fr 1fr; gap: 15px; flex-grow: 1; } .pb-drawing-office, .pb-blueprint, .pb-right { border: 2px solid #ccc; padding: 10px; background: white; border-radius: 5px; } .pb-barracks { border: 2px solid #ccc; margin-top: 15px; padding: 10px; height: 1.5in; background: white; border-radius: 5px; } h3 { margin-top: 0; border-bottom: 1px solid #eee; font-size: 12pt; text-align: center; color: #555; } .track { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #eee; padding: 5px 0; } .stat-row { display: flex; align-items: center; gap: 10px; margin-bottom: 5px; }</style></head><body><h1>Ground Board</h1><div class="board ground-board"><div class="gb-location"><div class="gb-header">Research Institute</div><div class="gb-icon"><svg class="icon-svg" style="width:24px;height:24px;" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Single Propeller Blade Definition -->
+    <path id="blade" d="M12 12 C 11 12 10 9 10 5 C 10 3 11 2 12 2 C 13 2 14 3 14 5 C 14 9 13 12 12 12 Z" fill="#ffffff" stroke="#ccc" stroke-width="0.5"/>
+  </defs>
+  
+  <!-- Three rotated instances -->
+  <use href="#blade"/>
+  <use href="#blade" transform="rotate(120 12 12)"/>
+  <use href="#blade" transform="rotate(240 12 12)"/>
+  
+  <!-- Center Hub -->
+  <circle cx="12" cy="12" r="2" fill="#e0e0e0" stroke="#999" stroke-width="1"/>
+</svg></div><div class="gb-body">Expand your research program</div></div><div class="gb-location"><div class="gb-header">Design Bureau</div><div class="gb-icon"><svg class="icon-svg" style="width:24px;height:24px;" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <!-- Wrench: Standard FontAwesome Style -->
+  <path d="M22.7 19l-9.1-9.1c.9-2.3.4-5-1.5-6.9-2-2-5-2.4-7.4-1.3L9 6 6 9 1.6 4.7C.4 7.1.9 10.1 2.9 12.1c1.9 1.9 4.6 2.4 6.9 1.5l9.1 9.1c.4.4 1 .4 1.4 0l2.3-2.3c.5-.4.5-1.1.1-1.4z" fill="#4a9eff"/>
+</svg>
+</div><div class="gb-body">Modify your Blueprint (install/remove Upgrades)</div></div><div class="gb-location"><div class="gb-header">Construction Hall</div><div class="gb-icon"><svg class="icon-svg" style="width:24px;height:24px;" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <!-- Wrench: Standard FontAwesome Style -->
+  <path d="M22.7 19l-9.1-9.1c.9-2.3.4-5-1.5-6.9-2-2-5-2.4-7.4-1.3L9 6 6 9 1.6 4.7C.4 7.1.9 10.1 2.9 12.1c1.9 1.9 4.6 2.4 6.9 1.5l9.1 9.1c.4.4 1 .4 1.4 0l2.3-2.3c.5-.4.5-1.1.1-1.4z" fill="#4a9eff"/>
+</svg>
+</div><div class="gb-body">Build ships</div></div><div class="gb-location"><div class="gb-header">Launchpad</div><div class="gb-icon"><svg class="icon-svg" style="width:24px;height:24px;" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Single Propeller Blade Definition -->
+    <path id="blade" d="M12 12 C 11 12 10 9 10 5 C 10 3 11 2 12 2 C 13 2 14 3 14 5 C 14 9 13 12 12 12 Z" fill="#ffffff" stroke="#ccc" stroke-width="0.5"/>
+  </defs>
+  
+  <!-- Three rotated instances -->
+  <use href="#blade"/>
+  <use href="#blade" transform="rotate(120 12 12)"/>
+  <use href="#blade" transform="rotate(240 12 12)"/>
+  
+  <!-- Center Hub -->
+  <circle cx="12" cy="12" r="2" fill="#e0e0e0" stroke="#999" stroke-width="1"/>
+</svg></div><div class="gb-body">Launch ships from your Launch Hangar</div></div><div class="gb-location"><div class="gb-header">Academy</div><div class="gb-icon"><svg class="icon-svg" style="width:24px;height:24px;" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <!-- Coin: Gold Solid Circle -->
+  <circle cx="12" cy="12" r="10" fill="#ffc107"/>
+  <circle cx="12" cy="12" r="8" fill="none" stroke="#ffca28" stroke-width="2"/>
+</svg></div><div class="gb-body">Recruit crew from the shared supply</div></div><div class="gb-location"><div class="gb-header">Flight School</div><div class="gb-icon"><svg class="icon-svg" style="width:24px;height:24px;" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <!-- Coin: Gold Solid Circle -->
+  <circle cx="12" cy="12" r="10" fill="#ffc107"/>
+  <circle cx="12" cy="12" r="8" fill="none" stroke="#ffca28" stroke-width="2"/>
+</svg></div><div class="gb-body">Expand your officer training program</div></div><div class="gb-location"><div class="gb-header">Technical Institute</div><div class="gb-icon"><svg class="icon-svg" style="width:24px;height:24px;" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <!-- Wrench: Standard FontAwesome Style -->
+  <path d="M22.7 19l-9.1-9.1c.9-2.3.4-5-1.5-6.9-2-2-5-2.4-7.4-1.3L9 6 6 9 1.6 4.7C.4 7.1.9 10.1 2.9 12.1c1.9 1.9 4.6 2.4 6.9 1.5l9.1 9.1c.4.4 1 .4 1.4 0l2.3-2.3c.5-.4.5-1.1.1-1.4z" fill="#4a9eff"/>
+</svg>
+</div><div class="gb-body">Expand your engineering program</div></div><div class="gb-location"><div class="gb-header">Government Liaison</div><div class="gb-icon"><svg class="icon-svg" style="width:24px;height:24px;" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <!-- Coin: Gold Solid Circle -->
+  <circle cx="12" cy="12" r="10" fill="#ffc107"/>
+  <circle cx="12" cy="12" r="8" fill="none" stroke="#ffca28" stroke-width="2"/>
+</svg></div><div class="gb-body">Send officers to secure government backing</div></div><div class="gb-location"><div class="gb-header">Ministry</div><div class="gb-icon"><svg class="icon-svg" style="width:24px;height:24px;" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Single Propeller Blade Definition -->
+    <path id="blade" d="M12 12 C 11 12 10 9 10 5 C 10 3 11 2 12 2 C 13 2 14 3 14 5 C 14 9 13 12 12 12 Z" fill="#ffffff" stroke="#ccc" stroke-width="0.5"/>
+  </defs>
+  
+  <!-- Three rotated instances -->
+  <use href="#blade"/>
+  <use href="#blade" transform="rotate(120 12 12)"/>
+  <use href="#blade" transform="rotate(240 12 12)"/>
+  
+  <!-- Center Hub -->
+  <circle cx="12" cy="12" r="2" fill="#e0e0e0" stroke="#999" stroke-width="1"/>
+</svg></div><div class="gb-body">Political maneuvering</div></div><div class="gb-location"><div class="gb-header">Gas Depot</div><div class="gb-icon"><svg class="icon-svg" style="width:24px;height:24px;" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <!-- Wrench: Standard FontAwesome Style -->
+  <path d="M22.7 19l-9.1-9.1c.9-2.3.4-5-1.5-6.9-2-2-5-2.4-7.4-1.3L9 6 6 9 1.6 4.7C.4 7.1.9 10.1 2.9 12.1c1.9 1.9 4.6 2.4 6.9 1.5l9.1 9.1c.4.4 1 .4 1.4 0l2.3-2.3c.5-.4.5-1.1.1-1.4z" fill="#4a9eff"/>
+</svg>
+</div><div class="gb-body">Purchase lifting gas for storage</div></div><div class="gb-location"><div class="gb-header">Insurance Bureau</div><div class="gb-icon"><svg class="icon-svg" style="width:24px;height:24px;" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <!-- Coin: Gold Solid Circle -->
+  <circle cx="12" cy="12" r="10" fill="#ffc107"/>
+  <circle cx="12" cy="12" r="8" fill="none" stroke="#ffca28" stroke-width="2"/>
+</svg></div><div class="gb-body">Purchase insurance policies</div></div><div class="gb-location"><div class="gb-header">Weather Bureau</div><div class="gb-icon"><svg class="icon-svg" style="width:24px;height:24px;" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Single Propeller Blade Definition -->
+    <path id="blade" d="M12 12 C 11 12 10 9 10 5 C 10 3 11 2 12 2 C 13 2 14 3 14 5 C 14 9 13 12 12 12 Z" fill="#ffffff" stroke="#ccc" stroke-width="0.5"/>
+  </defs>
+  
+  <!-- Three rotated instances -->
+  <use href="#blade"/>
+  <use href="#blade" transform="rotate(120 12 12)"/>
+  <use href="#blade" transform="rotate(240 12 12)"/>
+  
+  <!-- Center Hub -->
+  <circle cx="12" cy="12" r="2" fill="#e0e0e0" stroke="#999" stroke-width="1"/>
+</svg></div><div class="gb-body">Consult weather forecasts</div></div></div><div class="page-break"></div><h1>Player Board</h1><p><i>Print 4 copies.</i></p>
+    <div class="board player-board">
+        <div class="pb-header">FACTION NAME</div>
+        <div class="pb-grid">
+            <div class="pb-drawing-office">
+                <h3>Drawing Office</h3>
+                <div class="track"><div class="track-label">Propulsion</div><svg class="icon-svg" style="width:24px;height:24px;" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Single Propeller Blade Definition -->
+    <path id="blade" d="M12 12 C 11 12 10 9 10 5 C 10 3 11 2 12 2 C 13 2 14 3 14 5 C 14 9 13 12 12 12 Z" fill="#ffffff" stroke="#ccc" stroke-width="0.5"/>
+  </defs>
+  
+  <!-- Three rotated instances -->
+  <use href="#blade"/>
+  <use href="#blade" transform="rotate(120 12 12)"/>
+  <use href="#blade" transform="rotate(240 12 12)"/>
+  
+  <!-- Center Hub -->
+  <circle cx="12" cy="12" r="2" fill="#e0e0e0" stroke="#999" stroke-width="1"/>
+</svg></div>
+                <div class="track"><div class="track-label">Structure</div><svg class="icon-svg" style="width:24px;height:24px;" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <!-- Blueprint: Grid -->
+  <path d="M21 21H3V3h18v18zM5 5v14h14V5H5z" fill="#9ca3af" opacity="0.3"/>
+  <path d="M9 3v18M15 3v18M3 9h18M3 15h18" stroke="#9ca3af" stroke-width="1"/>
+</svg></div>
+                <div class="track"><div class="track-label">Fabric</div><svg class="icon-svg" style="width:24px;height:24px;" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <!-- Luxury: Gem -->
+  <path d="M12 2L2 9h20L12 2z" fill="#9ca3af"/>
+  <path d="M2 9l10 13 10-13H2z" fill="#9ca3af" opacity="0.8"/>
+  <path d="M7 9l5 13 5-13H7z" fill="#fff" opacity="0.2"/>
+</svg></div>
+                <div class="track"><div class="track-label">Gas/Payload</div><svg class="icon-svg" style="width:24px;height:24px;" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <!-- Gas: Canister -->
+  <path d="M7 6V4c0-1.1.9-2 2-2h6c1.1 0 2 .9 2 2v2h2v14c0 1.1-.9 2-2 2H7c-1.1 0-2-.9-2-2V6h2zm3-2h4v2h-4V4z" fill="#9ca3af"/>
+  <rect x="6" y="8" width="12" height="2" fill="#9ca3af" opacity="0.6"/>
+  <rect x="6" y="12" width="12" height="2" fill="#9ca3af" opacity="0.6"/>
+  <rect x="6" y="16" width="12" height="2" fill="#9ca3af" opacity="0.6"/>
+</svg></div>
+            </div>
+            <div class="pb-blueprint">
+                <h3>Blueprint Overlay Socket</h3>
+                <div style="border:2px dashed #ccc; height:3in; display:flex; align-items:center; justify-content:center; background: #f9f9f9;"><svg class="icon-svg" style="width:24px;height:24px;" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <!-- Blueprint: Grid -->
+  <path d="M21 21H3V3h18v18zM5 5v14h14V5H5z" fill="#9ca3af" opacity="0.3"/>
+  <path d="M9 3v18M15 3v18M3 9h18M3 15h18" stroke="#9ca3af" stroke-width="1"/>
+</svg></div>
+            </div>
+            <div class="pb-right">
+                <div class="pb-stats">
+                    <h3>Stats</h3>
+                    <div class="stat-row"><svg class="icon-svg" style="width:24px;height:24px;" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <!-- Lift: Balloon -->
+  <path d="M12 2C7.58 2 4 5.58 4 10c0 3.84 2.68 7.07 6.27 7.84L10 20h4l-.27-2.16C17.32 17.07 20 13.84 20 10c0-4.42-3.58-8-8-8zM12 22h-2v-1h4v1h-2z" fill="#9ca3af"/>
+</svg> Lift / <svg class="icon-svg" style="width:24px;height:24px;" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <path d="M12 2c-1.1 0-2 .9-2 2 0 .6.3 1.1.7 1.5H7c-1.1 0-2 .9-2 2s.9 2 2 2h3.1v8.5c-2.3-.5-4.1-2.4-4.5-4.8l-.1-.7-2.9 2.2 1.2 3.6c.6 1.8 2.3 3 4.2 3h8.4c1.9 0 3.6-1.2 4.2-3l1.2-3.6-2.9-2.2-.1.7c-.4 2.4-2.2 4.3-4.5 4.8V9.5H17c1.1 0 2-.9 2-2s-.9-2-2-2h-3.7c.4-.4.7-.9.7-1.5 0-1.1-.9-2-2-2z" fill="#9ca3af"/>
+</svg> Weight</div>
+                    <div class="stat-row"><svg class="icon-svg" style="width:24px;height:24px;" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <!-- Speed: Dial -->
+  <path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9-4.03-9-9-9zm0 16c-3.86 0-7-3.14-7-7s3.14-7 7-7 7 3.14 7 7-3.14 7-7 7zm1-7h4c0 .55-.45 1-1 1h-3v-1zm-1-5c-.55 0-1 .45-1 1s.45 1 1 1 1-.45 1-1-.45-1-1-1z" fill="#9ca3af"/>
+  <path d="M12 8l-2 6h4l-2-6z" fill="#9ca3af"/>
+</svg> Speed</div>
+                    <div class="stat-row"><svg class="icon-svg" style="width:24px;height:24px;" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <!-- Range: Arrow with origin dot -->
+  <circle cx="4" cy="12" r="3" fill="#9ca3af"/>
+  <path d="M8 10h8v-3l6 5-6 5v-3H8v-4z" fill="#9ca3af"/>
+</svg> Range</div>
+                    <div class="stat-row"><svg class="icon-svg" style="width:24px;height:24px;" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <!-- Ceiling: Cloud -->
+  <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z" fill="#9ca3af"/>
+</svg> Ceiling</div>
+                    <div class="stat-row"><svg class="icon-svg" style="width:24px;height:24px;" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <!-- Reliability: Shield -->
+  <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" fill="#9ca3af"/>
+</svg> Reliability</div>
+                    <div class="stat-row"><svg class="icon-svg" style="width:24px;height:24px;" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <!-- Luxury: Gem -->
+  <path d="M12 2L2 9h20L12 2z" fill="#9ca3af"/>
+  <path d="M2 9l10 13 10-13H2z" fill="#9ca3af" opacity="0.8"/>
+  <path d="M7 9l5 13 5-13H7z" fill="#fff" opacity="0.2"/>
+</svg> Luxury</div>
+                </div>
+                <div class="pb-economy">
+                    <h3>Economy</h3>
+                    <div class="stat-row"><svg class="icon-svg" style="width:24px;height:24px;" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <!-- Art Deco Arrow -->
+  <path d="M12 2L4 10h5v12h6V10h5L12 2z" fill="#4caf50"/>
+  <path d="M12 4.8L15.2 8h-1.7v12h-3V8H8.8L12 4.8z" fill="#81c784" opacity="0.5"/>
+</svg> Income</div>
+                </div>
+            </div>
+        </div>
+        <div class="pb-barracks">
+            <h3>Barracks</h3>
+            <div style="display:flex; justify-content:space-around;">
+                <div><svg class="icon-svg" style="width:24px;height:24px;" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <!-- Captain Silhouette -->
+  <defs>
+    <clipPath id="cap-clip">
+      <rect x="0" y="0" width="24" height="24"/>
+    </clipPath>
+  </defs>
+  <!-- Shoulders -->
+  <path d="M4 24v-4c0-3 4-5 8-5s8 2 8 5v4H4z" fill="#e0e0e0"/>
+  <!-- Head -->
+  <circle cx="12" cy="10" r="4.5" fill="#e0e0e0"/>
+  <!-- Cap Visor -->
+  <path d="M5 9c0-1 2-2 7-2s7 1 7 2" fill="none" stroke="#333" stroke-width="1.5"/>
+  <!-- Cap Top -->
+  <path d="M6 7c0-3 2.5-5 6-5s6 2 6 5H6z" fill="#e0e0e0"/>
+  <!-- Gold Band -->
+  <rect x="6" y="7" width="12" height="1.5" fill="#f1c40f"/>
+  <!-- Epaulettes -->
+  <rect x="5" y="16" width="4" height="2" fill="#f1c40f"/>
+  <rect x="15" y="16" width="4" height="2" fill="#f1c40f"/>
+</svg> Officers</div>
+                <div><svg class="icon-svg" style="width:24px;height:24px;" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <!-- Hard Hat -->
+  <path d="M2 14c0-5.5 4.5-10 10-10s10 4.5 10 10v2H2v-2z" fill="#ffa726"/>
+  <!-- Rim -->
+  <path d="M1 16h22v2H1z" fill="#f57c00"/>
+  <!-- Structural Ribs -->
+  <path d="M12 4v10" fill="none" stroke="#fb8c00" stroke-width="1.5"/>
+  <path d="M6.5 6.5c1.5 3 1.5 7.5 1.5 9.5" fill="none" stroke="#fb8c00" stroke-width="1.5"/>
+  <path d="M17.5 6.5c-1.5 3-1.5 7.5-1.5 9.5" fill="none" stroke="#fb8c00" stroke-width="1.5"/>
+</svg> Engineers</div>
+            </div>
+        </div>
+    </div>
+    <div class="page-break"></div><h1>Map: Age I</h1><svg width="10in" height="7in" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="border:1px solid #333; background:#eef;"><line x1="25" y1="30" x2="30" y2="32" stroke="#999" stroke-width="0.5" stroke-dasharray="1 0.5" /><line x1="32" y1="34" x2="30" y2="32" stroke="#999" stroke-width="0.5" stroke-dasharray="1 0.5" /><line x1="50" y1="45" x2="45" y2="40" stroke="#999" stroke-width="0.5" stroke-dasharray="1 0.5" /><line x1="38" y1="38" x2="42" y2="28" stroke="#999" stroke-width="0.5" stroke-dasharray="1 0.5" /><line x1="30" y1="50" x2="38" y2="38" stroke="#999" stroke-width="0.5" stroke-dasharray="1 0.5" /><line x1="38" y1="38" x2="45" y2="40" stroke="#999" stroke-width="0.5" stroke-dasharray="1 0.5" /><line x1="55" y1="62" x2="50" y2="60" stroke="#999" stroke-width="0.5" stroke-dasharray="1 0.5" /><line x1="25" y1="30" x2="30" y2="50" stroke="#999" stroke-width="0.5" stroke-dasharray="1 0.5" /><line x1="50" y1="20" x2="42" y2="28" stroke="#999" stroke-width="0.5" stroke-dasharray="1 0.5" /><line x1="50" y1="20" x2="55" y2="15" stroke="#999" stroke-width="0.5" stroke-dasharray="1 0.5" /><line x1="50" y1="60" x2="52" y2="70" stroke="#999" stroke-width="0.5" stroke-dasharray="1 0.5" /><line x1="40" y1="75" x2="30" y2="85" stroke="#999" stroke-width="0.5" stroke-dasharray="1 0.5" /><line x1="50" y1="45" x2="55" y2="62" stroke="#999" stroke-width="0.5" stroke-dasharray="1 0.5" /><line x1="52" y1="70" x2="60" y2="80" stroke="#999" stroke-width="0.5" stroke-dasharray="1 0.5" /><line x1="30" y1="50" x2="40" y2="75" stroke="#999" stroke-width="0.5" stroke-dasharray="1 0.5" /><line x1="65" y1="30" x2="70" y2="55" stroke="#999" stroke-width="0.5" stroke-dasharray="1 0.5" /><line x1="25" y1="30" x2="65" y2="30" stroke="#999" stroke-width="0.5" stroke-dasharray="1 0.5" /><text x="27.5" y="31.0" font-size="2" text-anchor="middle" fill="#333" style="font-family:sans-serif;">London Gateway</text><text x="31.0" y="33.0" font-size="2" text-anchor="middle" fill="#333" style="font-family:sans-serif;">Channel Crossing</text><text x="47.5" y="42.5" font-size="2" text-anchor="middle" fill="#333" style="font-family:sans-serif;">Rhine Valley</text><text x="40.0" y="33.0" font-size="2" text-anchor="middle" fill="#333" style="font-family:sans-serif;">Low Countries</text><text x="34.0" y="44.0" font-size="2" text-anchor="middle" fill="#333" style="font-family:sans-serif;">Paris Express</text><text x="41.5" y="39.0" font-size="2" text-anchor="middle" fill="#333" style="font-family:sans-serif;">Rhineland</text><text x="52.5" y="61.0" font-size="2" text-anchor="middle" fill="#333" style="font-family:sans-serif;">Lake Constance</text><text x="27.5" y="40.0" font-size="2" text-anchor="middle" fill="#333" style="font-family:sans-serif;">London–Paris</text><text x="46.0" y="24.0" font-size="2" text-anchor="middle" fill="#333" style="font-family:sans-serif;">North Sea Run</text><text x="52.5" y="17.5" font-size="2" text-anchor="middle" fill="#333" style="font-family:sans-serif;">Baltic Passage</text><text x="51.0" y="65.0" font-size="2" text-anchor="middle" fill="#333" style="font-family:sans-serif;">Alpine Transit</text><text x="35.0" y="80.0" font-size="2" text-anchor="middle" fill="#333" style="font-family:sans-serif;">Mediterranean Link</text><text x="52.5" y="53.5" font-size="2" text-anchor="middle" fill="#333" style="font-family:sans-serif;">German Alps</text><text x="56.0" y="75.0" font-size="2" text-anchor="middle" fill="#333" style="font-family:sans-serif;">Rome Approach</text><text x="35.0" y="62.5" font-size="2" text-anchor="middle" fill="#333" style="font-family:sans-serif;">Riviera Express</text><text x="67.5" y="42.5" font-size="2" text-anchor="middle" fill="#333" style="font-family:sans-serif;">Berlin–Vienna</text><text x="45.0" y="30.0" font-size="2" text-anchor="middle" fill="#333" style="font-family:sans-serif;">Imperial Circuit</text><circle cx="25" cy="30" r="1" fill="#000" /><text x="25" y="28" font-size="2.5" text-anchor="middle" font-weight="bold" fill="#000">London</text><circle cx="30" cy="32" r="1" fill="#000" /><text x="30" y="30" font-size="2.5" text-anchor="middle" font-weight="bold" fill="#000">Dover</text><circle cx="32" cy="34" r="1" fill="#000" /><text x="32" y="32" font-size="2.5" text-anchor="middle" font-weight="bold" fill="#000">Calais</text><circle cx="50" cy="45" r="1" fill="#000" /><text x="50" y="43" font-size="2.5" text-anchor="middle" font-weight="bold" fill="#000">Frankfurt</text><circle cx="45" cy="40" r="1" fill="#000" /><text x="45" y="38" font-size="2.5" text-anchor="middle" font-weight="bold" fill="#000">Cologne</text><circle cx="38" cy="38" r="1" fill="#000" /><text x="38" y="36" font-size="2.5" text-anchor="middle" font-weight="bold" fill="#000">Brussels</text><circle cx="42" cy="28" r="1" fill="#000" /><text x="42" y="26" font-size="2.5" text-anchor="middle" font-weight="bold" fill="#000">Amsterdam</text><circle cx="30" cy="50" r="1" fill="#000" /><text x="30" y="48" font-size="2.5" text-anchor="middle" font-weight="bold" fill="#000">Paris</text><circle cx="55" cy="62" r="1" fill="#000" /><text x="55" y="60" font-size="2.5" text-anchor="middle" font-weight="bold" fill="#000">Friedrichshafen</text><circle cx="50" cy="60" r="1" fill="#000" /><text x="50" y="58" font-size="2.5" text-anchor="middle" font-weight="bold" fill="#000">Zurich</text><circle cx="50" cy="20" r="1" fill="#000" /><text x="50" y="18" font-size="2.5" text-anchor="middle" font-weight="bold" fill="#000">Hamburg</text><circle cx="55" cy="15" r="1" fill="#000" /><text x="55" y="13" font-size="2.5" text-anchor="middle" font-weight="bold" fill="#000">Copenhagen</text><circle cx="52" cy="70" r="1" fill="#000" /><text x="52" y="68" font-size="2.5" text-anchor="middle" font-weight="bold" fill="#000">Milan</text><circle cx="40" cy="75" r="1" fill="#000" /><text x="40" y="73" font-size="2.5" text-anchor="middle" font-weight="bold" fill="#000">Marseille</text><circle cx="30" cy="85" r="1" fill="#000" /><text x="30" y="83" font-size="2.5" text-anchor="middle" font-weight="bold" fill="#000">Barcelona</text><circle cx="60" cy="80" r="1" fill="#000" /><text x="60" y="78" font-size="2.5" text-anchor="middle" font-weight="bold" fill="#000">Rome</text><circle cx="65" cy="30" r="1" fill="#000" /><text x="65" y="28" font-size="2.5" text-anchor="middle" font-weight="bold" fill="#000">Berlin</text><circle cx="70" cy="55" r="1" fill="#000" /><text x="70" y="53" font-size="2.5" text-anchor="middle" font-weight="bold" fill="#000">Vienna</text></svg><div class="page-break"></div><h1>Map: Age III</h1><svg width="10in" height="7in" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="border:1px solid #333; background:#eef;"><line x1="15" y1="35" x2="14" y2="37" stroke="#999" stroke-width="0.5" stroke-dasharray="1 0.5" /><line x1="88" y1="28" x2="89" y2="32" stroke="#999" stroke-width="0.5" stroke-dasharray="1 0.5" /><line x1="35" y1="80" x2="40" y2="70" stroke="#999" stroke-width="0.5" stroke-dasharray="1 0.5" /><line x1="12" y1="55" x2="12" y2="60" stroke="#999" stroke-width="0.5" stroke-dasharray="1 0.5" /><line x1="5" y1="45" x2="2" y2="40" stroke="#999" stroke-width="0.5" stroke-dasharray="1 0.5" /><line x1="35" y1="80" x2="30" y2="90" stroke="#999" stroke-width="0.5" stroke-dasharray="1 0.5" /><line x1="80" y1="25" x2="90" y2="25" stroke="#999" stroke-width="0.5" stroke-dasharray="1 0.5" /><line x1="15" y1="35" x2="12" y2="55" stroke="#999" stroke-width="0.5" stroke-dasharray="1 0.5" /><line x1="80" y1="25" x2="85" y2="15" stroke="#999" stroke-width="0.5" stroke-dasharray="1 0.5" /><line x1="30" y1="90" x2="25" y2="90" stroke="#999" stroke-width="0.5" stroke-dasharray="1 0.5" /><line x1="85" y1="15" x2="88" y2="5" stroke="#999" stroke-width="0.5" stroke-dasharray="1 0.5" /><line x1="10" y1="35" x2="5" y2="45" stroke="#999" stroke-width="0.5" stroke-dasharray="1 0.5" /><line x1="90" y1="40" x2="95" y2="50" stroke="#999" stroke-width="0.5" stroke-dasharray="1 0.5" /><line x1="35" y1="80" x2="30" y2="70" stroke="#999" stroke-width="0.5" stroke-dasharray="1 0.5" /><line x1="15" y1="35" x2="80" y2="25" stroke="#999" stroke-width="0.5" stroke-dasharray="1 0.5" /><line x1="15" y1="35" x2="10" y2="35" stroke="#999" stroke-width="0.5" stroke-dasharray="1 0.5" /><line x1="5" y1="45" x2="0" y2="55" stroke="#999" stroke-width="0.5" stroke-dasharray="1 0.5" /><line x1="80" y1="25" x2="15" y2="35" stroke="#999" stroke-width="0.5" stroke-dasharray="1 0.5" /><text x="14.5" y="36.0" font-size="2" text-anchor="middle" fill="#333" style="font-family:sans-serif;">Eastern Gateway</text><text x="88.5" y="30.0" font-size="2" text-anchor="middle" fill="#333" style="font-family:sans-serif;">German Hub</text><text x="37.5" y="75.0" font-size="2" text-anchor="middle" fill="#333" style="font-family:sans-serif;">South Atlantic</text><text x="12.0" y="57.5" font-size="2" text-anchor="middle" fill="#333" style="font-family:sans-serif;">Caribbean Connection</text><text x="3.5" y="42.5" font-size="2" text-anchor="middle" fill="#333" style="font-family:sans-serif;">Pacific Coast</text><text x="32.5" y="85.0" font-size="2" text-anchor="middle" fill="#333" style="font-family:sans-serif;">Rio–Buenos Aires</text><text x="85.0" y="25.0" font-size="2" text-anchor="middle" fill="#333" style="font-family:sans-serif;">European Trunk</text><text x="13.5" y="45.0" font-size="2" text-anchor="middle" fill="#333" style="font-family:sans-serif;">Eastern Seaboard</text><text x="82.5" y="20.0" font-size="2" text-anchor="middle" fill="#333" style="font-family:sans-serif;">North Sea Express</text><text x="27.5" y="90.0" font-size="2" text-anchor="middle" fill="#333" style="font-family:sans-serif;">Around Cape Horn</text><text x="86.5" y="10.0" font-size="2" text-anchor="middle" fill="#333" style="font-family:sans-serif;">Arctic Explorer</text><text x="7.5" y="40.0" font-size="2" text-anchor="middle" fill="#333" style="font-family:sans-serif;">Transcontinental</text><text x="92.5" y="45.0" font-size="2" text-anchor="middle" fill="#333" style="font-family:sans-serif;">Mediterranean Express</text><text x="32.5" y="75.0" font-size="2" text-anchor="middle" fill="#333" style="font-family:sans-serif;">Trans-Amazon</text><text x="47.5" y="30.0" font-size="2" text-anchor="middle" fill="#333" style="font-family:sans-serif;">North Atlantic Express</text><text x="12.5" y="35.0" font-size="2" text-anchor="middle" fill="#333" style="font-family:sans-serif;">Empire State Express</text><text x="2.5" y="50.0" font-size="2" text-anchor="middle" fill="#333" style="font-family:sans-serif;">California Clipper</text><text x="47.5" y="30.0" font-size="2" text-anchor="middle" fill="#333" style="font-family:sans-serif;">Transatlantic Luxury</text><circle cx="15" cy="35" r="1" fill="#000" /><text x="15" y="33" font-size="2.5" text-anchor="middle" font-weight="bold" fill="#000">New York</text><circle cx="14" cy="37" r="1" fill="#000" /><text x="14" y="35" font-size="2.5" text-anchor="middle" font-weight="bold" fill="#000">Lakehurst</text><circle cx="88" cy="28" r="1" fill="#000" /><text x="88" y="26" font-size="2.5" text-anchor="middle" font-weight="bold" fill="#000">Frankfurt</text><circle cx="89" cy="32" r="1" fill="#000" /><text x="89" y="30" font-size="2.5" text-anchor="middle" font-weight="bold" fill="#000">Friedrichshafen</text><circle cx="35" cy="80" r="1" fill="#000" /><text x="35" y="78" font-size="2.5" text-anchor="middle" font-weight="bold" fill="#000">Rio de Janeiro</text><circle cx="40" cy="70" r="1" fill="#000" /><text x="40" y="68" font-size="2.5" text-anchor="middle" font-weight="bold" fill="#000">Recife</text><circle cx="12" cy="55" r="1" fill="#000" /><text x="12" y="53" font-size="2.5" text-anchor="middle" font-weight="bold" fill="#000">Miami</text><circle cx="12" cy="60" r="1" fill="#000" /><text x="12" y="58" font-size="2.5" text-anchor="middle" font-weight="bold" fill="#000">Havana</text><circle cx="5" cy="45" r="1" fill="#000" /><text x="5" y="43" font-size="2.5" text-anchor="middle" font-weight="bold" fill="#000">Los Angeles</text><circle cx="2" cy="40" r="1" fill="#000" /><text x="2" y="38" font-size="2.5" text-anchor="middle" font-weight="bold" fill="#000">San Francisco</text><circle cx="30" cy="90" r="1" fill="#000" /><text x="30" y="88" font-size="2.5" text-anchor="middle" font-weight="bold" fill="#000">Buenos Aires</text><circle cx="80" cy="25" r="1" fill="#000" /><text x="80" y="23" font-size="2.5" text-anchor="middle" font-weight="bold" fill="#000">London</text><circle cx="90" cy="25" r="1" fill="#000" /><text x="90" y="23" font-size="2.5" text-anchor="middle" font-weight="bold" fill="#000">Berlin</text><circle cx="85" cy="15" r="1" fill="#000" /><text x="85" y="13" font-size="2.5" text-anchor="middle" font-weight="bold" fill="#000">Oslo</text><circle cx="25" cy="90" r="1" fill="#000" /><text x="25" y="88" font-size="2.5" text-anchor="middle" font-weight="bold" fill="#000">Valparaíso</text><circle cx="88" cy="5" r="1" fill="#000" /><text x="88" y="3" font-size="2.5" text-anchor="middle" font-weight="bold" fill="#000">Svalbard</text><circle cx="10" cy="35" r="1" fill="#000" /><text x="10" y="33" font-size="2.5" text-anchor="middle" font-weight="bold" fill="#000">Chicago</text><circle cx="90" cy="40" r="1" fill="#000" /><text x="90" y="38" font-size="2.5" text-anchor="middle" font-weight="bold" fill="#000">Rome</text><circle cx="95" cy="50" r="1" fill="#000" /><text x="95" y="48" font-size="2.5" text-anchor="middle" font-weight="bold" fill="#000">Cairo</text><circle cx="30" cy="70" r="1" fill="#000" /><text x="30" y="68" font-size="2.5" text-anchor="middle" font-weight="bold" fill="#000">Manaus</text><circle cx="0" cy="55" r="1" fill="#000" /><text x="0" y="53" font-size="2.5" text-anchor="middle" font-weight="bold" fill="#000">Honolulu</text></svg></body></html>
