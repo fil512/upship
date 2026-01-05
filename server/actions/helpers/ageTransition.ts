@@ -26,9 +26,8 @@ interface TechCardWithMeta {
 // Tech card bag type
 type TechCardBag = Record<number, TechCardWithMeta[]>;
 
-// Extended state for age transitions
+// Extended state for age transitions (techBag is already in GameState)
 interface AgeTransitionState extends GameState {
-  techCardBag?: Technology[];
   missionRow?: unknown[];
   missionDeck?: unknown[];
   ageTransitionDesignBureau?: {
@@ -78,8 +77,8 @@ function addAgeTechCards(state: AgeTransitionState, age: number): void {
   }
 
   // Shuffle and add to tech card bag
-  state.techCardBag = state.techCardBag || [];
-  state.techCardBag.push(...(shuffleArray(cardsToAdd) as Technology[]));
+  state.techBag = state.techBag || [];
+  state.techBag.push(...(shuffleArray(cardsToAdd) as Technology[]));
 }
 
 /**

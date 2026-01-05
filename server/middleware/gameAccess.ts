@@ -7,8 +7,9 @@ import type { Request, Response, NextFunction } from 'express';
 import { ForbiddenError, NotFoundError } from '../errors';
 
 // Use require for CommonJS compatibility
- 
+
 const gameService = require('../services/gameService');
+const { isUserAdmin } = require('../services/userService');
 
 // Game interface from gameService
 interface Game {
@@ -22,6 +23,7 @@ interface Game {
 /**
  * Middleware that requires the authenticated user to be a player in the game
  * Expects :gameId parameter in route
+ * Admins can bypass this check to view any game for debugging/playtesting
  *
  * Usage: router.get('/:gameId', requireGamePlayer, handler)
  */
@@ -37,6 +39,13 @@ export async function requireGamePlayer(
 
     if (!gameId) {
       next(new ForbiddenError('Game ID required'));
+      return;
+    }
+
+    // Check if user is admin first (admins can view any game)
+    const isAdmin = await isUserAdmin(userId);
+    if (isAdmin) {
+      next();
       return;
     }
 

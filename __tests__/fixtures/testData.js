@@ -198,7 +198,7 @@ const createTestGameState = (playerIds = [1, 2, 3, 4]) => ({
     placements: {}
   },
   rdBoard: [],
-  techCardBag: [],
+  techBag: [],
   marketCards: [],
   progressTrack: 0,
   progressThresholds: { age2: 4, age3: 8, end: 12 },

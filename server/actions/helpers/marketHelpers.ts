@@ -3,7 +3,7 @@
  * Functions for managing gas market and R&D/Market boards
  */
 
-import type { GameState, Technology } from '@upship/api';
+import type { GameState } from '@upship/api';
 
 const { HELIUM_PRICE_TRACK, RD_BOARD_SIZE, MARKET_ROW_SIZE } = require('../../config/constants');
 
@@ -11,8 +11,8 @@ const { HELIUM_PRICE_TRACK, RD_BOARD_SIZE, MARKET_ROW_SIZE } = require('../../co
 export { HELIUM_PRICE_TRACK };
 
 // Extended state for market operations (use intersection to allow flexible types)
-type MarketState = Omit<GameState, 'marketCards'> & {
-  techCardBag?: Technology[];
+// techBag is already in GameState, marketCards/marketDeck are made flexible
+type MarketState = Omit<GameState, 'marketCards' | 'marketDeck'> & {
   marketCards?: unknown[];
   marketDeck?: unknown[];
 };
@@ -51,12 +51,12 @@ function refreshRnDBoard(state: MarketState): void {
   // NOTE: Must use state.rdBoard (not state.rnDBoard) - this is where all
   // tech acquisition logic reads from. See bug-notes.md for details.
   state.rdBoard = state.rdBoard || [];
-  state.techCardBag = state.techCardBag || [];
+  state.techBag = state.techBag || [];
 
   const targetSize = RD_BOARD_SIZE as number;
 
-  while (state.rdBoard.length < targetSize && state.techCardBag.length > 0) {
-    const card = state.techCardBag.shift();
+  while (state.rdBoard.length < targetSize && state.techBag.length > 0) {
+    const card = state.techBag.shift();
     if (card) {
       state.rdBoard.push(card);
     }

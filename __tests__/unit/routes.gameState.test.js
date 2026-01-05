@@ -191,7 +191,7 @@ function createFullGameState() {
     rdBoard: [
       { id: 'helium_handling', name: 'Helium Handling', cost: 5, type: 'frame' }
     ],
-    techCardBag: [],
+    techBag: [],
     marketRow: [{ id: 'market1', cost: 3, symbol: 'wrench' }],
     availableRoutes: [
       { id: 'route-1', distance: 2, victoryPoints: 3, from: 'A', to: 'B' }

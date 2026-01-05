@@ -11,6 +11,7 @@ import type { GameState, Ship } from '@upship/api';
 const { Server } = require('socket.io');
 const gameStateService = require('../services/gameStateService');
 const gameService = require('../services/gameService');
+const { isUserAdmin } = require('../services/userService');
 const { filterStateForPlayer } = require('../services/gameStateHelpers');
 const { processAction } = require('../actions');
 const { executeUndo, getUndoInfo } = require('../actions/undo');
@@ -126,7 +127,7 @@ function initializeSocket(server: HttpServer, sessionMiddleware: RequestHandler)
     // Join game room
     socket.on('join-game', async ({ gameId, playerId }: { gameId: string; playerId: string }) => {
       try {
-        // Verify user is a player in this game
+        // Verify user is a player in this game (or is an admin)
         const gameState: GameStateWrapper | null = await gameStateService.getGameState(gameId);
 
         if (!gameState) {
@@ -134,27 +135,33 @@ function initializeSocket(server: HttpServer, sessionMiddleware: RequestHandler)
           return;
         }
 
-        if (!gameState.state.players[playerId]) {
+        const isAdmin = await isUserAdmin(userId);
+        if (!gameState.state.players[playerId] && !isAdmin) {
           socket.emit('action-error', { error: 'Not a player in this game' });
           return;
         }
 
+        // For admins viewing as spectator, use first player's perspective
+        const effectivePlayerId = gameState.state.players[playerId] ? playerId : gameState.state.playerOrder[0];
+
         // Store game/player info on socket
         socket.gameId = gameId;
-        socket.playerId = playerId;
+        socket.playerId = effectivePlayerId;
 
         // Join the game room
         socket.join(`game:${gameId}`);
 
-        // Track presence
-        handlePlayerJoin(io, gameId, playerId, socket.id);
+        // Track presence (only if actually a player, not admin spectating)
+        if (gameState.state.players[playerId]) {
+          handlePlayerJoin(io, gameId, playerId, socket.id);
+        }
 
         // Get undo info for this player
-        const undoInfo: UndoInfo = await getUndoInfo(gameId, playerId);
-        const playerState = gameState.state.players[playerId] as unknown as ExtendedPlayerState | undefined;
+        const undoInfo: UndoInfo = await getUndoInfo(gameId, effectivePlayerId);
+        const playerState = gameState.state.players[effectivePlayerId] as unknown as ExtendedPlayerState | undefined;
 
         // Send initial state sync with turnInfo
-        const filteredState = filterStateForPlayer(gameState.state, playerId);
+        const filteredState = filterStateForPlayer(gameState.state, effectivePlayerId);
         socket.emit('state-sync', {
           state: filteredState,
           version: gameState.version,
@@ -165,7 +172,7 @@ function initializeSocket(server: HttpServer, sessionMiddleware: RequestHandler)
           }
         });
 
-        logger.info({ gameId, playerId }, 'Player joined game room');
+        logger.info({ gameId, playerId: effectivePlayerId, isAdmin }, 'Player joined game room');
 
         // Trigger bot execution in case bots were waiting (e.g., after server restart)
         triggerBotExecution(io, gameId);

@@ -17,6 +17,7 @@ interface UserRow {
   display_name: string;
   created_at?: Date;
   last_login?: Date;
+  is_admin?: boolean;
 }
 
 // Public user info (no password)
@@ -114,9 +115,32 @@ export async function getUserById(userId: string): Promise<UserWithCreatedAt | n
   };
 }
 
+/**
+ * Check if user is an admin (superuser)
+ * Admins can view any game state for debugging/playtesting
+ */
+export async function isUserAdmin(userId: string): Promise<boolean> {
+  try {
+    const result = await pool.query<{ is_admin: boolean }>(
+      `SELECT is_admin FROM users WHERE id = $1`,
+      [userId]
+    );
+
+    if (!result || !result.rows || result.rows.length === 0) {
+      return false;
+    }
+
+    return result.rows[0].is_admin === true;
+  } catch {
+    // If query fails (e.g., column doesn't exist yet), return false
+    return false;
+  }
+}
+
 // CommonJS compatibility
 module.exports = {
   registerUser,
   loginUser,
-  getUserById
+  getUserById,
+  isUserAdmin
 };

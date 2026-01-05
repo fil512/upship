@@ -20,6 +20,14 @@ For testing the production site:
 - **Username**: testpilot42
 - **Password**: airship123
 
+## Superuser Account
+
+For viewing any game state (debugging/playtesting):
+- **Username**: superuser
+- **Password**: superuser123
+
+The superuser can bypass the "must be a player" check to view any game's state.
+
 ## Browser Testing (MCP)
 
 Browser UI playtesting uses Chrome DevTools MCP:

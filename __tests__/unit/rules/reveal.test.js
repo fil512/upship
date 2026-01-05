@@ -197,7 +197,7 @@ describe('Rules Compliance - Atomic Reveal Action', () => {
         cost: 3,
         type: 'structure'
       }];
-      state.techCardBag = [];
+      state.techBag = [];
 
       const result = processReveal(state, '1', {
         techAcquisitions: ['test_tech'],
@@ -384,7 +384,7 @@ describe('Rules Compliance - Atomic Reveal Action', () => {
         cost: 3,
         type: 'structure'
       }];
-      state.techCardBag = [];
+      state.techBag = [];
 
       const result = processAcquireTechnologyResearch(state, '1', {
         techId: 'test_tech',

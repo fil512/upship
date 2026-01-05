@@ -428,10 +428,9 @@ interface AcquireTechData {
   techId: string;
 }
 
-// Extended state with tech card structures
+// Extended state with tech card structures (techBag already in GameState)
 type StateWithTech = GameState & {
   rdBoard: TechCard[];
-  techCardBag?: TechCard[];
   progressTrack?: number;
   progressThresholds?: { age2: number; age3: number; end: number };
 };
@@ -466,8 +465,8 @@ function processAcquireTechnology(state: GameState, playerId: string, data: Reco
   stateWithTech.rdBoard.splice(cardIndex, 1);
 
   // Draw replacement from tech card bag if available
-  if (stateWithTech.techCardBag && stateWithTech.techCardBag.length > 0) {
-    stateWithTech.rdBoard.push(stateWithTech.techCardBag.shift()!);
+  if (stateWithTech.techBag && stateWithTech.techBag.length > 0) {
+    stateWithTech.rdBoard.push(stateWithTech.techBag.shift()!);
   }
 
   // Advance progress track
@@ -1164,8 +1163,8 @@ function processAcquireTechnologyResearch(state: GameState, playerId: string, da
   stateWithTech.rdBoard.splice(cardIndex, 1);
 
   // Draw replacement from tech card bag if available
-  if (stateWithTech.techCardBag && stateWithTech.techCardBag.length > 0) {
-    stateWithTech.rdBoard.push(stateWithTech.techCardBag.shift()!);
+  if (stateWithTech.techBag && stateWithTech.techBag.length > 0) {
+    stateWithTech.rdBoard.push(stateWithTech.techBag.shift()!);
   }
 
   // Advance progress track

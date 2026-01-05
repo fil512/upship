@@ -32,9 +32,8 @@ type TechPlayerState = PlayerState & {
   bannedTechCards?: string[];
 };
 
-// Extended state with tech bag and R&D board
+// Extended state with tech bag and R&D board (techBag already in GameState)
 type TechState = GameState & {
-  techCardBag?: TechCardWithMeta[];
   rdBoard: TechCardWithMeta[];
   progressTrack?: number;
   progressThresholds?: {
@@ -77,8 +76,8 @@ function addAgeTechCards(state: GameState, age: number): void {
   }
 
   // Shuffle and add to tech card bag
-  techState.techCardBag = techState.techCardBag || [];
-  techState.techCardBag.push(...shuffleArray(cardsToAdd));
+  techState.techBag = techState.techBag || [];
+  techState.techBag.push(...shuffleArray(cardsToAdd));
 }
 
 /**
@@ -168,8 +167,8 @@ function processAcquireTechCard(state: GameState, playerId: string, data: Acquir
   techState.rdBoard.splice(cardIndex, 1);
 
   // Draw replacement from tech card bag if available
-  if (techState.techCardBag && techState.techCardBag.length > 0) {
-    techState.rdBoard.push(techState.techCardBag.shift()!);
+  if (techState.techBag && techState.techBag.length > 0) {
+    techState.rdBoard.push(techState.techBag.shift()!);
   }
 
   // Advance progress track
@@ -304,8 +303,8 @@ function processAcquireTechCardResearch(state: GameState, playerId: string, data
   techState.rdBoard.splice(cardIndex, 1);
 
   // Draw replacement from tech card bag if available
-  if (techState.techCardBag && techState.techCardBag.length > 0) {
-    techState.rdBoard.push(techState.techCardBag.shift()!);
+  if (techState.techBag && techState.techBag.length > 0) {
+    techState.rdBoard.push(techState.techBag.shift()!);
   }
 
   // Advance progress track

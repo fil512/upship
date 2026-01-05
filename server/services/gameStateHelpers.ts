@@ -238,10 +238,9 @@ function shuffleArray<T>(array: T[]): T[] {
   return shuffled;
 }
 
-// Extended state type for R&D board operations
+// Extended state type for R&D board operations (techBag already in GameState)
 interface StateWithRnD extends GameState {
   rnDBoard?: { available: unknown[] };
-  techCardBag?: unknown[];
 }
 
 // Refresh R&D Board with new tech cards
@@ -250,8 +249,8 @@ function refreshRnDBoard(state: StateWithRnD): void {
   const rnDBoard = state.rnDBoard || { available: [] };
   const targetSize = 6; // 6 tech cards available
 
-  while (rnDBoard.available.length < targetSize && state.techCardBag && state.techCardBag.length > 0) {
-    rnDBoard.available.push(state.techCardBag.pop());
+  while (rnDBoard.available.length < targetSize && state.techBag && state.techBag.length > 0) {
+    rnDBoard.available.push(state.techBag.pop());
   }
 
   state.rnDBoard = rnDBoard;
@@ -523,10 +522,9 @@ interface TechCard {
   [key: string]: unknown;
 }
 
-// Extended state for tech card operations
-interface StateWithTech extends GameState {
-  techCardBag?: TechCard[];
-}
+// Extended state for tech card operations (techBag already in GameState)
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+interface StateWithTech extends GameState {}
 
 // Add new age tech cards to the tech card bag
 function addAgeTechCards(state: StateWithTech, age: number): void {
@@ -546,22 +544,21 @@ function addAgeTechCards(state: StateWithTech, age: number): void {
       .map((t: TechCard) => ({ ...t, age }));
 
     // Shuffle and add to tech card bag
-    state.techCardBag = state.techCardBag || [];
-    state.techCardBag.push(...shuffleArray(cardsWithAge));
+    // Cast to Technology[] for type compatibility (TechCard and Technology have same shape)
+    (state.techBag as unknown as TechCard[]).push(...shuffleArray(cardsWithAge));
   }
 }
 
 // Extended state for R&D board operations (intersection to allow TechCard arrays)
-type StateWithRD = Omit<GameState, 'rdBoard' | 'techBag'> & {
+type StateWithRD = Omit<GameState, 'rdBoard'> & {
   rdBoard?: TechCard[];
-  techCardBag?: TechCard[];
 };
 
 // Refill R&D board from tech card bag (Section 4.1)
 // Age I: 4 cards, Age II: 5 cards, Age III: 6 cards
 function refillRDBoard(state: StateWithRD): void {
   state.rdBoard = state.rdBoard || [];
-  state.techCardBag = state.techCardBag || [];
+  state.techBag = state.techBag || [];
 
   // R&D Board size scales by Age
   const rdBoardSize: Record<number, number> = {
@@ -571,8 +568,8 @@ function refillRDBoard(state: StateWithRD): void {
   };
   const targetSize = rdBoardSize[state.age] || 4;
 
-  while (state.rdBoard.length < targetSize && state.techCardBag.length > 0) {
-    state.rdBoard.push(state.techCardBag.shift()!);
+  while (state.rdBoard.length < targetSize && state.techBag.length > 0) {
+    state.rdBoard.push(state.techBag.shift() as unknown as TechCard);
   }
 }
 
