@@ -426,7 +426,10 @@
 
 	// Market/reveal phase derived values
 	$: isRevealPhase = $gameState?.phase === 'reveal';
-	$: isMarketInteractive = isRevealPhase && $isMyTurn;
+	// Player is in purchase selection when they've revealed (hasPassed) or phase is reveal
+	$: isInPurchaseSelection = $myState?.hasPassed === true || isRevealPhase;
+	$: isMarketInteractive = isInPurchaseSelection;
+	$: hasPendingPurchases = (pendingMarketPurchases.length > 0) || (pendingTechAcquisitions.length > 0);
 	$: marketCards = $gameState?.marketCards || [];
 	$: techCards = $gameState?.rdBoard || [];
 	$: marketCardsClaimed = $gameState?.marketCardsClaimed || {};
@@ -722,7 +725,28 @@
 			<aside class="sidebar right">
 				<div class="panel actions">
 					<!-- Instruction text at top -->
-					{#if isWorkerPlacementPhase && !isLaunchpadActive && !shipAwaitingHazard}
+					{#if isInPurchaseSelection && !isLaunchpadActive && !shipAwaitingHazard}
+						<!-- Purchase selection mode (after clicking Reveal) -->
+						<p class="action-instruction">Choose Agent and Tech cards to purchase</p>
+						<div class="reveal-row">
+							<button class="btn primary" on:click={handleEndTurn}>
+								End Turn
+							</button>
+							<div class="reveal-budget">
+								<div class="budget-icon diamond" title={revealBudget.influenceTooltip}>
+									<span class="budget-value">{revealBudget.influence}</span>
+								</div>
+								<div class="budget-icon square" title={revealBudget.researchTooltip}>
+									<span class="budget-value">{revealBudget.research}</span>
+								</div>
+							</div>
+						</div>
+						{#if hasPendingPurchases}
+							<button class="btn secondary w-full" on:click={handleUndo}>
+								Undo Purchases
+							</button>
+						{/if}
+					{:else if isWorkerPlacementPhase && !isLaunchpadActive && !shipAwaitingHazard}
 						<p class="action-instruction">
 							{#if ($myState?.agentsRemaining || 0) <= 0}
 								No agents available. Click Reveal.
@@ -753,16 +777,6 @@
 									Undo {$turnInfo.lastActionType || ''}
 								</button>
 							{/if}
-						{/if}
-					{:else if $gameState.phase === 'reveal'}
-						<p class="action-instruction">Purchase cards below, then End Turn</p>
-						{#if $isMyTurn && $turnInfo.canEndTurn}
-							<button class="btn primary w-full" on:click={handleEndTurn}>End Turn</button>
-						{/if}
-						{#if $isMyTurn && $turnInfo.canUndo}
-							<button class="btn secondary w-full" on:click={handleUndo}>
-								Undo {$turnInfo.lastActionType || ''}
-							</button>
 						{/if}
 					{:else if $gameState.phase === 'income_cleanup'}
 						<p class="action-instruction">Collecting income...</p>

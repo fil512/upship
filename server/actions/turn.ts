@@ -8,6 +8,7 @@ import type { GameState, PlayerState, Card, LogEntry } from '@upship/api';
 const { transitionToIncomeCleanup, startNewRound } = require('./helpers/phaseTransition');
 const { advanceToNextPlacer } = require('./helpers/turnOrder');
 const { refreshMarketRow, refreshRnDBoard } = require('./helpers/marketHelpers');
+const { executeAllReveals } = require('./reveal');
 
 interface ActionResult {
   newState: GameState;
@@ -35,6 +36,8 @@ type TurnState = GameState & {
     techAcquisitionsComplete: Record<string, boolean>;
     marketPurchasesComplete: Record<string, boolean>;
   };
+  pendingReveals?: Record<string, { techAcquisitions: string[]; marketPurchases: string[] }>;
+  playersFinishedPurchases?: Record<string, boolean>;
 };
 
 /**
@@ -46,23 +49,57 @@ function processEndTurn(state: GameState, playerId: string): ActionResult {
 
   switch (state.phase) {
     case 'worker_placement': {
-      // During worker placement, END_TURN just advances to next placer
-      // It does NOT mark the player as passed - only REVEAL does that
-      // Per terminology: Round = all players reveal, Turn = single player action
-      playerState.hasTakenActionThisTurn = false;
+      // Check if player has already revealed (hasPassed) - they're finishing purchase selection
+      if (playerState.hasPassed) {
+        // Player has revealed and is now finishing their purchase selection
+        // Store their pending purchases in pendingReveals for atomic processing
+        turnState.pendingReveals = turnState.pendingReveals || {};
+        turnState.pendingReveals[playerId] = {
+          techAcquisitions: (playerState.pendingTechAcquisitions || []).map(p => p.cardId),
+          marketPurchases: (playerState.pendingMarketPurchases || []).map(p => p.cardId)
+        };
 
-      state.log = state.log || [];
-      state.log.push({
-        timestamp: new Date().toISOString(),
-        message: `${playerState.faction.toUpperCase()} ended their turn`,
-        playerId,
-        type: 'turn',
-        round: state.round,
-        age: state.age
-      } as LogEntry);
+        // Mark player as finished with purchases
+        turnState.playersFinishedPurchases = turnState.playersFinishedPurchases || {};
+        turnState.playersFinishedPurchases[playerId] = true;
 
-      // Just advance to next placer - don't mark as passed
-      advanceToNextPlacer(state);
+        state.log = state.log || [];
+        state.log.push({
+          timestamp: new Date().toISOString(),
+          message: `${playerState.faction.toUpperCase()} finished purchase selection`,
+          playerId,
+          type: 'turn',
+          round: state.round,
+          age: state.age
+        } as LogEntry);
+
+        // Check if all players have revealed AND finished purchases
+        const allRevealedAndFinished = state.playerOrder.every(pid => {
+          const ps = state.players[pid];
+          return ps.hasPassed && turnState.playersFinishedPurchases?.[pid];
+        });
+
+        if (allRevealedAndFinished) {
+          // All players done - execute all reveals atomically
+          executeAllReveals(state);
+        }
+      } else {
+        // Normal worker placement turn end - just advance to next placer
+        playerState.hasTakenActionThisTurn = false;
+
+        state.log = state.log || [];
+        state.log.push({
+          timestamp: new Date().toISOString(),
+          message: `${playerState.faction.toUpperCase()} ended their turn`,
+          playerId,
+          type: 'turn',
+          round: state.round,
+          age: state.age
+        } as LogEntry);
+
+        // Just advance to next placer - don't mark as passed
+        advanceToNextPlacer(state);
+      }
       break;
     }
 

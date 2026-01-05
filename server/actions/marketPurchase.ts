@@ -55,9 +55,11 @@ function processBuyMarketCardTentative(state: GameState, playerId: string, data:
   const marketState = state as MarketState;
   const playerState = state.players[playerId] as MarketPlayerState;
 
-  // Must be in reveal phase
-  if (state.phase !== 'reveal') {
-    throw new GameRuleError('Can only buy market cards during reveal phase');
+  // Must be in reveal phase OR in worker_placement after revealing (hasPassed)
+  const canPurchase = state.phase === 'reveal' ||
+    (state.phase === 'worker_placement' && playerState.hasPassed === true);
+  if (!canPurchase) {
+    throw new GameRuleError('Can only buy market cards after revealing');
   }
 
   // Find the card in market
@@ -118,9 +120,11 @@ function processAcquireTechCardTentative(state: GameState, playerId: string, dat
   const marketState = state as MarketState;
   const playerState = state.players[playerId] as MarketPlayerState;
 
-  // Must be in reveal phase
-  if (state.phase !== 'reveal') {
-    throw new GameRuleError('Can only acquire tech cards during reveal phase');
+  // Must be in reveal phase OR in worker_placement after revealing (hasPassed)
+  const canPurchase = state.phase === 'reveal' ||
+    (state.phase === 'worker_placement' && playerState.hasPassed === true);
+  if (!canPurchase) {
+    throw new GameRuleError('Can only acquire tech cards after revealing');
   }
 
   // Find the card on R&D board
@@ -194,9 +198,11 @@ function processUndoMarketPurchase(state: GameState, playerId: string, data: Und
   const marketState = state as MarketState;
   const playerState = state.players[playerId] as MarketPlayerState;
 
-  // Must be in reveal phase
-  if (state.phase !== 'reveal') {
-    throw new GameRuleError('Can only undo purchases during reveal phase');
+  // Must be in reveal phase OR in worker_placement after revealing (hasPassed)
+  const canUndo = state.phase === 'reveal' ||
+    (state.phase === 'worker_placement' && playerState.hasPassed === true);
+  if (!canUndo) {
+    throw new GameRuleError('Can only undo purchases after revealing');
   }
 
   if (type === 'market') {

@@ -7,16 +7,42 @@
  * When all players have revealed, resources are collected and acquisitions processed
  */
 
-import type { GameState, LogEntry } from '@upship/api';
+import type { GameState, PlayerState, LogEntry, Card } from '@upship/api';
 
 const { GameRuleError } = require('../errors');
-const {
-  transitionToRevealPhase,
-  transitionToIncomeCleanup
-} = require('./helpers/phaseTransition');
+const { transitionToIncomeCleanup } = require('./helpers/phaseTransition');
 const { processAcquireTechCardResearch } = require('./technology');
 const { processBuyMarketCard } = require('./cards');
 const { refillRDBoard, refreshMarketRow } = require('./helpers/marketHelpers');
+
+// Extended card type with reveal bonuses
+interface RevealCard extends Card {
+  reveal?: {
+    research?: number;
+    influence?: number;
+    hydrogen?: number;
+    helium?: number;
+    cash?: number;
+    officers?: number;
+    engineers?: number;
+    gas?: number;
+  };
+  revealBonus?: {
+    research?: number;
+    influence?: number;
+    hydrogen?: number;
+    helium?: number;
+    cash?: number;
+    officers?: number;
+    engineers?: number;
+    gas?: number;
+  };
+}
+
+// Extended player state
+type RevealPlayerState = PlayerState & {
+  researchLevel?: number;
+};
 
 interface ActionResult {
   newState: GameState;
@@ -36,6 +62,76 @@ type RevealState = GameState & {
   };
   turnInRound?: number;
 };
+
+/**
+ * Collect resources for a single player when they reveal
+ * Per Section 5.1: Research = Research Level + Engineers in Barracks + card bonuses
+ */
+function collectPlayerRevealResources(state: GameState, playerId: string): void {
+  const playerState = state.players[playerId] as RevealPlayerState;
+  const hand = (playerState.hand || []) as RevealCard[];
+
+  let researchGained = 0;
+  let influenceGained = 0;
+  let hydrogenGained = 0;
+  let heliumGained = 0;
+  let cashGained = 0;
+  let officersGained = 0;
+  let engineersGained = 0;
+
+  for (const card of hand) {
+    const revealData = card.reveal || card.revealBonus;
+    if (revealData) {
+      researchGained += revealData.research || 0;
+      influenceGained += revealData.influence || 0;
+      hydrogenGained += revealData.hydrogen || 0;
+      heliumGained += revealData.helium || 0;
+      cashGained += revealData.cash || 0;
+      officersGained += revealData.officers || 0;
+      engineersGained += revealData.engineers || 0;
+
+      // Handle generic 'gas' property - defaults to hydrogen
+      if (revealData.gas) {
+        hydrogenGained += revealData.gas;
+      }
+    }
+  }
+
+  // Per Section 5.1: Research = Research Level + Engineers in Barracks + card bonuses
+  const researchLevel = playerState.researchLevel || 0;
+  const engineersInBarracks = playerState.engineers || 0;
+  researchGained += researchLevel + engineersInBarracks;
+
+  // Apply gains
+  playerState.research = researchGained;
+  playerState.influence = influenceGained;
+  playerState.gasCubes.hydrogen += hydrogenGained;
+  playerState.gasCubes.helium += heliumGained;
+  playerState.cash += cashGained;
+  playerState.officers += officersGained;
+  playerState.engineers += engineersGained;
+
+  const resourceLog: string[] = [];
+  if (researchGained > 0) resourceLog.push(`${researchGained} Research`);
+  if (influenceGained > 0) resourceLog.push(`${influenceGained} Influence`);
+  if (cashGained > 0) resourceLog.push(`£${cashGained}`);
+  if (officersGained > 0) resourceLog.push(`${officersGained} Officer(s)`);
+  if (engineersGained > 0) resourceLog.push(`${engineersGained} Engineer(s)`);
+  if (hydrogenGained > 0) resourceLog.push(`${hydrogenGained} Hydrogen`);
+  if (heliumGained > 0) resourceLog.push(`${heliumGained} Helium`);
+
+  if (resourceLog.length > 0) {
+    state.log = state.log || [];
+    state.log.push({
+      timestamp: new Date().toISOString(),
+      message: `${playerState.faction.toUpperCase()} collected: ${resourceLog.join(', ')}`,
+      playerId,
+      type: 'reveal',
+      round: state.round,
+      age: state.age
+    } as LogEntry);
+  }
+}
 
 /**
  * Get the current placer during worker placement
@@ -112,7 +208,10 @@ function processReveal(state: GameState, playerId: string, data: RevealData | un
   revealState.workerPlacement.passedPlayers = revealState.workerPlacement.passedPlayers || [];
   revealState.workerPlacement.passedPlayers.push(playerId);
 
-  // Store pending acquisitions
+  // Collect resources immediately so player can make purchases
+  collectPlayerRevealResources(state, playerId);
+
+  // Store pending acquisitions (may be empty if player will select interactively)
   revealState.pendingReveals = revealState.pendingReveals || {};
   revealState.pendingReveals[playerId] = { techAcquisitions, marketPurchases };
 
@@ -140,8 +239,18 @@ function processReveal(state: GameState, playerId: string, data: RevealData | un
 function executeAllReveals(state: GameState): void {
   const revealState = state as RevealState;
 
-  // Transition to reveal phase and collect resources from cards
-  transitionToRevealPhase(state);
+  // Set phase to reveal (resources already collected when each player revealed)
+  state.phase = 'reveal';
+
+  // Initialize reveal phase tracking if not already done
+  if (!revealState.revealPhase) {
+    revealState.revealPhase = {
+      revealedHands: {},
+      resourcesCollected: {},
+      techAcquisitionsComplete: {},
+      marketPurchasesComplete: {}
+    } as typeof revealState.revealPhase;
+  }
 
   // Process each player's acquisitions in player order
   for (const playerId of state.playerOrder) {
