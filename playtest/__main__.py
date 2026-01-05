@@ -2,6 +2,7 @@
 
 Usage:
     python -m playtest setup                 # Create new 4-player game (all AI)
+    python -m playtest setup-bots            # Create game with 1 human + 3 bots
     python -m playtest setup-interactive     # Create game for human (kenny) + 3 AI
     python -m playtest start                 # Start the current game (host action)
     python -m playtest autoplay [num_turns]  # Run AI until game ends
@@ -255,6 +256,98 @@ def setup_interactive_game() -> str:
     return game_id
 
 
+def setup_bots_game() -> str:
+    """Create a game with 1 human player + 3 server-side bots.
+
+    This uses the server's bot system where bots execute automatically
+    when it's their turn. Unlike setup-interactive which uses playtest_*
+    accounts, this creates actual bot players that the server controls.
+
+    Returns:
+        The game ID.
+    """
+    client = get_client()
+    game_name = f"Bot Test - {datetime.now().strftime('%Y%m%d_%H%M%S')}"
+
+    # Host player and their faction
+    host_player = "playtest_britain"
+    host_faction = "britain"
+
+    # Bot factions (will be controlled by server)
+    bot_factions = ["germany", "usa", "italy"]
+
+    print("=== UP SHIP! Bot Game Setup ===")
+    print(f"Server: {API_BASE} {'(LOCAL)' if USE_LOCAL else '(PRODUCTION)'}")
+    print(f"Human player: {host_player} -> {host_faction}")
+    print(f"Server bots: {', '.join(bot_factions)}\n")
+
+    # Login host player
+    print(">>> Logging in host player...")
+    try:
+        client.login(host_player, PASSWORD)
+        print(f"  {host_player}: logged in")
+    except Exception:
+        try:
+            client.register(host_player, PASSWORD)
+            print(f"  {host_player}: registered")
+        except Exception as e:
+            print(f"  {host_player}: WARNING - {e}")
+
+    # Create game
+    print(f"\n>>> Creating game: {game_name}")
+    game = client.create_game(host_player, game_name)
+    game_id = game.id
+
+    if not game_id:
+        print("ERROR: Could not create game")
+        sys.exit(1)
+
+    print(f"Game ID: {game_id}")
+
+    # Select faction for host
+    print(f"\n>>> Host selecting faction: {host_faction}")
+    try:
+        client.select_faction(host_player, game_id, host_faction)
+        print(f"  {host_player} -> {host_faction}: ✓")
+    except Exception as e:
+        print(f"  Failed: {e}")
+
+    # Add bots
+    print("\n>>> Adding server-side bots...")
+    for faction in bot_factions:
+        try:
+            client.add_bot(host_player, game_id, faction)
+            print(f"  Bot {faction}: ✓")
+        except Exception as e:
+            print(f"  Bot {faction}: ✗ ({e})")
+
+    # Start the game
+    print("\n>>> Starting game...")
+    try:
+        client.start_game(host_player, game_id)
+        print("Game started!")
+    except Exception as e:
+        print(f"Start failed: {e}")
+        sys.exit(1)
+
+    save_game_id(game_id)
+
+    logger = get_logger()
+    logger.init_log_file(game_id)
+    logger.log_action(None, "Bot game created and started", "setup")
+
+    print(f"\n{'='*50}")
+    print("Bot Game Ready!")
+    print(f"{'='*50}")
+    print(f"Game ID: {game_id}")
+    print(f"Human: {host_player} -> {host_faction}")
+    print(f"Bots: {', '.join(bot_factions)} (server-controlled)")
+    print(f"\nBots should automatically take their turns!")
+    print(f"Use 'python -m playtest whose-turn' to check current turn")
+
+    return game_id
+
+
 def end_phase(game_id: str = None) -> None:
     """Have all players end their turn or pass depending on phase.
 
@@ -493,6 +586,9 @@ def main():
 
     if cmd == "setup":
         setup_game()
+
+    elif cmd == "setup-bots":
+        setup_bots_game()
 
     elif cmd == "setup-interactive" or cmd == "play-with-me":
         setup_interactive_game()

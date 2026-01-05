@@ -24,10 +24,12 @@ export async function checkAndExecuteBotMoves(
   io: SocketIOServer,
   gameId: string
 ): Promise<void> {
+  logger.info({ gameId }, 'BOT EXECUTOR: checkAndExecuteBotMoves called');
   let actionsExecuted = 0;
 
   while (actionsExecuted < MAX_BOT_ACTIONS) {
     const executed = await executeOneBotMoveIfNeeded(io, gameId);
+    logger.info({ gameId, executed, actionsExecuted }, 'BOT EXECUTOR: executeOneBotMoveIfNeeded result');
     if (!executed) break;
     actionsExecuted++;
   }
@@ -48,9 +50,13 @@ async function executeOneBotMoveIfNeeded(
   try {
     // Get current game state
     const gameStateWrapper = await gameStateService.getGameState(gameId);
-    if (!gameStateWrapper) return false;
+    if (!gameStateWrapper) {
+      logger.info({ gameId }, 'BOT EXECUTOR: No game state found');
+      return false;
+    }
 
     const state = gameStateWrapper.state as GameState;
+    logger.info({ gameId, phase: state.phase }, 'BOT EXECUTOR: Current phase');
 
     // Determine current player based on phase
     let currentPlayerId: string | null = null;
@@ -58,6 +64,7 @@ async function executeOneBotMoveIfNeeded(
     if (state.phase === 'worker_placement' && state.workerPlacement?.placementOrder) {
       const idx = state.workerPlacement.currentPlacerIndex || 0;
       currentPlayerId = state.workerPlacement.placementOrder[idx];
+      logger.info({ gameId, idx, currentPlayerId, placementOrder: state.workerPlacement.placementOrder }, 'BOT EXECUTOR: Worker placement - current player');
     } else if (state.phase === 'reveal') {
       // Reveal phase: check all bots and execute their actions
       return await executeBotRevealPhase(io, gameId, state, gameStateWrapper.version);
@@ -71,16 +78,25 @@ async function executeOneBotMoveIfNeeded(
       currentPlayerId = state.playerOrder[state.currentPlayerIndex];
     }
 
-    if (!currentPlayerId) return false;
+    if (!currentPlayerId) {
+      logger.info({ gameId }, 'BOT EXECUTOR: No current player ID');
+      return false;
+    }
 
     // Check if current player is a bot
     const isBot = await isBotPlayer(gameId, currentPlayerId);
+    logger.info({ gameId, currentPlayerId, isBot }, 'BOT EXECUTOR: isBotPlayer check');
     if (!isBot) return false;
 
     // Execute bot move based on phase
     return await executeBotMove(io, gameId, state, currentPlayerId, gameStateWrapper.version);
   } catch (error) {
-    logger.error({ error, gameId }, 'Error in bot move execution');
+    const err = error as Error;
+    logger.error({
+      gameId,
+      errorMessage: err?.message || String(error),
+      errorStack: err?.stack
+    }, 'Error in bot move execution');
     return false;
   }
 }
@@ -136,17 +152,27 @@ async function executeBotWorkerPlacement(
   botId: string,
   version: number
 ): Promise<boolean> {
+  logger.info({ gameId, botId }, 'BOT EXECUTOR: executeBotWorkerPlacement called');
+
   const player = state.players[botId];
-  if (!player) return false;
+  if (!player) {
+    logger.warn({ gameId, botId, playerIds: Object.keys(state.players) }, 'BOT EXECUTOR: Player not found');
+    return false;
+  }
+
+  logger.info({ gameId, botId, agentsRemaining: player.agentsRemaining, handSize: player.hand?.length }, 'BOT EXECUTOR: Player state');
 
   // Check if bot has agents remaining
   if ((player.agentsRemaining || 0) <= 0) {
+    logger.info({ gameId, botId }, 'BOT EXECUTOR: No agents remaining, ending turn');
     // Bot must reveal/end turn
     return await executeBotAction(io, gameId, botId, 'END_TURN', {}, version);
   }
 
   // Find strategic placement
+  logger.info({ gameId, botId }, 'BOT EXECUTOR: Finding strategic placement');
   const decision = botService.findStrategicPlacement(state, botId);
+  logger.info({ gameId, botId, decision }, 'BOT EXECUTOR: Strategic placement decision');
 
   if (decision) {
     const actionData: Record<string, unknown> = {

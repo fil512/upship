@@ -280,6 +280,42 @@ class UpshipClient:
         game_data = data.get('game', data)
         return Game.from_dict(game_data)
 
+    def add_bot(self, username: str, game_id: str, faction: str) -> Game:
+        """Add a bot player to the game (host only).
+
+        Args:
+            username: The authenticated username (must be host).
+            game_id: The ID of the game.
+            faction: The faction for the bot ('germany', 'britain', 'usa', 'italy').
+
+        Returns:
+            The updated Game object.
+        """
+        data = self._api_post(
+            username,
+            f'/api/games/{game_id}/bot',
+            body={'faction': faction},
+        )
+        game_data = data.get('game', data)
+        return Game.from_dict(game_data)
+
+    def remove_bot(self, username: str, game_id: str, bot_id: str) -> Game:
+        """Remove a bot player from the game (host only).
+
+        Args:
+            username: The authenticated username (must be host).
+            game_id: The ID of the game.
+            bot_id: The ID of the bot to remove.
+
+        Returns:
+            The updated Game object.
+        """
+        cookie = self._get_cookie(username)
+        data, new_cookie = self.api.delete(f'/api/games/{game_id}/bot/{bot_id}', cookie=cookie)
+        self._update_session_cookie(username, new_cookie)
+        game_data = data.get('game', data)
+        return Game.from_dict(game_data)
+
     def start_game(self, username: str, game_id: str) -> GameState:
         """Start a game (host only).
 

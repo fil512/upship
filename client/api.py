@@ -119,3 +119,11 @@ class APIClient:
     ) -> tuple[dict[str, Any], str | None]:
         """Make a POST request."""
         return self.request('POST', path, body=body, cookie=cookie)
+
+    def delete(
+        self,
+        path: str,
+        cookie: str | None = None,
+    ) -> tuple[dict[str, Any], str | None]:
+        """Make a DELETE request."""
+        return self.request('DELETE', path, cookie=cookie)

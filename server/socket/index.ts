@@ -14,6 +14,7 @@ const gameService = require('../services/gameService');
 const { filterStateForPlayer } = require('../services/gameStateHelpers');
 const { processAction } = require('../actions');
 const { executeUndo, getUndoInfo } = require('../actions/undo');
+const { checkAndExecuteBotMoves } = require('../services/botExecutor');
 const logger = require('../logger');
 
 // Extended socket with game-specific properties
@@ -329,6 +330,14 @@ function initializeSocket(server: HttpServer, sessionMiddleware: RequestHandler)
         callback(responsePayload);
 
         logger.info({ gameId, playerId, actionType: action.actionType }, 'Action processed');
+
+        // Check if next player is a bot and execute their moves
+        // Run async to not block the response
+        setImmediate(() => {
+          checkAndExecuteBotMoves(io, gameId).catch((err: Error) => {
+            logger.error({ err, gameId }, 'Bot execution error');
+          });
+        });
       } catch (error) {
         logger.error({ error, gameId, action }, 'Error processing game action');
         const errorMessage = error instanceof Error ? error.message : 'Action failed';

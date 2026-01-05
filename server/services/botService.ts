@@ -385,7 +385,7 @@ export function findStrategicPlacement(
     Object.keys(state.groundBoard?.placements || {})
   );
 
-  const availableLocations = GROUND_BOARD_LOCATIONS
+  const availableLocations = Object.values(GROUND_BOARD_LOCATIONS)
     .filter((loc: { id: string }) => !occupiedLocations.has(loc.id))
     .map((loc: { id: string; symbol: string }) => ({ id: loc.id, symbol: loc.symbol }));
 
