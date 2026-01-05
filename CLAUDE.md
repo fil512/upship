@@ -22,11 +22,10 @@ For testing the production site:
 
 ## Browser Testing (MCP)
 
-Two browser automation options are available for UI playtesting:
-- `/playtest-ui` - Uses Chrome DevTools MCP (`mcp__chrome-devtools__*` tools)
-- `/playtest-ui-claude` - Uses Claude in Chrome MCP (`mcp__claude-in-chrome__*` tools)
+Browser UI playtesting uses Chrome DevTools MCP:
+- `/playtest-ui` - Full game playtest: creates a game with 3 server bots, plays through the UI until completion or stuck. If stuck, investigates and fixes the issue.
 
-See the respective command files in `.claude/commands/` for detailed tool references.
+See `.claude/commands/playtest-ui.md` for detailed instructions.
 
 ## Troubleshooting Deployments
 
@@ -270,10 +269,7 @@ See `plans/overview.md` for the 27-phase implementation plan tracking progress f
 - `/resolve-gaps` - Continuously loop between `/find-gaps` and `/fix-gaps` in subcontexts until all gaps are resolved
 - `/review-rules` - Conducts a comprehensive rules review using the boardgame-design skill
 - `/playtest-rest` - Run a full automated playtest against the local dev server (http://localhost:3000)
-- `/playtest-ui` - Run a browser-based UI playtest using Chrome DevTools MCP (tests UI controls, UX, and functionality)
-- `/playtest-ui-claude` - Run a browser-based UI playtest using Claude in Chrome MCP (alternative to /playtest-ui)
-- `/playtest-phases` - Multi-phase UI playtest: functionality, rules operation, UX, and design polish; tracks progress in `plans/playtest-tracking.md`
-- `/repeat-playtest` - Continuously run `/playtest-phases` in subcontexts until all 4 phases are complete
+- `/playtest-ui` - Create a game with 3 server bots, play through UI until completion; if stuck, fix the issue and retry
 - `/play-with-me` - Interactive game where you (kenny) play Britain and Claude controls Germany, USA, Italy via browser
 
 ## Available Skills
