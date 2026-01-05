@@ -38,7 +38,6 @@
 	import PlayersList from '$lib/components/sidebar/PlayersList.svelte';
 	import GameLog from '$lib/components/sidebar/GameLog.svelte';
 	import BudgetDisplay from '$lib/components/sidebar/BudgetDisplay.svelte';
-	import ActionButtons from '$lib/components/ui/ActionButtons.svelte';
 
 	// Market Components
 	import MarketSection from '$lib/components/market/MarketSection.svelte';
@@ -425,69 +424,6 @@
 		}
 	}
 
-	// Handle actions from ActionButtons component (state machine driven)
-	async function handleStateMachineAction(event: CustomEvent<{ action: string; actionData?: Record<string, unknown> }>) {
-		const { action, actionData } = event.detail;
-		let result;
-
-		switch (action) {
-			case 'PLACE_AGENT':
-				// This requires selection - don't handle directly, let existing flow work
-				showToast('Select a card and location to place agent', 'info');
-				return;
-
-			case 'REVEAL':
-				result = await sendAction({ actionType: 'REVEAL', actionData: {} });
-				break;
-
-			case 'KEEP_HAZARD':
-				result = await sendAction({ actionType: 'KEEP_HAZARD', actionData: {} });
-				break;
-
-			case 'DISCARD_HAZARD':
-				result = await sendAction({ actionType: 'DISCARD_HAZARD', actionData: {} });
-				break;
-
-			case 'DISCARD_MINISTRY_CARD':
-				result = await sendAction({
-					actionType: 'DISCARD_MINISTRY_CARD',
-					actionData: { cardIndex: actionData?.cardIndex ?? 0 }
-				});
-				break;
-
-			case 'LAUNCH_SHIP':
-				// This requires selection - guide user
-				showToast('Select gas type and route to launch', 'info');
-				return;
-
-			case 'NO_MORE_LAUNCHES':
-				result = await sendAction({ actionType: 'NO_MORE_LAUNCHES', actionData: {} });
-				break;
-
-			case 'RESPOND_TO_HAZARD':
-				if (!shipAwaitingHazard) {
-					showToast('No ship awaiting hazard response', 'error');
-					return;
-				}
-				result = await sendAction({
-					actionType: 'RESPOND_TO_HAZARD',
-					actionData: {
-						shipId: shipAwaitingHazard.id,
-						spendEngineers: actionData?.spendEngineers ?? false
-					}
-				});
-				break;
-
-			default:
-				showToast(`Unknown action: ${action}`, 'error');
-				return;
-		}
-
-		if (result && !result.success) {
-			showToast(result.error || `Failed to ${action}`, 'error');
-		}
-	}
-
 	// Market/reveal phase derived values
 	$: isRevealPhase = $gameState?.phase === 'reveal';
 	$: isMarketInteractive = isRevealPhase && $isMyTurn;
@@ -744,11 +680,42 @@
 
 			<!-- Right sidebar - Hand and Actions -->
 			<aside class="sidebar right">
-				<!-- State Machine Driven Action Buttons -->
-				<ActionButtons on:action={handleStateMachineAction} />
-
 				<div class="panel actions">
-					<h3>Actions</h3>
+					<!-- Instruction text at top -->
+					{#if isWorkerPlacementPhase && !isLaunchpadActive && !shipAwaitingHazard}
+						<p class="action-instruction">
+							{#if selectedCardIndex !== null}
+								Select a location to place your agent
+							{:else}
+								Select a card, or click Reveal to exit worker placement
+							{/if}
+						</p>
+						<!-- Reveal button right after instruction -->
+						{#if $isMyTurn}
+							<button class="btn primary w-full" on:click={handleReveal}>
+								Reveal
+							</button>
+							<!-- Undo only visible when available -->
+							{#if $turnInfo.canUndo}
+								<button class="btn secondary w-full" on:click={handleUndo}>
+									Undo {$turnInfo.lastActionType || ''}
+								</button>
+							{/if}
+						{/if}
+					{:else if $gameState.phase === 'reveal'}
+						<p class="action-instruction">Purchase cards below, then End Turn</p>
+						{#if $isMyTurn && $turnInfo.canEndTurn}
+							<button class="btn primary w-full" on:click={handleEndTurn}>End Turn</button>
+						{/if}
+						{#if $isMyTurn && $turnInfo.canUndo}
+							<button class="btn secondary w-full" on:click={handleUndo}>
+								Undo {$turnInfo.lastActionType || ''}
+							</button>
+						{/if}
+					{:else if $gameState.phase === 'income_cleanup'}
+						<p class="action-instruction">Collecting income...</p>
+					{/if}
+
 					{#if peekedHazard}
 						<!-- Peeked Hazard Display - from Navigator card or Weather Bureau -->
 						<div class="peeked-hazard-panel">
@@ -766,11 +733,6 @@
 						</div>
 					{/if}
 					{#if $isMyTurn}
-						{#if $turnInfo.canUndo}
-							<button class="btn secondary w-full" on:click={handleUndo}>
-								Undo {$turnInfo.lastActionType || ''}
-							</button>
-						{/if}
 						{#if shipAwaitingHazard && pendingHazard}
 							<!-- Hazard Response UI - ship awaiting hazard check -->
 							<div class="hazard-panel">
@@ -866,29 +828,13 @@
 									Exit Launchpad (No More Launches)
 								</button>
 							</div>
-						{:else if isWorkerPlacementPhase}
-							<!-- Reveal button - always available during worker placement -->
-							<button class="btn primary w-full" on:click={handleReveal}>
-								Reveal
-							</button>
-						{:else if $turnInfo.canEndTurn}
-							<button class="btn w-full" on:click={handleEndTurn}>End Turn</button>
 						{/if}
 					{/if}
-
-					{#if isWorkerPlacementPhase && !isLaunchpadActive}
-						<p class="action-hint">
-							{#if selectedCardIndex !== null}
-								Select a location to place your agent
-							{:else}
-								Select a card, or click Reveal to exit worker placement
-							{/if}
-						</p>
-					{:else if $gameState.phase === 'reveal'}
-						<p class="action-hint">Purchase cards below, then End Turn</p>
-					{:else if $gameState.phase === 'income_cleanup'}
-						<p class="action-hint">Collecting income...</p>
+					{#if $isMyTurn && isLaunchpadActive}
+						<!-- Launchpad-specific instruction -->
+						<p class="action-instruction">Launch ships or click Exit when done</p>
 					{/if}
+
 				</div>
 
 				<!-- Budget Display (reveal phase only) -->
@@ -1293,6 +1239,18 @@
 	/* Actions panel */
 	.panel.actions {
 		background: var(--color-bg-tertiary);
+		display: flex;
+		flex-direction: column;
+		gap: var(--spacing-sm);
+	}
+
+	.action-instruction {
+		font-size: 0.9rem;
+		font-weight: 500;
+		color: var(--color-text-primary);
+		text-align: center;
+		margin: 0;
+		padding: var(--spacing-xs) 0;
 	}
 
 	.action-hint {
