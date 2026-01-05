@@ -17,6 +17,15 @@ const { executeUndo, getUndoInfo } = require('../actions/undo');
 const { checkAndExecuteBotMoves } = require('../services/botExecutor');
 const logger = require('../logger');
 
+// Helper to trigger bot execution without deep nesting
+function triggerBotExecution(io: SocketIOServer, gameId: string): void {
+  setImmediate(() => {
+    checkAndExecuteBotMoves(io, gameId).catch((err: Error) => {
+      logger.error({ err, gameId }, 'Bot execution error');
+    });
+  });
+}
+
 // Extended socket with game-specific properties
 interface GameSocket extends Socket {
   gameId?: string | null;
@@ -157,6 +166,9 @@ function initializeSocket(server: HttpServer, sessionMiddleware: RequestHandler)
         });
 
         logger.info({ gameId, playerId }, 'Player joined game room');
+
+        // Trigger bot execution in case bots were waiting (e.g., after server restart)
+        triggerBotExecution(io, gameId);
       } catch (error) {
         logger.error({ error, gameId, playerId }, 'Error joining game');
         socket.emit('action-error', { error: 'Failed to join game' });

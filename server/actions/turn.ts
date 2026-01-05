@@ -8,7 +8,6 @@ import type { GameState, PlayerState, Card, LogEntry } from '@upship/api';
 const { transitionToIncomeCleanup, startNewRound } = require('./helpers/phaseTransition');
 const { advanceToNextPlacer } = require('./helpers/turnOrder');
 const { refreshMarketRow, refreshRnDBoard } = require('./helpers/marketHelpers');
-const { executeAllReveals } = require('./reveal');
 
 interface ActionResult {
   newState: GameState;
@@ -52,12 +51,73 @@ function processEndTurn(state: GameState, playerId: string): ActionResult {
       // Check if player has already revealed (hasPassed) - they're finishing purchase selection
       if (playerState.hasPassed) {
         // Player has revealed and is now finishing their purchase selection
-        // Store their pending purchases in pendingReveals for atomic processing
-        turnState.pendingReveals = turnState.pendingReveals || {};
-        turnState.pendingReveals[playerId] = {
-          techAcquisitions: (playerState.pendingTechAcquisitions || []).map(p => p.cardId),
-          marketPurchases: (playerState.pendingMarketPurchases || []).map(p => p.cardId)
-        };
+        // Finalize their purchases immediately
+
+        // 1. Finalize tech card acquisitions (add to techCards, increment progressTrack)
+        const pendingTech = playerState.pendingTechAcquisitions || [];
+        for (const acquisition of pendingTech) {
+          const cardIndex = turnState.rdBoard.findIndex(c => c.id === acquisition.cardId);
+          if (cardIndex !== -1) {
+            const card = turnState.rdBoard[cardIndex];
+            // Add to player's tech cards
+            playerState.techCards = playerState.techCards || [];
+            playerState.techCards.push(card.id);
+            // Remove from R&D board
+            turnState.rdBoard.splice(cardIndex, 1);
+            // Clear claim
+            if (turnState.techCardsClaimed) {
+              delete turnState.techCardsClaimed[acquisition.cardId];
+            }
+
+            // Increment progress track (needed for age transitions)
+            const techState = state as GameState & { progressTrack?: number };
+            techState.progressTrack = (techState.progressTrack || 0) + 1;
+
+            state.log = state.log || [];
+            state.log.push({
+              timestamp: new Date().toISOString(),
+              message: `Acquired ${card.name} for ${acquisition.cost} Research. Progress: ${techState.progressTrack}`,
+              playerId,
+              type: 'action',
+              round: state.round,
+              age: state.age
+            } as LogEntry);
+          }
+        }
+        playerState.pendingTechAcquisitions = [];
+
+        // 2. Finalize market card purchases (move to discard pile)
+        const pendingMarket = playerState.pendingMarketPurchases || [];
+        for (const purchase of pendingMarket) {
+          const cardIndex = turnState.marketCards.findIndex(c => c.id === purchase.cardId);
+          if (cardIndex !== -1) {
+            const card = turnState.marketCards[cardIndex];
+            // Move card to player's discard pile
+            playerState.discardPile = playerState.discardPile || [];
+            playerState.discardPile.push(card);
+            // Remove from market
+            turnState.marketCards.splice(cardIndex, 1);
+            // Clear claim
+            if (turnState.marketCardsClaimed) {
+              delete turnState.marketCardsClaimed[purchase.cardId];
+            }
+
+            state.log = state.log || [];
+            state.log.push({
+              timestamp: new Date().toISOString(),
+              message: `Purchased ${card.name} for ${purchase.cost} Influence`,
+              playerId,
+              type: 'action',
+              round: state.round,
+              age: state.age
+            } as LogEntry);
+          }
+        }
+        playerState.pendingMarketPurchases = [];
+
+        // 3. Replenish market and R&D board
+        refreshMarketRow(state);
+        refreshRnDBoard(state);
 
         // Mark player as finished with purchases
         turnState.playersFinishedPurchases = turnState.playersFinishedPurchases || {};
@@ -80,8 +140,11 @@ function processEndTurn(state: GameState, playerId: string): ActionResult {
         });
 
         if (allRevealedAndFinished) {
-          // All players done - execute all reveals atomically
-          executeAllReveals(state);
+          // All players done - transition to income/cleanup phase
+          transitionToIncomeCleanup(state);
+        } else {
+          // Not all players done yet - advance to next placer who hasn't revealed
+          advanceToNextPlacer(state);
         }
       } else {
         // Normal worker placement turn end - just advance to next placer
@@ -151,10 +214,14 @@ function processEndTurn(state: GameState, playerId: string): ActionResult {
             delete turnState.techCardsClaimed[acquisition.cardId];
           }
 
+          // Increment progress track (needed for age transitions)
+          const techState = state as GameState & { progressTrack?: number };
+          techState.progressTrack = (techState.progressTrack || 0) + 1;
+
           state.log = state.log || [];
           state.log.push({
             timestamp: new Date().toISOString(),
-            message: `Acquired ${card.name} for ${acquisition.cost} Research`,
+            message: `Acquired ${card.name} for ${acquisition.cost} Research. Progress: ${techState.progressTrack}`,
             playerId,
             type: 'action',
             round: state.round,

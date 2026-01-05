@@ -165,7 +165,9 @@ describe('Rules Compliance - Atomic Reveal Action', () => {
       expect(result.newState.players['1'].research).toBe(4);
     });
 
-    it('should process tech acquisitions using collected research', () => {
+    it('should store pending acquisitions for later finalization', () => {
+      // NOTE: Tech acquisitions are no longer processed atomically in REVEAL
+      // They are stored in pendingReveals and finalized on END_TURN
       const state = createTestGameState();
       state.phase = 'worker_placement';
       state.playerOrder = ['1'];
@@ -202,13 +204,18 @@ describe('Rules Compliance - Atomic Reveal Action', () => {
         marketPurchases: []
       });
 
-      // Player should have acquired the technology
-      expect(result.newState.players['1'].techCards).toContain('test_tech');
-      // Research should be 5 - 3 = 2 remaining
-      expect(result.newState.players['1'].research).toBe(2);
+      // REVEAL collects resources and stores pending acquisitions
+      // Player collects research (5 from card bonus)
+      expect(result.newState.players['1'].research).toBe(5);
+      // Tech is NOT yet acquired - will be finalized on END_TURN
+      expect(result.newState.players['1'].techCards).not.toContain('test_tech');
+      // Pending reveals should be stored
+      expect(result.newState.pendingReveals['1'].techAcquisitions).toContain('test_tech');
     });
 
-    it('should process market purchases using collected influence', () => {
+    it('should store pending market purchases for later finalization', () => {
+      // NOTE: Market purchases are no longer processed atomically in REVEAL
+      // They are stored in pendingReveals and finalized on END_TURN
       const state = createTestGameState();
       state.phase = 'worker_placement';
       state.playerOrder = ['1'];
@@ -243,17 +250,20 @@ describe('Rules Compliance - Atomic Reveal Action', () => {
         marketPurchases: ['market_card_1']
       });
 
-      // Player should have purchased the card (now in deck/hand/discard after full phase cycle)
+      // REVEAL collects influence and stores pending purchases
+      // Player collects influence (5 from card bonus)
+      expect(result.newState.players['1'].influence).toBe(5);
+      // Market card is NOT yet purchased - will be finalized on END_TURN
       const player = result.newState.players['1'];
-      const cardInDeck = player.deck?.some(c => c.id === 'market_card_1') || false;
-      const cardInHand = player.hand?.some(c => c.id === 'market_card_1') || false;
       const cardInDiscard = player.discardPile?.some(c => c.id === 'market_card_1') || false;
-      expect(cardInDeck || cardInHand || cardInDiscard).toBe(true);
-      // Influence is reset to 0 after income/cleanup phase transition (expected per Section 5.2)
-      expect(result.newState.players['1'].influence).toBe(0);
+      expect(cardInDiscard).toBe(false);
+      // Pending reveals should be stored
+      expect(result.newState.pendingReveals['1'].marketPurchases).toContain('market_card_1');
     });
 
-    it('should skip acquisitions player cannot afford (log error but continue)', () => {
+    it('should store pending acquisitions even if player cannot afford (validation on finalization)', () => {
+      // NOTE: REVEAL stores pending acquisitions without validation
+      // Affordability is checked on END_TURN when purchases are finalized
       const state = createTestGameState();
       state.phase = 'worker_placement';
       state.playerOrder = ['1'];
@@ -286,11 +296,12 @@ describe('Rules Compliance - Atomic Reveal Action', () => {
 
       // Player should NOT have the technology
       expect(result.newState.players['1'].techCards).not.toContain('expensive_tech');
-      // Should have logged an error
-      expect(result.newState.log.some(l => l.type === 'error' && l.message.includes('could not acquire'))).toBe(true);
+      // Pending acquisition is still stored - validation happens on END_TURN
+      expect(result.newState.pendingReveals['1'].techAcquisitions).toContain('expensive_tech');
     });
 
-    it('should clear pending reveals after processing', () => {
+    it('should store empty pending reveals when no acquisitions specified', () => {
+      // NOTE: pendingReveals are stored by REVEAL and cleared by END_TURN
       const state = createTestGameState();
       state.phase = 'worker_placement';
       state.playerOrder = ['1'];
@@ -307,8 +318,10 @@ describe('Rules Compliance - Atomic Reveal Action', () => {
         marketPurchases: []
       });
 
-      // pendingReveals should be cleared
-      expect(result.newState.pendingReveals).toBeUndefined();
+      // pendingReveals should be stored (cleared on END_TURN, not REVEAL)
+      expect(result.newState.pendingReveals).toBeDefined();
+      expect(result.newState.pendingReveals['1'].techAcquisitions).toEqual([]);
+      expect(result.newState.pendingReveals['1'].marketPurchases).toEqual([]);
     });
   });
 

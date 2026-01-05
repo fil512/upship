@@ -10,10 +10,6 @@
 import type { GameState, PlayerState, LogEntry, Card } from '@upship/api';
 
 const { GameRuleError } = require('../errors');
-const { transitionToIncomeCleanup } = require('./helpers/phaseTransition');
-const { processAcquireTechCardResearch } = require('./technology');
-const { processBuyMarketCard } = require('./cards');
-const { refillRDBoard, refreshMarketRow } = require('./helpers/marketHelpers');
 
 // Extended card type with reveal bonuses
 interface RevealCard extends Card {
@@ -142,33 +138,6 @@ function getCurrentPlacer(state: GameState): string {
   return placementOrder[revealState.workerPlacement?.currentPlacerIndex || 0];
 }
 
-/**
- * Check if all players have passed/revealed
- */
-function allPlayersPassed(state: GameState): boolean {
-  return state.playerOrder.every(pid => state.players[pid].hasPassed);
-}
-
-/**
- * Advance to the next placer who hasn't passed
- */
-function advanceToNextPlacer(state: GameState): void {
-  const revealState = state as RevealState;
-  // Increment turn counter within the current round
-  revealState.turnInRound = (revealState.turnInRound || 1) + 1;
-
-  const placementOrder = revealState.workerPlacement?.placementOrder || state.playerOrder;
-  let nextIndex = (revealState.workerPlacement.currentPlacerIndex + 1) % placementOrder.length;
-
-  // Skip players who have passed
-  let attempts = 0;
-  while (state.players[placementOrder[nextIndex]]?.hasPassed && attempts < placementOrder.length) {
-    nextIndex = (nextIndex + 1) % placementOrder.length;
-    attempts++;
-  }
-
-  revealState.workerPlacement.currentPlacerIndex = nextIndex;
-}
 
 interface RevealData {
   techAcquisitions?: string[];
@@ -223,92 +192,18 @@ function processReveal(state: GameState, playerId: string, data: RevealData | un
     type: 'action'
   } as LogEntry);
 
-  // Check if all players have revealed
-  if (allPlayersPassed(state)) {
-    executeAllReveals(state);
-  } else {
-    advanceToNextPlacer(state);
-  }
+  // Note: Do NOT advance to next placer here!
+  // The revealed player stays "current" to make their purchase selections.
+  // Only after they click END_TURN (which calls turn.ts processEndTurn for hasPassed players)
+  // will the next placer be advanced to.
+  // This allows interactive purchase selection after revealing.
 
   return { newState: state };
 }
 
-/**
- * Execute all pending reveals atomically
- */
-function executeAllReveals(state: GameState): void {
-  const revealState = state as RevealState;
-
-  // Set phase to reveal (resources already collected when each player revealed)
-  state.phase = 'reveal';
-
-  // Initialize reveal phase tracking if not already done
-  if (!revealState.revealPhase) {
-    revealState.revealPhase = {
-      revealedHands: {},
-      resourcesCollected: {},
-      techAcquisitionsComplete: {},
-      marketPurchasesComplete: {}
-    } as typeof revealState.revealPhase;
-  }
-
-  // Process each player's acquisitions in player order
-  for (const playerId of state.playerOrder) {
-    const pending = revealState.pendingReveals?.[playerId] || { techAcquisitions: [], marketPurchases: [] };
-    const { techAcquisitions, marketPurchases } = pending;
-    const playerState = state.players[playerId];
-
-    // Process tech acquisitions using collected research
-    for (const techId of techAcquisitions) {
-      try {
-        processAcquireTechCardResearch(state, playerId, { techId, _internal: true });
-      } catch (e) {
-        state.log = state.log || [];
-        state.log.push({
-          timestamp: new Date().toISOString(),
-          message: `${playerState.faction.toUpperCase()} could not acquire ${techId}: ${(e as Error).message}`,
-          playerId,
-          type: 'error'
-        } as LogEntry);
-      }
-    }
-
-    // Process market purchases using collected influence
-    for (const cardId of marketPurchases) {
-      try {
-        processBuyMarketCard(state, playerId, { cardId, _internal: true });
-      } catch (e) {
-        state.log = state.log || [];
-        state.log.push({
-          timestamp: new Date().toISOString(),
-          message: `${playerState.faction.toUpperCase()} could not buy ${cardId}: ${(e as Error).message}`,
-          playerId,
-          type: 'error'
-        } as LogEntry);
-      }
-    }
-
-    // Mark player as done with reveal
-    revealState.revealPhase.techAcquisitionsComplete[playerId] = true;
-    revealState.revealPhase.marketPurchasesComplete[playerId] = true;
-
-    // Replenish R&D Board and Market AFTER this player's purchases
-    // This allows later players to see freshly drawn tiles/cards
-    refillRDBoard(state);
-    refreshMarketRow(state);
-  }
-
-  // Clear pending reveals
-  delete revealState.pendingReveals;
-
-  // Transition to income/cleanup since all reveals are now complete
-  transitionToIncomeCleanup(state);
-}
-
-export { processReveal, executeAllReveals };
+export { processReveal };
 
 // CommonJS compatibility
 module.exports = {
-  processReveal,
-  executeAllReveals
+  processReveal
 };
