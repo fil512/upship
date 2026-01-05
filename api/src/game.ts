@@ -319,6 +319,18 @@ export interface GameState {
 		completedPlayers: string[];
 		currentPlayerIndex: number;
 	};
+	// Game complete state (present when phase === 'game_complete')
+	winner?: string;
+	scores?: Record<string, {
+		total: number;
+		breakdown: {
+			previouslyAccumulated: number;
+			routes: number;
+			techCards: number;
+		};
+		faction: string;
+	}>;
+	gameEndReason?: string;
 }
 
 // Game wrapper from API response

@@ -101,10 +101,32 @@ export const currentPhaseName = derived(gameState, ($state): string => {
 		worker_placement: 'Worker Placement',
 		reveal: 'Reveal Phase',
 		income_cleanup: 'Income & Cleanup',
-		age_transition_design_bureau: 'Age Transition'
+		age_transition_design_bureau: 'Age Transition',
+		game_complete: 'Game Complete'
 	};
 
 	return phaseNames[$state.phase] || $state.phase;
+});
+
+/**
+ * Check if the game is complete
+ */
+export const isGameComplete = derived(gameState, ($state): boolean => {
+	return $state?.phase === 'game_complete';
+});
+
+/**
+ * Get the winner's player ID (only valid when game is complete)
+ */
+export const gameWinner = derived(gameState, ($state): string | null => {
+	return $state?.winner ?? null;
+});
+
+/**
+ * Get final scores (only valid when game is complete)
+ */
+export const gameScores = derived(gameState, ($state) => {
+	return $state?.scores ?? null;
 });
 
 /**

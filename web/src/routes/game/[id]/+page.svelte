@@ -14,7 +14,8 @@
 		effectiveUserId,
 		setGameId,
 		resetGameState,
-		turnInfo
+		turnInfo,
+		isGameComplete
 	} from '$lib/stores/gameState';
 	import { connect, disconnect, connected, sendAction, onlinePlayers, gameError, connectToLobby, lobbyGame, inLobby } from '$lib/stores/socket';
 	import { toasts, showToast } from '$lib/stores/ui';
@@ -45,6 +46,7 @@
 	// Modals
 	import LocationActionModal from '$lib/components/modals/LocationActionModal.svelte';
 	import CitySelectionModal from '$lib/components/modals/CitySelectionModal.svelte';
+	import GameComplete from '$lib/components/game/GameComplete.svelte';
 
 	// Utilities
 	import { calculateShipStats } from '$lib/utils/shipStats';
@@ -329,13 +331,14 @@
 			return;
 		}
 		// Send LAUNCH_SHIP directly - city choice happens after hazard check
+		// Age II uses missionId instead of routeId
+		const currentAge = $gameState?.age || 1;
+		const actionData = currentAge === 2
+			? { shipId: selectedShip.id, missionId: selectedRouteId, gasType: selectedGasType }
+			: { shipId: selectedShip.id, routeId: selectedRouteId, gasType: selectedGasType };
 		const result = await sendAction({
 			actionType: 'LAUNCH_SHIP',
-			actionData: {
-				shipId: selectedShip.id,
-				routeId: selectedRouteId,
-				gasType: selectedGasType
-			}
+			actionData
 		});
 		if (result.success) {
 			selectedRouteId = null;
@@ -477,28 +480,55 @@
 	}
 
 	async function handleDesignBureauDone() {
-		if (!pendingBlueprint || designBureauCardIndex === null) return;
+		if (!pendingBlueprint) return;
 
-		const result = await sendAction({
-			actionType: 'PLACE_AGENT',
-			actionData: {
-				locationId: 'design_bureau',
-				cardIndex: designBureauCardIndex,
-				blueprint: pendingBlueprint
+		// Different action for age transition vs normal design bureau
+		if (isAgeTransitionDesignBureauPhase) {
+			const result = await sendAction({
+				actionType: 'AGE_TRANSITION_DESIGN_BUREAU',
+				actionData: {
+					blueprint: pendingBlueprint
+				}
+			});
+
+			if (result.success) {
+				designBureauMode = false;
+				pendingBlueprint = null;
+				selectedTechTileId = null;
+				designBureauCardIndex = null;
+				showToast('Blueprint updated for new Age!', 'success');
+			} else {
+				showToast(result.error || 'Failed to update blueprint', 'error');
 			}
-		});
-
-		if (result.success) {
-			designBureauMode = false;
-			pendingBlueprint = null;
-			selectedTechTileId = null;
-			designBureauCardIndex = null;
 		} else {
-			showToast(result.error || 'Failed to update blueprint', 'error');
+			if (designBureauCardIndex === null) return;
+
+			const result = await sendAction({
+				actionType: 'PLACE_AGENT',
+				actionData: {
+					locationId: 'design_bureau',
+					cardIndex: designBureauCardIndex,
+					blueprint: pendingBlueprint
+				}
+			});
+
+			if (result.success) {
+				designBureauMode = false;
+				pendingBlueprint = null;
+				selectedTechTileId = null;
+				designBureauCardIndex = null;
+			} else {
+				showToast(result.error || 'Failed to update blueprint', 'error');
+			}
 		}
 	}
 
 	function handleDesignBureauCancel() {
+		// Cannot cancel during age transition - it's mandatory
+		if (isAgeTransitionDesignBureauPhase) {
+			showToast('You must fill empty Frame and Fabric slots to continue', 'warning');
+			return;
+		}
 		designBureauMode = false;
 		pendingBlueprint = null;
 		selectedTechTileId = null;
@@ -547,12 +577,16 @@
 			hazard?.engineersNeeded === 0 ||
 			(spendEngineers && canAffordEngineers);
 
-		if (willPass) {
-			// Show city modal - city choice needed for successful launch
+		// Age 2 missions don't need city choice - just complete the mission
+		const isMission = shipAwaitingHazard.pendingMissionId && ($gameState?.age === 2);
+
+		if (willPass && !isMission && hazardRoute) {
+			// Show city modal - city choice needed for successful route launch
 			pendingHazardResponse = { spendEngineers };
 			showCityModal = true;
 		} else {
-			// Hazard fails - no city choice needed
+			// Either: hazard fails, OR it's a mission (no city), OR no valid route
+			// Send RESPOND_TO_HAZARD directly
 			const result = await sendAction({
 				actionType: 'RESPOND_TO_HAZARD',
 				actionData: {
@@ -560,7 +594,13 @@
 					spendEngineers
 				}
 			});
-			if (!result.success) {
+			if (result.success) {
+				if (isMission) {
+					showToast('Mission completed!', 'success');
+				} else if (!willPass) {
+					showToast('Launch aborted - ship returns to hangar', 'info');
+				}
+			} else {
 				showToast(result.error || 'Failed to respond to hazard', 'error');
 			}
 		}
@@ -568,8 +608,23 @@
 
 	// Market/reveal phase derived values
 	$: isRevealPhase = $gameState?.phase === 'reveal';
+	$: isAgeTransitionDesignBureauPhase = $gameState?.phase === 'age_transition_design_bureau';
 	// Player is in purchase selection when they've revealed (hasPassed) or phase is reveal
 	$: isInPurchaseSelection = $myState?.hasPassed === true || isRevealPhase;
+
+	// Auto-enter design bureau mode for age transition phase
+	$: {
+		if (isAgeTransitionDesignBureauPhase && $isMyTurn && !designBureauMode && $myState?.blueprint) {
+			// Check if we haven't already completed this phase
+			const completedPlayers = $gameState?.ageTransitionDesignBureau?.completedPlayers || [];
+			if (!completedPlayers.includes($effectiveUserId || '')) {
+				designBureauMode = true;
+				pendingBlueprint = structuredClone($myState.blueprint);
+				designBureauCardIndex = -1; // Special marker for age transition (no card used)
+				activeTab = 'blueprint';
+			}
+		}
+	}
 	$: isMarketInteractive = isInPurchaseSelection;
 	$: hasPendingPurchases = (pendingMarketPurchases.length > 0) || (pendingTechAcquisitions.length > 0);
 	$: marketCards = $gameState?.marketCards || [];
@@ -917,7 +972,9 @@
 					{#if designBureauMode}
 						<!-- Design Bureau editing mode -->
 						<p class="action-instruction">
-							{#if selectedTechTileId}
+							{#if isAgeTransitionDesignBureauPhase}
+								<strong>Age Transition:</strong> Fill empty Frame and Fabric slots
+							{:else if selectedTechTileId}
 								Click a highlighted slot to place the tile
 							{:else}
 								Select a tech tile below, then click a slot
@@ -930,11 +987,13 @@
 						{/if}
 						<div class="design-bureau-buttons">
 							<button class="btn primary w-full" on:click={handleDesignBureauDone}>
-								Done
+								{isAgeTransitionDesignBureauPhase ? 'Continue to Next Age' : 'Done'}
 							</button>
-							<button class="btn secondary w-full" on:click={handleDesignBureauCancel}>
-								Cancel
-							</button>
+							{#if !isAgeTransitionDesignBureauPhase}
+								<button class="btn secondary w-full" on:click={handleDesignBureauCancel}>
+									Cancel
+								</button>
+							{/if}
 						</div>
 					{:else if isInPurchaseSelection && !isLaunchpadActive && !shipAwaitingHazard}
 						<!-- Purchase selection mode (after clicking Reveal) -->
@@ -1150,6 +1209,10 @@
 			on:select={handleCitySelect}
 			on:cancel={handleCityModalCancel}
 		/>
+	{/if}
+
+	{#if $isGameComplete}
+		<GameComplete />
 	{/if}
 {/if}
 
