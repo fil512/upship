@@ -684,7 +684,9 @@
 					<!-- Instruction text at top -->
 					{#if isWorkerPlacementPhase && !isLaunchpadActive && !shipAwaitingHazard}
 						<p class="action-instruction">
-							{#if selectedCardIndex !== null}
+							{#if ($myState?.agentsRemaining || 0) <= 0}
+								No agents available. Click Reveal.
+							{:else if selectedCardIndex !== null}
 								Select a location to place your agent
 							{:else}
 								Select a card, or click Reveal to exit worker placement
