@@ -439,7 +439,8 @@
 	// Calculate projected influence and research at reveal time
 	// Per Section 5.1: Research = Research Level + Engineers + card reveal bonuses
 	// Influence = card reveal bonuses only
-	$: projectedReveal = (() => {
+	// Subtract any pending purchases/acquisitions to show remaining budget
+	$: revealBudget = (() => {
 		const hand = $myState?.hand || [];
 		let influence = 0;
 		let research = ($myState?.researchLevel || 0) + ($myState?.engineers || 0);
@@ -452,7 +453,15 @@
 			}
 		}
 
-		return { influence, research };
+		// Subtract pending market purchases (influence cost)
+		const spentInfluence = pendingMarketPurchases.reduce((sum, p) => sum + (p.cost || 0), 0);
+		// Subtract pending tech acquisitions (research cost)
+		const spentResearch = pendingTechAcquisitions.reduce((sum, p) => sum + (p.cost || 0), 0);
+
+		return {
+			influence: influence - spentInfluence,
+			research: research - spentResearch
+		};
 	})();
 </script>
 
@@ -711,19 +720,19 @@
 								Select a card, or click Reveal to exit worker placement
 							{/if}
 						</p>
-						<!-- Reveal button with projected resources -->
+						<!-- Reveal button with budget indicators -->
 						{#if $isMyTurn}
 							<div class="reveal-row">
 								<button class="btn primary" on:click={handleReveal}>
 									Reveal
 								</button>
-								<div class="projected-resources">
-									<span class="resource influence" title="Influence at reveal">
-										<span class="icon">★</span>{projectedReveal.influence}
-									</span>
-									<span class="resource research" title="Research at reveal">
-										<span class="icon">⚗</span>{projectedReveal.research}
-									</span>
+								<div class="reveal-budget">
+									<div class="budget-icon diamond" title="Influence available at reveal">
+										<span class="budget-value">{revealBudget.influence}</span>
+									</div>
+									<div class="budget-icon square" title="Research available at reveal">
+										<span class="budget-value">{revealBudget.research}</span>
+									</div>
 								</div>
 							</div>
 							<!-- Undo only visible when available -->
@@ -1294,33 +1303,37 @@
 		flex: 1;
 	}
 
-	.projected-resources {
+	.reveal-budget {
 		display: flex;
-		flex-direction: column;
-		gap: 2px;
-		font-size: 0.85rem;
-		font-weight: 600;
+		gap: 6px;
 	}
 
-	.projected-resources .resource {
+	.reveal-budget .budget-icon {
 		display: flex;
 		align-items: center;
-		gap: 4px;
-		padding: 2px 6px;
-		border-radius: 4px;
-		background: var(--color-bg-hover);
+		justify-content: center;
+		width: 32px;
+		height: 32px;
+		background: #888;
+		color: white;
 	}
 
-	.projected-resources .resource .icon {
-		font-size: 0.9rem;
+	.reveal-budget .budget-icon.diamond {
+		transform: rotate(45deg);
+		border-radius: 3px;
 	}
 
-	.projected-resources .resource.influence {
-		color: #e6b800;
+	.reveal-budget .budget-icon.diamond .budget-value {
+		transform: rotate(-45deg);
 	}
 
-	.projected-resources .resource.research {
-		color: #4da6ff;
+	.reveal-budget .budget-icon.square {
+		border-radius: 3px;
+	}
+
+	.reveal-budget .budget-value {
+		font-size: 1rem;
+		font-weight: 700;
 	}
 
 	.action-hint {
