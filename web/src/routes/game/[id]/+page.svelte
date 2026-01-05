@@ -1305,22 +1305,23 @@
 
 	.reveal-budget {
 		display: flex;
-		gap: 6px;
+		gap: 4px;
+		align-items: center;
 	}
 
 	.reveal-budget .budget-icon {
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		width: 32px;
-		height: 32px;
+		width: 24px;
+		height: 24px;
 		background: #888;
 		color: white;
 	}
 
 	.reveal-budget .budget-icon.diamond {
 		transform: rotate(45deg);
-		border-radius: 3px;
+		border-radius: 2px;
 	}
 
 	.reveal-budget .budget-icon.diamond .budget-value {
@@ -1328,11 +1329,11 @@
 	}
 
 	.reveal-budget .budget-icon.square {
-		border-radius: 3px;
+		border-radius: 2px;
 	}
 
 	.reveal-budget .budget-value {
-		font-size: 1rem;
+		font-size: 0.8rem;
 		font-weight: 700;
 	}
 
