@@ -72,7 +72,6 @@ const FACTION_CONFIG: Record<string, FactionConfig> = {
       component: 'dining_saloon'  // "Pre-Installed Luxury"
     },
     bonuses: { luxury: 1 }
-    // The Flaw: Red Tape - removed (swaps no longer limited)
   },
   usa: {
     // Rules 10.3: Duralumin Framework, Gelatinized Latex, Trapeze Fighter, Helium Handling
@@ -95,7 +94,6 @@ const FACTION_CONFIG: Record<string, FactionConfig> = {
       fabric: 'cotton_envelope'
     },
     bonuses: { speed: 1 },
-    // Starting Advantage: Rapid Refit - removed (swaps no longer limited)
     // The Flaw: Low Ceiling - fewer payload slots (handled in blueprint)
     lowCeiling: true
   }

@@ -357,10 +357,10 @@ async function executeBotAgeTransition(
   const player = state.players[botId];
   if (!player) return false;
 
-  // Get design bureau swaps (mandatory during age transition)
-  const swaps = botService.getDesignBureauSwaps(player, state.age, true);
+  // Get desired blueprint configuration (mandatory during age transition)
+  const blueprint = botService.getDesignBureauBlueprint(player, state.age, true);
 
-  return await executeBotAction(io, gameId, botId, 'AGE_TRANSITION_DESIGN_BUREAU', { swaps }, version);
+  return await executeBotAction(io, gameId, botId, 'AGE_TRANSITION_DESIGN_BUREAU', { blueprint }, version);
 }
 
 /**

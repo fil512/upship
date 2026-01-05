@@ -895,7 +895,7 @@ const commands: Record<string, CommandFunction> = {
     // Parse key=value pairs into actionData
     const actionData: Record<string, unknown> = {};
     // Keys that should be parsed as arrays (comma-separated)
-    const arrayKeys = ['techAcquisitions', 'marketPurchases', 'swaps'];
+    const arrayKeys = ['techAcquisitions', 'marketPurchases'];
 
     for (const arg of rest) {
       const [key, value] = arg.split('=');

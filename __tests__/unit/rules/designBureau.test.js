@@ -3,8 +3,7 @@
  *
  * Per Section 6.2: Modify your Blueprint.
  * Cost: Free.
- * Limit: 2 swaps per visit (Italy gets 4; Modular Frame grants +2; Mechanic cards +1).
- * Each swap is one installation or removal.
+ * Players send a blueprint object describing the desired final state.
  *
  * Per Section 5.1: Location actions execute IMMEDIATELY when placing an agent.
  */
@@ -16,7 +15,7 @@ const { processInstallUpgrade, processRemoveUpgrade } = require('../../../server
 describe('Rules Compliance - Design Bureau (Section 6.2)', () => {
 
   describe('Atomic Execution: Blueprint modifications during agent placement', () => {
-    it('should install an upgrade when placing at design_bureau with swaps array', () => {
+    it('should install an upgrade when placing at design_bureau with blueprint object', () => {
       const state = createTestGameState();
       state.phase = 'worker_placement';
       state.age = 1;
@@ -43,24 +42,21 @@ describe('Rules Compliance - Design Bureau (Section 6.2)', () => {
       state.playerOrder = [playerId];
       state.groundBoard = { placements: {} };
 
-      // Place agent at design_bureau with one install swap
+      // Place agent at design_bureau with desired blueprint state
       // Note: maybach_cx upgrade requires maybach_engine technology
       const result = processPlaceAgent(state, playerId, {
         locationId: 'design_bureau',
         cardIndex: 0,
-        swaps: JSON.stringify([{
-          action: 'install',
-          slotType: 'drive',
-          slotIndex: 0,
-          upgradeId: 'maybach_cx'
-        }])
+        blueprint: {
+          driveSlots: ['maybach_cx']
+        }
       });
 
       // Upgrade should be installed
       expect(result.newState.players[playerId].blueprint.driveSlots[0]).toBe('maybach_cx');
     });
 
-    it('should handle multiple swaps in one visit', () => {
+    it('should handle replacing an upgrade in one visit', () => {
       const state = createTestGameState();
       state.phase = 'worker_placement';
       state.age = 1;
@@ -68,7 +64,7 @@ describe('Rules Compliance - Design Bureau (Section 6.2)', () => {
       const playerId = '1';
       const playerState = state.players[playerId];
 
-      // Install an existing upgrade to remove (basic_engine requires daimler_engine tech)
+      // Install an existing upgrade to replace
       playerState.blueprint.driveSlots[0] = 'basic_engine';
       // Add required technologies
       playerState.techCards = ['daimler_engine', 'maybach_engine'];
@@ -88,22 +84,20 @@ describe('Rules Compliance - Design Bureau (Section 6.2)', () => {
       state.playerOrder = [playerId];
       state.groundBoard = { placements: {} };
 
-      // Place agent with 2 swaps: remove old, install new
+      // Place agent with desired blueprint - replaces old upgrade with new
       // maybach_cx upgrade requires maybach_engine technology
       const result = processPlaceAgent(state, playerId, {
         locationId: 'design_bureau',
         cardIndex: 0,
-        swaps: JSON.stringify([
-          { action: 'remove', slotType: 'drive', slotIndex: 0 },
-          { action: 'install', slotType: 'drive', slotIndex: 0, upgradeId: 'maybach_cx' }
-        ])
+        blueprint: {
+          driveSlots: ['maybach_cx']
+        }
       });
 
       expect(result.newState.players[playerId].blueprint.driveSlots[0]).toBe('maybach_cx');
     });
 
-    // NOTE: Swap limit test removed - players can now make unlimited modifications at Design Bureau
-    it('should allow unlimited modifications', () => {
+    it('should allow multiple modifications in one visit', () => {
       const state = createTestGameState();
       state.phase = 'worker_placement';
       state.age = 1;
@@ -132,24 +126,22 @@ describe('Rules Compliance - Design Bureau (Section 6.2)', () => {
       state.playerOrder = [playerId];
       state.groundBoard = { placements: {} };
 
-      // All 3 swaps should succeed (no limit)
+      // Place agent with desired blueprint state for all 3 slots
       const result = processPlaceAgent(state, playerId, {
         locationId: 'design_bureau',
         cardIndex: 0,
-        swaps: JSON.stringify([
-          { action: 'install', slotType: 'drive', slotIndex: 0, upgradeId: 'basic_engine' },
-          { action: 'install', slotType: 'drive', slotIndex: 1, upgradeId: 'maybach_cx' },
-          { action: 'install', slotType: 'drive', slotIndex: 2, upgradeId: 'efficient_propeller' }
-        ])
+        blueprint: {
+          driveSlots: ['basic_engine', 'maybach_cx', 'efficient_propeller']
+        }
       });
 
-      // All 3 should succeed
+      // All 3 should be set
       expect(result.newState.players[playerId].blueprint.driveSlots[0]).toBe('basic_engine');
       expect(result.newState.players[playerId].blueprint.driveSlots[1]).toBe('maybach_cx');
       expect(result.newState.players[playerId].blueprint.driveSlots[2]).toBe('efficient_propeller');
     });
 
-    it('should allow 0 swaps (just visit location)', () => {
+    it('should allow visiting with empty blueprint (no modifications)', () => {
       const state = createTestGameState();
       state.phase = 'worker_placement';
 
@@ -172,18 +164,18 @@ describe('Rules Compliance - Design Bureau (Section 6.2)', () => {
       state.playerOrder = [playerId];
       state.groundBoard = { placements: {} };
 
-      // Place with no swaps
+      // Place with empty blueprint
       const result = processPlaceAgent(state, playerId, {
         locationId: 'design_bureau',
         cardIndex: 0,
-        swaps: JSON.stringify([])
+        blueprint: {}
       });
 
       // Should succeed (just visited)
       expect(result.newState.groundBoard.placements.design_bureau).toBeDefined();
     });
 
-    it('should handle missing swaps param as visiting without modifications', () => {
+    it('should handle missing blueprint param as visiting without modifications', () => {
       const state = createTestGameState();
       state.phase = 'worker_placement';
 
@@ -206,7 +198,7 @@ describe('Rules Compliance - Design Bureau (Section 6.2)', () => {
       state.playerOrder = [playerId];
       state.groundBoard = { placements: {} };
 
-      // Place without swaps param
+      // Place without blueprint param
       const result = processPlaceAgent(state, playerId, {
         locationId: 'design_bureau',
         cardIndex: 0

@@ -26,7 +26,7 @@ This starts:
 Run this command ONCE to create the game:
 
 ```bash
-UPSHIP_LOCAL=1 python -m playtest setup-interactive
+python -m playtest setup-interactive
 ```
 
 This creates a game with 3 AI players and waits for kenny to join.
@@ -55,7 +55,7 @@ Use the playtest tool to check status and play AI turns:
 ### Check Whose Turn
 
 ```bash
-UPSHIP_LOCAL=1 python -m playtest whose-turn
+python -m playtest whose-turn
 ```
 
 Shows whose turn it is and the current phase.
@@ -63,7 +63,7 @@ Shows whose turn it is and the current phase.
 ### Check Current State
 
 ```bash
-UPSHIP_LOCAL=1 python -m playtest summary
+python -m playtest summary
 ```
 
 Shows all players' status including resources and ships.
@@ -73,7 +73,7 @@ Shows all players' status including resources and ships.
 The easiest way to play - run all AI turns automatically until it's kenny's turn:
 
 ```bash
-UPSHIP_LOCAL=1 python -m playtest autoplay-until britain
+python -m playtest autoplay-until britain
 ```
 
 This will:
@@ -86,9 +86,9 @@ This will:
 To play just one turn for a specific AI faction:
 
 ```bash
-UPSHIP_LOCAL=1 python -m playtest autoturn germany
-UPSHIP_LOCAL=1 python -m playtest autoturn usa
-UPSHIP_LOCAL=1 python -m playtest autoturn italy
+python -m playtest autoturn germany
+python -m playtest autoturn usa
+python -m playtest autoturn italy
 ```
 
 This only works if it's actually that faction's turn.
@@ -170,11 +170,11 @@ Take your action in the browser and say "done" when finished!
 ## Typical Game Flow
 
 1. Run `./scripts/restart_server.sh`
-2. Run `UPSHIP_LOCAL=1 python -m playtest setup-interactive` (in background)
+2. Run `python -m playtest setup-interactive` (in background)
 3. Tell kenny the game is ready with the game name and URL
 4. **STOP and WAIT** for kenny to say "joined" (do NOT proceed until they confirm!)
 5. **Game Loop:**
-   - Run `UPSHIP_LOCAL=1 python -m playtest autoplay-until britain`
+   - Run `python -m playtest autoplay-until britain`
    - Tell kenny it's their turn with status info
    - **WAIT** for kenny to say "done"
    - Repeat

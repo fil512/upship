@@ -356,7 +356,7 @@ describe('Rules Compliance - Age Transitions', () => {
 
       // Player 1 installs an upgrade - filling the second frame slot with a duplicate
       const result = processAgeTransitionDesignBureau(state, '1', {
-        swaps: [{ action: 'install', slotType: 'frame', slotIndex: 1, upgradeId: 'duralumin_frame' }]
+        blueprint: { frameSlots: ['duralumin_frame', 'duralumin_frame'] }
       });
 
       expect(result.newState.players['1'].blueprint.frameSlots[1]).toBe('duralumin_frame');
@@ -385,7 +385,7 @@ describe('Rules Compliance - Age Transitions', () => {
 
       // Try to install same upgrade in second slot (duplicates allowed)
       const result = processAgeTransitionDesignBureau(state, '1', {
-        swaps: [{ action: 'install', slotType: 'frame', slotIndex: 1, upgradeId: 'duralumin_frame' }]
+        blueprint: { frameSlots: ['duralumin_frame', 'duralumin_frame'] }
       });
 
       // Both slots should now have the same upgrade
@@ -416,12 +416,12 @@ describe('Rules Compliance - Age Transitions', () => {
 
       performAgeTransition(state, 2);
 
-      // Player 1 submits (no swaps)
-      processAgeTransitionDesignBureau(state, '1', { swaps: [] });
+      // Player 1 submits (no changes)
+      processAgeTransitionDesignBureau(state, '1', {});
       expect(state.phase).toBe('age_transition_design_bureau');  // Still in phase
 
-      // Player 2 submits (no swaps)
-      const result = processAgeTransitionDesignBureau(state, '2', { swaps: [] });
+      // Player 2 submits (no changes)
+      const result = processAgeTransitionDesignBureau(state, '2', {});
 
       // Transition should now be complete
       expect(result.newState.phase).toBe('worker_placement');

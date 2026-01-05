@@ -394,7 +394,7 @@ function startAgeTransition(state: AgeTransitionState, newAge: number): void {
 
 /**
  * Complete age transition after free Design Bureau phase
- * Called when all players have completed their free swaps
+ * Called when all players have completed their blueprint modifications
  */
 function completeAgeTransition(state: AgeTransitionState): void {
   const newAge = state.ageTransitionDesignBureau?.newAge || state.age + 1;

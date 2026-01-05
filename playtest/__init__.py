@@ -26,7 +26,7 @@ from .strategy import (
     find_playable_card,
     find_strategic_placement,
     evaluate_launch_readiness,
-    get_design_bureau_swaps,
+    get_design_bureau_blueprint,
 )
 
 __all__ = [
@@ -60,7 +60,7 @@ __all__ = [
     'find_playable_card',
     'find_strategic_placement',
     'evaluate_launch_readiness',
-    'get_design_bureau_swaps',
+    'get_design_bureau_blueprint',
 
     # Classes
     'StuckDetector',

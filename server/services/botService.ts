@@ -27,11 +27,12 @@ export interface LaunchDecision {
   gasType: 'hydrogen' | 'helium';
 }
 
-export interface DesignBureauSwap {
-  action: 'install';
-  slotType: string;
-  slotIndex: number;
-  upgradeId: string;
+// Blueprint changes for Design Bureau action
+export interface BlueprintChanges {
+  frameSlots?: (string | null)[];
+  fabricSlots?: (string | null)[];
+  driveSlots?: (string | null)[];
+  componentSlots?: (string | null)[];
 }
 
 export interface LaunchReadiness {
@@ -104,115 +105,118 @@ export function calculateShipStats(
 }
 
 /**
- * Determine which upgrades to install at Design Bureau
+ * Determine the desired blueprint configuration for Design Bureau action.
+ * Returns the complete blueprint with all slots filled, or null if no changes needed.
+ *
+ * For age transitions, all empty frame/fabric slots MUST be filled.
+ * For normal play, bot will fill empty slots opportunistically.
  */
-export function getDesignBureauSwaps(
+export function getDesignBureauBlueprint(
   player: PlayerState,
   currentAge: number = 1,
   isAgeTransition: boolean = false
-): DesignBureauSwap[] {
-  const swaps: DesignBureauSwap[] = [];
-
+): BlueprintChanges | null {
   if (!player || !player.blueprint) {
-    return swaps;
+    return null;
   }
 
   const blueprint = player.blueprint;
   const technologies = player.techCards || [];
 
-  if (technologies.length === 0) {
-    return swaps;
+  // Start with current blueprint state
+  const newBlueprint: BlueprintChanges = {
+    frameSlots: [...(blueprint.frameSlots || [])],
+    fabricSlots: [...(blueprint.fabricSlots || [])],
+    driveSlots: [...(blueprint.driveSlots || [])],
+    componentSlots: [...(blueprint.componentSlots || [])]
+  };
+
+  // Find empty slot indices
+  const emptyFrameIndices = newBlueprint.frameSlots!
+    .map((s, i) => s === null ? i : -1)
+    .filter(i => i !== -1);
+  const emptyFabricIndices = newBlueprint.fabricSlots!
+    .map((s, i) => s === null ? i : -1)
+    .filter(i => i !== -1);
+  const emptyDriveIndices = newBlueprint.driveSlots!
+    .map((s, i) => s === null ? i : -1)
+    .filter(i => i !== -1);
+
+  // No empty slots = no changes needed
+  if (emptyFrameIndices.length === 0 && emptyFabricIndices.length === 0 && emptyDriveIndices.length === 0) {
+    return null;
   }
 
-  const frameSlots = blueprint.frameSlots || [];
-  const fabricSlots = blueprint.fabricSlots || [];
-  const driveSlots = blueprint.driveSlots || [];
-
-  const emptyFrameIndices = frameSlots
-    .map((s, i) => s === null ? i : -1)
-    .filter(i => i !== -1);
-  const emptyFabricIndices = fabricSlots
-    .map((s, i) => s === null ? i : -1)
-    .filter(i => i !== -1);
-  const emptyDriveIndices = driveSlots
-    .map((s, i) => s === null ? i : -1)
-    .filter(i => i !== -1);
+  // If no technologies, can't fill anything
+  if (technologies.length === 0) {
+    // For age transition, return current state (server will validate)
+    return isAgeTransition ? newBlueprint : null;
+  }
 
   // Track installed drive upgrades (no duplicates allowed)
-  const installedDriveUpgrades = new Set(driveSlots.filter(s => s !== null));
+  const installedDriveUpgrades = new Set(newBlueprint.driveSlots!.filter(s => s !== null));
 
   // Collect available upgrades from technologies
-  const frameUpgrades: Array<{ upgradeId: string }> = [];
-  const fabricUpgrades: Array<{ upgradeId: string }> = [];
-  const driveUpgrades: Array<{ upgradeId: string }> = [];
+  const frameUpgrades: string[] = [];
+  const fabricUpgrades: string[] = [];
+  const driveUpgrades: string[] = [];
 
   for (const techId of technologies) {
     const upgradeInfo = getUpgradeForTech(techId);
     if (upgradeInfo) {
       const slotType = upgradeInfo.slotType;
       if (slotType === 'frame') {
-        frameUpgrades.push({ upgradeId: upgradeInfo.id });
+        frameUpgrades.push(upgradeInfo.id);
       } else if (slotType === 'fabric') {
-        fabricUpgrades.push({ upgradeId: upgradeInfo.id });
+        fabricUpgrades.push(upgradeInfo.id);
       } else if (slotType === 'drive') {
         if (!installedDriveUpgrades.has(upgradeInfo.id)) {
-          driveUpgrades.push({ upgradeId: upgradeInfo.id });
+          driveUpgrades.push(upgradeInfo.id);
         }
       }
     }
   }
 
-  // Expand frame/fabric upgrades for duplicates if needed
-  function expandForDuplicates(upgrades: Array<{ upgradeId: string }>, emptyCount: number): Array<{ upgradeId: string }> {
-    if (upgrades.length === 0 || emptyCount === 0) return upgrades;
-    const result = [...upgrades];
-    while (result.length < emptyCount && upgrades.length > 0) {
-      result.push({ ...upgrades[0] });
+  // Track changes made
+  let changesMade = false;
+
+  // Fill empty frame slots (duplicates allowed for frame/fabric)
+  for (const idx of emptyFrameIndices) {
+    if (frameUpgrades.length > 0) {
+      newBlueprint.frameSlots![idx] = frameUpgrades[0]; // Reuse first available
+      changesMade = true;
     }
-    return result;
   }
 
-  const expandedFrame = expandForDuplicates(frameUpgrades, emptyFrameIndices.length);
-  const expandedFabric = expandForDuplicates(fabricUpgrades, emptyFabricIndices.length);
-
-  // Determine priority based on context
-  type UpgradeOrder = [Array<{ upgradeId: string }>, number[], string];
-  let upgradeOrder: UpgradeOrder[];
-
-  if (isAgeTransition || currentAge === 1) {
-    // Age transition or Age I: structural slots first
-    upgradeOrder = [
-      [expandedFrame, [...emptyFrameIndices], 'frame'],
-      [expandedFabric, [...emptyFabricIndices], 'fabric'],
-      [driveUpgrades, [...emptyDriveIndices], 'drive']
-    ];
-  } else {
-    // Age II/III: prioritize drive for range/speed
-    upgradeOrder = [
-      [driveUpgrades, [...emptyDriveIndices], 'drive'],
-      [expandedFrame, [...emptyFrameIndices], 'frame'],
-      [expandedFabric, [...emptyFabricIndices], 'fabric']
-    ];
+  // Fill empty fabric slots
+  for (const idx of emptyFabricIndices) {
+    if (fabricUpgrades.length > 0) {
+      newBlueprint.fabricSlots![idx] = fabricUpgrades[0]; // Reuse first available
+      changesMade = true;
+    }
   }
 
-  // Apply swap limit (none for age transition, 2 for normal)
-  const maxSwaps = isAgeTransition ? Infinity : 2;
-
-  for (const [upgrades, emptyIndices, slotType] of upgradeOrder) {
-    for (const upgrade of upgrades) {
-      if (emptyIndices.length > 0 && swaps.length < maxSwaps) {
-        const slotIndex = emptyIndices.shift()!;
-        swaps.push({
-          action: 'install',
-          slotType,
-          slotIndex,
-          upgradeId: upgrade.upgradeId
-        });
+  // Fill empty drive slots (no duplicates)
+  let driveIdx = 0;
+  for (const idx of emptyDriveIndices) {
+    if (driveIdx < driveUpgrades.length) {
+      const upgradeId = driveUpgrades[driveIdx];
+      if (!installedDriveUpgrades.has(upgradeId)) {
+        newBlueprint.driveSlots![idx] = upgradeId;
+        installedDriveUpgrades.add(upgradeId);
+        changesMade = true;
+        driveIdx++;
       }
     }
   }
 
-  return swaps;
+  // For age transition, always return the blueprint (even if incomplete - server validates)
+  // For normal play, only return if we made changes
+  if (isAgeTransition) {
+    return newBlueprint;
+  }
+
+  return changesMade ? newBlueprint : null;
 }
 
 /**
@@ -483,8 +487,8 @@ function buildLocationAction(
       return { buildCount: 1 };
 
     case 'design_bureau': {
-      const swaps = getDesignBureauSwaps(player, state.age || 1);
-      return swaps.length > 0 ? { swaps } : undefined;
+      const blueprint = getDesignBureauBlueprint(player, state.age || 1);
+      return blueprint ? { blueprint } : undefined;
     }
 
     case 'gas_depot': {
@@ -623,7 +627,7 @@ export function getHazardResponse(
 module.exports = {
   findStrategicPlacement,
   evaluateLaunchReadiness,
-  getDesignBureauSwaps,
+  getDesignBureauBlueprint,
   findLaunchDecision,
   getRevealAcquisitions,
   getHazardResponse,

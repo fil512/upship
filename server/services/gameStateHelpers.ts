@@ -336,11 +336,8 @@ function processCardEffect(
 
   switch (effect) {
     case '+1 swap':
-      // Mechanic: grants +1 swap at Design Bureau
-      // Track bonus swaps for this placement
-      if (!playerState.bonusSwaps) playerState.bonusSwaps = 0;
-      playerState.bonusSwaps += 1;
-      return { success: true, message: '+1 swap this action' };
+      // Legacy card effect - no longer applicable (blueprint modifications unlimited)
+      return { success: true, message: 'Effect no longer applicable' };
 
     case 'Draw 1 card': {
       // Draftsman: Draw 1 card immediately

@@ -281,7 +281,6 @@ class Player:
     routes: list[str] = field(default_factory=list)
     blueprint: Blueprint | None = None
     bonuses: dict[str, int] = field(default_factory=dict)
-    upgrade_swaps: int = 2
     banned_technologies: list[str] = field(default_factory=list)
 
     @classmethod
@@ -334,7 +333,6 @@ class Player:
             routes=data.get('routes', []),
             blueprint=blueprint,
             bonuses=data.get('bonuses', {}),
-            upgrade_swaps=data.get('upgradeSwaps', 2),
             banned_technologies=data.get('bannedTechCards', data.get('bannedTechnologies', [])),
         )
 

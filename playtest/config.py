@@ -42,22 +42,24 @@ def _load_config_file() -> dict:
 _file_config = _load_config_file()
 
 # Server configuration
-# Use local server if:
-# 1. UPSHIP_LOCAL=1 in .upship-config file, OR
-# 2. UPSHIP_LOCAL=1 environment variable, OR
-# 3. --local flag on command line
-USE_LOCAL = (
-    _file_config.get("UPSHIP_LOCAL") == "1" or
-    os.environ.get("UPSHIP_LOCAL") == "1" or
-    "--local" in sys.argv
+# Use production server if:
+# 1. UPSHIP_PROD=1 in .upship-config file, OR
+# 2. UPSHIP_PROD=1 environment variable, OR
+# 3. --prod flag on command line
+# Otherwise, use local server by default (development mode)
+USE_PROD = (
+    _file_config.get("UPSHIP_PROD") == "1" or
+    os.environ.get("UPSHIP_PROD") == "1" or
+    "--prod" in sys.argv
 )
-API_BASE = "http://localhost:3000" if USE_LOCAL else "https://upship-production.up.railway.app"
+USE_LOCAL = not USE_PROD  # Backwards compatibility
+API_BASE = "https://upship-production.up.railway.app" if USE_PROD else "http://localhost:3000"
 # Frontend URL (SvelteKit dev server on 5173, production served from Express on 3000)
-FRONTEND_URL = "http://localhost:5173" if USE_LOCAL else "https://upship-production.up.railway.app"
+FRONTEND_URL = "https://upship-production.up.railway.app" if USE_PROD else "http://localhost:5173"
 
-# Clean up --local from argv
-if "--local" in sys.argv:
-    sys.argv = [a for a in sys.argv if a != "--local"]
+# Clean up --prod from argv
+if "--prod" in sys.argv:
+    sys.argv = [a for a in sys.argv if a != "--prod"]
 
 # Players and factions
 PLAYERS = ["playtest_germany", "playtest_britain", "playtest_usa", "playtest_italy"]

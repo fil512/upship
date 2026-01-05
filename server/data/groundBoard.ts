@@ -14,7 +14,6 @@ export interface LocationAction {
   type: string;
   cost?: number | string;
   effect: string;
-  swaps?: number;
   maxShips?: number;
   officerCost?: number;
   engineerCost?: number;
@@ -57,7 +56,6 @@ export const GROUND_BOARD_LOCATIONS: Record<string, GroundBoardLocation> = {
     action: {
       type: 'MODIFY_BLUEPRINT',
       cost: 0,
-      swaps: 2, // Base swaps allowed
       effect: 'Install or remove upgrade tiles'
     }
   },

@@ -71,8 +71,6 @@ describe('GameStateService', () => {
         expect(FACTION_CONFIG.britain.startingTechCards).toContain('imperial_mooring');
       });
 
-      // NOTE: Upgrade swaps test removed - swap limits have been eliminated
-
       it('should have pre-installed dining saloon', () => {
         expect(FACTION_CONFIG.britain.startingTechTiles.component).toBe('dining_saloon');
       });
@@ -98,8 +96,6 @@ describe('GameStateService', () => {
         expect(FACTION_CONFIG.italy.startingTechCards).toContain('rubberized_cotton');
         expect(FACTION_CONFIG.italy.startingTechCards).toContain('articulated_keel');
       });
-
-      // NOTE: Upgrade swaps test removed - swap limits have been eliminated
 
       it('should have low ceiling flaw', () => {
         expect(FACTION_CONFIG.italy.lowCeiling).toBe(true);
@@ -172,9 +168,6 @@ describe('GameStateService', () => {
       expect(germanyPlayer.gasCubes.hydrogen).toBe(2);
       expect(germanyPlayer.gasCubes.helium).toBe(0);
     });
-
-    // NOTE: Upgrade swaps test removed - swap limits have been eliminated
-    // Players can now make unlimited modifications at Design Bureau
 
     it('should draw 5 cards for each player', async () => {
       mockClient.query

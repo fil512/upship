@@ -82,7 +82,6 @@ interface PlaceAgentData {
   levels?: number;
   policyCount?: number;
   officerCount?: number;
-  swaps?: string | unknown[];
   blueprint?: string | Record<string, unknown>;
 }
 
@@ -95,7 +94,6 @@ interface LocationActionOptions {
   levels?: number;
   policyCount?: number;
   officerCount?: number;
-  swaps?: string | unknown[];
   blueprint?: string | Record<string, unknown>;
 }
 
@@ -365,9 +363,9 @@ function executeLocationAction(
     }
 
     case 'design_bureau': {
-      const { blueprint, swaps: swapsJson } = options;
+      const { blueprint } = options;
 
-      // New declarative blueprint format (preferred)
+      // Blueprint format: { frameSlots: [...], fabricSlots: [...], ... }
       if (blueprint) {
         try {
           const blueprintData = typeof blueprint === 'string' ? JSON.parse(blueprint) : blueprint;
@@ -381,52 +379,8 @@ function executeLocationAction(
         }
       }
 
-      // Legacy swaps format (for backwards compatibility)
-      if (!swapsJson) {
-        return { success: true, message: 'Visited Design Bureau (no modifications)' };
-      }
-
-      let swapsArray: Array<{ slotType: string; slotIndex: number; action: string; upgradeId?: string }>;
-      try {
-        swapsArray = typeof swapsJson === 'string' ? JSON.parse(swapsJson) : swapsJson as typeof swapsArray;
-      } catch (_e) { // eslint-disable-line sonarjs/no-ignored-exceptions -- User-facing error returned
-        return { success: false, error: 'Invalid swaps format - expected JSON array' };
-      }
-
-      if (!Array.isArray(swapsArray) || swapsArray.length === 0) {
-        return { success: true, message: 'Visited Design Bureau (no modifications)' };
-      }
-
-      // Convert swaps to declarative blueprint format
-      const oldBlueprint = playerState.blueprint;
-      const newBlueprint: Record<string, (string | null)[]> = {
-        frameSlots: [...(oldBlueprint.frameSlots || [])],
-        fabricSlots: [...(oldBlueprint.fabricSlots || [])],
-        driveSlots: [...(oldBlueprint.driveSlots || [])],
-        componentSlots: [...(oldBlueprint.componentSlots || [])]
-      };
-
-      for (const swap of swapsArray) {
-        const slotKey = `${swap.slotType}Slots`;
-        if (!newBlueprint[slotKey]) continue;
-        if (swap.slotIndex < 0 || swap.slotIndex >= newBlueprint[slotKey].length) continue;
-
-        if (swap.action === 'install') {
-          newBlueprint[slotKey][swap.slotIndex] = swap.upgradeId || null;
-        } else if (swap.action === 'remove') {
-          newBlueprint[slotKey][swap.slotIndex] = null;
-        }
-      }
-
-      try {
-        processUpdateBlueprint(state, playerId, {
-          blueprint: newBlueprint,
-          _internal: true
-        });
-        return { success: true, message: 'Blueprint updated via swaps' };
-      } catch (error) {
-        return { success: false, error: (error as Error).message };
-      }
+      // No modifications requested
+      return { success: true, message: 'Visited Design Bureau (no modifications)' };
     }
 
     case 'construction_hall': {
@@ -659,7 +613,7 @@ function hasPlayableCards(state: GameState, playerId: string): boolean {
  * Place an agent on a Ground Board location
  */
 function processPlaceAgent(state: GameState, playerId: string, data: PlaceAgentData): ActionResult {
-  const { locationId, cardIndex, buildCount, gasType, gasAmount, crewType, crewCount, levels, policyCount, officerCount, swaps, blueprint } = data;
+  const { locationId, cardIndex, buildCount, gasType, gasAmount, crewType, crewCount, levels, policyCount, officerCount, blueprint } = data;
   const playerState = state.players[playerId];
 
   // Validate phase
@@ -752,7 +706,7 @@ function processPlaceAgent(state: GameState, playerId: string, data: PlaceAgentD
     playerId,
     type: 'debug'
   } as LogEntry);
-  const actionResult = executeLocationAction(state, playerId, locationId, discardedCard, { buildCount, gasType, gasAmount, crewType, crewCount, levels, policyCount, officerCount, swaps, blueprint });
+  const actionResult = executeLocationAction(state, playerId, locationId, discardedCard, { buildCount, gasType, gasAmount, crewType, crewCount, levels, policyCount, officerCount, blueprint });
   state.log.push({
     timestamp: new Date().toISOString(),
     message: `[DEBUG-AFTER] executeLocationAction returned: ${JSON.stringify(actionResult)}`,

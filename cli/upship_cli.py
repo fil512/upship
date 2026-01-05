@@ -642,7 +642,7 @@ class CLI:
 
         # Parse key=value pairs
         action_data = {}
-        array_keys = ['techAcquisitions', 'marketPurchases', 'swaps']
+        array_keys = ['techAcquisitions', 'marketPurchases']
 
         for arg in extra_args:
             if '=' not in arg:

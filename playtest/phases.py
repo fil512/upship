@@ -19,7 +19,7 @@ from .state import (
     get_player_data
 )
 from .strategy import (
-    find_strategic_placement, get_design_bureau_swaps, get_reveal_acquisitions,
+    find_strategic_placement, get_design_bureau_blueprint, get_reveal_acquisitions,
     evaluate_combat_mission_readiness, find_best_combat_mission
 )
 
@@ -589,6 +589,11 @@ def submit_reveal(player: str, game_id: str, logger: PlaytestLogger, reason: str
     result = client.reveal(player, game_id, tech_acquisitions=tech_ids or None)
 
     if result.success:
+        # After revealing, send END_TURN to advance to next placer and finalize purchases
+        end_result = client.end_turn(player, game_id)
+        if not end_result.success:
+            print(f"  {player}: END_TURN after reveal failed - {end_result.error}")
+
         post_state = result.game_state or get_state(game_id, player)
         post_player_id = get_player_id(player, post_state) if post_state else None
         post_player_data = post_state.get_player(post_player_id) if post_state and post_player_id else None
@@ -779,11 +784,10 @@ def _execute_placement(player: str, game_id: str, card: dict, location: dict, lo
         action_desc = f"placed at {loc_id} and built ship"
     elif loc_id == 'design_bureau':
         current_age = pre_state.age if pre_state else 1
-        swaps = get_design_bureau_swaps(pre_player_data, current_age) if pre_player_data else []
-        if swaps:
-            kwargs['swaps'] = swaps
-            upgrade_names = [s['upgradeId'] for s in swaps]
-            action_desc = f"placed at {loc_id} and installed {', '.join(upgrade_names)}"
+        blueprint = get_design_bureau_blueprint(pre_player_data, current_age) if pre_player_data else None
+        if blueprint:
+            kwargs['blueprint'] = blueprint
+            action_desc = f"placed at {loc_id} and updated blueprint"
     elif loc_id == 'gas_depot':
         gas_type = "helium" if player == "playtest_usa" else "hydrogen"
         kwargs['gasType'] = gas_type
@@ -1035,23 +1039,22 @@ def handle_age_transition_design_bureau(game_id: str, logger: PlaytestLogger) ->
     if not player_data:
         return False
 
-    # Calculate swaps for this player
+    # Calculate desired blueprint for this player
     # new_age is the age we're transitioning TO, so that's the appropriate priority
-    # is_age_transition=True ensures structural slots are filled first with no swap limit
-    swaps = get_design_bureau_swaps(player_data, new_age, is_age_transition=True)
+    # is_age_transition=True ensures structural slots are filled first
+    blueprint = get_design_bureau_blueprint(player_data, new_age, is_age_transition=True)
 
     # Submit the action
-    result = client.action(current_username, game_id, 'AGE_TRANSITION_DESIGN_BUREAU', swaps=swaps)
+    result = client.action(current_username, game_id, 'AGE_TRANSITION_DESIGN_BUREAU', blueprint=blueprint)
 
     if result.success:
         faction = get_faction_from_player(current_username).upper()
-        if swaps:
-            swap_desc = ", ".join(f"{s['upgradeId']} in {s['slotType']}[{s['slotIndex']}]" for s in swaps)
-            print(f"  {current_username}: Age {new_age} free upgrades: {swap_desc}")
-            logger.log_action(current_username, f"Age {new_age} free upgrades: {swap_desc}", "age_transition")
+        if blueprint:
+            print(f"  {current_username}: Age {new_age} blueprint updated")
+            logger.log_action(current_username, f"Age {new_age} blueprint updated", "age_transition")
         else:
-            print(f"  {current_username}: Age {new_age} free upgrades: none (no available upgrades)")
-            logger.log_action(current_username, f"Age {new_age} free upgrades: none", "age_transition")
+            print(f"  {current_username}: Age {new_age} blueprint unchanged")
+            logger.log_action(current_username, f"Age {new_age} blueprint unchanged", "age_transition")
         return True
     else:
         error_msg = result.error or "unknown error"
@@ -1067,5 +1070,5 @@ def handle_age_transition_design_bureau(game_id: str, logger: PlaytestLogger) ->
             if frame_empty or fabric_empty:
                 logger.log_action(None, f"  └─ Empty slots: Frame={frame_empty}, Fabric={fabric_empty}", "age_transition")
                 logger.log_action(None, f"  └─ Technologies: {player_data.technologies or []}", "age_transition")
-                logger.log_action(None, f"  └─ Attempted swaps: {swaps}", "age_transition")
+                logger.log_action(None, f"  └─ Attempted blueprint: {blueprint}", "age_transition")
         return False

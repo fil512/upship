@@ -507,7 +507,6 @@ class UpshipClient:
         game_id: str,
         tech_acquisitions: list[str] | None = None,
         market_purchases: list[int] | None = None,
-        swaps: list[dict[str, Any]] | None = None,
     ) -> ActionResult:
         """Complete the reveal phase actions.
 
@@ -516,7 +515,6 @@ class UpshipClient:
             game_id: The ID of the game.
             tech_acquisitions: List of technology IDs to acquire.
             market_purchases: List of market card indices to purchase.
-            swaps: List of upgrade swap operations.
 
         Returns:
             ActionResult with success status and updated game state.
@@ -526,8 +524,6 @@ class UpshipClient:
             kwargs['techAcquisitions'] = tech_acquisitions
         if market_purchases:
             kwargs['marketPurchases'] = market_purchases
-        if swaps:
-            kwargs['swaps'] = swaps
         return self.action(username, game_id, 'REVEAL', **kwargs)
 
     def no_more_launches(self, username: str, game_id: str) -> ActionResult:
@@ -728,3 +724,17 @@ class UpshipClient:
     def play_card(self, username: str, game_id: str, card_index: int) -> ActionResult:
         """Play a card from hand."""
         return self.action(username, game_id, 'PLAY_CARD', cardIndex=card_index)
+
+    def poke_bots(self, username: str, game_id: str) -> dict:
+        """Trigger bot execution for a stuck game.
+
+        This is useful when bots aren't executing after a server restart.
+
+        Args:
+            username: The authenticated username.
+            game_id: The ID of the game to poke.
+
+        Returns:
+            Response dict with success status and diagnostics.
+        """
+        return self._api_post(username, f'/api/state/{game_id}/poke')

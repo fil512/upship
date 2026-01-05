@@ -489,23 +489,14 @@ function processUpdateBlueprint(state: GameState, playerId: string, data: Update
   return { newState: state };
 }
 
-interface SwapAction {
-  slotType: string;
-  slotIndex: number;
-  action: 'install' | 'remove';
-  tileId?: string;
-  upgradeId?: string;  // Legacy support
-}
-
 interface AgeTransitionDesignBureauData {
   blueprint?: BlueprintChanges;
-  swaps?: SwapAction[];
 }
 
 /**
  * Process free Design Bureau action during age transition
  * Per Section 12.1 step 5: Each player gets a free Design Bureau action
- * No swap limits and no Hull Upgrade Rule charges during age transition.
+ * No Hull Upgrade Rule charges during age transition.
  */
 function processAgeTransitionDesignBureau(state: GameState, playerId: string, data: AgeTransitionDesignBureauData): ActionResult {
   const { completeAgeTransition } = require('./helpers/ageTransition');
@@ -533,48 +524,16 @@ function processAgeTransitionDesignBureau(state: GameState, playerId: string, da
   }
 
   const playerState = state.players[playerId];
-  const oldBlueprintAny = playerState.blueprint as unknown as Record<string, (string | null)[]>;
 
-  // Handle both old swaps format and new blueprint format for backwards compatibility
+  // Apply blueprint changes if provided
   if (data.blueprint) {
-    // New declarative blueprint format - process with skipHullRule
     processUpdateBlueprint(state, playerId, {
       blueprint: data.blueprint,
       _internal: true,
       skipHullRule: true
     });
-  } else if (data.swaps && data.swaps.length > 0) {
-    // Legacy swaps format - convert to blueprint format
-    const newBlueprint: BlueprintChanges = {
-      frameSlots: [...(oldBlueprintAny.frameSlots || [])],
-      fabricSlots: [...(oldBlueprintAny.fabricSlots || [])],
-      driveSlots: [...(oldBlueprintAny.driveSlots || [])],
-      componentSlots: [...(oldBlueprintAny.componentSlots || [])]
-    };
-    const newBlueprintAny = newBlueprint as unknown as Record<string, (string | null)[]>;
-
-    // Apply swaps to build new blueprint
-    for (const swap of data.swaps) {
-      const slotKey = `${swap.slotType}Slots`;
-      if (!newBlueprintAny[slotKey]) continue;
-      if (swap.slotIndex < 0 || swap.slotIndex >= newBlueprintAny[slotKey].length) continue;
-
-      if (swap.action === 'install') {
-        // Support both tileId (new) and upgradeId (legacy)
-        newBlueprintAny[slotKey][swap.slotIndex] = swap.tileId || swap.upgradeId || null;
-      } else if (swap.action === 'remove') {
-        newBlueprintAny[slotKey][swap.slotIndex] = null;
-      }
-    }
-
-    // Process the converted blueprint
-    processUpdateBlueprint(state, playerId, {
-      blueprint: newBlueprint,
-      _internal: true,
-      skipHullRule: true
-    });
   }
-  // If neither blueprint nor swaps, player is skipping their free action
+  // If no blueprint provided, player is keeping their current configuration
 
   // Validate blueprint is complete (no empty frame/fabric slots)
   const validation = validateBlueprintComplete(playerState.blueprint);

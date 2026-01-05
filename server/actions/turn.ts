@@ -282,6 +282,13 @@ function processEndTurn(state: GameState, playerId: string): ActionResult {
       }
       break;
 
+    case 'age_transition_design_bureau': {
+      // During age transition, END_TURN completes the free Design Bureau action
+      // This delegates to processAgeTransitionDesignBureau with no changes
+      const { processAgeTransitionDesignBureau } = require('./blueprint');
+      return processAgeTransitionDesignBureau(state, playerId, {});
+    }
+
     default:
       // Fallback for any other phase - advance player
       state.currentPlayerIndex = (state.currentPlayerIndex + 1) % state.playerOrder.length;

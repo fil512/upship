@@ -123,6 +123,5 @@ describe('Rules Compliance - Blueprint System', () => {
     });
   });
 
-  // NOTE: GAP-033 (swap limits) and GAP-047 (Modular Frame extra swaps) tests removed
-  // Swap limits have been eliminated - players can make unlimited modifications at Design Bureau
+  // NOTE: Design Bureau allows unlimited blueprint modifications per visit
 });
