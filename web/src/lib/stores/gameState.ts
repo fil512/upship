@@ -50,6 +50,12 @@ export const isMyTurn = derived(
 			return true;
 		}
 
+		// Age transition design bureau phase uses ageTransitionDesignBureau.currentPlayerIndex
+		if ($state.phase === 'age_transition_design_bureau' && $state.ageTransitionDesignBureau) {
+			const idx = $state.ageTransitionDesignBureau.currentPlayerIndex ?? 0;
+			return $state.playerOrder[idx] === $userId;
+		}
+
 		// Other phases - use player order
 		return $state.playerOrder[$state.currentPlayerIndex] === $userId;
 	}
@@ -63,6 +69,12 @@ export const currentPlayerId = derived(gameState, ($state): string | null => {
 
 	if ($state.phase === 'worker_placement' && $state.workerPlacement) {
 		return $state.workerPlacement.placementOrder[$state.workerPlacement.currentPlacerIndex];
+	}
+
+	// Age transition design bureau phase uses ageTransitionDesignBureau.currentPlayerIndex
+	if ($state.phase === 'age_transition_design_bureau' && $state.ageTransitionDesignBureau) {
+		const idx = $state.ageTransitionDesignBureau.currentPlayerIndex ?? 0;
+		return $state.playerOrder[idx];
 	}
 
 	return $state.playerOrder[$state.currentPlayerIndex];

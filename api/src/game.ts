@@ -311,6 +311,12 @@ export interface GameState {
 	log: LogEntry[];      // Last 5 entries only (full log fetched on demand)
 	logCount?: number;    // Total log entry count
 	vp?: number;
+	// Age transition state (present during age_transition_design_bureau phase)
+	ageTransitionDesignBureau?: {
+		newAge: number;
+		completedPlayers: string[];
+		currentPlayerIndex: number;
+	};
 }
 
 // Game wrapper from API response

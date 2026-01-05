@@ -196,6 +196,13 @@ def debug_state(game_id: str = None) -> None:
         print(f"Worker Placement: {wp}")
         print(f"Player Order: {state_data.get('playerOrder')}")
 
+        # Age transition state (if present)
+        age_transition = state_data.get('ageTransition', {})
+        age_transition_db = state_data.get('ageTransitionDesignBureau', {})
+        if age_transition or age_transition_db:
+            print(f"\nAge Transition: {age_transition}")
+            print(f"Age Transition Design Bureau: {age_transition_db}")
+
         players = state_data.get('players', {})
         print("\nPlayers (id -> faction):")
         for pid, pdata in players.items():
