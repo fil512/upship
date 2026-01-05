@@ -435,6 +435,25 @@
 	$: pendingTechAcquisitions = $myState?.pendingTechAcquisitions || [];
 	$: playerInfluence = $myState?.influence || 0;
 	$: playerResearch = ($myState?.research || 0) + ($myState?.engineers || 0);
+
+	// Calculate projected influence and research at reveal time
+	// Per Section 5.1: Research = Research Level + Engineers + card reveal bonuses
+	// Influence = card reveal bonuses only
+	$: projectedReveal = (() => {
+		const hand = $myState?.hand || [];
+		let influence = 0;
+		let research = ($myState?.researchLevel || 0) + ($myState?.engineers || 0);
+
+		for (const card of hand) {
+			const revealData = card.reveal || card.revealBonus;
+			if (revealData) {
+				influence += revealData.influence || 0;
+				research += revealData.research || 0;
+			}
+		}
+
+		return { influence, research };
+	})();
 </script>
 
 <svelte:head>
@@ -692,11 +711,21 @@
 								Select a card, or click Reveal to exit worker placement
 							{/if}
 						</p>
-						<!-- Reveal button right after instruction -->
+						<!-- Reveal button with projected resources -->
 						{#if $isMyTurn}
-							<button class="btn primary w-full" on:click={handleReveal}>
-								Reveal
-							</button>
+							<div class="reveal-row">
+								<button class="btn primary" on:click={handleReveal}>
+									Reveal
+								</button>
+								<div class="projected-resources">
+									<span class="resource influence" title="Influence at reveal">
+										<span class="icon">★</span>{projectedReveal.influence}
+									</span>
+									<span class="resource research" title="Research at reveal">
+										<span class="icon">⚗</span>{projectedReveal.research}
+									</span>
+								</div>
+							</div>
 							<!-- Undo only visible when available -->
 							{#if $turnInfo.canUndo}
 								<button class="btn secondary w-full" on:click={handleUndo}>
@@ -1253,6 +1282,45 @@
 		text-align: center;
 		margin: 0;
 		padding: var(--spacing-xs) 0;
+	}
+
+	.reveal-row {
+		display: flex;
+		align-items: center;
+		gap: var(--spacing-sm);
+	}
+
+	.reveal-row .btn {
+		flex: 1;
+	}
+
+	.projected-resources {
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+		font-size: 0.85rem;
+		font-weight: 600;
+	}
+
+	.projected-resources .resource {
+		display: flex;
+		align-items: center;
+		gap: 4px;
+		padding: 2px 6px;
+		border-radius: 4px;
+		background: var(--color-bg-hover);
+	}
+
+	.projected-resources .resource .icon {
+		font-size: 0.9rem;
+	}
+
+	.projected-resources .resource.influence {
+		color: #e6b800;
+	}
+
+	.projected-resources .resource.research {
+		color: #4da6ff;
 	}
 
 	.action-hint {
