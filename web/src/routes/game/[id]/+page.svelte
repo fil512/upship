@@ -442,14 +442,16 @@
 	// Subtract any pending purchases/acquisitions to show remaining budget
 	$: revealBudget = (() => {
 		const hand = $myState?.hand || [];
-		let influence = 0;
-		let research = ($myState?.researchLevel || 0) + ($myState?.engineers || 0);
+		const researchLevel = $myState?.researchLevel || 0;
+		const engineers = $myState?.engineers || 0;
+		let cardInfluence = 0;
+		let cardResearch = 0;
 
 		for (const card of hand) {
 			const revealData = card.reveal || card.revealBonus;
 			if (revealData) {
-				influence += revealData.influence || 0;
-				research += revealData.research || 0;
+				cardInfluence += revealData.influence || 0;
+				cardResearch += revealData.research || 0;
 			}
 		}
 
@@ -458,9 +460,19 @@
 		// Subtract pending tech acquisitions (research cost)
 		const spentResearch = pendingTechAcquisitions.reduce((sum, p) => sum + (p.cost || 0), 0);
 
+		const totalInfluence = cardInfluence;
+		const totalResearch = researchLevel + engineers + cardResearch;
+
 		return {
-			influence: influence - spentInfluence,
-			research: research - spentResearch
+			influence: totalInfluence - spentInfluence,
+			research: totalResearch - spentResearch,
+			// Breakdown for tooltips
+			influenceTooltip: `Influence: ${cardInfluence} (cards)` +
+				(spentInfluence > 0 ? ` - ${spentInfluence} (pending)` : '') +
+				` = ${totalInfluence - spentInfluence}`,
+			researchTooltip: `Research: ${researchLevel} (level) + ${engineers} (engineers) + ${cardResearch} (cards)` +
+				(spentResearch > 0 ? ` - ${spentResearch} (pending)` : '') +
+				` = ${totalResearch - spentResearch}`
 		};
 	})();
 </script>
@@ -727,10 +739,10 @@
 									Reveal
 								</button>
 								<div class="reveal-budget">
-									<div class="budget-icon diamond" title="Influence available at reveal">
+									<div class="budget-icon diamond" title={revealBudget.influenceTooltip}>
 										<span class="budget-value">{revealBudget.influence}</span>
 									</div>
-									<div class="budget-icon square" title="Research available at reveal">
+									<div class="budget-icon square" title={revealBudget.researchTooltip}>
 										<span class="budget-value">{revealBudget.research}</span>
 									</div>
 								</div>
@@ -1305,7 +1317,7 @@
 
 	.reveal-budget {
 		display: flex;
-		gap: 4px;
+		gap: 8px;
 		align-items: center;
 	}
 
