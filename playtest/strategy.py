@@ -645,38 +645,30 @@ def get_reveal_acquisitions(player: str, game_id: str) -> tuple[list[str], list[
                             break
 
     # ============ MARKET CARD PURCHASES (Influence) ============
+    # Return ALL market cards sorted by priority as fallback options.
+    # The actual purchase will be limited by available influence on the server.
+    # This ensures that if the first-choice card is already claimed by another
+    # player, the bot will try the next best option instead of giving up.
     market_cards = get_market_cards(game_id)
     if market_cards:
-        # Calculate available influence
-        # Influence comes from card bonuses during reveal - estimate based on typical cards
-        # Note: Actual influence is calculated server-side during reveal, so we estimate
-        influence_estimate = 3  # Conservative estimate (1-2 cards typically give 2-4 influence)
+        # Prioritize cards by symbol usefulness
+        # Priority: operations (propeller) > technical (wrench) > business (coin)
+        def get_card_priority(card: dict) -> int:
+            """Lower number = higher priority."""
+            symbol = card.get('symbol', '').lower()
+            if symbol == 'propeller' or symbol == 'operations':
+                return 1  # Operations - useful for launchpad
+            if symbol == 'wrench' or symbol == 'technical':
+                return 2  # Technical - useful for construction, blueprint
+            if symbol == 'coin' or symbol == 'business':
+                return 3  # Business - useful for gas depot, insurance
+            return 4  # Any/wild or unknown
 
-        if influence_estimate > 0:
-            # Prioritize cards by symbol usefulness
-            # Priority: operations (propeller) > technical (wrench) > business (coin)
-            def get_card_priority(card: dict) -> int:
-                """Lower number = higher priority."""
-                symbol = card.get('symbol', '').lower()
-                if symbol == 'propeller' or symbol == 'operations':
-                    return 1  # Operations - useful for launchpad
-                if symbol == 'wrench' or symbol == 'technical':
-                    return 2  # Technical - useful for construction, blueprint
-                if symbol == 'coin' or symbol == 'business':
-                    return 3  # Business - useful for gas depot, insurance
-                return 4  # Any/wild or unknown
+        # Sort by priority, then by cost (prefer cheaper)
+        market_cards.sort(key=lambda c: (get_card_priority(c), c.get('cost', 3)))
 
-            # Sort by priority, then by cost (prefer cheaper)
-            market_cards.sort(key=lambda c: (get_card_priority(c), c.get('cost', 3)))
-
-            # Buy as many cards as we can afford
-            remaining_influence = influence_estimate
-            for card in market_cards:
-                cost = card.get('cost', 3)  # Default cost is 3 influence
-                if cost <= remaining_influence:
-                    card_ids.append(card['id'])
-                    remaining_influence -= cost
-                    if remaining_influence <= 0:
-                        break
+        # Return ALL cards sorted by priority - the purchase phase will try each
+        # in order and stop when influence runs out or all cards are attempted
+        card_ids = [card['id'] for card in market_cards]
 
     return tech_ids, card_ids

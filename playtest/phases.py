@@ -636,6 +636,8 @@ def submit_reveal(player: str, game_id: str, logger: PlaytestLogger, reason: str
                 logger.log_action(None, f"  └─ Tech {tech_id} acquisition error: {str(e)[:50]}", "reveal")
 
     # Step 2b: Make tentative market card purchases (uses influence)
+    # card_ids contains ALL market cards sorted by priority - we try them in order
+    # and stop when influence runs out or a card is already claimed
     acquired_cards = []
     if card_ids:
         for card_id in card_ids:
@@ -643,11 +645,19 @@ def submit_reveal(player: str, game_id: str, logger: PlaytestLogger, reason: str
                 card_result = client.buy_market_card_tentative(player, game_id, card_id)
                 if card_result.success:
                     acquired_cards.append(card_id)
+                    # Successfully purchased a card - continue to try more if we have influence
                 else:
-                    # Log but don't fail - player might not have enough influence
-                    logger.log_action(None, f"  └─ Market card {card_id} purchase failed: {card_result.error}", "reveal")
+                    error_msg = (card_result.error or '').lower()
+                    # Stop trying if we're out of influence
+                    if 'not enough influence' in error_msg or 'insufficient influence' in error_msg:
+                        break
+                    # Card already claimed or other error - try next card
+                    # (Don't log every failure to avoid spam)
             except Exception as e:
-                logger.log_action(None, f"  └─ Market card {card_id} purchase error: {str(e)[:50]}", "reveal")
+                error_str = str(e).lower()
+                if 'not enough influence' in error_str or 'insufficient influence' in error_str:
+                    break
+                # Other errors - continue to next card
 
     # Step 3: Send END_TURN to finalize acquisitions and advance to next placer
     end_result = client.end_turn(player, game_id)
