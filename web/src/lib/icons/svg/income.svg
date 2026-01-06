@@ -1,5 +1,10 @@
 <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-  <!-- Art Deco Arrow -->
-  <path d="M12 2L4 10h5v12h6V10h5L12 2z" fill="#4caf50"/>
-  <path d="M12 4.8L15.2 8h-1.7v12h-3V8H8.8L12 4.8z" fill="#81c784" opacity="0.5"/>
+  <!-- Income: Coin -->
+  <circle cx="12" cy="12" r="11" fill="#4caf50" stroke="#2e7d32" stroke-width="1"/>
+  <circle cx="12" cy="12" r="8.5" fill="none" stroke="#66bb6a" stroke-width="0.5"/>
+  <circle cx="12" cy="12" r="8" fill="none" stroke="#66bb6a" stroke-width="0.5" stroke-dasharray="1 1"/>
+  <!-- Pound Symbol -->
+  <path d="M10 8c0-1.65 1.35-3 3-3s2.5 1 2.5 1" fill="none" stroke="#1a1a2e" stroke-width="2" stroke-linecap="round"/>
+  <path d="M13 5c-1.65 0-3 1.35-3 3 0 1.5 1 2.5 2 3.5l-2 4.5h6" fill="none" stroke="#1a1a2e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  <line x1="9" y1="11" x2="15" y2="11" stroke="#1a1a2e" stroke-width="2"/>
 </svg>

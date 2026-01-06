@@ -1,5 +1,14 @@
 <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-  <!-- Speed: Dial -->
-  <path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9-4.03-9-9-9zm0 16c-3.86 0-7-3.14-7-7s3.14-7 7-7 7 3.14 7 7-3.14 7-7 7zm1-7h4c0 .55-.45 1-1 1h-3v-1zm-1-5c-.55 0-1 .45-1 1s.45 1 1 1 1-.45 1-1-.45-1-1-1z" fill="#9ca3af"/>
-  <path d="M12 8l-2 6h4l-2-6z" fill="#9ca3af"/>
+  <!-- Speed: Propeller -->
+  <defs>
+    <path id="speed-blade" d="M12 12 C 11 12 10 9 10 5 C 10 3 11 2 12 2 C 13 2 14 3 14 5 C 14 9 13 12 12 12 Z" fill="#9ca3af" stroke="#6b7280" stroke-width="0.5"/>
+  </defs>
+
+  <!-- Three rotated blades -->
+  <use href="#speed-blade"/>
+  <use href="#speed-blade" transform="rotate(120 12 12)"/>
+  <use href="#speed-blade" transform="rotate(240 12 12)"/>
+
+  <!-- Center Hub -->
+  <circle cx="12" cy="12" r="2" fill="#d1d5db" stroke="#6b7280" stroke-width="1"/>
 </svg>
