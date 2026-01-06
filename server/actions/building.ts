@@ -129,10 +129,8 @@ function processBuildShip(state: GameState, playerId: string, data: BuildShipDat
   return { newState: state };
 }
 
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
-interface RepairShipData {
-  // No shipId needed - ships are fungible tokens
-}
+// Ships are fungible tokens - no shipId needed for repair
+type RepairShipData = Record<string, never>;
 
 /**
  * Repair a damaged ship

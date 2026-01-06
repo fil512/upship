@@ -10,7 +10,6 @@ const { pool } = require('../db');
 const { TECH_CARD_BAG, PROGRESS_THRESHOLDS } = require('../config/constants');
 // calculateShipStats is imported for use in launch/hazard actions
 // TECH_TILES is no longer needed here - ships use blueprint stats at launch time
-const { generateId } = require('../utils/random');
 const { resourceFlowLogger } = require('./resourceFlowLogger');
 
 // Blueprint structure
