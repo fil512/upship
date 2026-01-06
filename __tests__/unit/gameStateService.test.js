@@ -89,8 +89,9 @@ describe('GameStateService', () => {
         expect(FACTION_CONFIG.usa.heliumMonopoly).toBe(true);
       });
 
-      it('should have 4 starting technologies', () => {
-        expect(FACTION_CONFIG.usa.startingTechCards.length).toBe(4);
+      it('should have 5 starting technologies (including daimler_engine for drive)', () => {
+        expect(FACTION_CONFIG.usa.startingTechCards.length).toBe(5);
+        expect(FACTION_CONFIG.usa.startingTechCards).toContain('daimler_engine');
       });
     });
 
@@ -208,18 +209,22 @@ describe('GameStateService', () => {
 
       // With 4 players: 3 copies per tech, minus faction starters
       // Age 1 has 12 unique techs
-      // Faction starters in Age 1 TECHNOLOGY_BAG:
-      // - wire_bracing (Britain) = 1 starter
-      // - doped_canvas (Britain) = 1 starter
-      // - rubberized_cotton (Italy) = 1 starter
-      // Total: 3 starters, each used by 1 player
-      // Non-starters: 9 techs * 3 copies = 27
-      // Starters: 3 techs * 2 copies each (3-1) = 6
-      // Total in bag: 27 + 6 = 33, minus 4 on R&D board = 29 in techBag
+      // Faction starters in Age 1 TECHNOLOGY_BAG (each reduces available copies):
+      // - wire_bracing (Britain) = 1 player → loses 1 copy
+      // - doped_canvas (Britain) = 1 player → loses 1 copy
+      // - rubberized_cotton (Italy) = 1 player → loses 1 copy
+      // - maybach_engine (Germany) = 1 player → loses 1 copy
+      // - improved_propeller (Britain + Italy) = 2 players → loses 2 copies
+      // - daimler_engine (USA) = 1 player → loses 1 copy
+      // Total: 6 starters reduce bag by 7 copies (one used by 2 players)
+      // Base: 12 techs * 3 copies = 36
+      // After starter reduction: 36 - 7 = 29
+      // Plus tech cards that aren't in bag (imperial_mooring, dining_saloon, etc)
+      // Result: 30 total, minus 4 on R&D board = 26 in techBag
       const totalTechsInBag = result.rdBoard.length + result.techBag.length;
-      expect(totalTechsInBag).toBe(33);
+      expect(totalTechsInBag).toBe(30);
       expect(result.rdBoard.length).toBe(4);
-      expect(result.techBag.length).toBe(29);
+      expect(result.techBag.length).toBe(26);
     });
 
     it('should set correct progress thresholds for player count', async () => {

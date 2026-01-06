@@ -52,48 +52,52 @@ interface FactionConfig {
 // Per rules Section 10: Each nation has unique starting tech cards and blueprint configuration
 const FACTION_CONFIG: Record<string, FactionConfig> = {
   germany: {
-    // Rules 10.1: Duralumin Framework, Goldbeater's Skin, Blaugas Fuel System
-    startingTechCards: ['duralumin_girders', 'goldbeater_skin', 'blaugas_storage'],
+    // Rules 10.1: Duralumin Framework, Goldbeater's Skin, Blaugas Fuel System, Maybach Engine
+    startingTechCards: ['duralumin_girders', 'goldbeater_skin', 'blaugas_storage', 'maybach_engine'],
     // Pre-installed tech tiles so Germany can launch on turn 1
     startingTechTiles: {
       frame: 'duralumin_frame',
-      fabric: 'premium_envelope'
+      fabric: 'premium_envelope',
+      drive: 'maybach_cx'  // Germany invented the Maybach engine - Speed +2, Range +1
     },
     bonuses: { structure: 1 },
     // The Flaw: Cannot acquire helium_handling tech card
     bannedTechCards: ['helium_handling']
   },
   britain: {
-    // Rules 10.2: Wire Bracing, Doped Canvas, Imperial Mooring System
+    // Rules 10.2: Wire Bracing, Doped Canvas, Imperial Mooring System, Improved Propeller
     // Also starts with Dining Saloon tech card (for the pre-installed Restaurant tile)
-    startingTechCards: ['wire_bracing', 'doped_canvas', 'imperial_mooring', 'dining_saloon'],
+    startingTechCards: ['wire_bracing', 'doped_canvas', 'imperial_mooring', 'dining_saloon', 'improved_propeller'],
     // Pre-installed tech tiles including Restaurant (Starting Advantage: "Pre-Installed Luxury")
     startingTechTiles: {
       frame: 'tensioned_frame',
       fabric: 'doped_covering',
+      drive: 'efficient_propeller',  // Practical British engineering - Speed +1, Range +1
       component: 'restaurant'  // "Pre-Installed Luxury" - requires dining_saloon tech card
     },
     bonuses: { luxury: 1 }
   },
   usa: {
-    // Rules 10.3: Duralumin Framework, Gelatinized Latex, Trapeze Fighter, Helium Handling
-    startingTechCards: ['duralumin_girders', 'gelatinized_latex', 'trapeze_system', 'helium_handling'],
+    // Rules 10.3: Duralumin Framework, Gelatinized Latex, Trapeze Fighter, Helium Handling, Daimler Engine
+    startingTechCards: ['duralumin_girders', 'gelatinized_latex', 'trapeze_system', 'helium_handling', 'daimler_engine'],
     // Pre-installed tech tiles so USA can launch on turn 1
     startingTechTiles: {
       frame: 'duralumin_frame',
-      fabric: 'synthetic_envelope'
+      fabric: 'synthetic_envelope',
+      drive: 'basic_engine'  // Standard engine - Speed +1
     },
     bonuses: { safety: 1 },
     // Starting Advantage: Helium Monopoly - market doesn't advance when USA buys helium
     heliumMonopoly: true
   },
   italy: {
-    // Rules 10.4: Internal Keel, Rubberized Cotton, Articulated Keel Design
-    startingTechCards: ['internal_keel', 'rubberized_cotton', 'articulated_keel'],
+    // Rules 10.4: Internal Keel, Rubberized Cotton, Articulated Keel Design, Improved Propeller
+    startingTechCards: ['internal_keel', 'rubberized_cotton', 'articulated_keel', 'improved_propeller'],
     // Pre-installed tech tiles so Italy can launch on turn 1
     startingTechTiles: {
       frame: 'semi_rigid_keel',
-      fabric: 'cotton_envelope'
+      fabric: 'cotton_envelope',
+      drive: 'efficient_propeller'  // Boost to offset Low Ceiling flaw - Speed +1, Range +1
     },
     bonuses: { speed: 1 },
     // The Flaw: Low Ceiling - fewer payload slots (handled in blueprint)
@@ -545,43 +549,43 @@ function createAgeIMap(): GameMap {
       // Per Appendix F - Age I Routes (fully connected network)
       // Range 1 routes (starter/regional)
       { id: 'route_london_gateway', name: 'London Gateway', from: 'London', to: 'Dover',
-        range: 1, speed: 0, ceiling: 0, income: 2, vp: 1, claimed: null },
+        range: 1, speed: 1, ceiling: 0, income: 2, vp: 1, claimed: null },
       { id: 'route_channel', name: 'Channel Crossing', from: 'Calais', to: 'Dover',
-        range: 1, speed: 1, ceiling: 0, income: 3, vp: 2, claimed: null },
+        range: 1, speed: 2, ceiling: 0, income: 3, vp: 2, claimed: null },
       { id: 'route_rhine_valley', name: 'Rhine Valley', from: 'Frankfurt', to: 'Cologne',
-        range: 1, speed: 0, ceiling: 0, income: 2, vp: 1, claimed: null },
+        range: 1, speed: 1, ceiling: 0, income: 2, vp: 1, claimed: null },
       { id: 'route_low_countries', name: 'Low Countries', from: 'Brussels', to: 'Amsterdam',
-        range: 1, speed: 1, ceiling: 0, income: 3, vp: 2, claimed: null },
+        range: 1, speed: 2, ceiling: 0, income: 3, vp: 2, claimed: null },
       { id: 'route_paris_express', name: 'Paris Express', from: 'Paris', to: 'Brussels',
-        range: 1, speed: 1, ceiling: 0, income: 3, vp: 2, claimed: null },
+        range: 1, speed: 2, ceiling: 0, income: 3, vp: 2, claimed: null },
       { id: 'route_rhineland', name: 'Rhineland', from: 'Brussels', to: 'Cologne',
-        range: 1, speed: 1, ceiling: 0, income: 3, vp: 2, claimed: null },
+        range: 1, speed: 2, ceiling: 0, income: 3, vp: 2, claimed: null },
       { id: 'route_lake_constance', name: 'Lake Constance', from: 'Friedrichshafen', to: 'Zurich',
-        range: 1, speed: 0, ceiling: 0, income: 3, vp: 2, claimed: null },
+        range: 1, speed: 1, ceiling: 0, income: 3, vp: 2, claimed: null },
       // Range 2 routes (medium distance)
       { id: 'route_london_paris', name: 'London-Paris', from: 'London', to: 'Paris',
-        range: 2, speed: 2, ceiling: 0, income: 5, vp: 3, claimed: null, track: 1 },
+        range: 2, speed: 3, ceiling: 0, income: 5, vp: 3, claimed: null, track: 1 },
       { id: 'route_london_paris_2', name: 'London-Paris', from: 'London', to: 'Paris',
-        range: 2, speed: 2, ceiling: 0, income: 5, vp: 3, claimed: null, track: 2 },
+        range: 2, speed: 3, ceiling: 0, income: 5, vp: 3, claimed: null, track: 2 },
       { id: 'route_north_sea', name: 'North Sea Run', from: 'Hamburg', to: 'Amsterdam',
-        range: 2, speed: 1, ceiling: 0, income: 4, vp: 2, claimed: null },
+        range: 2, speed: 2, ceiling: 0, income: 4, vp: 2, claimed: null },
       { id: 'route_baltic', name: 'Baltic Passage', from: 'Hamburg', to: 'Copenhagen',
-        range: 2, speed: 1, ceiling: 0, income: 4, vp: 2, claimed: null },
+        range: 2, speed: 2, ceiling: 0, income: 4, vp: 2, claimed: null },
       { id: 'route_alpine', name: 'Alpine Transit', from: 'Zurich', to: 'Milan',
-        range: 2, speed: 0, ceiling: 1, income: 4, vp: 2, claimed: null },
+        range: 2, speed: 1, ceiling: 1, income: 4, vp: 2, claimed: null },
       { id: 'route_mediterranean', name: 'Mediterranean Link', from: 'Marseille', to: 'Barcelona',
-        range: 2, speed: 1, ceiling: 0, income: 4, vp: 2, claimed: null },
+        range: 2, speed: 2, ceiling: 0, income: 4, vp: 2, claimed: null },
       { id: 'route_german_alps', name: 'German Alps', from: 'Frankfurt', to: 'Friedrichshafen',
-        range: 2, speed: 0, ceiling: 1, income: 4, vp: 2, claimed: null },
+        range: 2, speed: 1, ceiling: 1, income: 4, vp: 2, claimed: null },
       { id: 'route_rome', name: 'Rome Approach', from: 'Milan', to: 'Rome',
-        range: 2, speed: 1, ceiling: 1, income: 5, vp: 3, claimed: null },
+        range: 2, speed: 2, ceiling: 1, income: 5, vp: 3, claimed: null },
       // Range 3 routes (long distance)
       { id: 'route_riviera', name: 'Riviera Express', from: 'Paris', to: 'Marseille',
-        range: 3, speed: 1, ceiling: 0, income: 4, vp: 2, claimed: null },
+        range: 3, speed: 2, ceiling: 0, income: 4, vp: 2, claimed: null },
       { id: 'route_berlin_vienna', name: 'Berlin-Vienna', from: 'Berlin', to: 'Vienna',
-        range: 3, speed: 1, ceiling: 0, income: 5, vp: 3, claimed: null },
+        range: 3, speed: 2, ceiling: 0, income: 5, vp: 3, claimed: null },
       { id: 'route_imperial', name: 'Imperial Circuit', from: 'London', to: 'Berlin',
-        range: 3, speed: 2, ceiling: 0, income: 6, vp: 3, claimed: null }
+        range: 3, speed: 3, ceiling: 0, income: 6, vp: 3, claimed: null }
     ] as Route[],
     cities: {
       'Frankfurt': { type: 'major', homeBase: 'germany' },
@@ -618,55 +622,55 @@ function createAgeIIIMap(): GameMap {
     routes: [
       // Range 1 routes (regional connectors)
       { id: 'route_eastern_gateway', name: 'Eastern Gateway', from: 'New York', to: 'Lakehurst',
-        range: 1, speed: 0, ceiling: 0, income: 4, vp: 2, luxury: 0, claimed: null },
-      { id: 'route_german_hub', name: 'German Hub', from: 'Frankfurt', to: 'Friedrichshafen',
         range: 1, speed: 1, ceiling: 0, income: 4, vp: 2, luxury: 0, claimed: null },
+      { id: 'route_german_hub', name: 'German Hub', from: 'Frankfurt', to: 'Friedrichshafen',
+        range: 1, speed: 2, ceiling: 0, income: 4, vp: 2, luxury: 0, claimed: null },
       // Range 2 routes
       { id: 'route_south_atlantic', name: 'South Atlantic', from: 'Rio de Janeiro', to: 'Recife',
-        range: 2, speed: 1, ceiling: 0, income: 5, vp: 2, luxury: 0, claimed: null },
+        range: 2, speed: 2, ceiling: 0, income: 5, vp: 2, luxury: 0, claimed: null },
       { id: 'route_caribbean', name: 'Caribbean Connection', from: 'Miami', to: 'Havana',
-        range: 2, speed: 1, ceiling: 0, income: 5, vp: 2, luxury: 0, claimed: null },
+        range: 2, speed: 2, ceiling: 0, income: 5, vp: 2, luxury: 0, claimed: null },
       { id: 'route_pacific_coast', name: 'Pacific Coast', from: 'Los Angeles', to: 'San Francisco',
-        range: 2, speed: 1, ceiling: 1, income: 5, vp: 2, luxury: 0, claimed: null },
+        range: 2, speed: 2, ceiling: 1, income: 5, vp: 2, luxury: 0, claimed: null },
       // Range 3 routes
       { id: 'route_rio_buenos_aires', name: 'Rio-Buenos Aires', from: 'Rio de Janeiro', to: 'Buenos Aires',
-        range: 3, speed: 1, ceiling: 0, income: 5, vp: 2, luxury: 0, claimed: null },
+        range: 3, speed: 2, ceiling: 0, income: 5, vp: 2, luxury: 0, claimed: null },
       { id: 'route_european_trunk', name: 'European Trunk', from: 'London', to: 'Berlin',
-        range: 3, speed: 2, ceiling: 1, income: 6, vp: 3, luxury: 0, claimed: null },
+        range: 3, speed: 3, ceiling: 1, income: 6, vp: 3, luxury: 0, claimed: null },
       { id: 'route_eastern_seaboard', name: 'Eastern Seaboard', from: 'New York', to: 'Miami',
-        range: 3, speed: 2, ceiling: 0, income: 6, vp: 3, luxury: 0, claimed: null },
+        range: 3, speed: 3, ceiling: 0, income: 6, vp: 3, luxury: 0, claimed: null },
       { id: 'route_north_sea_express', name: 'North Sea Express', from: 'London', to: 'Oslo',
-        range: 3, speed: 1, ceiling: 1, income: 6, vp: 3, luxury: 0, claimed: null },
+        range: 3, speed: 2, ceiling: 1, income: 6, vp: 3, luxury: 0, claimed: null },
       { id: 'route_around_cape_horn', name: 'Around Cape Horn', from: 'Buenos Aires', to: 'Valparaiso',
-        range: 3, speed: 2, ceiling: 3, income: 7, vp: 3, luxury: 0, claimed: null },
+        range: 3, speed: 3, ceiling: 3, income: 7, vp: 3, luxury: 0, claimed: null },
       { id: 'route_arctic_explorer', name: 'Arctic Explorer', from: 'Oslo', to: 'Svalbard',
-        range: 3, speed: 1, ceiling: 3, income: 7, vp: 3, luxury: 0, claimed: null },
+        range: 3, speed: 2, ceiling: 3, income: 7, vp: 3, luxury: 0, claimed: null },
       // Range 4 routes
       { id: 'route_transcontinental', name: 'Transcontinental', from: 'Chicago', to: 'Los Angeles',
-        range: 4, speed: 2, ceiling: 1, income: 7, vp: 3, luxury: 0, claimed: null },
+        range: 4, speed: 3, ceiling: 1, income: 7, vp: 3, luxury: 0, claimed: null },
       { id: 'route_mediterranean_express', name: 'Mediterranean Express', from: 'Rome', to: 'Cairo',
-        range: 4, speed: 2, ceiling: 1, income: 7, vp: 3, luxury: 0, claimed: null },
+        range: 4, speed: 3, ceiling: 1, income: 7, vp: 3, luxury: 0, claimed: null },
       { id: 'route_trans_amazon', name: 'Trans-Amazon', from: 'Rio de Janeiro', to: 'Manaus',
-        range: 4, speed: 1, ceiling: 0, income: 7, vp: 3, luxury: 0, claimed: null },
+        range: 4, speed: 2, ceiling: 0, income: 7, vp: 3, luxury: 0, claimed: null },
       { id: 'route_north_atlantic_express', name: 'North Atlantic Express', from: 'New York', to: 'London',
-        range: 4, speed: 2, ceiling: 2, income: 8, vp: 4, luxury: 0, claimed: null, track: 1 },
+        range: 4, speed: 3, ceiling: 2, income: 8, vp: 4, luxury: 0, claimed: null, track: 1 },
       { id: 'route_north_atlantic_express_2', name: 'North Atlantic Express', from: 'New York', to: 'London',
-        range: 4, speed: 2, ceiling: 2, income: 8, vp: 4, luxury: 0, claimed: null, track: 2 },
+        range: 4, speed: 3, ceiling: 2, income: 8, vp: 4, luxury: 0, claimed: null, track: 2 },
       // Luxury Routes
       { id: 'route_empire_state_express', name: 'Empire State Express', from: 'New York', to: 'Chicago',
-        range: 3, speed: 3, ceiling: 1, income: 8, vp: 4, luxury: 1, claimed: null },
+        range: 3, speed: 4, ceiling: 1, income: 8, vp: 4, luxury: 1, claimed: null },
       { id: 'route_imperial_airship', name: 'Imperial Airship Route', from: 'London', to: 'Cairo',
-        range: 4, speed: 2, ceiling: 2, income: 9, vp: 4, luxury: 1, claimed: null },
+        range: 4, speed: 3, ceiling: 2, income: 9, vp: 4, luxury: 1, claimed: null },
       { id: 'route_california_clipper', name: 'California Clipper', from: 'Los Angeles', to: 'Honolulu',
-        range: 5, speed: 2, ceiling: 1, income: 10, vp: 5, luxury: 1, claimed: null },
+        range: 5, speed: 3, ceiling: 1, income: 10, vp: 5, luxury: 1, claimed: null },
       { id: 'route_graf_zeppelin', name: 'Graf Zeppelin Route', from: 'Rio de Janeiro', to: 'Friedrichshafen',
-        range: 5, speed: 2, ceiling: 2, income: 10, vp: 5, luxury: 1, claimed: null },
+        range: 5, speed: 3, ceiling: 2, income: 10, vp: 5, luxury: 1, claimed: null },
       { id: 'route_transatlantic_luxury', name: 'Transatlantic Luxury', from: 'London', to: 'New York',
-        range: 4, speed: 3, ceiling: 2, income: 11, vp: 5, luxury: 2, claimed: null, track: 1 },
+        range: 4, speed: 4, ceiling: 2, income: 11, vp: 5, luxury: 2, claimed: null, track: 1 },
       { id: 'route_transatlantic_luxury_2', name: 'Transatlantic Luxury', from: 'London', to: 'New York',
-        range: 4, speed: 3, ceiling: 2, income: 11, vp: 5, luxury: 2, claimed: null, track: 2 },
+        range: 4, speed: 4, ceiling: 2, income: 11, vp: 5, luxury: 2, claimed: null, track: 2 },
       { id: 'route_hindenburg', name: 'Hindenburg Route', from: 'Frankfurt', to: 'Lakehurst',
-        range: 5, speed: 3, ceiling: 2, income: 12, vp: 6, luxury: 2, claimed: null }
+        range: 5, speed: 4, ceiling: 2, income: 12, vp: 6, luxury: 2, claimed: null }
     ] as Route[],
     cities: {
       'Rio de Janeiro': { type: 'major', homeBase: null },
