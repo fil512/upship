@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { createEventDispatcher } from 'svelte';
 	import type { PlayerState } from '$lib/types/game';
 	import { getFactionColor, getFactionBorderColor } from '$lib/utils/factionColors';
 	import Icon from '$lib/components/ui/Icon.svelte';
@@ -9,6 +10,15 @@
 	export let currentPlayerId: string | null = null;
 	export let onlinePlayers: string[] = [];
 	export let myPlayerId: string | null = null;
+	export let viewedPlayerId: string | null = null;
+
+	const dispatch = createEventDispatcher<{
+		selectPlayer: { playerId: string };
+	}>();
+
+	function handlePlayerClick(playerId: string) {
+		dispatch('selectPlayer', { playerId });
+	}
 
 	function isOnline(playerId: string): boolean {
 		return onlinePlayers.includes(playerId);
@@ -60,8 +70,13 @@
 				class="player-card"
 				class:current={playerId === currentPlayerId}
 				class:me={playerId === myPlayerId}
+				class:viewing={playerId === viewedPlayerId}
 				style:--faction-color={factionColor}
 				style:--faction-border={borderColor}
+				role="button"
+				tabindex="0"
+				on:click={() => handlePlayerClick(playerId)}
+				on:keydown={(e) => e.key === 'Enter' && handlePlayerClick(playerId)}
 			>
 				<!-- Row 1: Chevron, Score, Flag, name, badges, pawns -->
 				<div class="player-header">
@@ -161,6 +176,12 @@
 		border-radius: var(--radius-md);
 		padding: var(--spacing-sm);
 		border-left: 4px solid var(--faction-border);
+		cursor: pointer;
+		transition: all var(--transition-fast);
+	}
+
+	.player-card:hover {
+		background: var(--color-bg-hover);
 	}
 
 	.player-card.current {
@@ -169,6 +190,11 @@
 
 	.player-card.me {
 		border-left-color: var(--color-accent-gold);
+	}
+
+	.player-card.viewing {
+		outline: 2px solid var(--color-accent-gold);
+		outline-offset: 1px;
 	}
 
 	.player-header {

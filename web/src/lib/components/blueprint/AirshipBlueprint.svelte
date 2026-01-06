@@ -446,6 +446,10 @@
 		<div class="legend-section">
 			<span class="legend-title">STATS:</span>
 			<span class="icon-legend">
+				<Icon name="gas_socket" size={20} />
+				Gas (5 Lift)
+			</span>
+			<span class="icon-legend">
 				<Icon name="lift" size={20} />
 				Lift
 			</span>
@@ -527,13 +531,7 @@
 	}
 
 	.propeller-group {
-		animation: spin 4s linear infinite;
 		transform-origin: center;
-	}
-
-	@keyframes spin {
-		from { transform: rotate(0deg); }
-		to { transform: rotate(360deg); }
 	}
 
 	.slot-group {

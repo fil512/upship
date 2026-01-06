@@ -36,6 +36,7 @@
 
 	// Sidebar Components
 	import TechList from '$lib/components/sidebar/TechList.svelte';
+	import TechTilesPanel from '$lib/components/sidebar/TechTilesPanel.svelte';
 	import PlayersList from '$lib/components/sidebar/PlayersList.svelte';
 	import GameLog from '$lib/components/sidebar/GameLog.svelte';
 	import BudgetDisplay from '$lib/components/sidebar/BudgetDisplay.svelte';
@@ -52,6 +53,7 @@
 	import { calculateShipStats } from '$lib/utils/shipStats';
 	import { getAvailableTilesForPlayer } from '$lib/utils/techCardToTiles';
 	import { TECH_TILES } from '$lib/data/techTiles';
+	import { getFactionBorderColor } from '$lib/utils/factionColors';
 	import Icon from '$lib/components/ui/Icon.svelte';
 	import TechTileSelector from '$lib/components/blueprint/TechTileSelector.svelte';
 	import type { Blueprint as BlueprintType } from '$lib/types/game';
@@ -77,7 +79,7 @@
 	let designBureauCardIndex: number | null = null;
 
 	// Center pane tabs
-	type CenterTab = 'actions' | 'log' | 'map' | 'blueprint';
+	type CenterTab = 'actions' | 'log' | 'map' | 'blueprint' | 'market';
 	let activeTab: CenterTab = 'actions';
 
 	$: gameId = $page.params.id;
@@ -311,6 +313,9 @@
 		const result = await sendAction({ actionType: 'REVEAL', actionData: {} });
 		if (!result.success) {
 			showToast(result.error || 'Failed to reveal', 'error');
+		} else {
+			// Auto-switch to market tab for purchasing
+			activeTab = 'market';
 		}
 	}
 
@@ -455,9 +460,11 @@
 	}
 
 	// Design Bureau mode handlers
-	$: availableTechTiles = designBureauMode
-		? getAvailableTilesForPlayer($myState?.techCards || [], $gameState?.age || 1)
-		: null;
+	// Available tech tiles - compute whenever on blueprint tab or in design bureau mode
+	$: availableTechTiles = getAvailableTilesForPlayer($myState?.techCards || [], $gameState?.age || 1);
+
+	// Is the blueprint tab active and we can show tech tiles?
+	$: showBlueprintTiles = activeTab === 'blueprint';
 
 	$: previewShipStats = designBureauMode && pendingBlueprint
 		? calculateShipStats(pendingBlueprint)
@@ -545,6 +552,20 @@
 	$: canAffordHelium = ($myState?.gasCubes?.helium || 0) >= launchGasRequired;
 	let selectedRouteId: string | null = null;
 	let selectedGasType: 'hydrogen' | 'helium' | null = null;
+
+	// State for viewing other players' blueprints
+	let viewedPlayerId: string | null = null;
+
+	// Viewed player defaults to self, or switches when clicking on another player
+	$: viewedPlayerIdResolved = viewedPlayerId || $effectiveUserId;
+	$: viewedPlayerState = viewedPlayerIdResolved ? $gameState?.players?.[viewedPlayerIdResolved] : null;
+	$: isViewingOwnBlueprint = viewedPlayerIdResolved === $effectiveUserId;
+
+	function handleSelectPlayer(event: CustomEvent<{ playerId: string }>) {
+		viewedPlayerId = event.detail.playerId;
+		// Switch to blueprint tab when selecting a player
+		activeTab = 'blueprint';
+	}
 
 	// City selection modal state
 	let showCityModal = false;
@@ -827,6 +848,8 @@
 					currentPlayerId={$currentPlayerId}
 					onlinePlayers={$onlinePlayers}
 					myPlayerId={$effectiveUserId}
+					viewedPlayerId={viewedPlayerIdResolved}
+					on:selectPlayer={handleSelectPlayer}
 				/>
 
 				{#if shipStats}
@@ -869,6 +892,13 @@
 					>
 						Blueprint
 					</button>
+					<button
+						class="tab-btn"
+						class:active={activeTab === 'market'}
+						on:click={() => (activeTab = 'market')}
+					>
+						Market
+					</button>
 				</div>
 
 				<!-- Tab content -->
@@ -886,23 +916,6 @@
 									on:placeAgent={handlePlaceAgent}
 								/>
 							</section>
-
-							<!-- Market Section (always visible) -->
-							<MarketSection
-								{marketCards}
-								{techCards}
-								claimedMarket={marketCardsClaimed}
-								claimedTech={techCardsClaimed}
-								{pendingMarketPurchases}
-								{pendingTechAcquisitions}
-								interactive={isMarketInteractive}
-								myPlayerId={$effectiveUserId}
-								players={$gameState.players}
-								playerTechCards={$myState?.techCards || []}
-								on:buyMarket={handleBuyMarketCard}
-								on:buyTech={handleBuyTechCard}
-								on:undoPurchase={handleUndoPurchase}
-							/>
 						</div>
 					{:else if activeTab === 'log'}
 						<div class="log-tab">
@@ -928,7 +941,28 @@
 						</div>
 					{:else if activeTab === 'blueprint'}
 						<div class="blueprint-tab">
-							{#if designBureauMode && pendingBlueprint}
+							{#if !isViewingOwnBlueprint && viewedPlayerState}
+								<!-- Viewing another player's blueprint -->
+								<div class="viewing-banner">
+									<span class="viewing-label">Viewing:</span>
+									<span class="viewing-faction" style:color={getFactionBorderColor(viewedPlayerState.faction)}>
+										{viewedPlayerState.faction}
+									</span>
+									<button class="btn secondary btn-sm" on:click={() => { viewedPlayerId = null; }}>
+										Back to My Blueprint
+									</button>
+								</div>
+								<AirshipBlueprint
+									blueprint={viewedPlayerState.blueprint}
+									age={$gameState?.age || 1}
+								/>
+								<TechList
+									techCards={viewedPlayerState.techCards || []}
+									pendingTechAcquisitions={[]}
+									rdBoard={techCards}
+									showUndo={false}
+								/>
+							{:else if designBureauMode && pendingBlueprint}
 								<!-- Design Bureau editing mode -->
 								<AirshipBlueprint
 									blueprint={pendingBlueprint}
@@ -938,13 +972,14 @@
 									on:slotClick={handleBlueprintSlotClick}
 									on:placeTile={handlePlaceTile}
 								/>
-								{#if availableTechTiles}
-									<TechTileSelector
-										tiles={availableTechTiles}
-										selectedTileId={selectedTechTileId}
-										on:select={handleTechTileSelect}
-									/>
-								{/if}
+								<!-- Tech card rows below blueprint -->
+								<TechList
+									techCards={$myState?.techCards || []}
+									{pendingTechAcquisitions}
+									rdBoard={techCards}
+									showUndo={isRevealPhase && $isMyTurn}
+									on:undo={(e) => handleUndoPurchase({ detail: { cardId: e.detail.cardId, type: 'tech' } })}
+								/>
 							{:else if $myState?.blueprint}
 								<!-- Normal view mode -->
 								<AirshipBlueprint
@@ -952,14 +987,33 @@
 									age={$gameState?.age || 1}
 									on:slotClick={handleBlueprintSlotClick}
 								/>
+								<!-- Tech card rows below blueprint -->
 								<TechList
-								techCards={$myState.techCards || []}
-								{pendingTechAcquisitions}
-								rdBoard={techCards}
-								showUndo={isRevealPhase && $isMyTurn}
-								on:undo={(e) => handleUndoPurchase({ detail: { cardId: e.detail.cardId, type: 'tech' } })}
-							/>
+									techCards={$myState?.techCards || []}
+									{pendingTechAcquisitions}
+									rdBoard={techCards}
+									showUndo={isRevealPhase && $isMyTurn}
+									on:undo={(e) => handleUndoPurchase({ detail: { cardId: e.detail.cardId, type: 'tech' } })}
+								/>
 							{/if}
+						</div>
+					{:else if activeTab === 'market'}
+						<div class="market-tab">
+							<MarketSection
+								{marketCards}
+								{techCards}
+								claimedMarket={marketCardsClaimed}
+								claimedTech={techCardsClaimed}
+								{pendingMarketPurchases}
+								{pendingTechAcquisitions}
+								interactive={isMarketInteractive}
+								myPlayerId={$effectiveUserId}
+								players={$gameState.players}
+								playerTechCards={$myState?.techCards || []}
+								on:buyMarket={handleBuyMarketCard}
+								on:buyTech={handleBuyTechCard}
+								on:undoPurchase={handleUndoPurchase}
+							/>
 						</div>
 					{/if}
 				</div>
@@ -977,7 +1031,7 @@
 							{:else if selectedTechTileId}
 								Click a highlighted slot to place the tile
 							{:else}
-								Select a tech tile below, then click a slot
+								Select a tech tile on the right, then click a blueprint slot
 							{/if}
 						</p>
 						{#if previewShipStats}
@@ -995,6 +1049,14 @@
 								</button>
 							{/if}
 						</div>
+					{:else if showBlueprintTiles && !isLaunchpadActive && !shipAwaitingHazard}
+						<!-- Blueprint tab view mode - show tech tiles info -->
+						<p class="action-instruction">
+							View your blueprint and available tech tiles
+						</p>
+						<p class="action-hint">
+							Place an agent at the Design Bureau to modify your blueprint
+						</p>
 					{:else if isInPurchaseSelection && !isLaunchpadActive && !shipAwaitingHazard}
 						<!-- Purchase selection mode (after clicking Reveal) -->
 						<p class="action-instruction">Choose Agent and Tech cards to purchase</p>
@@ -1178,15 +1240,24 @@
 					<BudgetDisplay influence={playerInfluence} research={playerResearch} />
 				{/if}
 
-				<!-- Hand Section -->
-				<HandSection
-					hand={Array.isArray($myState?.hand) ? $myState.hand : []}
-					selectedIndex={selectedCardIndex}
-					selectable={$isMyTurn && isWorkerPlacementPhase}
-					deckSize={typeof $myState?.deck === 'number' ? $myState.deck : ($myState?.deck?.length || 0)}
-					discardSize={typeof $myState?.discardPile === 'number' ? $myState.discardPile : ($myState?.discardPile?.length || 0)}
-					on:selectCard={handleCardSelect}
-				/>
+				<!-- Show Tech Tiles Panel on blueprint tab, Hand Section otherwise -->
+				{#if showBlueprintTiles}
+					<TechTilesPanel
+						tiles={availableTechTiles}
+						selectedTileId={selectedTechTileId}
+						selectable={designBureauMode}
+						on:select={handleTechTileSelect}
+					/>
+				{:else}
+					<HandSection
+						hand={Array.isArray($myState?.hand) ? $myState.hand : []}
+						selectedIndex={selectedCardIndex}
+						selectable={$isMyTurn && isWorkerPlacementPhase}
+						deckSize={typeof $myState?.deck === 'number' ? $myState.deck : ($myState?.deck?.length || 0)}
+						discardSize={typeof $myState?.discardPile === 'number' ? $myState.discardPile : ($myState?.discardPile?.length || 0)}
+						on:selectCard={handleCardSelect}
+					/>
+				{/if}
 			</aside>
 		</div>
 	</div>
@@ -1640,6 +1711,42 @@
 		gap: var(--spacing-lg);
 		max-width: 900px;
 		margin: 0 auto;
+	}
+
+	.viewing-banner {
+		display: flex;
+		align-items: center;
+		gap: var(--spacing-sm);
+		padding: var(--spacing-sm) var(--spacing-md);
+		background: var(--color-bg-hover);
+		border-radius: var(--radius-md);
+		border-left: 3px solid var(--color-accent-gold);
+	}
+
+	.viewing-label {
+		font-size: 0.85rem;
+		color: var(--color-text-secondary);
+	}
+
+	.viewing-faction {
+		font-size: 0.9rem;
+		font-weight: 700;
+		text-transform: capitalize;
+	}
+
+	.viewing-banner .btn {
+		margin-left: auto;
+	}
+
+	.btn-sm {
+		padding: var(--spacing-xs) var(--spacing-sm);
+		font-size: 0.75rem;
+	}
+
+	.market-tab {
+		display: flex;
+		flex-direction: column;
+		gap: var(--spacing-md);
 	}
 
 	.ship-stats-panel {
