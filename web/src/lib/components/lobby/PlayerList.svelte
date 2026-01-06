@@ -92,6 +92,7 @@
 	.player-list h3 {
 		font-size: 1rem;
 		margin-bottom: var(--spacing-md);
+		color: var(--color-text-primary);
 	}
 
 	.players {
@@ -106,8 +107,9 @@
 		align-items: center;
 		padding: var(--spacing-sm) var(--spacing-md);
 		background: var(--color-bg-card);
+		border: 1px solid var(--color-border);
 		border-radius: var(--radius-md);
-		border-left: 3px solid var(--faction-color);
+		border-left: 4px solid var(--faction-color);
 	}
 
 	.player.empty {
@@ -122,7 +124,8 @@
 	}
 
 	.player-name {
-		font-weight: 500;
+		font-weight: 600;
+		color: var(--color-text-primary);
 	}
 
 	.host-badge {
@@ -140,6 +143,7 @@
 		align-items: center;
 		gap: var(--spacing-xs);
 		font-size: 0.875rem;
+		color: var(--color-text-primary);
 	}
 
 	.faction-dot {

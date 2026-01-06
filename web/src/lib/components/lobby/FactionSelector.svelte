@@ -106,8 +106,8 @@
 		flex-direction: column;
 		gap: var(--spacing-xs);
 		padding: var(--spacing-md);
-		background: var(--color-bg-tertiary);
-		border: 3px solid transparent;
+		background: var(--color-bg-card);
+		border: 2px solid var(--color-border);
 		border-radius: var(--radius-lg);
 		cursor: pointer;
 		transition: all var(--transition-fast);
@@ -116,21 +116,22 @@
 
 	.faction-button.compact {
 		padding: var(--spacing-sm) var(--spacing-md);
-		border-width: 2px;
 		border-radius: var(--radius-md);
 	}
 
 	.faction-button:hover:not(:disabled) {
 		border-color: var(--faction-color);
+		background: color-mix(in srgb, var(--faction-color) 10%, var(--color-bg-card));
 	}
 
 	.faction-button.selected {
 		border-color: var(--faction-color);
-		background: color-mix(in srgb, var(--faction-color) 20%, var(--color-bg-tertiary));
+		border-width: 3px;
+		background: color-mix(in srgb, var(--faction-color) 15%, var(--color-bg-card));
 	}
 
 	.faction-button:disabled {
-		opacity: 0.5;
+		opacity: 0.4;
 		cursor: not-allowed;
 	}
 
@@ -147,11 +148,11 @@
 
 	.faction-name {
 		font-weight: 600;
-		color: var(--faction-color);
+		color: var(--color-text-primary);
 	}
 
 	.compact .faction-name {
-		font-size: 0.8rem;
+		font-size: 0.875rem;
 	}
 
 	.faction-desc {

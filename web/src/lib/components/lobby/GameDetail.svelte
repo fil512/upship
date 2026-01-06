@@ -417,6 +417,7 @@
 		padding: var(--spacing-md);
 		background: var(--color-bg-card);
 		border-radius: var(--radius-lg);
+		border: 1px solid var(--color-border);
 	}
 
 	.faction-section.compact-section {
@@ -428,12 +429,13 @@
 	.faction-section h3 {
 		font-size: 1rem;
 		margin-bottom: var(--spacing-md);
+		color: var(--color-text-primary);
 	}
 
 	.faction-section.compact-section h3 {
 		font-size: 0.875rem;
 		margin-bottom: var(--spacing-sm);
-		color: var(--color-text-secondary);
+		color: var(--color-text-primary);
 	}
 
 	.actions {
@@ -461,13 +463,13 @@
 		padding: var(--spacing-md);
 		background: var(--color-bg-card);
 		border-radius: var(--radius-lg);
-		border: 1px dashed var(--color-border);
+		border: 1px solid var(--color-border);
 	}
 
 	.bot-section h3 {
 		font-size: 1rem;
 		margin-bottom: var(--spacing-md);
-		color: var(--color-text-secondary);
+		color: var(--color-text-primary);
 	}
 
 	.bot-buttons {
@@ -482,6 +484,15 @@
 		gap: var(--spacing-sm);
 		padding: var(--spacing-sm) var(--spacing-md);
 		font-size: 0.875rem;
+		background: var(--color-bg-card);
+		color: var(--color-text-primary);
+		border: 2px solid var(--color-border);
+		transition: all var(--transition-fast);
+	}
+
+	.faction-btn:hover:not(:disabled) {
+		border-color: var(--btn-color);
+		background: color-mix(in srgb, var(--btn-color) 15%, var(--color-bg-card));
 	}
 
 	.faction-icon {
@@ -489,15 +500,15 @@
 	}
 
 	.faction-germany {
-		border-color: #444;
+		--btn-color: #cc0000;
 	}
 	.faction-britain {
-		border-color: #1e4785;
+		--btn-color: #4a7fc1;
 	}
 	.faction-usa {
-		border-color: #b22234;
+		--btn-color: #5588bb;
 	}
 	.faction-italy {
-		border-color: #008c45;
+		--btn-color: #00b050;
 	}
 </style>
