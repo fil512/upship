@@ -230,32 +230,32 @@ describe('Rules Compliance - Technology Tiles', () => {
     it('should have costs matching Appendix C', () => {
       const all = getAllTechnologies();
 
-      // Sample cost checks from Appendix C
+      // Sample cost checks from Appendix C (rebalanced for 1 tech/player/round)
       const costChecks = [
-        // Age I (1-2 Research)
-        { name: 'Daimler Petrol Engine', cost: 1 },
-        { name: 'Improved Propeller', cost: 1 },
-        { name: 'Dual Engine Mount', cost: 2 },
-        { name: 'Wooden Framework', cost: 1 },
-        { name: 'Wire Bracing', cost: 2 },
-        { name: 'Rubberized Cotton', cost: 1 },
-        { name: 'Doped Canvas', cost: 2 },
-        // Age II (2-4 Research)
-        { name: 'Maybach Engine Design', cost: 3 },
-        { name: 'Diesel Powerplant', cost: 3 },
-        { name: 'Duralumin Framework', cost: 3 },
-        { name: 'Steel Framework', cost: 2 },
-        { name: "Goldbeater's Skin", cost: 4 },
-        { name: 'Multiple Gas Cells', cost: 3 },
-        { name: 'Helium Handling', cost: 4 },
-        // Age III (4-6 Research)
-        { name: 'Streamlined Nacelle', cost: 4 },
-        { name: 'Supercharged Engine', cost: 5 },
-        { name: 'Geodetic Structure', cost: 4 },
-        { name: 'Modular Construction', cost: 5 },
-        { name: 'Pressure Altitude System', cost: 5 },
-        { name: 'Luxury Accommodation', cost: 4 },
-        { name: 'Promenade Deck', cost: 6 }
+        // Age I (avg 5 Research - matches early game research generation)
+        { name: 'Daimler Petrol Engine', cost: 5 },
+        { name: 'Improved Propeller', cost: 6 },
+        { name: 'Dual Engine Mount', cost: 5 },
+        { name: 'Wooden Framework', cost: 5 },
+        { name: 'Wire Bracing', cost: 5 },
+        { name: 'Rubberized Cotton', cost: 4 },
+        { name: 'Doped Canvas', cost: 5 },
+        // Age II (avg 7 Research - matches mid game research generation)
+        { name: 'Maybach Engine Design', cost: 6 },
+        { name: 'Diesel Powerplant', cost: 7 },
+        { name: 'Duralumin Framework', cost: 6 },
+        { name: 'Steel Framework', cost: 6 },
+        { name: "Goldbeater's Skin", cost: 7 },
+        { name: 'Multiple Gas Cells', cost: 6 },
+        { name: 'Helium Handling', cost: 7 },
+        // Age III (avg 9 Research - matches late game research generation)
+        { name: 'Streamlined Nacelle', cost: 8 },
+        { name: 'Supercharged Engine', cost: 10 },
+        { name: 'Geodetic Structure', cost: 9 },
+        { name: 'Modular Construction', cost: 9 },
+        { name: 'Pressure Altitude System', cost: 9 },
+        { name: 'Luxury Accommodation', cost: 8 },
+        { name: 'Promenade Deck', cost: 10 }
       ];
 
       for (const { name, cost } of costChecks) {

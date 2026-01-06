@@ -12,71 +12,32 @@ python -m playtest setup
 python -m playtest autoplay
 ```
 
-### Step 2: Locate and read the analysis file
-
-After the playtest completes, look for the most recent resource flow analysis file:
+### Step 2: Run the analysis script
 
 ```bash
-ls -t logs/resource-flows/*_analysis.txt | head -1
+python scripts/analyze_flow.py
 ```
 
-Read the analysis file to understand:
-- **Resource Totals**: Fountains (gains) vs Sinks (drains) vs Net for each resource
-- **Balance Status**: OK, OVERFLOW (accumulating), or DEFICIT (depleting)
-- **Fountain Breakdown**: Where resources come from (trickle, action, route, etc.)
-- **Sink Breakdown**: Where resources go (purchase, build, launch, hazard, etc.)
-- **Per-Faction Summary**: How each faction's economy differs
-- **Balance Warnings**: Automatic detection of problem resources
+The script automatically finds the most recent flow JSON and outputs:
+- **Purchasing Power Analysis** - techs/cards per player per round vs goals
+- **Currency Analysis** - research/influence generation vs costs
+- **Resource Flow Analysis** - overflow/deficit for all resources
+- **Per-Round Detail** - breakdown by faction
 
-### Step 3: Analyze Research/Influence at Reveal Phase
+### Step 3: Review the output against design goals
 
-This is a critical analysis to identify if players have too much or too little purchasing power during the reveal phase.
+#### Design Goals (PRIMARY METRICS):
 
-Read the JSON log file (not just the analysis summary) and extract per-round data:
+| Purchase Type | Target per Player per Round | Rationale |
+|---------------|----------------------------|-----------|
+| **Tech tiles** | **1** (rarely 2) | Age progression should be gradual |
+| **Market cards** | **1** (rarely 2) | Deck building should be steady |
+| **Total purchases** | **2** baseline, **3** on exceptional rounds | Creates meaningful decisions |
 
-```bash
-# Get the JSON file path
-JSON_FILE=$(ls -t logs/resource-flows/*.json | head -1)
-```
-
-For each round, calculate:
-
-**Research Economy:**
-- **Available at Reveal**: Sum of all `research` fountains from round start through reveal phase
-- **Spent at Reveal**: Sum of all `research` sinks during reveal phase (tech acquisitions)
-- **Leftover**: Available - Spent
-
-**Influence Economy:**
-- **Available at Reveal**: Sum of all `influence` fountains from round start through reveal phase
-- **Spent at Reveal**: Sum of all `influence` sinks during reveal phase (card purchases using influence)
-- **Leftover**: Available - Spent
-
-**Warning Signs:**
-- If leftover research is consistently > 50% of available: Players can't spend their research (need more/cheaper techs, or reduce research generation)
-- If leftover research is consistently 0 AND players wanted more techs: Players are research-starved (need more research sources)
-- Same analysis for influence
-
-**Output Format:**
-```
-=== RESEARCH/INFLUENCE PHASE ANALYSIS ===
-
-Round 1:
-  Research: 3 available → 2 spent → 1 leftover (33% unused)
-  Influence: 0 available → 0 spent → 0 leftover
-
-Round 2:
-  Research: 4 available → 4 spent → 0 leftover (fully utilized)
-  Influence: 1 available → 0 spent → 1 leftover (100% unused!)
-
-...
-
-SUMMARY:
-  Research utilization: 85% average (HEALTHY)
-  Influence utilization: 20% average (WARNING: players can't use influence)
-
-RECOMMENDATIONS:
-  - Influence is underutilized. Consider: cheaper influence costs, more influence-only items
-```
+The script compares actual purchases against these targets and diagnoses:
+- Whether research generation is too high or tech costs too low
+- Whether influence economy is balanced for card purchases
+- Which resources have overflow (no sinks) or deficit
 
 ### Step 4: Analyze and recommend tuning
 
@@ -97,14 +58,23 @@ For each resource with issues, explain:
 
 #### 4.3 Balance Targets
 
-For an engaging board game, aim for these targets:
+**PRIMARY TARGETS (Purchasing Power):**
+
+| Purchase Type | Target per Player per Round | How to Achieve |
+|---------------|----------------------------|----------------|
+| **Tech tiles** | **1** (max 2 rarely) | Research gen ≈ avg tech cost |
+| **Market cards** | **1** (max 2 rarely) | Influence gen ≈ avg card cost |
+| **Total purchases** | **2** baseline | Creates meaningful scarcity |
+
+**SECONDARY TARGETS (Resource Flow):**
+
 | Resource Type | Target Balance | Rationale |
 |---------------|----------------|-----------|
 | Currency (cash) | Sinks ≈ 80-100% of Fountains | Slight scarcity creates tension |
 | Crew (officers, engineers) | Sinks ≈ 60-80% of Fountains | Should feel valuable but available |
 | Consumables (gas) | Sinks ≈ 90-100% of Fountains | Should be mostly consumed |
-| Research | Sinks ≈ 70-90% of Fountains | Players should usually buy techs, occasional leftover OK |
-| Influence | Sinks ≈ 50-80% of Fountains | Optional currency, but should be usable |
+| Research | Generation ≈ 1× avg tech cost | Afford exactly 1 tech per round |
+| Influence | Generation ≈ 1× avg card cost | Afford exactly 1 card per round |
 | Income tracks | Sinks = 0 is OK | These are permanent upgrades |
 | VP | Fountains only | Victory condition, no sinks |
 
@@ -126,30 +96,43 @@ For each recommendation, suggest concrete code changes:
 === RESOURCE FLOW ANALYSIS REPORT ===
 
 EXECUTIVE SUMMARY:
-The economy has significant imbalances. Engineers accumulate indefinitely
-(39 gained, 0 spent) creating a hoarding problem. Cash is well-balanced.
-Officers are slightly tight which creates good tension.
+The economy has a critical pacing problem. Players buy 2.8 techs/round
+(goal: 1), causing ages to progress 3x too fast. The game ends in 3 rounds
+instead of the target 8-10 rounds.
 
-CRITICAL ISSUES:
-1. ENGINEERS (39 fountains, 0 sinks = 100% overflow)
-   - Problem: Engineers accumulate with nothing to spend them on
-   - Impact: Players hoard engineers, reducing decision pressure
-   - Fix: Increase hazard difficulty so engineers are spent on checks
-         Also consider: repair cost of 1 engineer per damaged ship
+=== PURCHASING POWER (PRIMARY METRIC) ===
 
-2. ENGINEER_INCOME (3 fountains, 0 sinks = 100% overflow)
-   - Note: This is an income track, 0 sinks is expected
-   - However: Review if 3 upgrades per game is too generous
+DESIGN GOALS:
+  - Techs per player per round: 1 (max 2 on rare rounds)
+  - Cards per player per round: 1 (max 2 on rare rounds)
+
+ACTUAL RESULTS:
+Round | Techs/Player | Cards/Player | Total | Status
+------|--------------|--------------|-------|-------
+R1    | 2.5          | 0.5          | 3.0   | ❌ TOO MANY TECHS
+R2    | 2.8          | 0.5          | 3.3   | ❌ TOO MANY TECHS
+R3    | 3.0          | 1.0          | 4.0   | ❌ WAY TOO MANY TECHS
+
+CURRENCY ANALYSIS:
+  Research: 4.5 generated/player/round, avg tech cost 1.4
+            → Purchasing power: 3.2 techs (goal: 1) ❌
+  Influence: 3.0 generated/player/round, avg card cost 2.8
+            → Purchasing power: 1.1 cards (goal: 1) ✓
+
+CRITICAL FIX NEEDED:
+  Option A: Triple tech costs (from avg 1.4 to avg 4.0)
+  Option B: Reduce research generation by 66%
+  Option C: Only count Drive techs for age progression
+
+=== SECONDARY METRICS ===
 
 HEALTHY RESOURCES:
-- Cash: 176 in, 199 out (13% deficit - good tension)
-- Officers: 9 in, 10 out (tight but manageable)
-- Research: 6 in, 29 out (converted to technologies)
+- Cash: 76 in, 76 out (perfect balance)
+- Influence: 61% utilization (acceptable)
 
-RECOMMENDATIONS:
-1. [Done] Increased hazard difficulties by +1 to consume more engineers
-2. [Done] Added 1 engineer cost to ship repairs
-3. Consider: engineer upkeep cost during income phase?
+PROBLEM RESOURCES:
+- Engineers: 17 in, 1 out (94% overflow - no sinks!)
+- Officers: 6 in, 1 out (83% overflow - few launches)
 ```
 
 ## Reference: Resource Types
