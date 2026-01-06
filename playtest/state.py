@@ -209,6 +209,8 @@ def get_rd_board(game_id: str) -> list[dict]:
 def get_market_cards(game_id: str) -> list[dict]:
     """Get available market cards (agent cards) for purchase.
 
+    Includes the reserve card (always available) as the last option.
+
     Args:
         game_id: The game ID.
 
@@ -216,8 +218,8 @@ def get_market_cards(game_id: str) -> list[dict]:
         List of card dicts with 'id', 'name', 'cost', and 'symbol' keys.
     """
     state = get_state(game_id)
+    result = []
     if state and state.market_cards:
-        result = []
         for card in state.market_cards:
             result.append({
                 'id': card.id,
@@ -225,8 +227,16 @@ def get_market_cards(game_id: str) -> list[dict]:
                 'cost': getattr(card, 'cost', 3),  # Default cost is 3 influence
                 'symbol': card.symbol,
             })
-        return result
-    return []
+    # Include reserve card (always available) as fallback option
+    if state and state.reserve_card:
+        result.append({
+            'id': state.reserve_card.id,
+            'name': state.reserve_card.name,
+            'cost': getattr(state.reserve_card, 'cost', 2),
+            'symbol': state.reserve_card.symbol,
+            'is_reserve': True,  # Flag to identify as reserve card
+        })
+    return result
 
 
 def get_current_placer(game_id: str) -> str | None:

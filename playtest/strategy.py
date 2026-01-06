@@ -652,9 +652,12 @@ def get_reveal_acquisitions(player: str, game_id: str) -> tuple[list[str], list[
     market_cards = get_market_cards(game_id)
     if market_cards:
         # Prioritize cards by symbol usefulness
-        # Priority: operations (propeller) > technical (wrench) > business (coin)
+        # Priority: operations (propeller) > technical (wrench) > business (coin) > any > reserve
         def get_card_priority(card: dict) -> int:
             """Lower number = higher priority."""
+            # Reserve card (always available) is lowest priority - it's a fallback
+            if card.get('is_reserve') or card.get('id') == 'reserve_aeronaut':
+                return 5
             symbol = card.get('symbol', '').lower()
             if symbol == 'propeller' or symbol == 'operations':
                 return 1  # Operations - useful for launchpad

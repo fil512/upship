@@ -90,6 +90,18 @@ function getUpgradeForTech(techId: string): { id: string; slotType: string; tile
 }
 
 /**
+ * Get priority for a market card based on symbol usefulness
+ * Lower number = higher priority
+ */
+function getMarketCardPriority(card: Card): number {
+  const symbol = (card.symbol || '').toLowerCase();
+  if (symbol === 'propeller' || symbol === 'operations') return 1; // Useful for launchpad
+  if (symbol === 'wrench' || symbol === 'technical') return 2;     // Useful for construction, blueprint
+  if (symbol === 'coin' || symbol === 'business') return 3;        // Useful for gas depot, insurance
+  return 4; // Any/wild or unknown
+}
+
+/**
  * Calculate a utility score for a tech tile
  * Higher score = better tech. Accounts for stats and weight.
  */
@@ -480,8 +492,21 @@ export function findStrategicPlacement(
     priorityLocations.push('technical_institute');
   }
 
+  // Target research_level = age + 1 (max 3) for tech purchasing power
+  const currentAge = state.age || 1;
+  const researchLevel = player.researchLevel || 0;
+  const targetResearchLevel = Math.min(currentAge + 1, 3);
+  if (researchLevel < targetResearchLevel && cash >= 4) {
+    priorityLocations.push('research_institute');
+  }
+
   if (hangarCount < 2 && cash >= 5) {
     priorityLocations.push('construction_hall');
+  }
+
+  // Collect cash from income track if running low
+  if (cash < 10) {
+    priorityLocations.push('treasury');
   }
 
   if (totalGas < 3) {
@@ -501,7 +526,8 @@ export function findStrategicPlacement(
     'blueprint_design', 'research_institute', 'construction_hall',
     'gas_depot', 'technical_institute', 'ministry',
     'flight_school', 'weather_bureau', 'government_liaison',
-    'insurance_bureau', 'launchpad', 'launchpad_2'
+    'insurance_bureau', 'launchpad', 'launchpad_2',
+    'personnel_office', 'engineering_depot', 'treasury'
   ];
 
   for (const loc of fallbackPriorities) {
@@ -630,8 +656,9 @@ export function findLaunchDecision(
 }
 
 /**
- * Get reveal phase acquisitions (tech priorities)
+ * Get reveal phase acquisitions (tech priorities and market cards)
  * Only acquires techs that are superior to what's already installed
+ * Returns all market cards sorted by priority - executor tries each in order
  */
 export function getRevealAcquisitions(
   state: GameState,
@@ -643,38 +670,84 @@ export function getRevealAcquisitions(
 
   if (!player) return { techIds, cardIds };
 
+  // ============ TECH ACQUISITIONS ============
   const rdBoard = state.rdBoard || [];
   const ownedTechs = new Set(player.techCards || []);
 
   // Filter to available techs not already owned
   const availableTechs = rdBoard.filter(t => !ownedTechs.has(t.id));
 
-  if (availableTechs.length === 0) return { techIds, cardIds };
+  if (availableTechs.length > 0) {
+    // Filter to techs that provide superior upgrades
+    const superiorTechs = availableTechs.filter(techCard => {
+      const upgradeInfo = getUpgradeForTech(techCard.id);
+      if (!upgradeInfo) return false; // No upgrade tile found
 
-  // Filter to techs that provide superior upgrades
-  const superiorTechs = availableTechs.filter(techCard => {
-    const upgradeInfo = getUpgradeForTech(techCard.id);
-    if (!upgradeInfo) return false; // No upgrade tile found
+      // Check if this upgrade is better than what's installed
+      return isTechSuperiorToInstalled(upgradeInfo.tile, player);
+    });
 
-    // Check if this upgrade is better than what's installed
-    return isTechSuperiorToInstalled(upgradeInfo.tile, player);
-  });
+    if (superiorTechs.length > 0) {
+      // Sort by score (highest first)
+      superiorTechs.sort((a, b) => {
+        const upgradeA = getUpgradeForTech(a.id);
+        const upgradeB = getUpgradeForTech(b.id);
+        if (!upgradeA || !upgradeB) return 0;
 
-  if (superiorTechs.length === 0) return { techIds, cardIds };
+        const scoreA = calculateTechScore(upgradeA.tile);
+        const scoreB = calculateTechScore(upgradeB.tile);
+        return scoreB - scoreA; // Descending order
+      });
 
-  // Sort by score (highest first) - pick the best available superior tech
-  superiorTechs.sort((a, b) => {
-    const upgradeA = getUpgradeForTech(a.id);
-    const upgradeB = getUpgradeForTech(b.id);
-    if (!upgradeA || !upgradeB) return 0;
+      // Calculate available research (research_level + engineers + estimate card bonus)
+      const researchLevel = player.researchLevel || 0;
+      const engineers = player.engineers || 0;
+      const cardBonusEstimate = 1; // Conservative estimate
+      let availableResearch = researchLevel + engineers + cardBonusEstimate;
 
-    const scoreA = calculateTechScore(upgradeA.tile);
-    const scoreB = calculateTechScore(upgradeB.tile);
-    return scoreB - scoreA; // Descending order
-  });
+      // Buy as many superior techs as affordable
+      for (const tech of superiorTechs) {
+        const cost = (tech as { cost?: number }).cost || 0;
+        if (cost <= availableResearch) {
+          techIds.push(tech.id);
+          availableResearch -= cost;
+          if (availableResearch <= 0) break;
+        }
+      }
+    }
+  }
 
-  // Pick the best superior tech
-  techIds.push(superiorTechs[0].id);
+  // ============ MARKET CARD PURCHASES ============
+  // Return ALL market cards sorted by priority - executor tries each in order
+  // and stops when influence runs out or all cards attempted
+  const marketCards = state.marketCards || [];
+
+  // Include reserve card (always available) as lowest priority fallback
+  const allCards = [...marketCards];
+  if (state.reserveCard) {
+    allCards.push(state.reserveCard);
+  }
+
+  if (allCards.length > 0) {
+    // Sort by priority (lower = better), then by cost (cheaper first)
+    // Reserve card gets priority 5 (lowest) since it's a fallback
+    const sortedCards = allCards.sort((a, b) => {
+      const isReserveA = a.id === 'reserve_aeronaut';
+      const isReserveB = b.id === 'reserve_aeronaut';
+      const priorityA = isReserveA ? 5 : getMarketCardPriority(a);
+      const priorityB = isReserveB ? 5 : getMarketCardPriority(b);
+      const priorityDiff = priorityA - priorityB;
+      if (priorityDiff !== 0) return priorityDiff;
+      const costA = (a as { cost?: number }).cost || 3;
+      const costB = (b as { cost?: number }).cost || 3;
+      return costA - costB;
+    });
+
+    // Return all card IDs - executor will try them in order
+    for (const card of sortedCards) {
+      cardIds.push(card.id);
+    }
+  }
 
   return { techIds, cardIds };
 }

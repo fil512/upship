@@ -321,6 +321,16 @@ async function executeBotRevealPhase(
       anyActionExecuted = true;
     }
 
+    // Buy market cards (tentatively) - tries in priority order, stops when influence runs out
+    for (const cardId of acquisitions.cardIds) {
+      const result = await executeBotAction(io, gameId, botId, 'BUY_MARKET_CARD_TENTATIVE', { cardId }, freshState.version);
+      // Result false means action failed (card claimed or out of influence)
+      // Continue trying next card - server will reject if influence exhausted
+      if (result) {
+        anyActionExecuted = true;
+      }
+    }
+
     // End turn to finalize
     const latestState = await gameStateService.getGameState(gameId);
     if (latestState) {

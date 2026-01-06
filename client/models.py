@@ -422,6 +422,7 @@ class GameState:
     available_routes: list[Route] = field(default_factory=list)
     mission_row: list[CombatMission] = field(default_factory=list)  # Age II only
     market_cards: list[Card] = field(default_factory=list)  # Available agent cards
+    reserve_card: Card | None = None  # Always-available card (like Dune's Arrakis Liaison)
     worker_placement: WorkerPlacement | None = None
     log: list[dict] = field(default_factory=list)
 
@@ -454,6 +455,10 @@ class GameState:
         # Parse market cards (agent cards available for purchase)
         market_cards = [Card.from_dict(c) for c in data.get('marketCards', [])]
 
+        # Parse reserve card (always-available card)
+        reserve_card_data = data.get('reserveCard')
+        reserve_card = Card.from_dict(reserve_card_data) if reserve_card_data else None
+
         # Parse worker placement
         wp_data = data.get('workerPlacement', {})
         worker_placement = WorkerPlacement.from_dict(wp_data) if wp_data else None
@@ -484,6 +489,7 @@ class GameState:
             available_routes=available_routes,
             mission_row=mission_row,
             market_cards=market_cards,
+            reserve_card=reserve_card,
             worker_placement=worker_placement,
             log=data.get('log', []),
         )
