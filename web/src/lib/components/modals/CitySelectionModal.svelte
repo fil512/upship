@@ -64,6 +64,17 @@
 
 	$: fromBonus = getCityBonus(fromCity);
 	$: toBonus = getCityBonus(toCity);
+	$: fromHasBonus = fromCity in CITY_BONUSES;
+	$: toHasBonus = toCity in CITY_BONUSES;
+	$: onlyOneHasBonus = fromHasBonus !== toHasBonus;
+	$: autoSelectedCity = onlyOneHasBonus ? (fromHasBonus ? fromCity : toCity) : null;
+	$: autoSelectedBonus = autoSelectedCity ? getCityBonus(autoSelectedCity) : null;
+
+	function handleAcknowledge() {
+		if (autoSelectedCity) {
+			dispatch('select', { city: autoSelectedCity });
+		}
+	}
 </script>
 
 <svelte:window on:keydown={handleKeydown} />
@@ -71,40 +82,62 @@
 <div class="modal-backdrop" on:click={handleBackdropClick} role="presentation">
 	<div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
 		<div class="modal-header">
-			<h2 id="modal-title">Choose City Bonus</h2>
-			<button class="close-button" on:click={handleCancel} aria-label="Close">
-				&times;
-			</button>
+			<h2 id="modal-title">{onlyOneHasBonus ? 'City Bonus' : 'Choose City Bonus'}</h2>
+			{#if !onlyOneHasBonus}
+				<button class="close-button" on:click={handleCancel} aria-label="Close">
+					&times;
+				</button>
+			{/if}
 		</div>
 
 		<div class="modal-body">
-			<p class="instruction">Select which city's bonus you want to receive:</p>
+			{#if onlyOneHasBonus && autoSelectedCity && autoSelectedBonus}
+				<p class="instruction">You receive the bonus from {autoSelectedCity}:</p>
 
-			<div class="city-options">
-				<button class="city-option" on:click={() => handleSelect(fromCity)}>
-					<div class="city-name">{fromCity}</div>
-					<div class="city-bonus">
-						<Icon name={fromBonus.icon} size={20} />
-						<span>{fromBonus.description}</span>
+				<div class="city-options">
+					<div class="city-option auto-selected">
+						<div class="city-name">{autoSelectedCity}</div>
+						<div class="city-bonus">
+							<Icon name={autoSelectedBonus.icon} size={20} />
+							<span>{autoSelectedBonus.description}</span>
+						</div>
 					</div>
-				</button>
+				</div>
+			{:else}
+				<p class="instruction">Select which city's bonus you want to receive:</p>
 
-				<div class="divider">or</div>
+				<div class="city-options">
+					<button class="city-option" on:click={() => handleSelect(fromCity)}>
+						<div class="city-name">{fromCity}</div>
+						<div class="city-bonus">
+							<Icon name={fromBonus.icon} size={20} />
+							<span>{fromBonus.description}</span>
+						</div>
+					</button>
 
-				<button class="city-option" on:click={() => handleSelect(toCity)}>
-					<div class="city-name">{toCity}</div>
-					<div class="city-bonus">
-						<Icon name={toBonus.icon} size={20} />
-						<span>{toBonus.description}</span>
-					</div>
-				</button>
-			</div>
+					<div class="divider">or</div>
+
+					<button class="city-option" on:click={() => handleSelect(toCity)}>
+						<div class="city-name">{toCity}</div>
+						<div class="city-bonus">
+							<Icon name={toBonus.icon} size={20} />
+							<span>{toBonus.description}</span>
+						</div>
+					</button>
+				</div>
+			{/if}
 		</div>
 
 		<div class="modal-footer">
-			<button class="btn btn-outline" on:click={handleCancel}>
-				Cancel
-			</button>
+			{#if onlyOneHasBonus}
+				<button class="btn btn-primary" on:click={handleAcknowledge}>
+					OK
+				</button>
+			{:else}
+				<button class="btn btn-outline" on:click={handleCancel}>
+					Cancel
+				</button>
+			{/if}
 		</div>
 	</div>
 </div>
@@ -200,6 +233,12 @@
 		background: rgba(212, 175, 55, 0.1);
 	}
 
+	.city-option.auto-selected {
+		border-color: var(--color-accent-gold);
+		background: rgba(212, 175, 55, 0.1);
+		cursor: default;
+	}
+
 	.city-name {
 		font-size: 1.1rem;
 		font-weight: 600;
@@ -246,6 +285,16 @@
 
 	.btn-outline:hover {
 		border-color: var(--color-text-muted);
+	}
+
+	.btn-primary {
+		background: var(--color-accent-gold);
+		border: 1px solid var(--color-accent-gold);
+		color: var(--color-bg-primary);
+	}
+
+	.btn-primary:hover {
+		background: var(--color-accent-gold-light, #e5c66d);
 	}
 
 	@keyframes fadeIn {

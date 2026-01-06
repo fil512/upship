@@ -7,6 +7,7 @@ import type { GameState, PlayerState, Ship, LogEntry, HazardCard, Blueprint } fr
 
 const { GameRuleError, InsufficientFundsError } = require('../errors');
 const { refillMissionRow } = require('../data/combatMissions');
+const { resourceFlowLogger, createFlowContext } = require('../services/resourceFlowLogger');
 
 interface ActionResult {
   newState: GameState;
@@ -285,6 +286,13 @@ function processLaunchCombatMission(state: GameState, playerId: string, data: La
   // Spend resources
   playerState.officers -= requiredOfficers;
   playerState.gasCubes[gasType] -= requiredCubes;
+
+  // Log resource flows
+  const flowContext = createFlowContext(state, (state as { gameId?: string }).gameId || 'unknown');
+  const faction = playerState.faction || 'unknown';
+  resourceFlowLogger.logSink(flowContext, playerId, faction, 'officers', requiredOfficers, 'launch', 'Combat mission', playerState.officers);
+  const resourceType = gasType === 'hydrogen' ? 'hydrogen' : 'helium';
+  resourceFlowLogger.logSink(flowContext, playerId, faction, resourceType, requiredCubes, 'launch', 'Combat mission gas', playerState.gasCubes[gasType]);
 
   // Set ship to awaiting hazard check
   const combatShip = ships[shipIndex] as CombatShip;

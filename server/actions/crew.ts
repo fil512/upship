@@ -12,6 +12,7 @@ const {
   FLIGHT_SCHOOL_COST,
   TECHNICAL_INSTITUTE_COST
 } = require('../config/constants');
+const { resourceFlowLogger, createFlowContext } = require('../services/resourceFlowLogger');
 
 interface ActionResult {
   newState: GameState;
@@ -80,6 +81,14 @@ function processRecruitCrew(state: GameState, playerId: string, data: RecruitDat
     playerState.engineers += count;
   }
 
+  // Log resource flows
+  const flowContext = createFlowContext(state, (state as { gameId?: string }).gameId || 'unknown');
+  const faction = playerState.faction || 'unknown';
+  resourceFlowLogger.logSink(flowContext, playerId, faction, 'cash', totalCost, 'purchase', `Recruit ${crewType}`, playerState.cash, { location: 'academy' });
+  const resourceType = crewType === 'officer' ? 'officers' : 'engineers';
+  const newTotal = crewType === 'officer' ? playerState.officers : playerState.engineers;
+  resourceFlowLogger.logFountain(flowContext, playerId, faction, resourceType, count, 'action', `Recruit ${crewType}`, newTotal, { location: 'academy' });
+
   state.log.push({
     timestamp: new Date().toISOString(),
     message: `Recruited ${count} ${crewType}(s) for £${totalCost}`,
@@ -129,6 +138,12 @@ function processUpgradeOfficerIncome(state: GameState, playerId: string, data: I
 
   playerState.cash -= FLIGHT_SCHOOL_COST as number;
   playerState.officerIncome = (playerState.officerIncome || 0) + 1;
+
+  // Log resource flows
+  const flowContext = createFlowContext(state, (state as { gameId?: string }).gameId || 'unknown');
+  const faction = playerState.faction || 'unknown';
+  resourceFlowLogger.logSink(flowContext, playerId, faction, 'cash', FLIGHT_SCHOOL_COST as number, 'purchase', 'Upgrade Officer Income', playerState.cash, { location: 'flight_school' });
+  resourceFlowLogger.logFountain(flowContext, playerId, faction, 'officer_income', 1, 'action', 'Upgrade Officer Income', playerState.officerIncome, { location: 'flight_school' });
 
   state.log.push({
     timestamp: new Date().toISOString(),
@@ -184,6 +199,12 @@ function processUpgradeEngineerIncome(state: GameState, playerId: string, data: 
 
   playerState.cash -= TECHNICAL_INSTITUTE_COST as number;
   playerState.engineerIncome = (playerState.engineerIncome || 1) + 1;
+
+  // Log resource flows
+  const flowContext = createFlowContext(state, (state as { gameId?: string }).gameId || 'unknown');
+  const faction = playerState.faction || 'unknown';
+  resourceFlowLogger.logSink(flowContext, playerId, faction, 'cash', TECHNICAL_INSTITUTE_COST as number, 'purchase', 'Upgrade Engineer Income', playerState.cash, { location: 'technical_institute' });
+  resourceFlowLogger.logFountain(flowContext, playerId, faction, 'engineer_income', 1, 'action', 'Upgrade Engineer Income', playerState.engineerIncome, { location: 'technical_institute' });
 
   state.log.push({
     timestamp: new Date().toISOString(),
@@ -247,6 +268,12 @@ function processGovernmentLiaison(state: GameState, playerId: string, data: Gove
   // Spend officers and gain income
   playerState.officers -= officerCount;
   playerState.income = (playerState.income || 0) + officerCount;
+
+  // Log resource flows (conversion: officers -> income)
+  const flowContext = createFlowContext(state, (state as { gameId?: string }).gameId || 'unknown');
+  const faction = playerState.faction || 'unknown';
+  resourceFlowLogger.logSink(flowContext, playerId, faction, 'officers', officerCount, 'conversion', 'Government Liaison', playerState.officers, { location: 'government_liaison' });
+  resourceFlowLogger.logFountain(flowContext, playerId, faction, 'income', officerCount, 'conversion', 'Government Liaison', playerState.income, { location: 'government_liaison' });
 
   state.log.push({
     timestamp: new Date().toISOString(),

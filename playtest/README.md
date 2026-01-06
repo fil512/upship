@@ -152,7 +152,6 @@ For `action ... place`:
 
 | Variable | Description |
 |----------|-------------|
-| `UPSHIP_LOCAL=1` | Use local server (default) |
 | `UPSHIP_PROD=1` | Use production server |
 | `UPSHIP_URL` | Custom server URL |
 

@@ -1,6 +1,51 @@
 import type { Blueprint } from '$lib/types/game';
 import { TECH_TILES } from '$lib/data/techTiles';
 
+export interface HullCostData {
+	total: number;
+	base: number;
+	frameCost: number;
+	fabricCost: number;
+}
+
+/**
+ * Calculate hull cost from installed Frame and Fabric tiles
+ * Formula: £2 base + sum of Frame tile hullCosts + sum of Fabric tile hullCosts
+ */
+export function calculateHullCost(blueprint: Blueprint | null | undefined): HullCostData {
+	const result: HullCostData = {
+		total: 2,
+		base: 2,
+		frameCost: 0,
+		fabricCost: 0
+	};
+
+	if (!blueprint) return result;
+
+	// Sum frame tile hull costs
+	for (const tileId of blueprint.frameSlots || []) {
+		if (tileId) {
+			const tile = TECH_TILES[tileId];
+			if (tile?.hullCost) {
+				result.frameCost += tile.hullCost;
+			}
+		}
+	}
+
+	// Sum fabric tile hull costs
+	for (const tileId of blueprint.fabricSlots || []) {
+		if (tileId) {
+			const tile = TECH_TILES[tileId];
+			if (tile?.hullCost) {
+				result.fabricCost += tile.hullCost;
+			}
+		}
+	}
+
+	result.total = result.base + result.frameCost + result.fabricCost;
+	return result;
+}
+
 export interface ShipStatsData {
 	lift: number;
 	weight: number;

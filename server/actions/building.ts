@@ -8,6 +8,7 @@ import type { GameState, PlayerState, Ship, LogEntry, Blueprint } from '@upship/
 const { GameRuleError, InsufficientFundsError } = require('../errors');
 const { UPGRADES, calculateShipStats } = require('../data/upgrades');
 const { generateId } = require('../utils/random');
+const { resourceFlowLogger, createFlowContext } = require('../services/resourceFlowLogger');
 
 interface ActionResult {
   newState: GameState;
@@ -166,12 +167,13 @@ interface RepairShipData {
 
 /**
  * Repair a damaged ship
- * Per Section 4.4: Repair Cost: £3 per ship to move from Repair Hangar to Launch Hangar
+ * Per Section 4.4/8.4: Repair Cost: £3 + 1 Engineer per ship to move from Repair Hangar to Launch Hangar
  */
 function processRepairShip(state: GameState, playerId: string, data: RepairShipData): ActionResult {
   const { shipId } = data;
   const playerState = state.players[playerId];
-  const REPAIR_COST = 3; // £3 per Section 4.4
+  const REPAIR_COST_CASH = 3; // £3 per Section 4.4
+  const REPAIR_COST_ENGINEER = 1; // 1 Engineer per Section 8.4
 
   // Find the ship
   const ships = playerState.ships || [];
@@ -188,13 +190,27 @@ function processRepairShip(state: GameState, playerId: string, data: RepairShipD
     throw new GameRuleError('Ship is not damaged and does not need repair');
   }
 
-  // Check if player can afford repair
-  if (playerState.cash < REPAIR_COST) {
-    throw new InsufficientFundsError(REPAIR_COST, playerState.cash);
+  // Check if player can afford repair (cash)
+  if (playerState.cash < REPAIR_COST_CASH) {
+    throw new InsufficientFundsError(REPAIR_COST_CASH, playerState.cash);
   }
 
-  // Pay repair cost
-  playerState.cash -= REPAIR_COST;
+  // Check if player has enough engineers
+  const availableEngineers = playerState.engineers || 0;
+  if (availableEngineers < REPAIR_COST_ENGINEER) {
+    throw new GameRuleError(`Not enough Engineers: need ${REPAIR_COST_ENGINEER}, have ${availableEngineers}`);
+  }
+
+  // Pay repair cost (cash)
+  playerState.cash -= REPAIR_COST_CASH;
+
+  // Pay repair cost (engineer)
+  playerState.engineers = availableEngineers - REPAIR_COST_ENGINEER;
+
+  // Log engineer consumption
+  const flowContext = createFlowContext(state, (state as { gameId?: string }).gameId || 'unknown');
+  const faction = playerState.faction || 'unknown';
+  resourceFlowLogger.logSink(flowContext, playerId, faction, 'engineers', REPAIR_COST_ENGINEER, 'repair', 'Ship repair labor', playerState.engineers);
 
   // Move ship from Repair Hangar to Launch Hangar
   ship.status = 'hangar';
@@ -202,7 +218,7 @@ function processRepairShip(state: GameState, playerId: string, data: RepairShipD
 
   state.log.push({
     timestamp: new Date().toISOString(),
-    message: `Repaired ship for £${REPAIR_COST}`,
+    message: `Repaired ship for £${REPAIR_COST_CASH} + ${REPAIR_COST_ENGINEER} Engineer`,
     playerId,
     type: 'action'
   } as LogEntry);

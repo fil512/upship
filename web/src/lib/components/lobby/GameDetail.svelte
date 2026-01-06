@@ -271,6 +271,32 @@
 			<span class="player-count">{game.current_player_count}/4 players</span>
 		</div>
 
+		<!-- Faction selector for non-players wanting to join -->
+		{#if canJoin}
+			<div class="faction-section compact-section">
+				<h3>Choose Your Faction</h3>
+				<FactionSelector
+					selectedFaction={selectedFaction}
+					{takenFactions}
+					compact={true}
+					on:select={handleFactionPreselect}
+				/>
+			</div>
+		{/if}
+
+		<!-- Faction selector for players who joined without faction (legacy/host) -->
+		{#if isPlayer && game.status === 'waiting' && !myFaction}
+			<div class="faction-section compact-section">
+				<h3>Select Your Faction</h3>
+				<FactionSelector
+					selectedFaction={myFaction}
+					{takenFactions}
+					compact={true}
+					on:select={handleFactionSelect}
+				/>
+			</div>
+		{/if}
+
 		<PlayerList
 			players={game.players}
 			hostId={game.host_id}
@@ -299,30 +325,6 @@
 						</button>
 					{/each}
 				</div>
-			</div>
-		{/if}
-
-		<!-- Faction selector for non-players wanting to join -->
-		{#if canJoin}
-			<div class="faction-section">
-				<h3>Choose Your Faction to Join</h3>
-				<FactionSelector
-					selectedFaction={selectedFaction}
-					{takenFactions}
-					on:select={handleFactionPreselect}
-				/>
-			</div>
-		{/if}
-
-		<!-- Faction selector for players who joined without faction (legacy/host) -->
-		{#if isPlayer && game.status === 'waiting' && !myFaction}
-			<div class="faction-section">
-				<h3>Select Your Faction</h3>
-				<FactionSelector
-					selectedFaction={myFaction}
-					{takenFactions}
-					on:select={handleFactionSelect}
-				/>
 			</div>
 		{/if}
 
@@ -417,9 +419,21 @@
 		border-radius: var(--radius-lg);
 	}
 
+	.faction-section.compact-section {
+		margin-top: 0;
+		margin-bottom: var(--spacing-md);
+		padding: var(--spacing-sm) var(--spacing-md);
+	}
+
 	.faction-section h3 {
 		font-size: 1rem;
 		margin-bottom: var(--spacing-md);
+	}
+
+	.faction-section.compact-section h3 {
+		font-size: 0.875rem;
+		margin-bottom: var(--spacing-sm);
+		color: var(--color-text-secondary);
 	}
 
 	.actions {

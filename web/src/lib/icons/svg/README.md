@@ -43,7 +43,7 @@ These appear on player cards and determine which Ground Board locations can be a
 
 | File | Game Meaning | Current Shape | Color |
 |------|--------------|---------------|-------|
-| `wrench.svg` | Technical symbol—engineering actions (Research Institute, Design Bureau, Construction Hall) | Adjustable wrench tool | #4a9eff (Blue) |
+| `wrench.svg` | Technical symbol—engineering actions (Research Institute, Blueprint Design, Construction Hall) | Adjustable wrench tool | #4a9eff (Blue) |
 | `coin.svg` | Business symbol—financial actions (Academy, Flight School, The Bank, etc.) | Solid circle | #ffc107 (Gold) |
 | `propeller.svg` | Operations symbol—flight actions (Launchpad, Gas Depot, Weather Bureau, etc.) | Three-blade aircraft propeller | #ffffff (White) |
 | `any.svg` | Wild symbol—works at any location | Asterisk | #c4a35a (Tan/Gold) |

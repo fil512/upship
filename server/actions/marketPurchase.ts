@@ -8,6 +8,7 @@
 import type { GameState, PlayerState, Card, LogEntry } from '@upship/api';
 
 const { GameRuleError, InsufficientFundsError } = require('../errors');
+const { resourceFlowLogger, createFlowContext } = require('../services/resourceFlowLogger');
 
 interface ActionResult {
   newState: GameState;
@@ -107,7 +108,8 @@ function processBuyMarketCardTentative(state: GameState, playerId: string, data:
 }
 
 interface AcquireTechCardTentativeData {
-  cardId: string;
+  cardId?: string;
+  techCardId?: string;  // Alias for backwards compatibility
 }
 
 /**
@@ -116,7 +118,8 @@ interface AcquireTechCardTentativeData {
  * until END_TURN finalizes the acquisition.
  */
 function processAcquireTechCardTentative(state: GameState, playerId: string, data: AcquireTechCardTentativeData): ActionResult {
-  const { cardId } = data;
+  // Accept both cardId and techCardId for backwards compatibility
+  const cardId = data.cardId || data.techCardId;
   const marketState = state as MarketState;
   const playerState = state.players[playerId] as MarketPlayerState;
 
@@ -157,13 +160,20 @@ function processAcquireTechCardTentative(state: GameState, playerId: string, dat
 
   // Spend research from saved first, then from engineers
   let remaining = cost;
+  const flowContext = createFlowContext(state, (state as { gameId?: string }).gameId || 'unknown');
+  const faction = playerState.faction || 'unknown';
+
   if (savedResearch > 0) {
     const fromSaved = Math.min(savedResearch, remaining);
     playerState.research = savedResearch - fromSaved;
     remaining -= fromSaved;
+    if (fromSaved > 0) {
+      resourceFlowLogger.logSink(flowContext, playerId, faction, 'research', fromSaved, 'purchase', `Acquire tech: ${card?.name}`, playerState.research);
+    }
   }
   if (remaining > 0) {
     playerState.engineers -= remaining;
+    resourceFlowLogger.logSink(flowContext, playerId, faction, 'engineers', remaining, 'purchase', `Acquire tech (engineer research): ${card?.name}`, playerState.engineers);
   }
 
   // Mark card as claimed

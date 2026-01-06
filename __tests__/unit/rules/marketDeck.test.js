@@ -259,7 +259,7 @@ describe('Rules Compliance - Market Deck', () => {
       // Chief Engineer currently has no special effect
       const card = { name: 'Chief Engineer', effect: null };
 
-      const result = processCardEffect(state, 'player1', card, 'design_bureau');
+      const result = processCardEffect(state, 'player1', card, 'blueprint_design');
 
       // Should succeed but have no special effect
       expect(result.success).toBe(true);

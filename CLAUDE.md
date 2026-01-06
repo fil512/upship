@@ -124,11 +124,13 @@ Global test helpers (defined in `__tests__/setup.js`):
 
 **IMPORTANT**: Claude must NEVER call `git push` directly. Always use the `/push` command instead, which runs lint and tests before pushing.
 
-## Playtesting (NEVER use CLI)
+## Playtesting (NEVER use CLI or curl)
 
 **CRITICAL**: Claude must NEVER use `npm run cli` or `npm run cli:local`. These commands require permission prompts and cause interruptions. **Always use the Python playtest tool instead** (`python -m playtest`), which runs without any permission prompts.
 
-If you need functionality that doesn't exist in the playtest tool, **add it to the playtest tool** rather than using the CLI.
+**ALSO CRITICAL**: Claude must NEVER use `curl` to interact with the API. Always use the Python playtest tool for all API interactions.
+
+If you need functionality that doesn't exist in the playtest tool, **add it to the playtest tool** rather than using the CLI or curl.
 
 ## Application Structure
 
@@ -336,7 +338,9 @@ python -m playtest autoplay   # Run until game ends or gets stuck
 
 ### Icons in the Web Interface
 
-When the web interface requires an icon, **always use icons from `web/src/lib/icons/svg/`**. See `web/src/lib/icons/svg/README.md` for the complete reference of available icons and their intended usage.
+When the web interface requires an icon, **always use icons from `web/src/lib/icons/svg/`**.
+
+**Icon specifications**: See **`web/src/lib/icons/svg/README.md`** for the complete reference of available icons, their intended usage, and design guidelines.
 
 Key icon categories:
 - **Resources**: `cash.svg`, `income.svg`, `officers.svg`, `engineers.svg`, `hydrogen.svg`, `helium.svg`, `vp.svg`, `research.svg`, `influence.svg`

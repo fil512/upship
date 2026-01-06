@@ -8,6 +8,10 @@
 	export let hydrogen: number = 0;
 	export let helium: number = 0;
 	export let vp: number = 0;
+
+	// Net income = base income - engineer upkeep (£1 per engineer)
+	$: netIncome = income - engineers;
+	$: incomeTooltip = `£${income} base income - £${engineers} engineers = ${netIncome >= 0 ? '+' : ''}£${netIncome}`;
 </script>
 
 <div class="resource-panel">
@@ -18,7 +22,7 @@
 			<Icon name="cash" size={24} />
 			<div class="values">
 				<span class="value">{cash}</span>
-				<span class="income">(+{income}/turn)</span>
+				<span class="income" class:negative={netIncome < 0} title={incomeTooltip}>({netIncome >= 0 ? '+' : ''}{netIncome}/turn)</span>
 			</div>
 			<span class="label">Cash</span>
 		</div>
@@ -99,6 +103,10 @@
 	.income {
 		font-size: 0.625rem;
 		color: var(--color-success);
+	}
+
+	.income.negative {
+		color: var(--color-error);
 	}
 
 	.label {

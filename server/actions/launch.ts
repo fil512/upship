@@ -9,6 +9,7 @@ const { GameRuleError, InsufficientFundsError } = require('../errors');
 const { TECH_TILES } = require('../data/upgrades');
 const { AGE_BASELINES, TECH_CARD_BAG } = require('../config/constants');
 const { shuffleArray } = require('../utils/random');
+const { resourceFlowLogger, createFlowContext } = require('../services/resourceFlowLogger');
 
 interface ActionResult {
   newState: GameState;
@@ -577,14 +578,22 @@ function processLaunchShip(state: GameState, playerId: string, data: LaunchShipD
   // Pay launch costs
   playerState.officers -= requiredOfficers;
 
+  // Log resource flows
+  const flowContext = createFlowContext(state, (state as { gameId?: string }).gameId || 'unknown');
+  const faction = playerState.faction || 'unknown';
+  resourceFlowLogger.logSink(flowContext, playerId, faction, 'officers', requiredOfficers, 'launch', 'Ship launch', playerState.officers);
+
   // Gas handling: consume gas unless using Blaugas to retain
   if (retainGas) {
     // Pay Blaugas cost to retain gas cubes
     playerState.cash -= BLAUGAS_COST;
+    resourceFlowLogger.logSink(flowContext, playerId, faction, 'cash', BLAUGAS_COST, 'launch', 'Blaugas cost', playerState.cash);
     // Gas cubes are NOT consumed
   } else {
     // Normal launch: consume gas cubes
     playerState.gasCubes[gasType] -= requiredCubes;
+    const resourceType = gasType === 'hydrogen' ? 'hydrogen' : 'helium';
+    resourceFlowLogger.logSink(flowContext, playerId, faction, resourceType, requiredCubes, 'launch', 'Gas consumption', playerState.gasCubes[gasType]);
   }
 
   // Step 4: Set ship to awaiting hazard check per Section 8.3

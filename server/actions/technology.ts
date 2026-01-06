@@ -10,6 +10,7 @@ const { shuffleArray } = require('../utils/random');
 const { refillRDBoard } = require('./helpers/marketHelpers');
 const { TECH_CARD_BAG, RESEARCH_INSTITUTE_COST } = require('../config/constants');
 const { performAgeTransition } = require('./helpers/ageTransition');
+const { resourceFlowLogger, createFlowContext } = require('../services/resourceFlowLogger');
 
 interface ActionResult {
   newState: GameState;
@@ -163,6 +164,12 @@ function processAcquireTechCard(state: GameState, playerId: string, data: Acquir
   playerState.cash -= card.cost;
   playerState.techCards.push(targetId!);
 
+  // Log resource flows
+  const flowContext = createFlowContext(state, (state as { gameId?: string }).gameId || 'unknown');
+  const faction = playerState.faction || 'unknown';
+  resourceFlowLogger.logSink(flowContext, playerId, faction, 'cash', card.cost, 'purchase', `Acquire tech: ${card.name}`, playerState.cash);
+  resourceFlowLogger.logFountain(flowContext, playerId, faction, 'technologies', 1, 'action', `Acquire tech: ${card.name}`, playerState.techCards.length);
+
   // Remove from R&D board
   techState.rdBoard.splice(cardIndex, 1);
 
@@ -289,6 +296,7 @@ function processAcquireTechCardResearch(state: GameState, playerId: string, data
 
   // Spend research (from saved first, then engineers provide the rest)
   const savedResearch = playerState.research || 0;
+  const researchSpent = Math.min(savedResearch, cost);
   if (savedResearch >= cost) {
     playerState.research = savedResearch - cost;
   } else {
@@ -298,6 +306,14 @@ function processAcquireTechCardResearch(state: GameState, playerId: string, data
 
   // Add tech card
   playerState.techCards.push(targetId!);
+
+  // Log resource flows
+  const flowContext = createFlowContext(state, (state as { gameId?: string }).gameId || 'unknown');
+  const faction = playerState.faction || 'unknown';
+  if (researchSpent > 0) {
+    resourceFlowLogger.logSink(flowContext, playerId, faction, 'research', researchSpent, 'purchase', `Acquire tech: ${card.name}`, playerState.research);
+  }
+  resourceFlowLogger.logFountain(flowContext, playerId, faction, 'technologies', 1, 'action', `Acquire tech: ${card.name}`, playerState.techCards.length);
 
   // Remove from R&D board
   techState.rdBoard.splice(cardIndex, 1);
@@ -396,6 +412,12 @@ function processUpgradeResearchLevel(state: GameState, playerId: string, data: U
 
   playerState.cash -= totalCost;
   playerState.researchLevel = (playerState.researchLevel || 0) + levels;
+
+  // Log resource flows
+  const flowContext = createFlowContext(state, (state as { gameId?: string }).gameId || 'unknown');
+  const faction = playerState.faction || 'unknown';
+  resourceFlowLogger.logSink(flowContext, playerId, faction, 'cash', totalCost, 'purchase', 'Upgrade Research Level', playerState.cash, { location: 'research_institute' });
+  resourceFlowLogger.logFountain(flowContext, playerId, faction, 'research', levels, 'action', 'Upgrade Research Level', playerState.researchLevel, { location: 'research_institute' });
 
   state.log.push({
     timestamp: new Date().toISOString(),

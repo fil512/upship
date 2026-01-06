@@ -7,12 +7,20 @@
 	import type { SymbolIconName } from '$lib/icons/types';
 
 	export let card: Card;
-	export let index: number;
+	export let index: number = 0;
 	export let selected: boolean = false;
 	export let selectable: boolean = false;
 
+	// Market mode props
+	export let marketMode: boolean = false;
+	export let claimedByMe: boolean = false;
+	export let claimedByOther: boolean = false;
+	export let claimingFaction: string = '';
+
 	const dispatch = createEventDispatcher<{
 		select: { index: number; card: Card };
+		buy: { cardId: string };
+		undo: { cardId: string };
 	}>();
 
 	const SYMBOL_COLORS: Record<string, string> = {
@@ -24,21 +32,36 @@
 
 	$: iconName = (card.symbol || 'any') as SymbolIconName;
 	$: symbolColor = SYMBOL_COLORS[card.symbol] || SYMBOL_COLORS.any;
+	$: isInteractive = marketMode ? (!claimedByOther) : selectable;
 
 	function handleClick() {
-		if (selectable) {
+		if (marketMode) {
+			if (claimedByMe) {
+				dispatch('undo', { cardId: card.id });
+			} else if (!claimedByOther) {
+				dispatch('buy', { cardId: card.id });
+			}
+		} else if (selectable) {
 			dispatch('select', { index, card });
 		}
+	}
+
+	function handleUndo(e: MouseEvent | KeyboardEvent) {
+		e.stopPropagation();
+		dispatch('undo', { cardId: card.id });
 	}
 </script>
 
 <button
 	class="card"
 	class:selected
-	class:selectable
+	class:selectable={isInteractive}
+	class:market-mode={marketMode}
+	class:claimed-by-me={claimedByMe}
+	class:claimed-by-other={claimedByOther}
 	style:--card-color={symbolColor}
 	on:click={handleClick}
-	disabled={!selectable}
+	disabled={marketMode ? claimedByOther : !selectable}
 	aria-label="{card.name} card, {card.symbol || 'any'} symbol{selected ? ', selected' : ''}"
 >
 	<!-- Header: Name (left) + Cost (right) -->
@@ -46,7 +69,7 @@
 		<span class="card-name">{card.name}</span>
 		{#if card.cost}
 			<div class="card-cost" title="Costs {card.cost} Influence">
-				<CostBadge type="influence" value={card.cost} size={24} />
+				<CostBadge type="influence" value={card.cost} size={28} />
 			</div>
 		{/if}
 	</div>
@@ -54,7 +77,7 @@
 	<!-- Center stripe: Symbol + Agent effect -->
 	<div class="card-center">
 		<div class="card-symbol">
-			<Icon name={iconName} size={32} color={symbolColor} />
+			<Icon name={iconName} size={48} color={symbolColor} />
 		</div>
 		{#if card.effect}
 			<div class="card-effect">{card.effect}</div>
@@ -66,32 +89,46 @@
 		<span class="reveal-label">Reveal:</span>
 		<div class="reveal-items">
 			{#if card.reveal?.cash}
-				<ResourceBadge type="cash" value={card.reveal.cash} size={16} />
+				<ResourceBadge type="cash" value={card.reveal.cash} size={20} />
 			{/if}
 			{#if card.reveal?.influence}
-				<ResourceBadge type="influence" value={card.reveal.influence} size={16} />
+				<ResourceBadge type="influence" value={card.reveal.influence} size={20} />
 			{/if}
 			{#if card.reveal?.research}
-				<ResourceBadge type="research" value={card.reveal.research} size={16} />
+				<ResourceBadge type="research" value={card.reveal.research} size={20} />
 			{/if}
 			{#if card.reveal?.officers}
-				<ResourceBadge type="officers" value={card.reveal.officers} size={14} />
+				<ResourceBadge type="officers" value={card.reveal.officers} size={18} />
 			{/if}
 			{#if card.reveal?.engineers}
-				<ResourceBadge type="engineers" value={card.reveal.engineers} size={14} />
+				<ResourceBadge type="engineers" value={card.reveal.engineers} size={18} />
 			{/if}
 		</div>
 	</div>
+
+	<!-- Overlay for claimed cards in market mode -->
+	{#if marketMode && claimedByMe}
+		<div class="claimed-overlay mine">
+			<span>Purchased</span>
+			<span class="undo-btn" role="button" tabindex="0" on:click={handleUndo} on:keydown={(e) => e.key === 'Enter' && handleUndo(e)}>Undo</span>
+		</div>
+	{:else if marketMode && claimedByOther}
+		<div class="claimed-overlay other">
+			<span>Claimed by</span>
+			<span class="faction">{claimingFaction}</span>
+		</div>
+	{/if}
 </button>
 
 <style>
 	.card {
+		position: relative;
 		display: flex;
 		flex-direction: column;
 		width: 100%;
-		min-width: 100px;
-		max-width: 140px;
-		min-height: 150px;
+		min-width: 120px;
+		max-width: 160px;
+		min-height: 170px;
 		background: #e8e4d9;
 		border: 2px solid #c4b8a0;
 		border-radius: var(--radius-md);
@@ -119,6 +156,62 @@
 
 	.card:disabled {
 		cursor: not-allowed;
+	}
+
+	/* Market mode styles */
+	.card.market-mode.claimed-by-me {
+		border-color: #4caf50;
+		background: #f0fff0;
+	}
+
+	.card.market-mode.claimed-by-other {
+		opacity: 0.6;
+		filter: grayscale(50%);
+	}
+
+	.claimed-overlay {
+		position: absolute;
+		inset: 0;
+		border-radius: var(--radius-md);
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
+		align-items: center;
+		gap: 0.5rem;
+		font-size: 0.8rem;
+		font-weight: 600;
+	}
+
+	.claimed-overlay.mine {
+		background: rgba(76, 175, 80, 0.9);
+		color: white;
+	}
+
+	.claimed-overlay.other {
+		background: rgba(0, 0, 0, 0.7);
+		color: white;
+	}
+
+	.claimed-overlay .faction {
+		font-size: 0.7rem;
+		opacity: 0.9;
+		text-transform: uppercase;
+	}
+
+	.undo-btn {
+		padding: 0.25rem 0.75rem;
+		background: white;
+		color: #4caf50;
+		border: none;
+		border-radius: 4px;
+		font-size: 0.7rem;
+		font-weight: 600;
+		cursor: pointer;
+		transition: background 0.2s;
+	}
+
+	.undo-btn:hover {
+		background: #f0f0f0;
 	}
 
 	/* Header section */

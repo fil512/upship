@@ -8,6 +8,7 @@ import type { GameState, PlayerState, LogEntry } from '@upship/api';
 
 const { GameRuleError } = require('../errors');
 const { TECH_CARD_BAG } = require('../config/constants');
+const { resourceFlowLogger } = require('../services/resourceFlowLogger');
 
 interface ActionResult {
   newState: GameState;
@@ -214,6 +215,16 @@ function processCalculateScores(state: GameState, playerId: string, data: Calcul
 
   // Set phase to game_complete to stop the game loop
   state.phase = 'game_complete';
+
+  // Save resource flow log for economy analysis
+  const logPath = resourceFlowLogger.saveLog();
+  if (logPath) {
+    state.log.push({
+      timestamp: new Date().toISOString(),
+      message: `Resource flow log saved to ${logPath}`,
+      type: 'system'
+    } as LogEntry);
+  }
 
   return { newState: state };
 }

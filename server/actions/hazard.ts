@@ -13,6 +13,7 @@ const { GameRuleError } = require('../errors');
 const { applyCityBonus, CITY_BONUSES } = require('../data/cities');
 const { shuffleArray } = require('../utils/random');
 const { processCompleteMission, resolveFlakCheck, calculateEquipmentBonus } = require('./combatMission');
+const { resourceFlowLogger, createFlowContext } = require('../services/resourceFlowLogger');
 
 interface ActionResult {
   newState: GameState;
@@ -276,6 +277,10 @@ function processHazardCheck(state: GameState, playerId: string, data: HazardChec
 
   if (engineerBonus > 0) {
     playerState.engineers -= engineerBonus;
+    // Log engineer consumption for hazard check
+    const flowContext = createFlowContext(state, (state as { gameId?: string }).gameId || 'unknown');
+    const faction = playerState.faction || 'unknown';
+    resourceFlowLogger.logSink(flowContext, playerId, faction, 'engineers', engineerBonus, 'hazard', `Hazard check: ${hazard.name}`, playerState.engineers);
   }
 
   const checkDetails = {
@@ -356,6 +361,10 @@ function resolveFireHazard(state: GameState, playerId: string, shipIndex: number
 
     if (engineerBonus > 0) {
       playerState.engineers -= engineerBonus;
+      // Log engineer consumption for static discharge
+      const flowContext = createFlowContext(state, (state as { gameId?: string }).gameId || 'unknown');
+      const faction = playerState.faction || 'unknown';
+      resourceFlowLogger.logSink(flowContext, playerId, faction, 'engineers', engineerBonus, 'hazard', 'Static discharge', playerState.engineers);
     }
 
     if (totalCheck >= hazard.difficulty) {
@@ -386,6 +395,11 @@ function resolveFireHazard(state: GameState, playerId: string, shipIndex: number
   if (actualSpend >= engineerCost) {
     playerState.engineers -= engineerCost;
     ships[shipIndex].status = 'damaged';
+
+    // Log engineer consumption for fire hazard
+    const flowContext = createFlowContext(state, (state as { gameId?: string }).gameId || 'unknown');
+    const faction = playerState.faction || 'unknown';
+    resourceFlowLogger.logSink(flowContext, playerId, faction, 'engineers', engineerCost, 'hazard', `Fire hazard: ${hazard.name}`, playerState.engineers);
 
     state.log.push({
       timestamp: new Date().toISOString(),
@@ -638,6 +652,11 @@ function processRespondToHazard(state: GameState, playerId: string, data: Respon
       ships[shipIndex].status = 'damaged';
       delete ships[shipIndex].pendingHazard;
 
+      // Log engineer consumption for fire hazard response
+      const flowContext = createFlowContext(state, (state as { gameId?: string }).gameId || 'unknown');
+      const faction = playerState.faction || 'unknown';
+      resourceFlowLogger.logSink(flowContext, playerId, faction, 'engineers', engineerCost, 'hazard', `Fire hazard: ${hazard.name}`, playerState.engineers);
+
       state.log.push({
         timestamp: new Date().toISOString(),
         message: `${hazard.name} controlled! Spent ${engineerCost} Engineer(s). Ship damaged.`,
@@ -659,6 +678,10 @@ function processRespondToHazard(state: GameState, playerId: string, data: Respon
 
     if (spendEngineers && availableEngineers >= engineersNeeded) {
       playerState.engineers -= engineersNeeded;
+      // Log engineer consumption for static discharge response
+      const flowContext = createFlowContext(state, (state as { gameId?: string }).gameId || 'unknown');
+      const faction = playerState.faction || 'unknown';
+      resourceFlowLogger.logSink(flowContext, playerId, faction, 'engineers', engineersNeeded, 'hazard', 'Static discharge response', playerState.engineers);
       delete ships[shipIndex].pendingHazard;
       return resolveHazardSuccess(state, playerId, shipIndex, route, hazard,
         `Static Discharge Reliability check passed: ${reliabilityStat + engineersNeeded} >= ${hazard.difficulty}`, cityChoice);
@@ -679,6 +702,10 @@ function processRespondToHazard(state: GameState, playerId: string, data: Respon
 
   if (spendEngineers && availableEngineers >= engineersNeeded) {
     playerState.engineers -= engineersNeeded;
+    // Log engineer consumption for hazard response
+    const flowContext = createFlowContext(state, (state as { gameId?: string }).gameId || 'unknown');
+    const faction = playerState.faction || 'unknown';
+    resourceFlowLogger.logSink(flowContext, playerId, faction, 'engineers', engineersNeeded, 'hazard', `Hazard response: ${hazard.name}`, playerState.engineers);
     delete ships[shipIndex].pendingHazard;
     return resolveHazardSuccess(state, playerId, shipIndex, route, hazard,
       `${hazard.statName?.toUpperCase() || 'CHECK'} passed: ${relevantStat} + ${engineersNeeded} engineers >= ${hazard.difficulty}`, cityChoice);
