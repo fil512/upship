@@ -2,6 +2,7 @@ import type { IconDefinition, GameIconName } from './types';
 
 // Import SVG files as raw strings (Vite ?raw)
 import shipSvg from './svg/ship.svg?raw';
+import shipDamagedSvg from './svg/ship-damaged.svg?raw';
 import launchSvg from './svg/launch.svg?raw';
 import routeSvg from './svg/route.svg?raw';
 import technologySvg from './svg/technology.svg?raw';
@@ -18,6 +19,12 @@ export const gameIcons: Record<GameIconName, IconDefinition> = {
     svg: shipSvg,
     category: 'game',
     tooltip: 'Airship'
+  },
+
+  'ship-damaged': {
+    svg: shipDamagedSvg,
+    category: 'game',
+    tooltip: 'Damaged Airship - needs repair'
   },
 
   launch: {

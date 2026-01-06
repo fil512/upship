@@ -1,0 +1,19 @@
+<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="currentColor">
+  <!-- Ship: Damaged Zeppelin (with cracks/damage marks) -->
+  <ellipse cx="12" cy="10" rx="11" ry="6" opacity="0.7"/>
+  <!-- Fins -->
+  <path d="M2 10L0 8v4l2-2z" opacity="0.7"/>
+  <path d="M22 10l2-2v4l-2-2z" opacity="0.7"/>
+  <path d="M12 4L10 2h4l-2 2z" opacity="0.7"/>
+  <!-- Gondola -->
+  <rect x="8" y="15" width="8" height="3" rx="1" opacity="0.7"/>
+  <!-- Connections -->
+  <line x1="10" y1="15" x2="10" y2="13" stroke="currentColor" stroke-width="1" opacity="0.7"/>
+  <line x1="14" y1="15" x2="14" y2="13" stroke="currentColor" stroke-width="1" opacity="0.7"/>
+  <!-- Damage marks (cracks) -->
+  <path d="M7 8L9 10L7 12" stroke="#dc2626" stroke-width="1.5" fill="none"/>
+  <path d="M15 7L17 9L15 11" stroke="#dc2626" stroke-width="1.5" fill="none"/>
+  <!-- Wrench symbol to indicate repair needed -->
+  <circle cx="19" cy="17" r="4" fill="#dc2626"/>
+  <path d="M17.5 16l1 1.5 2-2" stroke="white" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+</svg>

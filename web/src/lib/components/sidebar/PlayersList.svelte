@@ -32,6 +32,20 @@
 	function formatIncome(value: number): string {
 		return value >= 0 ? `+${value}` : `${value}`;
 	}
+
+	interface Ship {
+		status?: string;
+	}
+
+	function getHangarShipCount(player: PlayerState): number {
+		const ships = (player.ships as Ship[]) || [];
+		return ships.filter(s => s.status === 'hangar').length;
+	}
+
+	function getDamagedShipCount(player: PlayerState): number {
+		const ships = (player.ships as Ship[]) || [];
+		return ships.filter(s => s.status === 'damaged').length;
+	}
 </script>
 
 <div class="players-panel">
@@ -119,10 +133,16 @@
 						<span class="value">{player.gasCubes?.helium || 0}</span>
 						<Icon name="helium" size={14} />
 					</div>
-					<div class="resource" title="Ships: {player.ships?.length || 0}">
-						<span class="value">{player.ships?.length || 0}</span>
+					<div class="resource" title="Ships in Hangar: {getHangarShipCount(player)}">
+						<span class="value">{getHangarShipCount(player)}</span>
 						<Icon name="ship" size={14} />
 					</div>
+					{#if getDamagedShipCount(player) > 0}
+						<div class="resource damaged" title="Damaged Ships: {getDamagedShipCount(player)} (need repair)">
+							<span class="value">{getDamagedShipCount(player)}</span>
+							<Icon name="ship-damaged" size={14} />
+						</div>
+					{/if}
 				</div>
 			</div>
 		{/if}
@@ -253,7 +273,7 @@
 
 	.player-resources {
 		display: flex;
-		flex-wrap: wrap;
+		flex-wrap: nowrap;
 		gap: var(--spacing-xs);
 	}
 
@@ -282,6 +302,14 @@
 	}
 
 	.resource .income.negative {
+		color: var(--color-error);
+	}
+
+	.resource.damaged {
+		background: color-mix(in srgb, var(--color-error) 20%, var(--color-bg-hover));
+	}
+
+	.resource.damaged .value {
 		color: var(--color-error);
 	}
 </style>
