@@ -50,7 +50,7 @@
 	import GameComplete from '$lib/components/game/GameComplete.svelte';
 
 	// Utilities
-	import { calculateShipStats } from '$lib/utils/shipStats';
+	import { calculateShipStats, calculateHullCost, calculateGasRequired } from '$lib/utils/shipStats';
 	import { getAvailableTilesForPlayer } from '$lib/utils/techCardToTiles';
 	import { TECH_TILES } from '$lib/data/techTiles';
 	import { getFactionBorderColor } from '$lib/utils/factionColors';
@@ -71,6 +71,7 @@
 	const LOCATION_NAMES: Record<string, string> = {
 		blueprint_design: 'Blueprint Design',
 		launchpad: 'Launchpad',
+		launchpad_2: 'Launchpad',
 		ministry: 'Ministry',
 		weather_bureau: 'Weather Bureau',
 		flight_school: 'Flight School',
@@ -87,6 +88,7 @@
 
 		switch (locationId) {
 			case 'launchpad':
+			case 'launchpad_2':
 				costs = [{ icon: 'officers', label: '1 Officer', value: '1' }];
 				benefits = [{ icon: 'launch', label: 'Launch ships' }];
 				break;

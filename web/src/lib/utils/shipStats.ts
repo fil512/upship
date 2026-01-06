@@ -60,6 +60,24 @@ export interface ShipStatsData {
 }
 
 /**
+ * Calculate gas requirement (number of gas cubes needed to launch)
+ * This equals the total number of gas_socket stats across all frame tiles
+ */
+export function calculateGasRequired(blueprint: Blueprint | null | undefined): number {
+	if (!blueprint) return 0;
+
+	let gasRequired = 0;
+	for (const tileId of blueprint.frameSlots || []) {
+		if (!tileId) continue;
+		const tile = TECH_TILES[tileId];
+		if (tile?.stats?.gas_socket) {
+			gasRequired += tile.stats.gas_socket;
+		}
+	}
+	return gasRequired;
+}
+
+/**
  * Calculate ship stats from installed tech tiles on the blueprint
  * This mirrors the server-side calculateShipStats in server/data/upgrades.ts
  */

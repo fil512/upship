@@ -271,11 +271,14 @@ class ResourceFlowLogger {
     analysis.push('----------------|-----------|----------|----------|--------');
 
     for (const [resource, stats] of byResource) {
-      const balance = stats.fountains > 0
-        ? ((stats.sinks / stats.fountains) * 100).toFixed(0) + '%'
-        : 'N/A';
-      const status = stats.net > stats.fountains * 0.3 ? 'OVERFLOW' :
-                     stats.net < 0 ? 'DEFICIT' : 'OK';
+      let status: string;
+      if (stats.net > stats.fountains * 0.3) {
+        status = 'OVERFLOW';
+      } else if (stats.net < 0) {
+        status = 'DEFICIT';
+      } else {
+        status = 'OK';
+      }
       analysis.push(
         `${resource.padEnd(15)} | ${String(stats.fountains).padStart(9)} | ${String(stats.sinks).padStart(8)} | ${String(stats.net).padStart(8)} | ${status}`
       );

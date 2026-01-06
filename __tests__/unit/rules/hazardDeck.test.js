@@ -35,15 +35,16 @@ describe('Rules Compliance - Hazard Deck', () => {
       });
     });
 
-    it('should contain exactly 8 Minor Hazard cards (difficulty 2-3)', () => {
+    it('should contain exactly 8 Minor Hazard cards (difficulty 3-4)', () => {
       const deck = createHazardDeck();
       const minorHazards = deck.filter(card => card.category === 'minor');
       expect(minorHazards.length).toBe(8);
 
-      // All minor hazards should have difficulty 2 or 3
+      // All minor hazards should have difficulty 3 or 4
+      // (increased from 2-3 to require more engineer intervention)
       minorHazards.forEach(card => {
-        expect(card.difficulty).toBeGreaterThanOrEqual(2);
-        expect(card.difficulty).toBeLessThanOrEqual(3);
+        expect(card.difficulty).toBeGreaterThanOrEqual(3);
+        expect(card.difficulty).toBeLessThanOrEqual(4);
       });
 
       // Minor hazards should have challenge types
@@ -52,15 +53,16 @@ describe('Rules Compliance - Hazard Deck', () => {
       });
     });
 
-    it('should contain exactly 8 Major Hazard cards (difficulty 4-5)', () => {
+    it('should contain exactly 8 Major Hazard cards (difficulty 5-6)', () => {
       const deck = createHazardDeck();
       const majorHazards = deck.filter(card => card.category === 'major');
       expect(majorHazards.length).toBe(8);
 
-      // All major hazards should have difficulty 4 or 5
+      // All major hazards should have difficulty 5 or 6
+      // (increased from 4-5 to require more engineer intervention)
       majorHazards.forEach(card => {
-        expect(card.difficulty).toBeGreaterThanOrEqual(4);
-        expect(card.difficulty).toBeLessThanOrEqual(5);
+        expect(card.difficulty).toBeGreaterThanOrEqual(5);
+        expect(card.difficulty).toBeLessThanOrEqual(6);
       });
 
       // Major hazards should have challenge types
@@ -106,12 +108,13 @@ describe('Rules Compliance - Hazard Deck', () => {
       });
     });
 
-    it('should have Static Discharge with difficulty 4 Reliability check', () => {
+    it('should have Static Discharge with difficulty 5 Reliability check', () => {
       const deck = createHazardDeck();
       const staticDischarge = deck.find(card => card.type === 'static_discharge');
 
       expect(staticDischarge).toBeDefined();
-      expect(staticDischarge.difficulty).toBe(4);
+      // Difficulty increased from 4 to 5 to require more engineer intervention
+      expect(staticDischarge.difficulty).toBe(5);
       expect(staticDischarge.challengeType).toBe('reliability');
       expect(staticDischarge.hydrogenOnly).toBe(true);
     });
@@ -300,7 +303,7 @@ describe('Rules Compliance - Hazard Deck', () => {
               name: 'Static Discharge',
               hydrogenOnly: true,
               challengeType: 'reliability',
-              difficulty: 4,
+              difficulty: 5,
               flak: 4
             }],
             blueprint: {
