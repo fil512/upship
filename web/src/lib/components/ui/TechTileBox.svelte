@@ -52,14 +52,14 @@
 </div>
 
 <style>
-	/* Tile box matching blueprint style: 100x54px */
+	/* Tile box matching blueprint rendered size: ~108x59px */
 	.tile-box {
 		display: flex;
 		flex-direction: column;
 		align-items: center;
 		justify-content: space-between;
-		width: 100px;
-		height: 54px;
+		width: 108px;
+		height: 59px;
 		padding: 4px;
 		background: color-mix(in srgb, var(--slot-color) 20%, rgba(30, 41, 59, 0.9));
 		border: 2px solid var(--slot-color);

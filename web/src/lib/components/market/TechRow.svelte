@@ -140,8 +140,8 @@
 	.tech-card {
 		position: relative;
 		flex: 1;
-		min-width: 120px;
-		max-width: 160px;
+		min-width: 130px;
+		max-width: 180px;
 		min-height: 80px;
 		background: #e8e4d9;
 		border: 2px solid #9a8c70;
