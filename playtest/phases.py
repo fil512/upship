@@ -617,6 +617,20 @@ def submit_reveal(player: str, game_id: str, logger: PlaytestLogger, reason: str
             except Exception as e:
                 logger.log_action(None, f"  └─ Tech {tech_id} acquisition error: {str(e)[:50]}", "reveal")
 
+    # Step 2b: Make tentative market card purchases (uses influence)
+    acquired_cards = []
+    if card_ids:
+        for card_id in card_ids:
+            try:
+                card_result = client.buy_market_card_tentative(player, game_id, card_id)
+                if card_result.success:
+                    acquired_cards.append(card_id)
+                else:
+                    # Log but don't fail - player might not have enough influence
+                    logger.log_action(None, f"  └─ Market card {card_id} purchase failed: {card_result.error}", "reveal")
+            except Exception as e:
+                logger.log_action(None, f"  └─ Market card {card_id} purchase error: {str(e)[:50]}", "reveal")
+
     # Step 3: Send END_TURN to finalize acquisitions and advance to next placer
     end_result = client.end_turn(player, game_id)
     if not end_result.success:
@@ -656,6 +670,11 @@ def submit_reveal(player: str, game_id: str, logger: PlaytestLogger, reason: str
         faction = get_faction_from_player(player)
         for tech in new_techs:
             logger.track_tech_acquired(tech, faction)
+
+    if acquired_cards:
+        card_list = ", ".join(acquired_cards)
+        logger.log_action(None, f"  └─ Market cards bought: {card_list}", "reveal")
+        print(f"    └─ Market cards bought: {card_list}")
 
     if post_player_data:
         post_research = post_player_data.research or 0

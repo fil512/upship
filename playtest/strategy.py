@@ -8,7 +8,7 @@ from typing import Any
 
 from client import Player, Ship, Blueprint, Route, Card, CombatMission
 
-from .state import get_state, get_available_routes, get_mission_row, get_player_id, get_rd_board, get_ship_details
+from .state import get_state, get_available_routes, get_mission_row, get_player_id, get_rd_board, get_market_cards, get_ship_details
 from .client import get_player_user_id, get_manifest
 
 
@@ -439,6 +439,7 @@ def find_strategic_placement(
     cash = player_data.cash or 0
     engineers = player_data.engineers or 0
     officers = player_data.officers or 0
+    research_level = player_data.research_level or 0
     gas_cubes = player_data.gas_cubes or {}
     hydrogen = gas_cubes.get('hydrogen', 0)
     helium = gas_cubes.get('helium', 0)
@@ -463,6 +464,7 @@ def find_strategic_placement(
             'cash': cash,
             'officers': officers,
             'engineers': engineers,
+            'research_level': research_level,
             'hydrogen': hydrogen,
             'helium': helium,
             'hangar_ships': hangar_count,
@@ -487,8 +489,15 @@ def find_strategic_placement(
     priority_locations.extend(launch_eval['priorities'])
 
     # Phase 2: Strategic investments based on game state
-    if on_route_count >= 2:
+
+    # Invest in research_institute early to build tech purchasing power
+    # Target: research_level 2 by Age II, level 3 by Age III
+    # Cost is £4 per level, so need cash >= 4
+    target_research_level = min(current_age + 1, 3)  # Age 1->2, Age 2->3, Age 3->3
+    if research_level < target_research_level and cash >= 4:
         priority_locations.append('research_institute')
+
+    if on_route_count >= 2:
         priority_locations.append('flight_school')
         priority_locations.append('technical_institute')
 
@@ -550,8 +559,10 @@ def find_strategic_placement(
 def get_reveal_acquisitions(player: str, game_id: str) -> tuple[list[str], list[str]]:
     """Calculate what technologies and market cards to acquire during reveal.
 
-    Prioritizes drive technologies (basic_engine, efficient_propeller) which
-    provide range/speed stats needed for Age II missions and Age III routes.
+    Calculates available research (research_level + engineers + ~1 card bonus estimate)
+    and buys as many techs as affordable, prioritizing by strategic value.
+
+    Also calculates available influence and buys market cards (agent cards).
 
     Args:
         player: Player username.
@@ -563,44 +574,102 @@ def get_reveal_acquisitions(player: str, game_id: str) -> tuple[list[str], list[
     tech_ids = []
     card_ids = []
 
+    # Get player data to check resources and owned techs
+    state = get_state(game_id, player)
+    player_id = get_player_id(player, state) if state else None
+    player_data = state.get_player(player_id) if state and player_id else None
+
+    if not player_data:
+        return tech_ids, card_ids
+
+    # ============ TECH ACQUISITIONS (Research) ============
     techs = get_rd_board(game_id)
     if techs:
-        # Get player data to check what techs they already have
-        state = get_state(game_id, player)
-        player_id = get_player_id(player, state) if state else None
-        player_data = state.get_player(player_id) if state and player_id else None
-        owned_techs = set(player_data.technologies) if player_data else set()
+        owned_techs = set(player_data.technologies) if player_data.technologies else set()
 
-        # Priority order for technologies:
-        # 1. Drive technologies (for range/speed stats) - critical for Age II/III
-        # 2. Frame technologies (for lift)
-        # 3. Fabric technologies (for weight reduction)
-        # 4. Component technologies
+        # Calculate available research per Section 5.1:
+        # Research = Research Level + Engineers in Barracks + card bonuses
+        # Card bonuses vary, but estimate ~1-2 from typical hand (Rigger, Researcher cards)
+        research_level = player_data.research_level or 0
+        engineers = player_data.engineers or 0
+        card_bonus_estimate = 1  # Conservative estimate for card bonuses
 
-        drive_tech_names = {
-            'basic_engine', 'efficient_propeller', 'diesel_engine',
-            'supercharger', 'advanced_propeller', 'rotary_engine',
-            'turbocharger', 'triple_engine', 'jet_engine', 'variable_pitch_propeller',
-        }
+        available_research = research_level + engineers + card_bonus_estimate
 
-        # Filter to available techs not already owned
-        available_techs = [t for t in techs if t.get('id') not in owned_techs]
+        if available_research > 0:
+            # Filter to available techs not already owned
+            available_techs = [t for t in techs if t.get('id') not in owned_techs]
 
-        if not available_techs:
-            return tech_ids, card_ids
+            if available_techs:
+                # Categorize techs by strategic priority
+                # Priority: drive > gas > structure > fabric > component
+                drive_keywords = {'engine', 'propeller', 'diesel', 'supercharg', 'turbo', 'pitch'}
+                gas_keywords = {'gas', 'valv', 'ballonet', 'cell', 'vent', 'recovery', 'helium', 'blaugas'}
+                structure_keywords = {'frame', 'girder', 'bracing', 'keel', 'geodetic', 'modular'}
+                fabric_keywords = {'fabric', 'skin', 'canvas', 'cotton', 'latex', 'coating', 'doping', 'covering'}
 
-        # Prioritize drive technologies
-        drive_techs = [t for t in available_techs if t.get('id') in drive_tech_names]
-        other_techs = [t for t in available_techs if t.get('id') not in drive_tech_names]
+                def get_tech_priority(tech: dict) -> int:
+                    """Lower number = higher priority."""
+                    tech_id = tech.get('id', '').lower()
+                    tech_name = tech.get('name', '').lower()
+                    combined = tech_id + ' ' + tech_name
 
-        # Sort by cost (prefer cheaper)
-        drive_techs.sort(key=lambda t: t.get('cost', 0))
-        other_techs.sort(key=lambda t: t.get('cost', 0))
+                    if any(kw in combined for kw in drive_keywords):
+                        return 1  # Highest priority - range/speed for routes
+                    if any(kw in combined for kw in gas_keywords):
+                        return 2  # Gas efficiency
+                    if any(kw in combined for kw in structure_keywords):
+                        return 3  # Frame/lift
+                    if any(kw in combined for kw in fabric_keywords):
+                        return 4  # Fabric/weight
+                    return 5  # Components and other
 
-        # Pick the best available tech
-        if drive_techs:
-            tech_ids.append(drive_techs[0]['id'])
-        elif other_techs:
-            tech_ids.append(other_techs[0]['id'])
+                # Sort by priority first, then by cost (prefer cheaper within same priority)
+                available_techs.sort(key=lambda t: (get_tech_priority(t), t.get('cost', 0)))
+
+                # Buy as many techs as we can afford
+                remaining_research = available_research
+                for tech in available_techs:
+                    cost = tech.get('cost', 0)
+                    if cost <= remaining_research:
+                        tech_ids.append(tech['id'])
+                        remaining_research -= cost
+                        if remaining_research <= 0:
+                            break
+
+    # ============ MARKET CARD PURCHASES (Influence) ============
+    market_cards = get_market_cards(game_id)
+    if market_cards:
+        # Calculate available influence
+        # Influence comes from card bonuses during reveal - estimate based on typical cards
+        # Note: Actual influence is calculated server-side during reveal, so we estimate
+        influence_estimate = 3  # Conservative estimate (1-2 cards typically give 2-4 influence)
+
+        if influence_estimate > 0:
+            # Prioritize cards by symbol usefulness
+            # Priority: operations (propeller) > technical (wrench) > business (coin)
+            def get_card_priority(card: dict) -> int:
+                """Lower number = higher priority."""
+                symbol = card.get('symbol', '').lower()
+                if symbol == 'propeller' or symbol == 'operations':
+                    return 1  # Operations - useful for launchpad
+                if symbol == 'wrench' or symbol == 'technical':
+                    return 2  # Technical - useful for construction, blueprint
+                if symbol == 'coin' or symbol == 'business':
+                    return 3  # Business - useful for gas depot, insurance
+                return 4  # Any/wild or unknown
+
+            # Sort by priority, then by cost (prefer cheaper)
+            market_cards.sort(key=lambda c: (get_card_priority(c), c.get('cost', 3)))
+
+            # Buy as many cards as we can afford
+            remaining_influence = influence_estimate
+            for card in market_cards:
+                cost = card.get('cost', 3)  # Default cost is 3 influence
+                if cost <= remaining_influence:
+                    card_ids.append(card['id'])
+                    remaining_influence -= cost
+                    if remaining_influence <= 0:
+                        break
 
     return tech_ids, card_ids

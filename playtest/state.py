@@ -206,6 +206,29 @@ def get_rd_board(game_id: str) -> list[dict]:
     return []
 
 
+def get_market_cards(game_id: str) -> list[dict]:
+    """Get available market cards (agent cards) for purchase.
+
+    Args:
+        game_id: The game ID.
+
+    Returns:
+        List of card dicts with 'id', 'name', 'cost', and 'symbol' keys.
+    """
+    state = get_state(game_id)
+    if state and state.market_cards:
+        result = []
+        for card in state.market_cards:
+            result.append({
+                'id': card.id,
+                'name': card.name,
+                'cost': getattr(card, 'cost', 3),  # Default cost is 3 influence
+                'symbol': card.symbol,
+            })
+        return result
+    return []
+
+
 def get_current_placer(game_id: str) -> str | None:
     """Find which player should place an agent (during worker_placement phase).
 

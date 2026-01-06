@@ -92,6 +92,19 @@ class Card:
     symbol: str  # wrench, coin, propeller, any
     reveal: dict[str, int] = field(default_factory=dict)
     effect: str = ''
+    cost: int = 3  # Cost in influence to purchase from market
+
+    @classmethod
+    def from_dict(cls, data: dict) -> 'Card':
+        """Create Card from API response dict."""
+        return cls(
+            id=data.get('id', ''),
+            name=data.get('name', ''),
+            symbol=data.get('symbol', 'any'),
+            reveal=data.get('reveal', {}),
+            effect=data.get('effect', ''),
+            cost=data.get('cost', 3),
+        )
 
 
 @dataclass
@@ -397,6 +410,7 @@ class GameState:
     routes: list[Route] = field(default_factory=list)
     available_routes: list[Route] = field(default_factory=list)
     mission_row: list[CombatMission] = field(default_factory=list)  # Age II only
+    market_cards: list[Card] = field(default_factory=list)  # Available agent cards
     worker_placement: WorkerPlacement | None = None
     log: list[dict] = field(default_factory=list)
 
@@ -425,6 +439,9 @@ class GameState:
 
         # Parse combat mission row (Age II only)
         mission_row = [CombatMission.from_dict(m) for m in data.get('missionRow', [])]
+
+        # Parse market cards (agent cards available for purchase)
+        market_cards = [Card.from_dict(c) for c in data.get('marketCards', [])]
 
         # Parse worker placement
         wp_data = data.get('workerPlacement', {})
@@ -455,6 +472,7 @@ class GameState:
             routes=routes,
             available_routes=available_routes,
             mission_row=mission_row,
+            market_cards=market_cards,
             worker_placement=worker_placement,
             log=data.get('log', []),
         )

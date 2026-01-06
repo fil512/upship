@@ -658,6 +658,23 @@ class UpshipClient:
         """
         return self.action(username, game_id, 'ACQUIRE_TECH_CARD_TENTATIVE', techCardId=tech_card_id)
 
+    def buy_market_card_tentative(self, username: str, game_id: str, card_id: str) -> ActionResult:
+        """Tentatively buy a market card (agent card) during reveal.
+
+        This marks the market card as claimed by this player but doesn't finalize
+        until END_TURN is called. Used after REVEAL but before END_TURN.
+        Costs influence based on the card's cost (default 3).
+
+        Args:
+            username: The authenticated username.
+            game_id: The ID of the game.
+            card_id: The ID of the market card to buy.
+
+        Returns:
+            ActionResult with success status and updated game state.
+        """
+        return self.action(username, game_id, 'BUY_MARKET_CARD_TENTATIVE', cardId=card_id)
+
     def install_upgrade(
         self,
         username: str,
