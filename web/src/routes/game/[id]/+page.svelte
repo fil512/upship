@@ -47,6 +47,7 @@
 	// Modals
 	import LocationActionModal from '$lib/components/modals/LocationActionModal.svelte';
 	import CitySelectionModal from '$lib/components/modals/CitySelectionModal.svelte';
+	import LaunchSuccessModal from '$lib/components/modals/LaunchSuccessModal.svelte';
 	import GameComplete from '$lib/components/game/GameComplete.svelte';
 
 	// Utilities
@@ -462,24 +463,63 @@
 		}
 	}
 
+	// City bonus definitions (matches CitySelectionModal)
+	const CITY_BONUSES: Record<string, { description: string; icon: import('$lib/icons').IconName }> = {
+		// Age I Cities
+		London: { description: '+£3', icon: 'cash' },
+		Paris: { description: '+1 Influence', icon: 'influence' },
+		Berlin: { description: '+1 Research', icon: 'research' },
+		Frankfurt: { description: '+£2', icon: 'cash' },
+		Hamburg: { description: '+1 Hydrogen', icon: 'hydrogen' },
+		Brussels: { description: '+1 Officer', icon: 'officers' },
+		// Age II Cities
+		Friedrichshafen: { description: '+1 Research', icon: 'research' },
+		Cardington: { description: '+1 Engineer', icon: 'engineers' },
+		Rome: { description: '+1 Influence', icon: 'influence' },
+		Moscow: { description: '+£4', icon: 'cash' },
+		Cairo: { description: 'Free Tech Swap', icon: 'technology' },
+		'Scapa Flow': { description: '+1 Officer', icon: 'officers' },
+		// Age III Cities
+		'New York': { description: '+£5', icon: 'cash' },
+		Lakehurst: { description: '+1 Engineer', icon: 'engineers' },
+		'Rio de Janeiro': { description: '+2 Influence', icon: 'influence' },
+		Recife: { description: '+1 Gas (any)', icon: 'gas' },
+		Seville: { description: 'Draw 1 Card', icon: 'propeller' },
+		Bombay: { description: '+£3, +1 Influence', icon: 'cash' }
+	};
+
 	// Called when city is selected after hazard check passes
 	async function handleCitySelect(event: CustomEvent<{ city: string }>) {
 		showCityModal = false;
 		if (!pendingLaunch || !pendingHazardResponse) {
 			return;
 		}
+
+		// Capture launch data before the request
+		const launchRoute = hazardRoute;
+		const selectedCity = event.detail.city;
+		const cityBonusData = CITY_BONUSES[selectedCity];
+
 		// Ships are tokens - no shipId needed
 		const result = await sendAction({
 			actionType: 'RESPOND_TO_HAZARD',
 			actionData: {
 				spendEngineers: pendingHazardResponse.spendEngineers,
-				cityChoice: event.detail.city
+				cityChoice: selectedCity
 			}
 		});
 		pendingHazardResponse = null;
-		if (result.success) {
-			showToast('Ship launched successfully!', 'success');
-		} else {
+		if (result.success && launchRoute) {
+			// Show the launch success modal
+			launchSuccessData = {
+				routeName: launchRoute.name || `${launchRoute.from} → ${launchRoute.to}`,
+				routeIncome: launchRoute.income || 0,
+				cityBonus: cityBonusData ? { city: selectedCity, ...cityBonusData } : null,
+				missionName: null,
+				missionVp: 0
+			};
+			showLaunchSuccessModal = true;
+		} else if (!result.success) {
 			showToast(result.error || 'Failed to respond to hazard', 'error');
 		}
 	}
@@ -682,6 +722,16 @@
 	// City selection modal state
 	let showCityModal = false;
 	$: selectedRoute = routes.find((r) => r.id === selectedRouteId);
+
+	// Launch success modal state
+	let showLaunchSuccessModal = false;
+	let launchSuccessData: {
+		routeName: string;
+		routeIncome: number;
+		cityBonus: { city: string; description: string; icon: import('$lib/icons').IconName } | null;
+		missionName: string | null;
+		missionVp: number;
+	} | null = null;
 
 	// Auto-switch to Map tab when gas is selected during launch
 	function selectGasType(gasType: 'hydrogen' | 'helium') {
@@ -1530,6 +1580,20 @@
 			toCity={hazardRoute.to || 'Unknown'}
 			on:select={handleCitySelect}
 			on:cancel={handleCityModalCancel}
+		/>
+	{/if}
+
+	{#if showLaunchSuccessModal && launchSuccessData}
+		<LaunchSuccessModal
+			routeName={launchSuccessData.routeName}
+			routeIncome={launchSuccessData.routeIncome}
+			cityBonus={launchSuccessData.cityBonus}
+			missionName={launchSuccessData.missionName}
+			missionVp={launchSuccessData.missionVp}
+			on:dismiss={() => {
+				showLaunchSuccessModal = false;
+				launchSuccessData = null;
+			}}
 		/>
 	{/if}
 
