@@ -12,18 +12,17 @@ describe('Rules Compliance - Launching and Repair', () => {
       const state = createTestGameState();
       const playerState = state.players['1'];
 
-      // Player has a damaged ship in repair hangar
-      playerState.ships = [
-        { id: 'ship1', status: 'damaged' },
-        { id: 'ship2', status: 'hangar' }
-      ];
+      // Player has a damaged ship in repair bay
+      playerState.hangarShips = 1;
+      playerState.repairShips = 1;
       playerState.cash = 15;
 
       const { processRepairShip } = require('../../../server/actions/building');
-      const result = processRepairShip(state, '1', { shipId: 'ship1' });
+      const result = processRepairShip(state, '1', {});
 
-      // Ship should now be in hangar, cost £3
-      expect(result.newState.players['1'].ships[0].status).toBe('hangar');
+      // Ship should be moved from repair to hangar, cost £3
+      expect(result.newState.players['1'].repairShips).toBe(0);
+      expect(result.newState.players['1'].hangarShips).toBe(2);
       expect(result.newState.players['1'].cash).toBe(12);
     });
 
@@ -31,42 +30,29 @@ describe('Rules Compliance - Launching and Repair', () => {
       const state = createTestGameState();
       const playerState = state.players['1'];
 
-      playerState.ships = [{ id: 'ship1', status: 'damaged' }];
+      playerState.repairShips = 1;
       playerState.cash = 2;
 
       const { processRepairShip } = require('../../../server/actions/building');
 
       expect(() => {
-        processRepairShip(state, '1', { shipId: 'ship1' });
+        processRepairShip(state, '1', {});
       }).toThrow(/not enough cash|insufficient funds/i);
     });
 
-    it('should reject repair if ship is not damaged', () => {
+    it('should reject repair if no ships in repair bay', () => {
       const state = createTestGameState();
       const playerState = state.players['1'];
 
-      playerState.ships = [{ id: 'ship1', status: 'hangar' }];
+      playerState.hangarShips = 1;
+      playerState.repairShips = 0;  // No ships in repair bay
       playerState.cash = 15;
 
       const { processRepairShip } = require('../../../server/actions/building');
 
       expect(() => {
-        processRepairShip(state, '1', { shipId: 'ship1' });
-      }).toThrow(/not damaged/i);
-    });
-
-    it('should reject repair if ship not found', () => {
-      const state = createTestGameState();
-      const playerState = state.players['1'];
-
-      playerState.ships = [{ id: 'ship1', status: 'hangar' }];
-      playerState.cash = 15;
-
-      const { processRepairShip } = require('../../../server/actions/building');
-
-      expect(() => {
-        processRepairShip(state, '1', { shipId: 'nonexistent' });
-      }).toThrow(/not found/i);
+        processRepairShip(state, '1', {});
+      }).toThrow(/no.*repair|repair.*bay/i);
     });
   });
 
@@ -77,23 +63,22 @@ describe('Rules Compliance - Launching and Repair', () => {
 
       playerState.gasCubes = { hydrogen: 3, helium: 0 };
       playerState.officers = 1;
-      playerState.ships = [{ id: 'ship1', status: 'hangar' }];
+      playerState.hangarShips = 1;
 
       state.map.routes[0].claimed = null;
 
       const { processLaunchShip } = require('../../../server/actions/launch');
 
       const result = processLaunchShip(state, '1', {
-        shipId: 'ship1',
         routeId: 'route_1',
         gasType: 'hydrogen',
         _internal: true
       });
 
-      // Ship should be awaiting_hazard with pendingHazard after LAUNCH_SHIP
-      expect(result.newState.players['1'].ships[0].status).toBe('awaiting_hazard');
-      expect(result.newState.players['1'].ships[0].pendingHazard).toBeDefined();
-      expect(result.newState.players['1'].ships[0].pendingRouteId).toBe('route_1');
+      // Ship should be in pendingLaunch with hazardInfo after LAUNCH_SHIP
+      expect(result.newState.players['1'].pendingLaunch).toBeDefined();
+      expect(result.newState.players['1'].pendingLaunch.hazardInfo).toBeDefined();
+      expect(result.newState.players['1'].pendingLaunch.routeId).toBe('route_1');
     });
 
     it('should claim route after RESPOND_TO_HAZARD with spendEngineers=true', () => {
@@ -102,7 +87,7 @@ describe('Rules Compliance - Launching and Repair', () => {
 
       playerState.gasCubes = { hydrogen: 3, helium: 0 };
       playerState.officers = 1;
-      playerState.ships = [{ id: 'ship1', status: 'hangar' }];
+      playerState.hangarShips = 1;
 
       state.map.routes[0].claimed = null;
 
@@ -111,7 +96,6 @@ describe('Rules Compliance - Launching and Repair', () => {
 
       // Step 1: LAUNCH_SHIP
       const launchResult = processLaunchShip(state, '1', {
-        shipId: 'ship1',
         routeId: 'route_1',
         gasType: 'hydrogen',
         _internal: true
@@ -119,13 +103,12 @@ describe('Rules Compliance - Launching and Repair', () => {
 
       // Step 2: RESPOND_TO_HAZARD
       const hazardResult = processRespondToHazard(launchResult.newState, '1', {
-        shipId: 'ship1',
         spendEngineers: true
       });
 
-      // Route should be claimed after hazard check passes
+      // Route should be claimed after hazard check passes, pendingLaunch cleared
       expect(hazardResult.newState.map.routes[0].claimed).toBe('1');
-      expect(hazardResult.newState.players['1'].ships[0].status).toBe('on_route');
+      expect(hazardResult.newState.players['1'].pendingLaunch).toBeUndefined();
     });
 
     it('should increase income after RESPOND_TO_HAZARD passes', () => {
@@ -135,7 +118,7 @@ describe('Rules Compliance - Launching and Repair', () => {
       const initialIncome = playerState.income;
       playerState.gasCubes = { hydrogen: 3, helium: 0 };
       playerState.officers = 1;
-      playerState.ships = [{ id: 'ship1', status: 'hangar' }];
+      playerState.hangarShips = 1;
 
       state.map.routes[0].claimed = null;
       const routeIncome = state.map.routes[0].income;
@@ -145,7 +128,6 @@ describe('Rules Compliance - Launching and Repair', () => {
 
       // Step 1: LAUNCH_SHIP
       const launchResult = processLaunchShip(state, '1', {
-        shipId: 'ship1',
         routeId: 'route_1',
         gasType: 'hydrogen',
         _internal: true
@@ -153,7 +135,6 @@ describe('Rules Compliance - Launching and Repair', () => {
 
       // Step 2: RESPOND_TO_HAZARD
       const hazardResult = processRespondToHazard(launchResult.newState, '1', {
-        shipId: 'ship1',
         spendEngineers: true
       });
 
@@ -177,7 +158,7 @@ describe('Rules Compliance - Launching and Repair', () => {
       // Setup: ship with insufficient Speed for route
       playerState.gasCubes = { hydrogen: 0, helium: 3 };
       playerState.officers = 1;
-      playerState.ships = [{ id: 'ship1', status: 'hangar' }];
+      playerState.hangarShips = 1;
 
       // Route requires Speed 5, but ship only has Speed 2
       state.map.routes = [{
@@ -198,7 +179,6 @@ describe('Rules Compliance - Launching and Repair', () => {
 
       // Step 1: LAUNCH_SHIP - With Trapeze System and bypassedRequirement option
       const launchResult = processLaunchShip(state, '3', {
-        shipId: 'ship1',
         routeId: 'route_speed',
         gasType: 'helium',
         bypassRequirement: 'speed',  // Use Trapeze System to bypass speed
@@ -206,17 +186,16 @@ describe('Rules Compliance - Launching and Repair', () => {
       });
 
       // Should succeed - ship awaiting hazard response
-      expect(launchResult.newState.players['3'].ships[0].status).toBe('awaiting_hazard');
+      expect(launchResult.newState.players['3'].pendingLaunch).toBeDefined();
 
       // Step 2: RESPOND_TO_HAZARD
       const hazardResult = processRespondToHazard(launchResult.newState, '3', {
-        shipId: 'ship1',
         spendEngineers: true
       });
 
-      // Should succeed - ship on_route after hazard check passes
-      expect(hazardResult.newState.players['3'].ships[0].status).toBe('on_route');
-      expect(hazardResult.newState.players['3'].ships[0].routeId).toBe('route_speed');
+      // Should succeed - route claimed after hazard check passes, pendingLaunch cleared
+      expect(hazardResult.newState.players['3'].pendingLaunch).toBeUndefined();
+      expect(hazardResult.newState.map.routes[0].claimed).toBe('3');
     });
 
     it('should NOT allow non-USA player to bypass route requirements (no upgrade installed)', () => {
@@ -231,7 +210,7 @@ describe('Rules Compliance - Launching and Repair', () => {
 
       playerState.gasCubes = { hydrogen: 3, helium: 0 };
       playerState.officers = 1;
-      playerState.ships = [{ id: 'ship1', status: 'hangar' }];
+      playerState.hangarShips = 1;
 
       // Route requires Speed 5, but ship only has Speed 2
       state.map.routes = [{
@@ -249,7 +228,6 @@ describe('Rules Compliance - Launching and Repair', () => {
       // Should fail - Germany can't bypass requirements
       expect(() => {
         processLaunchShip(state, '1', {
-          shipId: 'ship1',
           routeId: 'route_speed',
           gasType: 'hydrogen',
           bypassRequirement: 'speed',
@@ -267,7 +245,7 @@ describe('Rules Compliance - Launching and Repair', () => {
 
       playerState.gasCubes = { hydrogen: 0, helium: 3 };
       playerState.officers = 1;
-      playerState.ships = [{ id: 'ship1', status: 'hangar' }];
+      playerState.hangarShips = 1;
 
       // Route requires both high Speed AND high Ceiling
       state.map.routes = [{
@@ -286,7 +264,6 @@ describe('Rules Compliance - Launching and Repair', () => {
       // Even with bypassRequirement, ship fails other requirement
       expect(() => {
         processLaunchShip(state, '3', {
-          shipId: 'ship1',
           routeId: 'route_hard',
           gasType: 'helium',
           bypassRequirement: 'speed',  // Bypass speed, but ceiling still fails
@@ -315,7 +292,7 @@ describe('Rules Compliance - Launching and Repair', () => {
 
       playerState.gasCubes = { hydrogen: 0, helium: 3 };
       playerState.officers = 1;
-      playerState.ships = [{ id: 'ship1', status: 'hangar' }];
+      playerState.hangarShips = 1;
 
       // Route requires Speed 5, but ship only has Speed 2
       state.map.routes = [{
@@ -333,7 +310,6 @@ describe('Rules Compliance - Launching and Repair', () => {
       // Should FAIL - having technology is not enough, upgrade must be installed
       expect(() => {
         processLaunchShip(state, '3', {
-          shipId: 'ship1',
           routeId: 'route_speed',
           gasType: 'helium',
           bypassRequirement: 'speed',
@@ -360,7 +336,7 @@ describe('Rules Compliance - Launching and Repair', () => {
 
       playerState.gasCubes = { hydrogen: 0, helium: 3 };
       playerState.officers = 1;
-      playerState.ships = [{ id: 'ship1', status: 'hangar' }];
+      playerState.hangarShips = 1;
 
       // Route requires Speed 5, but ship only has Speed 2
       state.map.routes = [{
@@ -377,14 +353,13 @@ describe('Rules Compliance - Launching and Repair', () => {
 
       // Should SUCCEED - upgrade is installed
       const result = processLaunchShip(state, '3', {
-        shipId: 'ship1',
         routeId: 'route_speed',
         gasType: 'helium',
         bypassRequirement: 'speed',
         _internal: true
       });
 
-      expect(result.newState.players['3'].ships[0].status).toBe('awaiting_hazard');
+      expect(result.newState.players['3'].pendingLaunch).toBeDefined();
     });
   });
 
@@ -396,7 +371,7 @@ describe('Rules Compliance - Launching and Repair', () => {
 
       playerState.gasCubes = { hydrogen: 3, helium: 0 };
       playerState.officers = 3; // Age 3 requires 3 officers
-      playerState.ships = [{ id: 'ship1', status: 'hangar' }];
+      playerState.hangarShips = 1;
 
       // Blueprint has no luxury upgrades (Luxury stat = 0)
       playerState.blueprint = {
@@ -424,7 +399,6 @@ describe('Rules Compliance - Launching and Repair', () => {
 
       expect(() => {
         processLaunchShip(state, '1', {
-          shipId: 'ship1',
           routeId: 'luxury_route',
           gasType: 'hydrogen',
           _internal: true
@@ -439,7 +413,7 @@ describe('Rules Compliance - Launching and Repair', () => {
 
       playerState.gasCubes = { hydrogen: 3, helium: 0 };
       playerState.officers = 3;
-      playerState.ships = [{ id: 'ship1', status: 'hangar' }];
+      playerState.hangarShips = 1;
 
       // Blueprint with sleeping_quarters which gives luxury: 1
       playerState.blueprint = {
@@ -467,13 +441,12 @@ describe('Rules Compliance - Launching and Repair', () => {
 
       // Should succeed - ship has luxury 1, route requires 1
       const result = processLaunchShip(state, '1', {
-        shipId: 'ship1',
         routeId: 'luxury_route',
         gasType: 'hydrogen',
         _internal: true
       });
 
-      expect(result.newState.players['1'].ships[0].status).toBe('awaiting_hazard');
+      expect(result.newState.players['1'].pendingLaunch).toBeDefined();
     });
 
     it('should allow USA with Sparrowhawk Hangar upgrade to bypass Luxury requirement', () => {
@@ -483,7 +456,7 @@ describe('Rules Compliance - Launching and Repair', () => {
 
       playerState.gasCubes = { hydrogen: 0, helium: 3 };
       playerState.officers = 3;
-      playerState.ships = [{ id: 'ship1', status: 'hangar' }];
+      playerState.hangarShips = 1;
 
       // GAP-079: Blueprint with sparrowhawk_hangar upgrade installed (no luxury upgrades)
       playerState.blueprint = {
@@ -511,14 +484,13 @@ describe('Rules Compliance - Launching and Repair', () => {
 
       // Should succeed with Trapeze System bypassing luxury requirement
       const result = processLaunchShip(state, '3', {
-        shipId: 'ship1',
         routeId: 'luxury_route',
         gasType: 'helium',
         bypassRequirement: 'luxury',
         _internal: true
       });
 
-      expect(result.newState.players['3'].ships[0].status).toBe('awaiting_hazard');
+      expect(result.newState.players['3'].pendingLaunch).toBeDefined();
     });
 
     it('should allow launch on non-luxury routes without Luxury stat', () => {
@@ -528,7 +500,7 @@ describe('Rules Compliance - Launching and Repair', () => {
 
       playerState.gasCubes = { hydrogen: 3, helium: 0 };
       playerState.officers = 3;
-      playerState.ships = [{ id: 'ship1', status: 'hangar' }];
+      playerState.hangarShips = 1;
 
       // Blueprint with no luxury
       playerState.blueprint = {
@@ -556,13 +528,12 @@ describe('Rules Compliance - Launching and Repair', () => {
 
       // Should succeed - no luxury requirement
       const result = processLaunchShip(state, '1', {
-        shipId: 'ship1',
         routeId: 'regular_route',
         gasType: 'hydrogen',
         _internal: true
       });
 
-      expect(result.newState.players['1'].ships[0].status).toBe('awaiting_hazard');
+      expect(result.newState.players['1'].pendingLaunch).toBeDefined();
     });
   });
 
@@ -573,7 +544,7 @@ describe('Rules Compliance - Launching and Repair', () => {
 
       playerState.gasCubes = { hydrogen: 3, helium: 0 };
       playerState.officers = 1;
-      playerState.ships = [{ id: 'ship1', status: 'hangar' }];
+      playerState.hangarShips = 1;
 
       state.map.routes = [{
         id: 'route_1',
@@ -589,14 +560,13 @@ describe('Rules Compliance - Launching and Repair', () => {
 
       // Player chooses London for the city bonus
       const result = processLaunchShip(state, '1', {
-        shipId: 'ship1',
         routeId: 'route_1',
         gasType: 'hydrogen',
         cityChoice: 'London',
         _internal: true
       });
 
-      expect(result.newState.players['1'].ships[0].pendingCityChoice).toBe('London');
+      expect(result.newState.players['1'].pendingLaunch.cityChoice).toBe('London');
     });
 
     it('should apply player-chosen city bonus after hazard success', () => {
@@ -606,7 +576,7 @@ describe('Rules Compliance - Launching and Repair', () => {
       const initialCash = playerState.cash;
       playerState.gasCubes = { hydrogen: 3, helium: 0 };
       playerState.officers = 1;
-      playerState.ships = [{ id: 'ship1', status: 'hangar' }];
+      playerState.hangarShips = 1;
 
       state.map.routes = [{
         id: 'route_1',
@@ -623,7 +593,6 @@ describe('Rules Compliance - Launching and Repair', () => {
 
       // Launch with London as city choice
       const launchResult = processLaunchShip(state, '1', {
-        shipId: 'ship1',
         routeId: 'route_1',
         gasType: 'hydrogen',
         cityChoice: 'London',
@@ -632,7 +601,6 @@ describe('Rules Compliance - Launching and Repair', () => {
 
       // Respond to hazard
       const hazardResult = processRespondToHazard(launchResult.newState, '1', {
-        shipId: 'ship1',
         spendEngineers: true
       });
 
@@ -648,7 +616,7 @@ describe('Rules Compliance - Launching and Repair', () => {
 
       playerState.gasCubes = { hydrogen: 3, helium: 0 };
       playerState.officers = 1;
-      playerState.ships = [{ id: 'ship1', status: 'hangar' }];
+      playerState.hangarShips = 1;
       playerState.influence = 0;
 
       state.map.routes = [{
@@ -666,7 +634,6 @@ describe('Rules Compliance - Launching and Repair', () => {
 
       // Launch with Paris as city choice instead
       const launchResult = processLaunchShip(state, '1', {
-        shipId: 'ship1',
         routeId: 'route_1',
         gasType: 'hydrogen',
         cityChoice: 'Paris',
@@ -677,7 +644,6 @@ describe('Rules Compliance - Launching and Repair', () => {
 
       // Respond to hazard
       const hazardResult = processRespondToHazard(launchResult.newState, '1', {
-        shipId: 'ship1',
         spendEngineers: true
       });
 
@@ -693,7 +659,7 @@ describe('Rules Compliance - Launching and Repair', () => {
 
       playerState.gasCubes = { hydrogen: 3, helium: 0 };
       playerState.officers = 1;
-      playerState.ships = [{ id: 'ship1', status: 'hangar' }];
+      playerState.hangarShips = 1;
 
       state.map.routes = [{
         id: 'route_1',
@@ -710,7 +676,6 @@ describe('Rules Compliance - Launching and Repair', () => {
       // Try to choose Berlin (not an endpoint)
       expect(() => {
         processLaunchShip(state, '1', {
-          shipId: 'ship1',
           routeId: 'route_1',
           gasType: 'hydrogen',
           cityChoice: 'Berlin',  // Invalid - not an endpoint
@@ -725,7 +690,7 @@ describe('Rules Compliance - Launching and Repair', () => {
 
       playerState.gasCubes = { hydrogen: 3, helium: 0 };
       playerState.officers = 1;
-      playerState.ships = [{ id: 'ship1', status: 'hangar' }];
+      playerState.hangarShips = 1;
       playerState.influence = 0;
 
       state.map.routes = [{
@@ -743,7 +708,6 @@ describe('Rules Compliance - Launching and Repair', () => {
 
       // Launch WITHOUT cityChoice - should default to 'to' city (Paris)
       const launchResult = processLaunchShip(state, '1', {
-        shipId: 'ship1',
         routeId: 'route_1',
         gasType: 'hydrogen',
         _internal: true
@@ -753,7 +717,6 @@ describe('Rules Compliance - Launching and Repair', () => {
 
       // Respond to hazard
       const hazardResult = processRespondToHazard(launchResult.newState, '1', {
-        shipId: 'ship1',
         spendEngineers: true
       });
 

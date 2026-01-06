@@ -235,6 +235,52 @@ export const TECH_TILES: Record<string, TechTile> = {
     age: 3
   },
 
+  // === FACTION STARTING DRIVE TILES ===
+  maybach_hl: {
+    id: 'maybach_hl',
+    name: 'Maybach HL Engine',
+    type: 'drive',
+    slotType: 'driveSlots',
+    requiredCard: 'maybach_engine',
+    weight: 2,
+    stats: { speed: 1 },
+    special: null,
+    age: 1
+  },
+  expedition_engine: {
+    id: 'expedition_engine',
+    name: 'Expedition Engine',
+    type: 'drive',
+    slotType: 'driveSlots',
+    requiredCard: 'expedition_propeller',
+    weight: 2,
+    stats: { range: 1 },
+    special: null,
+    age: 1
+  },
+  reliable_engine: {
+    id: 'reliable_engine',
+    name: 'Reliable Engine',
+    type: 'drive',
+    slotType: 'driveSlots',
+    requiredCard: 'basic_powerplant',
+    weight: 1,
+    stats: {},
+    special: null,
+    age: 1
+  },
+  standard_engine: {
+    id: 'standard_engine',
+    name: 'Standard Engine',
+    type: 'drive',
+    slotType: 'driveSlots',
+    requiredCard: 'standard_propeller',
+    weight: 2,
+    stats: {},
+    special: null,
+    age: 1
+  },
+
   // === FRAME UPGRADES ===
   wooden_frame: {
     id: 'wooden_frame',
@@ -357,6 +403,56 @@ export const TECH_TILES: Record<string, TechTile> = {
     age: 3
   },
 
+  // === FACTION STARTING FRAME TILES ===
+  zeppelin_frame: {
+    id: 'zeppelin_frame',
+    name: 'Zeppelin Frame',
+    type: 'frame',
+    slotType: 'frameSlots',
+    requiredCard: 'zeppelin_girders',
+    weight: 3,
+    hullCost: 1,
+    stats: { gas_socket: 1 },
+    special: null,
+    age: 1
+  },
+  semi_rigid_frame: {
+    id: 'semi_rigid_frame',
+    name: 'Semi-Rigid Frame',
+    type: 'frame',
+    slotType: 'frameSlots',
+    requiredCard: 'internal_keel',
+    weight: 2,
+    hullCost: 1,
+    stats: { gas_socket: 1 },
+    special: 'semi_rigid',
+    age: 1
+  },
+  rigid_duralumin_frame: {
+    id: 'rigid_duralumin_frame',
+    name: 'Rigid Duralumin Frame',
+    type: 'frame',
+    slotType: 'frameSlots',
+    requiredCard: 'duralumin_girders',
+    weight: 3,
+    hullCost: 2,
+    stats: { ceiling: 1, gas_socket: 1 },
+    special: null,
+    age: 1
+  },
+  wire_braced_frame: {
+    id: 'wire_braced_frame',
+    name: 'Wire-Braced Frame',
+    type: 'frame',
+    slotType: 'frameSlots',
+    requiredCard: 'wire_bracing',
+    weight: 2,
+    hullCost: 1,
+    stats: { gas_socket: 1 },
+    special: null,
+    age: 1
+  },
+
   // === FABRIC UPGRADES ===
   cotton_envelope: {
     id: 'cotton_envelope',
@@ -453,6 +549,56 @@ export const TECH_TILES: Record<string, TechTile> = {
     stats: { reliability: 1 },
     special: 'static_immunity',
     age: 2
+  },
+
+  // === FACTION STARTING FABRIC TILES ===
+  goldbeater_envelope: {
+    id: 'goldbeater_envelope',
+    name: "Goldbeater's Envelope",
+    type: 'fabric',
+    slotType: 'fabricSlots',
+    requiredCard: 'goldbeater_skin',
+    weight: 0,
+    hullCost: 1,
+    stats: {},
+    special: 'best_gas_tightness',
+    age: 1
+  },
+  rubberized_envelope: {
+    id: 'rubberized_envelope',
+    name: 'Rubberized Envelope',
+    type: 'fabric',
+    slotType: 'fabricSlots',
+    requiredCard: 'rubberized_cotton',
+    weight: 1,
+    hullCost: 0,
+    stats: {},
+    special: null,
+    age: 1
+  },
+  latex_envelope: {
+    id: 'latex_envelope',
+    name: 'Latex Envelope',
+    type: 'fabric',
+    slotType: 'fabricSlots',
+    requiredCard: 'gelatinized_latex',
+    weight: 1,
+    hullCost: 1,
+    stats: { reliability: 1 },
+    special: null,
+    age: 1
+  },
+  doped_canvas_envelope: {
+    id: 'doped_canvas_envelope',
+    name: 'Doped Canvas Envelope',
+    type: 'fabric',
+    slotType: 'fabricSlots',
+    requiredCard: 'doped_canvas',
+    weight: 1,
+    hullCost: 1,
+    stats: {},
+    special: null,
+    age: 1
   },
 
   // === GAS SYSTEM UPGRADES ===
@@ -613,6 +759,17 @@ export const TECH_TILES: Record<string, TechTile> = {
     requiredCard: 'cargo_nets',
     weight: 2,
     stats: { income: 2 },
+    special: null,
+    age: 1
+  },
+  passenger_cabin: {
+    id: 'passenger_cabin',
+    name: 'Passenger Cabin',
+    type: 'component',
+    slotType: 'componentSlots',
+    requiredCard: 'passenger_accommodation',
+    weight: 0,
+    stats: { income: 1 },
     special: null,
     age: 1
   },
@@ -852,23 +1009,29 @@ export const TECH_TILES: Record<string, TechTile> = {
 export const TECH_CARDS: Record<string, TechCard> = {
   // Faction starting techs (pre-printed on player boards, cost 0, don't advance Progress)
   // Germany starting techs
-  duralumin_girders: { id: 'duralumin_girders', name: 'Duralumin Framework', type: 'structure', cost: 0, age: 1, faction: 'germany' },
+  zeppelin_girders: { id: 'zeppelin_girders', name: 'Zeppelin Girders', type: 'structure', cost: 0, age: 1, faction: 'germany' },
   goldbeater_skin: { id: 'goldbeater_skin', name: "Goldbeater's Skin", type: 'fabric', cost: 0, age: 1, faction: 'germany' },
   blaugas_storage: { id: 'blaugas_storage', name: 'Blaugas Fuel System', type: 'gas', cost: 0, age: 1, faction: 'germany' },
+  maybach_engine: { id: 'maybach_engine', name: 'Maybach Engine', type: 'drive', cost: 0, age: 1, faction: 'germany' },
 
   // Britain starting techs
   wire_bracing: { id: 'wire_bracing', name: 'Wire Bracing', type: 'structure', cost: 0, age: 1, faction: 'britain' },
   doped_canvas: { id: 'doped_canvas', name: 'Doped Canvas', type: 'fabric', cost: 0, age: 1, faction: 'britain' },
+  standard_propeller: { id: 'standard_propeller', name: 'Standard Propeller', type: 'drive', cost: 0, age: 1, faction: 'britain' },
+  passenger_accommodation: { id: 'passenger_accommodation', name: 'Passenger Accommodation', type: 'component', cost: 0, age: 1, faction: 'britain' },
   imperial_mooring: { id: 'imperial_mooring', name: 'Imperial Mooring System', type: 'special', cost: 0, age: 1, faction: 'britain' },
 
   // USA starting techs
+  duralumin_girders: { id: 'duralumin_girders', name: 'Duralumin Framework', type: 'structure', cost: 0, age: 1, faction: 'usa' },
   gelatinized_latex: { id: 'gelatinized_latex', name: 'Gelatinized Latex', type: 'fabric', cost: 0, age: 1, faction: 'usa' },
+  basic_powerplant: { id: 'basic_powerplant', name: 'Basic Powerplant', type: 'drive', cost: 0, age: 1, faction: 'usa' },
   trapeze_system: { id: 'trapeze_system', name: 'Trapeze Fighter System', type: 'special', cost: 0, age: 1, faction: 'usa' },
   helium_handling: { id: 'helium_handling', name: 'Helium Handling', type: 'gas', cost: 0, age: 1, faction: 'usa' },
 
   // Italy starting techs
   internal_keel: { id: 'internal_keel', name: 'Internal Keel', type: 'structure', cost: 0, age: 1, faction: 'italy' },
   rubberized_cotton: { id: 'rubberized_cotton', name: 'Rubberized Cotton', type: 'fabric', cost: 0, age: 1, faction: 'italy' },
+  expedition_propeller: { id: 'expedition_propeller', name: 'Expedition Propeller', type: 'drive', cost: 0, age: 1, faction: 'italy' },
   articulated_keel: { id: 'articulated_keel', name: 'Articulated Keel Design', type: 'structure', cost: 0, age: 1, faction: 'italy' },
 
   // Legacy entries (kept for backwards compatibility)
@@ -879,7 +1042,7 @@ export const TECH_CARDS: Record<string, TechCard> = {
   // Drive techs
   daimler_engine: { id: 'daimler_engine', name: 'Daimler Engine', type: 'drive', cost: 2, age: 1 },
   improved_propeller: { id: 'improved_propeller', name: 'Improved Propeller', type: 'drive', cost: 3, age: 1 },
-  maybach_engine: { id: 'maybach_engine', name: 'Maybach Engine', type: 'drive', cost: 4, age: 1 },
+  // maybach_engine - defined above as Germany starting tech
   dual_engine_mount: { id: 'dual_engine_mount', name: 'Dual Engine Mount', type: 'drive', cost: 4, age: 2 },
   diesel_powerplant: { id: 'diesel_powerplant', name: 'Diesel Powerplant', type: 'drive', cost: 5, age: 2 },
   swiveling_propeller: { id: 'swiveling_propeller', name: 'Swiveling Propeller', type: 'drive', cost: 4, age: 2 },

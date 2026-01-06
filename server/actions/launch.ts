@@ -1,9 +1,12 @@
 /**
  * Launch Actions
  * LAUNCH_SHIP, CLAIM_ROUTE action processors
+ *
+ * Ships are tokens, not individual entities. Ship stats come from
+ * the current blueprint at launch time.
  */
 
-import type { GameState, PlayerState, Ship, Route, LogEntry, HazardCard, Blueprint } from '@upship/api';
+import type { GameState, PlayerState, Route, LogEntry, HazardCard, Blueprint, PendingLaunch } from '@upship/api';
 
 const { GameRuleError, InsufficientFundsError } = require('../errors');
 const { TECH_TILES } = require('../data/upgrades');
@@ -21,10 +24,12 @@ interface ShipStats {
   ceiling?: number;
   reliability?: number;
   luxury?: number;
+  income?: number;
   [key: string]: number | undefined;
 }
 
-interface PendingHazard {
+// Extended hazard info stored during pending launch
+interface PendingHazardInfo {
   type: string;
   name: string;
   category: string;
@@ -46,21 +51,20 @@ interface PendingHazard {
   fireResistantFabricAvailable: boolean;
 }
 
+// Extended pending launch with hazard info
+type ExtendedPendingLaunch = PendingLaunch & {
+  hazardInfo?: PendingHazardInfo;
+  stats?: ShipStats;
+  launchedAge?: number;
+};
+
 // Extended types for launch operations
 type LaunchPlayerState = PlayerState & {
   fireProtectionUsedThisAge?: boolean;
   hazardDeck?: HazardCard[];
   hazardDiscardPile?: HazardCard[];
   launchBonuses?: Record<string, unknown>;
-};
-
-type LaunchShip = Omit<Ship, 'pendingHazard'> & {
-  stats?: ShipStats;
-  pendingRouteId?: string;
-  pendingCityChoice?: string;
-  pendingHazard?: PendingHazard;
-  gasType?: 'hydrogen' | 'helium';
-  launchedAge?: number;
+  pendingLaunch?: ExtendedPendingLaunch;
 };
 
 type LaunchState = GameState & {
@@ -77,8 +81,8 @@ interface ExtendedRoute extends Route {
   claimed?: string;
   claimedBy?: {
     playerId: string;
-    shipId: string;
     round: number;
+    // shipId removed - ships are fungible tokens
   };
 }
 
@@ -381,7 +385,7 @@ function hasSparrowhawkHangar(playerState: PlayerState): boolean {
 }
 
 interface LaunchShipData {
-  shipId: string;
+  // shipId removed - ships are fungible tokens
   routeId?: string;
   missionId?: string;
   gasType?: 'hydrogen' | 'helium';
@@ -393,9 +397,10 @@ interface LaunchShipData {
 
 /**
  * Launch a ship from hangar
+ * Ships are tokens - stats come from blueprint at launch time.
  */
 function processLaunchShip(state: GameState, playerId: string, data: LaunchShipData): ActionResult {
-  const { shipId, routeId, missionId, gasType = 'hydrogen', retainGas = false, bypassRequirement = null, cityChoice = null, _internal = false } = data;
+  const { routeId, missionId, gasType = 'hydrogen', retainGas = false, bypassRequirement = null, cityChoice = null, _internal = false } = data;
   const launchState = state as LaunchState;
   const playerState = state.players[playerId] as LaunchPlayerState;
   const BLAUGAS_COST = 2; // £2 to retain gas cubes per Section 13.1
@@ -421,7 +426,7 @@ function processLaunchShip(state: GameState, playerId: string, data: LaunchShipD
     }
     // Delegate to combat mission launch logic
     const { processLaunchCombatMission } = require('./combatMission');
-    return processLaunchCombatMission(state, playerId, { shipId, missionId, gasType, _internal });
+    return processLaunchCombatMission(state, playerId, { missionId, gasType, _internal });
   }
 
   // Step 1: Choose a target route (Age I or Age III)
@@ -535,12 +540,17 @@ function processLaunchShip(state: GameState, playerId: string, data: LaunchShipD
     throw new GameRuleError(`Cannot launch: ${emptyFabricSlots} Fabric slot(s) must be filled`);
   }
 
-  // Step 3: Select a ship and validate resources
-  const ships = (playerState.ships || []) as unknown as LaunchShip[];
-  const shipIndex = ships.findIndex(s => s.id === shipId && s.status === 'hangar');
+  // Step 3: Validate ship availability and resources
+  // Ships are fungible tokens - just check if there's one in the hangar
+  const hangarShips = playerState.hangarShips || 0;
 
-  if (shipIndex === -1) {
-    throw new GameRuleError('Ship not found in hangar');
+  if (hangarShips <= 0) {
+    throw new GameRuleError('No ships available in hangar');
+  }
+
+  // Check if already mid-launch (only one launch at a time)
+  if (playerState.pendingLaunch) {
+    throw new GameRuleError('Already have a ship mid-launch awaiting hazard resolution');
   }
 
   // Calculate required officers (equal to Age number: 1/2/3)
@@ -596,13 +606,18 @@ function processLaunchShip(state: GameState, playerId: string, data: LaunchShipD
     resourceFlowLogger.logSink(flowContext, playerId, faction, resourceType, requiredCubes, 'launch', 'Gas consumption', playerState.gasCubes[gasType]);
   }
 
-  // Step 4: Set ship to awaiting hazard check per Section 8.3
-  ships[shipIndex].status = 'awaiting_hazard';
-  ships[shipIndex].stats = stats;
-  ships[shipIndex].launchedAge = state.age;
-  ships[shipIndex].gasType = gasType;
-  ships[shipIndex].pendingRouteId = routeId;  // Route to claim if hazard check succeeds
-  ships[shipIndex].pendingCityChoice = selectedCityChoice || undefined;  // City bonus choice per Section 10.4
+  // Step 4: Decrement hangar and set pending launch
+  // Ship is now "in transit" awaiting hazard check per Section 8.3
+  playerState.hangarShips = hangarShips - 1;
+
+  // Initialize pendingLaunch (will add hazard info below)
+  playerState.pendingLaunch = {
+    routeId: routeId!,
+    gasType,
+    cityChoice: selectedCityChoice || undefined,
+    stats,
+    launchedAge: state.age
+  };
 
   // Build stats summary for log
   const statParts = [`Range ${stats.range}`, `Speed ${stats.speed}`];
@@ -672,8 +687,8 @@ function processLaunchShip(state: GameState, playerId: string, data: LaunchShipD
   // Extended hazard properties that may exist on runtime hazard cards
   const extendedHazard = hazard as HazardCard & { special?: string; gasLossOnFailure?: boolean };
 
-  // Store pending hazard on ship for client to respond
-  ships[shipIndex].pendingHazard = {
+  // Store pending hazard info for client to respond
+  playerState.pendingLaunch!.hazardInfo = {
     // Core hazard info
     type: hazard.type,
     name: hazard.name,
@@ -704,8 +719,11 @@ function processLaunchShip(state: GameState, playerId: string, data: LaunchShipD
     fireResistantFabricAvailable: fireProtectionAvailable
   };
 
+  // Also store hazard on pendingLaunch for API compatibility
+  playerState.pendingLaunch!.hazard = hazard;
+
   // Build log message
-  const autoPassReason = ships[shipIndex].pendingHazard!.autoPassReason;
+  const autoPassReason = playerState.pendingLaunch!.hazardInfo!.autoPassReason;
   const hazardDetails = autoPassReason
     ? ' (' + autoPassReason + ')'
     : ' (' + challengeType + ' ' + difficulty + ' vs ' + relevantStat + ')';
@@ -722,26 +740,26 @@ function processLaunchShip(state: GameState, playerId: string, data: LaunchShipD
 }
 
 interface ClaimRouteData {
-  shipId: string;
   routeId: string;
+  // shipId removed - ships are fungible tokens
 }
 
 /**
  * Claim a route with a launched ship
+ * NOTE: In the new model, routes are typically claimed via RESPOND_TO_HAZARD
+ * when the hazard check passes. This function is kept for backwards compatibility.
  */
 function processClaimRoute(state: GameState, playerId: string, data: ClaimRouteData): ActionResult {
-  const { shipId, routeId } = data;
-  const playerState = state.players[playerId];
+  const { routeId } = data;
+  const playerState = state.players[playerId] as LaunchPlayerState;
 
-  // Find launched ship
-  const ships = (playerState.ships || []) as unknown as LaunchShip[];
-  const shipIndex = ships.findIndex(s => s.id === shipId && s.status === 'launched');
-
-  if (shipIndex === -1) {
-    throw new GameRuleError('No launched ship available');
+  // Check if there's a pending launch (ship in transit after hazard passed)
+  if (!playerState.pendingLaunch) {
+    throw new GameRuleError('No ship in transit to claim route with');
   }
 
-  const ship = ships[shipIndex];
+  const pendingLaunch = playerState.pendingLaunch;
+  const stats = pendingLaunch.stats || { range: 1, speed: 1 };
 
   // Find route
   const mapState = state.map as MapState | undefined;
@@ -768,33 +786,34 @@ function processClaimRoute(state: GameState, playerId: string, data: ClaimRouteD
   }
 
   // Check ship meets route requirements
-  const shipStats = ship.stats || { range: 1, speed: 1 };
-  if (shipStats.range < route.distance) {
-    throw new GameRuleError(`Ship range (${shipStats.range}) < route distance (${route.distance})`);
+  if (stats.range < (route.distance || 1)) {
+    throw new GameRuleError(`Ship range (${stats.range}) < route distance (${route.distance})`);
   }
-  if (route.speed && shipStats.speed < route.speed) {
-    throw new GameRuleError(`Ship speed (${shipStats.speed}) < route requirement (${route.speed})`);
+  if (route.speed && stats.speed < route.speed) {
+    throw new GameRuleError(`Ship speed (${stats.speed}) < route requirement (${route.speed})`);
   }
 
   // Claim the route
   route.claimed = playerId;
   route.claimedBy = {
     playerId,
-    shipId,
     round: state.round
   };
 
-  // Update ship to on-route status
-  ships[shipIndex].status = 'on_route';
-  (ships[shipIndex] as unknown as Ship & { routeId?: string }).routeId = routeId;
+  // Add route income + ship income bonus to player
+  const shipIncome = stats.income || 0;
+  const totalIncome = route.income + shipIncome;
+  playerState.income += totalIncome;
 
-  // Add route income to player
-  playerState.income += route.income;
+  // Clear pending launch (ship is now "on route")
+  delete playerState.pendingLaunch;
 
   state.log = state.log || [];
   state.log.push({
     timestamp: new Date().toISOString(),
-    message: `Claimed route ${route.from} → ${route.to} for +${route.income} income`,
+    message: shipIncome > 0
+      ? `Claimed route ${route.from} → ${route.to} for +${route.income} route income +${shipIncome} ship income = +${totalIncome} total`
+      : `Claimed route ${route.from} → ${route.to} for +${route.income} income`,
     playerId,
     type: 'action'
   } as LogEntry);

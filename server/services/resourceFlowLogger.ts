@@ -356,10 +356,96 @@ class ResourceFlowLogger {
       }
     }
 
+    // Special section for ephemeral resources (research, influence)
+    // These reset each round so cumulative analysis doesn't apply
     analysis.push('');
+    analysis.push('=== EPHEMERAL RESOURCES (Per-Round Analysis) ===');
+    analysis.push('Note: Research and Influence reset each round. We measure whether players');
+    analysis.push('have MORE than needed (excess/wasted) or LESS than needed (constrained).');
+    analysis.push('');
+
+    const ephemeralResources: ResourceType[] = ['research', 'influence'];
+
+    for (const resource of ephemeralResources) {
+      // Group by round and faction
+      const byRoundFaction = new Map<string, { generated: number; spent: number }>();
+
+      for (const entry of this.entries) {
+        if (entry.resourceType !== resource) continue;
+        const key = `Age${entry.age}_R${entry.round}_${entry.faction}`;
+        if (!byRoundFaction.has(key)) {
+          byRoundFaction.set(key, { generated: 0, spent: 0 });
+        }
+        const stats = byRoundFaction.get(key)!;
+        if (entry.flowType === 'fountain') {
+          stats.generated += entry.amount;
+        } else {
+          stats.spent += entry.amount;
+        }
+      }
+
+      if (byRoundFaction.size === 0) {
+        analysis.push(`${resource.toUpperCase()}: No data tracked`);
+        analysis.push('');
+        continue;
+      }
+
+      analysis.push(`${resource.toUpperCase()}:`);
+      analysis.push('Round           | Faction    | Generated | Spent | Unused | Status');
+      analysis.push('----------------|------------|-----------|-------|--------|-------');
+
+      let totalGenerated = 0;
+      let totalSpent = 0;
+      let constrainedCount = 0;
+      let excessCount = 0;
+
+      for (const [key, stats] of Array.from(byRoundFaction.entries()).sort()) {
+        const unused = stats.generated - stats.spent;
+        totalGenerated += stats.generated;
+        totalSpent += stats.spent;
+
+        let status: string;
+        if (stats.generated === 0) {
+          status = 'NO GEN';  // No generation - can't buy anything
+          constrainedCount++;
+        } else if (unused <= 0) {
+          status = 'TIGHT';   // Spent everything or more (using engineers for research)
+        } else if (unused >= stats.generated * 0.5) {
+          status = 'EXCESS';  // Wasted 50%+ of generated
+          excessCount++;
+        } else {
+          status = 'OK';
+        }
+
+        const parts = key.split('_');
+        const roundLabel = `${parts[0]} ${parts[1]}`.padEnd(15);
+        const faction = parts[2].padEnd(10);
+
+        analysis.push(
+          `${roundLabel} | ${faction} | ${String(stats.generated).padStart(9)} | ${String(stats.spent).padStart(5)} | ${String(unused).padStart(6)} | ${status}`
+        );
+      }
+
+      analysis.push('');
+      const totalUnused = totalGenerated - totalSpent;
+      const utilizationPct = totalGenerated > 0 ? Math.round((totalSpent / totalGenerated) * 100) : 0;
+      analysis.push(`  Total: Generated=${totalGenerated}, Spent=${totalSpent}, Unused=${totalUnused} (${utilizationPct}% utilization)`);
+
+      if (constrainedCount > byRoundFaction.size * 0.3) {
+        analysis.push(`  WARNING: ${constrainedCount}/${byRoundFaction.size} rounds had no ${resource} generation`);
+      }
+      if (excessCount > byRoundFaction.size * 0.3) {
+        analysis.push(`  WARNING: ${excessCount}/${byRoundFaction.size} rounds had >50% unused ${resource}`);
+      }
+      analysis.push('');
+    }
+
     analysis.push('=== BALANCE WARNINGS ===');
 
     for (const [resource, stats] of byResource) {
+      // Skip ephemeral resources - they're analyzed above
+      if (resource === 'research' || resource === 'influence') continue;
+
       if (stats.net > stats.fountains * 0.5) {
         analysis.push(`WARNING: ${resource} has >50% overflow (net: ${stats.net}, fountains: ${stats.fountains})`);
         analysis.push(`  -> Consider: increase sink costs, reduce fountain rates, or add new sinks`);

@@ -3,7 +3,7 @@
  * Implementation of Section 12 - Age Transitions
  */
 
-import type { GameState, PlayerState, Technology, Ship, Route, Card, LogEntry } from '@upship/api';
+import type { GameState, PlayerState, Technology, Ship, Route, Card, LogEntry, Mission } from '@upship/api';
 
 const { TECH_CARD_BAG, HAND_SIZE, INITIAL_AGENTS } = require('../../config/constants');
 const { setupMissionRow } = require('../../data/combatMissions');
@@ -28,8 +28,7 @@ type TechCardBag = Record<number, TechCardWithMeta[]>;
 
 // Extended state for age transitions (techBag is already in GameState)
 interface AgeTransitionState extends GameState {
-  missionRow?: unknown[];
-  missionDeck?: unknown[];
+  missionDeck?: Mission[];
   ageTransitionBlueprintDesign?: {
     newAge: number;
     currentPlayerIndex: number;
@@ -423,7 +422,7 @@ function completeAgeTransition(state: AgeTransitionState): void {
   // Set up combat missions for Age II, or clear them for Age III
   if (newAge === 2) {
     // Per Section 10.5 and Appendix G: Set up Combat Mission Row for Age II
-    const { missionRow, missionDeck } = setupMissionRow() as { missionRow: unknown[]; missionDeck: unknown[] };
+    const { missionRow, missionDeck } = setupMissionRow() as { missionRow: Mission[]; missionDeck: Mission[] };
     state.missionRow = missionRow;
     state.missionDeck = missionDeck;
 

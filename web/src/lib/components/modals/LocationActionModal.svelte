@@ -27,6 +27,14 @@
 	$: playerHydrogen = $myState?.gasCubes?.hydrogen || 0;
 	$: playerHelium = $myState?.gasCubes?.helium || 0;
 
+	// Tech card checks
+	$: hasHeliumHandling = $myState?.techCards?.includes('helium_handling') || false;
+
+	// Reset to hydrogen if helium was selected but player doesn't have Helium Handling
+	$: if (gasType === 'helium' && !hasHeliumHandling) {
+		gasType = 'hydrogen';
+	}
+
 	// Gas depot costs (per cube)
 	const GAS_COST = 3; // Base cost per cube
 
@@ -117,12 +125,24 @@
 						<button
 							class="option-btn"
 							class:selected={gasType === 'helium'}
-							on:click={() => (gasType = 'helium')}
+							class:disabled={!hasHeliumHandling}
+							disabled={!hasHeliumHandling}
+							on:click={() => hasHeliumHandling && (gasType = 'helium')}
+							title={!hasHeliumHandling ? 'Requires Helium Handling tech card' : ''}
 						>
 							<Icon name="helium" size={32} />
 							Helium
+							{#if !hasHeliumHandling}
+								<span class="lock-icon">🔒</span>
+							{/if}
 						</button>
 					</div>
+					{#if !hasHeliumHandling}
+						<div class="info-text">
+							<Icon name="technology" size={14} />
+							<span>Helium requires the <strong>Helium Handling</strong> tech card</span>
+						</div>
+					{/if}
 				</div>
 
 				<div class="form-section">
@@ -421,6 +441,38 @@
 	.option-btn.selected {
 		border-color: var(--color-accent-gold);
 		background: rgba(212, 175, 55, 0.1);
+	}
+
+	.option-btn.disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
+		border-color: var(--color-bg-hover);
+	}
+
+	.option-btn.disabled:hover {
+		border-color: var(--color-bg-hover);
+	}
+
+	.lock-icon {
+		font-size: 0.75rem;
+		margin-left: var(--spacing-xs);
+	}
+
+	.info-text {
+		display: flex;
+		align-items: center;
+		gap: var(--spacing-xs);
+		margin-top: var(--spacing-sm);
+		padding: var(--spacing-sm);
+		background: rgba(59, 130, 246, 0.1);
+		border: 1px solid var(--color-info, #3b82f6);
+		border-radius: var(--radius-md);
+		font-size: 0.75rem;
+		color: var(--color-info, #3b82f6);
+	}
+
+	.info-text strong {
+		color: inherit;
 	}
 
 	.number-selector {

@@ -2,9 +2,11 @@
  * Hazard Actions
  * PERFORM_HAZARD_CHECK action processor
  * Implements hazard checks per Section 8.2, fire hazards per Section 8.3, and Hindenburg Disaster (Section 1.2)
+ *
+ * Ships are tokens, not individual entities. Ship stats come from pendingLaunch.
  */
 
-import type { GameState, PlayerState, Ship, Route, LogEntry, HazardCard } from '@upship/api';
+import type { GameState, PlayerState, Route, LogEntry, HazardCard, PendingLaunch } from '@upship/api';
 
 // Type alias for slot entries (can be string ID or object with id)
 type SlotEntry = string | { id: string } | null;
@@ -14,9 +16,17 @@ const { applyCityBonus, CITY_BONUSES } = require('../data/cities');
 const { shuffleArray } = require('../utils/random');
 const { processCompleteMission, resolveFlakCheck, calculateEquipmentBonus } = require('./combatMission');
 const { resourceFlowLogger, createFlowContext } = require('../services/resourceFlowLogger');
+const { HANGAR_CAPACITY, REPAIR_CAPACITY } = require('./building');
 
 interface ActionResult {
   newState: GameState;
+}
+
+// Extended pending launch with hazard info
+interface ExtendedPendingLaunch extends PendingLaunch {
+  hazardInfo?: HazardCardDetails;
+  stats?: Record<string, number>;
+  launchedAge?: number;
 }
 
 // Extended types
@@ -28,18 +38,10 @@ type HazardPlayerState = PlayerState & {
   fireProtectionUsedThisAge?: boolean;
   peekedHazard?: HazardCard;
   vp?: number;
-};
-
-type HazardShip = Ship & {
-  stats?: Record<string, number>;
-  pendingRouteId?: string;
-  pendingMissionId?: string;
-  pendingCityChoice?: string;
-  pendingHazard?: HazardCardDetails;
-  armor?: number;
-  gasType?: 'hydrogen' | 'helium';
-  launchedAge?: number;
-  route?: string | null;
+  pendingLaunch?: ExtendedPendingLaunch;
+  // Ship counters (ships are tokens)
+  hangarShips?: number;
+  repairShips?: number;
 };
 
 interface HazardConditions {
@@ -86,7 +88,7 @@ type HazardState = GameState & {
 type ExtendedRoute = Route & {
   luxury?: number | boolean;
   claimed?: string;
-  claimedBy?: { playerId: string; shipId: string; round: number };
+  claimedBy?: { playerId: string; round: number };
 };
 
 /**
@@ -127,34 +129,28 @@ function getRelevantStat(shipStats: Record<string, number>, challengeType: strin
 }
 
 interface HazardCheckData {
-  shipId: string;
   engineersToSpend?: number | string;
 }
 
 /**
  * Perform a hazard check for a ship awaiting launch
+ * Ships are tokens - stats come from pendingLaunch (calculated from blueprint at launch time)
  */
 function processHazardCheck(state: GameState, playerId: string, data: HazardCheckData): ActionResult {
-  const { shipId } = data;
   const engineersToSpend = Math.max(0, parseInt(String(data.engineersToSpend), 10) || 0);
   const playerState = state.players[playerId] as HazardPlayerState;
   const hazardState = state as HazardState;
 
-  const ships = playerState.ships || [];
-  let shipIndex = ships.findIndex(s => s.id === shipId && s.status === 'awaiting_hazard');
-
-  if (shipIndex === -1) {
-    shipIndex = ships.findIndex(s => s.id === shipId && s.status === 'on_route');
-  }
-
-  if (shipIndex === -1) {
+  // Ships are tokens - check pendingLaunch instead of finding ship by ID
+  const pendingLaunch = playerState.pendingLaunch;
+  if (!pendingLaunch) {
     throw new GameRuleError('No ship awaiting hazard check');
   }
 
-  const ship = ships[shipIndex] as HazardShip;
-  const shipStats = ship.stats || { speed: 0, reliability: 0, ceiling: 0, range: 0 };
+  const shipStats = pendingLaunch.stats || { speed: 0, reliability: 0, ceiling: 0, range: 0 };
+  const gasType = pendingLaunch.gasType;
 
-  const pendingRouteId = ship.pendingRouteId || ship.routeId || ship.route;
+  const pendingRouteId = pendingLaunch.routeId;
   const route = (state.map?.routes as ExtendedRoute[] | undefined)?.find(r => r.id === pendingRouteId);
 
   if (!playerState.hazardDeck || playerState.hazardDeck.length === 0) {
@@ -181,7 +177,7 @@ function processHazardCheck(state: GameState, playerId: string, data: HazardChec
 
   const hindenburgConditions: HazardConditions = {
     age: state.age,
-    gasType: ship.gasType,
+    gasType,
     isLuxuryRoute,
     hazardType: hazard.type
   };
@@ -189,7 +185,8 @@ function processHazardCheck(state: GameState, playerId: string, data: HazardChec
   const isHindenburgDisaster = checkHindenburgDisaster(hindenburgConditions);
 
   if (isHindenburgDisaster) {
-    ships[shipIndex].status = 'destroyed';
+    // Ship destroyed - clear pendingLaunch (ship is lost)
+    delete playerState.pendingLaunch;
     hazardState.hindenburgDisaster = true;
     hazardState.gameEndReason = 'hindenburg_disaster';
     hazardState.gameEndAfterRound = true;
@@ -206,12 +203,12 @@ function processHazardCheck(state: GameState, playerId: string, data: HazardChec
   }
 
   if (hazard.autoPass || hazard.type === 'clear_weather') {
-    return resolveHazardSuccess(state, playerId, shipIndex, route, hazard, 'Clear Weather - Auto Pass');
+    return resolveHazardSuccess(state, playerId, route, hazard, 'Clear Weather - Auto Pass');
   }
 
   const isFireHazard = hazard.category === 'fire' || hazard.hydrogenOnly;
-  if (isFireHazard && ship.gasType === 'helium') {
-    return resolveHazardSuccess(state, playerId, shipIndex, route, hazard, 'Fire Immunity (Helium) - Auto Pass');
+  if (isFireHazard && gasType === 'helium') {
+    return resolveHazardSuccess(state, playerId, route, hazard, 'Fire Immunity (Helium) - Auto Pass');
   }
 
   const playerBlueprint = playerState.blueprint;
@@ -220,7 +217,7 @@ function processHazardCheck(state: GameState, playerId: string, data: HazardChec
   );
 
   if (hazard.type === 'static_discharge' && hasCondictiveCovering) {
-    return resolveHazardSuccess(state, playerId, shipIndex, route, hazard,
+    return resolveHazardSuccess(state, playerId, route, hazard,
       'Static Discharge - Auto Pass (Conductive Covering grounds electrical charge)');
   }
 
@@ -230,7 +227,7 @@ function processHazardCheck(state: GameState, playerId: string, data: HazardChec
 
   const extendedHazard = hazard as HazardCard & { hazardType?: string };
   if (extendedHazard.hazardType === 'weather' && hasRapidDescentSystem) {
-    return resolveHazardSuccess(state, playerId, shipIndex, route, hazard,
+    return resolveHazardSuccess(state, playerId, route, hazard,
       'Weather Hazard - Auto Pass (Rapid Descent System enables emergency venting)');
   }
 
@@ -249,12 +246,12 @@ function processHazardCheck(state: GameState, playerId: string, data: HazardChec
       type: 'action'
     } as LogEntry);
 
-    return resolveHazardSuccess(state, playerId, shipIndex, route, hazard,
+    return resolveHazardSuccess(state, playerId, route, hazard,
       'Fire Hazard - Auto Pass (Fire-Resistant Fabric, once per Age)');
   }
 
-  if (isFireHazard && ship.gasType === 'hydrogen') {
-    return resolveFireHazard(state, playerId, shipIndex, ship, hazard, engineersToSpend, route);
+  if (isFireHazard && gasType === 'hydrogen') {
+    return resolveFireHazard(state, playerId, hazard, engineersToSpend, route);
   }
 
   const challengeType = hazard.challengeType || 'reliability';
@@ -293,33 +290,31 @@ function processHazardCheck(state: GameState, playerId: string, data: HazardChec
     success
   };
 
-  if (!playerState.lastHazardCheck) {
-    playerState.lastHazardCheck = {};
-  }
-  playerState.lastHazardCheck[shipId] = checkDetails;
+  playerState.lastHazardCheck = checkDetails;
 
   if (success) {
-    return resolveHazardSuccess(state, playerId, shipIndex, route, hazard,
+    return resolveHazardSuccess(state, playerId, route, hazard,
       `${challengeType.toUpperCase()} check passed: ${totalCheck} >= ${hazard.difficulty}`);
   } else {
-    return resolveHazardAbort(state, playerId, shipIndex, hazard,
+    return resolveHazardAbort(state, playerId, hazard,
       `${challengeType.toUpperCase()} check failed: ${totalCheck} < ${hazard.difficulty}`);
   }
 }
 
 /**
  * Apply insurance policy to recover crashed ship per Section 6.11
+ * Ships are tokens - recovery means incrementing hangarShips counter
  */
-function applyInsuranceRecovery(state: GameState, playerId: string, shipIndex: number, hazardName: string): boolean {
+function applyInsuranceRecovery(state: GameState, playerId: string, hazardName: string): boolean {
   const playerState = state.players[playerId] as HazardPlayerState;
-  const ships = playerState.ships as HazardShip[];
   const insurancePolicies = playerState.insurance || 0;
 
   if (insurancePolicies > 0) {
     playerState.insurance = insurancePolicies - 1;
-    ships[shipIndex].status = 'hangar';
-    delete ships[shipIndex].pendingRouteId;
-    delete ships[shipIndex].route;
+    // Ship recovered - increment hangar counter
+    playerState.hangarShips = Math.min(HANGAR_CAPACITY, (playerState.hangarShips || 0) + 1);
+    // Clear pending launch
+    delete playerState.pendingLaunch;
 
     state.log.push({
       timestamp: new Date().toISOString(),
@@ -335,13 +330,16 @@ function applyInsuranceRecovery(state: GameState, playerId: string, shipIndex: n
 
 /**
  * Handle fire hazard resolution per Section 8.3
+ * Ships are tokens - damage moves to repair bay, destruction clears pendingLaunch
  */
-function resolveFireHazard(state: GameState, playerId: string, shipIndex: number, ship: HazardShip, hazard: HazardCard, engineersToSpend: number, route: ExtendedRoute | undefined): ActionResult {
+function resolveFireHazard(state: GameState, playerId: string, hazard: HazardCard, engineersToSpend: number, route: ExtendedRoute | undefined): ActionResult {
   const playerState = state.players[playerId] as HazardPlayerState;
-  const ships = playerState.ships as HazardShip[];
+  const pendingLaunch = playerState.pendingLaunch;
+  const shipStats = pendingLaunch?.stats || {};
 
   if (hazard.noSave || hazard.type === 'catastrophic_explosion') {
-    ships[shipIndex].status = 'destroyed';
+    // Ship destroyed - clear pendingLaunch (ship is lost)
+    delete playerState.pendingLaunch;
 
     state.log.push({
       timestamp: new Date().toISOString(),
@@ -354,7 +352,6 @@ function resolveFireHazard(state: GameState, playerId: string, shipIndex: number
   }
 
   if (hazard.type === 'static_discharge') {
-    const shipStats = ship.stats || {};
     const reliabilityStat = shipStats.reliability || 0;
     const engineerBonus = Math.min(engineersToSpend, playerState.engineers || 0);
     const totalCheck = reliabilityStat + engineerBonus;
@@ -368,14 +365,15 @@ function resolveFireHazard(state: GameState, playerId: string, shipIndex: number
     }
 
     if (totalCheck >= hazard.difficulty) {
-      return resolveHazardSuccess(state, playerId, shipIndex, route, hazard,
+      return resolveHazardSuccess(state, playerId, route, hazard,
         `Static Discharge Reliability check passed: ${totalCheck} >= ${hazard.difficulty}`);
     } else {
-      if (applyInsuranceRecovery(state, playerId, shipIndex, 'STATIC DISCHARGE')) {
+      if (applyInsuranceRecovery(state, playerId, 'STATIC DISCHARGE')) {
         return { newState: state };
       }
 
-      ships[shipIndex].status = 'destroyed';
+      // Ship destroyed - clear pendingLaunch
+      delete playerState.pendingLaunch;
 
       state.log.push({
         timestamp: new Date().toISOString(),
@@ -394,7 +392,9 @@ function resolveFireHazard(state: GameState, playerId: string, shipIndex: number
 
   if (actualSpend >= engineerCost) {
     playerState.engineers -= engineerCost;
-    ships[shipIndex].status = 'damaged';
+    // Ship damaged - move to repair bay
+    playerState.repairShips = Math.min(REPAIR_CAPACITY, (playerState.repairShips || 0) + 1);
+    delete playerState.pendingLaunch;
 
     // Log engineer consumption for fire hazard
     const flowContext = createFlowContext(state, (state as { gameId?: string }).gameId || 'unknown');
@@ -403,18 +403,19 @@ function resolveFireHazard(state: GameState, playerId: string, shipIndex: number
 
     state.log.push({
       timestamp: new Date().toISOString(),
-      message: `${hazard.name} controlled! Spent ${engineerCost} Engineer(s). Ship damaged.`,
+      message: `${hazard.name} controlled! Spent ${engineerCost} Engineer(s). Ship damaged - moved to Repair Bay.`,
       playerId,
       type: 'hazard'
     } as LogEntry);
 
     return { newState: state };
   } else {
-    if (applyInsuranceRecovery(state, playerId, shipIndex, hazard.name || 'Fire Hazard')) {
+    if (applyInsuranceRecovery(state, playerId, hazard.name || 'Fire Hazard')) {
       return { newState: state };
     }
 
-    ships[shipIndex].status = 'destroyed';
+    // Ship destroyed - clear pendingLaunch
+    delete playerState.pendingLaunch;
 
     state.log.push({
       timestamp: new Date().toISOString(),
@@ -429,25 +430,33 @@ function resolveFireHazard(state: GameState, playerId: string, shipIndex: number
 
 /**
  * Resolve successful hazard check - ship claims route or completes mission
- * @param cityChoice - Optional city choice from RESPOND_TO_HAZARD action (takes precedence over ship.pendingCityChoice)
+ * Ships are tokens - stats come from pendingLaunch, income bonus added to route
+ * @param cityChoice - Optional city choice from RESPOND_TO_HAZARD action
  */
-function resolveHazardSuccess(state: GameState, playerId: string, shipIndex: number, route: ExtendedRoute | undefined, hazard: HazardCard, message: string, cityChoice?: string): ActionResult {
+function resolveHazardSuccess(state: GameState, playerId: string, route: ExtendedRoute | undefined, hazard: HazardCard, message: string, cityChoice?: string): ActionResult {
   const playerState = state.players[playerId] as HazardPlayerState;
   const hazardState = state as HazardState;
-  const ships = playerState.ships as HazardShip[];
-  const ship = ships[shipIndex];
+  const pendingLaunch = playerState.pendingLaunch;
 
-  if (ship.pendingMissionId && state.age === 2) {
-    const mission = hazardState.missionRow?.find(m => m.id === ship.pendingMissionId);
+  if (!pendingLaunch) {
+    throw new GameRuleError('No pending launch to resolve');
+  }
+
+  const shipStats = pendingLaunch.stats || {};
+
+  // Handle Age 2 combat missions
+  if (pendingLaunch.missionId && state.age === 2) {
+    const mission = hazardState.missionRow?.find(m => m.id === pendingLaunch.missionId);
     if (!mission) {
       state.log.push({
         timestamp: new Date().toISOString(),
-        message: `Error: Mission ${ship.pendingMissionId} not found in Mission Row`,
+        message: `Error: Mission ${pendingLaunch.missionId} not found in Mission Row`,
         playerId,
         type: 'error'
       } as LogEntry);
-      ships[shipIndex].status = 'hangar';
-      delete ships[shipIndex].pendingMissionId;
+      // Return ship to hangar
+      playerState.hangarShips = Math.min(HANGAR_CAPACITY, (playerState.hangarShips || 0) + 1);
+      delete playerState.pendingLaunch;
       return { newState: state };
     }
 
@@ -465,11 +474,11 @@ function resolveHazardSuccess(state: GameState, playerId: string, shipIndex: num
       type: 'hazard'
     } as LogEntry);
 
-    const flakResult = resolveFlakCheck(ship, hazard);
+    const flakResult = resolveFlakCheck({ stats: shipStats }, hazard);
 
     if (flakResult.destroyed) {
-      ships[shipIndex].status = 'destroyed';
-      delete ships[shipIndex].pendingMissionId;
+      // Ship destroyed by flak - clear pendingLaunch
+      delete playerState.pendingLaunch;
       state.log.push({
         timestamp: new Date().toISOString(),
         message: `FLAK! ${flakResult.reason}. Mission completed but ship lost to anti-aircraft fire.`,
@@ -477,9 +486,8 @@ function resolveHazardSuccess(state: GameState, playerId: string, shipIndex: num
         type: 'hazard'
       } as LogEntry);
     } else {
-      ships[shipIndex].status = 'on_route';
-      (ships[shipIndex] as HazardShip & { missionId?: string }).missionId = ship.pendingMissionId;
-      delete ships[shipIndex].pendingMissionId;
+      // Mission complete, ship survives - clear pendingLaunch (ship on route)
+      delete playerState.pendingLaunch;
       state.log.push({
         timestamp: new Date().toISOString(),
         message: `${flakResult.reason}. Ship survived and mission complete.`,
@@ -491,50 +499,64 @@ function resolveHazardSuccess(state: GameState, playerId: string, shipIndex: num
     return { newState: state };
   }
 
-  ships[shipIndex].status = 'on_route';
-  (ships[shipIndex] as HazardShip & { routeId?: string | null }).routeId = route?.id || null;
-  const pendingCityChoice = ship.pendingCityChoice;
-  delete ships[shipIndex].pendingRouteId;
-  delete ships[shipIndex].pendingCityChoice;
+  // Clear pending launch - ship is now on route
+  const pendingCityChoice = pendingLaunch.cityChoice;
+  delete playerState.pendingLaunch;
 
   if (route) {
     route.claimed = playerId;
     route.claimedBy = {
       playerId,
-      shipId: ships[shipIndex].id,
       round: state.round
     };
-    playerState.income += route.income || 0;
+
+    // Calculate income: route income + ship income bonus from components
+    const routeIncome = route.income || 0;
+    const shipIncome = shipStats.income || 0;
+    const totalIncome = routeIncome + shipIncome;
+    playerState.income += totalIncome;
 
     if (CITY_BONUSES) {
       // Prefer cityChoice from action, fall back to pendingCityChoice, then route endpoint
       const cityName = cityChoice || pendingCityChoice || route.to || route.from;
       applyCityBonus(playerState, cityName, state, playerId);
     }
-  }
 
-  state.log.push({
-    timestamp: new Date().toISOString(),
-    message: `Hazard check PASSED (${hazard.type}): ${message}`,
-    playerId,
-    type: 'hazard'
-  } as LogEntry);
+    // Log with income bonus if applicable
+    const incomeMessage = shipIncome > 0
+      ? ` Route income: £${routeIncome} + £${shipIncome} ship bonus = £${totalIncome}`
+      : '';
+
+    state.log.push({
+      timestamp: new Date().toISOString(),
+      message: `Hazard check PASSED (${hazard.type}): ${message}${incomeMessage}`,
+      playerId,
+      type: 'hazard'
+    } as LogEntry);
+  } else {
+    state.log.push({
+      timestamp: new Date().toISOString(),
+      message: `Hazard check PASSED (${hazard.type}): ${message}`,
+      playerId,
+      type: 'hazard'
+    } as LogEntry);
+  }
 
   return { newState: state };
 }
 
 /**
  * Resolve aborted launch - ship returns to hangar
+ * Ships are tokens - abort increments hangarShips counter
  * Per Section 8.2: On abort, officers are KEPT (refunded), gas is spent
  */
-function resolveHazardAbort(state: GameState, playerId: string, shipIndex: number, hazard: HazardCard, message: string): ActionResult {
+function resolveHazardAbort(state: GameState, playerId: string, hazard: HazardCard, message: string): ActionResult {
   const playerState = state.players[playerId] as HazardPlayerState;
-  const ships = playerState.ships as HazardShip[];
 
-  ships[shipIndex].status = 'hangar';
-  delete ships[shipIndex].pendingRouteId;
-  delete ships[shipIndex].pendingMissionId;
-  delete ships[shipIndex].route;
+  // Ship returns to hangar - increment counter
+  playerState.hangarShips = Math.min(HANGAR_CAPACITY, (playerState.hangarShips || 0) + 1);
+  // Clear pending launch
+  delete playerState.pendingLaunch;
 
   // Refund officers per Section 8.2 - officers are KEPT on abort
   const officersToRefund = state.age || 1;
@@ -551,41 +573,41 @@ function resolveHazardAbort(state: GameState, playerId: string, shipIndex: numbe
 }
 
 interface RespondToHazardData {
-  shipId: string;
   spendEngineers?: boolean;
   cityChoice?: string;  // Which route endpoint to receive city bonus from
 }
 
 /**
  * Process player's response to a pending hazard check
+ * Ships are tokens - hazard info and stats come from pendingLaunch
  */
 function processRespondToHazard(state: GameState, playerId: string, data: RespondToHazardData): ActionResult {
-  const { shipId, cityChoice } = data;
+  const { cityChoice } = data;
   const spendEngineers = data.spendEngineers === true;
   const playerState = state.players[playerId] as HazardPlayerState;
   const hazardState = state as HazardState;
 
-  const ships = playerState.ships as HazardShip[];
-  const shipIndex = ships.findIndex(s => s.id === shipId && s.status === 'awaiting_hazard' && s.pendingHazard);
-
-  if (shipIndex === -1) {
+  // Ships are tokens - check pendingLaunch instead of finding ship by ID
+  const pendingLaunch = playerState.pendingLaunch;
+  if (!pendingLaunch || !pendingLaunch.hazardInfo) {
     throw new GameRuleError('No ship awaiting hazard response');
   }
 
-  const ship = ships[shipIndex];
-  const hazard = ship.pendingHazard!;
-  const pendingRouteId = ship.pendingRouteId;
+  const hazard = pendingLaunch.hazardInfo as HazardCardDetails;
+  const shipStats = pendingLaunch.stats || {};
+  const gasType = pendingLaunch.gasType;
+  const pendingRouteId = pendingLaunch.routeId;
   const route = (state.map?.routes as ExtendedRoute[] | undefined)?.find(r => r.id === pendingRouteId);
 
   const isLuxuryRoute = !!route?.luxury;
   if (checkHindenburgDisaster({
     age: state.age,
-    gasType: ship.gasType,
+    gasType,
     isLuxuryRoute,
     hazardType: hazard.type
   })) {
-    ships[shipIndex].status = 'destroyed';
-    delete ships[shipIndex].pendingHazard;
+    // Ship destroyed - clear pendingLaunch
+    delete playerState.pendingLaunch;
 
     hazardState.hindenburgDisaster = true;
     hazardState.gameEndReason = 'hindenburg_disaster';
@@ -603,24 +625,20 @@ function processRespondToHazard(state: GameState, playerId: string, data: Respon
   }
 
   if (hazard.autoPass || hazard.autoPassReason === 'Clear Weather') {
-    delete ships[shipIndex].pendingHazard;
-    return resolveHazardSuccess(state, playerId, shipIndex, route, hazard, 'Clear Weather - Auto Pass', cityChoice);
+    return resolveHazardSuccess(state, playerId, route, hazard as HazardCard, 'Clear Weather - Auto Pass', cityChoice);
   }
 
   if (hazard.heliumFireImmunity) {
-    delete ships[shipIndex].pendingHazard;
-    return resolveHazardSuccess(state, playerId, shipIndex, route, hazard, 'Fire Immunity (Helium) - Auto Pass', cityChoice);
+    return resolveHazardSuccess(state, playerId, route, hazard as HazardCard, 'Fire Immunity (Helium) - Auto Pass', cityChoice);
   }
 
   if (hazard.conductiveCoveringImmunity) {
-    delete ships[shipIndex].pendingHazard;
-    return resolveHazardSuccess(state, playerId, shipIndex, route, hazard,
+    return resolveHazardSuccess(state, playerId, route, hazard as HazardCard,
       'Static Discharge - Auto Pass (Conductive Covering grounds electrical charge)', cityChoice);
   }
 
   if (hazard.fireResistantFabricAvailable) {
     playerState.fireProtectionUsedThisAge = true;
-    delete ships[shipIndex].pendingHazard;
 
     state.log.push({
       timestamp: new Date().toISOString(),
@@ -629,13 +647,13 @@ function processRespondToHazard(state: GameState, playerId: string, data: Respon
       type: 'action'
     } as LogEntry);
 
-    return resolveHazardSuccess(state, playerId, shipIndex, route, hazard,
+    return resolveHazardSuccess(state, playerId, route, hazard as HazardCard,
       'Fire Hazard - Auto Pass (Fire-Resistant Fabric, once per Age)', cityChoice);
   }
 
   if (hazard.noSave || hazard.type === 'catastrophic_explosion') {
-    ships[shipIndex].status = 'destroyed';
-    delete ships[shipIndex].pendingHazard;
+    // Ship destroyed - clear pendingLaunch
+    delete playerState.pendingLaunch;
 
     state.log.push({
       timestamp: new Date().toISOString(),
@@ -654,8 +672,9 @@ function processRespondToHazard(state: GameState, playerId: string, data: Respon
 
     if (spendEngineers && availableEngineers >= engineerCost) {
       playerState.engineers -= engineerCost;
-      ships[shipIndex].status = 'damaged';
-      delete ships[shipIndex].pendingHazard;
+      // Ship damaged - move to repair bay
+      playerState.repairShips = Math.min(REPAIR_CAPACITY, (playerState.repairShips || 0) + 1);
+      delete playerState.pendingLaunch;
 
       // Log engineer consumption for fire hazard response
       const flowContext = createFlowContext(state, (state as { gameId?: string }).gameId || 'unknown');
@@ -664,19 +683,18 @@ function processRespondToHazard(state: GameState, playerId: string, data: Respon
 
       state.log.push({
         timestamp: new Date().toISOString(),
-        message: `${hazard.name} controlled! Spent ${engineerCost} Engineer(s). Ship damaged.`,
+        message: `${hazard.name} controlled! Spent ${engineerCost} Engineer(s). Ship damaged - moved to Repair Bay.`,
         playerId,
         type: 'hazard'
       } as LogEntry);
 
       return { newState: state };
     } else {
-      return resolveFireCrash(state, playerId, shipIndex, hazard);
+      return resolveFireCrash(state, playerId, hazard as HazardCard);
     }
   }
 
   if (hazard.type === 'static_discharge') {
-    const shipStats = ship.stats || {};
     const reliabilityStat = shipStats.reliability || 0;
     const engineersNeeded = hazard.engineersNeeded || Math.max(0, hazard.difficulty - reliabilityStat);
     const availableEngineers = playerState.engineers || 0;
@@ -687,11 +705,10 @@ function processRespondToHazard(state: GameState, playerId: string, data: Respon
       const flowContext = createFlowContext(state, (state as { gameId?: string }).gameId || 'unknown');
       const faction = playerState.faction || 'unknown';
       resourceFlowLogger.logSink(flowContext, playerId, faction, 'engineers', engineersNeeded, 'hazard', 'Static discharge response', playerState.engineers);
-      delete ships[shipIndex].pendingHazard;
-      return resolveHazardSuccess(state, playerId, shipIndex, route, hazard,
+      return resolveHazardSuccess(state, playerId, route, hazard as HazardCard,
         `Static Discharge Reliability check passed: ${reliabilityStat + engineersNeeded} >= ${hazard.difficulty}`, cityChoice);
     } else if (!spendEngineers || availableEngineers < engineersNeeded) {
-      return resolveFireCrash(state, playerId, shipIndex, hazard);
+      return resolveFireCrash(state, playerId, hazard as HazardCard);
     }
   }
 
@@ -700,8 +717,7 @@ function processRespondToHazard(state: GameState, playerId: string, data: Respon
   const relevantStat = hazard.relevantStat || 0;
 
   if (engineersNeeded === 0) {
-    delete ships[shipIndex].pendingHazard;
-    return resolveHazardSuccess(state, playerId, shipIndex, route, hazard,
+    return resolveHazardSuccess(state, playerId, route, hazard as HazardCard,
       `${hazard.statName?.toUpperCase() || 'CHECK'} passed: ${relevantStat} >= ${hazard.difficulty}`, cityChoice);
   }
 
@@ -711,30 +727,27 @@ function processRespondToHazard(state: GameState, playerId: string, data: Respon
     const flowContext = createFlowContext(state, (state as { gameId?: string }).gameId || 'unknown');
     const faction = playerState.faction || 'unknown';
     resourceFlowLogger.logSink(flowContext, playerId, faction, 'engineers', engineersNeeded, 'hazard', `Hazard response: ${hazard.name}`, playerState.engineers);
-    delete ships[shipIndex].pendingHazard;
-    return resolveHazardSuccess(state, playerId, shipIndex, route, hazard,
+    return resolveHazardSuccess(state, playerId, route, hazard as HazardCard,
       `${hazard.statName?.toUpperCase() || 'CHECK'} passed: ${relevantStat} + ${engineersNeeded} engineers >= ${hazard.difficulty}`, cityChoice);
   } else {
-    delete ships[shipIndex].pendingHazard;
-    return resolveHazardAbort(state, playerId, shipIndex, hazard,
+    return resolveHazardAbort(state, playerId, hazard as HazardCard,
       `${hazard.statName?.toUpperCase() || 'CHECK'} failed: chose to abort rather than spend ${engineersNeeded} engineers`);
   }
 }
 
 /**
  * Resolve fire crash - ship destroyed (with insurance check)
+ * Ships are tokens - destruction clears pendingLaunch
  */
-function resolveFireCrash(state: GameState, playerId: string, shipIndex: number, hazard: HazardCard): ActionResult {
+function resolveFireCrash(state: GameState, playerId: string, hazard: HazardCard): ActionResult {
   const playerState = state.players[playerId] as HazardPlayerState;
-  const ships = playerState.ships as HazardShip[];
 
-  if (applyInsuranceRecovery(state, playerId, shipIndex, hazard.name || 'Fire Hazard')) {
-    delete ships[shipIndex].pendingHazard;
+  if (applyInsuranceRecovery(state, playerId, hazard.name || 'Fire Hazard')) {
     return { newState: state };
   }
 
-  ships[shipIndex].status = 'destroyed';
-  delete ships[shipIndex].pendingHazard;
+  // Ship destroyed - clear pendingLaunch
+  delete playerState.pendingLaunch;
 
   state.log.push({
     timestamp: new Date().toISOString(),

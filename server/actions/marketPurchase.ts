@@ -89,6 +89,11 @@ function processBuyMarketCardTentative(state: GameState, playerId: string, data:
   // Deduct influence
   (playerState as PlayerState & { influence?: number }).influence = availableInfluence - cost;
 
+  // Log influence sink
+  const flowContext = createFlowContext(state, (state as { gameId?: string }).gameId || 'unknown');
+  const faction = playerState.faction || 'unknown';
+  resourceFlowLogger.logSink(flowContext, playerId, faction, 'influence', cost, 'purchase', `Buy market card: ${card.name}`, (playerState as PlayerState & { influence?: number }).influence);
+
   // Mark card as claimed
   marketState.marketCardsClaimed[cardId] = playerId;
 

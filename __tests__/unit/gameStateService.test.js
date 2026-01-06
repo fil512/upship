@@ -53,9 +53,10 @@ describe('GameStateService', () => {
     });
 
     describe('Germany faction', () => {
-      it('should have duralumin, goldbeater, and blaugas technologies', () => {
-        expect(FACTION_CONFIG.germany.startingTechCards).toContain('duralumin_girders');
+      it('should have zeppelin girders, goldbeater, maybach, and blaugas technologies', () => {
+        expect(FACTION_CONFIG.germany.startingTechCards).toContain('zeppelin_girders');
         expect(FACTION_CONFIG.germany.startingTechCards).toContain('goldbeater_skin');
+        expect(FACTION_CONFIG.germany.startingTechCards).toContain('maybach_engine');
         expect(FACTION_CONFIG.germany.startingTechCards).toContain('blaugas_storage');
       });
 
@@ -71,12 +72,12 @@ describe('GameStateService', () => {
         expect(FACTION_CONFIG.britain.startingTechCards).toContain('imperial_mooring');
       });
 
-      it('should have pre-installed restaurant (Pre-Installed Luxury)', () => {
-        expect(FACTION_CONFIG.britain.startingTechTiles.component).toBe('restaurant');
+      it('should have pre-installed passenger cabin (Luxury Focus)', () => {
+        expect(FACTION_CONFIG.britain.startingTechTiles.component).toBe('passenger_cabin');
       });
 
-      it('should have dining saloon tech card for the restaurant tile', () => {
-        expect(FACTION_CONFIG.britain.startingTechCards).toContain('dining_saloon');
+      it('should have passenger accommodation tech card for the cabin tile', () => {
+        expect(FACTION_CONFIG.britain.startingTechCards).toContain('passenger_accommodation');
       });
     });
 
@@ -89,9 +90,9 @@ describe('GameStateService', () => {
         expect(FACTION_CONFIG.usa.heliumMonopoly).toBe(true);
       });
 
-      it('should have 5 starting technologies (including daimler_engine for drive)', () => {
+      it('should have 5 starting technologies (including basic_powerplant for drive)', () => {
         expect(FACTION_CONFIG.usa.startingTechCards.length).toBe(5);
-        expect(FACTION_CONFIG.usa.startingTechCards).toContain('daimler_engine');
+        expect(FACTION_CONFIG.usa.startingTechCards).toContain('basic_powerplant');
       });
     });
 
@@ -208,23 +209,14 @@ describe('GameStateService', () => {
       const result = await initializeGameState(1, players);
 
       // With 4 players: 3 copies per tech, minus faction starters
-      // Age 1 has 12 unique techs
-      // Faction starters in Age 1 TECHNOLOGY_BAG (each reduces available copies):
-      // - wire_bracing (Britain) = 1 player → loses 1 copy
-      // - doped_canvas (Britain) = 1 player → loses 1 copy
-      // - rubberized_cotton (Italy) = 1 player → loses 1 copy
-      // - maybach_engine (Germany) = 1 player → loses 1 copy
-      // - improved_propeller (Britain + Italy) = 2 players → loses 2 copies
-      // - daimler_engine (USA) = 1 player → loses 1 copy
-      // Total: 6 starters reduce bag by 7 copies (one used by 2 players)
-      // Base: 12 techs * 3 copies = 36
-      // After starter reduction: 36 - 7 = 29
-      // Plus tech cards that aren't in bag (imperial_mooring, dining_saloon, etc)
-      // Result: 30 total, minus 4 on R&D board = 26 in techBag
+      // Faction starters reduce available copies in the tech bag
+      // The exact count depends on which starting techs overlap with general techs
+      // After the starting tech redesign (zeppelin_girders, expedition_propeller, etc.),
+      // the total tech count changed. Current expected: 33 total.
       const totalTechsInBag = result.rdBoard.length + result.techBag.length;
-      expect(totalTechsInBag).toBe(30);
+      expect(totalTechsInBag).toBe(33);
       expect(result.rdBoard.length).toBe(4);
-      expect(result.techBag.length).toBe(26);
+      expect(result.techBag.length).toBe(29);
     });
 
     it('should set correct progress thresholds for player count', async () => {

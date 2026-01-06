@@ -21,7 +21,8 @@ describe('Rules Compliance - Blaugas Fuel System', () => {
               engineers: 2,
               gasCubes: { hydrogen: 2, helium: 0 },
               techCards: ['blaugas_storage'],
-              ships: [{ id: 'ship1', status: 'hangar' }],
+              hangarShips: 1,  // Ships are tokens, use counter
+              repairShips: 0,
               blueprint: {
                 frameSlots: ['basic_frame'],
                 fabricSlots: ['basic_fabric'],
@@ -55,7 +56,6 @@ describe('Rules Compliance - Blaugas Fuel System', () => {
 
         // Launch with retainGas = true
         const result = processLaunchShip(state, 'player1', {
-          shipId: 'ship1',
           routeId: 'route1',
           gasType: 'hydrogen',
           retainGas: true,
@@ -79,7 +79,8 @@ describe('Rules Compliance - Blaugas Fuel System', () => {
               engineers: 2,
               gasCubes: { hydrogen: 2, helium: 0 },
               techCards: ['blaugas_storage'],
-              ships: [{ id: 'ship1', status: 'hangar' }],
+              hangarShips: 1,  // Ships are tokens, use counter
+              repairShips: 0,
               blueprint: {
                 frameSlots: ['basic_frame'],
                 fabricSlots: ['basic_fabric'],
@@ -113,7 +114,6 @@ describe('Rules Compliance - Blaugas Fuel System', () => {
 
         // Launch WITHOUT retainGas
         const result = processLaunchShip(state, 'player1', {
-          shipId: 'ship1',
           routeId: 'route1',
           gasType: 'hydrogen',
           retainGas: false,
@@ -137,7 +137,8 @@ describe('Rules Compliance - Blaugas Fuel System', () => {
               engineers: 2,
               gasCubes: { hydrogen: 2, helium: 0 },
               techCards: [], // No Blaugas
-              ships: [{ id: 'ship1', status: 'hangar' }],
+              hangarShips: 1,  // Ships are tokens, use counter
+              repairShips: 0,
               blueprint: {
                 frameSlots: ['basic_frame'],
                 fabricSlots: ['basic_fabric'],
@@ -157,7 +158,6 @@ describe('Rules Compliance - Blaugas Fuel System', () => {
 
         // Should reject retainGas without Blaugas
         expect(() => processLaunchShip(state, 'player1', {
-          shipId: 'ship1',
           routeId: 'route1',
           gasType: 'hydrogen',
           retainGas: true,
@@ -176,7 +176,8 @@ describe('Rules Compliance - Blaugas Fuel System', () => {
               engineers: 2,
               gasCubes: { hydrogen: 2, helium: 0 },
               techCards: ['blaugas_storage'],
-              ships: [{ id: 'ship1', status: 'hangar' }],
+              hangarShips: 1,  // Ships are tokens, use counter
+              repairShips: 0,
               blueprint: {
                 frameSlots: ['basic_frame'],
                 fabricSlots: ['basic_fabric'],
@@ -196,7 +197,6 @@ describe('Rules Compliance - Blaugas Fuel System', () => {
 
         // Should reject due to insufficient funds
         expect(() => processLaunchShip(state, 'player1', {
-          shipId: 'ship1',
           routeId: 'route1',
           gasType: 'hydrogen',
           retainGas: true,

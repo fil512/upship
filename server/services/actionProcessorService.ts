@@ -983,11 +983,20 @@ interface BuildShipData {
   count?: number;
 }
 
+const HANGAR_CAPACITY = 3; // Max ships in hangar
+
 // Build a ship at the Construction Hall
+// Ships are tokens - this increments the hangarShips counter
 function processBuildShip(state: GameState, playerId: string, data: Record<string, unknown>): ActionResult {
   const { count = 1 } = data as BuildShipData;
-  const playerState = state.players[playerId] as PlayerState & { blueprint: Blueprint; ships?: Ship[] };
+  const playerState = state.players[playerId] as PlayerState & { blueprint: Blueprint; hangarShips?: number };
   const stateWithLog = state as StateWithLog;
+
+  // Check hangar capacity
+  const currentHangarCount = playerState.hangarShips || 0;
+  if (currentHangarCount + count > HANGAR_CAPACITY) {
+    return { error: `Cannot build ${count} ship(s): would exceed hangar capacity of ${HANGAR_CAPACITY}. Current hangar: ${currentHangarCount} ships.` };
+  }
 
   // Calculate hull cost from installed tech tiles
   let hullCost = 2; // Base cost
@@ -1018,19 +1027,8 @@ function processBuildShip(state: GameState, playerId: string, data: Record<strin
 
   playerState.cash -= totalCost;
 
-  // Initialize ships array if needed
-  if (!playerState.ships) {
-    playerState.ships = [];
-  }
-
-  // Add ships to hangar
-  for (let i = 0; i < count; i++) {
-    playerState.ships.push({
-      id: `ship_${Date.now()}_${i}`,
-      status: 'hangar', // hangar, launched, damaged
-      route: null
-    } as Ship);
-  }
+  // Ships are tokens - increment the hangar counter
+  playerState.hangarShips = currentHangarCount + count;
 
   stateWithLog.log.push({
     timestamp: new Date().toISOString(),

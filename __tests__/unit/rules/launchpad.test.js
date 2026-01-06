@@ -64,7 +64,7 @@ describe('Rules Compliance - Launchpad (Section 6.4)', () => {
       // Set up player with resources to launch
       playerState.officers = 2;
       playerState.gasCubes = { hydrogen: 3, helium: 0 };
-      playerState.ships = [{ id: 'ship1', status: 'hangar' }];
+      playerState.hangarShips = 1;
       playerState.blueprint = {
         frameSlots: ['basic_frame'],
         fabricSlots: ['basic_envelope'],
@@ -87,15 +87,14 @@ describe('Rules Compliance - Launchpad (Section 6.4)', () => {
       };
 
       const result = processLaunchShip(state, playerId, {
-        shipId: 'ship1',
         routeId: 'route1',
         gasType: 'hydrogen',
         _internal: true
       });
 
-      // Ship should be awaiting_hazard (two-step flow: LAUNCH_SHIP then RESPOND_TO_HAZARD)
-      expect(result.newState.players[playerId].ships[0].status).toBe('awaiting_hazard');
-      expect(result.newState.players[playerId].ships[0].pendingHazard).toBeDefined();
+      // Ship should be awaiting hazard (pendingLaunch with hazardInfo)
+      expect(result.newState.players[playerId].pendingLaunch).toBeDefined();
+      expect(result.newState.players[playerId].pendingLaunch.hazardInfo).toBeDefined();
     });
   });
 
@@ -159,7 +158,7 @@ describe('Rules Compliance - Launchpad (Section 6.4)', () => {
 
       playerState.officers = 2;
       playerState.gasCubes = { hydrogen: 3, helium: 0 };
-      playerState.ships = [{ id: 'ship1', status: 'hangar' }];
+      playerState.hangarShips = 1;
       playerState.blueprint = {
         frameSlots: ['basic_frame'],
         fabricSlots: ['basic_envelope'],
@@ -178,7 +177,6 @@ describe('Rules Compliance - Launchpad (Section 6.4)', () => {
 
       expect(() => {
         processLaunchShip(state, playerId, {
-          shipId: 'ship1',
           routeId: 'route1',
           gasType: 'hydrogen'
         });
@@ -195,7 +193,7 @@ describe('Rules Compliance - Launchpad (Section 6.4)', () => {
 
       playerState.officers = 2;
       playerState.gasCubes = { hydrogen: 3, helium: 0 };
-      playerState.ships = [{ id: 'ship1', status: 'hangar' }];
+      playerState.hangarShips = 1;
       playerState.blueprint = {
         frameSlots: ['basic_frame'],
         fabricSlots: ['basic_envelope'],
@@ -210,15 +208,14 @@ describe('Rules Compliance - Launchpad (Section 6.4)', () => {
 
       // Internal call bypasses launchpad check
       const result = processLaunchShip(state, playerId, {
-        shipId: 'ship1',
         routeId: 'route1',
         gasType: 'hydrogen',
         _internal: true
       });
 
-      // Ship should be awaiting_hazard (two-step flow: LAUNCH_SHIP then RESPOND_TO_HAZARD)
-      expect(result.newState.players[playerId].ships[0].status).toBe('awaiting_hazard');
-      expect(result.newState.players[playerId].ships[0].pendingHazard).toBeDefined();
+      // Ship should be awaiting hazard (pendingLaunch with hazardInfo)
+      expect(result.newState.players[playerId].pendingLaunch).toBeDefined();
+      expect(result.newState.players[playerId].pendingLaunch.hazardInfo).toBeDefined();
     });
   });
 });

@@ -16,45 +16,38 @@ describe('Rules Compliance - Building Ships', () => {
     it('should allow building when hangar has 0 ships', () => {
       const state = createTestGameState();
       state.players['1'].cash = 100;
-      state.players['1'].ships = [];
+      state.players['1'].hangarShips = 0;
 
       const result = processBuildShip(state, '1', { count: 1, _internal: true });
 
-      expect(result.newState.players['1'].ships.length).toBe(1);
-      expect(result.newState.players['1'].ships[0].status).toBe('hangar');
+      expect(result.newState.players['1'].hangarShips).toBe(1);
     });
 
     it('should allow building 3 ships when hangar is empty', () => {
       const state = createTestGameState();
       state.players['1'].cash = 100;
-      state.players['1'].ships = [];
+      state.players['1'].hangarShips = 0;
 
       const result = processBuildShip(state, '1', { count: 3, _internal: true });
 
-      expect(result.newState.players['1'].ships.length).toBe(3);
+      expect(result.newState.players['1'].hangarShips).toBe(3);
     });
 
     it('should allow building 2 ships when hangar has 1 ship', () => {
       const state = createTestGameState();
       state.players['1'].cash = 100;
-      state.players['1'].ships = [
-        { id: 'existing1', status: 'hangar' }
-      ];
+      state.players['1'].hangarShips = 1;
 
       const result = processBuildShip(state, '1', { count: 2, _internal: true });
 
       // Should have 3 ships total (1 existing + 2 new)
-      const hangarShips = result.newState.players['1'].ships.filter(s => s.status === 'hangar');
-      expect(hangarShips.length).toBe(3);
+      expect(result.newState.players['1'].hangarShips).toBe(3);
     });
 
     it('should reject building if it would exceed 3 ships in hangar per Section 6.3', () => {
       const state = createTestGameState();
       state.players['1'].cash = 100;
-      state.players['1'].ships = [
-        { id: 'existing1', status: 'hangar' },
-        { id: 'existing2', status: 'hangar' }
-      ];
+      state.players['1'].hangarShips = 2;
 
       // Trying to build 2 ships when there are already 2 in hangar (would make 4)
       expect(() => {
@@ -65,9 +58,7 @@ describe('Rules Compliance - Building Ships', () => {
     it('should reject building 3 ships when hangar already has 1 ship', () => {
       const state = createTestGameState();
       state.players['1'].cash = 100;
-      state.players['1'].ships = [
-        { id: 'existing1', status: 'hangar' }
-      ];
+      state.players['1'].hangarShips = 1;
 
       // Trying to build 3 ships when there is already 1 in hangar
       expect(() => {
@@ -78,32 +69,29 @@ describe('Rules Compliance - Building Ships', () => {
     it('should not count ships on routes toward hangar capacity', () => {
       const state = createTestGameState();
       state.players['1'].cash = 100;
-      state.players['1'].ships = [
-        { id: 'on_route_1', status: 'on_route' },
-        { id: 'on_route_2', status: 'on_route' },
-        { id: 'on_route_3', status: 'on_route' }
-      ];
+      // Ships on routes are tracked separately - hangar is empty
+      state.players['1'].hangarShips = 0;
+      // Note: With the new model, ships on routes don't have a separate counter
+      // They're just gone from the hangar. Routes track claimed status.
 
-      // Ships on routes don't count, so building 3 should work
+      // Ships on routes don't count against hangar, so building 3 should work
       const result = processBuildShip(state, '1', { count: 3, _internal: true });
 
-      const hangarShips = result.newState.players['1'].ships.filter(s => s.status === 'hangar');
-      expect(hangarShips.length).toBe(3);
+      expect(result.newState.players['1'].hangarShips).toBe(3);
     });
 
     it('should not count damaged ships toward hangar capacity', () => {
       const state = createTestGameState();
       state.players['1'].cash = 100;
-      state.players['1'].ships = [
-        { id: 'damaged_1', status: 'damaged' },
-        { id: 'damaged_2', status: 'damaged' }
-      ];
+      // Damaged ships are in repair bay, not launch hangar
+      state.players['1'].hangarShips = 0;
+      state.players['1'].repairShips = 2;
 
-      // Damaged ships are in Repair Hangar, not Launch Hangar
+      // Repair bay ships don't count against launch hangar capacity
       const result = processBuildShip(state, '1', { count: 3, _internal: true });
 
-      const hangarShips = result.newState.players['1'].ships.filter(s => s.status === 'hangar');
-      expect(hangarShips.length).toBe(3);
+      expect(result.newState.players['1'].hangarShips).toBe(3);
+      expect(result.newState.players['1'].repairShips).toBe(2);  // Unchanged
     });
   });
 
@@ -115,7 +103,7 @@ describe('Rules Compliance - Building Ships', () => {
       const state = createTestGameState();
       const playerId = '1';
       state.players[playerId].cash = 100;
-      state.players[playerId].ships = [];
+      state.players[playerId].hangarShips = 0;
       state.players[playerId].agentsRemaining = 2;
       state.players[playerId].hand = [
         { id: 'card1', name: 'Mechanic', symbol: 'wrench', effect: '+1 swap' }
@@ -134,16 +122,15 @@ describe('Rules Compliance - Building Ships', () => {
         buildCount: 1  // Specify how many ships to build
       });
 
-      // Ship should be built immediately during placement
-      expect(result.newState.players[playerId].ships.length).toBe(1);
-      expect(result.newState.players[playerId].ships[0].status).toBe('hangar');
+      // Ship should be built immediately during placement (starts with 1)
+      expect(result.newState.players[playerId].hangarShips).toBe(1);
     });
 
     it('should build multiple ships when buildCount specified', () => {
       const state = createTestGameState();
       const playerId = '1';
       state.players[playerId].cash = 100;
-      state.players[playerId].ships = [];
+      state.players[playerId].hangarShips = 0;
       state.players[playerId].agentsRemaining = 2;
       state.players[playerId].hand = [
         { id: 'card1', name: 'Mechanic', symbol: 'wrench', effect: '+1 swap' }
@@ -163,14 +150,14 @@ describe('Rules Compliance - Building Ships', () => {
       });
 
       // All 3 ships should be built immediately
-      expect(result.newState.players[playerId].ships.length).toBe(3);
+      expect(result.newState.players[playerId].hangarShips).toBe(3);
     });
 
     it('should reject direct BUILD_SHIP action during reveal phase', () => {
       const state = createTestGameState();
       state.phase = 'reveal';
       state.players['1'].cash = 100;
-      state.players['1'].ships = [];
+      state.players['1'].hangarShips = 0;
       // Player has a placement at construction_hall from earlier
       state.groundBoard.placements['construction_hall'] = { playerId: '1' };
 
@@ -184,7 +171,7 @@ describe('Rules Compliance - Building Ships', () => {
       const state = createTestGameState();
       state.phase = 'worker_placement';
       state.players['1'].cash = 100;
-      state.players['1'].ships = [];
+      state.players['1'].hangarShips = 0;
       // No agent at construction_hall
       state.groundBoard.placements = {};
 
@@ -198,7 +185,7 @@ describe('Rules Compliance - Building Ships', () => {
       const state = createTestGameState();
       state.phase = 'worker_placement';
       state.players['1'].cash = 100;
-      state.players['1'].ships = [];
+      state.players['1'].hangarShips = 0;
       // Player 2 has agent at construction_hall, not player 1
       state.groundBoard.placements['construction_hall'] = { playerId: '2' };
 
@@ -212,7 +199,7 @@ describe('Rules Compliance - Building Ships', () => {
       const state = createTestGameState();
       const playerId = '1';
       state.players[playerId].cash = 10;
-      state.players[playerId].ships = [];
+      state.players[playerId].hangarShips = 0;
       state.players[playerId].agentsRemaining = 2;
       // Use Rigger card which gives -£2 build cost
       state.players[playerId].hand = [
@@ -242,7 +229,7 @@ describe('Rules Compliance - Building Ships', () => {
 
       // Base cost £2 - £2 Rigger discount = £0
       // Ship should be built for free
-      expect(result.newState.players[playerId].ships.length).toBe(1);
+      expect(result.newState.players[playerId].hangarShips).toBe(1);
       expect(result.newState.players[playerId].cash).toBe(initialCash); // No cost deducted
     });
   });

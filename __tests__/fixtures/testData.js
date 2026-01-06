@@ -138,7 +138,10 @@ const createTestPlayerState = (faction = 'germany') => ({
   agentsRemaining: 2,  // Per rules Section 2.1
   hasPassed: false,
   techCards: getFactionStartingTech(faction),
-  ships: [],
+  // Ships are tokens (counters), not individual entities
+  hangarShips: 1,  // Start with 1 ship per Section 3.2
+  repairShips: 0,
+  ships: [],  // Deprecated - kept for backwards compatibility
   routes: [],
   // Deep copy testBlueprint to avoid shared reference mutation
   blueprint: JSON.parse(JSON.stringify(testBlueprint)),
@@ -159,10 +162,10 @@ const createTestPlayerState = (faction = 'germany') => ({
 
 function getFactionStartingTech(faction) {
   const configs = {
-    germany: ['duralumin_girders', 'goldbeater_skin', 'blaugas_storage'],
-    britain: ['wire_bracing', 'doped_canvas', 'imperial_mooring'],
-    usa: ['duralumin_girders', 'gelatinized_latex', 'trapeze_system', 'helium_handling'],
-    italy: ['internal_keel', 'rubberized_cotton', 'articulated_keel']
+    germany: ['zeppelin_girders', 'goldbeater_skin', 'maybach_engine', 'blaugas_storage'],
+    britain: ['wire_bracing', 'doped_canvas', 'standard_propeller', 'passenger_accommodation', 'imperial_mooring'],
+    usa: ['duralumin_girders', 'gelatinized_latex', 'basic_powerplant', 'trapeze_system', 'helium_handling'],
+    italy: ['internal_keel', 'rubberized_cotton', 'expedition_propeller', 'articulated_keel']
   };
   return configs[faction] || [];
 }

@@ -22,7 +22,7 @@ describe('Rules Compliance - Factions', () => {
       // Set up state for launch
       usaPlayer.gasCubes = { hydrogen: 0, helium: 3 };
       usaPlayer.officers = 1;
-      usaPlayer.ships = [{ id: 'ship1', status: 'hangar' }];
+      usaPlayer.hangarShips = 1;
       usaPlayer.blueprint = {
         age: 1,
         frameSlots: ['duralumin_frame'],
@@ -36,23 +36,23 @@ describe('Rules Compliance - Factions', () => {
 
       // Step 1: LAUNCH_SHIP - USA should be able to launch with helium
       const launchResult = processLaunchShip(state, '3', {
-        shipId: 'ship1',
         routeId: 'route_1',
         gasType: 'helium',
         _internal: true
       });
 
-      // Ship should be awaiting hazard response
-      expect(launchResult.newState.players['3'].ships[0].status).toBe('awaiting_hazard');
+      // Ship should be in pendingLaunch with hazardInfo
+      expect(launchResult.newState.players['3'].pendingLaunch).toBeDefined();
+      expect(launchResult.newState.players['3'].pendingLaunch.hazardInfo).toBeDefined();
 
       // Step 2: RESPOND_TO_HAZARD
       const hazardResult = processRespondToHazard(launchResult.newState, '3', {
-        shipId: 'ship1',
         spendEngineers: true
       });
 
-      // Ship on_route after hazard check passes
-      expect(hazardResult.newState.players['3'].ships[0].status).toBe('on_route');
+      // Route claimed after hazard check passes, pendingLaunch cleared
+      expect(hazardResult.newState.players['3'].pendingLaunch).toBeUndefined();
+      expect(hazardResult.newState.map.routes[0].claimed).toBe('3');
     });
 
     it('should allow USA to buy helium with helium_handling technology (lowercase)', () => {
@@ -89,14 +89,13 @@ describe('Rules Compliance - Factions', () => {
       // Set up state for launch
       germanyPlayer.gasCubes = { hydrogen: 0, helium: 3 };
       germanyPlayer.officers = 1;
-      germanyPlayer.ships = [{ id: 'ship1', status: 'hangar' }];
+      germanyPlayer.hangarShips = 1;
 
       state.map.routes[0].claimed = null;
 
       // Germany should NOT be able to launch with helium
       expect(() => {
         processLaunchShip(state, '1', {
-          shipId: 'ship1',
           routeId: 'route_1',
           gasType: 'helium',
           _internal: true
@@ -209,7 +208,6 @@ describe('Rules Compliance - Factions', () => {
 
       // Launch with retainGas option
       const result = processLaunchShip(state, '1', {
-        shipId: 'ship1',
         routeId: 'route_1',
         gasType: 'hydrogen',
         retainGas: true, // Germany can use Blaugas to retain gas
@@ -249,7 +247,6 @@ describe('Rules Compliance - Factions', () => {
 
       expect(() => {
         processLaunchShip(state, '2', {
-          shipId: 'ship1',
           routeId: 'route_1',
           gasType: 'hydrogen',
           retainGas: true,
@@ -274,7 +271,6 @@ describe('Rules Compliance - Factions', () => {
 
       // Launch WITHOUT retainGas option
       const result = processLaunchShip(state, '1', {
-        shipId: 'ship1',
         routeId: 'route_1',
         gasType: 'hydrogen',
         _internal: true

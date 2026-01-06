@@ -10,6 +10,7 @@
 import type { GameState, PlayerState, LogEntry, Card } from '@upship/api';
 
 const { GameRuleError } = require('../errors');
+const { resourceFlowLogger, createFlowContext } = require('../services/resourceFlowLogger');
 
 // Extended card type with reveal bonuses
 interface RevealCard extends Card {
@@ -106,6 +107,27 @@ function collectPlayerRevealResources(state: GameState, playerId: string): void 
   playerState.cash += cashGained;
   playerState.officers += officersGained;
   playerState.engineers += engineersGained;
+
+  // Log resource fountains for research and influence
+  const flowContext = createFlowContext(state, (state as { gameId?: string }).gameId || 'unknown');
+  const faction = playerState.faction || 'unknown';
+
+  // Research fountains: research level (trickle), engineers (conversion), cards (card)
+  if (researchLevel > 0) {
+    resourceFlowLogger.logFountain(flowContext, playerId, faction, 'research', researchLevel, 'trickle', 'Research Level', playerState.research);
+  }
+  if (engineersInBarracks > 0) {
+    resourceFlowLogger.logFountain(flowContext, playerId, faction, 'research', engineersInBarracks, 'conversion', 'Engineers in Barracks', playerState.research);
+  }
+  const cardResearch = researchGained - researchLevel - engineersInBarracks;
+  if (cardResearch > 0) {
+    resourceFlowLogger.logFountain(flowContext, playerId, faction, 'research', cardResearch, 'card', 'Reveal card bonuses', playerState.research);
+  }
+
+  // Influence fountains from cards
+  if (influenceGained > 0) {
+    resourceFlowLogger.logFountain(flowContext, playerId, faction, 'influence', influenceGained, 'card', 'Reveal card bonuses', playerState.influence);
+  }
 
   const resourceLog: string[] = [];
   if (researchGained > 0) resourceLog.push(`${researchGained} Research`);

@@ -1,13 +1,15 @@
 /**
  * Building Actions
- * BUILD_SHIP action processor
+ * BUILD_SHIP and REPAIR_SHIP action processors
+ *
+ * Ships are tokens, not individual entities with stats.
+ * Ship stats come from the current blueprint at launch time.
  */
 
-import type { GameState, PlayerState, Ship, LogEntry, Blueprint } from '@upship/api';
+import type { GameState, PlayerState, LogEntry, Blueprint } from '@upship/api';
 
 const { GameRuleError, InsufficientFundsError } = require('../errors');
-const { UPGRADES, calculateShipStats } = require('../data/upgrades');
-const { generateId } = require('../utils/random');
+const { UPGRADES } = require('../data/upgrades');
 const { resourceFlowLogger, createFlowContext } = require('../services/resourceFlowLogger');
 
 interface ActionResult {
@@ -20,7 +22,7 @@ type ExtendedBlueprint = Blueprint & {
 };
 
 // Extended player state with building-related properties
-type BuildPlayerState = Omit<PlayerState, 'blueprint'> & {
+type BuildPlayerState = PlayerState & {
   buildDiscount?: number;
   blueprint: ExtendedBlueprint;
 };
@@ -30,18 +32,18 @@ interface BuildShipData {
   _internal?: boolean;
 }
 
+const HANGAR_CAPACITY = 3; // Per Section 4.4 and 6.3
+const REPAIR_CAPACITY = 3; // Max ships in repair bay
+
 /**
  * Build a ship at the Construction Hall
  *
  * Per Section 5.1: Actions execute IMMEDIATELY when placing an agent.
- * This action should only be called:
- * 1. Internally from processPlaceAgent when placing at construction_hall
- * 2. NOT directly during reveal phase or without proper agent placement
+ * Ships are tokens - stats come from blueprint at launch time, not build time.
  */
 function processBuildShip(state: GameState, playerId: string, data: BuildShipData): ActionResult {
   const { count = 1, _internal = false } = data;
   const playerState = state.players[playerId] as BuildPlayerState;
-  const HANGAR_CAPACITY = 3; // Per Section 4.4 and 6.3
 
   // Per Section 5.1: Actions execute when placing agent, not separately
   // Only allow direct calls during worker_placement when player has agent at construction_hall
@@ -66,9 +68,7 @@ function processBuildShip(state: GameState, playerId: string, data: BuildShipDat
   }
 
   // Per Section 6.3: "Limit: You may never have more than 3 ships in your Hangar at any time"
-  // Count ships currently in Launch Hangar (status === 'hangar')
-  const ships = playerState.ships || [];
-  const currentHangarCount = ships.filter(s => s.status === 'hangar').length;
+  const currentHangarCount = playerState.hangarShips || 0;
 
   if (currentHangarCount + count > HANGAR_CAPACITY) {
     throw new GameRuleError(
@@ -108,43 +108,11 @@ function processBuildShip(state: GameState, playerId: string, data: BuildShipDat
     throw new GameRuleError('Can only build up to 3 ships per action');
   }
 
+  // Pay the cost
   playerState.cash -= totalCost;
 
-  // Initialize ships array if needed
-  if (!playerState.ships) {
-    playerState.ships = [];
-  }
-
-  // Calculate ship stats from blueprint at build time
-  // This captures the stats when the ship was built (lift comes from gas_socket on frame tiles)
-  const shipStats = calculateShipStats(playerState.blueprint, {}, state.age);
-  const lift = shipStats.lift;
-
-  // Calculate weight from frame/fabric upgrades
-  let weight = 0;
-  for (const upgradeId of [...(playerState.blueprint.frameSlots || []), ...(playerState.blueprint.fabricSlots || [])]) {
-    if (upgradeId && UPGRADES[upgradeId]?.weight) {
-      weight += UPGRADES[upgradeId].weight;
-    }
-  }
-
-  // Add ships to hangar with stats
-  for (let i = 0; i < count; i++) {
-    const newShip: Ship = {
-      id: generateId('ship'),
-      status: 'hangar', // hangar, launched, damaged
-      routeId: null,
-      // Stats from blueprint at build time
-      lift,
-      weight,
-      speed: shipStats.speed,
-      range: shipStats.range,
-      ceiling: shipStats.ceiling,
-      reliability: shipStats.reliability,
-      luxury: shipStats.luxury
-    };
-    playerState.ships.push(newShip);
-  }
+  // Add ships to hangar (ships are just counters now)
+  playerState.hangarShips = (playerState.hangarShips || 0) + count;
 
   // Clear buildDiscount after use (it's a per-action bonus)
   playerState.buildDiscount = 0;
@@ -161,33 +129,30 @@ function processBuildShip(state: GameState, playerId: string, data: BuildShipDat
   return { newState: state };
 }
 
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
 interface RepairShipData {
-  shipId: string;
+  // No shipId needed - ships are fungible tokens
 }
 
 /**
  * Repair a damaged ship
  * Per Section 4.4/8.4: Repair Cost: £3 + 1 Engineer per ship to move from Repair Hangar to Launch Hangar
  */
-function processRepairShip(state: GameState, playerId: string, data: RepairShipData): ActionResult {
-  const { shipId } = data;
+function processRepairShip(state: GameState, playerId: string, _data: RepairShipData): ActionResult {
   const playerState = state.players[playerId];
   const REPAIR_COST_CASH = 3; // £3 per Section 4.4
   const REPAIR_COST_ENGINEER = 1; // 1 Engineer per Section 8.4
 
-  // Find the ship
-  const ships = playerState.ships || [];
-  const shipIndex = ships.findIndex(s => s.id === shipId);
-
-  if (shipIndex === -1) {
-    throw new GameRuleError(`Ship not found: ${shipId}`);
+  // Check if player has ships to repair
+  const repairShips = playerState.repairShips || 0;
+  if (repairShips <= 0) {
+    throw new GameRuleError('No ships in repair bay to repair');
   }
 
-  const ship = ships[shipIndex];
-
-  // Check if ship is damaged
-  if (ship.status !== 'damaged') {
-    throw new GameRuleError('Ship is not damaged and does not need repair');
+  // Check hangar capacity
+  const hangarShips = playerState.hangarShips || 0;
+  if (hangarShips >= HANGAR_CAPACITY) {
+    throw new GameRuleError(`Cannot repair: hangar is full (${HANGAR_CAPACITY} ships)`);
   }
 
   // Check if player can afford repair (cash)
@@ -212,9 +177,9 @@ function processRepairShip(state: GameState, playerId: string, data: RepairShipD
   const faction = playerState.faction || 'unknown';
   resourceFlowLogger.logSink(flowContext, playerId, faction, 'engineers', REPAIR_COST_ENGINEER, 'repair', 'Ship repair labor', playerState.engineers);
 
-  // Move ship from Repair Hangar to Launch Hangar
-  ship.status = 'hangar';
-  (ship as Ship & { damaged?: boolean }).damaged = false;
+  // Move ship from Repair Bay to Launch Hangar
+  playerState.repairShips = repairShips - 1;
+  playerState.hangarShips = hangarShips + 1;
 
   state.log.push({
     timestamp: new Date().toISOString(),
@@ -226,7 +191,7 @@ function processRepairShip(state: GameState, playerId: string, data: RepairShipD
   return { newState: state };
 }
 
-export { processBuildShip, processRepairShip };
+export { processBuildShip, processRepairShip, HANGAR_CAPACITY, REPAIR_CAPACITY };
 
 // CommonJS compatibility
-module.exports = { processBuildShip, processRepairShip };
+module.exports = { processBuildShip, processRepairShip, HANGAR_CAPACITY, REPAIR_CAPACITY };

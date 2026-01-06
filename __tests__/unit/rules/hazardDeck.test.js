@@ -283,19 +283,19 @@ describe('Rules Compliance - Hazard Deck', () => {
     });
 
     it('should auto-pass Static Discharge if ship has Conductive Covering fabric', () => {
-      // Create a test state with a ship that has conductive_covering fabric
+      // Create a test state with a pending launch (ships are tokens now)
       const state = {
         age: 1,
         players: {
           player1: {
             engineers: 0,
-            ships: [{
-              id: 'ship1',
-              status: 'awaiting_hazard',
-              pendingRouteId: 'route1',
+            hangarShips: 0,  // Ship is mid-launch
+            repairShips: 0,
+            pendingLaunch: {
+              routeId: 'route1',
               gasType: 'hydrogen',
               stats: { speed: 1, reliability: 0, ceiling: 0, range: 1 }
-            }],
+            },
             hazardDeck: [{
               id: 'static_discharge_0',
               type: 'static_discharge',
@@ -306,6 +306,7 @@ describe('Rules Compliance - Hazard Deck', () => {
               difficulty: 5,
               flak: 4
             }],
+            hazardDiscardPile: [],
             blueprint: {
               fabricSlots: ['conductive_covering'] // Has conductive covering installed
             }
@@ -317,9 +318,12 @@ describe('Rules Compliance - Hazard Deck', () => {
         log: []
       };
 
+      const result = processHazardCheck(state, 'player1', {});
+
       // Should pass without needing engineers due to Conductive Covering
-      const result = processHazardCheck(state, 'player1', { shipId: 'ship1', engineersToSpend: 0 });
-      expect(result.newState.players.player1.ships[0].status).toBe('on_route');
+      // Route should be claimed (pendingLaunch cleared)
+      expect(result.newState.players.player1.pendingLaunch).toBeUndefined();
+      expect(result.newState.map.routes[0].claimed).toBe('player1');
     });
   });
 });

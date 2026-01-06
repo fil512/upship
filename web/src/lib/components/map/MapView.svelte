@@ -2,13 +2,13 @@
   import { createEventDispatcher } from 'svelte';
   import GameMap from './GameMap.svelte';
   import MissionView from './MissionView.svelte';
-  import type { Route, Ship, Mission } from '$lib/types/game';
+  import type { Route, Mission } from '$lib/types/game';
 
   export let age: number;
   export let routes: Route[] = [];
   export let cities: Record<string, { type: string; homeBase: string | null }> = {};
-  export let ships: Ship[] = [];
-  export let allPlayerShips: { ship: Ship; faction: string }[] = [];
+  // Ships are now tokens (counters) - just pass boolean for hint display
+  export let hasShipsInHangar: boolean = false;
   export let playerFactions: Record<string, string> = {};
   export let missionRow: Mission[] = [];
   export let myFaction: string | undefined = undefined;
@@ -32,9 +32,6 @@
     const mission = event.detail.mission;
     dispatch('selectRoute', { route: { id: mission.id, ...mission } as unknown as Route });
   }
-
-  // Check if player has any ships in hangar
-  $: hasShipsInHangar = ships.some(s => s.status === 'hangar');
 </script>
 
 <div class="map-view">
@@ -51,8 +48,6 @@
       {age}
       {routes}
       {cities}
-      {ships}
-      {allPlayerShips}
       {playerFactions}
       {myFaction}
       {selectable}

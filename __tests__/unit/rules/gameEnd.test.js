@@ -22,14 +22,13 @@ describe('Rules Compliance - Game End Conditions', () => {
       state.phase = 'worker_placement';
       state.playerOrder = ['1', '2', '3', '4'];
 
-      // Set up player 1 to trigger Hindenburg
-      state.players['1'].ships = [{
-        id: 'ship1',
-        status: 'awaiting_hazard',
+      // Set up player 1 to trigger Hindenburg (ship is mid-launch)
+      state.players['1'].hangarShips = 0;  // Ship in air
+      state.players['1'].pendingLaunch = {
+        routeId: 'luxury_route_1',
         gasType: 'hydrogen',
-        pendingRouteId: 'luxury_route_1',
         stats: { speed: 3, range: 3, ceiling: 2, reliability: 2 }
-      }];
+      };
 
       // Add hazard deck with Catastrophic Explosion
       state.players['1'].hazardDeck = [{
@@ -52,7 +51,7 @@ describe('Rules Compliance - Game End Conditions', () => {
       });
 
       // Trigger hazard check
-      const result = processHazardCheck(state, '1', { shipId: 'ship1' });
+      const result = processHazardCheck(state, '1', {});
 
       // Per Section 1.2: "Complete the current round, then proceed to final scoring"
       // Should set gameEndAfterRound flag, NOT end immediately
