@@ -71,8 +71,12 @@ describe('GameStateService', () => {
         expect(FACTION_CONFIG.britain.startingTechCards).toContain('imperial_mooring');
       });
 
-      it('should have pre-installed dining saloon', () => {
-        expect(FACTION_CONFIG.britain.startingTechTiles.component).toBe('dining_saloon');
+      it('should have pre-installed restaurant (Pre-Installed Luxury)', () => {
+        expect(FACTION_CONFIG.britain.startingTechTiles.component).toBe('restaurant');
+      });
+
+      it('should have dining saloon tech card for the restaurant tile', () => {
+        expect(FACTION_CONFIG.britain.startingTechCards).toContain('dining_saloon');
       });
     });
 

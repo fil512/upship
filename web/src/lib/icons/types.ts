@@ -43,7 +43,8 @@ export type StatIconName =
   | 'reliability'
   | 'luxury'
   | 'lift'
-  | 'weight';
+  | 'weight'
+  | 'gas_socket';
 
 export type GameIconName =
   | 'ship'

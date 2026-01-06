@@ -6,7 +6,7 @@
 import type { GameState, PlayerState, Ship, LogEntry, Blueprint } from '@upship/api';
 
 const { GameRuleError, InsufficientFundsError } = require('../errors');
-const { UPGRADES, calculateShipStats, calculateLift } = require('../data/upgrades');
+const { UPGRADES, calculateShipStats } = require('../data/upgrades');
 const { generateId } = require('../utils/random');
 
 interface ActionResult {
@@ -115,9 +115,9 @@ function processBuildShip(state: GameState, playerId: string, data: BuildShipDat
   }
 
   // Calculate ship stats from blueprint at build time
-  // This captures the stats when the ship was built
+  // This captures the stats when the ship was built (lift comes from gas_socket on frame tiles)
   const shipStats = calculateShipStats(playerState.blueprint, {}, state.age);
-  const lift = calculateLift(playerState.blueprint.gasSockets);
+  const lift = shipStats.lift;
 
   // Calculate weight from frame/fabric upgrades
   let weight = 0;

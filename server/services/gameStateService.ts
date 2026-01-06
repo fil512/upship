@@ -10,6 +10,7 @@ const { pool } = require('../db');
 const { TECH_CARD_BAG, PROGRESS_THRESHOLDS } = require('../config/constants');
 const { TECH_TILES, calculateShipStats } = require('../data/upgrades');
 const { generateId } = require('../utils/random');
+const { resourceFlowLogger } = require('./resourceFlowLogger');
 
 // Blueprint structure
 interface Blueprint {
@@ -64,12 +65,13 @@ const FACTION_CONFIG: Record<string, FactionConfig> = {
   },
   britain: {
     // Rules 10.2: Wire Bracing, Doped Canvas, Imperial Mooring System
-    startingTechCards: ['wire_bracing', 'doped_canvas', 'imperial_mooring'],
-    // Pre-installed tech tiles including printed Dining Saloon (Starting Advantage)
+    // Also starts with Dining Saloon tech card (for the pre-installed Restaurant tile)
+    startingTechCards: ['wire_bracing', 'doped_canvas', 'imperial_mooring', 'dining_saloon'],
+    // Pre-installed tech tiles including Restaurant (Starting Advantage: "Pre-Installed Luxury")
     startingTechTiles: {
       frame: 'tensioned_frame',
       fabric: 'doped_covering',
-      component: 'dining_saloon'  // "Pre-Installed Luxury"
+      component: 'restaurant'  // "Pre-Installed Luxury" - requires dining_saloon tech card
     },
     bonuses: { luxury: 1 }
   },
@@ -762,10 +764,14 @@ async function initializeGameState(
     // At game start, all players have income 5, so use original random order
     const initialPlacementOrder = [...playerOrder];
 
+    // Initialize resource flow logger for this game
+    resourceFlowLogger.startGame(gameId);
+
     // Create initial game state
     // Note: Server uses some different property names than API types (e.g., turn vs turnInRound)
     // Cast through unknown to allow this flexibility during migration
     const gameState = {
+      gameId,  // Store gameId for resource flow logging
       age: 1,
       round: 1,        // Increments each time all players complete a cycle
       turnInRound: 1,  // Resets to 1 at start of each round

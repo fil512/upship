@@ -166,7 +166,7 @@ export const TECH_TILES: Record<string, TechTile> = {
     requiredCard: 'wooden_framework',
     weight: 2,
     hullCost: 1,
-    stats: { reliability: 1 },
+    stats: { reliability: 1, gas_socket: 1 },
     special: null,
     age: 1
   },
@@ -178,7 +178,7 @@ export const TECH_TILES: Record<string, TechTile> = {
     requiredCard: 'wire_bracing',
     weight: 1,
     hullCost: 1,
-    stats: { ceiling: 1 },
+    stats: { ceiling: 1, gas_socket: 1 },
     special: null,
     age: 1
   },
@@ -190,7 +190,7 @@ export const TECH_TILES: Record<string, TechTile> = {
     requiredCard: 'duralumin_girders',
     weight: 2,
     hullCost: 2,
-    stats: { reliability: 2, ceiling: 1 },
+    stats: { reliability: 2, ceiling: 1, gas_socket: 1 },
     special: null,
     age: 1
   },
@@ -202,7 +202,7 @@ export const TECH_TILES: Record<string, TechTile> = {
     requiredCard: 'steel_framework',
     weight: 3,
     hullCost: 1,
-    stats: { reliability: 2 },
+    stats: { reliability: 2, gas_socket: 1 },
     special: 'heavy_but_cheap',
     age: 2
   },
@@ -214,7 +214,7 @@ export const TECH_TILES: Record<string, TechTile> = {
     requiredCard: 'internal_keel',
     weight: 2,
     hullCost: 1,
-    stats: { reliability: 1 },
+    stats: { reliability: 1, gas_socket: 1 },
     special: 'italy_specialty',
     age: 2
   },
@@ -226,7 +226,7 @@ export const TECH_TILES: Record<string, TechTile> = {
     requiredCard: 'geodetic_structure',
     weight: 1,
     hullCost: 3,
-    stats: { reliability: 2, ceiling: 1 },
+    stats: { reliability: 2, ceiling: 1, gas_socket: 1 },
     special: 'lightest_expensive',
     age: 3
   },
@@ -238,7 +238,7 @@ export const TECH_TILES: Record<string, TechTile> = {
     requiredCard: 'modular_construction',
     weight: 1,
     hullCost: 2,
-    stats: {},
+    stats: { gas_socket: 1 },
     special: null,
     age: 3
   },
@@ -250,7 +250,7 @@ export const TECH_TILES: Record<string, TechTile> = {
     requiredCard: 'articulated_keel',
     weight: 0,
     hullCost: 1,
-    stats: { ceiling: 1 },
+    stats: { ceiling: 1, gas_socket: 1 },
     special: 'weather_penalty',
     age: 1
   },
@@ -262,7 +262,7 @@ export const TECH_TILES: Record<string, TechTile> = {
     requiredCard: 'aerodynamic_hull_design',
     weight: 1,
     hullCost: 2,
-    stats: { lift: 2 },
+    stats: { lift: 2, gas_socket: 1 },
     special: null,
     age: 2
   },
@@ -274,7 +274,7 @@ export const TECH_TILES: Record<string, TechTile> = {
     requiredCard: 'dynamic_lift_surfaces',
     weight: 2,
     hullCost: 3,
-    stats: { lift: 4 },
+    stats: { lift: 4, gas_socket: 1 },
     special: null,
     age: 3
   },

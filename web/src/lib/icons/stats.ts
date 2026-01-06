@@ -8,6 +8,7 @@ import reliabilitySvg from './svg/reliability.svg?raw';
 import luxurySvg from './svg/luxury.svg?raw';
 import liftSvg from './svg/lift.svg?raw';
 import weightSvg from './svg/weight.svg?raw';
+import gasSocketSvg from './svg/gas_socket.svg?raw';
 
 export const statIcons: Record<StatIconName, IconDefinition> = {
   speed: {
@@ -50,5 +51,11 @@ export const statIcons: Record<StatIconName, IconDefinition> = {
     svg: weightSvg,
     category: 'stat',
     tooltip: 'Weight - reduces lift capacity'
+  },
+
+  gas_socket: {
+    svg: gasSocketSvg,
+    category: 'stat',
+    tooltip: 'Gas Socket - provides +5 lift when gas loaded'
   }
 };

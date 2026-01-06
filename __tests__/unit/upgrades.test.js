@@ -197,28 +197,24 @@ describe('Upgrades Module', () => {
   });
 
   describe('calculateLift', () => {
-    it('should return 0 for empty gas sockets', () => {
-      expect(calculateLift([])).toBe(0);
-      expect(calculateLift(null)).toBe(0);
-      expect(calculateLift(undefined)).toBe(0);
+    it('should return 0 for blueprint with no frame tiles', () => {
+      const blueprint = { ...emptyBlueprint, frameSlots: [] };
+      expect(calculateLift(blueprint, {}, 1)).toBe(0);
     });
 
-    it('should calculate 5 lift per hydrogen cube', () => {
-      expect(calculateLift(['hydrogen'])).toBe(5);
-      expect(calculateLift(['hydrogen', 'hydrogen'])).toBe(10);
+    it('should calculate 5 lift per frame tile (via gas_socket)', () => {
+      // Each frame tile has gas_socket: 1, which provides +5 lift
+      const blueprint1 = { ...emptyBlueprint, frameSlots: ['wooden_frame'] };
+      expect(calculateLift(blueprint1, {}, 1)).toBe(5);
+
+      const blueprint2 = { ...emptyBlueprint, frameSlots: ['wooden_frame', 'duralumin_frame'] };
+      expect(calculateLift(blueprint2, {}, 1)).toBe(10);
     });
 
-    it('should calculate 5 lift per helium cube', () => {
-      expect(calculateLift(['helium'])).toBe(5);
-      expect(calculateLift(['helium', 'helium'])).toBe(10);
-    });
-
-    it('should handle mixed gas types', () => {
-      expect(calculateLift(['hydrogen', 'helium'])).toBe(10);
-    });
-
-    it('should ignore invalid gas types', () => {
-      expect(calculateLift(['hydrogen', 'invalid', 'helium'])).toBe(10);
+    it('should include bonus lift from special frame tiles', () => {
+      // streamlined_hull has gas_socket: 1 (+5 lift) and lift: 2 (+2 bonus)
+      const blueprint = { ...emptyBlueprint, frameSlots: ['streamlined_hull'] };
+      expect(calculateLift(blueprint, {}, 1)).toBe(7); // 5 from socket + 2 bonus
     });
   });
 
@@ -248,12 +244,17 @@ describe('Upgrades Module', () => {
     });
 
     it('should return false when lift is insufficient', () => {
+      // duralumin_frame: lift 5 (from gas_socket), weight 2
+      // Add heavy components to exceed lift capacity
+      // twin_engine: weight 3, basic_engine: weight 1, external_cargo: weight 2
       const blueprint = {
         ...emptyBlueprint,
         frameSlots: ['duralumin_frame'],
         fabricSlots: ['premium_envelope'],
-        gasSockets: [] // No gas = 0 lift
+        driveSlots: ['twin_engine'],
+        componentSlots: ['external_cargo', 'external_cargo']
       };
+      // Total: lift=5, weight=2+3+2+2=9 => insufficient
       const result = canLaunch(blueprint, {}, 1);
       expect(result.canLaunch).toBe(false);
       expect(result.message).toContain('lift');
@@ -262,12 +263,12 @@ describe('Upgrades Module', () => {
     it('should return true when all requirements are met', () => {
       const blueprint = {
         age: 1,
-        frameSlots: ['duralumin_frame'],
-        fabricSlots: ['premium_envelope'],
+        frameSlots: ['duralumin_frame'],  // 5 lift (gas_socket), 2 weight
+        fabricSlots: ['premium_envelope'], // 0 weight
         driveSlots: [null],
-        componentSlots: [null],
-        gasSockets: ['hydrogen', 'hydrogen'] // 10 lift, weight is ~2
+        componentSlots: [null]
       };
+      // Lift: 5, Weight: 2 => can launch
       const result = canLaunch(blueprint, {}, 1);
       expect(result.canLaunch).toBe(true);
       expect(result.message).toBe('Ready to launch');

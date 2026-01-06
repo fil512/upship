@@ -118,7 +118,7 @@
 
 	function getIconsWithPositions(stats: Record<string, number>, weight: number): IconInfo[] {
 		const icons: IconInfo[] = [];
-		const order = ['lift', 'reliability', 'ceiling', 'range', 'speed', 'income', 'luxury'];
+		const order = ['gas_socket', 'lift', 'reliability', 'ceiling', 'range', 'speed', 'income', 'luxury'];
 
 		// Collect all stat icons
 		for (const stat of order) {

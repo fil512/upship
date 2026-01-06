@@ -30,6 +30,7 @@ export interface TechTileStats {
   income?: number;
   lift?: number;
   armor?: number;
+  gas_socket?: number;  // Each gas_socket provides +5 lift
 }
 
 export interface TechTile {
@@ -92,6 +93,7 @@ export interface ShipStats {
   income: number;
   weight: number;
   hullCost: number;
+  lift: number;
 }
 
 export interface FactionBonuses {
@@ -242,7 +244,7 @@ export const TECH_TILES: Record<string, TechTile> = {
     requiredCard: 'wooden_framework',
     weight: 2,
     hullCost: 1,
-    stats: { reliability: 1 },
+    stats: { reliability: 1, gas_socket: 1 },
     special: null,
     age: 1
   },
@@ -254,7 +256,7 @@ export const TECH_TILES: Record<string, TechTile> = {
     requiredCard: 'wire_bracing',
     weight: 1,
     hullCost: 1,
-    stats: { ceiling: 1 },
+    stats: { ceiling: 1, gas_socket: 1 },
     special: null,
     age: 1
   },
@@ -266,7 +268,7 @@ export const TECH_TILES: Record<string, TechTile> = {
     requiredCard: 'duralumin_girders',
     weight: 2,
     hullCost: 2,
-    stats: { reliability: 2, ceiling: 1 },
+    stats: { reliability: 2, ceiling: 1, gas_socket: 1 },
     special: null,
     age: 1
   },
@@ -278,7 +280,7 @@ export const TECH_TILES: Record<string, TechTile> = {
     requiredCard: 'steel_framework',
     weight: 3,
     hullCost: 1,
-    stats: { reliability: 2 },
+    stats: { reliability: 2, gas_socket: 1 },
     special: 'heavy_but_cheap',
     age: 2
   },
@@ -290,7 +292,7 @@ export const TECH_TILES: Record<string, TechTile> = {
     requiredCard: 'internal_keel',
     weight: 2,
     hullCost: 1,
-    stats: { reliability: 1 },
+    stats: { reliability: 1, gas_socket: 1 },
     special: 'italy_specialty',
     age: 2
   },
@@ -302,7 +304,7 @@ export const TECH_TILES: Record<string, TechTile> = {
     requiredCard: 'geodetic_structure',
     weight: 1,
     hullCost: 3,
-    stats: { reliability: 2, ceiling: 1 },
+    stats: { reliability: 2, ceiling: 1, gas_socket: 1 },
     special: 'lightest_expensive',
     age: 3
   },
@@ -314,7 +316,7 @@ export const TECH_TILES: Record<string, TechTile> = {
     requiredCard: 'modular_construction',
     weight: 1,
     hullCost: 2,
-    stats: {},
+    stats: { gas_socket: 1 },
     special: null,
     age: 3
   },
@@ -326,7 +328,7 @@ export const TECH_TILES: Record<string, TechTile> = {
     requiredCard: 'articulated_keel',
     weight: 0,  // Per Appendix D: weight is 0, not -1
     hullCost: 1,
-    stats: { ceiling: 1 },  // Per Section 13.4: +1 Ceiling (not reliability)
+    stats: { ceiling: 1, gas_socket: 1 },  // Per Section 13.4: +1 Ceiling (not reliability)
     special: 'weather_penalty',  // Per Section 13.4: -1 to Reliability checks during Weather hazards
     age: 1  // Italy starting tech, available from Age 1
   },
@@ -338,7 +340,7 @@ export const TECH_TILES: Record<string, TechTile> = {
     requiredCard: 'aerodynamic_hull_design',
     weight: 1,
     hullCost: 2,
-    stats: { lift: 2 },  // Provides lift without gas
+    stats: { lift: 2, gas_socket: 1 },  // Provides lift without gas
     special: null,
     age: 2
   },
@@ -350,7 +352,7 @@ export const TECH_TILES: Record<string, TechTile> = {
     requiredCard: 'dynamic_lift_surfaces',
     weight: 2,
     hullCost: 3,
-    stats: { lift: 4 },  // Provides lift without gas
+    stats: { lift: 4, gas_socket: 1 },  // Provides lift without gas
     special: null,
     age: 3
   },
@@ -1035,7 +1037,8 @@ export function calculateShipStats(blueprint: Blueprint, factionBonuses: Faction
     luxury: factionBonuses.luxury || 0,
     income: 0,
     weight: 0,
-    hullCost: 2 // Base hull cost
+    hullCost: 2, // Base hull cost
+    lift: 0
   };
 
   // Sum stats from all installed tech tiles
@@ -1052,9 +1055,14 @@ export function calculateShipStats(blueprint: Blueprint, factionBonuses: Faction
 
       // Add tech tile stats
       for (const [stat, value] of Object.entries(tile.stats || {})) {
-        const statKey = stat as keyof ShipStats;
-        if (typeof stats[statKey] === 'number' && typeof value === 'number') {
-          (stats[statKey] as number) += value;
+        if (stat === 'gas_socket' && typeof value === 'number') {
+          // Gas sockets provide +5 lift each
+          stats.lift += value * 5;
+        } else {
+          const statKey = stat as keyof ShipStats;
+          if (typeof stats[statKey] === 'number' && typeof value === 'number') {
+            (stats[statKey] as number) += value;
+          }
         }
       }
 
@@ -1072,18 +1080,15 @@ export function calculateShipStats(blueprint: Blueprint, factionBonuses: Faction
 }
 
 /**
- * Calculate lift from gas cubes
- * @param gasSockets - Gas cubes placed on frame
+ * Calculate lift from blueprint (frame tiles provide gas sockets worth +5 lift each)
+ * @param blueprint - Player's blueprint
+ * @param factionBonuses - Faction bonuses
+ * @param age - Current age
  * @returns Total lift
  */
-export function calculateLift(gasSockets: string[] | undefined): number {
-  let lift = 0;
-  for (const cube of gasSockets || []) {
-    if (cube === 'hydrogen' || cube === 'helium') {
-      lift += 5;
-    }
-  }
-  return lift;
+export function calculateLift(blueprint: Blueprint, factionBonuses: FactionBonuses = {}, age = 1): number {
+  const stats = calculateShipStats(blueprint, factionBonuses, age);
+  return stats.lift;
 }
 
 /**
@@ -1095,7 +1100,7 @@ export function calculateLift(gasSockets: string[] | undefined): number {
  */
 export function canLaunch(blueprint: Blueprint, factionBonuses: FactionBonuses = {}, age = 1): LaunchCheck {
   const stats = calculateShipStats(blueprint, factionBonuses, age);
-  const lift = calculateLift(blueprint.gasSockets);
+  const lift = stats.lift;
 
   // Check required slots are filled
   const requiredSlots = AGE_BASELINES[age];

@@ -35,15 +35,8 @@ export function calculateShipStats(blueprint: Blueprint | null | undefined, age 
 		canLaunch: false
 	};
 
-	// Calculate lift from gas cubes (each cube = +5 lift)
-	const gasSockets = blueprint.gasSockets || [];
-	for (const cube of gasSockets) {
-		if (cube === 'hydrogen' || cube === 'helium') {
-			stats.lift += 5;
-		}
-	}
-
 	// Sum stats from all installed tech tiles
+	// Note: gas_socket on frame tiles provides +5 lift each
 	const allSlots: (keyof Pick<Blueprint, 'frameSlots' | 'fabricSlots' | 'driveSlots' | 'componentSlots'>)[] =
 		['frameSlots', 'fabricSlots', 'driveSlots', 'componentSlots'];
 
@@ -63,7 +56,9 @@ export function calculateShipStats(blueprint: Blueprint | null | undefined, age 
 				stats.reliability += tile.stats.reliability || 0;
 				stats.luxury += tile.stats.luxury || 0;
 				stats.income += tile.stats.income || 0;
-				stats.lift += tile.stats.lift || 0; // Some tiles provide lift (aerodynamic hull)
+				stats.lift += tile.stats.lift || 0; // Some tiles provide bonus lift
+				// Gas sockets on frame tiles provide +5 lift each
+				stats.lift += (tile.stats.gas_socket || 0) * 5;
 			}
 
 			// Add weight
