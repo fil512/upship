@@ -670,14 +670,58 @@
 	// Peeked hazard - from Navigator card or Weather Bureau
 	$: peekedHazard = $myState?.peekedHazard;
 
+	// Ministry card selection - drawn 2 cards, must discard 1
+	$: drawnMinistryCards = $myState?.drawnMinistryCards;
+
+	async function handleDiscardMinistryCard(cardIndex: number) {
+		const result = await sendAction({
+			actionType: 'DISCARD_MINISTRY_CARD',
+			actionData: { cardIndex }
+		});
+		if (result.success) {
+			const keptCard = drawnMinistryCards?.[cardIndex === 0 ? 1 : 0];
+			showToast(`Kept ${keptCard?.name || 'card'}`, 'success');
+		} else {
+			showToast(result.error || 'Failed to select card', 'error');
+		}
+	}
+
+	async function handleKeepHazard() {
+		const result = await sendAction({
+			actionType: 'KEEP_HAZARD',
+			actionData: {}
+		});
+		if (result.success) {
+			showToast('Hazard kept in deck', 'info');
+		} else {
+			showToast(result.error || 'Failed to keep hazard', 'error');
+		}
+	}
+
+	async function handleDiscardHazard() {
+		const result = await sendAction({
+			actionType: 'DISCARD_HAZARD',
+			actionData: {}
+		});
+		if (result.success) {
+			showToast('Hazard discarded!', 'success');
+		} else {
+			showToast(result.error || 'Failed to discard hazard', 'error');
+		}
+	}
+
 	async function handleRespondToHazard(spendEngineers: boolean) {
 		if (!shipAwaitingHazard) return;
 
 		// Determine if hazard will pass (need city choice) or fail (no city needed)
 		const hazard = pendingHazard;
-		const willPass = hazard?.autoPassReason ||
+		// noSave hazards (like Catastrophic Explosion) always destroy the ship
+		const isNoSave = hazard?.noSave || hazard?.type === 'catastrophic_explosion';
+		const willPass = !isNoSave && (
+			hazard?.autoPassReason ||
 			hazard?.engineersNeeded === 0 ||
-			(spendEngineers && canAffordEngineers);
+			(spendEngineers && canAffordEngineers)
+		);
 
 		// Age 2 missions don't need city choice - just complete the mission
 		const isMission = shipAwaitingHazard.pendingMissionId && ($gameState?.age === 2);
@@ -687,7 +731,7 @@
 			pendingHazardResponse = { spendEngineers };
 			showCityModal = true;
 		} else {
-			// Either: hazard fails, OR it's a mission (no city), OR no valid route
+			// Either: hazard fails, OR it's a mission (no city), OR no valid route, OR noSave
 			// Send RESPOND_TO_HAZARD directly
 			const result = await sendAction({
 				actionType: 'RESPOND_TO_HAZARD',
@@ -697,7 +741,9 @@
 				}
 			});
 			if (result.success) {
-				if (isMission) {
+				if (isNoSave) {
+					showToast('Ship destroyed!', 'error');
+				} else if (isMission) {
 					showToast('Mission completed!', 'success');
 				} else if (!willPass) {
 					showToast('Launch aborted - ship returns to hangar', 'info');
@@ -994,6 +1040,7 @@
 									{selectedCardSymbol}
 									isMyTurn={$isMyTurn}
 									{isWorkerPlacementPhase}
+									heliumPrice={$gameState.gasMarket?.helium || 2}
 									on:placeAgent={handlePlaceAgent}
 								/>
 							</section>
@@ -1250,6 +1297,44 @@
 								{/if}
 							</div>
 							<p class="peeked-hint">This is the top card of your hazard deck.</p>
+							{#if $isMyTurn}
+								<div class="hazard-buttons">
+									<button class="btn success" on:click={handleDiscardHazard}>
+										Discard Hazard
+									</button>
+									<button class="btn secondary" on:click={handleKeepHazard}>
+										Keep in Deck
+									</button>
+								</div>
+							{/if}
+						</div>
+					{/if}
+
+					{#if drawnMinistryCards?.length === 2}
+						<!-- Ministry Card Selection - choose one to keep -->
+						<div class="ministry-panel">
+							<h4>🏛️ Ministry</h4>
+							<p class="ministry-instruction">Choose one card to keep:</p>
+							<div class="ministry-cards">
+								{#each drawnMinistryCards as card, index (card.id || index)}
+									<div class="ministry-card">
+										<div class="card-info">
+											<span class="card-name">{card.name}</span>
+											{#if card.symbol}
+												<span class="card-symbol">({card.symbol})</span>
+											{/if}
+										</div>
+										{#if $isMyTurn}
+											<button
+												class="btn primary"
+												on:click={() => handleDiscardMinistryCard(index === 0 ? 1 : 0)}
+											>
+												Keep
+											</button>
+										{/if}
+									</div>
+								{/each}
+							</div>
 						</div>
 					{/if}
 					{#if $isMyTurn}
@@ -1263,6 +1348,12 @@
 										<p class="hazard-auto-pass">Auto-pass: {pendingHazard.autoPassReason}</p>
 										<button class="btn primary w-full" on:click={() => handleRespondToHazard(false)}>
 											Continue
+										</button>
+									{:else if pendingHazard.noSave || pendingHazard.type === 'catastrophic_explosion'}
+										<p class="hazard-catastrophic">Airship and crew lost!</p>
+										<p class="hazard-info">No save possible.</p>
+										<button class="btn danger w-full" on:click={() => handleRespondToHazard(false)}>
+											Acknowledge
 										</button>
 									{:else if pendingHazard.engineersNeeded > 0}
 										<p class="hazard-requirement">
@@ -2158,6 +2249,62 @@
 		margin: 0;
 	}
 
+	/* Ministry Panel - card selection after visiting Ministry */
+	.ministry-panel {
+		display: flex;
+		flex-direction: column;
+		gap: var(--spacing-sm);
+		padding: var(--spacing-sm);
+		background: rgba(168, 85, 247, 0.1);
+		border: 2px solid #a855f7;
+		border-radius: var(--radius-md);
+		margin-bottom: var(--spacing-sm);
+	}
+
+	.ministry-panel h4 {
+		margin: 0;
+		font-size: 0.9rem;
+		color: #a855f7;
+	}
+
+	.ministry-instruction {
+		font-size: 0.85rem;
+		color: var(--color-text-secondary);
+		margin: 0;
+	}
+
+	.ministry-cards {
+		display: flex;
+		flex-direction: column;
+		gap: var(--spacing-sm);
+	}
+
+	.ministry-card {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		padding: var(--spacing-sm);
+		background: rgba(0, 0, 0, 0.2);
+		border-radius: var(--radius-sm);
+		border: 1px solid var(--color-border);
+	}
+
+	.ministry-card .card-info {
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+	}
+
+	.ministry-card .card-name {
+		font-weight: 500;
+		color: var(--color-text-primary);
+	}
+
+	.ministry-card .card-symbol {
+		font-size: 0.75rem;
+		color: var(--color-text-secondary);
+	}
+
 	.peeked-hazard-card .hazard-cost {
 		font-size: 0.8rem;
 		color: var(--color-warning);
@@ -2224,6 +2371,24 @@
 		font-size: 0.8rem;
 		color: var(--color-text-secondary);
 		margin: 0;
+	}
+
+	.hazard-catastrophic {
+		font-size: 1rem;
+		font-weight: bold;
+		color: var(--color-error);
+		margin: 0;
+	}
+
+	.btn.danger {
+		background: var(--color-error);
+		color: white;
+		border-color: var(--color-error);
+	}
+
+	.btn.danger:hover {
+		background: #c9302c;
+		border-color: #c9302c;
 	}
 
 	.hazard-buttons {

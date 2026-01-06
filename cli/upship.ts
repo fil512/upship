@@ -1004,14 +1004,13 @@ const commands: Record<string, CommandFunction> = {
       console.log('Usage: upship <user> place <gameId> <locationId> <cardIndex> [params...]');
       console.log('');
       console.log('Locations:');
-      console.log('  research-institute, design-bureau, construction-hall (wrench)');
-      console.log('  launchpad, ministry, gas-depot, weather-bureau (propeller)');
-      console.log('  academy, flight-school, technical-institute, the-bank, insurance-bureau (coin)');
+      console.log('  blueprint-design, construction-hall, gas-depot, technical-institute (wrench)');
+      console.log('  launchpad, launchpad-2, ministry, weather-bureau (propeller)');
+      console.log('  research-institute, flight-school, government-liaison, insurance-bureau (coin)');
       console.log('');
       console.log('Location-specific parameters (Section 5.1 - actions execute immediately):');
       console.log('  construction-hall: buildCount=N (1-3 ships)');
       console.log('  gas-depot: gasType=hydrogen|helium gasAmount=N');
-      console.log('  academy: crewType=officer|engineer crewCount=N');
       return;
     }
     const actionArgs = [gameId, 'PLACE_AGENT', `locationId=${locationId}`, `cardIndex=${cardIndex}`];
@@ -1051,14 +1050,10 @@ const commands: Record<string, CommandFunction> = {
     return commands.action(user, [gameId, 'BUILD_SHIP', `count=${count || 1}`]);
   },
 
-  async recruit(username: string | string[], args?: string[]): Promise<void> {
-    const user = typeof username === 'string' ? username : username[0];
-    const [gameId, crewType, count] = args || [];
-    if (!gameId || !crewType) {
-      console.log('Usage: upship <user> recruit <gameId> <officer|engineer> [count]');
-      return;
-    }
-    return commands.action(user, [gameId, 'RECRUIT_CREW', `crewType=${crewType}`, `count=${count || 1}`]);
+  async recruit(_username: string | string[], _args?: string[]): Promise<void> {
+    console.log(`${COLORS.yellow}Note: Crew recruiting has been removed from the game.${COLORS.reset}`);
+    console.log('Officers and Engineers are now gained only through income.');
+    console.log('Use Flight School to increase Officer income, Technical Institute for Engineer income.');
   },
 
   async load(_username: string | string[], _args?: string[]): Promise<void> {
@@ -1178,7 +1173,6 @@ ${c(COLORS.yellow, 'Actions (shorthand):')}
   upship <user> loan <gameId>                 Take a loan (£30, -3 income)
   upship <user> draw <gameId> [count]         Draw cards
   upship <user> build <gameId> [count]        Build ships
-  upship <user> recruit <id> <type> [count]   Recruit crew
   upship <user> launch <gameId> <shipId> <routeId> [gas]  Launch ship to claim route
   upship <user> tech <gameId> <techId>        Acquire technology from R&D
 

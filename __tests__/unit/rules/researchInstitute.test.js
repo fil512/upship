@@ -28,11 +28,11 @@ describe('Rules Compliance - Research Institute (Section 6.1)', () => {
       const initialResearchLevel = playerState.researchLevel;
       playerState.agentsRemaining = 2;
 
-      // Set up a card with propeller symbol for research_institute
+      // Set up a card with coin symbol for research_institute
       playerState.hand = [{
         id: 'test-card',
         name: 'Test Card',
-        symbol: 'propeller'
+        symbol: 'coin'
       }];
 
       state.workerPlacement = {
@@ -69,7 +69,7 @@ describe('Rules Compliance - Research Institute (Section 6.1)', () => {
       playerState.hand = [{
         id: 'test-card',
         name: 'Test Card',
-        symbol: 'propeller'
+        symbol: 'coin'
       }];
 
       state.workerPlacement = {
@@ -107,7 +107,7 @@ describe('Rules Compliance - Research Institute (Section 6.1)', () => {
       playerState.hand = [{
         id: 'test-card',
         name: 'Test Card',
-        symbol: 'propeller'
+        symbol: 'coin'
       }];
 
       state.workerPlacement = {
@@ -148,7 +148,7 @@ describe('Rules Compliance - Research Institute (Section 6.1)', () => {
       playerState.hand = [{
         id: 'test-card',
         name: 'Test Card',
-        symbol: 'propeller'
+        symbol: 'coin'
       }];
 
       state.workerPlacement = {

@@ -14,7 +14,7 @@ const { reduceHeliumMarket } = require('./helpers/marketHelpers');
 const { WEATHER_BUREAU_COST } = require('../config/constants');
 const { processBuildShip } = require('./building');
 const { processBuyGas } = require('./gas');
-const { processRecruitCrew, processUpgradeOfficerIncome, processUpgradeEngineerIncome, processGovernmentLiaison } = require('./crew');
+const { processUpgradeOfficerIncome, processUpgradeEngineerIncome, processGovernmentLiaison } = require('./crew');
 const { processBuyInsurance } = require('./economy');
 const { processUpgradeResearchLevel } = require('./technology');
 const { processUpdateBlueprint } = require('./blueprint');
@@ -408,7 +408,8 @@ function executeLocationAction(
       }
     }
 
-    case 'launchpad': {
+    case 'launchpad':
+    case 'launchpad_2': {
       // Launchpad is a multi-step location - enables multiple launches
       // Set launchpadActive and DON'T advance turn until NO_MORE_LAUNCHES is called
       workerState.launchpadActive = workerState.launchpadActive || {};
@@ -419,20 +420,6 @@ function executeLocationAction(
         message: 'Launchpad activated - may launch ships. Call NO_MORE_LAUNCHES when done.',
         skipTurnAdvance: true  // Signal to processPlaceAgent not to advance turn
       };
-    }
-
-    case 'academy': {
-      // Per Section 5.1: Execute action immediately when placing agent
-      const { crewType, crewCount } = options;
-      if (!crewType || !crewCount) {
-        return { success: false, error: 'Academy requires crewType and crewCount parameters' };
-      }
-      try {
-        processRecruitCrew(state, playerId, { crewType, count: crewCount, _internal: true });
-        return { success: true, message: `Recruited ${crewCount} ${crewType}(s)` };
-      } catch (error) {
-        return { success: false, error: (error as Error).message };
-      }
     }
 
     case 'flight_school': {

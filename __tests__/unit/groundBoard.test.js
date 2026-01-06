@@ -43,8 +43,8 @@ describe('GroundBoard Module', () => {
     });
 
     describe('specific locations', () => {
-      it('research_institute should have propeller symbol', () => {
-        expect(GROUND_BOARD_LOCATIONS.research_institute.symbol).toBe('propeller');
+      it('research_institute should have coin symbol', () => {
+        expect(GROUND_BOARD_LOCATIONS.research_institute.symbol).toBe('coin');
       });
 
       it('blueprint_design should have wrench symbol', () => {
@@ -59,12 +59,12 @@ describe('GroundBoard Module', () => {
         expect(GROUND_BOARD_LOCATIONS.launchpad.symbol).toBe('propeller');
       });
 
-      it('construction_hall should have wrench symbol', () => {
-        expect(GROUND_BOARD_LOCATIONS.construction_hall.symbol).toBe('wrench');
+      it('launchpad_2 should have propeller symbol', () => {
+        expect(GROUND_BOARD_LOCATIONS.launchpad_2.symbol).toBe('propeller');
       });
 
-      it('academy should have coin symbol', () => {
-        expect(GROUND_BOARD_LOCATIONS.academy.symbol).toBe('coin');
+      it('construction_hall should have wrench symbol', () => {
+        expect(GROUND_BOARD_LOCATIONS.construction_hall.symbol).toBe('wrench');
       });
     });
   });
@@ -163,7 +163,7 @@ describe('GroundBoard Module', () => {
       });
 
       it('should not be placeable at coin locations', () => {
-        expect(canPlaceAtLocation('wrench', 'academy')).toBe(false);
+        expect(canPlaceAtLocation('wrench', 'research_institute')).toBe(false);
         expect(canPlaceAtLocation('wrench', 'government_liaison')).toBe(false);
         expect(canPlaceAtLocation('wrench', 'flight_school')).toBe(false);
         expect(canPlaceAtLocation('wrench', 'insurance_bureau')).toBe(false);
@@ -171,7 +171,7 @@ describe('GroundBoard Module', () => {
 
       it('should not be placeable at propeller locations', () => {
         expect(canPlaceAtLocation('wrench', 'launchpad')).toBe(false);
-        expect(canPlaceAtLocation('wrench', 'research_institute')).toBe(false);
+        expect(canPlaceAtLocation('wrench', 'launchpad_2')).toBe(false);
         expect(canPlaceAtLocation('wrench', 'ministry')).toBe(false);
         expect(canPlaceAtLocation('wrench', 'weather_bureau')).toBe(false);
       });
@@ -179,7 +179,7 @@ describe('GroundBoard Module', () => {
 
     describe('coin symbol card', () => {
       it('should be placeable at coin locations', () => {
-        expect(canPlaceAtLocation('coin', 'academy')).toBe(true);
+        expect(canPlaceAtLocation('coin', 'research_institute')).toBe(true);
         expect(canPlaceAtLocation('coin', 'government_liaison')).toBe(true);
         expect(canPlaceAtLocation('coin', 'flight_school')).toBe(true);
         expect(canPlaceAtLocation('coin', 'insurance_bureau')).toBe(true);
@@ -192,21 +192,21 @@ describe('GroundBoard Module', () => {
 
       it('should not be placeable at propeller locations', () => {
         expect(canPlaceAtLocation('coin', 'launchpad')).toBe(false);
-        expect(canPlaceAtLocation('coin', 'research_institute')).toBe(false);
+        expect(canPlaceAtLocation('coin', 'launchpad_2')).toBe(false);
       });
     });
 
     describe('propeller symbol card', () => {
       it('should be placeable at propeller locations', () => {
         expect(canPlaceAtLocation('propeller', 'launchpad')).toBe(true);
-        expect(canPlaceAtLocation('propeller', 'research_institute')).toBe(true);
+        expect(canPlaceAtLocation('propeller', 'launchpad_2')).toBe(true);
         expect(canPlaceAtLocation('propeller', 'ministry')).toBe(true);
         expect(canPlaceAtLocation('propeller', 'weather_bureau')).toBe(true);
       });
 
       it('should not be placeable at other locations', () => {
         expect(canPlaceAtLocation('propeller', 'blueprint_design')).toBe(false);
-        expect(canPlaceAtLocation('propeller', 'academy')).toBe(false);
+        expect(canPlaceAtLocation('propeller', 'research_institute')).toBe(false);
       });
     });
 

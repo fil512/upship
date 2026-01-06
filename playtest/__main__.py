@@ -450,14 +450,6 @@ def run_action(player: str, command: str, *args, game_id: str = None) -> None:
             gas_type = args[0]
             amount = int(args[1]) if len(args) > 1 else 1
             result = client.buy_gas(player, game_id, gas_type, amount)
-        elif command_lower == 'recruit':
-            # recruit <crewType> [count]
-            if len(args) < 1:
-                print("Usage: recruit <officer|engineer> [count]")
-                return
-            crew_type = args[0]
-            count = int(args[1]) if len(args) > 1 else 1
-            result = client.recruit_crew(player, game_id, crew_type, count)
         elif command_lower == 'install':
             # install <slotType> <slotIndex> <upgradeId>
             if len(args) < 3:

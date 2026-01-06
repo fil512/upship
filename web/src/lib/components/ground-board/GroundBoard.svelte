@@ -10,89 +10,90 @@
 	export let selectedCardSymbol: string | null = null;
 	export let isMyTurn: boolean = false;
 	export let isWorkerPlacementPhase: boolean = false;
+	export let heliumPrice: number = 2;
 
 	const dispatch = createEventDispatcher<{
 		placeAgent: { locationId: string };
 	}>();
 
-	// Location definitions matching server/data/groundBoard.js
+	// Location definitions matching server/data/groundBoard.ts
 	const locations = [
 		// Wrench locations (technical)
 		{
 			id: 'blueprint_design',
 			name: 'Blueprint Design',
 			symbol: 'wrench' as const,
-			description: 'Modify your Blueprint'
+			description: 'Free. Install tech tiles you own into your blueprint slots.'
 		},
 		{
 			id: 'construction_hall',
 			name: 'Hangar',
 			symbol: 'wrench' as const,
-			description: 'Build ships'
+			description: 'Pay Hull Cost to build ships (max 3). Ships go to Launch Hangar.'
 		},
 		{
 			id: 'technical_institute',
 			name: 'Technical Institute',
 			symbol: 'wrench' as const,
-			description: 'Upgrade engineer income'
+			description: '£6/level. Increase Engineer Income track (+1 engineer per round).'
 		},
 		{
 			id: 'gas_depot',
 			name: 'Gas Depot',
 			symbol: 'wrench' as const,
-			description: 'Purchase lifting gas'
+			description: 'Buy gas cubes. Hydrogen £1 each. Helium at market price.'
 		},
 
 		// Propeller locations (operations)
 		{
-			id: 'research_institute',
-			name: 'Research Institute',
-			symbol: 'propeller' as const,
-			description: 'Expand research level'
-		},
-		{
 			id: 'launchpad',
 			name: 'Launchpad',
 			symbol: 'propeller' as const,
-			description: 'Launch ships'
+			description: 'Launch ships to claim routes. Costs Officers (by Age) + Gas.'
+		},
+		{
+			id: 'launchpad_2',
+			name: 'Launchpad 2',
+			symbol: 'propeller' as const,
+			description: 'Launch ships to claim routes. Costs Officers (by Age) + Gas.'
 		},
 		{
 			id: 'ministry',
 			name: 'Ministry',
 			symbol: 'propeller' as const,
-			description: 'Political maneuvering'
+			description: 'Draw 2 cards, keep 1. Take First Player token. Reduce He price by 1.'
 		},
 		{
 			id: 'weather_bureau',
 			name: 'Weather Bureau',
 			symbol: 'propeller' as const,
-			description: 'Check weather forecasts'
+			description: '£2. Peek at top of your hazard deck. Keep it or discard it.'
 		},
 
 		// Coin locations (business)
 		{
-			id: 'academy',
-			name: 'Academy',
+			id: 'research_institute',
+			name: 'Research Institute',
 			symbol: 'coin' as const,
-			description: 'Recruit crew'
+			description: '£4/level. Increase Research Level (+1 research when revealing).'
 		},
 		{
 			id: 'flight_school',
 			name: 'Flight School',
 			symbol: 'coin' as const,
-			description: 'Upgrade officer income'
+			description: '£5/level. Increase Officer Income track (+1 officer per round).'
 		},
 		{
 			id: 'government_liaison',
 			name: 'Government Liaison',
 			symbol: 'coin' as const,
-			description: 'Secure government backing'
+			description: 'Spend 1-3 Officers to gain +1 Income per officer spent.'
 		},
 		{
 			id: 'insurance_bureau',
 			name: 'Insurance Bureau',
 			symbol: 'coin' as const,
-			description: 'Purchase insurance'
+			description: '-1 Income/policy (max 3). Recover crashed ships instead of losing them.'
 		}
 	];
 
@@ -142,6 +143,7 @@
 						{players}
 						canPlace={canPlaceMap[loc.id]}
 						hullCost={loc.id === 'construction_hall' ? playerHullCost : undefined}
+						heliumPrice={loc.id === 'gas_depot' ? heliumPrice : undefined}
 						on:select={handleLocationSelect}
 					/>
 				{/each}

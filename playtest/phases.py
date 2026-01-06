@@ -817,10 +817,6 @@ def _execute_placement(player: str, game_id: str, card: dict, location: dict, lo
         kwargs['gasType'] = gas_type
         kwargs['gasAmount'] = 3
         action_desc = f"placed at {loc_id} and bought 3 {gas_type}"
-    elif loc_id == 'academy':
-        kwargs['crewType'] = 'officer'
-        kwargs['crewCount'] = 1
-        action_desc = f"placed at {loc_id} and recruited 1 officer"
     elif loc_id == 'flight_school':
         kwargs['levels'] = 1
         action_desc = f"placed at {loc_id} and upgraded officer income"
@@ -836,7 +832,7 @@ def _execute_placement(player: str, game_id: str, card: dict, location: dict, lo
     elif loc_id == 'research_institute':
         kwargs['levels'] = 1
         action_desc = f"placed at {loc_id} and upgraded research level"
-    elif loc_id == 'launchpad':
+    elif loc_id in ('launchpad', 'launchpad_2'):
         action_desc = f"placed at {loc_id} (launching ships next)"
 
     # Execute the placement

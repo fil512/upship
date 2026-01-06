@@ -1,14 +1,12 @@
 /**
  * Crew Actions
- * RECRUIT_CREW, UPGRADE_OFFICER_INCOME, UPGRADE_ENGINEER_INCOME action processors
+ * UPGRADE_OFFICER_INCOME, UPGRADE_ENGINEER_INCOME action processors
  */
 
 import type { GameState, PlayerState, LogEntry } from '@upship/api';
 
 const { GameRuleError, InsufficientFundsError } = require('../errors');
 const {
-  OFFICER_RECRUIT_COST,
-  ENGINEER_RECRUIT_COST,
   FLIGHT_SCHOOL_COST,
   TECHNICAL_INSTITUTE_COST
 } = require('../config/constants');
@@ -24,80 +22,6 @@ type CrewPlayerState = PlayerState & {
   engineerIncome?: number;
   agents?: number;
 };
-
-interface RecruitData {
-  crewType: 'officer' | 'engineer';
-  count?: number;
-  _internal?: boolean;
-}
-
-/**
- * Recruit crew at the Academy
- *
- * Per Section 5.1: Location actions execute IMMEDIATELY when placing an agent.
- * Direct API calls are rejected - must go through PLACE_AGENT with crewType/crewCount params.
- */
-function processRecruitCrew(state: GameState, playerId: string, data: RecruitData): ActionResult {
-  const { crewType, count = 1, _internal = false } = data;
-  const playerState = state.players[playerId];
-
-  // Validate that this is called through PLACE_AGENT (Section 5.1)
-  if (!_internal) {
-    if (state.phase !== 'worker_placement') {
-      throw new GameRuleError(
-        'RECRUIT_CREW not allowed: Actions execute immediately when placing an agent (Section 5.1). ' +
-        'Place an agent at Academy during worker placement phase to recruit crew.'
-      );
-    }
-    const placement = state.groundBoard?.placements?.academy;
-    if (!placement || placement.playerId !== playerId) {
-      throw new GameRuleError(
-        'RECRUIT_CREW not allowed: You must place an agent at Academy to recruit crew. ' +
-        'Use PLACE_AGENT with locationId "academy" and crewType/crewCount parameters.'
-      );
-    }
-  }
-
-  const costs: Record<string, number> = {
-    officer: OFFICER_RECRUIT_COST as number,
-    engineer: ENGINEER_RECRUIT_COST as number
-  };
-
-  if (!costs[crewType]) {
-    throw new GameRuleError('Invalid crew type. Use "officer" or "engineer".');
-  }
-
-  const totalCost = costs[crewType] * count;
-
-  if (playerState.cash < totalCost) {
-    throw new InsufficientFundsError(totalCost, playerState.cash);
-  }
-
-  playerState.cash -= totalCost;
-
-  if (crewType === 'officer') {
-    playerState.officers += count;
-  } else {
-    playerState.engineers += count;
-  }
-
-  // Log resource flows
-  const flowContext = createFlowContext(state, (state as { gameId?: string }).gameId || 'unknown');
-  const faction = playerState.faction || 'unknown';
-  resourceFlowLogger.logSink(flowContext, playerId, faction, 'cash', totalCost, 'purchase', `Recruit ${crewType}`, playerState.cash, { location: 'academy' });
-  const resourceType = crewType === 'officer' ? 'officers' : 'engineers';
-  const newTotal = crewType === 'officer' ? playerState.officers : playerState.engineers;
-  resourceFlowLogger.logFountain(flowContext, playerId, faction, resourceType, count, 'action', `Recruit ${crewType}`, newTotal, { location: 'academy' });
-
-  state.log.push({
-    timestamp: new Date().toISOString(),
-    message: `Recruited ${count} ${crewType}(s) for £${totalCost}`,
-    playerId,
-    type: 'action'
-  } as LogEntry);
-
-  return { newState: state };
-}
 
 interface InternalData {
   levels?: number;
@@ -286,7 +210,6 @@ function processGovernmentLiaison(state: GameState, playerId: string, data: Gove
 }
 
 export {
-  processRecruitCrew,
   processUpgradeOfficerIncome,
   processUpgradeEngineerIncome,
   processGovernmentLiaison
@@ -294,7 +217,6 @@ export {
 
 // CommonJS compatibility
 module.exports = {
-  processRecruitCrew,
   processUpgradeOfficerIncome,
   processUpgradeEngineerIncome,
   processGovernmentLiaison

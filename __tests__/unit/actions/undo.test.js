@@ -26,7 +26,7 @@ describe('Undo Module', () => {
     it('returns false for PLACE_AGENT at other locations', () => {
       expect(createsCommitPoint('PLACE_AGENT', { locationId: 'research-institute' })).toBe(false);
       expect(createsCommitPoint('PLACE_AGENT', { locationId: 'design-bureau' })).toBe(false);
-      expect(createsCommitPoint('PLACE_AGENT', { locationId: 'academy' })).toBe(false);
+      expect(createsCommitPoint('PLACE_AGENT', { locationId: 'insurance_bureau' })).toBe(false);
     });
 
     it('returns true for DISCARD_HAZARD', () => {

@@ -13,6 +13,7 @@
 	export let players: Record<string, PlayerState> = {};
 	export let canPlace: boolean = false;
 	export let hullCost: number | undefined = undefined;
+	export let heliumPrice: number | undefined = undefined;
 
 	// Cost and benefit data for each location
 	// resourceBadge: array of {type, value} for ResourceBadge display
@@ -128,28 +129,42 @@
 		<div class="cost-item symbol-cost" title="Requires {symbol} card">
 			<Icon name={symbol as SymbolIconName} size={16} color="var(--symbol-color)" />
 		</div>
-		{#each locationData.costs as cost, i (i)}
-			{#if hasResourceBadge(cost)}
-				<div class="cost-item resource-cost">
-					{#each cost.resourceBadge as badge, j (j)}
-						{#if j > 0}<span class="cost-separator">{cost.separator || '/'}</span>{/if}
-						<ResourceBadge type={badge.type} value={badge.value} size={14} />
-					{/each}
+		{#if id === 'gas_depot' && heliumPrice !== undefined}
+			<!-- Gas Depot: show H:1 and He:X prices -->
+			<div class="cost-item gas-prices">
+				<div class="gas-price-row">
+					<Icon name="hydrogen" size={12} />
+					<span class="gas-price-value">1</span>
 				</div>
-			{:else if id === 'construction_hall' && cost.icon === 'cash' && hullCost !== undefined}
-				<!-- Dynamic hull cost display for Construction Hall -->
-				<div class="cost-item resource-cost">
-					<ResourceBadge type="cash" value={hullCost} size={14} />
+				<div class="gas-price-row">
+					<Icon name="helium" size={12} />
+					<span class="gas-price-value">{heliumPrice}</span>
 				</div>
-			{:else}
-				<div class="cost-item icon-cost" title={cost.icon}>
-					<Icon name={cost.icon} size={14} />
-					{#if cost.amount}
-						<span class="cost-amount">{cost.amount}</span>
-					{/if}
-				</div>
-			{/if}
-		{/each}
+			</div>
+		{:else}
+			{#each locationData.costs as cost, i (i)}
+				{#if hasResourceBadge(cost)}
+					<div class="cost-item resource-cost">
+						{#each cost.resourceBadge as badge, j (j)}
+							{#if j > 0}<span class="cost-separator">{cost.separator || '/'}</span>{/if}
+							<ResourceBadge type={badge.type} value={badge.value} size={14} />
+						{/each}
+					</div>
+				{:else if id === 'construction_hall' && cost.icon === 'cash' && hullCost !== undefined}
+					<!-- Dynamic hull cost display for Construction Hall -->
+					<div class="cost-item resource-cost">
+						<ResourceBadge type="cash" value={hullCost} size={14} />
+					</div>
+				{:else}
+					<div class="cost-item icon-cost" title={cost.icon}>
+						<Icon name={cost.icon} size={14} />
+						{#if cost.amount}
+							<span class="cost-amount">{cost.amount}</span>
+						{/if}
+					</div>
+				{/if}
+			{/each}
+		{/if}
 	</div>
 
 	<!-- Main content section -->
@@ -283,6 +298,25 @@
 	.icon-cost {
 		flex-direction: row;
 		gap: 2px;
+	}
+
+	.gas-prices {
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+		padding: 4px;
+	}
+
+	.gas-price-row {
+		display: flex;
+		align-items: center;
+		gap: 2px;
+	}
+
+	.gas-price-value {
+		font-size: 0.7rem;
+		font-weight: 700;
+		color: var(--color-text-primary);
 	}
 
 	.symbol-cost {

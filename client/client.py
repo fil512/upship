@@ -558,26 +558,6 @@ class UpshipClient:
         """Draw cards from the deck."""
         return self.action(username, game_id, 'DRAW_CARDS', count=count)
 
-    def recruit_crew(
-        self,
-        username: str,
-        game_id: str,
-        crew_type: str,
-        count: int = 1,
-    ) -> ActionResult:
-        """Recruit crew members.
-
-        Args:
-            username: The authenticated username.
-            game_id: The ID of the game.
-            crew_type: Type of crew ('officer' or 'engineer').
-            count: Number to recruit.
-
-        Returns:
-            ActionResult with success status and updated game state.
-        """
-        return self.action(username, game_id, 'RECRUIT_CREW', crewType=crew_type, count=count)
-
     def build_ship(self, username: str, game_id: str, count: int = 1) -> ActionResult:
         """Build ships in the hangar.
 

@@ -730,14 +730,13 @@ class CLI:
             print('Usage: upship <user> place <gameId> <locationId> <cardIndex> [params...]')
             print('')
             print('Locations:')
-            print('  research-institute, design-bureau, construction-hall (wrench)')
-            print('  launchpad, ministry, gas-depot, weather-bureau (propeller)')
-            print('  academy, flight-school, technical-institute, the-bank, insurance-bureau (coin)')
+            print('  blueprint-design, construction-hall, gas-depot, technical-institute (wrench)')
+            print('  launchpad, launchpad-2, ministry, weather-bureau (propeller)')
+            print('  research-institute, flight-school, government-liaison, insurance-bureau (coin)')
             print('')
             print('Location-specific parameters:')
             print('  construction-hall: buildCount=N (1-3 ships)')
             print('  gas-depot: gasType=hydrogen|helium gasAmount=N')
-            print('  academy: crewType=officer|engineer crewCount=N')
             return
 
         game_id, location_id, card_index = args[0], args[1], args[2]
@@ -781,13 +780,10 @@ class CLI:
         self.cmd_action(username, [game_id, 'BUILD_SHIP', f"count={count}"])
 
     def cmd_recruit(self, username: str, args: list[str]) -> None:
-        """Recruit crew."""
-        if len(args) < 2:
-            print('Usage: upship <user> recruit <gameId> <officer|engineer> [count]')
-            return
-        game_id, crew_type = args[0], args[1]
-        count = args[2] if len(args) > 2 else '1'
-        self.cmd_action(username, [game_id, 'RECRUIT_CREW', f"crewType={crew_type}", f"count={count}"])
+        """(Deprecated) Recruit crew."""
+        print(f"{Colors.YELLOW}Note: Crew recruiting has been removed from the game.{Colors.RESET}")
+        print('Officers and Engineers are now gained only through income.')
+        print('Use Flight School to increase Officer income, Technical Institute for Engineer income.')
 
     def cmd_load(self, username: str, args: list[str]) -> None:
         """(Deprecated) Load gas."""
@@ -869,7 +865,6 @@ class CLI:
   upship <user> loan <gameId>                 Take a loan (£30, -3 income)
   upship <user> draw <gameId> [count]         Draw cards
   upship <user> build <gameId> [count]        Build ships
-  upship <user> recruit <id> <type> [count]   Recruit crew
   upship <user> launch <gameId> <shipId> <routeId> [gas]  Launch ship
   upship <user> tech <gameId> <techId>        Acquire technology
 

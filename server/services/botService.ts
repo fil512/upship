@@ -301,7 +301,7 @@ export function evaluateLaunchReadiness(
   const officersNeeded = currentAge;
   if (officers < officersNeeded) {
     missing.push(`need ${officersNeeded - officers} more officer(s) for Age ${currentAge}`);
-    priorities.push('academy');
+    priorities.push('flight_school');  // Build officer income
   }
 
   // Check 4: Do we have gas?
@@ -418,8 +418,8 @@ export function findStrategicPlacement(
     priorityLocations.push('gas_depot');
   }
 
-  if (officers < 2 && cash >= 2) {
-    priorityLocations.push('academy');
+  if (officers < 2 && cash >= 5) {
+    priorityLocations.push('flight_school');  // Build officer income
   }
 
   if (hangarCount > 0 || onRouteCount > 0) {
@@ -429,9 +429,9 @@ export function findStrategicPlacement(
   // Phase 3: Fallback priorities
   const fallbackPriorities = [
     'blueprint_design', 'research_institute', 'construction_hall',
-    'gas_depot', 'academy', 'technical_institute', 'ministry',
+    'gas_depot', 'technical_institute', 'ministry',
     'flight_school', 'weather_bureau', 'government_liaison',
-    'insurance_bureau', 'launchpad'
+    'insurance_bureau', 'launchpad', 'launchpad_2'
   ];
 
   for (const loc of fallbackPriorities) {
@@ -500,9 +500,6 @@ function buildLocationAction(
       const gasType = player.faction === 'usa' ? 'helium' : 'hydrogen';
       return { gasType, gasAmount: 3 };
     }
-
-    case 'academy':
-      return { crewType: 'officer', crewCount: 1 };
 
     case 'flight_school':
     case 'technical_institute':

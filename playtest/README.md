@@ -124,7 +124,6 @@ Execute a single action. Supported commands:
 | Place agent | `place <loc> <cardIdx> [opts]` | `action playtest_germany place design-bureau 0` |
 | Build ship | `build [count]` | `action playtest_germany build 2` |
 | Buy gas | `buygas <type> [amount]` | `action playtest_usa buygas helium 3` |
-| Recruit crew | `recruit <type> [count]` | `action playtest_usa recruit officer 2` |
 | Install upgrade | `install <slot> <idx> <id>` | `action playtest_usa install frame 0 upgrade_id` |
 | Take loan | `loan` | `action playtest_italy loan` |
 
@@ -140,13 +139,13 @@ python -m playtest launch playtest_germany ship_123 route_456 hydrogen
 For `action ... place`:
 
 **Technical (wrench):**
-- `research-institute`, `design-bureau`, `construction-hall`
+- `blueprint-design`, `construction-hall`, `gas-depot`, `technical-institute`
 
 **Operations (propeller):**
-- `launchpad`, `ministry`, `gas-depot`, `weather-bureau`
+- `launchpad`, `launchpad-2`, `ministry`, `weather-bureau`
 
 **Business (coin):**
-- `academy`, `flight-school`, `technical-institute`, `the-bank`, `insurance-bureau`
+- `research-institute`, `flight-school`, `government-liaison`, `insurance-bureau`
 
 ## Environment Variables
 

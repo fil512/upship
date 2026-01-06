@@ -25,9 +25,9 @@ describe('Rules Compliance - Ground Board', () => {
   });
 
   describe('Ground Board location symbols per Section 5.1', () => {
-    it('should have Research Institute as propeller location per Section 6.1', () => {
+    it('should have Research Institute as coin location per Section 6.1', () => {
       expect(GROUND_BOARD_LOCATIONS.research_institute).toBeDefined();
-      expect(GROUND_BOARD_LOCATIONS.research_institute.symbol).toBe('propeller');
+      expect(GROUND_BOARD_LOCATIONS.research_institute.symbol).toBe('coin');
     });
 
     it('should have Blueprint Design as wrench location per Section 6.2', () => {
@@ -35,17 +35,22 @@ describe('Rules Compliance - Ground Board', () => {
       expect(GROUND_BOARD_LOCATIONS.blueprint_design.symbol).toBe('wrench');
     });
 
-    it('should have Academy as coin location per Section 6.5', () => {
-      expect(GROUND_BOARD_LOCATIONS.academy).toBeDefined();
-      expect(GROUND_BOARD_LOCATIONS.academy.symbol).toBe('coin');
+    it('should have Launchpad as propeller location per Section 6.4', () => {
+      expect(GROUND_BOARD_LOCATIONS.launchpad).toBeDefined();
+      expect(GROUND_BOARD_LOCATIONS.launchpad.symbol).toBe('propeller');
     });
 
-    it('should have Flight School as coin location per Section 6.6', () => {
+    it('should have Launchpad 2 as propeller location per Section 6.4', () => {
+      expect(GROUND_BOARD_LOCATIONS.launchpad_2).toBeDefined();
+      expect(GROUND_BOARD_LOCATIONS.launchpad_2.symbol).toBe('propeller');
+    });
+
+    it('should have Flight School as coin location per Section 6.5', () => {
       expect(GROUND_BOARD_LOCATIONS.flight_school).toBeDefined();
       expect(GROUND_BOARD_LOCATIONS.flight_school.symbol).toBe('coin');
     });
 
-    it('should have Gas Depot as wrench location per Section 6.10', () => {
+    it('should have Gas Depot as wrench location per Section 6.9', () => {
       expect(GROUND_BOARD_LOCATIONS.gas_depot).toBeDefined();
       expect(GROUND_BOARD_LOCATIONS.gas_depot.symbol).toBe('wrench');
     });

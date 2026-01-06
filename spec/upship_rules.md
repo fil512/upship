@@ -289,8 +289,8 @@ The player with the **First Player** pawn goes first.
 | Symbol | Locations |
 |--------|-----------|
 | **Wrench** | Blueprint Design, Construction Hall, Gas Depot, Technical Institute |
-| **Coin** | Academy, Flight School, Government Liaison, Insurance Bureau |
-| **Propeller** | Research Institute, Launchpad, Ministry, Weather Bureau |
+| **Coin** | Research Institute, Flight School, Government Liaison, Insurance Bureau |
+| **Propeller** | Launchpad, Launchpad 2, Ministry, Weather Bureau |
 | **Any** | Can visit any location |
 
 ### Earning Your Third Agent
@@ -323,7 +323,7 @@ You may take a loan at any time during your turn—this does not require an Agen
 
 The Ground Board has 12 action spaces. Each requires a matching card symbol.
 
-## 6.1 Research Institute (Propeller)
+## 6.1 Research Institute (Coin)
 
 **Action:** Expand your research program.
 
@@ -364,26 +364,15 @@ The Ground Board has 12 action spaces. Each requires a matching card symbol.
 
 **Hull Tech Tile Rule:** If you change Frame or Fabric Tech Tiles while ships are in your Launch Hangar, pay the Hull Cost difference for each ship.
 
-## 6.4 Launchpad (Propeller)
+## 6.4 Launchpad / Launchpad 2 (Propeller)
 
 **Action:** Launch ships to claim routes or combat missions.
 
+There are two Launchpad spaces on the Ground Board. Both function identically.
+
 See **Section 8: Launching Ships** for the complete procedure.
 
-## 6.5 Academy (Coin)
-
-**Action:** Recruit crew.
-
-| Crew Type | Cost |
-|-----------|------|
-| Officer | £2 each |
-| Engineer | £4 each |
-
-**Result:** Gain tokens from shared supply to your Barracks.
-
-**Market Purge:** You may also discard the leftmost card from the Market Row.
-
-## 6.6 Flight School (Coin)
+## 6.5 Flight School (Coin)
 
 **Action:** Expand officer training.
 
@@ -393,7 +382,7 @@ See **Section 8: Launching Ships** for the complete procedure.
 
 **Milestone:** When your Officer Income Track reaches +3, immediately gain your 3rd Agent.
 
-## 6.7 Technical Institute (Wrench)
+## 6.6 Technical Institute (Wrench)
 
 **Action:** Expand engineering program.
 
@@ -401,7 +390,7 @@ See **Section 8: Launching Ships** for the complete procedure.
 
 **Effect:** Increase Engineer Income Track by 1 step.
 
-## 6.8 Government Liaison (Coin)
+## 6.7 Government Liaison (Coin)
 
 **Action:** Send officers to secure government backing.
 
@@ -409,7 +398,7 @@ See **Section 8: Launching Ships** for the complete procedure.
 
 **Effect:** Increase your Income Track by 1 step per Officer spent.
 
-## 6.9 Ministry (Propeller)
+## 6.8 Ministry (Propeller)
 
 **Action:** Political maneuvering.
 
@@ -418,7 +407,7 @@ See **Section 8: Launching Ships** for the complete procedure.
 2. Take the **First Player Token.**
 3. Reduce Helium Market Track by 1 step (minimum £2).
 
-## 6.10 Gas Depot (Wrench)
+## 6.9 Gas Depot (Wrench)
 
 **Action:** Purchase lifting gas.
 
@@ -429,7 +418,7 @@ See **Section 8: Launching Ships** for the complete procedure.
 
 **Result:** Add cubes to your Gas Reserve.
 
-## 6.11 Insurance Bureau (Coin)
+## 6.10 Insurance Bureau (Coin)
 
 **Action:** Purchase insurance policies.
 
@@ -439,7 +428,7 @@ See **Section 8: Launching Ships** for the complete procedure.
 
 **Benefit:** When a ship crashes, discard a policy to recover the ship to your Launch Hangar (Officers and gas still lost).
 
-## 6.12 Weather Bureau (Propeller)
+## 6.11 Weather Bureau (Propeller)
 
 **Action:** Consult weather forecasts.
 
@@ -1031,8 +1020,8 @@ When Catastrophic Explosion occurs during a Luxury Launch in Age III using Hydro
 | Symbol | Locations |
 |--------|-----------|
 | Wrench | Blueprint Design, Construction Hall, Gas Depot, Technical Institute |
-| Coin | Academy, Flight School, Government Liaison, Insurance Bureau |
-| Propeller | Research Institute, Launchpad, Ministry, Weather Bureau |
+| Coin | Research Institute, Flight School, Government Liaison, Insurance Bureau |
+| Propeller | Launchpad, Launchpad 2, Ministry, Weather Bureau |
 
 ## Scoring Summary
 

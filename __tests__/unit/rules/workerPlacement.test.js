@@ -22,7 +22,7 @@ describe('Rules Compliance - Worker Placement', () => {
         effect: 'Gain £1'
       };
 
-      const result = processCardEffect(state, '1', clerkCard, 'academy');
+      const result = processCardEffect(state, '1', clerkCard, 'flight_school');
 
       // Clerk should grant £1
       expect(result.success).toBe(true);
@@ -41,7 +41,7 @@ describe('Rules Compliance - Worker Placement', () => {
         effect: 'Gain £2'
       };
 
-      const result = processCardEffect(state, '1', purserCard, 'academy');
+      const result = processCardEffect(state, '1', purserCard, 'flight_school');
 
       // Purser should grant £2
       expect(result.success).toBe(true);
@@ -60,7 +60,7 @@ describe('Rules Compliance - Worker Placement', () => {
         effect: 'None'
       };
 
-      const result = processCardEffect(state, '1', investorCard, 'academy');
+      const result = processCardEffect(state, '1', investorCard, 'flight_school');
 
       // Investor has no effect
       expect(result.success).toBe(true);
@@ -210,8 +210,8 @@ describe('Rules Compliance - Worker Placement', () => {
       // Verify player 1 is current placer
       expect(getCurrentPlacer(state)).toBe('1');
 
-      // Player 1 places an agent
-      processPlaceAgent(state, '1', { locationId: 'academy', cardIndex: 0, crewType: 'officers', crewCount: 1 });
+      // Player 1 places an agent at insurance_bureau (coin location)
+      processPlaceAgent(state, '1', { locationId: 'insurance_bureau', cardIndex: 0 });
 
       // After placing, turn should advance to player 2
       expect(getCurrentPlacer(state)).toBe('2');
@@ -237,12 +237,12 @@ describe('Rules Compliance - Worker Placement', () => {
         { id: 'card2', name: 'Purser', symbol: 'coin', effect: 'None' }
       ];
 
-      // Player 1 places first agent at academy (coin location)
-      processPlaceAgent(state, '1', { locationId: 'academy', cardIndex: 0, crewType: 'officers', crewCount: 1 });
+      // Player 1 places first agent at insurance_bureau (coin location)
+      processPlaceAgent(state, '1', { locationId: 'insurance_bureau', cardIndex: 0 });
 
       // Player 1 tries to place second agent immediately at flight_school (also coin) - should fail
       expect(() => {
-        processPlaceAgent(state, '1', { locationId: 'flight_school', cardIndex: 0, crewType: 'engineers', crewCount: 1 });
+        processPlaceAgent(state, '1', { locationId: 'flight_school', cardIndex: 0 });
       }).toThrow(/not your turn/i);
     });
   });

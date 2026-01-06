@@ -214,7 +214,7 @@ def evaluate_launch_readiness(
     officers_needed = current_age
     if officers < officers_needed:
         missing.append(f'need {officers_needed - officers} more officer(s) for Age {current_age}')
-        priorities.append('academy')
+        priorities.append('flight_school')  # Increase officer income
 
     # Check 4: Do we have gas?
     gas_needed = 1
@@ -498,8 +498,8 @@ def find_strategic_placement(
     if total_gas < 3:
         priority_locations.append('gas_depot')
 
-    if officers < 2 and cash >= 2:
-        priority_locations.append('academy')
+    if officers < 2 and cash >= 5:
+        priority_locations.append('flight_school')  # Build officer income
 
     if hangar_count > 0 or on_route_count > 0:
         priority_locations.append('insurance_bureau')
@@ -507,9 +507,9 @@ def find_strategic_placement(
     # Phase 3: General fallback priorities
     fallback_priorities = [
         'blueprint_design', 'research_institute', 'construction_hall',
-        'gas_depot', 'academy', 'technical_institute', 'ministry',
+        'gas_depot', 'technical_institute', 'ministry',
         'flight_school', 'weather_bureau', 'government_liaison',
-        'insurance_bureau', 'launchpad',
+        'insurance_bureau', 'launchpad', 'launchpad_2',
     ]
 
     for loc in fallback_priorities:

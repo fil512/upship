@@ -37,7 +37,7 @@ export const GROUND_BOARD_LOCATIONS: Record<string, GroundBoardLocation> = {
   research_institute: {
     id: 'research_institute',
     name: 'Research Institute',
-    symbol: 'propeller',
+    symbol: 'coin',
     position: 1,
     description: 'Expand your research program',
     action: {
@@ -86,17 +86,16 @@ export const GROUND_BOARD_LOCATIONS: Record<string, GroundBoardLocation> = {
     }
   },
 
-  academy: {
-    id: 'academy',
-    name: 'Academy',
-    symbol: 'coin',
+  launchpad_2: {
+    id: 'launchpad_2',
+    name: 'Launchpad 2',
+    symbol: 'propeller',
     position: 5,
-    description: 'Recruit crew from the shared supply',
+    description: 'Launch ships from your Launch Hangar',
     action: {
-      type: 'RECRUIT_CREW',
-      officerCost: 2,
-      engineerCost: 4,
-      effect: 'Gain Officer or Engineer tokens'
+      type: 'LAUNCH_SHIPS',
+      cost: 'Officers (by Age) + Gas',
+      effect: 'Launch ships to claim routes'
     }
   },
 

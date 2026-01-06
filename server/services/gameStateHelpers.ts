@@ -406,13 +406,9 @@ function executeLocationAction(
       return { success: true, message: 'May build a ship' };
 
     case 'launchpad':
+    case 'launchpad_2':
       // Launch a ship (handled via LAUNCH_SHIP)
       return { success: true, message: 'May launch a ship' };
-
-    case 'academy':
-      // Recruit crew (handled via RECRUIT_CREW)
-      // Also: May discard leftmost Market card (Section 6.3)
-      return { success: true, message: 'May recruit crew. May also discard leftmost Market card.' };
 
     case 'flight_school':
       // Upgrade Officer income track (handled via UPGRADE_OFFICER_INCOME)
