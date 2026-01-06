@@ -75,17 +75,87 @@ function findPlayableCard(
  * Tech card IDs (e.g., 'internal_keel') map to upgrade tile IDs (e.g., 'semi_rigid_keel')
  * via the 'requiredCard' field on upgrade tiles
  */
-function getUpgradeForTech(techId: string): { id: string; slotType: string } | null {
+function getUpgradeForTech(techId: string): { id: string; slotType: string; tile: TechTile } | null {
   // Search for the upgrade tile that requires this tech card
   for (const [upgradeId, upgrade] of Object.entries(UPGRADES)) {
     if (upgrade.requiredCard === techId) {
       return {
         id: upgradeId,
-        slotType: upgrade.slotType
+        slotType: upgrade.slotType,
+        tile: upgrade
       };
     }
   }
   return null;
+}
+
+/**
+ * Calculate a utility score for a tech tile
+ * Higher score = better tech. Accounts for stats and weight.
+ */
+function calculateTechScore(tile: TechTile): number {
+  const stats = tile.stats || {};
+  let score = 0;
+
+  // Positive stats (each point adds to score)
+  score += (stats.speed || 0) * 3;      // Speed is very valuable
+  score += (stats.range || 0) * 3;      // Range is very valuable
+  score += (stats.ceiling || 0) * 2;    // Ceiling is moderately valuable
+  score += (stats.reliability || 0) * 2; // Reliability helps hazards
+  score += (stats.income || 0) * 2;     // Income generates money
+  score += (stats.luxury || 0) * 1;     // Luxury for passenger routes
+  score += (stats.lift || 0) * 1;       // Direct lift is useful
+  score += (stats.gas_socket || 0) * 5; // Gas socket = +5 lift each
+
+  // Weight is negative (heavier = worse)
+  score -= (tile.weight || 0) * 1;
+
+  return score;
+}
+
+/**
+ * Check if a new tech tile is superior to what's currently in the slot
+ * Returns true if the new tech is better than existing, or slot is empty
+ */
+function isTechSuperiorToInstalled(
+  newTile: TechTile,
+  player: PlayerState
+): boolean {
+  const blueprint = player.blueprint;
+  if (!blueprint) return true; // No blueprint = always accept
+
+  const slotType = newTile.slotType as keyof typeof blueprint;
+  const installedTiles = blueprint[slotType] as (string | null)[] | undefined;
+
+  if (!installedTiles || installedTiles.length === 0) {
+    return true; // Empty slots = always accept
+  }
+
+  // Calculate score for the new tile
+  const newScore = calculateTechScore(newTile);
+
+  // Check all installed tiles in this slot type
+  // If the new tile is better than ANY installed tile, it's worth acquiring
+  // (Bot can potentially upgrade a slot later)
+  for (const installedId of installedTiles) {
+    if (!installedId) {
+      // There's an empty slot - new tech is useful
+      return true;
+    }
+
+    const installedTile = UPGRADES[installedId];
+    if (!installedTile) continue;
+
+    const installedScore = calculateTechScore(installedTile);
+
+    // If new tile is better than any installed tile, it's superior
+    if (newScore > installedScore) {
+      return true;
+    }
+  }
+
+  // New tile is not better than any installed tile
+  return false;
 }
 
 /**
@@ -561,6 +631,7 @@ export function findLaunchDecision(
 
 /**
  * Get reveal phase acquisitions (tech priorities)
+ * Only acquires techs that are superior to what's already installed
  */
 export function getRevealAcquisitions(
   state: GameState,
@@ -575,28 +646,35 @@ export function getRevealAcquisitions(
   const rdBoard = state.rdBoard || [];
   const ownedTechs = new Set(player.techCards || []);
 
-  // Priority: drive technologies for range/speed
-  const driveTechNames = new Set([
-    'basic_engine', 'efficient_propeller', 'diesel_engine',
-    'supercharger', 'advanced_propeller', 'rotary_engine',
-    'turbocharger', 'triple_engine', 'jet_engine', 'variable_pitch_propeller'
-  ]);
-
   // Filter to available techs not already owned
   const availableTechs = rdBoard.filter(t => !ownedTechs.has(t.id));
 
   if (availableTechs.length === 0) return { techIds, cardIds };
 
-  // Prioritize drive technologies
-  const driveTechs = availableTechs.filter(t => driveTechNames.has(t.id));
-  const otherTechs = availableTechs.filter(t => !driveTechNames.has(t.id));
+  // Filter to techs that provide superior upgrades
+  const superiorTechs = availableTechs.filter(techCard => {
+    const upgradeInfo = getUpgradeForTech(techCard.id);
+    if (!upgradeInfo) return false; // No upgrade tile found
 
-  // Pick the best available
-  if (driveTechs.length > 0) {
-    techIds.push(driveTechs[0].id);
-  } else if (otherTechs.length > 0) {
-    techIds.push(otherTechs[0].id);
-  }
+    // Check if this upgrade is better than what's installed
+    return isTechSuperiorToInstalled(upgradeInfo.tile, player);
+  });
+
+  if (superiorTechs.length === 0) return { techIds, cardIds };
+
+  // Sort by score (highest first) - pick the best available superior tech
+  superiorTechs.sort((a, b) => {
+    const upgradeA = getUpgradeForTech(a.id);
+    const upgradeB = getUpgradeForTech(b.id);
+    if (!upgradeA || !upgradeB) return 0;
+
+    const scoreA = calculateTechScore(upgradeA.tile);
+    const scoreB = calculateTechScore(upgradeB.tile);
+    return scoreB - scoreA; // Descending order
+  });
+
+  // Pick the best superior tech
+  techIds.push(superiorTechs[0].id);
 
   return { techIds, cardIds };
 }
