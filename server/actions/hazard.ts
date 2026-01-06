@@ -525,6 +525,7 @@ function resolveHazardSuccess(state: GameState, playerId: string, shipIndex: num
 
 /**
  * Resolve aborted launch - ship returns to hangar
+ * Per Section 8.2: On abort, officers are KEPT (refunded), gas is spent
  */
 function resolveHazardAbort(state: GameState, playerId: string, shipIndex: number, hazard: HazardCard, message: string): ActionResult {
   const playerState = state.players[playerId] as HazardPlayerState;
@@ -535,9 +536,13 @@ function resolveHazardAbort(state: GameState, playerId: string, shipIndex: numbe
   delete ships[shipIndex].pendingMissionId;
   delete ships[shipIndex].route;
 
+  // Refund officers per Section 8.2 - officers are KEPT on abort
+  const officersToRefund = state.age || 1;
+  playerState.officers = (playerState.officers || 0) + officersToRefund;
+
   state.log.push({
     timestamp: new Date().toISOString(),
-    message: `Hazard check FAILED (${hazard.type}): ${message}. Launch aborted - ship returns to hangar.`,
+    message: `Hazard check FAILED (${hazard.type}): ${message}. Launch aborted - ship returns to hangar, ${officersToRefund} officer(s) refunded.`,
     playerId,
     type: 'hazard'
   } as LogEntry);

@@ -70,6 +70,7 @@
 	// Location names for preview
 	const LOCATION_NAMES: Record<string, string> = {
 		blueprint_design: 'Blueprint Design',
+		construction_hall: 'Hangar',
 		launchpad: 'Launchpad',
 		launchpad_2: 'Launchpad',
 		ministry: 'Ministry',
@@ -81,16 +82,27 @@
 	};
 
 	// Build preview data for a location
-	function buildActionPreview(locationId: string, cardIndex: number): ActionPreview {
+	function buildActionPreview(locationId: string, cardIndex: number, blueprint: BlueprintType | null | undefined): ActionPreview {
 		const locationName = LOCATION_NAMES[locationId] || locationId;
 		let costs: ActionPreview['costs'] = [];
 		let benefits: ActionPreview['benefits'] = [];
 
+		// Calculate dynamic costs from blueprint
+		const hullCost = calculateHullCost(blueprint);
+		const gasRequired = calculateGasRequired(blueprint);
+
 		switch (locationId) {
 			case 'launchpad':
 			case 'launchpad_2':
-				costs = [{ icon: 'officers', label: '1 Officer', value: '1' }];
+				costs = [
+					{ icon: 'officers', label: '1 Officer', value: '1' },
+					{ icon: 'gas', label: `${gasRequired} Gas`, value: String(gasRequired) }
+				];
 				benefits = [{ icon: 'launch', label: 'Launch ships' }];
+				break;
+			case 'construction_hall':
+				costs = [{ icon: 'cash', label: `£${hullCost.total}`, value: String(hullCost.total) }];
+				benefits = [{ icon: 'ship', label: 'Build a ship' }];
 				break;
 			case 'ministry':
 				benefits = [{ icon: 'politics', label: 'Draw 2 cards, discard 1' }];
@@ -325,7 +337,7 @@
 		}
 
 		// Show action preview instead of sending immediately
-		pendingActionPreview = buildActionPreview(locationId, selectedCardIndex);
+		pendingActionPreview = buildActionPreview(locationId, selectedCardIndex, $myState?.blueprint);
 	}
 
 	// Confirm the pending action preview
@@ -664,6 +676,9 @@
 	$: shipAwaitingHazard = myShips.find((s) => s.status === 'awaiting_hazard' && s.pendingHazard);
 	$: pendingHazard = shipAwaitingHazard?.pendingHazard;
 	$: canAffordEngineers = ($myState?.engineers || 0) >= (pendingHazard?.engineersNeeded || 0);
+	// Abort outcome info (per Section 8.2: gas lost, officers refunded, ship returns)
+	$: abortGasType = shipAwaitingHazard?.gasType || 'hydrogen';
+	$: abortGasAmount = shipStats?.gas || 1;
 	// Route for city choice modal during hazard response
 	$: hazardRoute = shipAwaitingHazard?.pendingRouteId
 		? routes.find((r) => r.id === shipAwaitingHazard.pendingRouteId)
@@ -1364,6 +1379,11 @@
 										<p class="hazard-available">
 											You have: {$myState?.engineers || 0} Engineers
 										</p>
+										{#if !canAffordEngineers}
+											<p class="hazard-abort-outcome">
+												Launch aborted: {abortGasAmount} {abortGasType} lost, officers refunded, ship returns to hangar.
+											</p>
+										{/if}
 										<div class="hazard-buttons">
 											{#if canAffordEngineers}
 												<button class="btn primary w-full" on:click={() => handleRespondToHazard(true)}>
@@ -1371,7 +1391,7 @@
 												</button>
 											{/if}
 											<button class="btn secondary w-full" on:click={() => handleRespondToHazard(false)}>
-												{canAffordEngineers ? 'Decline (Fail Check)' : 'Fail Check (Not Enough Engineers)'}
+												{canAffordEngineers ? 'Abort Launch' : 'Confirm'}
 											</button>
 										</div>
 									{:else}
@@ -2367,6 +2387,16 @@
 		font-size: 0.8rem;
 		color: var(--color-text-secondary);
 		margin: 0;
+	}
+
+	.hazard-abort-outcome {
+		font-size: 0.8rem;
+		color: var(--color-text-primary);
+		background: var(--color-bg-secondary);
+		padding: var(--spacing-sm);
+		border-radius: var(--radius-sm);
+		margin: var(--spacing-sm) 0;
+		border-left: 3px solid var(--color-warning);
 	}
 
 	.hazard-info {
