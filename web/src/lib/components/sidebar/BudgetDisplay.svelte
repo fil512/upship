@@ -47,7 +47,9 @@
 	}
 
 	.budget-icon.diamond {
-		/* Rotate square 45 degrees to make diamond */
+		/* Scale down so rotated diamond has same visual height as square */
+		width: 34px;
+		height: 34px;
 		transform: rotate(45deg);
 		border-radius: 4px;
 	}
@@ -55,6 +57,7 @@
 	.budget-icon.diamond .budget-value {
 		/* Counter-rotate text to keep it upright */
 		transform: rotate(-45deg);
+		font-size: 1.2rem;
 	}
 
 	.budget-icon.square {

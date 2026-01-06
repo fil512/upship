@@ -85,7 +85,13 @@
 			<!-- Header -->
 			<div class="card-header">
 				<span class="card-name">{card.name}</span>
-				<CostBadge type="research" value={costInfo.cost} size={20} discounted={costInfo.discounted} />
+				<CostBadge type="research" value={costInfo.cost} size={26} discounted={costInfo.discounted} />
+			</div>
+
+			<!-- Image area placeholder -->
+			<div class="card-image-area">
+				<!-- Future: tech image will go here -->
+				<div class="age-badge">Age {card.age}</div>
 			</div>
 
 			<!-- Effect -->
@@ -101,9 +107,6 @@
 					{/each}
 				</div>
 			{/if}
-
-			<!-- Age badge -->
-			<div class="age-badge">Age {card.age}</div>
 
 			<!-- Overlay for claimed cards -->
 			{#if claimedByMe}
@@ -139,19 +142,19 @@
 
 	.tech-card {
 		position: relative;
-		flex: 1;
-		min-width: 130px;
-		max-width: 180px;
-		min-height: 80px;
+		flex: 0 0 auto;
+		width: 160px;
+		min-height: 225px;
 		background: #e8e4d9;
 		border: 2px solid #9a8c70;
 		border-radius: 8px;
-		padding: 0.5rem;
+		padding: 0;
+		margin: 0;
 		display: flex;
 		flex-direction: column;
-		gap: 0.25rem;
 		cursor: default;
 		transition: all 0.2s ease;
+		overflow: hidden;
 	}
 
 	.tech-card.interactive:not(.claimed-by-other) {
@@ -190,23 +193,45 @@
 	.card-header {
 		display: flex;
 		justify-content: space-between;
-		align-items: flex-start;
-		gap: 0.25rem;
+		align-items: center;
+		padding: 4px 6px;
+		margin: 0;
+		gap: 4px;
+		background: rgba(0, 0, 0, 0.08);
+		border-bottom: 1px solid #c4b8a0;
+		border-radius: 0;
 	}
 
 	.card-name {
-		font-size: 0.7rem;
+		flex: 1;
+		font-size: 0.65rem;
 		font-weight: 700;
 		color: #333;
 		text-transform: uppercase;
-		line-height: 1.2;
+		line-height: 1.1;
+		min-width: 0;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+
+	.card-image-area {
+		flex: 1;
+		min-height: 90px;
+		margin: 0;
+		background: rgba(154, 140, 112, 0.15);
+		border-radius: 0;
+		position: relative;
 	}
 
 	.card-effect {
-		flex: 1;
+		padding: 4px 6px;
+		margin: 0;
 		font-size: 0.6rem;
-		color: #666;
+		color: #555;
 		line-height: 1.3;
+		background: rgba(255, 255, 255, 0.5);
+		border-top: 1px solid #c4b8a0;
+		border-radius: 0;
 	}
 
 	.age-badge {
@@ -214,8 +239,11 @@
 		bottom: 4px;
 		right: 4px;
 		font-size: 0.5rem;
-		color: #888;
+		color: #666;
 		text-transform: uppercase;
+		background: rgba(255, 255, 255, 0.7);
+		padding: 1px 4px;
+		border-radius: 2px;
 	}
 
 	/* Tech tiles section */
@@ -224,12 +252,11 @@
 		flex-wrap: wrap;
 		justify-content: center;
 		gap: 4px;
-		border-top: 1px dashed #9a8c70;
-		padding: 0.25rem;
-		margin-top: 0.25rem;
-		background: rgba(30, 41, 59, 0.1);
-		margin-left: -0.5rem;
-		margin-right: -0.5rem;
+		margin: 0;
+		border-top: 1px solid #c4b8a0;
+		padding: 4px 6px;
+		background: rgba(0, 0, 0, 0.08);
+		border-radius: 0;
 	}
 
 	.claimed-overlay {

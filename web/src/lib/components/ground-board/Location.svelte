@@ -15,6 +15,26 @@
 	export let hullCost: number | undefined = undefined;
 	export let heliumPrice: number | undefined = undefined;
 
+	// Tooltip descriptions based on game rules (Section 6)
+	const LOCATION_DESCRIPTIONS: Record<string, string> = {
+		research_institute: 'Pay £4 to increase Research Level by 1. Research contributes to acquiring Technologies during Reveal.',
+		blueprint_design: 'Free. Install or swap Tech Tiles on your Blueprint. Only tiles for Technologies you own. Unlimited changes per visit.',
+		construction_hall: 'Build up to 3 ships. Hull Cost = £2 + Frame cost + Fabric cost. Ships go to your Launch Hangar (max 3).',
+		launchpad: 'Launch ships to claim routes. Cost: 1 Officer + Gas cubes equal to ship\'s Gas requirement.',
+		launchpad_2: 'Launch ships to claim routes. Cost: 1 Officer + Gas cubes equal to ship\'s Gas requirement.',
+		flight_school: 'Pay £5 to increase Officer Income by 1. At +3 Officer Income, gain your 3rd Agent.',
+		technical_institute: 'Pay £6 to increase Engineer Income by 1.',
+		government_liaison: 'Spend 1-3 Officers to increase Income Track by 1 per Officer spent.',
+		ministry: 'Draw 2 cards (discard 1), take First Player Token, reduce Helium market price by 1.',
+		gas_depot: 'Buy gas: Hydrogen £1/cube (fixed), Helium at market price (track advances per cube bought).',
+		insurance_bureau: 'Reduce Income by 1 per policy (max 3). Discard a policy to recover a crashed ship to your Hangar.',
+		weather_bureau: 'Pay £2 to look at the top card of your Hazard Deck. Keep it on top or discard it.',
+		personnel_office: 'Free. Gain Officers equal to your Officer Income Track.',
+		engineering_depot: 'Free. Gain Engineers equal to your Engineer Income Track.',
+		treasury: 'Free. Gain Cash equal to your Income Track.',
+		academy: 'Pay £2/£4 to recruit 1 Officer or 1 Engineer.'
+	};
+
 	// Cost and benefit data for each location
 	// resourceBadge: array of {type, value} for ResourceBadge display
 	// icons: simple icon display without numbers
@@ -41,6 +61,10 @@
 			benefits: [{ icon: 'ship' }]
 		},
 		launchpad: {
+			costs: [{ resourceBadge: [{ type: 'officers', value: 1 }] }, { icon: 'hydrogen' }],
+			benefits: [{ icon: 'launch' }]
+		},
+		launchpad_2: {
 			costs: [{ resourceBadge: [{ type: 'officers', value: 1 }] }, { icon: 'hydrogen' }],
 			benefits: [{ icon: 'launch' }]
 		},
@@ -102,6 +126,7 @@
 	}>();
 
 	$: locationData = LOCATION_DATA[id] || { costs: [], benefits: [] };
+	$: locationDescription = LOCATION_DESCRIPTIONS[id] || '';
 	$: placement = placements[id];
 	$: isOccupied = !!placement;
 	$: occupantPlayer = placement ? players[placement.playerId] : null;
@@ -123,6 +148,7 @@
 	style:--symbol-color={SYMBOL_COLORS[symbol]}
 	on:click={handleClick}
 	disabled={isOccupied || !canPlace}
+	title={locationDescription}
 >
 	<!-- Cost bar on the left (includes card symbol requirement) -->
 	<div class="location-cost-bar">

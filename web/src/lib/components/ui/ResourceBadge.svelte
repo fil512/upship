@@ -78,8 +78,10 @@
 		border-radius: 50%;
 	}
 
-	/* Influence - grey diamond */
+	/* Influence - grey diamond (scaled down so rotated height matches other badges) */
 	.badge-shape.influence {
+		width: calc(var(--size) * 0.707);
+		height: calc(var(--size) * 0.707);
 		background: #888888;
 		transform: rotate(45deg);
 		border-radius: 2px;
@@ -87,6 +89,7 @@
 
 	.badge-shape.influence .badge-value {
 		transform: rotate(-45deg);
+		font-size: calc(var(--size) * 0.45);
 	}
 
 	/* Research - grey square */

@@ -2200,12 +2200,15 @@
 	}
 
 	.reveal-budget .budget-icon.diamond {
+		width: 17px;
+		height: 17px;
 		transform: rotate(45deg);
 		border-radius: 2px;
 	}
 
 	.reveal-budget .budget-icon.diamond .budget-value {
 		transform: rotate(-45deg);
+		font-size: 0.7rem;
 	}
 
 	.reveal-budget .budget-icon.square {

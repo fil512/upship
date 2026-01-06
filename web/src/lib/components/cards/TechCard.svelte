@@ -49,9 +49,14 @@
 			<span class="tech-name">{tech.name}</span>
 			{#if tech.researchCost}
 				<div class="tech-cost" title="Costs {tech.researchCost} Research">
-					<CostBadge type="research" value={tech.researchCost} size={24} />
+					<CostBadge type="research" value={tech.researchCost} size={31} />
 				</div>
 			{/if}
+		</div>
+
+		<!-- Image area placeholder -->
+		<div class="tech-image-area">
+			<!-- Future: tech image will go here -->
 		</div>
 
 		<!-- Effect description -->
@@ -75,9 +80,11 @@
 		display: flex;
 		flex-direction: column;
 		width: 100%;
-		min-width: 130px;
-		max-width: 180px;
-		min-height: 80px;
+		min-width: 140px;
+		max-width: 160px;
+		min-height: 225px;
+		padding: 0;
+		margin: 0;
 		background: #e8e4d9;
 		border: 2px solid #9a8c70;
 		border-radius: var(--radius-md);
@@ -117,19 +124,24 @@
 	.tech-header {
 		display: flex;
 		justify-content: space-between;
-		align-items: flex-start;
-		padding: 6px 8px;
+		align-items: center;
+		padding: 4px 6px;
+		margin: 0;
 		background: rgba(0, 0, 0, 0.08);
 		border-bottom: 1px solid #c4b8a0;
+		border-radius: 0;
 	}
 
 	.tech-name {
-		font-size: 0.7rem;
+		font-size: 0.65rem;
 		font-weight: 700;
 		color: #333;
 		text-transform: uppercase;
-		line-height: 1.2;
+		line-height: 1.1;
 		flex: 1;
+		min-width: 0;
+		overflow: hidden;
+		text-overflow: ellipsis;
 	}
 
 	.tech-cost {
@@ -138,13 +150,25 @@
 		flex-shrink: 0;
 	}
 
+	/* Image area placeholder */
+	.tech-image-area {
+		flex: 1;
+		min-height: 90px;
+		margin: 0;
+		background: rgba(154, 140, 112, 0.15);
+		border-radius: 0;
+	}
+
 	/* Effect section */
 	.tech-effect {
-		flex: 1;
-		padding: 8px;
+		padding: 4px 6px;
+		margin: 0;
 		font-size: 0.6rem;
 		color: #555;
-		line-height: 1.4;
+		line-height: 1.3;
+		background: rgba(255, 255, 255, 0.5);
+		border-top: 1px solid #c4b8a0;
+		border-radius: 0;
 	}
 
 	/* Tech tiles section */
@@ -153,9 +177,11 @@
 		flex-wrap: wrap;
 		justify-content: center;
 		gap: 4px;
-		border-top: 1px dashed #9a8c70;
-		padding: 6px 4px;
-		background: rgba(30, 41, 59, 0.1);
+		margin: 0;
+		border-top: 1px solid #c4b8a0;
+		padding: 4px 6px;
+		background: rgba(0, 0, 0, 0.08);
+		border-radius: 0;
 	}
 
 	/* Compact mode styles */

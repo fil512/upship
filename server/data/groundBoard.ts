@@ -88,7 +88,7 @@ export const GROUND_BOARD_LOCATIONS: Record<string, GroundBoardLocation> = {
 
   launchpad_2: {
     id: 'launchpad_2',
-    name: 'Launchpad 2',
+    name: 'Launchpad',
     symbol: 'propeller',
     position: 5,
     description: 'Launch ships from your Launch Hangar',

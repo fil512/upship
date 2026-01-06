@@ -65,49 +65,47 @@
 	title={card.flavor || ''}
 	aria-label="{card.name} card, {card.symbol || 'any'} symbol{selected ? ', selected' : ''}"
 >
-	<!-- Header: Name + Flavor (left) + Cost (right) -->
+	<!-- Header: Symbol + Name (left) + Cost (right) -->
 	<div class="card-header">
-		<div class="card-title-block">
-			<span class="card-name">{card.name}</span>
-			{#if card.flavor}
-				<span class="card-flavor">{card.flavor}</span>
-			{/if}
+		<div class="card-symbol">
+			<Icon name={iconName} size={18} color={symbolColor} />
 		</div>
+		<span class="card-name">{card.name}</span>
 		{#if card.cost}
 			<div class="card-cost" title="Costs {card.cost} Influence">
-				<CostBadge type="influence" value={card.cost} size={32} />
+				<CostBadge type="influence" value={card.cost} size={26} />
 			</div>
 		{/if}
 	</div>
 
-	<!-- Center stripe: Symbol + Agent effect -->
-	<div class="card-center">
-		<div class="card-symbol">
-			<Icon name={iconName} size={56} color={symbolColor} />
-		</div>
-		{#if card.effect}
-			<div class="card-effect">{card.effect}</div>
-		{/if}
+	<!-- Center: Image area (placeholder for now) -->
+	<div class="card-image-area">
+		<!-- Future: card image will go here -->
 	</div>
 
-	<!-- Bottom stripe: Reveal effect -->
+	<!-- Effect description above reveal -->
+	{#if card.effect}
+		<div class="card-effect">{card.effect}</div>
+	{/if}
+
+	<!-- Bottom stripe: Reveal effect (full width) -->
 	<div class="card-reveal">
 		<span class="reveal-label">Reveal:</span>
 		<div class="reveal-items">
 			{#if card.reveal?.cash}
-				<ResourceBadge type="cash" value={card.reveal.cash} size={22} />
+				<ResourceBadge type="cash" value={card.reveal.cash} size={18} />
 			{/if}
 			{#if card.reveal?.influence}
-				<ResourceBadge type="influence" value={card.reveal.influence} size={22} />
+				<ResourceBadge type="influence" value={card.reveal.influence} size={18} />
 			{/if}
 			{#if card.reveal?.research}
-				<ResourceBadge type="research" value={card.reveal.research} size={22} />
+				<ResourceBadge type="research" value={card.reveal.research} size={18} />
 			{/if}
 			{#if card.reveal?.officers}
-				<ResourceBadge type="officers" value={card.reveal.officers} size={20} />
+				<ResourceBadge type="officers" value={card.reveal.officers} size={16} />
 			{/if}
 			{#if card.reveal?.engineers}
-				<ResourceBadge type="engineers" value={card.reveal.engineers} size={20} />
+				<ResourceBadge type="engineers" value={card.reveal.engineers} size={16} />
 			{/if}
 		</div>
 	</div>
@@ -132,9 +130,11 @@
 		display: flex;
 		flex-direction: column;
 		width: 100%;
-		min-width: 160px;
-		max-width: 200px;
-		min-height: 220px;
+		min-width: 140px;
+		max-width: 160px;
+		min-height: 225px;
+		padding: 0;
+		margin: 0;
 		background: #e8e4d9;
 		border: 2px solid #c4b8a0;
 		border-radius: var(--radius-md);
@@ -220,91 +220,83 @@
 		background: #f0f0f0;
 	}
 
-	/* Header section */
+	/* Header section - Symbol + Name + Cost */
 	.card-header {
 		display: flex;
-		justify-content: space-between;
-		align-items: flex-start;
-		padding: 8px 10px;
+		align-items: center;
+		padding: 4px 6px;
+		gap: 3px;
+		margin: 0;
 		background: rgba(0, 0, 0, 0.08);
 		border-bottom: 1px solid #c4b8a0;
-	}
-
-	.card-title-block {
-		display: flex;
-		flex-direction: column;
-		flex: 1;
-		min-width: 0;
-	}
-
-	.card-name {
-		font-size: 0.8rem;
-		font-weight: 700;
-		color: #333;
-		text-transform: uppercase;
-		line-height: 1.2;
-	}
-
-	.card-flavor {
-		font-size: 0.6rem;
-		font-style: italic;
-		color: #666;
-		line-height: 1.3;
-		margin-top: 2px;
-	}
-
-	.card-cost {
-		display: flex;
-		align-items: flex-start;
-		flex-shrink: 0;
-		margin-left: 6px;
-	}
-
-	/* Center section - Symbol and Effect */
-	.card-center {
-		flex: 1;
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		justify-content: center;
-		padding: 10px;
-		background: color-mix(in srgb, var(--card-color) 15%, #e8e4d9);
+		border-radius: 0;
 	}
 
 	.card-symbol {
-		margin-bottom: 6px;
+		flex-shrink: 0;
 	}
 
-	.card-effect {
+	.card-name {
+		flex: 1;
 		font-size: 0.65rem;
-		color: #555;
-		text-align: center;
-		line-height: 1.3;
-		padding: 6px;
-		background: rgba(255, 255, 255, 0.5);
-		border-radius: var(--radius-sm);
-		max-width: 100%;
+		font-weight: 700;
+		color: #333;
+		text-transform: uppercase;
+		line-height: 1.1;
+		min-width: 0;
+		overflow: hidden;
+		text-overflow: ellipsis;
 	}
 
-	/* Bottom section - Reveal */
+	.card-cost {
+		flex-shrink: 0;
+	}
+
+	/* Center section - Image placeholder */
+	.card-image-area {
+		flex: 1;
+		min-height: 90px;
+		margin: 0;
+		background: color-mix(in srgb, var(--card-color) 10%, #e8e4d9);
+		border-radius: 0;
+	}
+
+	/* Effect description - above reveal */
+	.card-effect {
+		font-size: 0.6rem;
+		color: #555;
+		text-align: left;
+		line-height: 1.2;
+		padding: 4px 6px;
+		margin: 0;
+		background: rgba(255, 255, 255, 0.5);
+		border-top: 1px solid #c4b8a0;
+		border-radius: 0;
+	}
+
+	/* Bottom section - Reveal (full width) */
 	.card-reveal {
-		padding: 8px 10px;
+		display: flex;
+		align-items: center;
+		gap: 4px;
+		padding: 4px 6px;
+		margin: 0;
 		background: rgba(0, 0, 0, 0.08);
 		border-top: 1px solid #c4b8a0;
+		border-radius: 0;
 	}
 
 	.reveal-label {
-		font-size: 0.55rem;
+		font-size: 0.5rem;
 		color: #777;
 		text-transform: uppercase;
-		display: block;
-		margin-bottom: 4px;
+		flex-shrink: 0;
 	}
 
 	.reveal-items {
 		display: flex;
 		flex-wrap: wrap;
-		gap: 5px;
+		gap: 3px;
 		align-items: center;
 	}
 </style>

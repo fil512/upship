@@ -53,7 +53,7 @@
 		},
 		{
 			id: 'launchpad_2',
-			name: 'Launchpad 2',
+			name: 'Launchpad',
 			symbol: 'propeller' as const,
 			description: 'Launch ships to claim routes. Costs Officers (by Age) + Gas.'
 		},
