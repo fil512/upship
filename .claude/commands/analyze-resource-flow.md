@@ -28,16 +28,66 @@ Read the analysis file to understand:
 - **Per-Faction Summary**: How each faction's economy differs
 - **Balance Warnings**: Automatic detection of problem resources
 
-### Step 3: Analyze and recommend tuning
+### Step 3: Analyze Research/Influence at Reveal Phase
+
+This is a critical analysis to identify if players have too much or too little purchasing power during the reveal phase.
+
+Read the JSON log file (not just the analysis summary) and extract per-round data:
+
+```bash
+# Get the JSON file path
+JSON_FILE=$(ls -t logs/resource-flows/*.json | head -1)
+```
+
+For each round, calculate:
+
+**Research Economy:**
+- **Available at Reveal**: Sum of all `research` fountains from round start through reveal phase
+- **Spent at Reveal**: Sum of all `research` sinks during reveal phase (tech acquisitions)
+- **Leftover**: Available - Spent
+
+**Influence Economy:**
+- **Available at Reveal**: Sum of all `influence` fountains from round start through reveal phase
+- **Spent at Reveal**: Sum of all `influence` sinks during reveal phase (card purchases using influence)
+- **Leftover**: Available - Spent
+
+**Warning Signs:**
+- If leftover research is consistently > 50% of available: Players can't spend their research (need more/cheaper techs, or reduce research generation)
+- If leftover research is consistently 0 AND players wanted more techs: Players are research-starved (need more research sources)
+- Same analysis for influence
+
+**Output Format:**
+```
+=== RESEARCH/INFLUENCE PHASE ANALYSIS ===
+
+Round 1:
+  Research: 3 available → 2 spent → 1 leftover (33% unused)
+  Influence: 0 available → 0 spent → 0 leftover
+
+Round 2:
+  Research: 4 available → 4 spent → 0 leftover (fully utilized)
+  Influence: 1 available → 0 spent → 1 leftover (100% unused!)
+
+...
+
+SUMMARY:
+  Research utilization: 85% average (HEALTHY)
+  Influence utilization: 20% average (WARNING: players can't use influence)
+
+RECOMMENDATIONS:
+  - Influence is underutilized. Consider: cheaper influence costs, more influence-only items
+```
+
+### Step 4: Analyze and recommend tuning
 
 After reading the analysis file, provide a comprehensive report with:
 
-#### 3.1 Executive Summary
+#### 4.1 Executive Summary
 - Overall game economy health (healthy, too loose, too tight)
 - Key problem resources that need attention
 - Estimated impact on gameplay feel
 
-#### 3.2 Resource-by-Resource Analysis
+#### 4.2 Resource-by-Resource Analysis
 
 For each resource with issues, explain:
 - **Current State**: Fountain rate, sink rate, net accumulation
@@ -45,7 +95,7 @@ For each resource with issues, explain:
 - **Gameplay Impact**: How this affects player experience
 - **Recommended Fix**: Specific actionable changes
 
-#### 3.3 Balance Targets
+#### 4.3 Balance Targets
 
 For an engaging board game, aim for these targets:
 | Resource Type | Target Balance | Rationale |
@@ -53,10 +103,12 @@ For an engaging board game, aim for these targets:
 | Currency (cash) | Sinks ≈ 80-100% of Fountains | Slight scarcity creates tension |
 | Crew (officers, engineers) | Sinks ≈ 60-80% of Fountains | Should feel valuable but available |
 | Consumables (gas) | Sinks ≈ 90-100% of Fountains | Should be mostly consumed |
+| Research | Sinks ≈ 70-90% of Fountains | Players should usually buy techs, occasional leftover OK |
+| Influence | Sinks ≈ 50-80% of Fountains | Optional currency, but should be usable |
 | Income tracks | Sinks = 0 is OK | These are permanent upgrades |
 | VP | Fountains only | Victory condition, no sinks |
 
-#### 3.4 Specific Recommendations
+#### 4.4 Specific Recommendations
 
 Prioritize recommendations by:
 1. **Critical**: Resources with >50% overflow or 0 sinks (breaking balance)
@@ -111,6 +163,7 @@ RECOMMENDATIONS:
 | helium | gas depot | launches |
 | income | routes, tech | N/A (track) |
 | research | research level + engineers | technology acquisition |
+| influence | card effects, locations | card purchases (alternative to cash) |
 | officer_income | flight school | N/A (track) |
 | engineer_income | technical institute | N/A (track) |
 

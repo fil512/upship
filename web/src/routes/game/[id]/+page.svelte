@@ -161,6 +161,17 @@
 	// Center pane tabs
 	type CenterTab = 'actions' | 'log' | 'map' | 'blueprint' | 'market';
 	let activeTab: CenterTab = 'actions';
+	let wasMyTurn = false;
+
+	// Switch back to Actions tab when player's turn/phase ends
+	$: {
+		const currentlyMyTurn = $isMyTurn;
+		if (wasMyTurn && !currentlyMyTurn) {
+			// Turn just ended - switch back to actions tab
+			activeTab = 'actions';
+		}
+		wasMyTurn = currentlyMyTurn;
+	}
 
 	$: gameId = $page.params.id;
 
@@ -535,8 +546,8 @@
 		Object.entries($gameState?.players || {}).map(([playerId, player]) => [playerId, player.faction])
 	);
 
-	// Ship stats from blueprint
-	$: shipStats = calculateShipStats($myState?.blueprint);
+	// Ship stats from blueprint (uses viewed player's blueprint when viewing another player)
+	$: shipStats = calculateShipStats(viewedPlayerState?.blueprint || $myState?.blueprint);
 
 	// Game advancement track
 	$: progressThresholds = $gameState?.progressThresholds || { age2: 4, age3: 8, end: 12 };
