@@ -67,10 +67,76 @@
 		construction_hall: 'Hangar'
 	};
 
+	// Location names for preview
+	const LOCATION_NAMES: Record<string, string> = {
+		blueprint_design: 'Blueprint Design',
+		launchpad: 'Launchpad',
+		ministry: 'Ministry',
+		weather_bureau: 'Weather Bureau',
+		flight_school: 'Flight School',
+		technical_institute: 'Technical Institute',
+		insurance_bureau: 'Insurance Bureau',
+		...LOCATIONS_REQUIRING_PARAMS
+	};
+
+	// Build preview data for a location
+	function buildActionPreview(locationId: string, cardIndex: number): ActionPreview {
+		const locationName = LOCATION_NAMES[locationId] || locationId;
+		let costs: ActionPreview['costs'] = [];
+		let benefits: ActionPreview['benefits'] = [];
+
+		switch (locationId) {
+			case 'launchpad':
+				costs = [{ icon: 'officers', label: '1 Officer', value: '1' }];
+				benefits = [{ icon: 'launch', label: 'Launch ships' }];
+				break;
+			case 'ministry':
+				benefits = [{ icon: 'politics', label: 'Draw 2 cards, discard 1' }];
+				break;
+			case 'weather_bureau':
+				costs = [{ icon: 'cash', label: '£2', value: '2' }];
+				benefits = [{ icon: 'eye', label: 'Peek at hazard deck' }];
+				break;
+			case 'flight_school':
+				costs = [{ icon: 'cash', label: '£5', value: '5' }];
+				benefits = [{ icon: 'income', label: '+1 Officer Income' }];
+				break;
+			case 'technical_institute':
+				costs = [{ icon: 'cash', label: '£6', value: '6' }];
+				benefits = [{ icon: 'income', label: '+1 Engineer Income' }];
+				break;
+			case 'insurance_bureau':
+				costs = [{ icon: 'income', label: '-1 Income', value: '-1' }];
+				benefits = [{ icon: 'insurance', label: 'Insurance policy' }];
+				break;
+			default:
+				// For locations not listed, show generic info
+				benefits = [{ icon: 'blueprint', label: 'Location action' }];
+		}
+
+		return {
+			locationId,
+			locationName,
+			costs,
+			benefits,
+			cardIndex
+		};
+	}
+
 	// State for location action modal
 	let showLocationModal = false;
 	let pendingLocationId: string | null = null;
 	let pendingLocationName: string = '';
+
+	// State for action preview panel (shown before confirming worker placement)
+	type ActionPreview = {
+		locationId: string;
+		locationName: string;
+		costs: Array<{ icon: string; label: string; value: string }>;
+		benefits: Array<{ icon: string; label: string }>;
+		cardIndex: number;
+	} | null;
+	let pendingActionPreview: ActionPreview = null;
 
 	// Blueprint Design mode state
 	let blueprintDesignMode = false;
@@ -247,7 +313,8 @@
 			return;
 		}
 
-		// Check if this location requires parameter input
+		// Check if this location requires parameter input (has modal)
+		// These skip the preview since they have their own detailed modal
 		if (LOCATIONS_REQUIRING_PARAMS[locationId]) {
 			pendingLocationId = locationId;
 			pendingLocationName = LOCATIONS_REQUIRING_PARAMS[locationId];
@@ -255,13 +322,27 @@
 			return;
 		}
 
-		// Send action directly for locations that don't require params
-		await sendPlaceAgentAction(locationId, {});
+		// Show action preview instead of sending immediately
+		pendingActionPreview = buildActionPreview(locationId, selectedCardIndex);
+	}
+
+	// Confirm the pending action preview
+	async function handleConfirmPreview() {
+		if (!pendingActionPreview) return;
+
+		await sendPlaceAgentAction(pendingActionPreview.locationId, {}, pendingActionPreview.cardIndex);
+		pendingActionPreview = null;
+	}
+
+	// Cancel the pending action preview
+	function handleCancelPreview() {
+		pendingActionPreview = null;
 	}
 
 	// Send the PLACE_AGENT action with optional params
-	async function sendPlaceAgentAction(locationId: string, params: Record<string, unknown>) {
-		if (selectedCardIndex === null) {
+	async function sendPlaceAgentAction(locationId: string, params: Record<string, unknown>, cardIndex?: number) {
+		const effectiveCardIndex = cardIndex ?? selectedCardIndex;
+		if (effectiveCardIndex === null) {
 			showToast('Select a card first', 'warning');
 			return;
 		}
@@ -270,7 +351,7 @@
 			actionType: 'PLACE_AGENT',
 			actionData: {
 				locationId,
-				cardIndex: selectedCardIndex,
+				cardIndex: effectiveCardIndex,
 				...params
 			}
 		});
@@ -1022,8 +1103,49 @@
 			<!-- Right sidebar - Hand and Actions -->
 			<aside class="sidebar right">
 				<div class="panel actions">
-					<!-- Instruction text at top -->
-					{#if blueprintDesignMode}
+					<!-- Action Preview Panel (shown when a location is selected but not yet confirmed) -->
+					{#if pendingActionPreview}
+						<div class="action-preview-panel">
+							<h4 class="preview-title">{pendingActionPreview.locationName}</h4>
+
+							{#if pendingActionPreview.costs.length > 0}
+								<div class="preview-section">
+									<span class="preview-label">Spend:</span>
+									<div class="preview-items">
+										{#each pendingActionPreview.costs as cost}
+											<div class="preview-item cost">
+												<Icon name={cost.icon} size={16} />
+												<span>{cost.label}</span>
+											</div>
+										{/each}
+									</div>
+								</div>
+							{/if}
+
+							{#if pendingActionPreview.benefits.length > 0}
+								<div class="preview-section">
+									<span class="preview-label">Gain:</span>
+									<div class="preview-items">
+										{#each pendingActionPreview.benefits as benefit}
+											<div class="preview-item benefit">
+												<Icon name={benefit.icon} size={16} />
+												<span>{benefit.label}</span>
+											</div>
+										{/each}
+									</div>
+								</div>
+							{/if}
+
+							<div class="preview-buttons">
+								<button class="btn primary w-full" on:click={handleConfirmPreview}>
+									Confirm
+								</button>
+								<button class="btn secondary w-full" on:click={handleCancelPreview}>
+									Cancel
+								</button>
+							</div>
+						</div>
+					{:else if blueprintDesignMode}
 						<!-- Blueprint Design editing mode -->
 						<p class="action-instruction">
 							{#if isAgeTransitionBlueprintDesignPhase}
@@ -1783,6 +1905,70 @@
 		display: flex;
 		flex-direction: column;
 		gap: var(--spacing-sm);
+	}
+
+	/* Action Preview Panel */
+	.action-preview-panel {
+		display: flex;
+		flex-direction: column;
+		gap: var(--spacing-sm);
+		padding: var(--spacing-sm);
+		background: rgba(59, 130, 246, 0.1);
+		border: 2px solid var(--color-info);
+		border-radius: var(--radius-md);
+	}
+
+	.preview-title {
+		margin: 0;
+		font-size: 1rem;
+		font-weight: 600;
+		color: var(--color-info);
+		text-align: center;
+	}
+
+	.preview-section {
+		display: flex;
+		flex-direction: column;
+		gap: var(--spacing-xs);
+	}
+
+	.preview-label {
+		font-size: 0.75rem;
+		font-weight: 600;
+		color: var(--color-text-muted);
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+	}
+
+	.preview-items {
+		display: flex;
+		flex-direction: column;
+		gap: 4px;
+	}
+
+	.preview-item {
+		display: flex;
+		align-items: center;
+		gap: var(--spacing-xs);
+		padding: var(--spacing-xs);
+		background: rgba(0, 0, 0, 0.2);
+		border-radius: var(--radius-sm);
+		font-size: 0.85rem;
+	}
+
+	.preview-item.cost {
+		color: var(--color-warning);
+	}
+
+	.preview-item.benefit {
+		color: var(--color-success);
+	}
+
+	.preview-buttons {
+		display: flex;
+		flex-direction: column;
+		gap: var(--spacing-xs);
+		margin-top: var(--spacing-xs);
 	}
 
 	.action-instruction {

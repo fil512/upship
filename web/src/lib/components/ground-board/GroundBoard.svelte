@@ -3,6 +3,7 @@
 	import { gameState, myState } from '$lib/stores/gameState';
 	import Location from './Location.svelte';
 	import type { GroundBoardPlacements, PlayerState } from '$lib/types/game';
+	import { calculateHullCost } from '$lib/utils/shipStats';
 
 	export let placements: GroundBoardPlacements = {};
 	export let players: Record<string, PlayerState> = {};
@@ -119,6 +120,9 @@
 		}
 		return map;
 	})();
+
+	// Calculate hull cost for construction_hall display
+	$: playerHullCost = $myState?.blueprint ? calculateHullCost($myState.blueprint).total : 2;
 </script>
 
 <div class="ground-board">
@@ -137,6 +141,7 @@
 						{placements}
 						{players}
 						canPlace={canPlaceMap[loc.id]}
+						hullCost={loc.id === 'construction_hall' ? playerHullCost : undefined}
 						on:select={handleLocationSelect}
 					/>
 				{/each}

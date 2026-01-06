@@ -4,6 +4,7 @@
 	import { icons, type IconName } from '$lib/icons';
 	import Icon from '$lib/components/ui/Icon.svelte';
 	import { TECH_TILES } from '$lib/data/techTiles';
+	import { calculateHullCost } from '$lib/utils/shipStats';
 
 	export let blueprint: Blueprint;
 	export let age: number = 1;
@@ -17,6 +18,9 @@
 
 	// Determine which slot type the selected tile can go into
 	$: selectedTileSlotType = selectedTileId ? TECH_TILES[selectedTileId]?.slotType : null;
+
+	// Calculate hull cost for display
+	$: hullCost = calculateHullCost(blueprint);
 
 	function handleSlotClick(slotType: string, index: number, upgrade: string | null) {
 		if (editMode && selectedTileId && selectedTileSlotType) {
@@ -171,8 +175,15 @@
 
 <div class="airship-blueprint">
 	<div class="header">
-		<span class="title">BLUEPRINT</span>
-		<span class="age-badge">Age {age}</span>
+		<div class="header-left">
+			<span class="title">BLUEPRINT</span>
+			<span class="age-badge">Age {age}</span>
+		</div>
+		<div class="hull-cost">
+			<Icon name="cash" size={16} />
+			<span class="cost-value">{hullCost.total}</span>
+			<span class="cost-breakdown">(£2 + £{hullCost.frameCost} frame + £{hullCost.fabricCost} fabric)</span>
+		</div>
 	</div>
 
 	<svg viewBox="0 0 800 300" class="airship-svg">
@@ -499,6 +510,14 @@
 		justify-content: space-between;
 		align-items: center;
 		margin-bottom: var(--spacing-sm);
+		flex-wrap: wrap;
+		gap: var(--spacing-xs);
+	}
+
+	.header-left {
+		display: flex;
+		align-items: center;
+		gap: var(--spacing-sm);
 	}
 
 	.title {
@@ -514,6 +533,27 @@
 		border-radius: var(--radius-full);
 		font-size: 0.75rem;
 		color: var(--color-text-secondary);
+	}
+
+	.hull-cost {
+		display: flex;
+		align-items: center;
+		gap: var(--spacing-xs);
+		padding: 4px 10px;
+		background: rgba(34, 197, 94, 0.15);
+		border: 1px solid rgba(34, 197, 94, 0.3);
+		border-radius: var(--radius-md);
+	}
+
+	.cost-value {
+		font-size: 0.875rem;
+		font-weight: 700;
+		color: var(--color-cash, #22c55e);
+	}
+
+	.cost-breakdown {
+		font-size: 0.65rem;
+		color: var(--color-text-muted);
 	}
 
 	.airship-svg {

@@ -12,6 +12,7 @@
 	export let placements: GroundBoardPlacements;
 	export let players: Record<string, PlayerState> = {};
 	export let canPlace: boolean = false;
+	export let hullCost: number | undefined = undefined;
 
 	// Cost and benefit data for each location
 	// resourceBadge: array of {type, value} for ResourceBadge display
@@ -134,6 +135,11 @@
 						{#if j > 0}<span class="cost-separator">{cost.separator || '/'}</span>{/if}
 						<ResourceBadge type={badge.type} value={badge.value} size={14} />
 					{/each}
+				</div>
+			{:else if id === 'construction_hall' && cost.icon === 'cash' && hullCost !== undefined}
+				<!-- Dynamic hull cost display for Construction Hall -->
+				<div class="cost-item resource-cost">
+					<ResourceBadge type="cash" value={hullCost} size={14} />
 				</div>
 			{:else}
 				<div class="cost-item icon-cost" title={cost.icon}>
