@@ -139,7 +139,7 @@ export function connect(gameId: string, playerId: string): void {
 			worker_placement: 'Worker Placement Phase',
 			reveal: 'Reveal Phase',
 			income_cleanup: 'Income & Cleanup Phase',
-			age_transition_design_bureau: 'Age Transition'
+			age_transition_blueprint_design: 'Age Transition'
 		};
 		showToast(phaseNames[phase] || phase, 'phase');
 	});

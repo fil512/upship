@@ -72,11 +72,11 @@
 	let pendingLocationId: string | null = null;
 	let pendingLocationName: string = '';
 
-	// Design Bureau mode state
-	let designBureauMode = false;
+	// Blueprint Design mode state
+	let blueprintDesignMode = false;
 	let pendingBlueprint: BlueprintType | null = null;
 	let selectedTechTileId: string | null = null;
-	let designBureauCardIndex: number | null = null;
+	let blueprintDesignCardIndex: number | null = null;
 
 	// Center pane tabs
 	type CenterTab = 'actions' | 'log' | 'map' | 'blueprint' | 'market';
@@ -234,12 +234,12 @@
 
 		const locationId = event.detail.locationId;
 
-		// Design Bureau: enter interactive blueprint editing mode
-		if (locationId === 'design_bureau') {
+		// Blueprint Design: enter interactive blueprint editing mode
+		if (locationId === 'blueprint_design') {
 			if ($myState?.blueprint) {
-				designBureauMode = true;
+				blueprintDesignMode = true;
 				pendingBlueprint = structuredClone($myState.blueprint);
-				designBureauCardIndex = selectedCardIndex;
+				blueprintDesignCardIndex = selectedCardIndex;
 				selectedCardIndex = null;
 				selectedCardSymbol = null;
 				activeTab = 'blueprint';
@@ -447,9 +447,9 @@
 	$: progressThresholds = $gameState?.progressThresholds || { age2: 4, age3: 8, end: 12 };
 	$: progressTrack = $gameState?.progressTrack || 0;
 
-	// Handle blueprint slot click (normal mode - not design bureau)
+	// Handle blueprint slot click (normal mode - not blueprint design)
 	function handleBlueprintSlotClick(event: CustomEvent<{ slotType: string; index: number; upgrade: string | null }>) {
-		if (designBureauMode) return; // Handled by placeTile event in design bureau mode
+		if (blueprintDesignMode) return; // Handled by placeTile event in blueprint design mode
 		const { slotType, index, upgrade } = event.detail;
 		openModal('upgrade', {
 			slotType,
@@ -459,14 +459,14 @@
 		});
 	}
 
-	// Design Bureau mode handlers
-	// Available tech tiles - compute whenever on blueprint tab or in design bureau mode
+	// Blueprint Design mode handlers
+	// Available tech tiles - compute whenever on blueprint tab or in blueprint design mode
 	$: availableTechTiles = getAvailableTilesForPlayer($myState?.techCards || [], $gameState?.age || 1);
 
 	// Is the blueprint tab active and we can show tech tiles?
 	$: showBlueprintTiles = activeTab === 'blueprint';
 
-	$: previewShipStats = designBureauMode && pendingBlueprint
+	$: previewShipStats = blueprintDesignMode && pendingBlueprint
 		? calculateShipStats(pendingBlueprint)
 		: null;
 
@@ -486,60 +486,60 @@
 		selectedTechTileId = null; // Clear selection after placement
 	}
 
-	async function handleDesignBureauDone() {
+	async function handleBlueprintDesignDone() {
 		if (!pendingBlueprint) return;
 
-		// Different action for age transition vs normal design bureau
-		if (isAgeTransitionDesignBureauPhase) {
+		// Different action for age transition vs normal blueprint design
+		if (isAgeTransitionBlueprintDesignPhase) {
 			const result = await sendAction({
-				actionType: 'AGE_TRANSITION_DESIGN_BUREAU',
+				actionType: 'AGE_TRANSITION_BLUEPRINT_DESIGN',
 				actionData: {
 					blueprint: pendingBlueprint
 				}
 			});
 
 			if (result.success) {
-				designBureauMode = false;
+				blueprintDesignMode = false;
 				pendingBlueprint = null;
 				selectedTechTileId = null;
-				designBureauCardIndex = null;
+				blueprintDesignCardIndex = null;
 				showToast('Blueprint updated for new Age!', 'success');
 			} else {
 				showToast(result.error || 'Failed to update blueprint', 'error');
 			}
 		} else {
-			if (designBureauCardIndex === null) return;
+			if (blueprintDesignCardIndex === null) return;
 
 			const result = await sendAction({
 				actionType: 'PLACE_AGENT',
 				actionData: {
-					locationId: 'design_bureau',
-					cardIndex: designBureauCardIndex,
+					locationId: 'blueprint_design',
+					cardIndex: blueprintDesignCardIndex,
 					blueprint: pendingBlueprint
 				}
 			});
 
 			if (result.success) {
-				designBureauMode = false;
+				blueprintDesignMode = false;
 				pendingBlueprint = null;
 				selectedTechTileId = null;
-				designBureauCardIndex = null;
+				blueprintDesignCardIndex = null;
 			} else {
 				showToast(result.error || 'Failed to update blueprint', 'error');
 			}
 		}
 	}
 
-	function handleDesignBureauCancel() {
+	function handleBlueprintDesignCancel() {
 		// Cannot cancel during age transition - it's mandatory
-		if (isAgeTransitionDesignBureauPhase) {
+		if (isAgeTransitionBlueprintDesignPhase) {
 			showToast('You must fill empty Frame and Fabric slots to continue', 'warning');
 			return;
 		}
-		designBureauMode = false;
+		blueprintDesignMode = false;
 		pendingBlueprint = null;
 		selectedTechTileId = null;
-		designBureauCardIndex = null;
+		blueprintDesignCardIndex = null;
 	}
 
 	// Launchpad state - when active, show launch UI
@@ -629,19 +629,19 @@
 
 	// Market/reveal phase derived values
 	$: isRevealPhase = $gameState?.phase === 'reveal';
-	$: isAgeTransitionDesignBureauPhase = $gameState?.phase === 'age_transition_design_bureau';
+	$: isAgeTransitionBlueprintDesignPhase = $gameState?.phase === 'age_transition_blueprint_design';
 	// Player is in purchase selection when they've revealed (hasPassed) or phase is reveal
 	$: isInPurchaseSelection = $myState?.hasPassed === true || isRevealPhase;
 
-	// Auto-enter design bureau mode for age transition phase
+	// Auto-enter blueprint design mode for age transition phase
 	$: {
-		if (isAgeTransitionDesignBureauPhase && $isMyTurn && !designBureauMode && $myState?.blueprint) {
+		if (isAgeTransitionBlueprintDesignPhase && $isMyTurn && !blueprintDesignMode && $myState?.blueprint) {
 			// Check if we haven't already completed this phase
-			const completedPlayers = $gameState?.ageTransitionDesignBureau?.completedPlayers || [];
+			const completedPlayers = $gameState?.ageTransitionBlueprintDesign?.completedPlayers || [];
 			if (!completedPlayers.includes($effectiveUserId || '')) {
-				designBureauMode = true;
+				blueprintDesignMode = true;
 				pendingBlueprint = structuredClone($myState.blueprint);
-				designBureauCardIndex = -1; // Special marker for age transition (no card used)
+				blueprintDesignCardIndex = -1; // Special marker for age transition (no card used)
 				activeTab = 'blueprint';
 			}
 		}
@@ -962,8 +962,8 @@
 									rdBoard={techCards}
 									showUndo={false}
 								/>
-							{:else if designBureauMode && pendingBlueprint}
-								<!-- Design Bureau editing mode -->
+							{:else if blueprintDesignMode && pendingBlueprint}
+								<!-- Blueprint Design editing mode -->
 								<AirshipBlueprint
 									blueprint={pendingBlueprint}
 									age={$gameState?.age || 1}
@@ -1023,10 +1023,10 @@
 			<aside class="sidebar right">
 				<div class="panel actions">
 					<!-- Instruction text at top -->
-					{#if designBureauMode}
-						<!-- Design Bureau editing mode -->
+					{#if blueprintDesignMode}
+						<!-- Blueprint Design editing mode -->
 						<p class="action-instruction">
-							{#if isAgeTransitionDesignBureauPhase}
+							{#if isAgeTransitionBlueprintDesignPhase}
 								<strong>Age Transition:</strong> Fill empty Frame and Fabric slots
 							{:else if selectedTechTileId}
 								Click a highlighted slot to place the tile
@@ -1035,16 +1035,16 @@
 							{/if}
 						</p>
 						{#if previewShipStats}
-							<div class="design-bureau-stats">
+							<div class="blueprint-design-stats">
 								<ShipStats stats={previewShipStats} />
 							</div>
 						{/if}
-						<div class="design-bureau-buttons">
-							<button class="btn primary w-full" on:click={handleDesignBureauDone}>
-								{isAgeTransitionDesignBureauPhase ? 'Continue to Next Age' : 'Done'}
+						<div class="blueprint-design-buttons">
+							<button class="btn primary w-full" on:click={handleBlueprintDesignDone}>
+								{isAgeTransitionBlueprintDesignPhase ? 'Continue to Next Age' : 'Done'}
 							</button>
-							{#if !isAgeTransitionDesignBureauPhase}
-								<button class="btn secondary w-full" on:click={handleDesignBureauCancel}>
+							{#if !isAgeTransitionBlueprintDesignPhase}
+								<button class="btn secondary w-full" on:click={handleBlueprintDesignCancel}>
 									Cancel
 								</button>
 							{/if}
@@ -1055,7 +1055,7 @@
 							View your blueprint and available tech tiles
 						</p>
 						<p class="action-hint">
-							Place an agent at the Design Bureau to modify your blueprint
+							Place an agent at Blueprint Design to modify your blueprint
 						</p>
 					{:else if isInPurchaseSelection && !isLaunchpadActive && !shipAwaitingHazard}
 						<!-- Purchase selection mode (after clicking Reveal) -->
@@ -1245,7 +1245,7 @@
 					<TechTilesPanel
 						tiles={availableTechTiles}
 						selectedTileId={selectedTechTileId}
-						selectable={designBureauMode}
+						selectable={blueprintDesignMode}
 						on:select={handleTechTileSelect}
 					/>
 				{:else}
@@ -2056,12 +2056,12 @@
 		color: white;
 	}
 
-	/* Design Bureau Mode */
-	.design-bureau-stats {
+	/* Blueprint Design Mode */
+	.blueprint-design-stats {
 		margin-bottom: var(--spacing-sm);
 	}
 
-	.design-bureau-buttons {
+	.blueprint-design-buttons {
 		display: flex;
 		flex-direction: column;
 		gap: var(--spacing-xs);

@@ -19,7 +19,7 @@ from .state import (
     get_player_data
 )
 from .strategy import (
-    find_strategic_placement, get_design_bureau_blueprint, get_reveal_acquisitions,
+    find_strategic_placement, get_blueprint_design_blueprint, get_reveal_acquisitions,
     evaluate_combat_mission_readiness, find_best_combat_mission
 )
 
@@ -454,11 +454,12 @@ def _check_and_handle_hazard(client, player: str, game_id: str, ship_id: str, pl
         logger.log_action(None, f"  └─ ERROR: Ship awaiting_hazard but no pendingHazard", "worker_placement")
         return ship_status
 
-    # Handle the hazard response
-    return _handle_hazard_response(player, game_id, ship_id, pending_hazard, player_data, logger)
+    # Handle the hazard response - use fresh engineer count from raw_player
+    fresh_engineers = raw_player.get('engineers', 0)
+    return _handle_hazard_response(player, game_id, ship_id, pending_hazard, player_data, logger, fresh_engineers)
 
 
-def _handle_hazard_response(player: str, game_id: str, ship_id: str, pending_hazard: dict, player_data: Player, logger: PlaytestLogger) -> str:
+def _handle_hazard_response(player: str, game_id: str, ship_id: str, pending_hazard: dict, player_data: Player, logger: PlaytestLogger, fresh_engineers: int | None = None) -> str:
     """Handle responding to a hazard check. Returns final ship status.
 
     Args:
@@ -468,6 +469,7 @@ def _handle_hazard_response(player: str, game_id: str, ship_id: str, pending_haz
         pending_hazard: Dict with hazard info.
         player_data: Player object.
         logger: PlaytestLogger instance.
+        fresh_engineers: Fresh engineer count from API (overrides player_data.engineers).
 
     Returns:
         Final ship status string.
@@ -479,7 +481,8 @@ def _handle_hazard_response(player: str, game_id: str, ship_id: str, pending_haz
     engineer_cost = pending_hazard.get('engineerCost')
     auto_pass_reason = pending_hazard.get('autoPassReason')
     no_save = pending_hazard.get('noSave', False)
-    available_engineers = player_data.engineers if player_data else 0
+    # Use fresh engineers if provided, otherwise fall back to player_data
+    available_engineers = fresh_engineers if fresh_engineers is not None else (player_data.engineers if player_data else 0)
 
     spend_engineers = False
     if auto_pass_reason:
@@ -566,7 +569,12 @@ def _determine_launch_outcome(log_entries: list[dict], ship_id: str, ship_status
 
 
 def submit_reveal(player: str, game_id: str, logger: PlaytestLogger, reason: str = "") -> None:
-    """Submit atomic REVEAL action with tech/market acquisitions.
+    """Submit REVEAL action and make tentative tech acquisitions.
+
+    Flow:
+    1. Call REVEAL (marks as passed, collects resources)
+    2. Call ACQUIRE_TECH_CARD_TENTATIVE for each tech we want
+    3. Call END_TURN to finalize acquisitions and advance
 
     Args:
         player: Player username.
@@ -582,66 +590,82 @@ def submit_reveal(player: str, game_id: str, logger: PlaytestLogger, reason: str
     pre_player_data = pre_state.get_player(pre_player_id) if pre_state and pre_player_id else None
     pre_techs = set(pre_player_data.technologies or []) if pre_player_data else set()
 
-    # Calculate acquisitions
+    # Calculate what techs we want to acquire
     tech_ids, card_ids = get_reveal_acquisitions(player, game_id)
 
-    # Submit reveal action
-    result = client.reveal(player, game_id, tech_acquisitions=tech_ids or None)
+    # Step 1: Submit reveal action (NO tech acquisitions - just marks as passed)
+    result = client.reveal(player, game_id)
 
-    if result.success:
-        # After revealing, send END_TURN to advance to next placer and finalize purchases
-        end_result = client.end_turn(player, game_id)
-        if not end_result.success:
-            print(f"  {player}: END_TURN after reveal failed - {end_result.error}")
-
-        post_state = result.game_state or get_state(game_id, player)
-        post_player_id = get_player_id(player, post_state) if post_state else None
-        post_player_data = post_state.get_player(post_player_id) if post_state and post_player_id else None
-
-        post_techs = set(post_player_data.technologies or []) if post_player_data else set()
-        new_techs = post_techs - pre_techs
-
-        # Look for resources collected in log
-        log_entries = get_last_log_entries(post_state, count=20, entry_type='reveal') if post_state else []
-        resources_collected = None
-        for entry in reversed(log_entries):
-            msg = entry.get('message', '')
-            faction = get_faction_from_player(player).upper()
-            if faction in msg and 'collected' in msg.lower():
-                resources_collected = msg
-                break
-
-        logger.log_player_turn()
-        action_desc = f"REVEAL {reason}".strip()
-        print(f"  {player}: {action_desc}")
-        logger.log_action(player, action_desc, "reveal")
-
-        if resources_collected:
-            logger.log_action(None, f"  └─ {resources_collected}", "reveal")
-            print(f"    └─ {resources_collected}")
-
-        if new_techs:
-            tech_list = ", ".join(new_techs)
-            logger.log_action(None, f"  └─ Tech acquired: {tech_list}", "reveal")
-            print(f"    └─ Tech acquired: {tech_list}")
-            faction = get_faction_from_player(player)
-            for tech in new_techs:
-                logger.track_tech_acquired(tech, faction)
-
-        if post_player_data:
-            post_research = post_player_data.research or 0
-            if post_research > 0:
-                logger.log_action(None, f"  └─ Research remaining: {post_research}", "reveal")
-
-            post_hand = post_player_data.hand or []
-            if post_hand:
-                hand_names = [c.name for c in post_hand[:5]]
-                logger.log_action(None, f"  └─ Hand ({len(post_hand)} cards): {', '.join(hand_names)}", "reveal")
-    else:
+    if not result.success:
         error_msg = result.error or "unknown error"
         print(f"  {player}: reveal failed - {error_msg}")
         logger.log_action(player, f"REVEAL FAILED {reason}", "reveal")
         logger.log_action(None, f"  └─ Error: {error_msg[:100]}", "reveal")
+        return
+
+    # Step 2: Make tentative tech acquisitions (after REVEAL, before END_TURN)
+    acquired_techs = []
+    if tech_ids:
+        for tech_id in tech_ids:
+            try:
+                tech_result = client.acquire_tech_card_tentative(player, game_id, tech_id)
+                if tech_result.success:
+                    acquired_techs.append(tech_id)
+                else:
+                    # Log but don't fail - player might not have enough research
+                    logger.log_action(None, f"  └─ Tech {tech_id} acquisition failed: {tech_result.error}", "reveal")
+            except Exception as e:
+                logger.log_action(None, f"  └─ Tech {tech_id} acquisition error: {str(e)[:50]}", "reveal")
+
+    # Step 3: Send END_TURN to finalize acquisitions and advance to next placer
+    end_result = client.end_turn(player, game_id)
+    if not end_result.success:
+        print(f"  {player}: END_TURN after reveal failed - {end_result.error}")
+
+    # Get post-state for logging
+    post_state = end_result.game_state or get_state(game_id, player)
+    post_player_id = get_player_id(player, post_state) if post_state else None
+    post_player_data = post_state.get_player(post_player_id) if post_state and post_player_id else None
+
+    post_techs = set(post_player_data.technologies or []) if post_player_data else set()
+    new_techs = post_techs - pre_techs
+
+    # Look for resources collected in log
+    log_entries = get_last_log_entries(post_state, count=20, entry_type='reveal') if post_state else []
+    resources_collected = None
+    for entry in reversed(log_entries):
+        msg = entry.get('message', '')
+        faction = get_faction_from_player(player).upper()
+        if faction in msg and 'collected' in msg.lower():
+            resources_collected = msg
+            break
+
+    logger.log_player_turn()
+    action_desc = f"REVEAL {reason}".strip()
+    print(f"  {player}: {action_desc}")
+    logger.log_action(player, action_desc, "reveal")
+
+    if resources_collected:
+        logger.log_action(None, f"  └─ {resources_collected}", "reveal")
+        print(f"    └─ {resources_collected}")
+
+    if new_techs:
+        tech_list = ", ".join(new_techs)
+        logger.log_action(None, f"  └─ Tech acquired: {tech_list}", "reveal")
+        print(f"    └─ Tech acquired: {tech_list}")
+        faction = get_faction_from_player(player)
+        for tech in new_techs:
+            logger.track_tech_acquired(tech, faction)
+
+    if post_player_data:
+        post_research = post_player_data.research or 0
+        if post_research > 0:
+            logger.log_action(None, f"  └─ Research remaining: {post_research}", "reveal")
+
+        post_hand = post_player_data.hand or []
+        if post_hand:
+            hand_names = [c.name for c in post_hand[:5]]
+            logger.log_action(None, f"  └─ Hand ({len(post_hand)} cards): {', '.join(hand_names)}", "reveal")
 
 
 def handle_worker_placement_round(game_id: str, logger: PlaytestLogger) -> bool:
@@ -782,9 +806,9 @@ def _execute_placement(player: str, game_id: str, card: dict, location: dict, lo
     if loc_id == 'construction_hall':
         kwargs['buildCount'] = 1
         action_desc = f"placed at {loc_id} and built ship"
-    elif loc_id == 'design_bureau':
+    elif loc_id == 'blueprint_design':
         current_age = pre_state.age if pre_state else 1
-        blueprint = get_design_bureau_blueprint(pre_player_data, current_age) if pre_player_data else None
+        blueprint = get_blueprint_design_blueprint(pre_player_data, current_age) if pre_player_data else None
         if blueprint:
             kwargs['blueprint'] = blueprint
             action_desc = f"placed at {loc_id} and updated blueprint"
@@ -837,7 +861,7 @@ def _execute_placement(player: str, game_id: str, card: dict, location: dict, lo
 
         logger.log_action(None, f"  └─ Card: {card['name']} ({card['symbol']})", "worker_placement")
 
-        if loc_id == 'design_bureau':
+        if loc_id == 'blueprint_design':
             bp_changes = []
             for key in ['lift', 'weight', 'range', 'speed', 'ceiling', 'cargo']:
                 if pre_blueprint.get(key, 0) != post_blueprint.get(key, 0):
@@ -964,10 +988,10 @@ def handle_income_cleanup_phase(game_id: str, logger: PlaytestLogger) -> None:
     print("  AI players collected income")
 
 
-def handle_age_transition_design_bureau(game_id: str, logger: PlaytestLogger) -> bool:
-    """Handle the age transition Design Bureau phase.
+def handle_age_transition_blueprint_design(game_id: str, logger: PlaytestLogger) -> bool:
+    """Handle the age transition Blueprint Design phase.
 
-    Each player gets a free Design Bureau action (no Hull Upgrade Rule charges).
+    Each player gets a free Blueprint Design action (no Hull Upgrade Rule charges).
     Players take turns installing upgrades using their faction swap limit.
 
     Args:
@@ -989,7 +1013,7 @@ def handle_age_transition_design_bureau(game_id: str, logger: PlaytestLogger) ->
         raw_state = client._api_get("playtest_germany", f"/api/state/{game_id}")
         game_state_wrapper = raw_state.get('gameState', raw_state)
         state_data = game_state_wrapper.get('state', {})
-        transition_info = state_data.get('ageTransitionDesignBureau', {})
+        transition_info = state_data.get('ageTransitionBlueprintDesign', {})
     except Exception:
         return False
 
@@ -1042,10 +1066,10 @@ def handle_age_transition_design_bureau(game_id: str, logger: PlaytestLogger) ->
     # Calculate desired blueprint for this player
     # new_age is the age we're transitioning TO, so that's the appropriate priority
     # is_age_transition=True ensures structural slots are filled first
-    blueprint = get_design_bureau_blueprint(player_data, new_age, is_age_transition=True)
+    blueprint = get_blueprint_design_blueprint(player_data, new_age, is_age_transition=True)
 
     # Submit the action
-    result = client.action(current_username, game_id, 'AGE_TRANSITION_DESIGN_BUREAU', blueprint=blueprint)
+    result = client.action(current_username, game_id, 'AGE_TRANSITION_BLUEPRINT_DESIGN', blueprint=blueprint)
 
     if result.success:
         faction = get_faction_from_player(current_username).upper()

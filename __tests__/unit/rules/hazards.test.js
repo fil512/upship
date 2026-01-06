@@ -916,7 +916,7 @@ describe('Rules Compliance - Hazards', () => {
       state.players['1'].fireProtectionUsedThisAge = true;
 
       // Use the age transition helpers to test reset
-      // performAgeTransition starts the transition (enters Design Bureau phase)
+      // performAgeTransition starts the transition (enters Blueprint Design phase)
       // completeAgeTransition finishes it (applies resets and faction flaws)
       const { performAgeTransition, completeAgeTransition } = require('../../../server/actions/helpers/ageTransition');
       performAgeTransition(state, 2);

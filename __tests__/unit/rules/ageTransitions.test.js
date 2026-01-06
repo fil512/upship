@@ -37,16 +37,16 @@ describe('Rules Compliance - Age Transitions', () => {
       state.progressThresholds = { age2: 4, age3: 8, end: 12 };
 
       // Age should transition when progress track reaches threshold
-      // Per Section 12.1: Age transition includes a free Design Bureau phase
+      // Per Section 12.1: Age transition includes a free Blueprint Design phase
       // startNewRound triggers the transition but doesn't complete it immediately
       startNewRound(state);
 
       // Per Section 5.2 step 3: "Check Age Transition: If Progress Track reached threshold, trigger Age Transition"
-      // The transition starts by entering the free Design Bureau phase
-      expect(state.phase).toBe('age_transition_design_bureau');
-      expect(state.ageTransitionDesignBureau.newAge).toBe(2);
+      // The transition starts by entering the free Blueprint Design phase
+      expect(state.phase).toBe('age_transition_blueprint_design');
+      expect(state.ageTransitionBlueprintDesign.newAge).toBe(2);
 
-      // Age is updated when completeAgeTransition is called (after free Design Bureau actions)
+      // Age is updated when completeAgeTransition is called (after free Blueprint Design actions)
       completeAgeTransition(state);
       expect(state.age).toBe(2);
     });
@@ -285,7 +285,7 @@ describe('Rules Compliance - Age Transitions', () => {
       // No routes claimed by this player
       state.map.routes = state.map.routes.filter(r => r.claimed !== '2');
 
-      // Start transition (enters Design Bureau phase)
+      // Start transition (enters Blueprint Design phase)
       performAgeTransition(state, 2);
       // Complete transition (applies Red Tape flaw after income recalculation)
       completeAgeTransition(state);
@@ -318,22 +318,22 @@ describe('Rules Compliance - Age Transitions', () => {
     });
   });
 
-  describe('Free Design Bureau action during age transition', () => {
-    it('should enter age_transition_design_bureau phase after performAgeTransition', () => {
+  describe('Free Blueprint Design action during age transition', () => {
+    it('should enter age_transition_blueprint_design phase after performAgeTransition', () => {
       const state = createTestGameState();
       state.age = 1;
 
       performAgeTransition(state, 2);
 
-      expect(state.phase).toBe('age_transition_design_bureau');
-      expect(state.ageTransitionDesignBureau).toBeDefined();
-      expect(state.ageTransitionDesignBureau.newAge).toBe(2);
-      expect(state.ageTransitionDesignBureau.currentPlayerIndex).toBe(0);
-      expect(state.ageTransitionDesignBureau.completedPlayers).toEqual([]);
+      expect(state.phase).toBe('age_transition_blueprint_design');
+      expect(state.ageTransitionBlueprintDesign).toBeDefined();
+      expect(state.ageTransitionBlueprintDesign.newAge).toBe(2);
+      expect(state.ageTransitionBlueprintDesign.currentPlayerIndex).toBe(0);
+      expect(state.ageTransitionBlueprintDesign.completedPlayers).toEqual([]);
     });
 
     it('should allow installing upgrades during age transition without Hull Upgrade charges', () => {
-      const { processAgeTransitionDesignBureau } = require('../../../server/actions/blueprint');
+      const { processAgeTransitionBlueprintDesign } = require('../../../server/actions/blueprint');
 
       const state = createTestGameState();
       state.age = 1;
@@ -355,7 +355,7 @@ describe('Rules Compliance - Age Transitions', () => {
       performAgeTransition(state, 2);
 
       // Player 1 installs an upgrade - filling the second frame slot with a duplicate
-      const result = processAgeTransitionDesignBureau(state, '1', {
+      const result = processAgeTransitionBlueprintDesign(state, '1', {
         blueprint: { frameSlots: ['duralumin_frame', 'duralumin_frame'] }
       });
 
@@ -365,7 +365,7 @@ describe('Rules Compliance - Age Transitions', () => {
     });
 
     it('should allow duplicate upgrades during age transition', () => {
-      const { processAgeTransitionDesignBureau } = require('../../../server/actions/blueprint');
+      const { processAgeTransitionBlueprintDesign } = require('../../../server/actions/blueprint');
 
       const state = createTestGameState();
       state.age = 1;
@@ -384,7 +384,7 @@ describe('Rules Compliance - Age Transitions', () => {
       performAgeTransition(state, 2);
 
       // Try to install same upgrade in second slot (duplicates allowed)
-      const result = processAgeTransitionDesignBureau(state, '1', {
+      const result = processAgeTransitionBlueprintDesign(state, '1', {
         blueprint: { frameSlots: ['duralumin_frame', 'duralumin_frame'] }
       });
 
@@ -394,7 +394,7 @@ describe('Rules Compliance - Age Transitions', () => {
     });
 
     it('should complete age transition after all players submit their actions', () => {
-      const { processAgeTransitionDesignBureau } = require('../../../server/actions/blueprint');
+      const { processAgeTransitionBlueprintDesign } = require('../../../server/actions/blueprint');
 
       const state = createTestGameState();
       state.age = 1;
@@ -417,16 +417,16 @@ describe('Rules Compliance - Age Transitions', () => {
       performAgeTransition(state, 2);
 
       // Player 1 submits (no changes)
-      processAgeTransitionDesignBureau(state, '1', {});
-      expect(state.phase).toBe('age_transition_design_bureau');  // Still in phase
+      processAgeTransitionBlueprintDesign(state, '1', {});
+      expect(state.phase).toBe('age_transition_blueprint_design');  // Still in phase
 
       // Player 2 submits (no changes)
-      const result = processAgeTransitionDesignBureau(state, '2', {});
+      const result = processAgeTransitionBlueprintDesign(state, '2', {});
 
       // Transition should now be complete
       expect(result.newState.phase).toBe('worker_placement');
       expect(result.newState.age).toBe(2);
-      expect(result.newState.ageTransitionDesignBureau).toBeUndefined();
+      expect(result.newState.ageTransitionBlueprintDesign).toBeUndefined();
     });
   });
 });

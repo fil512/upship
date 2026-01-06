@@ -52,7 +52,7 @@ interface GameStateWrapper {
       currentPlacerIndex?: number;
       placementOrder?: string[];
     };
-    ageTransitionDesignBureau?: {
+    ageTransitionBlueprintDesign?: {
       currentPlayerIndex?: number;
     };
     groundBoard?: {
@@ -254,9 +254,9 @@ router.post('/:gameId/action', requireGamePlayer, async (req: Request, res: Resp
       // Reveal phase allows all players to act simultaneously
       skipTurnCheck = true;
       currentPlayerId = effectiveUserId;
-    } else if (state.phase === 'age_transition_design_bureau' && state.ageTransitionDesignBureau) {
+    } else if (state.phase === 'age_transition_blueprint_design' && state.ageTransitionBlueprintDesign) {
       // Age transition phase uses its own player index
-      const transitionIndex = state.ageTransitionDesignBureau.currentPlayerIndex || 0;
+      const transitionIndex = state.ageTransitionBlueprintDesign.currentPlayerIndex || 0;
       currentPlayerId = state.playerOrder[transitionIndex];
     } else {
       currentPlayerId = state.playerOrder[state.currentPlayerIndex];
@@ -362,7 +362,7 @@ router.post('/:gameId/poke', requireGamePlayer, async (req: Request, res: Respon
       phase: gameState?.state?.phase,
       age: gameState?.state?.age,
       currentPlayerIndex: gameState?.state?.currentPlayerIndex,
-      ageTransitionState: (gameState?.state as GameStateWrapper['state'])?.ageTransitionDesignBureau
+      ageTransitionState: (gameState?.state as GameStateWrapper['state'])?.ageTransitionBlueprintDesign
     };
 
     const io = authReq.app.get('io');

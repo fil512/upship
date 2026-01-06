@@ -53,7 +53,7 @@ interface GameStateWrapper {
       currentPlacerIndex?: number;
       placementOrder?: string[];
     };
-    ageTransitionDesignBureau?: {
+    ageTransitionBlueprintDesign?: {
       currentPlayerIndex?: number;
     };
   };
@@ -269,8 +269,8 @@ function initializeSocket(server: HttpServer, sessionMiddleware: RequestHandler)
         } else if (state.phase === 'reveal') {
           skipTurnCheck = true;
           currentPlayerId = effectiveUserId;
-        } else if (state.phase === 'age_transition_design_bureau' && state.ageTransitionDesignBureau) {
-          const transitionIndex = state.ageTransitionDesignBureau.currentPlayerIndex || 0;
+        } else if (state.phase === 'age_transition_blueprint_design' && state.ageTransitionBlueprintDesign) {
+          const transitionIndex = state.ageTransitionBlueprintDesign.currentPlayerIndex || 0;
           currentPlayerId = state.playerOrder[transitionIndex];
         } else {
           currentPlayerId = state.playerOrder[state.currentPlayerIndex];

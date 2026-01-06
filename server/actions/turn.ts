@@ -282,11 +282,11 @@ function processEndTurn(state: GameState, playerId: string): ActionResult {
       }
       break;
 
-    case 'age_transition_design_bureau': {
-      // During age transition, END_TURN completes the free Design Bureau action
-      // This delegates to processAgeTransitionDesignBureau with no changes
-      const { processAgeTransitionDesignBureau } = require('./blueprint');
-      return processAgeTransitionDesignBureau(state, playerId, {});
+    case 'age_transition_blueprint_design': {
+      // During age transition, END_TURN completes the free Blueprint Design action
+      // This delegates to processAgeTransitionBlueprintDesign with no changes
+      const { processAgeTransitionBlueprintDesign } = require('./blueprint');
+      return processAgeTransitionBlueprintDesign(state, playerId, {});
     }
 
     default:

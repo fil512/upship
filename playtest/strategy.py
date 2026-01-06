@@ -31,8 +31,8 @@ def find_playable_card(cards: list[dict], locations: list[dict]) -> tuple[dict |
     return None, None
 
 
-def get_design_bureau_blueprint(player_data: Player, current_age: int = 1, is_age_transition: bool = False) -> dict | None:
-    """Determine the desired blueprint configuration for Design Bureau action.
+def get_blueprint_design_blueprint(player_data: Player, current_age: int = 1, is_age_transition: bool = False) -> dict | None:
+    """Determine the desired blueprint configuration for Blueprint Design action.
 
     Returns the complete blueprint with all slots filled, or None if no changes needed.
 
@@ -200,11 +200,11 @@ def evaluate_launch_readiness(
 
         if empty_frame > 0:
             missing.append(f'{empty_frame} empty Frame slot(s)')
-            priorities.append('design_bureau')
+            priorities.append('blueprint_design')
             slots_ready = False
         if empty_fabric > 0:
             missing.append(f'{empty_fabric} empty Fabric slot(s)')
-            priorities.append('design_bureau')
+            priorities.append('blueprint_design')
             slots_ready = False
     else:
         missing.append('no blueprint data')
@@ -247,7 +247,7 @@ def evaluate_launch_readiness(
                 missing.append(f'no achievable missions (range={ship_range}, speed={ship_speed}, ceil={ship_ceiling}, rel={ship_reliability})')
                 # Need better stats from drive upgrades
                 priorities.insert(0, 'research_institute')  # Get more tech
-                priorities.insert(1, 'design_bureau')  # Install drive upgrades
+                priorities.insert(1, 'blueprint_design')  # Install drive upgrades
         elif routes:
             # Age I/III: Check routes
             for route in routes:
@@ -263,7 +263,7 @@ def evaluate_launch_readiness(
             if not has_achievable_target:
                 missing.append(f'no reachable routes (range={ship_range}, speed={ship_speed})')
                 priorities.insert(0, 'research_institute')  # Get more tech
-                priorities.insert(1, 'design_bureau')  # Install drive upgrades
+                priorities.insert(1, 'blueprint_design')  # Install drive upgrades
 
     # Check 6: Do we have engineers for hazard mitigation?
     if engineers < 2:
@@ -506,7 +506,7 @@ def find_strategic_placement(
 
     # Phase 3: General fallback priorities
     fallback_priorities = [
-        'design_bureau', 'research_institute', 'construction_hall',
+        'blueprint_design', 'research_institute', 'construction_hall',
         'gas_depot', 'academy', 'technical_institute', 'ministry',
         'flight_school', 'weather_bureau', 'government_liaison',
         'insurance_bureau', 'launchpad',

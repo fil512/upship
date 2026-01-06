@@ -397,7 +397,7 @@ function executeLocationAction(
       // Buy Research tokens for £3 each (handled separately via GAIN_RESEARCH)
       return { success: true, message: 'May buy Research for £3 each' };
 
-    case 'design_bureau':
+    case 'blueprint_design':
       // Install upgrade to blueprint (handled via INSTALL_UPGRADE)
       return { success: true, message: 'May install upgrade to blueprint' };
 

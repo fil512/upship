@@ -1,5 +1,5 @@
 /**
- * Rules Compliance Tests - Design Bureau
+ * Rules Compliance Tests - Blueprint Design
  *
  * Per Section 6.2: Modify your Blueprint.
  * Cost: Free.
@@ -12,10 +12,10 @@ const { createTestGameState } = require('../../fixtures/testData');
 const { processPlaceAgent } = require('../../../server/actions/worker');
 const { processInstallUpgrade, processRemoveUpgrade } = require('../../../server/actions/blueprint');
 
-describe('Rules Compliance - Design Bureau (Section 6.2)', () => {
+describe('Rules Compliance - Blueprint Design (Section 6.2)', () => {
 
   describe('Atomic Execution: Blueprint modifications during agent placement', () => {
-    it('should install an upgrade when placing at design_bureau with blueprint object', () => {
+    it('should install an upgrade when placing at blueprint_design with blueprint object', () => {
       const state = createTestGameState();
       state.phase = 'worker_placement';
       state.age = 1;
@@ -27,7 +27,7 @@ describe('Rules Compliance - Design Bureau (Section 6.2)', () => {
       playerState.techCards = ['maybach_engine'];
       playerState.agentsRemaining = 2;
 
-      // Set up a card with wrench symbol for design_bureau
+      // Set up a card with wrench symbol for blueprint_design
       playerState.hand = [{
         id: 'test-card',
         name: 'Test Card',
@@ -42,10 +42,10 @@ describe('Rules Compliance - Design Bureau (Section 6.2)', () => {
       state.playerOrder = [playerId];
       state.groundBoard = { placements: {} };
 
-      // Place agent at design_bureau with desired blueprint state
+      // Place agent at blueprint_design with desired blueprint state
       // Note: maybach_cx upgrade requires maybach_engine technology
       const result = processPlaceAgent(state, playerId, {
-        locationId: 'design_bureau',
+        locationId: 'blueprint_design',
         cardIndex: 0,
         blueprint: {
           driveSlots: ['maybach_cx']
@@ -87,7 +87,7 @@ describe('Rules Compliance - Design Bureau (Section 6.2)', () => {
       // Place agent with desired blueprint - replaces old upgrade with new
       // maybach_cx upgrade requires maybach_engine technology
       const result = processPlaceAgent(state, playerId, {
-        locationId: 'design_bureau',
+        locationId: 'blueprint_design',
         cardIndex: 0,
         blueprint: {
           driveSlots: ['maybach_cx']
@@ -128,7 +128,7 @@ describe('Rules Compliance - Design Bureau (Section 6.2)', () => {
 
       // Place agent with desired blueprint state for all 3 slots
       const result = processPlaceAgent(state, playerId, {
-        locationId: 'design_bureau',
+        locationId: 'blueprint_design',
         cardIndex: 0,
         blueprint: {
           driveSlots: ['basic_engine', 'maybach_cx', 'efficient_propeller']
@@ -166,13 +166,13 @@ describe('Rules Compliance - Design Bureau (Section 6.2)', () => {
 
       // Place with empty blueprint
       const result = processPlaceAgent(state, playerId, {
-        locationId: 'design_bureau',
+        locationId: 'blueprint_design',
         cardIndex: 0,
         blueprint: {}
       });
 
       // Should succeed (just visited)
-      expect(result.newState.groundBoard.placements.design_bureau).toBeDefined();
+      expect(result.newState.groundBoard.placements.blueprint_design).toBeDefined();
     });
 
     it('should handle missing blueprint param as visiting without modifications', () => {
@@ -200,12 +200,12 @@ describe('Rules Compliance - Design Bureau (Section 6.2)', () => {
 
       // Place without blueprint param
       const result = processPlaceAgent(state, playerId, {
-        locationId: 'design_bureau',
+        locationId: 'blueprint_design',
         cardIndex: 0
       });
 
       // Should succeed (just visited)
-      expect(result.newState.groundBoard.placements.design_bureau).toBeDefined();
+      expect(result.newState.groundBoard.placements.blueprint_design).toBeDefined();
     });
   });
 
@@ -226,7 +226,7 @@ describe('Rules Compliance - Design Bureau (Section 6.2)', () => {
       }).toThrow(/Actions execute immediately when placing an agent|Section 5\.1/);
     });
 
-    it('should reject direct processInstallUpgrade calls without agent at design_bureau', () => {
+    it('should reject direct processInstallUpgrade calls without agent at blueprint_design', () => {
       const state = createTestGameState();
       state.phase = 'worker_placement';
 
@@ -240,7 +240,7 @@ describe('Rules Compliance - Design Bureau (Section 6.2)', () => {
           slotIndex: 0,
           upgradeId: 'maybach_engine'
         });
-      }).toThrow(/must place an agent at Design Bureau|PLACE_AGENT/);
+      }).toThrow(/must place an agent at Blueprint Design|PLACE_AGENT/);
     });
 
     it('should reject direct processRemoveUpgrade calls during reveal phase', () => {
@@ -258,7 +258,7 @@ describe('Rules Compliance - Design Bureau (Section 6.2)', () => {
       }).toThrow(/Actions execute immediately when placing an agent|Section 5\.1/);
     });
 
-    it('should reject direct processRemoveUpgrade calls without agent at design_bureau', () => {
+    it('should reject direct processRemoveUpgrade calls without agent at blueprint_design', () => {
       const state = createTestGameState();
       state.phase = 'worker_placement';
 
@@ -271,7 +271,7 @@ describe('Rules Compliance - Design Bureau (Section 6.2)', () => {
           slotType: 'drive',
           slotIndex: 0
         });
-      }).toThrow(/must place an agent at Design Bureau|PLACE_AGENT/);
+      }).toThrow(/must place an agent at Blueprint Design|PLACE_AGENT/);
     });
 
     it('should allow internal calls with _internal flag', () => {

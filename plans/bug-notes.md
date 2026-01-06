@@ -180,9 +180,9 @@ State is initialized with one shape but runtime code expects a different shape.
 ### Description
 A complete, correct implementation exists but another part of the code calls a simplified or stub version of the same functionality, bypassing critical steps.
 
-### Example: Age Transition Free Design Bureau Phase Skipped
+### Example: Age Transition Free Blueprint Design Phase Skipped
 
-**Symptom**: Players never get free Design Bureau upgrades during age transitions. Blueprint frame/fabric slots stay empty throughout the game. Ships can never launch because slots aren't filled.
+**Symptom**: Players never get free Blueprint Design upgrades during age transitions. Blueprint frame/fabric slots stay empty throughout the game. Ships can never launch because slots aren't filled.
 
 **Root Cause**: Two separate age transition implementations existed:
 
@@ -192,7 +192,7 @@ A complete, correct implementation exists but another part of the code calls a s
    - Recovers ships and officers (Section 12.1 step 2)
    - Calculates transition income (Section 12.1 step 3)
    - Expands blueprint slots (Section 12.1 step 4)
-   - **Enters `age_transition_design_bureau` phase** (Section 12.1 step 5)
+   - **Enters `age_transition_blueprint_design` phase** (Section 12.1 step 5)
    - Properly handles faction-specific flaws (Britain's Red Tape, etc.)
 
 2. **Simplified stub** (`phaseTransition.js`):
@@ -215,7 +215,7 @@ performAgeTransition(state, newAge);
 
 **Result**:
 - Blueprint slots were never expanded (stayed at 1/1 instead of 2/2 in Age III)
-- Players never got free Design Bureau upgrades during transitions
+- Players never got free Blueprint Design upgrades during transitions
 - Ships could never launch because frame/fabric slots weren't filled
 - VP was never scored for routes/technologies at age boundaries
 
@@ -253,7 +253,7 @@ performAgeTransition(state, newAge);
    ```
 
 5. **Verify state machine completeness**:
-   - If a feature has a dedicated phase (like `age_transition_design_bureau`), verify the phase is actually entered
+   - If a feature has a dedicated phase (like `age_transition_blueprint_design`), verify the phase is actually entered
    - Search for the phase name to see where it's set vs where it's handled
 
 ### Functions to Audit

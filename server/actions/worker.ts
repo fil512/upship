@@ -362,7 +362,7 @@ function executeLocationAction(
       }
     }
 
-    case 'design_bureau': {
+    case 'blueprint_design': {
       const { blueprint } = options;
 
       // Blueprint format: { frameSlots: [...], fabricSlots: [...], ... }
@@ -380,7 +380,7 @@ function executeLocationAction(
       }
 
       // No modifications requested
-      return { success: true, message: 'Visited Design Bureau (no modifications)' };
+      return { success: true, message: 'Visited Blueprint Design (no modifications)' };
     }
 
     case 'construction_hall': {

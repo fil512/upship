@@ -47,8 +47,8 @@ describe('GroundBoard Module', () => {
         expect(GROUND_BOARD_LOCATIONS.research_institute.symbol).toBe('propeller');
       });
 
-      it('design_bureau should have wrench symbol', () => {
-        expect(GROUND_BOARD_LOCATIONS.design_bureau.symbol).toBe('wrench');
+      it('blueprint_design should have wrench symbol', () => {
+        expect(GROUND_BOARD_LOCATIONS.blueprint_design.symbol).toBe('wrench');
       });
 
       it('government_liaison should have coin symbol', () => {
@@ -156,7 +156,7 @@ describe('GroundBoard Module', () => {
 
     describe('wrench symbol card', () => {
       it('should be placeable at wrench locations', () => {
-        expect(canPlaceAtLocation('wrench', 'design_bureau')).toBe(true);
+        expect(canPlaceAtLocation('wrench', 'blueprint_design')).toBe(true);
         expect(canPlaceAtLocation('wrench', 'construction_hall')).toBe(true);
         expect(canPlaceAtLocation('wrench', 'technical_institute')).toBe(true);
         expect(canPlaceAtLocation('wrench', 'gas_depot')).toBe(true);
@@ -186,7 +186,7 @@ describe('GroundBoard Module', () => {
       });
 
       it('should not be placeable at wrench locations', () => {
-        expect(canPlaceAtLocation('coin', 'design_bureau')).toBe(false);
+        expect(canPlaceAtLocation('coin', 'blueprint_design')).toBe(false);
         expect(canPlaceAtLocation('coin', 'construction_hall')).toBe(false);
       });
 
@@ -205,7 +205,7 @@ describe('GroundBoard Module', () => {
       });
 
       it('should not be placeable at other locations', () => {
-        expect(canPlaceAtLocation('propeller', 'design_bureau')).toBe(false);
+        expect(canPlaceAtLocation('propeller', 'blueprint_design')).toBe(false);
         expect(canPlaceAtLocation('propeller', 'academy')).toBe(false);
       });
     });

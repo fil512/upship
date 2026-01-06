@@ -1,6 +1,6 @@
 /**
  * Rules Compliance Tests - Blueprint System
- * Tests for correct implementation of Section 6.2, 6.3 (Design Bureau and Hull Upgrade Rule)
+ * Tests for correct implementation of Section 6.2, 6.3 (Blueprint Design and Hull Upgrade Rule)
  */
 
 const { createTestGameState } = require('../../fixtures/testData');
@@ -51,7 +51,7 @@ describe('Rules Compliance - Blueprint System', () => {
 
       processInstallUpgrade(state, '1', { slotType: 'frame', slotIndex: 0, upgradeId: 'duralumin_frame', _internal: true });
 
-      // Should not charge extra - cash unchanged (installing upgrade is free at Design Bureau)
+      // Should not charge extra - cash unchanged (installing upgrade is free at Blueprint Design)
       expect(state.players['1'].cash).toBe(100);
     });
 
@@ -123,5 +123,5 @@ describe('Rules Compliance - Blueprint System', () => {
     });
   });
 
-  // NOTE: Design Bureau allows unlimited blueprint modifications per visit
+  // NOTE: Blueprint Design allows unlimited blueprint modifications per visit
 });

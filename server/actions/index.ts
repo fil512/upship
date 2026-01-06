@@ -10,7 +10,7 @@ const { GameRuleError } = require('../errors');
 // Import all action processors
 const { processBuyGas } = require('./gas');
 const { processAcquireTechCard, processAcquireTechCardResearch, processGainResearch } = require('./technology');
-const { processInstallTechTile, processRemoveTechTile, processAgeTransitionDesignBureau } = require('./blueprint');
+const { processInstallTechTile, processRemoveTechTile, processAgeTransitionBlueprintDesign } = require('./blueprint');
 const { processBuildShip } = require('./building');
 const { processLaunchShip, processClaimRoute, processNoMoreLaunches } = require('./launch');
 const { processLaunchCombatMission } = require('./combatMission');
@@ -52,7 +52,7 @@ const ACTION_HANDLERS: Record<string, ActionHandler> = {
   // Tech Tiles / Blueprint
   INSTALL_TECH_TILE: processInstallTechTile,
   REMOVE_TECH_TILE: processRemoveTechTile,
-  AGE_TRANSITION_DESIGN_BUREAU: processAgeTransitionDesignBureau,
+  AGE_TRANSITION_BLUEPRINT_DESIGN: processAgeTransitionBlueprintDesign,
   // Legacy aliases for backwards compatibility
   INSTALL_UPGRADE: processInstallTechTile,
   REMOVE_UPGRADE: processRemoveTechTile,

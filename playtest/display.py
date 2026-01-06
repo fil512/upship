@@ -198,10 +198,10 @@ def debug_state(game_id: str = None) -> None:
 
         # Age transition state (if present)
         age_transition = state_data.get('ageTransition', {})
-        age_transition_db = state_data.get('ageTransitionDesignBureau', {})
-        if age_transition or age_transition_db:
+        age_transition_bd = state_data.get('ageTransitionBlueprintDesign', {})
+        if age_transition or age_transition_bd:
             print(f"\nAge Transition: {age_transition}")
-            print(f"Age Transition Design Bureau: {age_transition_db}")
+            print(f"Age Transition Blueprint Design: {age_transition_bd}")
 
         players = state_data.get('players', {})
         print("\nPlayers (id -> faction):")

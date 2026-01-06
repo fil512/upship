@@ -70,9 +70,9 @@ async function executeOneBotMoveIfNeeded(
       return await executeBotRevealPhase(io, gameId, state, gameStateWrapper.version);
     } else if (state.phase === 'income_cleanup') {
       currentPlayerId = state.playerOrder[state.currentPlayerIndex];
-    } else if (state.phase === 'age_transition_design_bureau') {
-      const idx = (state as GameState & { ageTransitionDesignBureau?: { currentPlayerIndex?: number } })
-        .ageTransitionDesignBureau?.currentPlayerIndex || 0;
+    } else if (state.phase === 'age_transition_blueprint_design') {
+      const idx = (state as GameState & { ageTransitionBlueprintDesign?: { currentPlayerIndex?: number } })
+        .ageTransitionBlueprintDesign?.currentPlayerIndex || 0;
       currentPlayerId = state.playerOrder[idx];
     } else {
       currentPlayerId = state.playerOrder[state.currentPlayerIndex];
@@ -134,7 +134,7 @@ async function executeBotMove(
     case 'income_cleanup':
       return await executeBotEndTurn(io, gameId, botId, version);
 
-    case 'age_transition_design_bureau':
+    case 'age_transition_blueprint_design':
       return await executeBotAgeTransition(io, gameId, state, botId, version);
 
     default:
@@ -358,9 +358,9 @@ async function executeBotAgeTransition(
   if (!player) return false;
 
   // Get desired blueprint configuration (mandatory during age transition)
-  const blueprint = botService.getDesignBureauBlueprint(player, state.age, true);
+  const blueprint = botService.getBlueprintDesignBlueprint(player, state.age, true);
 
-  return await executeBotAction(io, gameId, botId, 'AGE_TRANSITION_DESIGN_BUREAU', { blueprint }, version);
+  return await executeBotAction(io, gameId, botId, 'AGE_TRANSITION_BLUEPRINT_DESIGN', { blueprint }, version);
 }
 
 /**

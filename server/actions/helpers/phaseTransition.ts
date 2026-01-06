@@ -10,6 +10,7 @@ const { calculateTurnOrder } = require('./turnOrder');
 const { refreshRnDBoard, refreshMarketRow } = require('./marketHelpers');
 const { HAND_SIZE, INITIAL_AGENTS, MIN_INCOME, LOAN_AMOUNT, LOAN_INCOME_PENALTY } = require('../../config/constants');
 const { performAgeTransition } = require('./ageTransition');
+const { resourceFlowLogger, createFlowContext } = require('../../services/resourceFlowLogger');
 
 // Extended state type for phase transitions (use intersection to allow optional properties)
 type PhaseState = GameState & {
@@ -145,6 +146,41 @@ function collectRevealResources(state: PhaseState): void {
     playerState.officers += officersGained;
     playerState.engineers += engineersGained;
 
+    // Log resource fountains
+    const flowContext = createFlowContext(state, (state as { gameId?: string }).gameId || 'unknown');
+    const faction = playerState.faction || 'unknown';
+
+    // Research comes from: research level (trickle), engineers (conversion), cards (card)
+    if (researchLevel > 0) {
+      resourceFlowLogger.logFountain(flowContext, playerId, faction, 'research', researchLevel, 'trickle', 'Research Level', playerState.research);
+    }
+    if (engineersInBarracks > 0) {
+      resourceFlowLogger.logFountain(flowContext, playerId, faction, 'research', engineersInBarracks, 'conversion', 'Engineers in Barracks', playerState.research);
+    }
+    const cardResearch = researchGained - researchLevel - engineersInBarracks;
+    if (cardResearch > 0) {
+      resourceFlowLogger.logFountain(flowContext, playerId, faction, 'research', cardResearch, 'card', 'Reveal card bonuses', playerState.research);
+    }
+
+    if (influenceGained > 0) {
+      resourceFlowLogger.logFountain(flowContext, playerId, faction, 'influence', influenceGained, 'card', 'Reveal card bonuses', playerState.influence);
+    }
+    if (hydrogenGained > 0) {
+      resourceFlowLogger.logFountain(flowContext, playerId, faction, 'hydrogen', hydrogenGained, 'card', 'Reveal card bonuses', playerState.gasCubes.hydrogen);
+    }
+    if (heliumGained > 0) {
+      resourceFlowLogger.logFountain(flowContext, playerId, faction, 'helium', heliumGained, 'card', 'Reveal card bonuses', playerState.gasCubes.helium);
+    }
+    if (cashGained > 0) {
+      resourceFlowLogger.logFountain(flowContext, playerId, faction, 'cash', cashGained, 'card', 'Reveal card bonuses', playerState.cash);
+    }
+    if (officersGained > 0) {
+      resourceFlowLogger.logFountain(flowContext, playerId, faction, 'officers', officersGained, 'card', 'Reveal card bonuses', playerState.officers);
+    }
+    if (engineersGained > 0) {
+      resourceFlowLogger.logFountain(flowContext, playerId, faction, 'engineers', engineersGained, 'card', 'Reveal card bonuses', playerState.engineers);
+    }
+
     if (state.revealPhase) {
       state.revealPhase.resourcesCollected[playerId] = true;
     }
@@ -195,6 +231,20 @@ function transitionToIncomeCleanup(state: PhaseState): void {
     const grossIncome = playerState.income || 0;
     const engineerUpkeep = playerState.engineers || 0;
     const netIncome = grossIncome - engineerUpkeep;
+
+    // Log resource flows
+    const flowContext = createFlowContext(state, (state as { gameId?: string }).gameId || 'unknown');
+    const faction = playerState.faction || 'unknown';
+
+    // Log gross income as fountain (trickle)
+    if (grossIncome > 0) {
+      resourceFlowLogger.logFountain(flowContext, playerId, faction, 'cash', grossIncome, 'trickle', 'Income Track', playerState.cash + (netIncome >= 0 ? netIncome : 0));
+    }
+
+    // Log engineer upkeep as sink
+    if (engineerUpkeep > 0) {
+      resourceFlowLogger.logSink(flowContext, playerId, faction, 'cash', engineerUpkeep, 'upkeep', 'Engineer upkeep', playerState.cash);
+    }
 
     if (netIncome >= 0) {
       playerState.cash += netIncome;
@@ -269,6 +319,10 @@ function transitionToIncomeCleanup(state: PhaseState): void {
           currentIncome -= LOAN_INCOME_PENALTY as number;
           playerState.income = currentIncome;
 
+          // Log loan as fountain for cash, sink for income
+          resourceFlowLogger.logFountain(flowContext, playerId, faction, 'cash', LOAN_AMOUNT as number, 'loan', 'Take loan', playerState.cash);
+          resourceFlowLogger.logSink(flowContext, playerId, faction, 'income', LOAN_INCOME_PENALTY as number, 'loan_penalty', 'Loan income penalty', playerState.income);
+
           state.log.push({
             timestamp: new Date().toISOString(),
             message: `${playerState.faction.toUpperCase()} took loan #${playerState.loans}: gained £${LOAN_AMOUNT}, income reduced to £${playerState.income}`,
@@ -296,6 +350,14 @@ function transitionToIncomeCleanup(state: PhaseState): void {
     playerState.officers += officersGained;
     playerState.engineers += engineersGained;
 
+    // Log officer/engineer income as fountains
+    if (officersGained > 0) {
+      resourceFlowLogger.logFountain(flowContext, playerId, faction, 'officers', officersGained, 'trickle', 'Officer Income Track', playerState.officers);
+    }
+    if (engineersGained > 0) {
+      resourceFlowLogger.logFountain(flowContext, playerId, faction, 'engineers', engineersGained, 'trickle', 'Engineer Income Track', playerState.engineers);
+    }
+
     if (officersGained > 0 || engineersGained > 0) {
       state.log.push({
         timestamp: new Date().toISOString(),
@@ -319,7 +381,7 @@ function transitionToIncomeCleanup(state: PhaseState): void {
 
   // Auto-advance: Income phase has no player decisions, so immediately start next round
   // startNewRound() will either:
-  // - Trigger age transition (phase = 'age_transition_design_bureau') if thresholds met
+  // - Trigger age transition (phase = 'age_transition_blueprint_design') if thresholds met
   // - Start worker placement (phase = 'worker_placement') for normal rounds
   startNewRound(state);
 }
@@ -381,9 +443,9 @@ function startNewRound(state: PhaseState): void {
     // Use complete age transition implementation which includes:
     // - VP scoring, ship/officer recovery, income adjustment
     // - Blueprint slot expansion
-    // - Free Design Bureau phase (age_transition_design_bureau)
+    // - Free Blueprint Design phase (age_transition_blueprint_design)
     performAgeTransition(state, newAge);
-    // State phase is now 'age_transition_design_bureau'
+    // State phase is now 'age_transition_blueprint_design'
     // Worker placement setup will happen after transition completes
     return;
   }

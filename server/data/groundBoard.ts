@@ -47,9 +47,9 @@ export const GROUND_BOARD_LOCATIONS: Record<string, GroundBoardLocation> = {
     }
   },
 
-  design_bureau: {
-    id: 'design_bureau',
-    name: 'Design Bureau',
+  blueprint_design: {
+    id: 'blueprint_design',
+    name: 'Blueprint Design',
     symbol: 'wrench',
     position: 2,
     description: 'Modify your Blueprint (install/remove Upgrades)',

@@ -30,7 +30,7 @@
 			costs: [{ resourceBadge: [{ type: 'cash', value: 4 }] }],
 			benefits: [{ icon: 'research' }]
 		},
-		design_bureau: {
+		blueprint_design: {
 			costs: [],
 			benefits: [{ icon: 'blueprint' }]
 		},

@@ -1,7 +1,7 @@
 /**
  * Blueprint Actions
  * INSTALL_TECH_TILE, REMOVE_TECH_TILE, UPDATE_BLUEPRINT action processors
- * Implements Section 6.2 (Design Bureau) including Hull Upgrade Rule
+ * Implements Section 6.2 (Blueprint Design) including Hull Upgrade Rule
  * Note: Swap limits have been removed - players can make unlimited modifications
  */
 
@@ -50,7 +50,7 @@ interface AgeTransitionState {
 
 // Extended state with age transition
 type AgeTransitionGameState = GameState & {
-  ageTransitionDesignBureau?: AgeTransitionState;
+  ageTransitionBlueprintDesign?: AgeTransitionState;
 };
 
 /**
@@ -133,14 +133,14 @@ function processInstallTechTile(state: GameState, playerId: string, data: Instal
     if (state.phase !== 'worker_placement') {
       throw new GameRuleError(
         'INSTALL_TECH_TILE not allowed: Actions execute immediately when placing an agent (Section 5.1). ' +
-        'Place an agent at Design Bureau during worker placement phase to modify blueprint.'
+        'Place an agent at Blueprint Design during worker placement phase to modify blueprint.'
       );
     }
-    const placement = state.groundBoard?.placements?.design_bureau;
+    const placement = state.groundBoard?.placements?.blueprint_design;
     if (!placement || placement.playerId !== playerId) {
       throw new GameRuleError(
-        'INSTALL_TECH_TILE not allowed: You must place an agent at Design Bureau to modify blueprint. ' +
-        'Use PLACE_AGENT with locationId "design_bureau" and blueprint parameter.'
+        'INSTALL_TECH_TILE not allowed: You must place an agent at Blueprint Design to modify blueprint. ' +
+        'Use PLACE_AGENT with locationId "blueprint_design" and blueprint parameter.'
       );
     }
   }
@@ -256,14 +256,14 @@ function processRemoveTechTile(state: GameState, playerId: string, data: RemoveT
     if (state.phase !== 'worker_placement') {
       throw new GameRuleError(
         'REMOVE_TECH_TILE not allowed: Actions execute immediately when placing an agent (Section 5.1). ' +
-        'Place an agent at Design Bureau during worker placement phase to modify blueprint.'
+        'Place an agent at Blueprint Design during worker placement phase to modify blueprint.'
       );
     }
-    const placement = state.groundBoard?.placements?.design_bureau;
+    const placement = state.groundBoard?.placements?.blueprint_design;
     if (!placement || placement.playerId !== playerId) {
       throw new GameRuleError(
-        'REMOVE_TECH_TILE not allowed: You must place an agent at Design Bureau to modify blueprint. ' +
-        'Use PLACE_AGENT with locationId "design_bureau" and blueprint parameter.'
+        'REMOVE_TECH_TILE not allowed: You must place an agent at Blueprint Design to modify blueprint. ' +
+        'Use PLACE_AGENT with locationId "blueprint_design" and blueprint parameter.'
       );
     }
   }
@@ -330,14 +330,14 @@ function processUpdateBlueprint(state: GameState, playerId: string, data: Update
     if (state.phase !== 'worker_placement') {
       throw new GameRuleError(
         'UPDATE_BLUEPRINT not allowed: Actions execute immediately when placing an agent (Section 5.1). ' +
-        'Place an agent at Design Bureau during worker placement phase to modify blueprint.'
+        'Place an agent at Blueprint Design during worker placement phase to modify blueprint.'
       );
     }
-    const placement = state.groundBoard?.placements?.design_bureau;
+    const placement = state.groundBoard?.placements?.blueprint_design;
     if (!placement || placement.playerId !== playerId) {
       throw new GameRuleError(
-        'UPDATE_BLUEPRINT not allowed: You must place an agent at Design Bureau to modify blueprint. ' +
-        'Use PLACE_AGENT with locationId "design_bureau" and blueprint parameter.'
+        'UPDATE_BLUEPRINT not allowed: You must place an agent at Blueprint Design to modify blueprint. ' +
+        'Use PLACE_AGENT with locationId "blueprint_design" and blueprint parameter.'
       );
     }
   }
@@ -384,7 +384,7 @@ function processUpdateBlueprint(state: GameState, playerId: string, data: Update
 
         // Validate age requirement
         // During age transition, use the NEW age for validation
-        const effectiveAge = extendedState.ageTransitionDesignBureau?.newAge || state.age;
+        const effectiveAge = extendedState.ageTransitionBlueprintDesign?.newAge || state.age;
         if (tile.age > effectiveAge) {
           throw new GameRuleError(`${tile.name} not available until Age ${tile.age}`);
         }
@@ -489,25 +489,25 @@ function processUpdateBlueprint(state: GameState, playerId: string, data: Update
   return { newState: state };
 }
 
-interface AgeTransitionDesignBureauData {
+interface AgeTransitionBlueprintDesignData {
   blueprint?: BlueprintChanges;
 }
 
 /**
- * Process free Design Bureau action during age transition
- * Per Section 12.1 step 5: Each player gets a free Design Bureau action
+ * Process free Blueprint Design action during age transition
+ * Per Section 12.1 step 5: Each player gets a free Blueprint Design action
  * No Hull Upgrade Rule charges during age transition.
  */
-function processAgeTransitionDesignBureau(state: GameState, playerId: string, data: AgeTransitionDesignBureauData): ActionResult {
+function processAgeTransitionBlueprintDesign(state: GameState, playerId: string, data: AgeTransitionBlueprintDesignData): ActionResult {
   const { completeAgeTransition } = require('./helpers/ageTransition');
   const extendedState = state as AgeTransitionGameState;
 
   // Verify we're in the correct phase
-  if (state.phase !== 'age_transition_design_bureau') {
-    throw new GameRuleError('Not in age transition Design Bureau phase');
+  if (state.phase !== 'age_transition_blueprint_design') {
+    throw new GameRuleError('Not in age transition Blueprint Design phase');
   }
 
-  const transitionState = extendedState.ageTransitionDesignBureau;
+  const transitionState = extendedState.ageTransitionBlueprintDesign;
   if (!transitionState) {
     throw new GameRuleError('Age transition state not found');
   }
@@ -520,7 +520,7 @@ function processAgeTransitionDesignBureau(state: GameState, playerId: string, da
 
   // Already completed?
   if (transitionState.completedPlayers.includes(playerId)) {
-    throw new GameRuleError('You have already completed your free Design Bureau action');
+    throw new GameRuleError('You have already completed your free Blueprint Design action');
   }
 
   const playerState = state.players[playerId];
@@ -566,7 +566,7 @@ export {
   processInstallTechTile,
   processRemoveTechTile,
   processUpdateBlueprint,
-  processAgeTransitionDesignBureau,
+  processAgeTransitionBlueprintDesign,
   calculateHullCost,  // Exported for testing
   validateBlueprintComplete  // Exported for use in worker.js
 };
@@ -580,7 +580,7 @@ module.exports = {
   processInstallTechTile,
   processRemoveTechTile,
   processUpdateBlueprint,
-  processAgeTransitionDesignBureau,
+  processAgeTransitionBlueprintDesign,
   calculateHullCost,
   validateBlueprintComplete,
   // Legacy aliases

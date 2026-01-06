@@ -30,9 +30,9 @@ describe('Rules Compliance - Ground Board', () => {
       expect(GROUND_BOARD_LOCATIONS.research_institute.symbol).toBe('propeller');
     });
 
-    it('should have Design Bureau as wrench location per Section 6.2', () => {
-      expect(GROUND_BOARD_LOCATIONS.design_bureau).toBeDefined();
-      expect(GROUND_BOARD_LOCATIONS.design_bureau.symbol).toBe('wrench');
+    it('should have Blueprint Design as wrench location per Section 6.2', () => {
+      expect(GROUND_BOARD_LOCATIONS.blueprint_design).toBeDefined();
+      expect(GROUND_BOARD_LOCATIONS.blueprint_design.symbol).toBe('wrench');
     });
 
     it('should have Academy as coin location per Section 6.5', () => {

@@ -2,32 +2,20 @@
 
 Play a complete game through the **web browser interface** using **Chrome DevTools MCP** tools. You play as one faction through the UI while 3 server bots automatically play the other factions in the background.
 
+Question: $ARGUMENTS
+
 ## Goal
+
+Your goal of this playtest is to answer the Question above.
 
 **Complete an entire game from start to finish** with:
 - 1 player (you) controlling through the UI
 - 3 server bots playing automatically
-
-Success = game reaches completion (a winner is declared or game ends properly).
+with the aim of answering this Question.
 
 ## Prerequisites
 
 1. **Chrome DevTools MCP server must be connected** (chrome-devtools)
-2. **Development servers running** (Express on 3000, SvelteKit on 5173)
-
-## Server Architecture
-
-```
-Browser (5173) → Vite Dev Server → Express API (3000)
-                     ↓ proxy
-              /api/* → :3000/api/*
-              /socket.io → :3000/socket.io
-```
-
-**URLs:**
-- **Frontend**: http://localhost:5173 (SvelteKit)
-- **API**: http://localhost:3000 (Express)
-- **Game URL pattern**: http://localhost:5173/game/GAME_ID
 
 ## Server Bot System
 
@@ -129,6 +117,8 @@ mcp__chrome-devtools__take_snapshot
 # 4. When out of agents (or want to reveal early):
 #    Click "Reveal" or "Pass" button
 ```
+
+Remember, your goal of this playthrough is to answer the Question.
 
 #### Worker Placement Phase (Bot Turns)
 
@@ -233,7 +223,7 @@ mcp__chrome-devtools__take_screenshot fullPage=true
 | `PASS` | Click "Pass" button |
 | `END_TURN` | Click "End Turn" button |
 | `BUY_GAS` | Automatic via Gas Depot placement |
-| `INSTALL_UPGRADE` | Automatic via Design Bureau placement |
+| `INSTALL_UPGRADE` | Automatic via Blueprint Design placement |
 | `BUILD_SHIP` | Automatic via Construction Hall placement |
 | `LAUNCH_SHIP` | FleetPanel ship → Route modal |
 | `ACQUIRE_TECH_CARD_TENTATIVE` | Click tech tile during reveal |
@@ -277,7 +267,7 @@ If the game gets stuck (no progress for extended period):
 ## Strategic Guidance
 
 ### Early Game (Age 1)
-1. **Design Bureau** first - fill Frame and Fabric slots
+1. **Blueprint Design** first - fill Frame and Fabric slots
 2. **Construction Hall** - build a ship
 3. **Gas Depot** - get gas for launches
 4. **Academy** - recruit officers for Age requirements
@@ -313,19 +303,8 @@ The playtest is **successful** when:
 - All phases work correctly (worker placement, reveal, income/cleanup)
 - Bots take their turns automatically without manual intervention
 - Game ends with a winner declared or proper termination
+- You have good information to answer the Question
 
 ## Reporting Format
 
-After testing, document findings as:
-
-### Issues Found
-- [ ] Description of issue
-- [ ] Steps to reproduce
-- [ ] Error messages (if any)
-- [ ] Fix applied
-
-### Test Coverage
-- Phases tested: [worker_placement, reveal, income_cleanup]
-- Actions tested: [list of actions verified through UI]
-- Turns completed: [number]
-- Ages reached: [1, 2, 3]
+After completing the playest, document game statistics and the answer to the Question. Use `playtest` commands to gather details about what happened during the game.

@@ -30,7 +30,7 @@ type TechCardBag = Record<number, TechCardWithMeta[]>;
 interface AgeTransitionState extends GameState {
   missionRow?: unknown[];
   missionDeck?: unknown[];
-  ageTransitionDesignBureau?: {
+  ageTransitionBlueprintDesign?: {
     newAge: number;
     currentPlayerIndex: number;
     completedPlayers: string[];
@@ -360,8 +360,8 @@ function applyBritainRedTape(state: AgeTransitionState): void {
 }
 
 /**
- * Start age transition - performs steps 1-4 and enters free Design Bureau phase
- * Per Section 12.1 step 5: Each player gets a free Design Bureau action
+ * Start age transition - performs steps 1-4 and enters free Blueprint Design phase
+ * Per Section 12.1 step 5: Each player gets a free Blueprint Design action
  */
 function startAgeTransition(state: AgeTransitionState, newAge: number): void {
   // Step 1: Score VP for routes and technologies
@@ -376,10 +376,10 @@ function startAgeTransition(state: AgeTransitionState, newAge: number): void {
   // Step 4: Replace Blueprint (expand slots)
   expandBlueprintSlots(state, newAge);
 
-  // Step 5: Enter free Design Bureau phase
+  // Step 5: Enter free Blueprint Design phase
   // Players take turns installing upgrades (no Hull Upgrade Rule charges)
-  state.phase = 'age_transition_design_bureau';
-  state.ageTransitionDesignBureau = {
+  state.phase = 'age_transition_blueprint_design';
+  state.ageTransitionBlueprintDesign = {
     newAge,
     currentPlayerIndex: 0,
     completedPlayers: []
@@ -393,11 +393,11 @@ function startAgeTransition(state: AgeTransitionState, newAge: number): void {
 }
 
 /**
- * Complete age transition after free Design Bureau phase
+ * Complete age transition after free Blueprint Design phase
  * Called when all players have completed their blueprint modifications
  */
 function completeAgeTransition(state: AgeTransitionState): void {
-  const newAge = state.ageTransitionDesignBureau?.newAge || state.age + 1;
+  const newAge = state.ageTransitionBlueprintDesign?.newAge || state.age + 1;
 
   // Apply faction-specific flaws
   applyBritainRedTape(state);
@@ -448,7 +448,7 @@ function completeAgeTransition(state: AgeTransitionState): void {
   state.gasMarket = { hydrogen: 1, helium: 2 };
 
   // Clean up transition state
-  delete state.ageTransitionDesignBureau;
+  delete state.ageTransitionBlueprintDesign;
 
   // Return to worker placement for new age
   state.phase = 'worker_placement';
@@ -524,7 +524,7 @@ function completeAgeTransition(state: AgeTransitionState): void {
 
 /**
  * Perform full age transition per Section 12.1
- * This starts the transition; completeAgeTransition finishes it after Design Bureau phase
+ * This starts the transition; completeAgeTransition finishes it after Blueprint Design phase
  */
 function performAgeTransition(state: AgeTransitionState, newAge: number): void {
   startAgeTransition(state, newAge);

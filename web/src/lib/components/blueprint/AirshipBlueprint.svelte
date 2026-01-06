@@ -481,7 +481,7 @@
 		<span class="hint-icon">&#128161;</span>
 		<span class="hint-text">
 			Visit <strong>Hangar</strong> during Worker Placement to build ships from this design.
-			Click any slot to modify your blueprint at the <strong>Design Bureau</strong>.
+			Click any slot to modify your blueprint at <strong>Blueprint Design</strong>.
 		</span>
 	</div>
 </div>

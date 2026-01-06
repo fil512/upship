@@ -212,7 +212,7 @@ Ships ready to fly:
 Ships requiring maintenance:
 - **Capacity:** Unlimited
 - Damaged ships go here
-- **Repair Cost:** £3 per ship to move to Launch Hangar
+- **Repair Cost:** £3 + 1 Engineer per ship to move to Launch Hangar
 
 ## 4.5 Gas Reserve (Adjacent to Hangar Bay)
 
@@ -288,7 +288,7 @@ The player with the **First Player** pawn goes first.
 
 | Symbol | Locations |
 |--------|-----------|
-| **Wrench** | Design Bureau, Construction Hall, Gas Depot, Technical Institute |
+| **Wrench** | Blueprint Design, Construction Hall, Gas Depot, Technical Institute |
 | **Coin** | Academy, Flight School, Government Liaison, Insurance Bureau |
 | **Propeller** | Research Institute, Launchpad, Ministry, Weather Bureau |
 | **Any** | Can visit any location |
@@ -333,7 +333,7 @@ The Ground Board has 12 action spaces. Each requires a matching card symbol.
 
 > **Example:** Marco plays a Propeller card and spends £8 to increase his Research Level from 0 to 2. He will now have 2 base Research each round when he Reveals.
 
-## 6.2 Design Bureau (Wrench)
+## 6.2 Blueprint Design (Wrench)
 
 **Action:** Modify your Blueprint.
 
@@ -341,7 +341,7 @@ The Ground Board has 12 action spaces. Each requires a matching card symbol.
 
 **Constraint:** Only install Tech Tiles for Technologies you own. You may make unlimited modifications in a single visit.
 
-> **Example:** Anna visits the Design Bureau and replaces her old Basic Engine with a Maybach Engine. The new Tech Tile is taken from supply and the old tile returned to supply.
+> **Example:** Anna visits the Blueprint Design and replaces her old Basic Engine with a Maybach Engine. The new Tech Tile is taken from supply and the old tile returned to supply.
 
 **Hull Tech Tile Rule:** If you change Frame or Fabric Tech Tiles while ships are in your Launch Hangar, pay the Hull Cost difference for each ship.
 
@@ -536,6 +536,10 @@ When you control a fire by spending Engineers:
 - Gas cubes are spent
 - No Income or city bonus gained
 
+**Repairing Damaged Ships:** To repair a damaged ship (move it from Repair Hangar to Launch Hangar), you must:
+- Spend **£3** (repair materials)
+- Spend **1 Engineer** (labor)
+
 ## 8.5 Luxury Launches
 
 Routes marked **Luxury** require ships with the Luxury stat. In Age III, Luxury Launches using Hydrogen risk triggering the Hindenburg Disaster if you draw Catastrophic Explosion.
@@ -586,7 +590,7 @@ Tech Tiles are physical components installed on your Blueprint. Each requires th
 
 ### Installing Tech Tiles
 
-Visit the **Design Bureau**:
+Visit the **Blueprint Design**:
 1. Choose a tile from the Tech Tile Supply.
 2. Verify you own the corresponding Technology.
 3. Install in a matching empty slot.
@@ -771,7 +775,7 @@ When the Progress Track reaches the Age threshold (checked during Income & Clean
    
 4. **Replace Blueprint:** Install new Age's Blueprint overlay. Transfer Tech Tiles to new Blueprint.
 
-5. **Free Blueprint Update (Mandatory):** Each player **must** fill all structural slots (Frame and Fabric) using their free Design Bureau action. Players take turns in player order to install Tech Tiles. Hull Tech Tile Rule does not apply during this free action. Use duplicate Tech Tiles from the same Technology if needed—every faction starts with at least one Frame and one Fabric Technology, so all slots can always be filled.
+5. **Free Blueprint Update (Mandatory):** Each player **must** fill all structural slots (Frame and Fabric) using their free Blueprint Design action. Players take turns in player order to install Tech Tiles. Hull Tech Tile Rule does not apply during this free action. Use duplicate Tech Tiles from the same Technology if needed—every faction starts with at least one Frame and one Fabric Technology, so all slots can always be filled.
 
 6. **Set Up New Age:** Place new Map, add new Technologies to bag, refresh R&D Board.
 
@@ -1026,7 +1030,7 @@ When Catastrophic Explosion occurs during a Luxury Launch in Age III using Hydro
 
 | Symbol | Locations |
 |--------|-----------|
-| Wrench | Design Bureau, Construction Hall, Gas Depot, Technical Institute |
+| Wrench | Blueprint Design, Construction Hall, Gas Depot, Technical Institute |
 | Coin | Academy, Flight School, Government Liaison, Insurance Bureau |
 | Propeller | Research Institute, Launchpad, Ministry, Weather Bureau |
 
@@ -1058,17 +1062,17 @@ Each player has an identical 27-card Personal Hazard Deck:
 Auto-pass. No hazard.
 
 ## Minor Hazards (8 cards)
-Difficulty 2–3 against Speed, Reliability, Ceiling, or Range.
+Difficulty **3–4** against Speed, Reliability, Ceiling, or Range.
 
 ## Major Hazards (8 cards)
-Difficulty 4–5 against Speed, Reliability, Ceiling, or Range. Includes:
+Difficulty **5–6** against Speed, Reliability, Ceiling, or Range. Includes:
 - **Squall Line:** Ships with 3+ Payload slots suffer +1 Difficulty.
 - **Icing Conditions:** On failure, also lose 1 gas cube.
 
 ## Fire Hazards (6 cards) — Hydrogen Only
 - **Engine Fire (×2):** Spend 1 Engineer → Damaged. Fail → Crash.
 - **Gas Cell Rupture (×2):** Spend 2 Engineers → Damaged. Fail → Crash.
-- **Static Discharge (×1):** Difficulty 4 Reliability check. Fail → Crash.
+- **Static Discharge (×1):** Difficulty **5** Reliability check. Fail → Crash.
 - **Catastrophic Explosion (×1):** No save. Crash. Age III Luxury = Hindenburg.
 
 ## Mechanical Hazards (1 card)

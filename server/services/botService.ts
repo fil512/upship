@@ -28,7 +28,7 @@ export interface LaunchDecision {
   gasType: 'hydrogen' | 'helium';
 }
 
-// Blueprint changes for Design Bureau action
+// Blueprint changes for Blueprint Design action
 export interface BlueprintChanges {
   frameSlots?: (string | null)[];
   fabricSlots?: (string | null)[];
@@ -108,13 +108,13 @@ export function calculateShipStats(
 }
 
 /**
- * Determine the desired blueprint configuration for Design Bureau action.
+ * Determine the desired blueprint configuration for Blueprint Design action.
  * Returns the complete blueprint with all slots filled, or null if no changes needed.
  *
  * For age transitions, all empty frame/fabric slots MUST be filled.
  * For normal play, bot will fill empty slots opportunistically.
  */
-export function getDesignBureauBlueprint(
+export function getBlueprintDesignBlueprint(
   player: PlayerState,
   _currentAge: number = 1,
   isAgeTransition: boolean = false
@@ -285,13 +285,13 @@ export function evaluateLaunchReadiness(
 
     if (emptyFrame > 0) {
       missing.push(`${emptyFrame} empty Frame slot(s)`);
-      priorities.push('design_bureau');
+      priorities.push('blueprint_design');
       slotsReady = false;
     }
     if (emptyFabric > 0) {
       missing.push(`${emptyFabric} empty Fabric slot(s)`);
-      if (!priorities.includes('design_bureau')) {
-        priorities.push('design_bureau');
+      if (!priorities.includes('blueprint_design')) {
+        priorities.push('blueprint_design');
       }
       slotsReady = false;
     }
@@ -334,7 +334,7 @@ export function evaluateLaunchReadiness(
     if (!hasAchievableTarget) {
       missing.push(`no reachable routes (range=${shipStats.range}, speed=${shipStats.speed})`);
       priorities.unshift('research_institute');
-      priorities.splice(1, 0, 'design_bureau');
+      priorities.splice(1, 0, 'blueprint_design');
     }
   }
 
@@ -428,7 +428,7 @@ export function findStrategicPlacement(
 
   // Phase 3: Fallback priorities
   const fallbackPriorities = [
-    'design_bureau', 'research_institute', 'construction_hall',
+    'blueprint_design', 'research_institute', 'construction_hall',
     'gas_depot', 'academy', 'technical_institute', 'ministry',
     'flight_school', 'weather_bureau', 'government_liaison',
     'insurance_bureau', 'launchpad'
@@ -490,8 +490,8 @@ function buildLocationAction(
     case 'construction_hall':
       return { buildCount: 1 };
 
-    case 'design_bureau': {
-      const blueprint = getDesignBureauBlueprint(player, state.age || 1);
+    case 'blueprint_design': {
+      const blueprint = getBlueprintDesignBlueprint(player, state.age || 1);
       return blueprint ? { blueprint } : undefined;
     }
 
@@ -631,7 +631,7 @@ export function getHazardResponse(
 module.exports = {
   findStrategicPlacement,
   evaluateLaunchReadiness,
-  getDesignBureauBlueprint,
+  getBlueprintDesignBlueprint,
   findLaunchDecision,
   getRevealAcquisitions,
   getHazardResponse,

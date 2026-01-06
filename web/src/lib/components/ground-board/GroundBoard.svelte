@@ -18,8 +18,8 @@
 	const locations = [
 		// Wrench locations (technical)
 		{
-			id: 'design_bureau',
-			name: 'Design Bureau',
+			id: 'blueprint_design',
+			name: 'Blueprint Design',
 			symbol: 'wrench' as const,
 			description: 'Modify your Blueprint'
 		},

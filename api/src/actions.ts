@@ -17,7 +17,7 @@ export type ActionType =
 	// Blueprint management
 	| 'INSTALL_UPGRADE'
 	| 'REMOVE_UPGRADE'
-	| 'AGE_TRANSITION_DESIGN_BUREAU'
+	| 'AGE_TRANSITION_BLUEPRINT_DESIGN'
 	// Ship operations
 	| 'BUILD_SHIP'
 	| 'LAUNCH_SHIP'

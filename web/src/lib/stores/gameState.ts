@@ -50,9 +50,9 @@ export const isMyTurn = derived(
 			return true;
 		}
 
-		// Age transition design bureau phase uses ageTransitionDesignBureau.currentPlayerIndex
-		if ($state.phase === 'age_transition_design_bureau' && $state.ageTransitionDesignBureau) {
-			const idx = $state.ageTransitionDesignBureau.currentPlayerIndex ?? 0;
+		// Age transition blueprint design phase uses ageTransitionBlueprintDesign.currentPlayerIndex
+		if ($state.phase === 'age_transition_blueprint_design' && $state.ageTransitionBlueprintDesign) {
+			const idx = $state.ageTransitionBlueprintDesign.currentPlayerIndex ?? 0;
 			return $state.playerOrder[idx] === $userId;
 		}
 
@@ -71,9 +71,9 @@ export const currentPlayerId = derived(gameState, ($state): string | null => {
 		return $state.workerPlacement.placementOrder[$state.workerPlacement.currentPlacerIndex];
 	}
 
-	// Age transition design bureau phase uses ageTransitionDesignBureau.currentPlayerIndex
-	if ($state.phase === 'age_transition_design_bureau' && $state.ageTransitionDesignBureau) {
-		const idx = $state.ageTransitionDesignBureau.currentPlayerIndex ?? 0;
+	// Age transition blueprint design phase uses ageTransitionBlueprintDesign.currentPlayerIndex
+	if ($state.phase === 'age_transition_blueprint_design' && $state.ageTransitionBlueprintDesign) {
+		const idx = $state.ageTransitionBlueprintDesign.currentPlayerIndex ?? 0;
 		return $state.playerOrder[idx];
 	}
 
@@ -101,7 +101,7 @@ export const currentPhaseName = derived(gameState, ($state): string => {
 		worker_placement: 'Worker Placement',
 		reveal: 'Reveal Phase',
 		income_cleanup: 'Income & Cleanup',
-		age_transition_design_bureau: 'Age Transition',
+		age_transition_blueprint_design: 'Age Transition',
 		game_complete: 'Game Complete'
 	};
 

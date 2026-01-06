@@ -16,7 +16,7 @@ from .logging import get_logger
 from .state import get_state, get_phase, get_age, check_game_ended, get_state_fingerprint, get_current_placer, get_current_placer_faction
 from .phases import (
     handle_worker_placement_round, handle_reveal_phase, handle_income_cleanup_phase,
-    handle_age_transition_design_bureau
+    handle_age_transition_blueprint_design
 )
 from .display import show_summary
 
@@ -236,13 +236,13 @@ def autoplay(num_turns: int | None = None, game_id: str | None = None) -> None:
                     print(f"{'='*60}")
                     break
 
-        elif phase == "AGE_TRANSITION_DESIGN_BUREAU":
-            # Handle free Design Bureau action during age transition
-            if handle_age_transition_design_bureau(game_id, logger):
+        elif phase == "AGE_TRANSITION_BLUEPRINT_DESIGN":
+            # Handle free Blueprint Design action during age transition
+            if handle_age_transition_blueprint_design(game_id, logger):
                 stuck_detector.reset()
             # Check if phase completed (might loop for all players)
             current_phase = get_phase(game_id)
-            if current_phase != "AGE_TRANSITION_DESIGN_BUREAU":
+            if current_phase != "AGE_TRANSITION_BLUEPRINT_DESIGN":
                 # Transition completed
                 current_age = get_age(game_id)
                 if current_age != last_age:
@@ -383,8 +383,8 @@ def autoplay_until(target_faction: str, game_id: str | None = None) -> bool:
             if get_phase(game_id) != "INCOME_CLEANUP":
                 stuck_detector.reset()
 
-        elif phase == "AGE_TRANSITION_DESIGN_BUREAU":
-            if handle_age_transition_design_bureau(game_id, logger):
+        elif phase == "AGE_TRANSITION_BLUEPRINT_DESIGN":
+            if handle_age_transition_blueprint_design(game_id, logger):
                 stuck_detector.reset()
 
         else:
@@ -498,8 +498,8 @@ def autoturn(faction: str, game_id: str | None = None) -> bool:
             print(f"  {faction.upper()}: end turn failed - {e}")
             return False
 
-    elif phase == "AGE_TRANSITION_DESIGN_BUREAU":
-        if handle_age_transition_design_bureau(game_id, logger):
+    elif phase == "AGE_TRANSITION_BLUEPRINT_DESIGN":
+        if handle_age_transition_blueprint_design(game_id, logger):
             return True
         return False
 
