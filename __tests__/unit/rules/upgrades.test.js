@@ -46,17 +46,17 @@ describe('Rules Compliance - Upgrades', () => {
   describe('GAP-069: Gas System Upgrades', () => {
     // Appendix D defines 11 Gas System upgrades
     const gasSystemUpgrades = [
-      { id: 'pressure_control', requiredCard: 'improved_valving', weight: -1, stats: { ceiling: 1 } },
-      { id: 'altitude_ballonets', requiredCard: 'manual_ballonets', weight: -1, stats: { ceiling: 1 } },
-      { id: 'compartmented_gas', requiredCard: 'multiple_gas_cells', weight: -1, stats: { lift: 2, reliability: 1 } },
-      { id: 'helium_gas_cell', requiredCard: 'helium_handling', weight: -1, special: 'fire_immunity' },
+      { id: 'pressure_control', requiredCard: 'improved_valving', weight: 1, stats: { ceiling: 1 } },
+      { id: 'altitude_ballonets', requiredCard: 'manual_ballonets', weight: 1, stats: { ceiling: 1 } },
+      { id: 'compartmented_gas', requiredCard: 'multiple_gas_cells', weight: 1, stats: { lift: 2, reliability: 1 } },
+      { id: 'helium_gas_cell', requiredCard: 'helium_handling', weight: 1, special: 'fire_immunity' },
       { id: 'blaugas_tank', requiredCard: 'blaugas_storage', weight: 0, stats: { range: 1 }, special: 'gas_retention' },
-      { id: 'smart_valving', requiredCard: 'automatic_valves', weight: -1, stats: { reliability: 1, ceiling: 1 } },
-      { id: 'high_ceiling_gas', requiredCard: 'pressure_altitude_system', weight: -2, stats: { lift: 3, ceiling: 2 } },
-      { id: 'redundant_cells', requiredCard: 'triple_gas_cell', weight: -2, stats: { lift: 4, reliability: 2 } },
-      { id: 'rapid_descent_system', requiredCard: 'emergency_venting', weight: -1, stats: { reliability: 2 }, special: 'weather_auto_pass' },
-      { id: 'reclamation_system', requiredCard: 'gas_recovery', weight: -1, stats: { range: 2 }, special: 'gas_cost_reduction' },
-      { id: 'exhaust_condensers', requiredCard: 'water_recovery_system', weight: -2, special: 'helium_cost_reduction' }
+      { id: 'smart_valving', requiredCard: 'automatic_valves', weight: 1, stats: { reliability: 1, ceiling: 1 } },
+      { id: 'high_ceiling_gas', requiredCard: 'pressure_altitude_system', weight: 2, stats: { lift: 3, ceiling: 2 } },
+      { id: 'redundant_cells', requiredCard: 'triple_gas_cell', weight: 2, stats: { lift: 4, reliability: 2 } },
+      { id: 'rapid_descent_system', requiredCard: 'emergency_venting', weight: 1, stats: { reliability: 2 }, special: 'weather_auto_pass' },
+      { id: 'reclamation_system', requiredCard: 'gas_recovery', weight: 1, stats: { range: 2 }, special: 'gas_cost_reduction' },
+      { id: 'exhaust_condensers', requiredCard: 'water_recovery_system', weight: 2, special: 'helium_cost_reduction' }
     ];
 
     gasSystemUpgrades.forEach(({ id, requiredCard, weight, stats, special }) => {
@@ -94,7 +94,7 @@ describe('Rules Compliance - Upgrades', () => {
       const upgrade = TECH_TILES.streamlined_hull;
       expect(upgrade).toBeDefined();
       expect(upgrade.type).toBe('frame');
-      expect(upgrade.weight).toBe(-1);
+      expect(upgrade.weight).toBe(1);
       expect(upgrade.hullCost).toBe(2);
       expect(upgrade.stats.lift).toBe(2);
       expect(upgrade.requiredCard).toBe('aerodynamic_hull_design');
@@ -105,7 +105,7 @@ describe('Rules Compliance - Upgrades', () => {
       const upgrade = TECH_TILES.aerodynamic_lift_system;
       expect(upgrade).toBeDefined();
       expect(upgrade.type).toBe('frame');
-      expect(upgrade.weight).toBe(-2);
+      expect(upgrade.weight).toBe(2);
       expect(upgrade.hullCost).toBe(3);
       expect(upgrade.stats.lift).toBe(4);
       expect(upgrade.requiredCard).toBe('dynamic_lift_surfaces');
@@ -118,7 +118,7 @@ describe('Rules Compliance - Upgrades', () => {
       const upgrade = TECH_TILES.bombing_equipment;
       expect(upgrade).toBeDefined();
       expect(upgrade.type).toBe('component');
-      expect(upgrade.weight).toBe(-3);
+      expect(upgrade.weight).toBe(3);
       expect(upgrade.special).toBe('combat_income_bonus');
     });
 
@@ -127,7 +127,7 @@ describe('Rules Compliance - Upgrades', () => {
       const upgrade = TECH_TILES.sparrowhawk_hangar;
       expect(upgrade).toBeDefined();
       expect(upgrade.type).toBe('component');
-      expect(upgrade.weight).toBe(-3);
+      expect(upgrade.weight).toBe(3);
       expect(upgrade.special).toBe('ignore_route_requirement');
     });
 
@@ -136,7 +136,7 @@ describe('Rules Compliance - Upgrades', () => {
       const upgrade = TECH_TILES.light_armor_plating;
       expect(upgrade).toBeDefined();
       expect(upgrade.type).toBe('component');
-      expect(upgrade.weight).toBe(-2);
+      expect(upgrade.weight).toBe(2);
       expect(upgrade.stats.armor).toBe(1);
     });
 
@@ -145,7 +145,7 @@ describe('Rules Compliance - Upgrades', () => {
       const upgrade = TECH_TILES.heavy_armor_plating;
       expect(upgrade).toBeDefined();
       expect(upgrade.type).toBe('component');
-      expect(upgrade.weight).toBe(-3);
+      expect(upgrade.weight).toBe(3);
       expect(upgrade.stats.armor).toBe(2);
     });
 
@@ -154,7 +154,7 @@ describe('Rules Compliance - Upgrades', () => {
       const upgrade = TECH_TILES.observation_lounge;
       expect(upgrade).toBeDefined();
       expect(upgrade.type).toBe('component');
-      expect(upgrade.weight).toBe(-2);
+      expect(upgrade.weight).toBe(2);
       expect(upgrade.stats.income).toBe(1);
       expect(upgrade.stats.luxury).toBe(3);
     });
@@ -164,7 +164,7 @@ describe('Rules Compliance - Upgrades', () => {
       const upgrade = TECH_TILES.imperial_mast;
       expect(upgrade).toBeDefined();
       expect(upgrade.type).toBe('component');
-      expect(upgrade.weight).toBe(-1);
+      expect(upgrade.weight).toBe(1);
       expect(upgrade.special).toBe('british_territories_home');
     });
   });
@@ -180,7 +180,7 @@ describe('Rules Compliance - Upgrades', () => {
     it('should have correct stats for dining_saloon per Appendix D', () => {
       // Appendix D: Restaurant | Dining Saloon | -2 | Income +2, Luxury +2
       const upgrade = TECH_TILES.dining_saloon;
-      expect(upgrade.weight).toBe(-2); // was -3
+      expect(upgrade.weight).toBe(2); // was -3
       expect(upgrade.stats.income).toBe(2);
       expect(upgrade.stats.luxury).toBe(2); // was 3
     });

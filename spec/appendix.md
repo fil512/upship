@@ -375,17 +375,17 @@ Tech Tiles are installed on your Blueprint. You must own the corresponding Techn
 
 | Name | Required Tech | Weight | Stats | Special |
 |------|---------------|--------|-------|---------|
-| Basic Engine | Daimler Petrol Engine | -1 | Speed +1 | — |
-| Efficient Propeller | Improved Propeller | -1 | Speed +1, Range +1 | — |
-| Twin Engine | Dual Engine Mount | -3 | Speed +2, Reliability +1 | — |
-| Maybach CX Engine | Maybach Engine Design | -2 | Speed +2, Range +1 | — |
-| Diesel Engine | Diesel Powerplant | -2 | Range +2, Reliability +1 | — |
-| Vectored Thrust | Swiveling Propeller | -2 | Speed +1, Ceiling +1 | — |
-| Balanced Propulsion | Contra-Rotating Props | -2 | Speed +2, Reliability +1 | — |
-| Aerodynamic Engine | Streamlined Nacelle | -2 | Speed +3 | — |
-| High-Altitude Engine | Supercharged Engine | -3 | Speed +2, Ceiling +2 | — |
-| Hybrid Powerplant | Diesel-Electric Drive | -3 | Range +3, Reliability +1 | — |
-| Adaptive Propeller | Variable-Pitch Propeller | -2 | Speed +1, Range +2 | — |
+| Basic Engine | Daimler Petrol Engine | 1 | Speed +1 | — |
+| Efficient Propeller | Improved Propeller | 1 | Speed +1, Range +1 | — |
+| Twin Engine | Dual Engine Mount | 3 | Speed +2, Reliability +1 | — |
+| Maybach CX Engine | Maybach Engine Design | 2 | Speed +2, Range +1 | — |
+| Diesel Engine | Diesel Powerplant | 2 | Range +2, Reliability +1 | — |
+| Vectored Thrust | Swiveling Propeller | 2 | Speed +1, Ceiling +1 | — |
+| Balanced Propulsion | Contra-Rotating Props | 2 | Speed +2, Reliability +1 | — |
+| Aerodynamic Engine | Streamlined Nacelle | 2 | Speed +3 | — |
+| High-Altitude Engine | Supercharged Engine | 3 | Speed +2, Ceiling +2 | — |
+| Hybrid Powerplant | Diesel-Electric Drive | 3 | Range +3, Reliability +1 | — |
+| Adaptive Propeller | Variable-Pitch Propeller | 2 | Speed +1, Range +2 | — |
 
 ## Frame Tech Tiles
 
@@ -393,16 +393,16 @@ Frame tiles go in Frame slots. Each Frame slot shows a gas cube icon—this indi
 
 | Name | Required Tech | Weight | Hull Cost | Stats | Special |
 |------|---------------|--------|-----------|-------|---------|
-| Wooden Frame | Wooden Framework | -2 | +£1 | Reliability +1 | — |
-| Tensioned Frame | Wire Bracing | -1 | +£1 | Ceiling +1 | — |
-| Duralumin Frame | Duralumin Framework | -2 | +£2 | Reliability +2, Ceiling +1 | — |
-| Steel Frame | Steel Framework | -3 | +£1 | Reliability +2 | Heavier but cheap |
-| Semi-Rigid Keel | Internal Keel | -2 | +£1 | Reliability +1 | Italy's specialty |
-| Geodetic Frame | Geodetic Structure | -1 | +£3 | Reliability +2, Ceiling +1 | Lightest, most expensive |
-| Modular Frame | Modular Construction | -1 | +£2 | — | — |
+| Wooden Frame | Wooden Framework | 2 | +£1 | Reliability +1 | — |
+| Tensioned Frame | Wire Bracing | 1 | +£1 | Ceiling +1 | — |
+| Duralumin Frame | Duralumin Framework | 2 | +£2 | Reliability +2, Ceiling +1 | — |
+| Steel Frame | Steel Framework | 3 | +£1 | Reliability +2 | Heavier but cheap |
+| Semi-Rigid Keel | Internal Keel | 2 | +£1 | Reliability +1 | Italy's specialty |
+| Geodetic Frame | Geodetic Structure | 1 | +£3 | Reliability +2, Ceiling +1 | Lightest, most expensive |
+| Modular Frame | Modular Construction | 1 | +£2 | — | — |
 | Flexible Frame | Articulated Keel Design | 0 | +£1 | Ceiling +1 | Semi-rigid: -1 to Reliability checks during Weather hazards (Italy starting tech) |
-| Streamlined Hull | Aerodynamic Hull Design | -1 | +£2 | Lift +2 | Provides lift without gas |
-| Aerodynamic Lift System | Dynamic Lift Surfaces | -2 | +£3 | Lift +4 | Provides lift without gas |
+| Streamlined Hull | Aerodynamic Hull Design | 1 | +£2 | Lift +2 | Provides lift without gas |
+| Aerodynamic Lift System | Dynamic Lift Surfaces | 2 | +£3 | Lift +4 | Provides lift without gas |
 
 ## Fabric Tech Tiles
 
@@ -413,7 +413,7 @@ Fabric tiles go in Fabric slots. The **Hull Cost** column shows how much this ti
 | Cotton Envelope | Rubberized Cotton | 0 | +£0 | — | Basic default |
 | Doped Covering | Doped Canvas | 0 | +£1 | Speed +1 | Improved aerodynamics |
 | Premium Envelope | Goldbeater's Skin | 0 | +£3 | Reliability +1, Range +1 | Best gas-tightness |
-| Fire-Resistant Fabric | Fireproof Coating | -1 | +£2 | Reliability +1 | Once per Age, treat one Fire hazard as auto-pass |
+| Fire-Resistant Fabric | Fireproof Coating | 1 | +£2 | Reliability +1 | Once per Age, treat one Fire hazard as auto-pass |
 | Reflective Covering | Aluminum Doping | 0 | +£1 | Reliability +1 | Protects gas from heat |
 | Conductive Covering | Grounding Systems | 0 | +£1 | Reliability +1 | Immune to Static Discharge hazard (grounds electrical charge) |
 | Synthetic Envelope | Gelatinized Latex | 0 | +£2 | Reliability +1, Range +1 | Modern replacement for goldbeater's |
@@ -425,37 +425,37 @@ Fabric tiles go in Fabric slots. The **Hull Cost** column shows how much this ti
 
 | Name | Required Tech | Weight | Stats | Special |
 |------|---------------|--------|-------|---------|
-| Pressure Control | Improved Valving | -1 | Ceiling +1 | — |
-| Altitude Ballonets | Manual Ballonets | -1 | Ceiling +1 | — |
-| Compartmented Gas | Multiple Gas Cells | -1 | Lift +2, Reliability +1 | — |
-| Helium Gas Cell | Helium Handling | -1 | — | Safe (immune to Fire hazards); use Helium cubes |
+| Pressure Control | Improved Valving | 1 | Ceiling +1 | — |
+| Altitude Ballonets | Manual Ballonets | 1 | Ceiling +1 | — |
+| Compartmented Gas | Multiple Gas Cells | 1 | Lift +2, Reliability +1 | — |
+| Helium Gas Cell | Helium Handling | 1 | — | Safe (immune to Fire hazards); use Helium cubes |
 | Blaugas Tank | Blaugas Fuel System | 0 | Range +1 | Neutral buoyancy fuel: Pay £2 when launching to keep gas cubes after mission (Germany starting tech) |
-| Smart Valving | Automatic Valves | -1 | Reliability +1, Ceiling +1 | — |
-| High-Ceiling Gas | Pressure Altitude System | -2 | Lift +3, Ceiling +2 | — |
-| Redundant Cells | Triple Gas Cell | -2 | Lift +4, Reliability +2 | — |
-| Rapid Descent System | Emergency Venting | -1 | Reliability +2 | Auto-pass Weather-type hazards |
-| Reclamation System | Gas Recovery | -1 | Range +2 | -£2 Lifting Gas cost |
-| Exhaust Condensers | Water Recovery System | -2 | — | When using Helium: -£3 Lifting Gas cost. Recovers water from engine exhaust (USA specialty) |
+| Smart Valving | Automatic Valves | 1 | Reliability +1, Ceiling +1 | — |
+| High-Ceiling Gas | Pressure Altitude System | 2 | Lift +3, Ceiling +2 | — |
+| Redundant Cells | Triple Gas Cell | 2 | Lift +4, Reliability +2 | — |
+| Rapid Descent System | Emergency Venting | 1 | Reliability +2 | Auto-pass Weather-type hazards |
+| Reclamation System | Gas Recovery | 1 | Range +2 | -£2 Lifting Gas cost |
+| Exhaust Condensers | Water Recovery System | 2 | — | When using Helium: -£3 Lifting Gas cost. Recovers water from engine exhaust (USA specialty) |
 
 ## Payload Tech Tiles
 
 | Name | Required Tech | Weight | Stats | Special |
 |------|---------------|--------|-------|---------|
-| Spotter Gondola | Observation Platform | -1 | Income +1 | — |
-| Postal Service | Mail Compartment | -1 | Income +2 | — |
-| External Cargo | Cargo Nets | -2 | Income +2 | — |
-| Basic Cabin | Passenger Gondola | -2 | Income +2, Luxury +1 | — |
-| Bombing Equipment | Bomb Bay Design | -3 | — | Combat Missions: +£3 Income |
-| Sparrowhawk Hangar | Trapeze System | -3 | — | Ignore one route requirement |
-| Communications Suite | Radio Equipment | -1 | Reliability +1 | +1 to Navigation hazards |
-| Light Armor Plating | Armored Gondola | -2 | Armor +1 | Age II: Survive flak ≤ Armor |
-| Heavy Armor Plating | Reinforced Hull | -3 | Armor +2 | Age II: Survive flak ≤ Armor |
-| Luxury Cabin | Luxury Accommodation | -3 | Income +3, Luxury +2 | — |
-| Restaurant | Dining Saloon | -2 | Income +2, Luxury +2 | — |
-| Observation Lounge | Promenade Deck | -2 | Income +1, Luxury +3 | — |
-| Private Berths | Sleeping Quarters | -2 | Income +2, Luxury +1 | — |
-| Pressurized Lounge | Smoking Room | -2 | Income +1, Luxury +2 | Requires Helium Gas Cell installed |
-| Imperial Mast | Imperial Mooring System | -1 | — | British Territories count as Home Base (Britain specialty) |
+| Spotter Gondola | Observation Platform | 1 | Income +1 | — |
+| Postal Service | Mail Compartment | 1 | Income +2 | — |
+| External Cargo | Cargo Nets | 2 | Income +2 | — |
+| Basic Cabin | Passenger Gondola | 2 | Income +2, Luxury +1 | — |
+| Bombing Equipment | Bomb Bay Design | 3 | — | Combat Missions: +£3 Income |
+| Sparrowhawk Hangar | Trapeze System | 3 | — | Ignore one route requirement |
+| Communications Suite | Radio Equipment | 1 | Reliability +1 | +1 to Navigation hazards |
+| Light Armor Plating | Armored Gondola | 2 | Armor +1 | Age II: Survive flak ≤ Armor |
+| Heavy Armor Plating | Reinforced Hull | 3 | Armor +2 | Age II: Survive flak ≤ Armor |
+| Luxury Cabin | Luxury Accommodation | 3 | Income +3, Luxury +2 | — |
+| Restaurant | Dining Saloon | 2 | Income +2, Luxury +2 | — |
+| Observation Lounge | Promenade Deck | 2 | Income +1, Luxury +3 | — |
+| Private Berths | Sleeping Quarters | 2 | Income +2, Luxury +1 | — |
+| Pressurized Lounge | Smoking Room | 2 | Income +1, Luxury +2 | Requires Helium Gas Cell installed |
+| Imperial Mast | Imperial Mooring System | 1 | — | British Territories count as Home Base (Britain specialty) |
 
 **Total: 56 Tech Tiles** (Propulsion 11, Frame 10, Fabric 8, Gas Systems 11, Payload 16)
 
