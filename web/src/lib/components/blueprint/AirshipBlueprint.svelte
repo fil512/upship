@@ -48,76 +48,22 @@
 		return match ? match[1] : '';
 	}
 
-	// Upgrade data lookup (simplified - full names and stats)
-	const UPGRADE_DATA: Record<string, { name: string; weight: number; stats: Record<string, number> }> = {
-		// Frame
-		duralumin_frame: { name: 'Duralumin Frame', weight: 2, stats: { reliability: 2, ceiling: 1 } },
-		wooden_frame: { name: 'Wooden Frame', weight: 2, stats: { reliability: 1 } },
-		tensioned_frame: { name: 'Tensioned Frame', weight: 1, stats: { ceiling: 1 } },
-		steel_frame: { name: 'Steel Frame', weight: 3, stats: { reliability: 2 } },
-		semi_rigid_keel: { name: 'Semi-Rigid Keel', weight: 2, stats: { reliability: 1 } },
-		geodetic_frame: { name: 'Geodetic Frame', weight: 1, stats: { reliability: 2, ceiling: 1 } },
-		modular_frame: { name: 'Modular Frame', weight: 1, stats: {} },
-		flexible_frame: { name: 'Flexible Frame', weight: 0, stats: { ceiling: 1 } },
-		streamlined_hull: { name: 'Streamlined Hull', weight: 1, stats: { lift: 2 } },
-		aerodynamic_lift_system: { name: 'Aero Lift System', weight: 2, stats: { lift: 4 } },
-		// Fabric
-		cotton_envelope: { name: 'Cotton Envelope', weight: 0, stats: {} },
-		doped_covering: { name: 'Doped Covering', weight: 0, stats: { speed: 1 } },
-		premium_envelope: { name: 'Premium Envelope', weight: 0, stats: { lift: 3, reliability: 1, range: 1 } },
-		fire_resistant_fabric: { name: 'Fire-Resist Fabric', weight: 1, stats: { reliability: 1 } },
-		reflective_covering: { name: 'Reflective Cover', weight: 0, stats: { reliability: 1 } },
-		synthetic_envelope: { name: 'Synthetic Envelope', weight: 0, stats: { reliability: 1, range: 1 } },
-		advanced_fabric: { name: 'Advanced Fabric', weight: 0, stats: { reliability: 2 } },
-		conductive_covering: { name: 'Conductive Cover', weight: 0, stats: { reliability: 1 } },
-		// Drive
-		basic_engine: { name: 'Basic Engine', weight: 1, stats: { speed: 1 } },
-		efficient_propeller: { name: 'Efficient Prop', weight: 1, stats: { speed: 1, range: 1 } },
-		twin_engine: { name: 'Twin Engine', weight: 3, stats: { speed: 2, reliability: 1 } },
-		maybach_cx: { name: 'Maybach CX', weight: 2, stats: { speed: 2, range: 1 } },
-		diesel_engine: { name: 'Diesel Engine', weight: 2, stats: { range: 2, reliability: 1 } },
-		vectored_thrust: { name: 'Vectored Thrust', weight: 2, stats: { speed: 1, ceiling: 1 } },
-		balanced_propulsion: { name: 'Balanced Prop', weight: 2, stats: { speed: 2, reliability: 1 } },
-		aerodynamic_engine: { name: 'Aero Engine', weight: 2, stats: { speed: 3 } },
-		high_altitude_engine: { name: 'High-Alt Engine', weight: 3, stats: { speed: 2, ceiling: 2 } },
-		hybrid_powerplant: { name: 'Hybrid Power', weight: 3, stats: { range: 3, reliability: 1 } },
-		adaptive_propeller: { name: 'Adaptive Prop', weight: 2, stats: { speed: 1, range: 2 } },
-		// Component
-		pressure_control: { name: 'Pressure Control', weight: 1, stats: { ceiling: 1 } },
-		altitude_ballonets: { name: 'Altitude Ballonets', weight: 1, stats: { ceiling: 1 } },
-		compartmented_gas: { name: 'Compartment Gas', weight: 1, stats: { lift: 2, reliability: 1 } },
-		helium_gas_cell: { name: 'Helium Gas Cell', weight: 1, stats: {} },
-		blaugas_tank: { name: 'Blaugas Tank', weight: 0, stats: { range: 1 } },
-		smart_valving: { name: 'Smart Valving', weight: 1, stats: { reliability: 1, ceiling: 1 } },
-		high_ceiling_gas: { name: 'High-Ceiling Gas', weight: 2, stats: { lift: 3, ceiling: 2 } },
-		redundant_cells: { name: 'Redundant Cells', weight: 2, stats: { lift: 4, reliability: 2 } },
-		rapid_descent_system: { name: 'Rapid Descent', weight: 1, stats: { reliability: 2 } },
-		reclamation_system: { name: 'Reclamation Sys', weight: 1, stats: { range: 2 } },
-		exhaust_condensers: { name: 'Exhaust Condense', weight: 2, stats: {} },
-		spotter_gondola: { name: 'Spotter Gondola', weight: 1, stats: { income: 1 } },
-		postal_service: { name: 'Postal Service', weight: 1, stats: { income: 2 } },
-		external_cargo: { name: 'External Cargo', weight: 2, stats: { income: 2 } },
-		passenger_gondola: { name: 'Basic Cabin', weight: 2, stats: { income: 2, luxury: 1 } },
-		bombing_equipment: { name: 'Bombing Equip', weight: 3, stats: {} },
-		sparrowhawk_hangar: { name: 'Fighter Hangar', weight: 3, stats: {} },
-		communications_suite: { name: 'Comms Suite', weight: 1, stats: { reliability: 1 } },
-		light_armor_plating: { name: 'Light Armor', weight: 2, stats: {} },
-		heavy_armor_plating: { name: 'Heavy Armor', weight: 3, stats: {} },
-		luxury_cabin: { name: 'Luxury Cabin', weight: 3, stats: { income: 3, luxury: 2 } },
-		restaurant: { name: 'Restaurant', weight: 2, stats: { income: 2, luxury: 2 } },
-		observation_lounge: { name: 'Observation Lounge', weight: 2, stats: { income: 1, luxury: 3 } },
-		sleeping_quarters: { name: 'Private Berths', weight: 2, stats: { income: 2, luxury: 1 } },
-		pressurized_lounge: { name: 'Pressurized Lounge', weight: 2, stats: { income: 1, luxury: 2 } },
-		imperial_mast: { name: 'Imperial Mast', weight: 1, stats: {} },
-		navigation_suite: { name: 'Navigation Suite', weight: 1, stats: { reliability: 2, range: 1 } }
-	};
-
+	// Get upgrade info from the canonical TECH_TILES data
 	function getUpgradeInfo(upgradeId: string | null): { name: string; weight: number; stats: Record<string, number> } | null {
 		if (!upgradeId) return null;
-		// Try exact match first, then strip type prefix (fabric_, frame_, etc.)
-		if (UPGRADE_DATA[upgradeId]) return UPGRADE_DATA[upgradeId];
-		const stripped = upgradeId.replace(/^(fabric|frame|drive|component)_/, '');
-		return UPGRADE_DATA[stripped] || { name: upgradeId.replace(/_/g, ' '), weight: 0, stats: {} };
+
+		// Look up in TECH_TILES
+		const tile = TECH_TILES[upgradeId];
+		if (tile) {
+			return {
+				name: tile.name,
+				weight: tile.weight,
+				stats: tile.stats as Record<string, number>
+			};
+		}
+
+		// Fallback for unknown tiles
+		return { name: upgradeId.replace(/_/g, ' '), weight: 0, stats: {} };
 	}
 
 	// Slot positions on the airship (viewBox is 800x300)
