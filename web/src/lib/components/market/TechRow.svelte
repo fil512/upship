@@ -97,7 +97,7 @@
 			{#if tiles.length > 0}
 				<div class="tiles-section">
 					{#each tiles as tile}
-						<TechTileBox {tile} size="small" />
+						<TechTileBox {tile} />
 					{/each}
 				</div>
 			{/if}

@@ -63,7 +63,7 @@
 		{#if tiles.length > 0}
 			<div class="tiles-section">
 				{#each tiles as tile}
-					<TechTileBox {tile} size="small" />
+					<TechTileBox {tile} />
 				{/each}
 			</div>
 		{/if}
@@ -75,8 +75,8 @@
 		display: flex;
 		flex-direction: column;
 		width: 100%;
-		min-width: 100px;
-		max-width: 140px;
+		min-width: 120px;
+		max-width: 160px;
 		min-height: 80px;
 		background: #e8e4d9;
 		border: 2px solid #9a8c70;

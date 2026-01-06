@@ -141,22 +141,23 @@
 		border-left: 2px solid var(--slot-color);
 	}
 
+	/* 2-column grid layout for tiles */
 	.tile-grid {
-		display: flex;
-		flex-wrap: wrap;
+		display: grid;
+		grid-template-columns: repeat(2, 100px);
 		gap: 6px;
 	}
 
-	/* Tile box matching blueprint style: rectangular box with icons centered, name at bottom */
+	/* Tile box matching blueprint style: 100x54px */
 	.tile-box {
 		display: flex;
 		flex-direction: column;
 		align-items: center;
 		justify-content: space-between;
-		width: 90px;
-		height: 50px;
+		width: 100px;
+		height: 54px;
 		padding: 4px;
-		background: color-mix(in srgb, var(--slot-color) 15%, rgba(30, 41, 59, 0.9));
+		background: color-mix(in srgb, var(--slot-color) 20%, rgba(30, 41, 59, 0.9));
 		border: 2px solid var(--slot-color);
 		border-radius: 6px;
 		cursor: default;
@@ -191,7 +192,7 @@
 
 	/* Name at bottom of tile */
 	.tile-name {
-		font-size: 8px;
+		font-size: 9px;
 		font-weight: 600;
 		color: var(--slot-color);
 		text-align: center;

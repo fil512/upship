@@ -4,7 +4,6 @@
 	import type { TechTile } from '$lib/data/techTiles';
 
 	export let tile: TechTile;
-	export let size: 'small' | 'medium' = 'medium';
 
 	// Slot type colors matching AirshipBlueprint
 	const slotColors: Record<string, string> = {
@@ -37,42 +36,34 @@
 
 	$: slotColor = slotColors[tile.slotType] || '#666';
 	$: icons = getIconsList(tile.stats, tile.weight);
-	$: iconSize = size === 'small' ? 12 : 14;
 </script>
 
 <div
 	class="tile-box"
-	class:small={size === 'small'}
 	style="--slot-color: {slotColor}"
 	title="{tile.name}"
 >
 	<div class="tile-icons">
 		{#each icons as icon}
-			<Icon name={icon.type as IconName} size={iconSize} />
+			<Icon name={icon.type as IconName} size={14} />
 		{/each}
 	</div>
 	<span class="tile-name">{tile.name}</span>
 </div>
 
 <style>
-	/* Tile box matching blueprint/TechTilesPanel style */
+	/* Tile box matching blueprint style: 100x54px */
 	.tile-box {
 		display: flex;
 		flex-direction: column;
 		align-items: center;
 		justify-content: space-between;
-		width: 80px;
-		height: 44px;
-		padding: 3px;
-		background: color-mix(in srgb, var(--slot-color) 15%, rgba(30, 41, 59, 0.9));
+		width: 100px;
+		height: 54px;
+		padding: 4px;
+		background: color-mix(in srgb, var(--slot-color) 20%, rgba(30, 41, 59, 0.9));
 		border: 2px solid var(--slot-color);
-		border-radius: 5px;
-	}
-
-	.tile-box.small {
-		width: 70px;
-		height: 38px;
-		padding: 2px;
+		border-radius: 6px;
 	}
 
 	/* Icons area - centered horizontally */
@@ -81,14 +72,14 @@
 		flex-wrap: wrap;
 		justify-content: center;
 		align-items: center;
-		gap: 1px;
+		gap: 2px;
 		max-width: 100%;
 		flex: 1;
 	}
 
 	/* Name at bottom of tile */
 	.tile-name {
-		font-size: 7px;
+		font-size: 9px;
 		font-weight: 600;
 		color: var(--slot-color);
 		text-align: center;
@@ -97,9 +88,5 @@
 		text-overflow: ellipsis;
 		max-width: 100%;
 		line-height: 1;
-	}
-
-	.tile-box.small .tile-name {
-		font-size: 6px;
 	}
 </style>
