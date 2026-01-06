@@ -2,7 +2,8 @@
 	import { createEventDispatcher } from 'svelte';
 	import type { Technology, Faction } from '$lib/types/game';
 	import CostBadge from '$lib/components/ui/CostBadge.svelte';
-	import { getTilesForCard, formatStats, getSlotTypeLabel } from '$lib/utils/techCardToTiles';
+	import TechTileBox from '$lib/components/ui/TechTileBox.svelte';
+	import { getTilesForCard } from '$lib/utils/techCardToTiles';
 	import { TECH_CARDS } from '$lib/data/techTiles';
 
 	export let cards: Technology[] = [];
@@ -96,20 +97,7 @@
 			{#if tiles.length > 0}
 				<div class="tiles-section">
 					{#each tiles as tile}
-						<div class="tile-info">
-							<div class="tile-header">
-								<span class="tile-name">{tile.name}</span>
-								<span class="tile-type">{getSlotTypeLabel(tile.slotType)}</span>
-							</div>
-							<div class="tile-stats">
-								{#if tile.weight !== 0}
-									<span class="tile-weight">Wt: {tile.weight}</span>
-								{/if}
-								{#if Object.keys(tile.stats).length > 0}
-									<span class="tile-bonuses">{formatStats(tile.stats)}</span>
-								{/if}
-							</div>
-						</div>
+						<TechTileBox {tile} size="small" />
 					{/each}
 				</div>
 			{/if}
@@ -232,60 +220,16 @@
 
 	/* Tech tiles section */
 	.tiles-section {
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: center;
+		gap: 4px;
 		border-top: 1px dashed #9a8c70;
-		padding-top: 0.25rem;
+		padding: 0.25rem;
 		margin-top: 0.25rem;
-		background: rgba(255, 255, 255, 0.3);
+		background: rgba(30, 41, 59, 0.1);
 		margin-left: -0.5rem;
 		margin-right: -0.5rem;
-		padding-left: 0.5rem;
-		padding-right: 0.5rem;
-		padding-bottom: 0.25rem;
-	}
-
-	.tile-info {
-		margin-bottom: 4px;
-	}
-
-	.tile-info:last-child {
-		margin-bottom: 0;
-	}
-
-	.tile-header {
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-		gap: 4px;
-	}
-
-	.tile-name {
-		font-size: 0.55rem;
-		font-weight: 600;
-		color: #333;
-	}
-
-	.tile-type {
-		font-size: 0.45rem;
-		color: #666;
-		background: rgba(0, 0, 0, 0.1);
-		padding: 1px 4px;
-		border-radius: 2px;
-	}
-
-	.tile-stats {
-		display: flex;
-		gap: 6px;
-		font-size: 0.45rem;
-		color: #555;
-		margin-top: 2px;
-	}
-
-	.tile-weight {
-		color: #c62828;
-	}
-
-	.tile-bonuses {
-		color: #2e7d32;
 	}
 
 	.claimed-overlay {
