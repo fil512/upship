@@ -17,6 +17,21 @@
 	function getAgentsRemaining(player: PlayerState): number {
 		return player.agentsRemaining ?? 3;
 	}
+
+	function getNetIncome(player: PlayerState): number {
+		return (player.income || 0) - (player.engineers || 0);
+	}
+
+	function getIncomeTooltip(player: PlayerState): string {
+		const baseIncome = player.income || 0;
+		const engineers = player.engineers || 0;
+		const net = baseIncome - engineers;
+		return `£${baseIncome} base income - £${engineers} engineers = ${net >= 0 ? '+' : ''}£${net}`;
+	}
+
+	function formatIncome(value: number): string {
+		return value >= 0 ? `+${value}` : `${value}`;
+	}
 </script>
 
 <div class="players-panel">
@@ -26,6 +41,7 @@
 			{@const factionColor = getFactionColor(player.faction)}
 			{@const borderColor = getFactionBorderColor(player.faction)}
 			{@const agentsRemaining = getAgentsRemaining(player)}
+			{@const netIncome = getNetIncome(player)}
 			<div
 				class="player-card"
 				class:current={playerId === currentPlayerId}
@@ -33,12 +49,16 @@
 				style:--faction-color={factionColor}
 				style:--faction-border={borderColor}
 			>
-				<!-- Row 1: Faction icon, name, badges, and pawns -->
+				<!-- Row 1: Chevron, Score, Flag, name, badges, pawns -->
 				<div class="player-header">
 					<div class="player-identity">
+						{#if playerId === currentPlayerId}
+							<span class="turn-chevron">▶</span>
+						{/if}
+						<span class="vp-score" title="Victory Points: {player.vp || 0}">{player.vp || 0}</span>
 						<Icon
 							name={(player.faction || 'germany') as FactionIconName}
-							size={24}
+							size={20}
 							color={borderColor}
 						/>
 						<span class="faction-name" style:color={borderColor}>
@@ -46,9 +66,6 @@
 						</span>
 						{#if !player.isBot}
 							<span class="online-dot" class:online={isOnline(playerId)}></span>
-						{/if}
-						{#if playerId === currentPlayerId}
-							<span class="badge turn">Turn</span>
 						{/if}
 						{#if playerId === myPlayerId}
 							<span class="badge you">You</span>
@@ -69,16 +86,12 @@
 					</div>
 				</div>
 
-				<!-- Row 2: Resources as value icon +income -->
+				<!-- Row 2: Cash, Officers, Engineers -->
 				<div class="player-resources">
-					<div class="resource" title="Cash: £{player.cash}, Income: +£{player.income || 0}">
+					<div class="resource" title={getIncomeTooltip(player)}>
 						<span class="value">{player.cash}</span>
 						<Icon name="cash" size={14} color="var(--color-accent-gold)" />
-						{#if player.income}<span class="income">+{player.income}</span>{/if}
-					</div>
-					<div class="resource" title="Victory Points: {player.vp || 0}">
-						<span class="value">{player.vp || 0}</span>
-						<Icon name="vp" size={14} color="var(--color-success)" />
+						<span class="income" class:negative={netIncome < 0}>{formatIncome(netIncome)}</span>
 					</div>
 					<div class="resource" title="Officers: {player.officers}, Income: +{player.officerIncome || 0}">
 						<span class="value">{player.officers}</span>
@@ -90,6 +103,10 @@
 						<Icon name="engineers" size={14} />
 						<span class="income">+{player.engineerIncome || 0}</span>
 					</div>
+				</div>
+
+				<!-- Row 3: Research, Hydrogen, Helium, Ships -->
+				<div class="player-resources">
 					<div class="resource" title="Research Level: +{player.researchLevel || 0}">
 						<Icon name="research" size={14} />
 						<span class="income">+{player.researchLevel || 0}</span>
@@ -128,7 +145,6 @@
 
 	.player-card.current {
 		background: color-mix(in srgb, var(--color-success) 10%, var(--color-bg-card));
-		box-shadow: 0 0 8px color-mix(in srgb, var(--color-success) 30%, transparent);
 	}
 
 	.player-card.me {
@@ -148,8 +164,22 @@
 		gap: var(--spacing-xs);
 	}
 
+	.turn-chevron {
+		color: var(--color-success);
+		font-size: 0.7rem;
+		margin-right: -2px;
+	}
+
+	.vp-score {
+		font-size: 1.1rem;
+		font-weight: 700;
+		color: var(--color-success);
+		min-width: 20px;
+		text-align: center;
+	}
+
 	.faction-name {
-		font-size: 0.8rem;
+		font-size: 0.75rem;
 		font-weight: 700;
 		text-transform: capitalize;
 	}
@@ -173,11 +203,6 @@
 		font-weight: 700;
 	}
 
-	.badge.turn {
-		background: var(--color-success);
-		color: white;
-	}
-
 	.badge.you {
 		background: var(--color-accent-gold);
 		color: var(--color-bg-primary);
@@ -194,37 +219,34 @@
 	}
 
 	.pawn {
-		width: 14px;
-		height: 18px;
+		width: 12px;
+		height: 16px;
 		position: relative;
-		/* Body - rounded bottom */
 		background: inherit;
-		border-radius: 3px 3px 7px 7px;
+		border-radius: 2px 2px 6px 6px;
 		border: 2px solid;
 	}
 
-	/* Head - circular top */
 	.pawn::before {
 		content: '';
 		position: absolute;
-		width: 10px;
-		height: 10px;
+		width: 8px;
+		height: 8px;
 		background: inherit;
 		border: inherit;
 		border-radius: 50%;
-		top: -8px;
+		top: -6px;
 		left: 50%;
 		transform: translateX(-50%);
 	}
 
-	/* Neck connector */
 	.pawn::after {
 		content: '';
 		position: absolute;
-		width: 6px;
-		height: 4px;
+		width: 5px;
+		height: 3px;
 		background: inherit;
-		top: -2px;
+		top: -1px;
 		left: 50%;
 		transform: translateX(-50%);
 	}
@@ -257,5 +279,9 @@
 		font-weight: 600;
 		color: var(--color-success);
 		margin-left: 1px;
+	}
+
+	.resource .income.negative {
+		color: var(--color-error);
 	}
 </style>
