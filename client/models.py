@@ -299,8 +299,19 @@ class Player:
     @classmethod
     def from_dict(cls, user_id: str, data: dict, username: str = '') -> 'Player':
         """Create Player from API response dict."""
-        # Parse ships
+        # Parse ships - server uses counters (hangarShips, repairShips) not individual objects
+        # Generate pseudo-Ship objects from counters for client compatibility
         ships = [Ship.from_dict(s) for s in data.get('ships', [])]
+
+        # If no ship objects but hangarShips counter exists, generate pseudo-ships
+        hangar_count = data.get('hangarShips', 0)
+        repair_count = data.get('repairShips', 0)
+
+        if not ships and (hangar_count > 0 or repair_count > 0):
+            for i in range(hangar_count):
+                ships.append(Ship(id=f'hangar_{i}', status='hangar'))
+            for i in range(repair_count):
+                ships.append(Ship(id=f'repair_{i}', status='repair'))
 
         # Parse hand (may be hidden for opponents)
         hand_data = data.get('hand', [])

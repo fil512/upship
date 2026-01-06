@@ -401,14 +401,15 @@ def _no_more_launches_quiet(player: str, game_id: str) -> None:
 def _check_and_handle_hazard(client, player: str, game_id: str, ship_id: str, player_id: str | None, player_data: Player, logger: PlaytestLogger) -> str:
     """Check if ship needs hazard response and handle it.
 
-    This function fetches raw state to check for pending hazards because
-    the typed GameState model doesn't expose pendingHazard on ships.
+    Ships are fungible tokens tracked as counters (hangarShips, repairShips).
+    Pending hazards are stored at the player level via pendingLaunch, not on
+    individual ship objects.
 
     Args:
         client: UpshipClient instance.
         player: Player username.
         game_id: The game ID.
-        ship_id: The ship ID.
+        ship_id: The ship ID (ignored - ships are fungible).
         player_id: The player's UUID (may be None).
         player_data: Player object (for engineer count).
         logger: PlaytestLogger instance.
@@ -416,7 +417,7 @@ def _check_and_handle_hazard(client, player: str, game_id: str, ship_id: str, pl
     Returns:
         Final ship status string after hazard resolution.
     """
-    # Fetch raw state to get pendingHazard (not in typed model)
+    # Fetch raw state to get pendingLaunch (ships are counters, not objects)
     raw_state = client._api_get(player, f"/api/state/{game_id}")
     game_state_wrapper = raw_state.get('gameState', raw_state)
     state_data = game_state_wrapper.get('state', {})
@@ -435,28 +436,28 @@ def _check_and_handle_hazard(client, player: str, game_id: str, ship_id: str, pl
         return 'unknown'
 
     raw_player = players_data.get(player_id, {})
-    raw_ships = raw_player.get('ships', [])
-    raw_ship = next((s for s in raw_ships if s.get('id') == ship_id), None)
 
-    if not raw_ship:
-        # Debug: log available ships
-        ship_ids = [s.get('id', 'unknown')[:20] for s in raw_ships]
-        logger.log_action(None, f"  └─ ERROR: Ship {ship_id[:20]} not found. Available: {ship_ids}", "worker_placement")
+    # Ships are fungible tokens - check pendingLaunch at player level for hazard
+    pending_launch = raw_player.get('pendingLaunch')
+    if not pending_launch:
+        # No pending launch = launch completed without hazard or already resolved
+        # Check if route was claimed to determine success
+        routes_claimed = raw_player.get('routes', [])
+        hangar_count = raw_player.get('hangarShips', 0)
+        repair_count = raw_player.get('repairShips', 0)
+
+        # If hangar decreased and no pending launch, assume success or abort
+        return 'on_route' if routes_claimed else 'hangar'
+
+    # Get hazard info from pendingLaunch
+    hazard_info = pending_launch.get('hazardInfo')
+    if not hazard_info:
+        logger.log_action(None, f"  └─ ERROR: pendingLaunch but no hazardInfo", "worker_placement")
         return 'unknown'
-
-    ship_status = raw_ship.get('status', 'unknown')
-
-    if ship_status != 'awaiting_hazard':
-        return ship_status
-
-    pending_hazard = raw_ship.get('pendingHazard')
-    if not pending_hazard:
-        logger.log_action(None, f"  └─ ERROR: Ship awaiting_hazard but no pendingHazard", "worker_placement")
-        return ship_status
 
     # Handle the hazard response - use fresh engineer count from raw_player
     fresh_engineers = raw_player.get('engineers', 0)
-    return _handle_hazard_response(player, game_id, ship_id, pending_hazard, player_data, logger, fresh_engineers)
+    return _handle_hazard_response(player, game_id, ship_id, hazard_info, player_data, logger, fresh_engineers)
 
 
 def _handle_hazard_response(player: str, game_id: str, ship_id: str, pending_hazard: dict, player_data: Player, logger: PlaytestLogger, fresh_engineers: int | None = None) -> str:
@@ -522,15 +523,32 @@ def _handle_hazard_response(player: str, game_id: str, ship_id: str, pending_haz
     result = client.action(player, game_id, 'RESPOND_TO_HAZARD',
                           shipId=ship_id, spendEngineers=spend_engineers)
 
-    # Get final ship status
-    final_state = result.game_state or get_state(game_id, player)
-    if final_state:
-        final_player_id = get_player_id(player, final_state)
-        final_player_data = final_state.get_player(final_player_id) if final_player_id else None
-        if final_player_data:
-            final_ship = next((s for s in final_player_data.ships if s.id == ship_id), None)
-            if final_ship:
-                return final_ship.status
+    # Determine final status based on outcome
+    # Ships are fungible - can't find by ID, need to check state changes
+    if not result.success:
+        logger.log_action(None, f"  └─ RESPOND_TO_HAZARD error: {result.error}", "worker_placement")
+        return 'unknown'
+
+    # Fetch raw state to check outcome (routes claimed, hangar count, repair count)
+    raw_state = client._api_get(player, f"/api/state/{game_id}")
+    game_state_wrapper = raw_state.get('gameState', raw_state)
+    state_data = game_state_wrapper.get('state', {})
+    players_data = state_data.get('players', {})
+
+    faction = get_faction_from_player(player)
+    for pid, pdata in players_data.items():
+        if pdata.get('faction') == faction:
+            routes_claimed = pdata.get('routes', [])
+            repair_ships = pdata.get('repairShips', 0)
+
+            # If route was claimed, launch succeeded
+            if routes_claimed:
+                return 'on_route'
+            # If ship went to repair, it was damaged
+            if repair_ships > 0:
+                return 'repair'
+            # Otherwise ship returned to hangar (abort or other)
+            return 'hangar'
 
     return 'unknown'
 
