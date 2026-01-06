@@ -62,14 +62,20 @@
 	style:--card-color={symbolColor}
 	on:click={handleClick}
 	disabled={marketMode ? claimedByOther : !selectable}
+	title={card.flavor || ''}
 	aria-label="{card.name} card, {card.symbol || 'any'} symbol{selected ? ', selected' : ''}"
 >
-	<!-- Header: Name (left) + Cost (right) -->
+	<!-- Header: Name + Flavor (left) + Cost (right) -->
 	<div class="card-header">
-		<span class="card-name">{card.name}</span>
+		<div class="card-title-block">
+			<span class="card-name">{card.name}</span>
+			{#if card.flavor}
+				<span class="card-flavor">{card.flavor}</span>
+			{/if}
+		</div>
 		{#if card.cost}
 			<div class="card-cost" title="Costs {card.cost} Influence">
-				<CostBadge type="influence" value={card.cost} size={28} />
+				<CostBadge type="influence" value={card.cost} size={32} />
 			</div>
 		{/if}
 	</div>
@@ -77,7 +83,7 @@
 	<!-- Center stripe: Symbol + Agent effect -->
 	<div class="card-center">
 		<div class="card-symbol">
-			<Icon name={iconName} size={48} color={symbolColor} />
+			<Icon name={iconName} size={56} color={symbolColor} />
 		</div>
 		{#if card.effect}
 			<div class="card-effect">{card.effect}</div>
@@ -89,19 +95,19 @@
 		<span class="reveal-label">Reveal:</span>
 		<div class="reveal-items">
 			{#if card.reveal?.cash}
-				<ResourceBadge type="cash" value={card.reveal.cash} size={20} />
+				<ResourceBadge type="cash" value={card.reveal.cash} size={22} />
 			{/if}
 			{#if card.reveal?.influence}
-				<ResourceBadge type="influence" value={card.reveal.influence} size={20} />
+				<ResourceBadge type="influence" value={card.reveal.influence} size={22} />
 			{/if}
 			{#if card.reveal?.research}
-				<ResourceBadge type="research" value={card.reveal.research} size={20} />
+				<ResourceBadge type="research" value={card.reveal.research} size={22} />
 			{/if}
 			{#if card.reveal?.officers}
-				<ResourceBadge type="officers" value={card.reveal.officers} size={18} />
+				<ResourceBadge type="officers" value={card.reveal.officers} size={20} />
 			{/if}
 			{#if card.reveal?.engineers}
-				<ResourceBadge type="engineers" value={card.reveal.engineers} size={18} />
+				<ResourceBadge type="engineers" value={card.reveal.engineers} size={20} />
 			{/if}
 		</div>
 	</div>
@@ -126,9 +132,9 @@
 		display: flex;
 		flex-direction: column;
 		width: 100%;
-		min-width: 120px;
-		max-width: 160px;
-		min-height: 170px;
+		min-width: 160px;
+		max-width: 200px;
+		min-height: 220px;
 		background: #e8e4d9;
 		border: 2px solid #c4b8a0;
 		border-radius: var(--radius-md);
@@ -219,24 +225,39 @@
 		display: flex;
 		justify-content: space-between;
 		align-items: flex-start;
-		padding: 6px 8px;
+		padding: 8px 10px;
 		background: rgba(0, 0, 0, 0.08);
 		border-bottom: 1px solid #c4b8a0;
 	}
 
+	.card-title-block {
+		display: flex;
+		flex-direction: column;
+		flex: 1;
+		min-width: 0;
+	}
+
 	.card-name {
-		font-size: 0.7rem;
+		font-size: 0.8rem;
 		font-weight: 700;
 		color: #333;
 		text-transform: uppercase;
 		line-height: 1.2;
-		flex: 1;
+	}
+
+	.card-flavor {
+		font-size: 0.6rem;
+		font-style: italic;
+		color: #666;
+		line-height: 1.3;
+		margin-top: 2px;
 	}
 
 	.card-cost {
 		display: flex;
-		align-items: center;
+		align-items: flex-start;
 		flex-shrink: 0;
+		margin-left: 6px;
 	}
 
 	/* Center section - Symbol and Effect */
@@ -246,20 +267,20 @@
 		flex-direction: column;
 		align-items: center;
 		justify-content: center;
-		padding: 8px;
+		padding: 10px;
 		background: color-mix(in srgb, var(--card-color) 15%, #e8e4d9);
 	}
 
 	.card-symbol {
-		margin-bottom: 4px;
+		margin-bottom: 6px;
 	}
 
 	.card-effect {
-		font-size: 0.55rem;
+		font-size: 0.65rem;
 		color: #555;
 		text-align: center;
 		line-height: 1.3;
-		padding: 4px;
+		padding: 6px;
 		background: rgba(255, 255, 255, 0.5);
 		border-radius: var(--radius-sm);
 		max-width: 100%;
@@ -267,23 +288,23 @@
 
 	/* Bottom section - Reveal */
 	.card-reveal {
-		padding: 6px 8px;
+		padding: 8px 10px;
 		background: rgba(0, 0, 0, 0.08);
 		border-top: 1px solid #c4b8a0;
 	}
 
 	.reveal-label {
-		font-size: 0.5rem;
+		font-size: 0.55rem;
 		color: #777;
 		text-transform: uppercase;
 		display: block;
-		margin-bottom: 3px;
+		margin-bottom: 4px;
 	}
 
 	.reveal-items {
 		display: flex;
 		flex-wrap: wrap;
-		gap: 4px;
+		gap: 5px;
 		align-items: center;
 	}
 </style>

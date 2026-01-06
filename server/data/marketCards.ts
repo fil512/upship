@@ -38,6 +38,7 @@ export interface MarketCard {
   symbol: CardSymbol;
   effect: string | null;
   reveal: MarketCardReveal;
+  flavor: string;
 }
 
 /* eslint-disable sonarjs/pseudo-random */
@@ -51,16 +52,18 @@ export const MARKET_CARDS: MarketCard[] = [
     cost: 4,
     symbol: 'wrench',
     effect: null,
-    reveal: { engineers: 1 }
+    reveal: { engineers: 1 },
+    flavor: 'Senior officer of the engineering department'
   },
   {
     id: 'market_test_pilot',
-    name: 'Test Pilot',
+    name: 'Kite Jockey',
     category: 'technical',
     cost: 5,
     symbol: 'propeller',
     effect: '+2 Reliability for this launch',
-    reveal: { officers: 1 }
+    reveal: { officers: 1 },
+    flavor: 'RFC slang for a daring aviator'
   },
   {
     id: 'market_navigator',
@@ -69,209 +72,232 @@ export const MARKET_CARDS: MarketCard[] = [
     cost: 3,
     symbol: 'propeller',
     effect: '+1 Range for this launch',
-    reveal: { cash: 1, influence: 1 }
+    reveal: { cash: 1, influence: 1 },
+    flavor: 'Dead reckoning specialist using course, speed, and drift'
   },
   {
     id: 'market_weather_expert',
-    name: 'Weather Expert',
+    name: 'The Weatherman',
     category: 'technical',
     cost: 4,
     symbol: 'propeller',
     effect: 'Ignore Weather hazards this launch',
-    reveal: { engineers: 1 }
+    reveal: { engineers: 1 },
+    flavor: 'Reads the sky better than any bureau telegram'
   },
   {
     id: 'market_gas_engineer',
-    name: 'Gas Engineer',
+    name: 'Gasbag Man',
     category: 'technical',
     cost: 3,
     symbol: 'wrench',
     effect: 'Install Gas upgrade: -1 Weight',
-    reveal: { gas: 1 }
+    reveal: { gas: 1 },
+    flavor: 'Specialist in gas cells and lifting calculations'
   },
   {
     id: 'market_engine_specialist',
-    name: 'Engine Specialist',
+    name: 'Engine Room Mechanic',
     category: 'technical',
     cost: 3,
     symbol: 'wrench',
     effect: 'Install Propulsion upgrade: -1 Weight',
-    reveal: { cash: 1, research: 1, influence: 1 }
+    reveal: { cash: 1, research: 1, influence: 1 },
+    flavor: 'Machinist assigned to the engine gondolas'
   },
   {
     id: 'market_safety_inspector',
-    name: 'Safety Inspector',
+    name: 'The Scrutineer',
     category: 'technical',
     cost: 4,
     symbol: 'wrench',
     effect: '+2 Reliability for this launch',
-    reveal: { engineers: 1 }
+    reveal: { engineers: 1 },
+    flavor: 'Official inspector ensuring airworthiness'
   },
   {
     id: 'market_ground_crew_chief',
-    name: 'Ground Crew Chief',
+    name: 'Rigger Chief',
     category: 'technical',
     cost: 2,
     symbol: 'wrench',
     effect: '-2 Hull Cost',
-    reveal: { cash: 2, influence: 1 }
+    reveal: { cash: 2, influence: 1 },
+    flavor: 'Commands the ground handling crew'
   },
   {
     id: 'market_structural_engineer',
-    name: 'Structural Engineer',
+    name: 'Duralumin Man',
     category: 'technical',
     cost: 3,
     symbol: 'wrench',
     effect: 'Install Structure upgrade: +1 Lift',
-    reveal: { research: 1 }
+    reveal: { research: 1 },
+    flavor: 'Expert in the lightweight alloy that makes rigids possible'
   },
   {
     id: 'market_fuel_specialist',
-    name: 'Fuel Specialist',
+    name: 'Blaugas Handler',
     category: 'technical',
     cost: 3,
     symbol: 'wrench',
     effect: '-2 Lifting Gas cost',
-    reveal: { gas: 1, cash: 1, influence: 1 }
+    reveal: { gas: 1, cash: 1, influence: 1 },
+    flavor: 'Manages the special fuel gas carried in the hull'
   },
 
   // === POLITICAL/FINANCIAL PERSONNEL (10 Agent Cards) ===
   {
     id: 'market_aristocrat',
-    name: 'The Aristocrat',
+    name: 'The Nob',
     category: 'political',
     cost: 5,
     symbol: 'coin',
     effect: 'Gain 5',
-    reveal: { influence: 3 }
+    reveal: { influence: 3 },
+    flavor: 'Old money with connections in high places'
   },
   {
     id: 'market_industrial_magnate',
-    name: 'Industrial Magnate',
+    name: 'Captain of Industry',
     category: 'political',
     cost: 6,
     symbol: 'any',
     effect: 'Gain 3',
-    reveal: { influence: 4 }
+    reveal: { influence: 4 },
+    flavor: 'A titan of commerce and manufacturing'
   },
   {
     id: 'market_government_minister',
-    name: 'Government Minister',
+    name: 'The Mandarin',
     category: 'political',
     cost: 5,
     symbol: 'propeller',
     effect: 'Take 2 Ministry actions',
-    reveal: { influence: 2, cash: 1 }
+    reveal: { influence: 2, cash: 1 },
+    flavor: 'Senior civil servant with considerable influence'
   },
   {
     id: 'market_shipping_tycoon',
-    name: 'Shipping Tycoon',
+    name: 'Merchant Prince',
     category: 'political',
     cost: 4,
     symbol: 'propeller',
     effect: '+2 Income from this route',
-    reveal: { influence: 3 }
+    reveal: { influence: 3 },
+    flavor: 'Controls lucrative trade routes across continents'
   },
   {
     id: 'market_press_baron',
-    name: 'Press Baron',
+    name: 'Fleet Street Baron',
     category: 'political',
     cost: 4,
     symbol: 'any',
     effect: 'No action effect',
-    reveal: { influence: 2, cash: 2 }
+    reveal: { influence: 2, cash: 2 },
+    flavor: 'The newspapers dance to his tune'
   },
   {
     id: 'market_foreign_investor',
-    name: 'Foreign Investor',
+    name: 'The Moneybags',
     category: 'political',
     cost: 3,
     symbol: 'coin',
     effect: 'Loan gives 35 instead of 30',
-    reveal: { influence: 2 }
+    reveal: { influence: 2 },
+    flavor: 'Capital from abroad, no questions asked'
   },
   {
     id: 'market_insurance_agent',
-    name: 'Insurance Agent',
+    name: "Lloyd's Man",
     category: 'political',
     cost: 3,
     symbol: 'coin',
     effect: 'Gain 1 Insurance policy',
-    reveal: { influence: 2 }
+    reveal: { influence: 2 },
+    flavor: 'Underwriter from the famous London exchange'
   },
   {
     id: 'market_bureaucrat',
-    name: 'Bureaucrat',
+    name: 'The Pen-Pusher',
     category: 'political',
     cost: 2,
     symbol: 'propeller',
     effect: 'Go first in turn order next round',
-    reveal: { influence: 2 }
+    reveal: { influence: 2 },
+    flavor: 'Knows which forms to file and when'
   },
   {
     id: 'market_union_representative',
-    name: 'Union Representative',
+    name: 'Shop Steward',
     category: 'political',
     cost: 2,
     symbol: 'coin',
     effect: '-1 per crew recruited this action',
-    reveal: { influence: 1, officers: 1 }
+    reveal: { influence: 1, officers: 1 },
+    flavor: 'Voice of the working men on the factory floor'
   },
   {
     id: 'market_customs_official',
-    name: 'Customs Official',
+    name: 'The Exciseman',
     category: 'political',
     cost: 3,
     symbol: 'propeller',
     effect: 'Claim route even if tied',
-    reveal: { influence: 2 }
+    reveal: { influence: 2 },
+    flavor: "His Majesty's collector of duties and tariffs"
   },
 
   // === RESEARCH PERSONNEL (5 Agent Cards) ===
   {
     id: 'market_university_partnership',
-    name: 'University Partnership',
+    name: 'The Boffin',
     category: 'research',
     cost: 4,
     symbol: 'propeller',
     effect: '-2 per Technology this round',
-    reveal: { research: 2 }
+    reveal: { research: 2 },
+    flavor: 'Brilliant academic with theoretical insights'
   },
   {
     id: 'market_patent_attorney',
-    name: 'Patent Attorney',
+    name: 'Patent Clerk',
     category: 'research',
     cost: 3,
     symbol: 'propeller',
     effect: '-1 to Technology Research cost',
-    reveal: { influence: 2 }
+    reveal: { influence: 2 },
+    flavor: 'Knows which ideas are truly novel'
   },
   {
     id: 'market_research_assistant',
-    name: 'Research Assistant',
+    name: 'The Lab Coat',
     category: 'research',
     cost: 2,
     symbol: 'propeller',
     effect: '+1 Research this round',
-    reveal: { influence: 1, research: 1 }
+    reveal: { influence: 1, research: 1 },
+    flavor: 'Tireless experimenter in applied sciences'
   },
   {
     id: 'market_technical_library',
-    name: 'Technical Library',
+    name: 'The Archives',
     category: 'research',
     cost: 3,
     symbol: 'propeller',
     effect: 'Look at top 3 R&D tiles; reorder them',
-    reveal: { research: 2 }
+    reveal: { research: 2 },
+    flavor: 'Repository of accumulated aeronautical knowledge'
   },
   {
     id: 'market_foreign_consultant',
-    name: 'Foreign Consultant',
+    name: 'Continental Expert',
     category: 'research',
     cost: 4,
     symbol: 'propeller',
     effect: 'Acquire Tech another player owns (pay double)',
-    reveal: { research: 1, cash: 1, influence: 1 }
+    reveal: { research: 1, cash: 1, influence: 1 },
+    flavor: "Brings expertise from Europe's leading programs"
   },
 
   // === ORGANIZATIONS (5 Agent Cards) ===
@@ -282,34 +308,38 @@ export const MARKET_CARDS: MarketCard[] = [
     cost: 6,
     symbol: 'wrench',
     effect: 'Install 1 Upgrade ignoring Tech requirement',
-    reveal: { engineers: 1, influence: 2 }
+    reveal: { engineers: 1, influence: 2 },
+    flavor: 'Patrons of exploration and scientific discovery'
   },
   {
     id: 'market_combat_veteran',
-    name: 'Combat Veteran',
+    name: 'Old Contemptible',
     category: 'organizations',
     cost: 5,
     symbol: 'propeller',
     effect: 'Gain 8; Combat missions: +2 Income',
-    reveal: { officers: 1, cash: 1 }
+    reveal: { officers: 1, cash: 1 },
+    flavor: "Survivor of the Kaiser's 'contemptible little army'"
   },
   {
     id: 'market_luxury_travel_agency',
-    name: 'Luxury Travel Agency',
+    name: "Cook's Man",
     category: 'organizations',
     cost: 5,
     symbol: 'propeller',
     effect: '+1 Luxury stat for this launch',
-    reveal: { influence: 3 }
+    reveal: { influence: 3 },
+    flavor: 'Agent of Thomas Cook & Son, travel pioneers'
   },
   {
     id: 'market_aviation_club',
-    name: 'Aviation Club',
+    name: 'Aero Club',
     category: 'organizations',
     cost: 4,
     symbol: 'coin',
     effect: 'Recruit 1 Officer free',
-    reveal: { influence: 2, officers: 1 }
+    reveal: { influence: 2, officers: 1 },
+    flavor: 'Gentlemen aviators and aerial enthusiasts'
   },
   {
     id: 'market_engineering_guild',
@@ -318,7 +348,8 @@ export const MARKET_CARDS: MarketCard[] = [
     cost: 4,
     symbol: 'coin',
     effect: 'Recruit 1 Engineer at -1',
-    reveal: { influence: 1, engineers: 1 }
+    reveal: { influence: 1, engineers: 1 },
+    flavor: 'Brotherhood of skilled craftsmen and artificers'
   }
 ];
 
@@ -328,13 +359,14 @@ export const MARKET_CARDS: MarketCard[] = [
  * It provides a reliable deck-building foundation when the market doesn't have good options.
  */
 export const RESERVE_CARD: MarketCard = {
-  id: 'reserve_airship_enthusiast',
-  name: 'Airship Enthusiast',
+  id: 'reserve_aeronaut',
+  name: 'The Aeronaut',
   category: 'organizations',
   cost: 2,
   symbol: 'any',
   effect: null,
-  reveal: { influence: 2 }
+  reveal: { influence: 2 },
+  flavor: 'Veteran balloonist and lighter-than-air pioneer'
 };
 
 /**

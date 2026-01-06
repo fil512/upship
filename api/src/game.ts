@@ -100,6 +100,7 @@ export interface Card {
 	};
 	effect?: string | null;
 	ability?: string;
+	flavor?: string; // Period-authentic description for thematic immersion
 }
 
 // Hazard card

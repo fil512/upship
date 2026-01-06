@@ -66,15 +66,15 @@ describe('Rules Compliance - Market Deck', () => {
       const { MARKET_CARDS } = getMarketCardData();
       const technicalNames = [
         'Chief Engineer',
-        'Test Pilot',
+        'Kite Jockey',
         'Navigator',
-        'Weather Expert',
-        'Gas Engineer',
-        'Engine Specialist',
-        'Safety Inspector',
-        'Ground Crew Chief',
-        'Structural Engineer',
-        'Fuel Specialist'
+        'The Weatherman',
+        'Gasbag Man',
+        'Engine Room Mechanic',
+        'The Scrutineer',
+        'Rigger Chief',
+        'Duralumin Man',
+        'Blaugas Handler'
       ];
 
       for (const name of technicalNames) {
@@ -87,16 +87,16 @@ describe('Rules Compliance - Market Deck', () => {
     it('should have all required Political/Financial Personnel cards per Appendix H', () => {
       const { MARKET_CARDS } = getMarketCardData();
       const politicalNames = [
-        'The Aristocrat',
-        'Industrial Magnate',
-        'Government Minister',
-        'Shipping Tycoon',
-        'Press Baron',
-        'Foreign Investor',
-        'Insurance Agent',
-        'Bureaucrat',
-        'Union Representative',
-        'Customs Official'
+        'The Nob',
+        'Captain of Industry',
+        'The Mandarin',
+        'Merchant Prince',
+        'Fleet Street Baron',
+        'The Moneybags',
+        "Lloyd's Man",
+        'The Pen-Pusher',
+        'Shop Steward',
+        'The Exciseman'
       ];
 
       for (const name of politicalNames) {
@@ -109,11 +109,11 @@ describe('Rules Compliance - Market Deck', () => {
     it('should have all required Research Personnel cards per Appendix H', () => {
       const { MARKET_CARDS } = getMarketCardData();
       const researchNames = [
-        'University Partnership',
-        'Patent Attorney',
-        'Research Assistant',
-        'Technical Library',
-        'Foreign Consultant'
+        'The Boffin',
+        'Patent Clerk',
+        'The Lab Coat',
+        'The Archives',
+        'Continental Expert'
       ];
 
       for (const name of researchNames) {
@@ -127,9 +127,9 @@ describe('Rules Compliance - Market Deck', () => {
       const { MARKET_CARDS } = getMarketCardData();
       const orgNames = [
         'Royal Geographic Society',
-        'Combat Veteran',
-        'Luxury Travel Agency',
-        'Aviation Club',
+        'Old Contemptible',
+        "Cook's Man",
+        'Aero Club',
         'Engineering Guild'
       ];
 
@@ -146,34 +146,34 @@ describe('Rules Compliance - Market Deck', () => {
       // Verify specific card costs from Appendix H
       const expectedCosts = {
         'Chief Engineer': 4,
-        'Test Pilot': 5,
+        'Kite Jockey': 5,
         'Navigator': 3,
-        'Weather Expert': 4,
-        'Gas Engineer': 3,
-        'Engine Specialist': 3,
-        'Safety Inspector': 4,
-        'Ground Crew Chief': 2,
-        'Structural Engineer': 3,
-        'Fuel Specialist': 3,
-        'The Aristocrat': 5,
-        'Industrial Magnate': 6,
-        'Government Minister': 5,
-        'Shipping Tycoon': 4,
-        'Press Baron': 4,
-        'Foreign Investor': 3,
-        'Insurance Agent': 3,
-        'Bureaucrat': 2,
-        'Union Representative': 2,
-        'Customs Official': 3,
-        'University Partnership': 4,
-        'Patent Attorney': 3,
-        'Research Assistant': 2,
-        'Technical Library': 3,
-        'Foreign Consultant': 4,
+        'The Weatherman': 4,
+        'Gasbag Man': 3,
+        'Engine Room Mechanic': 3,
+        'The Scrutineer': 4,
+        'Rigger Chief': 2,
+        'Duralumin Man': 3,
+        'Blaugas Handler': 3,
+        'The Nob': 5,
+        'Captain of Industry': 6,
+        'The Mandarin': 5,
+        'Merchant Prince': 4,
+        'Fleet Street Baron': 4,
+        'The Moneybags': 3,
+        "Lloyd's Man": 3,
+        'The Pen-Pusher': 2,
+        'Shop Steward': 2,
+        'The Exciseman': 3,
+        'The Boffin': 4,
+        'Patent Clerk': 3,
+        'The Lab Coat': 2,
+        'The Archives': 3,
+        'Continental Expert': 4,
         'Royal Geographic Society': 6,
-        'Combat Veteran': 5,
-        'Luxury Travel Agency': 5,
-        'Aviation Club': 4,
+        'Old Contemptible': 5,
+        "Cook's Man": 5,
+        'Aero Club': 4,
         'Engineering Guild': 4
       };
 
@@ -190,34 +190,34 @@ describe('Rules Compliance - Market Deck', () => {
       // Verify specific card symbols from Appendix H
       const expectedSymbols = {
         'Chief Engineer': 'wrench',
-        'Test Pilot': 'propeller',
+        'Kite Jockey': 'propeller',
         'Navigator': 'propeller',
-        'Weather Expert': 'propeller',
-        'Gas Engineer': 'wrench',
-        'Engine Specialist': 'wrench',
-        'Safety Inspector': 'wrench',
-        'Ground Crew Chief': 'wrench',
-        'Structural Engineer': 'wrench',
-        'Fuel Specialist': 'wrench',
-        'The Aristocrat': 'coin',
-        'Industrial Magnate': 'any',
-        'Government Minister': 'propeller',
-        'Shipping Tycoon': 'propeller',
-        'Press Baron': 'any',
-        'Foreign Investor': 'coin',
-        'Insurance Agent': 'coin',
-        'Bureaucrat': 'propeller',
-        'Union Representative': 'coin',
-        'Customs Official': 'propeller',
-        'University Partnership': 'propeller',
-        'Patent Attorney': 'propeller',
-        'Research Assistant': 'propeller',
-        'Technical Library': 'propeller',
-        'Foreign Consultant': 'propeller',
+        'The Weatherman': 'propeller',
+        'Gasbag Man': 'wrench',
+        'Engine Room Mechanic': 'wrench',
+        'The Scrutineer': 'wrench',
+        'Rigger Chief': 'wrench',
+        'Duralumin Man': 'wrench',
+        'Blaugas Handler': 'wrench',
+        'The Nob': 'coin',
+        'Captain of Industry': 'any',
+        'The Mandarin': 'propeller',
+        'Merchant Prince': 'propeller',
+        'Fleet Street Baron': 'any',
+        'The Moneybags': 'coin',
+        "Lloyd's Man": 'coin',
+        'The Pen-Pusher': 'propeller',
+        'Shop Steward': 'coin',
+        'The Exciseman': 'propeller',
+        'The Boffin': 'propeller',
+        'Patent Clerk': 'propeller',
+        'The Lab Coat': 'propeller',
+        'The Archives': 'propeller',
+        'Continental Expert': 'propeller',
         'Royal Geographic Society': 'wrench',
-        'Combat Veteran': 'propeller',
-        'Luxury Travel Agency': 'propeller',
-        'Aviation Club': 'coin',
+        'Old Contemptible': 'propeller',
+        "Cook's Man": 'propeller',
+        'Aero Club': 'coin',
         'Engineering Guild': 'coin'
       };
 
