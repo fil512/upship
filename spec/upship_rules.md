@@ -725,15 +725,17 @@ Distribution: 3 Wrench, 3 Coin, 3 Propeller, 1 Any.
 | Card | Symbol | Agent Effect | Reveal |
 |------|--------|--------------|--------|
 | Apprentice | Any | None | 1 Influence |
-| Mechanic | Wrench | None | 1 £ |
+| Mechanic | Wrench | None | 1 £, 1 Influence |
 | Draftsman | Wrench | Draw 1 card | 1 Influence |
 | Rigger | Wrench | −£2 ship build cost | 1 Research |
 | Purser | Coin | Gain £2 | 2 Influence |
-| Clerk | Coin | Gain £1 | 1 £ |
-| Investor | Coin | None | 3 Influence |
+| Clerk | Coin | Gain £1 | 1 £, 1 Influence |
+| Investor | Coin | None | 2 Influence |
 | Researcher | Propeller | −£1 per Research | 1 Research |
 | Helmsman | Propeller | +1 ship stat this launch | 1 Officer |
 | Navigator | Propeller | Look at top Hazard card | 1 Influence |
+
+**Starting Deck Influence:** Total 9 Influence (average 0.9/card). Distribution: 30% give 0, 50% give 1, 20% give 2.
 
 ## 11.4 Market Deck
 

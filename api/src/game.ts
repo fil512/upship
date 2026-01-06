@@ -11,7 +11,7 @@ export type GamePhase =
 	| 'age_transition_blueprint_design'
 	| 'game_complete';
 
-// Ship status
+// Ship status (deprecated - ships are now counters)
 export type ShipStatus =
 	| 'hangar'
 	| 'launched'
@@ -20,6 +20,49 @@ export type ShipStatus =
 	| 'destroyed'
 	| 'damaged'
 	| 'crashed';
+
+// Hazard info attached to pending launch (flat structure matching server)
+export interface PendingHazardInfo {
+	// Core hazard info
+	type: string;
+	name: string;
+	category?: string;  // 'clear' | 'minor' | 'major' | 'fire' | 'mechanical'
+	challengeType?: string;
+	difficulty: number;
+	flak?: number;
+	// Fire hazard specific
+	engineerCost?: number;
+	noSave?: boolean;
+	hydrogenOnly?: boolean;
+	// Special effects
+	special?: string;
+	gasLossOnFailure?: boolean;
+	// Ship stats for comparison
+	relevantStat?: number;
+	statName?: string;
+	engineersNeeded?: number;
+	// Auto-pass flags
+	autoPass?: boolean;
+	autoPassReason?: string | null;
+	heliumFireImmunity?: boolean;
+	conductiveCoveringImmunity?: boolean;
+	fireResistantFabricAvailable?: boolean;
+	// From HazardCard
+	id?: string;
+	hazardType?: string;
+}
+
+// Pending launch state (when a ship is mid-launch awaiting hazard check)
+export interface PendingLaunch {
+	routeId: string;
+	missionId?: string;
+	cityChoice?: string;
+	gasType?: GasType;
+	stats?: ShipStats;  // Ship stats at launch time
+	hazard?: HazardCard;  // The actual hazard card (for API compatibility)
+	hazardInfo?: PendingHazardInfo;  // Processed hazard info for UI
+	launchedAge?: number;  // Age when ship was launched
+}
 
 // Gas types
 export type GasType = 'hydrogen' | 'helium';
@@ -82,14 +125,18 @@ export interface HazardCard {
 	fireResistantFabricAvailable?: boolean;
 }
 
-// Ship stats
+// Ship stats (all optional for flexibility, calculated from blueprint at launch time)
 export interface ShipStats {
-	speed: number;
-	range: number;
-	ceiling: number;
-	reliability: number;
-	luxury: number;
+	speed?: number;
+	range?: number;
+	ceiling?: number;
+	reliability?: number;
+	luxury?: number;
+	income?: number;
 	structure?: number;
+	weight?: number;
+	lift?: number;
+	hullCost?: number;
 }
 
 // Ship structure (flat stats for easier component access)
@@ -105,6 +152,7 @@ export interface Ship {
 	ceiling: number;
 	reliability: number;
 	luxury: number;
+	income: number;
 	gasType?: GasType;
 	gasCubes?: number;
 	routeId?: string;
@@ -137,7 +185,21 @@ export interface Route {
 }
 
 // Combat Mission (Age II)
-export type MissionType = 'bombing_run' | 'reconnaissance' | 'transport' | 'patrol';
+export type MissionType =
+	| 'bombing_run'
+	| 'reconnaissance'
+	| 'resupply'
+	| 'naval_patrol'
+	| 'artillery_observation'
+	| 'transport'
+	| 'patrol';
+
+export interface MissionSpecialBonus {
+	income?: number;
+	vp?: number;
+	range?: number;
+	description: string;
+}
 
 export interface Mission {
 	id: string;
@@ -149,10 +211,9 @@ export interface Mission {
 	reliability?: number;
 	income: number;
 	vp: number;
-	specialBonus?: {
-		type: string;
-		description: string;
-	};
+	bonusVp?: number;
+	special?: string | null;
+	specialBonus?: MissionSpecialBonus;
 	claimed?: string | null; // playerId or null
 	completedBy?: string | null;
 }
@@ -224,7 +285,12 @@ export interface PlayerState {
 	influence: number;
 	hasPassed: boolean;
 	techCards: string[]; // Server sends tech card IDs, not Technology objects
-	ships: Ship[];
+	// Ship counters (ships are tokens, not individual entities)
+	hangarShips: number;  // 0-3, ships ready to launch
+	repairShips: number;  // 0-3, ships being repaired
+	pendingLaunch?: PendingLaunch;  // Set when a ship is mid-launch awaiting hazard
+	// Deprecated - kept for backwards compatibility during migration
+	ships?: Ship[];
 	routes: Route[];
 	blueprint: Blueprint;
 	hand: Card[];
@@ -303,6 +369,7 @@ export interface GameState {
 	techBag: Technology[];
 	marketCards: Card[];
 	marketDeck: Card[];
+	reserveCard: Card;  // Always-available card (like Dune's Arrakis Liaison)
 	// Cards tentatively claimed during reveal (cardId -> playerId)
 	marketCardsClaimed?: Record<string, string>;
 	techCardsClaimed?: Record<string, string>;
@@ -313,6 +380,8 @@ export interface GameState {
 	log: LogEntry[];      // Last 5 entries only (full log fetched on demand)
 	logCount?: number;    // Total log entry count
 	vp?: number;
+	launchpadActive?: Record<string, boolean>;  // Which players are at launchpad
+	missionRow?: Mission[];  // Age II combat missions
 	// Age transition state (present during age_transition_blueprint_design phase)
 	ageTransitionBlueprintDesign?: {
 		newAge: number;

@@ -56,7 +56,7 @@ describe('Rules Compliance - Worker Placement', () => {
         id: 'starter_7',
         name: 'Investor',
         symbol: 'coin',
-        reveal: { influence: 3 },
+        reveal: { influence: 2 },  // Updated per Dune comparison: 3→2
         effect: 'None'
       };
 
@@ -142,7 +142,7 @@ describe('Rules Compliance - Worker Placement', () => {
       // Set up player with Rigger discount and cash
       playerState.buildDiscount = 2;  // From Rigger card effect
       playerState.cash = 10;
-      playerState.ships = [];
+      playerState.hangarShips = 0;  // Ships are now counters
 
       // Base hull cost is 2 (base) + frame cost + fabric cost
       // With testBlueprint, it would be higher
@@ -162,7 +162,7 @@ describe('Rules Compliance - Worker Placement', () => {
 
       // Hull cost 2 - 2 discount = 0 (minimum 1), so cost 1
       // Actually, let's check what the code does with discount
-      expect(result.newState.players['1'].ships.length).toBe(1);
+      expect(result.newState.players['1'].hangarShips).toBe(1);
     });
   });
 

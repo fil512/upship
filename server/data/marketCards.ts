@@ -96,7 +96,7 @@ export const MARKET_CARDS: MarketCard[] = [
     cost: 3,
     symbol: 'wrench',
     effect: 'Install Propulsion upgrade: -1 Weight',
-    reveal: { cash: 1, research: 1 }
+    reveal: { cash: 1, research: 1, influence: 1 }
   },
   {
     id: 'market_safety_inspector',
@@ -114,7 +114,7 @@ export const MARKET_CARDS: MarketCard[] = [
     cost: 2,
     symbol: 'wrench',
     effect: '-2 Hull Cost',
-    reveal: { cash: 2 }
+    reveal: { cash: 2, influence: 1 }
   },
   {
     id: 'market_structural_engineer',
@@ -132,7 +132,7 @@ export const MARKET_CARDS: MarketCard[] = [
     cost: 3,
     symbol: 'wrench',
     effect: '-2 Lifting Gas cost',
-    reveal: { gas: 1, cash: 1 }
+    reveal: { gas: 1, cash: 1, influence: 1 }
   },
 
   // === POLITICAL/FINANCIAL PERSONNEL (10 Agent Cards) ===
@@ -271,7 +271,7 @@ export const MARKET_CARDS: MarketCard[] = [
     cost: 4,
     symbol: 'propeller',
     effect: 'Acquire Tech another player owns (pay double)',
-    reveal: { research: 1, cash: 1 }
+    reveal: { research: 1, cash: 1, influence: 1 }
   },
 
   // === ORGANIZATIONS (5 Agent Cards) ===
@@ -323,6 +323,21 @@ export const MARKET_CARDS: MarketCard[] = [
 ];
 
 /**
+ * Reserve Card (Always Available)
+ * Like Dune Imperium's Arrakis Liaison, this card is always available for purchase.
+ * It provides a reliable deck-building foundation when the market doesn't have good options.
+ */
+export const RESERVE_CARD: MarketCard = {
+  id: 'reserve_airship_enthusiast',
+  name: 'Airship Enthusiast',
+  category: 'organizations',
+  cost: 2,
+  symbol: 'any',
+  effect: null,
+  reveal: { influence: 2 }
+};
+
+/**
  * Create a shuffled market deck from the card definitions
  * @returns Shuffled array of market cards
  */
@@ -351,6 +366,7 @@ export function createMarketRow(): { marketRow: MarketCard[]; marketDeck: Market
 // CommonJS compatibility
 module.exports = {
   MARKET_CARDS,
+  RESERVE_CARD,
   createMarketDeck,
   createMarketRow
 };

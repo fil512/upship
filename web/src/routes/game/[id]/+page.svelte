@@ -82,10 +82,10 @@
 	};
 
 	// Build preview data for a location
-	function buildActionPreview(locationId: string, cardIndex: number, blueprint: BlueprintType | null | undefined): ActionPreview {
+	function buildActionPreview(locationId: string, cardIndex: number, blueprint: BlueprintType | null | undefined): ActionPreviewData {
 		const locationName = LOCATION_NAMES[locationId] || locationId;
-		let costs: ActionPreview['costs'] = [];
-		let benefits: ActionPreview['benefits'] = [];
+		let costs: ActionPreviewData['costs'] = [];
+		let benefits: ActionPreviewData['benefits'] = [];
 
 		// Calculate dynamic costs from blueprint
 		const hullCost = calculateHullCost(blueprint);
@@ -143,13 +143,14 @@
 	let pendingLocationName: string = '';
 
 	// State for action preview panel (shown before confirming worker placement)
-	type ActionPreview = {
+	type ActionPreviewData = {
 		locationId: string;
 		locationName: string;
 		costs: Array<{ icon: string; label: string; value: string }>;
 		benefits: Array<{ icon: string; label: string }>;
 		cardIndex: number;
-	} | null;
+	};
+	type ActionPreview = ActionPreviewData | null;
 	let pendingActionPreview: ActionPreview = null;
 
 	// Blueprint Design mode state
@@ -437,7 +438,8 @@
 	let pendingHazardResponse: { spendEngineers: boolean } | null = null;
 
 	async function handleLaunchShip() {
-		if (!selectedShip || !selectedRouteId || !selectedGasType) {
+		// Ships are tokens - no individual ship ID needed
+		if (!hasShipsToLaunch || !selectedRouteId || !selectedGasType) {
 			showToast('Select gas type and route first', 'error');
 			return;
 		}
@@ -445,8 +447,8 @@
 		// Age II uses missionId instead of routeId
 		const currentAge = $gameState?.age || 1;
 		const actionData = currentAge === 2
-			? { shipId: selectedShip.id, missionId: selectedRouteId, gasType: selectedGasType }
-			: { shipId: selectedShip.id, routeId: selectedRouteId, gasType: selectedGasType };
+			? { missionId: selectedRouteId, gasType: selectedGasType }
+			: { routeId: selectedRouteId, gasType: selectedGasType };
 		const result = await sendAction({
 			actionType: 'LAUNCH_SHIP',
 			actionData
@@ -463,13 +465,13 @@
 	// Called when city is selected after hazard check passes
 	async function handleCitySelect(event: CustomEvent<{ city: string }>) {
 		showCityModal = false;
-		if (!shipAwaitingHazard || !pendingHazardResponse) {
+		if (!pendingLaunch || !pendingHazardResponse) {
 			return;
 		}
+		// Ships are tokens - no shipId needed
 		const result = await sendAction({
 			actionType: 'RESPOND_TO_HAZARD',
 			actionData: {
-				shipId: shipAwaitingHazard.id,
 				spendEngineers: pendingHazardResponse.spendEngineers,
 				cityChoice: event.detail.city
 			}
@@ -536,9 +538,12 @@
 	$: claimedRouteIds = routes.filter((r) => r.claimed).map((r) => r.id);
 	$: cities = $gameState?.map?.cities || {};
 
-	// All player ships for map display
-	$: allPlayerShips = Object.entries($gameState?.players || {}).flatMap(([playerId, player]) =>
-		(player.ships || []).map((ship) => ({ ship, faction: player.faction }))
+	// Count ships on routes per player (routes track claims, not individual ships)
+	$: playerRouteCounts = Object.fromEntries(
+		Object.entries($gameState?.players || {}).map(([playerId, player]) => [
+			playerId,
+			routes.filter((r) => r.claimed === playerId).length
+		])
 	);
 
 	// Player ID to faction mapping (for route claim colors)
@@ -650,10 +655,11 @@
 
 	// Launchpad state - when active, show launch UI
 	$: isLaunchpadActive = $gameState?.launchpadActive?.[$effectiveUserId] === true;
-	$: myShips = $myState?.ships || [];
-	$: launchableShips = myShips.filter((s) => s.status === 'hangar');
-	$: selectedShip = launchableShips[0] || null; // Auto-select first ship in hangar
-	$: launchGasRequired = selectedShip ? (shipStats?.gas || 1) : 1;
+	// Ships are tokens (counters) - no individual ship objects
+	$: hangarShipsCount = $myState?.hangarShips || 0;
+	$: repairShipsCount = $myState?.repairShips || 0;
+	$: hasShipsToLaunch = hangarShipsCount > 0;
+	$: launchGasRequired = calculateGasRequired(viewedPlayerState?.blueprint || $myState?.blueprint);
 	$: canAffordHydrogen = ($myState?.gasCubes?.hydrogen || 0) >= launchGasRequired;
 	$: canAffordHelium = ($myState?.gasCubes?.helium || 0) >= launchGasRequired;
 	let selectedRouteId: string | null = null;
@@ -683,16 +689,16 @@
 		activeTab = 'map';
 	}
 
-	// Hazard response state - ship awaiting hazard response
-	$: shipAwaitingHazard = myShips.find((s) => s.status === 'awaiting_hazard' && s.pendingHazard);
-	$: pendingHazard = shipAwaitingHazard?.pendingHazard;
+	// Hazard response state - pendingLaunch contains hazard info
+	$: pendingLaunch = $myState?.pendingLaunch;
+	$: pendingHazard = pendingLaunch?.hazardInfo;  // Flat structure with all hazard info
 	$: canAffordEngineers = ($myState?.engineers || 0) >= (pendingHazard?.engineersNeeded || 0);
 	// Abort outcome info (per Section 8.2: gas lost, officers refunded, ship returns)
-	$: abortGasType = shipAwaitingHazard?.gasType || 'hydrogen';
-	$: abortGasAmount = shipStats?.gas || 1;
+	$: abortGasType = pendingLaunch?.gasType || 'hydrogen';
+	$: abortGasAmount = launchGasRequired;
 	// Route for city choice modal during hazard response
-	$: hazardRoute = shipAwaitingHazard?.pendingRouteId
-		? routes.find((r) => r.id === shipAwaitingHazard.pendingRouteId)
+	$: hazardRoute = pendingLaunch?.routeId
+		? routes.find((r) => r.id === pendingLaunch.routeId)
 		: null;
 
 	// Peeked hazard - from Navigator card or Weather Bureau
@@ -739,20 +745,19 @@
 	}
 
 	async function handleRespondToHazard(spendEngineers: boolean) {
-		if (!shipAwaitingHazard) return;
+		if (!pendingLaunch) return;
 
 		// Determine if hazard will pass (need city choice) or fail (no city needed)
-		const hazard = pendingHazard;
 		// noSave hazards (like Catastrophic Explosion) always destroy the ship
-		const isNoSave = hazard?.noSave || hazard?.type === 'catastrophic_explosion';
+		const isNoSave = pendingHazard?.noSave || pendingHazard?.type === 'catastrophic_explosion';
 		const willPass = !isNoSave && (
-			hazard?.autoPassReason ||
-			hazard?.engineersNeeded === 0 ||
+			pendingHazard?.autoPassReason ||
+			pendingHazard?.engineersNeeded === 0 ||
 			(spendEngineers && canAffordEngineers)
 		);
 
 		// Age 2 missions don't need city choice - just complete the mission
-		const isMission = shipAwaitingHazard.pendingMissionId && ($gameState?.age === 2);
+		const isMission = pendingLaunch.missionId && ($gameState?.age === 2);
 
 		if (willPass && !isMission && hazardRoute) {
 			// Show city modal - city choice needed for successful route launch
@@ -760,11 +765,10 @@
 			showCityModal = true;
 		} else {
 			// Either: hazard fails, OR it's a mission (no city), OR no valid route, OR noSave
-			// Send RESPOND_TO_HAZARD directly
+			// Ships are tokens - no shipId needed
 			const result = await sendAction({
 				actionType: 'RESPOND_TO_HAZARD',
 				actionData: {
-					shipId: shipAwaitingHazard.id,
 					spendEngineers
 				}
 			});
@@ -804,6 +808,7 @@
 	$: isMarketInteractive = isInPurchaseSelection;
 	$: hasPendingPurchases = (pendingMarketPurchases.length > 0) || (pendingTechAcquisitions.length > 0);
 	$: marketCards = $gameState?.marketCards || [];
+	$: reserveCard = $gameState?.reserveCard || null;
 	$: techCards = $gameState?.rdBoard || [];
 	$: marketCardsClaimed = $gameState?.marketCardsClaimed || {};
 	$: techCardsClaimed = $gameState?.techCardsClaimed || {};
@@ -1083,13 +1088,12 @@
 								age={$gameState?.age || 1}
 								{routes}
 								{cities}
-								ships={$myState?.ships || []}
-								{allPlayerShips}
+								hasShipsInHangar={hasShipsToLaunch}
 								{playerFactions}
 								missionRow={$gameState?.missionRow || []}
 								myFaction={$myState?.faction}
 								selectable={$isMyTurn && isLaunchpadActive}
-								on:selectRoute={(e) => { selectedRouteId = e.detail.route?.id || e.detail.routeId; }}
+								on:selectRoute={(e) => { selectedRouteId = e.detail.route?.id; }}
 							/>
 							{#if isLaunchpadActive && selectedRouteId}
 								<p class="route-selected">Selected route: {selectedRouteId}</p>
@@ -1157,6 +1161,7 @@
 						<div class="market-tab">
 							<MarketSection
 								{marketCards}
+								{reserveCard}
 								{techCards}
 								claimedMarket={marketCardsClaimed}
 								claimedTech={techCardsClaimed}
@@ -1246,7 +1251,7 @@
 								</button>
 							{/if}
 						</div>
-					{:else if showBlueprintTiles && !isLaunchpadActive && !shipAwaitingHazard}
+					{:else if showBlueprintTiles && !isLaunchpadActive && !pendingLaunch}
 						<!-- Blueprint tab view mode - show tech tiles info -->
 						<p class="action-instruction">
 							View your blueprint and available tech tiles
@@ -1254,7 +1259,7 @@
 						<p class="action-hint">
 							Place an agent at Blueprint Design to modify your blueprint
 						</p>
-					{:else if isInPurchaseSelection && !isLaunchpadActive && !shipAwaitingHazard}
+					{:else if isInPurchaseSelection && !isLaunchpadActive && !pendingLaunch}
 						<!-- Purchase selection mode (after clicking Reveal) -->
 						<p class="action-instruction">Choose Agent and Tech cards to purchase</p>
 						<div class="reveal-row">
@@ -1275,7 +1280,7 @@
 								Undo Purchases
 							</button>
 						{/if}
-					{:else if isWorkerPlacementPhase && !isLaunchpadActive && !shipAwaitingHazard}
+					{:else if isWorkerPlacementPhase && !isLaunchpadActive && !pendingLaunch}
 						<p class="action-instruction">
 							{#if ($myState?.agentsRemaining || 0) <= 0}
 								No agents available. Click Reveal.
@@ -1366,7 +1371,7 @@
 						</div>
 					{/if}
 					{#if $isMyTurn}
-						{#if shipAwaitingHazard && pendingHazard}
+						{#if pendingLaunch && pendingHazard}
 							<!-- Hazard Response UI - ship awaiting hazard check -->
 							<div class="hazard-panel">
 								<h4>⚠️ Hazard Check</h4>
@@ -1418,7 +1423,7 @@
 							<div class="launch-panel">
 								<h4>Launch Ship</h4>
 
-								{#if launchableShips.length === 0}
+								{#if !hasShipsToLaunch}
 									<p class="action-hint">No ships in hangar to launch</p>
 								{:else if !selectedGasType}
 									<!-- Step 1: Gas selection via clickable slots -->

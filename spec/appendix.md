@@ -86,7 +86,7 @@ These items are physical component specifications for manufacturing. Rules are c
 3. **Starter Deck Review:** **RESOLVED** - See Section 11.3 for final deck:
    - 3 Wrench, 3 Coin, 3 Propeller, 1 Any — balanced access to all locations
    - Variety of reveal resources (£, Influence, Research, Officer)
-   - Investor card provides 3 Influence for Market purchases
+   - Total 9 Influence (avg 0.9/card): 30% zeros, 50% ones, 20% twos (matches Dune Imperium)
 
 ## A.3 Economy Balancing (All Resolved)
 
@@ -712,6 +712,16 @@ After each successful mission (removed from row), refill the Mission Row to 6 ca
 
 The Market Deck contains 30 purchasable Agent Cards. Five are displayed in the Market Row at all times. Purchase Agent Cards using Influence during the Reveal Phase.
 
+## Reserve Card (Always Available)
+
+The Reserve Card is always available for purchase, separate from the Market Row. Like Dune Imperium's Arrakis Liaison, it provides a reliable deck-building foundation.
+
+| Name | Cost | Symbol | Agent Effect | Reveal |
+|------|------|--------|--------------|--------|
+| Airship Enthusiast | 2 | Any | None | 2 Influence |
+
+**Design Note:** The Reserve Card prevents market stagnation by ensuring players always have an affordable purchase option. At cost 2, it's accessible early game; at reveal 2, it builds purchasing power for later rounds.
+
 ## Technical Personnel (10 Agent Cards)
 
 | Name | Cost | Symbol | Agent Effect | Reveal |
@@ -721,11 +731,11 @@ The Market Deck contains 30 purchasable Agent Cards. Five are displayed in the M
 | Navigator | 3 | Propeller | +1 Range for this launch | 1 £, 1 Influence |
 | Weather Expert | 4 | Propeller | Ignore Weather hazards this launch | 1 Engineer |
 | Gas Engineer | 3 | Wrench | Install Gas Tech Tile: -1 Weight | 1 Gas |
-| Engine Specialist | 3 | Wrench | Install Propulsion Tech Tile: -1 Weight | 1 £, 1 Research |
+| Engine Specialist | 3 | Wrench | Install Propulsion Tech Tile: -1 Weight | 1 £, 1 Research, 1 Influence |
 | Safety Inspector | 4 | Wrench | +2 Reliability for this launch | 1 Engineer |
-| Ground Crew Chief | 2 | Wrench | -£2 Hull Cost | 2 £ |
+| Ground Crew Chief | 2 | Wrench | -£2 Hull Cost | 2 £, 1 Influence |
 | Structural Engineer | 3 | Wrench | Install Frame Tech Tile: +1 Lift | 1 Research |
-| Fuel Specialist | 3 | Wrench | -£2 Lifting Gas cost | 1 Gas, 1 £ |
+| Fuel Specialist | 3 | Wrench | -£2 Lifting Gas cost | 1 Gas, 1 £, 1 Influence |
 
 ## Political/Financial Personnel (10 Agent Cards)
 
@@ -750,7 +760,7 @@ The Market Deck contains 30 purchasable Agent Cards. Five are displayed in the M
 | Patent Attorney | 3 | Propeller | -1 to Technology Research cost | 2 Influence |
 | Research Assistant | 2 | Propeller | +1 Research this round | 1 Influence, 1 Research |
 | Technical Library | 3 | Propeller | Look at top 3 R&D tiles; reorder them | 2 Research |
-| Foreign Consultant | 4 | Propeller | Acquire Tech another player owns (pay double) | 1 Research, 1 £ |
+| Foreign Consultant | 4 | Propeller | Acquire Tech another player owns (pay double) | 1 Research, 1 £, 1 Influence |
 
 ## Organizations (5 Agent Cards)
 

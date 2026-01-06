@@ -8,7 +8,8 @@ import type { PoolClient } from 'pg';
 
 const { pool } = require('../db');
 const { TECH_CARD_BAG, PROGRESS_THRESHOLDS } = require('../config/constants');
-const { TECH_TILES, calculateShipStats } = require('../data/upgrades');
+// calculateShipStats is imported for use in launch/hazard actions
+// TECH_TILES is no longer needed here - ships use blueprint stats at launch time
 const { generateId } = require('../utils/random');
 const { resourceFlowLogger } = require('./resourceFlowLogger');
 
@@ -52,75 +53,53 @@ interface FactionConfig {
 // Per rules Section 10: Each nation has unique starting tech cards and blueprint configuration
 const FACTION_CONFIG: Record<string, FactionConfig> = {
   germany: {
-    // Rules 10.1: Duralumin Framework, Goldbeater's Skin, Blaugas Fuel System, Maybach Engine
-    startingTechCards: ['duralumin_girders', 'goldbeater_skin', 'blaugas_storage', 'maybach_engine'],
-    // Pre-installed tech tiles so Germany can launch on turn 1
+    // Zeppelin-style design: Heavy frame, powerful Maybach engine (+1 speed)
+    startingTechCards: ['zeppelin_girders', 'goldbeater_skin', 'maybach_engine', 'blaugas_storage'],
     startingTechTiles: {
-      frame: 'duralumin_frame',
-      fabric: 'premium_envelope',
-      drive: 'maybach_cx'  // Germany invented the Maybach engine - Speed +2, Range +1
+      frame: 'zeppelin_frame',       // weight 3, gas_socket: 1
+      fabric: 'goldbeater_envelope', // weight 0
+      drive: 'maybach_hl'            // weight 2, speed: +1
     },
-    bonuses: { structure: 1 },
+    bonuses: {},
     // The Flaw: Cannot acquire helium_handling tech card
     bannedTechCards: ['helium_handling']
   },
   britain: {
-    // Rules 10.2: Wire Bracing, Doped Canvas, Imperial Mooring System, Improved Propeller
-    // Also starts with Dining Saloon tech card (for the pre-installed Restaurant tile)
-    startingTechCards: ['wire_bracing', 'doped_canvas', 'imperial_mooring', 'dining_saloon', 'improved_propeller'],
-    // Pre-installed tech tiles including Restaurant (Starting Advantage: "Pre-Installed Luxury")
+    // R-Class design: Wire-braced frame with passenger cabin (ships earn +1 income on routes)
+    startingTechCards: ['wire_bracing', 'doped_canvas', 'standard_propeller', 'passenger_accommodation', 'imperial_mooring'],
     startingTechTiles: {
-      frame: 'tensioned_frame',
-      fabric: 'doped_covering',
-      drive: 'efficient_propeller',  // Practical British engineering - Speed +1, Range +1
-      component: 'restaurant'  // "Pre-Installed Luxury" - requires dining_saloon tech card
+      frame: 'wire_braced_frame',      // weight 2, gas_socket: 1
+      fabric: 'doped_canvas_envelope', // weight 1
+      drive: 'standard_engine',        // weight 2
+      component: 'passenger_cabin'     // weight 0, income: +1 on route completion
     },
-    bonuses: { luxury: 1 }
+    bonuses: {}
   },
   usa: {
-    // Rules 10.3: Duralumin Framework, Gelatinized Latex, Trapeze Fighter, Helium Handling, Daimler Engine
-    startingTechCards: ['duralumin_girders', 'gelatinized_latex', 'trapeze_system', 'helium_handling', 'daimler_engine'],
-    // Pre-installed tech tiles so USA can launch on turn 1
+    // Goodyear-Zeppelin design: Safety-focused with high ceiling and reliability
+    startingTechCards: ['duralumin_girders', 'gelatinized_latex', 'basic_powerplant', 'trapeze_system', 'helium_handling'],
     startingTechTiles: {
-      frame: 'duralumin_frame',
-      fabric: 'synthetic_envelope',
-      drive: 'basic_engine'  // Standard engine - Speed +1
+      frame: 'rigid_duralumin_frame', // weight 3, ceiling: +1, gas_socket: 1
+      fabric: 'latex_envelope',       // weight 1, reliability: +1
+      drive: 'reliable_engine'        // weight 1
     },
-    bonuses: { safety: 1 },
+    bonuses: {},
     // Starting Advantage: Helium Monopoly - market doesn't advance when USA buys helium
     heliumMonopoly: true
   },
   italy: {
-    // Rules 10.4: Internal Keel, Rubberized Cotton, Articulated Keel Design, Improved Propeller
-    startingTechCards: ['internal_keel', 'rubberized_cotton', 'articulated_keel', 'improved_propeller'],
-    // Pre-installed tech tiles so Italy can launch on turn 1
+    // Nobile semi-rigid design: Long-range expedition capability (+1 range)
+    startingTechCards: ['internal_keel', 'rubberized_cotton', 'expedition_propeller', 'articulated_keel'],
     startingTechTiles: {
-      frame: 'semi_rigid_keel',
-      fabric: 'cotton_envelope',
-      drive: 'efficient_propeller'  // Boost to offset Low Ceiling flaw - Speed +1, Range +1
+      frame: 'semi_rigid_frame',     // weight 2, gas_socket: 1
+      fabric: 'rubberized_envelope', // weight 1
+      drive: 'expedition_engine'     // weight 2, range: +1
     },
-    bonuses: { speed: 1 },
+    bonuses: {},
     // The Flaw: Low Ceiling - fewer payload slots (handled in blueprint)
     lowCeiling: true
   }
 };
-
-// Tech tile definition
-interface TechTile {
-  weight?: number;
-  lift?: number;
-  [key: string]: unknown;
-}
-
-// Ship stats from calculateShipStats
-interface ShipStats {
-  speed: number;
-  range: number;
-  ceiling: number;
-  reliability: number;
-  luxury: number;
-  [key: string]: number;
-}
 
 // Create initial player state
 function createPlayerState(faction: Faction): PlayerState {
@@ -131,41 +110,8 @@ function createPlayerState(faction: Faction): PlayerState {
     ? { hydrogen: 0, helium: 2 }
     : { hydrogen: 2, helium: 0 };
 
-  // Create blueprint first so we can build starting ship from it
+  // Create blueprint (ships use current blueprint stats, not stored stats)
   const blueprint = createInitialBlueprint(faction);
-
-  // Calculate ship stats from starting blueprint (per rules Section 3.2)
-  const shipStats: ShipStats = calculateShipStats(blueprint, config.bonuses || {}, 1);
-
-  // Calculate weight from frame/fabric tech tiles
-  let weight = 0;
-  for (const tileId of [...(blueprint.frameSlots || []), ...(blueprint.fabricSlots || [])]) {
-    if (tileId && (TECH_TILES[tileId] as TechTile)?.weight) {
-      weight += (TECH_TILES[tileId] as TechTile).weight!;
-    }
-  }
-
-  // Calculate lift from frame/fabric tech tiles
-  let lift = 0;
-  for (const tileId of [...(blueprint.frameSlots || []), ...(blueprint.fabricSlots || [])]) {
-    if (tileId && (TECH_TILES[tileId] as TechTile)?.lift) {
-      lift += (TECH_TILES[tileId] as TechTile).lift!;
-    }
-  }
-
-  // Create starting ship (per rules Section 3.2: each player starts with 1 airship)
-  const startingShip = {
-    id: generateId('ship'),
-    status: 'hangar' as const,
-    routeId: undefined as string | undefined,
-    lift,
-    weight,
-    speed: shipStats.speed,
-    range: shipStats.range,
-    ceiling: shipStats.ceiling,
-    reliability: shipStats.reliability,
-    luxury: shipStats.luxury
-  };
 
   return {
     faction,
@@ -183,7 +129,10 @@ function createPlayerState(faction: Faction): PlayerState {
     agentsRemaining: 2, // Per rules Section 2.1: Start with 2 agents
     hasPassed: false, // Whether player has passed in worker placement this round
     techCards: config.startingTechCards || [],
-    ships: [startingShip], // Per rules Section 3.2: Start with 1 airship in hangar
+    // Ship counters (ships are tokens, not individual entities with stats)
+    // Per rules Section 3.2: Start with 1 airship in hangar
+    hangarShips: 1,
+    repairShips: 0,
     routes: [],
     blueprint: blueprint as unknown as PlayerState['blueprint'],
     hand: [],
@@ -253,18 +202,19 @@ interface StarterCard {
 
 // Create starter deck of 10 cards (Section 11.3)
 // Distribution: 3 Wrench, 3 Coin, 3 Propeller, 1 Any
+// Total 9 Influence (avg 0.9/card): 30% zeros, 50% ones, 20% twos (matches Dune Imperium)
 function createStarterDeck(): Card[] {
   return [
     // 1 Any card
     { id: 'starter_1', name: 'Apprentice', symbol: 'any', reveal: { influence: 1 }, effect: null },
     // 3 Wrench cards
-    { id: 'starter_2', name: 'Mechanic', symbol: 'wrench', reveal: { cash: 1 }, effect: null },
+    { id: 'starter_2', name: 'Mechanic', symbol: 'wrench', reveal: { cash: 1, influence: 1 }, effect: null },
     { id: 'starter_3', name: 'Draftsman', symbol: 'wrench', reveal: { influence: 1 }, effect: 'Draw 1 card' },
     { id: 'starter_4', name: 'Rigger', symbol: 'wrench', reveal: { research: 1 }, effect: '-£2 ship build cost' },
     // 3 Coin cards
     { id: 'starter_5', name: 'Purser', symbol: 'coin', reveal: { influence: 2 }, effect: 'Gain £2' },
-    { id: 'starter_6', name: 'Clerk', symbol: 'coin', reveal: { cash: 1 }, effect: 'Gain £1' },
-    { id: 'starter_7', name: 'Investor', symbol: 'coin', reveal: { influence: 3 }, effect: null },
+    { id: 'starter_6', name: 'Clerk', symbol: 'coin', reveal: { cash: 1, influence: 1 }, effect: 'Gain £1' },
+    { id: 'starter_7', name: 'Investor', symbol: 'coin', reveal: { influence: 2 }, effect: null },
     // 3 Propeller cards
     { id: 'starter_8', name: 'Researcher', symbol: 'propeller', reveal: { research: 1 }, effect: '-£1 per Research' },
     { id: 'starter_9', name: 'Helmsman', symbol: 'propeller', reveal: { officers: 1 }, effect: '+1 ship stat' },
@@ -514,12 +464,12 @@ function createTechCardBagAndRDBoard(
 }
 
 // Create initial market cards using the 30-card market deck from Appendix H
-// Returns { marketCards, marketDeck } where marketCards is the visible row of 5
-// and marketDeck is the remaining 25 cards to draw from
-function createMarketCards(): { marketCards: Card[]; marketDeck: Card[] } {
-  const { createMarketRow } = require('../data/marketCards');
+// Returns { marketCards, marketDeck, reserveCard } where marketCards is the visible row of 5,
+// marketDeck is the remaining 25 cards to draw from, and reserveCard is always available
+function createMarketCards(): { marketCards: Card[]; marketDeck: Card[]; reserveCard: Card } {
+  const { createMarketRow, RESERVE_CARD } = require('../data/marketCards');
   const { marketRow, marketDeck } = createMarketRow();
-  return { marketCards: marketRow, marketDeck };
+  return { marketCards: marketRow, marketDeck, reserveCard: RESERVE_CARD };
 }
 
 // City definition
@@ -764,8 +714,8 @@ async function initializeGameState(
     // Per Section 3.1: (N-1) copies per card, minus faction starters
     const { rdBoard, techCardBag } = createTechCardBagAndRDBoard(1, playerCount, starterCounts);
 
-    // Create market cards (5 visible + 25 in deck)
-    const { marketCards, marketDeck } = createMarketCards();
+    // Create market cards (5 visible + 25 in deck + always-available reserve)
+    const { marketCards, marketDeck, reserveCard } = createMarketCards();
 
     // Calculate initial turn order by income (lowest first)
     // At game start, all players have income 5, so use original random order
@@ -810,6 +760,7 @@ async function initializeGameState(
       techBag: techCardBag,
       marketCards,
       marketDeck,
+      reserveCard,  // Always-available card (like Dune's Arrakis Liaison)
       progressTrack: 0,
       progressThresholds: PROGRESS_THRESHOLDS[playerCount],
       gasMarket: { hydrogen: 1, helium: 2 }, // Prices per cube (Section 4.4: H₂ fixed at £1, He starts at £2)

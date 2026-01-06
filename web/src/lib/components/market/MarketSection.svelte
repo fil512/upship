@@ -3,8 +3,10 @@
 	import type { Card, Technology, Faction, PendingPurchase } from '$lib/types/game';
 	import MarketRow from './MarketRow.svelte';
 	import TechRow from './TechRow.svelte';
+	import CardComponent from '$lib/components/cards/Card.svelte';
 
 	export let marketCards: Card[] = [];
+	export let reserveCard: Card | null = null;
 	export let techCards: Technology[] = [];
 	export let claimedMarket: Record<string, string> = {};
 	export let claimedTech: Record<string, string> = {};
@@ -45,16 +47,29 @@
 			<span class="hint">Click to purchase with Influence</span>
 		{/if}
 	</div>
-	<MarketRow
-		cards={marketCards}
-		claimed={claimedMarket}
-		{pendingMarketPurchases}
-		{interactive}
-		{myPlayerId}
-		{players}
-		on:buy={handleBuyMarket}
-		on:undo={handleUndoMarket}
-	/>
+	<div class="market-with-reserve">
+		<MarketRow
+			cards={marketCards}
+			claimed={claimedMarket}
+			{pendingMarketPurchases}
+			{interactive}
+			{myPlayerId}
+			{players}
+			on:buy={handleBuyMarket}
+			on:undo={handleUndoMarket}
+		/>
+		{#if reserveCard}
+			<div class="reserve-section">
+				<div class="reserve-label">Always Available</div>
+				<CardComponent
+					card={reserveCard}
+					marketMode={true}
+					selectable={interactive}
+					on:buy={handleBuyMarket}
+				/>
+			</div>
+		{/if}
+	</div>
 
 	<div class="section-header">
 		<h4>Tech Cards</h4>
@@ -102,5 +117,31 @@
 		font-size: 0.7rem;
 		color: var(--color-text-secondary, #666);
 		font-style: italic;
+	}
+
+	.market-with-reserve {
+		display: flex;
+		align-items: flex-start;
+		gap: 0.5rem;
+	}
+
+	.reserve-section {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		padding: 0.5rem;
+		background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+		border: 2px solid #81c784;
+		border-radius: 8px;
+		min-width: fit-content;
+	}
+
+	.reserve-label {
+		font-size: 0.65rem;
+		font-weight: 600;
+		color: #2e7d32;
+		text-transform: uppercase;
+		letter-spacing: 0.5px;
+		margin-bottom: 0.25rem;
 	}
 </style>
