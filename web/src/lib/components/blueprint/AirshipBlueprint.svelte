@@ -160,7 +160,15 @@
 	interface IconInfo {
 		type: string;
 		x: number;
+		y: number;
 	}
+
+	// Max icons per tile is ~8 (e.g., redundant_cells: 4 lift + 2 reliability + 2 weight)
+	// Slot is 100x54, with name taking ~12px at bottom, we have ~35px height for icons
+	// Use a grid layout: up to 4 icons per row, 2 rows max
+	const MAX_ICONS_PER_ROW = 5;
+	const ICON_SIZE = 14; // Smaller icons to fit
+	const ICON_SPACING = 16; // Tighter spacing
 
 	function getIconsWithPositions(stats: Record<string, number>, weight: number): IconInfo[] {
 		const icons: IconInfo[] = [];
@@ -170,22 +178,45 @@
 		for (const stat of order) {
 			const count = stats[stat] || 0;
 			for (let i = 0; i < count; i++) {
-				icons.push({ type: stat, x: 0 });
+				icons.push({ type: stat, x: 0, y: 0 });
 			}
 		}
 
 		// Add weight icons
 		for (let i = 0; i < weight; i++) {
-			icons.push({ type: 'weight', x: 0 });
+			icons.push({ type: 'weight', x: 0, y: 0 });
 		}
 
-		// Calculate positions (larger spacing for bigger icons)
-		const spacing = 30;
 		const totalIcons = icons.length;
-		const startX = -((totalIcons - 1) * spacing) / 2;
 
-		for (let i = 0; i < icons.length; i++) {
-			icons[i].x = startX + i * spacing;
+		if (totalIcons <= MAX_ICONS_PER_ROW) {
+			// Single row - center horizontally
+			const totalWidth = (totalIcons - 1) * ICON_SPACING;
+			const startX = -totalWidth / 2;
+			for (let i = 0; i < icons.length; i++) {
+				icons[i].x = startX + i * ICON_SPACING;
+				icons[i].y = 0;
+			}
+		} else {
+			// Two rows
+			const topRowCount = Math.ceil(totalIcons / 2);
+			const bottomRowCount = totalIcons - topRowCount;
+
+			// Top row
+			const topWidth = (topRowCount - 1) * ICON_SPACING;
+			const topStartX = -topWidth / 2;
+			for (let i = 0; i < topRowCount; i++) {
+				icons[i].x = topStartX + i * ICON_SPACING;
+				icons[i].y = -8;
+			}
+
+			// Bottom row
+			const bottomWidth = (bottomRowCount - 1) * ICON_SPACING;
+			const bottomStartX = -bottomWidth / 2;
+			for (let i = topRowCount; i < totalIcons; i++) {
+				icons[i].x = bottomStartX + (i - topRowCount) * ICON_SPACING;
+				icons[i].y = 8;
+			}
 		}
 
 		return icons;
@@ -308,11 +339,11 @@
 						style="--slot-color: {slotColors.fabric}"
 					/>
 					{#if info}
-						<!-- Icons row - large and prominent -->
+						<!-- Icons row - compact to fit within tile -->
 						<g transform="translate({slotWidth/2}, 22)">
 							{#each iconPositions as icon}
-								<g transform="translate({icon.x}, 0)">
-									<svg x="-14" y="-14" width="28" height="28" viewBox="0 0 24 24">
+								<g transform="translate({icon.x}, {icon.y})">
+									<svg x={-ICON_SIZE/2} y={-ICON_SIZE/2} width={ICON_SIZE} height={ICON_SIZE} viewBox="0 0 24 24">
 										{@html getIconSvgContent(icon.type)}
 									</svg>
 								</g>
@@ -351,11 +382,11 @@
 						style="--slot-color: {slotColors.frame}"
 					/>
 					{#if info}
-						<!-- Icons row - large and prominent -->
+						<!-- Icons row - compact to fit within tile -->
 						<g transform="translate({slotWidth/2}, 22)">
 							{#each iconPositions as icon}
-								<g transform="translate({icon.x}, 0)">
-									<svg x="-14" y="-14" width="28" height="28" viewBox="0 0 24 24">
+								<g transform="translate({icon.x}, {icon.y})">
+									<svg x={-ICON_SIZE/2} y={-ICON_SIZE/2} width={ICON_SIZE} height={ICON_SIZE} viewBox="0 0 24 24">
 										{@html getIconSvgContent(icon.type)}
 									</svg>
 								</g>
@@ -394,11 +425,11 @@
 						style="--slot-color: {slotColors.drive}"
 					/>
 					{#if info}
-						<!-- Icons row - large and prominent -->
+						<!-- Icons row - compact to fit within tile -->
 						<g transform="translate({slotWidth/2}, 22)">
 							{#each iconPositions as icon}
-								<g transform="translate({icon.x}, 0)">
-									<svg x="-14" y="-14" width="28" height="28" viewBox="0 0 24 24">
+								<g transform="translate({icon.x}, {icon.y})">
+									<svg x={-ICON_SIZE/2} y={-ICON_SIZE/2} width={ICON_SIZE} height={ICON_SIZE} viewBox="0 0 24 24">
 										{@html getIconSvgContent(icon.type)}
 									</svg>
 								</g>
@@ -437,11 +468,11 @@
 						style="--slot-color: {slotColors.component}"
 					/>
 					{#if info}
-						<!-- Icons row - large and prominent -->
+						<!-- Icons row - compact to fit within tile -->
 						<g transform="translate({slotWidth/2}, 22)">
 							{#each iconPositions as icon}
-								<g transform="translate({icon.x}, 0)">
-									<svg x="-14" y="-14" width="28" height="28" viewBox="0 0 24 24">
+								<g transform="translate({icon.x}, {icon.y})">
+									<svg x={-ICON_SIZE/2} y={-ICON_SIZE/2} width={ICON_SIZE} height={ICON_SIZE} viewBox="0 0 24 24">
 										{@html getIconSvgContent(icon.type)}
 									</svg>
 								</g>
