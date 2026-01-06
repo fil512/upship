@@ -8,15 +8,15 @@ const {
 
 describe('GroundBoard Module', () => {
   describe('GROUND_BOARD_LOCATIONS constant', () => {
-    it('should contain 12 locations', () => {
-      expect(Object.keys(GROUND_BOARD_LOCATIONS).length).toBe(12);
+    it('should contain 15 locations', () => {
+      expect(Object.keys(GROUND_BOARD_LOCATIONS).length).toBe(15);
     });
 
-    it('should have unique position values 1-12', () => {
+    it('should have unique position values 1-15', () => {
       const positions = Object.values(GROUND_BOARD_LOCATIONS).map(l => l.position);
-      expect(new Set(positions).size).toBe(12);
+      expect(new Set(positions).size).toBe(15);
       expect(Math.min(...positions)).toBe(1);
-      expect(Math.max(...positions)).toBe(12);
+      expect(Math.max(...positions)).toBe(15);
     });
 
     it('should have valid symbols for all locations', () => {
@@ -104,7 +104,7 @@ describe('GroundBoard Module', () => {
   describe('getLocationsBySymbol', () => {
     it('should return all locations for "any" symbol', () => {
       const result = getLocationsBySymbol('any');
-      expect(result.length).toBe(12);
+      expect(result.length).toBe(15);
     });
 
     it('should return only wrench locations', () => {
@@ -135,8 +135,8 @@ describe('GroundBoard Module', () => {
       const coinCount = getLocationsBySymbol('coin').length;
       const propellerCount = getLocationsBySymbol('propeller').length;
 
-      // Should total 12
-      expect(wrenchCount + coinCount + propellerCount).toBe(12);
+      // Should total 15 (added Personnel Office, Engineering Depot, Treasury)
+      expect(wrenchCount + coinCount + propellerCount).toBe(15);
 
       // Each type should have at least one
       expect(wrenchCount).toBeGreaterThan(0);

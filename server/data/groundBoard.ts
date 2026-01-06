@@ -1,5 +1,5 @@
 /**
- * Ground Board Data - 12 Worker Placement Action Spaces
+ * Ground Board Data - 15 Worker Placement Action Spaces
  *
  * Symbols:
  * - wrench: Technical (engineering/construction)
@@ -190,6 +190,45 @@ export const GROUND_BOARD_LOCATIONS: Record<string, GroundBoardLocation> = {
       type: 'CHECK_WEATHER',
       cost: 2, // £2
       effect: 'Peek at next hazard, optionally discard it'
+    }
+  },
+
+  personnel_office: {
+    id: 'personnel_office',
+    name: 'Personnel Office',
+    symbol: 'coin',
+    position: 13,
+    description: 'Recruit trained officers',
+    action: {
+      type: 'COLLECT_OFFICERS',
+      cost: 0,
+      effect: 'Gain officers equal to Officer Income Track'
+    }
+  },
+
+  engineering_depot: {
+    id: 'engineering_depot',
+    name: 'Engineering Depot',
+    symbol: 'wrench',
+    position: 14,
+    description: 'Hire skilled engineers',
+    action: {
+      type: 'COLLECT_ENGINEERS',
+      cost: 0,
+      effect: 'Gain engineers equal to Engineer Income Track'
+    }
+  },
+
+  treasury: {
+    id: 'treasury',
+    name: 'The Treasury',
+    symbol: 'coin',
+    position: 15,
+    description: 'Collect company earnings',
+    action: {
+      type: 'COLLECT_MONEY',
+      cost: 0,
+      effect: 'Gain cash equal to Income Track'
     }
   }
 };

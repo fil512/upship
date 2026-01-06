@@ -16,7 +16,7 @@ const { processLaunchShip, processClaimRoute, processNoMoreLaunches } = require(
 const { processLaunchCombatMission } = require('./combatMission');
 const { processRespondToHazard } = require('./hazard');
 const { processPlaceAgent, processRecallAgents } = require('./worker');
-const { processTakeLoan, processBuyInsurance, processCollectIncome } = require('./economy');
+const { processBuyInsurance } = require('./economy');
 const { processUpgradeOfficerIncome, processUpgradeEngineerIncome } = require('./crew');
 const { processPlayCard, processDrawCards, processBuyMarketCard, processDiscardHazard, processKeepHazard, processDiscardMinistryCard, processDiscardMarketCard } = require('./cards');
 const { processEndTurn } = require('./turn');
@@ -76,9 +76,7 @@ const ACTION_HANDLERS: Record<string, ActionHandler> = {
   REVEAL: processReveal,
 
   // Economy
-  TAKE_LOAN: processTakeLoan,
   BUY_INSURANCE: processBuyInsurance,
-  COLLECT_INCOME: processCollectIncome,
 
   // Crew
   UPGRADE_OFFICER_INCOME: processUpgradeOfficerIncome,

@@ -8,7 +8,7 @@ import type { GameState, PlayerState, Card, LogEntry } from '@upship/api';
 const { shuffleArray } = require('../../utils/random');
 const { calculateTurnOrder } = require('./turnOrder');
 const { refreshRnDBoard, refreshMarketRow } = require('./marketHelpers');
-const { HAND_SIZE, INITIAL_AGENTS, MIN_INCOME, LOAN_AMOUNT, LOAN_INCOME_PENALTY } = require('../../config/constants');
+const { HAND_SIZE, INITIAL_AGENTS } = require('../../config/constants');
 const { performAgeTransition } = require('./ageTransition');
 const { resourceFlowLogger, createFlowContext } = require('../../services/resourceFlowLogger');
 
@@ -35,7 +35,6 @@ type TransitionPlayerState = PlayerState & {
   researchLevel?: number;
   officerIncome?: number;
   engineerIncome?: number;
-  loans?: number;
   agentsRemaining?: number;
   hasPassed?: boolean;
   agents?: number;
@@ -210,6 +209,8 @@ function collectRevealResources(state: PhaseState): void {
 /**
  * Transition from Reveal phase to Income & Cleanup phase
  * Per Section 5.2: Net income = Income Track - Engineers in Barracks (upkeep)
+ * If negative, lose VP equal to the deficit (minimum 0 VP)
+ * Officers and Engineers are NOT auto-collected - must visit Personnel Office / Engineering Depot
  */
 function transitionToIncomeCleanup(state: PhaseState): void {
   state.phase = 'income_cleanup';
@@ -226,8 +227,7 @@ function transitionToIncomeCleanup(state: PhaseState): void {
   for (const playerId of state.playerOrder) {
     const playerState = state.players[playerId] as TransitionPlayerState;
 
-    // Per Section 5.2: "Gain £ equal to your Income Track minus Engineers in Barracks"
-    // This is NET income - upkeep is subtracted from income, not from cash
+    // Per Section 5.2: Net income = Income Track - Engineers in Barracks (£1 upkeep each)
     const grossIncome = playerState.income || 0;
     const engineerUpkeep = playerState.engineers || 0;
     const netIncome = grossIncome - engineerUpkeep;
@@ -236,18 +236,18 @@ function transitionToIncomeCleanup(state: PhaseState): void {
     const flowContext = createFlowContext(state, (state as { gameId?: string }).gameId || 'unknown');
     const faction = playerState.faction || 'unknown';
 
-    // Log gross income as fountain (trickle)
-    if (grossIncome > 0) {
-      resourceFlowLogger.logFountain(flowContext, playerId, faction, 'cash', grossIncome, 'trickle', 'Income Track', playerState.cash + (netIncome >= 0 ? netIncome : 0));
-    }
-
-    // Log engineer upkeep as sink
-    if (engineerUpkeep > 0) {
-      resourceFlowLogger.logSink(flowContext, playerId, faction, 'cash', engineerUpkeep, 'upkeep', 'Engineer upkeep', playerState.cash);
-    }
-
     if (netIncome >= 0) {
+      // Positive net income: gain cash
       playerState.cash += netIncome;
+
+      // Log gross income as fountain, upkeep as sink
+      if (grossIncome > 0) {
+        resourceFlowLogger.logFountain(flowContext, playerId, faction, 'cash', grossIncome, 'trickle', 'Income Track', playerState.cash);
+      }
+      if (engineerUpkeep > 0) {
+        resourceFlowLogger.logSink(flowContext, playerId, faction, 'cash', engineerUpkeep, 'upkeep', 'Engineer upkeep', playerState.cash);
+      }
+
       state.log.push({
         timestamp: new Date().toISOString(),
         message: `${playerState.faction.toUpperCase()} collected £${netIncome} (£${grossIncome} income - £${engineerUpkeep} engineer upkeep)`,
@@ -257,117 +257,29 @@ function transitionToIncomeCleanup(state: PhaseState): void {
         age: state.age
       } as LogEntry);
     } else {
-      // Negative net income: must pay the difference from cash
-      const deficit = Math.abs(netIncome);
-      if (playerState.cash >= deficit) {
-        playerState.cash -= deficit;
-        state.log.push({
-          timestamp: new Date().toISOString(),
-          message: `${playerState.faction.toUpperCase()} paid £${deficit} (£${engineerUpkeep} upkeep exceeds £${grossIncome} income)`,
-          playerId,
-          type: 'income',
-          round: state.round,
-          age: state.age
-        } as LogEntry);
-      } else {
-        // GAP-082: Cannot pay full deficit from cash - handle loans and potential bankruptcy
-        // Per Section 5.3: Must take loans until solvent, or go bankrupt if loans would exceed limit
-        const canPay = playerState.cash;
-        let remainingDebt = deficit - canPay;
-        playerState.cash = 0;
+      // Negative net income: lose VP equal to the deficit (VP cannot go below 0)
+      const vpLoss = Math.abs(netIncome);
+      const currentVp = playerState.vp || 0;
+      const actualVpLost = Math.min(vpLoss, currentVp);
+      playerState.vp = Math.max(0, currentVp - vpLoss);
 
-        state.log.push({
-          timestamp: new Date().toISOString(),
-          message: `${playerState.faction.toUpperCase()} cannot pay full upkeep: paid £${canPay}, needs £${remainingDebt} more`,
-          playerId,
-          type: 'income',
-          round: state.round,
-          age: state.age
-        } as LogEntry);
-
-        // Initialize loans counter if not present
-        if (typeof playerState.loans !== 'number') {
-          playerState.loans = 0;
-        }
-
-        // Try to take loans to cover the debt
-        let currentIncome = playerState.income;
-        while (remainingDebt > 0) {
-          // Check if taking a loan would exceed the debt limit
-          const potentialNewIncome = currentIncome - (LOAN_INCOME_PENALTY as number);
-          if (potentialNewIncome < (MIN_INCOME as number)) {
-            // Bankruptcy! Cannot take loan without exceeding debt limit
-            // Per Section 5.3: lose 10 VP and reset Income Track to 0
-            const vpLost = Math.min(10, playerState.vp || 0);
-            playerState.vp = Math.max(0, (playerState.vp || 0) - 10);
-            playerState.income = 0;
-
-            state.log.push({
-              timestamp: new Date().toISOString(),
-              message: `${playerState.faction.toUpperCase()} is BANKRUPT! Cannot take loans (income would drop below ${MIN_INCOME}). Lost ${vpLost} VP, income reset to 0.`,
-              playerId,
-              type: 'bankruptcy',
-              round: state.round,
-              age: state.age
-            } as LogEntry);
-            break;
-          }
-
-          // Take a loan
-          playerState.loans++;
-          playerState.cash += LOAN_AMOUNT as number;
-          currentIncome -= LOAN_INCOME_PENALTY as number;
-          playerState.income = currentIncome;
-
-          // Log loan as fountain for cash, sink for income
-          resourceFlowLogger.logFountain(flowContext, playerId, faction, 'cash', LOAN_AMOUNT as number, 'loan', 'Take loan', playerState.cash);
-          resourceFlowLogger.logSink(flowContext, playerId, faction, 'income', LOAN_INCOME_PENALTY as number, 'loan_penalty', 'Loan income penalty', playerState.income);
-
-          state.log.push({
-            timestamp: new Date().toISOString(),
-            message: `${playerState.faction.toUpperCase()} took loan #${playerState.loans}: gained £${LOAN_AMOUNT}, income reduced to £${playerState.income}`,
-            playerId,
-            type: 'loan',
-            round: state.round,
-            age: state.age
-          } as LogEntry);
-
-          // Pay off remaining debt from the loan money
-          if (playerState.cash >= remainingDebt) {
-            playerState.cash -= remainingDebt;
-            remainingDebt = 0;
-          } else {
-            remainingDebt -= playerState.cash;
-            playerState.cash = 0;
-          }
-        }
+      // Log VP loss
+      if (actualVpLost > 0) {
+        resourceFlowLogger.logSink(flowContext, playerId, faction, 'vp', actualVpLost, 'upkeep_penalty', 'Negative net income', playerState.vp);
       }
-    }
 
-    // Collect Officers and Engineers from their income tracks
-    const officersGained = playerState.officerIncome || 0;
-    const engineersGained = playerState.engineerIncome || 1;
-    playerState.officers += officersGained;
-    playerState.engineers += engineersGained;
-
-    // Log officer/engineer income as fountains
-    if (officersGained > 0) {
-      resourceFlowLogger.logFountain(flowContext, playerId, faction, 'officers', officersGained, 'trickle', 'Officer Income Track', playerState.officers);
-    }
-    if (engineersGained > 0) {
-      resourceFlowLogger.logFountain(flowContext, playerId, faction, 'engineers', engineersGained, 'trickle', 'Engineer Income Track', playerState.engineers);
-    }
-
-    if (officersGained > 0 || engineersGained > 0) {
       state.log.push({
         timestamp: new Date().toISOString(),
-        message: `${playerState.faction.toUpperCase()} gained +${officersGained} Officer(s), +${engineersGained} Engineer(s)`,
+        message: `${playerState.faction.toUpperCase()} lost ${actualVpLost} VP (net income: £${grossIncome} - £${engineerUpkeep} upkeep = ${netIncome})`,
         playerId,
         type: 'income',
         round: state.round,
         age: state.age
       } as LogEntry);
     }
+
+    // NOTE: Officers and Engineers are NOT auto-collected anymore
+    // Players must visit Personnel Office and Engineering Depot board spaces to collect them
 
     // Discard remaining hand
     if (playerState.hand && playerState.hand.length > 0) {

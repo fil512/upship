@@ -55,17 +55,7 @@ jest.mock('../../server/services/actionProcessorService', () => ({
     if (actionType === 'UNKNOWN_ACTION') {
       return { error: 'Unknown action type: UNKNOWN_ACTION' };
     }
-    if (actionType === 'TAKE_LOAN') {
-      const playerState = state.players[playerId];
-      if (playerState.loans >= 2) {
-        return { error: 'Maximum 2 loans allowed. Pay off existing debt first.' };
-      }
-      const newState = JSON.parse(JSON.stringify(state));
-      newState.players[playerId].cash += 30;
-      newState.players[playerId].income -= 3;
-      newState.players[playerId].loans = (newState.players[playerId].loans || 0) + 1;
-      return { newState };
-    }
+    // Note: TAKE_LOAN removed from game - loans system eliminated
     if (actionType === 'PASS') {
       const newState = JSON.parse(JSON.stringify(state));
       newState.players[playerId].hasPassed = true;
@@ -433,32 +423,7 @@ describe('GameState Routes', () => {
       expect(res.status).toBe(200);
     });
 
-    it('should process TAKE_LOAN action', async () => {
-      const gameState = createFullGameState();
-      gameState.phase = 'income_cleanup';
-      gameStateService.getGameState.mockResolvedValue({ state: gameState, version: 1, id: 1 });
-      gameStateService.updateGameState.mockResolvedValue({ state: gameState, version: 2 });
-
-      const res = await request(app)
-        .post('/api/state/1/action')
-        .send({ actionType: 'TAKE_LOAN' });
-
-      expect(res.status).toBe(200);
-    });
-
-    it('should reject TAKE_LOAN when max loans reached', async () => {
-      const gameState = createFullGameState();
-      gameState.phase = 'income_cleanup';
-      gameState.players['1'].loans = 3;
-      gameStateService.getGameState.mockResolvedValue({ state: gameState, version: 1, id: 1 });
-
-      const res = await request(app)
-        .post('/api/state/1/action')
-        .send({ actionType: 'TAKE_LOAN' });
-
-      expect(res.status).toBe(400);
-      expect(res.body.error).toContain('Maximum');
-    });
+    // Note: TAKE_LOAN tests removed - loans have been removed from the game
 
     it('should process RECALL_AGENTS action', async () => {
       const gameState = createFullGameState();

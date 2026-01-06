@@ -214,7 +214,8 @@ def evaluate_launch_readiness(
     officers_needed = current_age
     if officers < officers_needed:
         missing.append(f'need {officers_needed - officers} more officer(s) for Age {current_age}')
-        priorities.append('flight_school')  # Increase officer income
+        priorities.append('personnel_office')  # Collect officers from income track
+        priorities.append('flight_school')  # Increase officer income track
 
     # Check 4: Do we have gas?
     gas_needed = 1
@@ -268,7 +269,8 @@ def evaluate_launch_readiness(
     # Check 6: Do we have engineers for hazard mitigation?
     if engineers < 2:
         missing.append(f'low engineers ({engineers}/2 recommended)')
-        priorities.append('technical_institute')
+        priorities.append('engineering_depot')  # Collect engineers from income track
+        priorities.append('technical_institute')  # Increase engineer income track
 
     can_launch = (len(hangar_ships) > 0 and slots_ready and
                   officers >= officers_needed and total_gas >= gas_needed and
@@ -504,6 +506,10 @@ def find_strategic_placement(
     if hangar_count < 2 and cash >= 5:
         priority_locations.append('construction_hall')
 
+    # Collect cash from income track if running low
+    if cash < 10:
+        priority_locations.append('treasury')
+
     if total_gas < 3:
         priority_locations.append('gas_depot')
 
@@ -519,6 +525,7 @@ def find_strategic_placement(
         'gas_depot', 'technical_institute', 'ministry',
         'flight_school', 'weather_bureau', 'government_liaison',
         'insurance_bureau', 'launchpad', 'launchpad_2',
+        'personnel_office', 'engineering_depot', 'treasury',
     ]
 
     for loc in fallback_priorities:

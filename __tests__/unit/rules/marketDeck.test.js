@@ -321,10 +321,10 @@ describe('Rules Compliance - Market Deck', () => {
       expect(state.players.player1.cash).toBe(15);
     });
 
-    it('should handle Foreign Investor effect (Loan gives 35 instead of 30)', () => {
+    it('should handle Foreign Investor effect (converted to £5 cash bonus since loans removed)', () => {
       const state = {
         players: {
-          player1: { loanBonus: 0 }
+          player1: { cash: 10 }
         }
       };
       const card = { name: 'Foreign Investor', effect: 'Loan gives 35 instead of 30' };
@@ -332,7 +332,8 @@ describe('Rules Compliance - Market Deck', () => {
       const result = processCardEffect(state, 'player1', card, 'the_bank');
 
       expect(result.success).toBe(true);
-      expect(state.players.player1.loanBonus).toBe(5);
+      // Loans removed from game, effect converted to £5 cash bonus
+      expect(state.players.player1.cash).toBe(15);
     });
 
     it('should handle Insurance Agent effect (Gain 1 Insurance policy)', () => {

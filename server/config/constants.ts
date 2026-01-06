@@ -9,11 +9,8 @@ import type { Faction, GamePhase } from '@upship/api';
 export const HYDROGEN_PRICE = 1;
 export const HELIUM_PRICE_TRACK = [2, 3, 4, 5, 6, 8, 10, 15] as const;
 
-// Loans (The Bank) - per Section 5.3
-export const MAX_LOANS = 2;
-export const LOAN_AMOUNT = 30;
-export const LOAN_INCOME_PENALTY = 3;
-export const MIN_INCOME = -10;  // Debt limit per Section 5.3
+// Income limits
+export const MIN_INCOME = -10;  // Minimum income track (for insurance validation)
 
 // Game Progression
 export const HAND_SIZE = 5;
@@ -56,7 +53,7 @@ export const FACTIONS: Faction[] = ['germany', 'britain', 'usa', 'italy'];
 // Starting player resources
 export const STARTING_CASH = 15;
 export const STARTING_INCOME = 5;
-export const STARTING_OFFICER_INCOME = 0;
+export const STARTING_OFFICER_INCOME = 1;
 export const STARTING_ENGINEER_INCOME = 1;
 export const STARTING_OFFICERS = 1;
 export const STARTING_ENGINEERS = 2;
@@ -176,10 +173,7 @@ module.exports = {
   HYDROGEN_PRICE,
   HELIUM_PRICE_TRACK,
 
-  // Loans
-  MAX_LOANS,
-  LOAN_AMOUNT,
-  LOAN_INCOME_PENALTY,
+  // Income limits
   MIN_INCOME,
 
   // Game Progression

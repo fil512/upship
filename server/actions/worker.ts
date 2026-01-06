@@ -43,7 +43,6 @@ type WorkerPlayerState = Omit<PlayerState, 'peekedHazard'> & {
   peekedHazard?: { name?: string; type?: string; id?: string } | null;
   gasDiscount?: number;
   ministryActionsRemaining?: number;
-  loanBonus?: number;
   insurancePolicies?: number;
   crewRecruitDiscount?: number;
   engineerRecruitDiscount?: number;
@@ -242,10 +241,9 @@ function processCardEffect(state: GameState, playerId: string, card: Card, _loca
       return { success: true, message: '+2 Income from this route' };
 
     case 'Loan gives 35 instead of 30':
-      // Foreign Investor: Loans give 35 instead of 30
-      if (!playerState.loanBonus) playerState.loanBonus = 0;
-      playerState.loanBonus += 5;
-      return { success: true, message: 'Loans give 35 instead of 30' };
+      // Foreign Investor: Loans removed from game - give cash bonus instead
+      playerState.cash += 5;
+      return { success: true, message: 'Gained £5 (loan bonus converted)' };
 
     case 'Gain 1 Insurance policy':
       // Insurance Agent: Gain 1 Insurance policy
@@ -444,9 +442,6 @@ function executeLocationAction(
       }
     }
 
-    case 'the_bank':
-      return { success: true, message: 'May take a loan' };
-
     case 'government_liaison': {
       // Per Section 6.8: Spend 1-3 Officers to increase Income Track
       const { officerCount } = options;
@@ -557,6 +552,72 @@ function executeLocationAction(
         };
       }
       return { success: true, message: 'Hazard deck is empty' };
+    }
+
+    case 'personnel_office': {
+      // Gain officers equal to Officer Income Track
+      const officerIncome = (playerState as PlayerState & { officerIncome?: number }).officerIncome || 0;
+      if (officerIncome <= 0) {
+        state.log.push({
+          timestamp: new Date().toISOString(),
+          message: `Personnel Office: Officer Income Track is 0, no officers to collect`,
+          playerId,
+          type: 'action'
+        } as LogEntry);
+        return { success: true, message: 'Officer Income Track is 0 - no officers to collect' };
+      }
+      playerState.officers = (playerState.officers || 0) + officerIncome;
+      state.log.push({
+        timestamp: new Date().toISOString(),
+        message: `Personnel Office: Collected ${officerIncome} officer(s) (now have ${playerState.officers})`,
+        playerId,
+        type: 'action'
+      } as LogEntry);
+      return { success: true, message: `Collected ${officerIncome} officer(s)` };
+    }
+
+    case 'engineering_depot': {
+      // Gain engineers equal to Engineer Income Track
+      const engineerIncome = (playerState as PlayerState & { engineerIncome?: number }).engineerIncome || 1;
+      if (engineerIncome <= 0) {
+        state.log.push({
+          timestamp: new Date().toISOString(),
+          message: `Engineering Depot: Engineer Income Track is 0, no engineers to collect`,
+          playerId,
+          type: 'action'
+        } as LogEntry);
+        return { success: true, message: 'Engineer Income Track is 0 - no engineers to collect' };
+      }
+      playerState.engineers = (playerState.engineers || 0) + engineerIncome;
+      state.log.push({
+        timestamp: new Date().toISOString(),
+        message: `Engineering Depot: Collected ${engineerIncome} engineer(s) (now have ${playerState.engineers})`,
+        playerId,
+        type: 'action'
+      } as LogEntry);
+      return { success: true, message: `Collected ${engineerIncome} engineer(s)` };
+    }
+
+    case 'treasury': {
+      // Gain cash equal to Income Track (if positive)
+      const incomeTrack = playerState.income || 0;
+      if (incomeTrack <= 0) {
+        state.log.push({
+          timestamp: new Date().toISOString(),
+          message: `The Treasury: Income Track is ${incomeTrack}, no cash to collect`,
+          playerId,
+          type: 'action'
+        } as LogEntry);
+        return { success: true, message: `Income Track is ${incomeTrack} - no cash to collect` };
+      }
+      playerState.cash = (playerState.cash || 0) + incomeTrack;
+      state.log.push({
+        timestamp: new Date().toISOString(),
+        message: `The Treasury: Collected £${incomeTrack} (now have £${playerState.cash})`,
+        playerId,
+        type: 'action'
+      } as LogEntry);
+      return { success: true, message: `Collected £${incomeTrack}` };
     }
 
     default:

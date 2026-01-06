@@ -1,12 +1,12 @@
 /**
  * Economy Actions
- * TAKE_LOAN, BUY_INSURANCE, COLLECT_INCOME action processors
+ * BUY_INSURANCE action processor
  */
 
 import type { GameState, PlayerState, LogEntry } from '@upship/api';
 
 const { GameRuleError } = require('../errors');
-const { MAX_LOANS, LOAN_AMOUNT, LOAN_INCOME_PENALTY, MAX_INSURANCE_POLICIES, MIN_INCOME } = require('../config/constants');
+const { MAX_INSURANCE_POLICIES, MIN_INCOME } = require('../config/constants');
 
 interface ActionResult {
   newState: GameState;
@@ -14,52 +14,10 @@ interface ActionResult {
 
 // Extended player state with economy properties
 type EconomyPlayerState = PlayerState & {
-  loans?: number;
   insurance?: number;
   officerIncome?: number;
   engineerIncome?: number;
 };
-
-/**
- * Take a loan at The Bank
- */
-function processTakeLoan(state: GameState, playerId: string, _data: unknown): ActionResult {
-  const playerState = state.players[playerId] as EconomyPlayerState;
-
-  // Limit maximum loans to 2
-  const currentLoans = playerState.loans || 0;
-  if (currentLoans >= (MAX_LOANS as number)) {
-    throw new GameRuleError(`Maximum ${MAX_LOANS} loans allowed. Pay off existing debt first.`);
-  }
-
-  // Per Section 5.3: "If a loan would push you below -10, you cannot take it"
-  const currentIncome = playerState.income || 0;
-  const newIncome = currentIncome - (LOAN_INCOME_PENALTY as number);
-  if (newIncome < (MIN_INCOME as number)) {
-    throw new GameRuleError(
-      `Cannot take loan: Income would drop to ${newIncome}, below the debt limit of ${MIN_INCOME}. ` +
-      `Current income: ${currentIncome}.`
-    );
-  }
-
-  // Give the player £30
-  playerState.cash += LOAN_AMOUNT as number;
-
-  // Reduce income track by 3 (minimum -10 per Section 5.3)
-  playerState.income = Math.max(MIN_INCOME as number, currentIncome - (LOAN_INCOME_PENALTY as number));
-
-  // Track loan count for reference
-  playerState.loans = currentLoans + 1;
-
-  state.log.push({
-    timestamp: new Date().toISOString(),
-    message: `Took loan ${playerState.loans}/${MAX_LOANS}: gained £${LOAN_AMOUNT}, income reduced by ${LOAN_INCOME_PENALTY}`,
-    playerId,
-    type: 'action'
-  } as LogEntry);
-
-  return { newState: state };
-}
 
 interface InternalData {
   _internal?: boolean;
@@ -122,49 +80,11 @@ function processBuyInsurance(state: GameState, playerId: string, data: InternalD
   return { newState: state };
 }
 
-/**
- * Collect income at end of round
- * Note: Income is now auto-collected when entering income phase
- */
-function processCollectIncome(state: GameState, playerId: string, _data: unknown): ActionResult {
-  // Income is now auto-collected when entering income phase
-  // This action is kept for backwards compatibility but restricted to income_cleanup phase
-  if (state.phase !== 'income_cleanup') {
-    throw new GameRuleError('Can only collect income during the Income/Cleanup phase (income is auto-collected when the phase begins)');
-  }
-
-  const playerState = state.players[playerId] as EconomyPlayerState;
-
-  // Collect cash from income track
-  const incomeGained = playerState.income;
-  playerState.cash += incomeGained;
-
-  // Gain crew from income tracks
-  const officersGained = playerState.officerIncome || 0;
-  const engineersGained = playerState.engineerIncome || 1;
-
-  playerState.officers += officersGained;
-  playerState.engineers += engineersGained;
-
-  state.log.push({
-    timestamp: new Date().toISOString(),
-    message: `Collected income: £${incomeGained}, +${officersGained} Officer(s), +${engineersGained} Engineer(s)`,
-    playerId,
-    type: 'income'
-  } as LogEntry);
-
-  return { newState: state };
-}
-
 export {
-  processTakeLoan,
-  processBuyInsurance,
-  processCollectIncome
+  processBuyInsurance
 };
 
 // CommonJS compatibility
 module.exports = {
-  processTakeLoan,
-  processBuyInsurance,
-  processCollectIncome
+  processBuyInsurance
 };

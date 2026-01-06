@@ -121,7 +121,7 @@ Each player receives:
 9. **Starter Deck** of 10 cards (shuffled)
 10. **Income Track** set to £5
 11. **Research Level Track** set to 0
-12. **Officer Income Track** set to 0
+12. **Officer Income Track** set to 1
 13. **Engineer Income Track** set to 1
 14. **1 Airship** in Hangar (built from starting Blueprint)
 
@@ -224,10 +224,10 @@ Store purchased **Gas Cubes** here:
 
 | Track | Function | Starting Value |
 |-------|----------|----------------|
-| **Income Track** | £ earned per round from routes | £5 |
+| **Income Track** | £ earned at The Treasury; used for upkeep calculation | £5 |
 | **Research Level Track** | Base Research when you Reveal | 0 |
-| **Officer Income Track** | Free Officers per round; reaching +3 grants your 3rd Agent | 0 (no free Officers initially) |
-| **Engineer Income Track** | Free Engineers per round | 1 |
+| **Officer Income Track** | Officers recruited at Personnel Office; reaching +3 grants your 3rd Agent | 1 |
+| **Engineer Income Track** | Engineers hired at Engineering Depot | 1 |
 
 ## 4.7 Stat Tracks & Lift Calculator
 
@@ -301,27 +301,21 @@ Players start with 2 Agents. When your **Officer Income Track reaches +3**, imme
 
 After all players have revealed:
 
-1. **Collect Income:** Gain £ equal to your Income Track minus Engineers in Barracks (each Engineer costs £1 upkeep). If this is negative, you must take loans until solvent (see Loans below).
-2. **Collect Crew Income:** Gain Officers and Engineers per your Income Tracks.
+1. **Calculate Net Income:** Net Income = Income Track − Engineers in Barracks (each Engineer costs £1 upkeep).
+2. **Apply Net Income:**
+   - If positive: Gain that many £.
+   - If negative: Lose that many VP (minimum 0 VP).
 3. **Check Age Transition:** If Progress Track reached threshold, trigger Age Transition (see Section 12).
 4. **Refresh Agents:** Return all Agents to player supplies.
 5. **Draw Cards:** Draw until you have 5 cards (if fewer). If your draw deck runs out, shuffle your discard pile as a new draw deck.
 
-## 5.3 Loans (Free Action)
-
-You may take a loan at any time during your turn—this does not require an Agent or card.
-
-**Effect:** Gain £30 immediately. Reduce your Income Track by 3 positions.
-
-**Debt Limit:** Your Income Track cannot go below −10. If a loan would push you below −10, you cannot take it.
-
-**Bankruptcy:** If during Income & Cleanup you have negative net income and cannot take loans to cover it (because doing so would exceed the −10 limit), you are **bankrupt**—immediately lose 10 VP and reset your Income Track to 0.
+**Important:** Officers and Engineers are NOT automatically collected during Income & Cleanup. You must visit the Personnel Office (for Officers) or Engineering Depot (for Engineers) during the Worker Placement phase to recruit crew based on your income tracks.
 
 ---
 
 # 6. GROUND BOARD LOCATIONS
 
-The Ground Board has 12 action spaces. Each requires a matching card symbol.
+The Ground Board has 15 action spaces. Each requires a matching card symbol.
 
 ## 6.1 Research Institute (Coin)
 
@@ -435,6 +429,36 @@ See **Section 8: Launching Ships** for the complete procedure.
 **Cost:** £2.
 
 **Effect:** Look at the top card of your Hazard Deck. Either leave it on top or discard it.
+
+## 6.12 Personnel Office (Coin)
+
+**Action:** Recruit trained officers.
+
+**Cost:** Free.
+
+**Effect:** Gain Officers equal to your Officer Income Track.
+
+> **Example:** Hans has Officer Income 2 and visits the Personnel Office. He gains 2 Officers from the supply.
+
+## 6.13 Engineering Depot (Wrench)
+
+**Action:** Hire skilled engineers.
+
+**Cost:** Free.
+
+**Effect:** Gain Engineers equal to your Engineer Income Track.
+
+> **Example:** Clara has Engineer Income 3 and visits the Engineering Depot. She gains 3 Engineers from the supply.
+
+## 6.14 The Treasury (Coin)
+
+**Action:** Collect company earnings.
+
+**Cost:** Free.
+
+**Effect:** Gain £ equal to your Income Track. If your Income Track is 0 or negative, you gain nothing.
+
+> **Example:** Wilhelm has Income Track 7 and visits The Treasury. He gains £7.
 
 ---
 

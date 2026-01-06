@@ -152,67 +152,35 @@ describe('processAction', () => {
 
   describe('state immutability', () => {
     it('should not mutate original state on success', () => {
-      const originalCash = state.players['player-1'].cash;
       const originalIncome = state.players['player-1'].income;
+      state.players['player-1'].insurance = 0;
 
-      // Try TAKE_LOAN which modifies cash and income
-      processAction(state, 'player-1', 'TAKE_LOAN', {});
+      // Try BUY_INSURANCE which modifies income
+      // Set up valid conditions for insurance purchase
+      state.phase = 'worker_placement';
+      state.groundBoard = { placements: { insurance_bureau: { playerId: 'player-1' } } };
 
-      expect(state.players['player-1'].cash).toBe(originalCash);
+      processAction(state, 'player-1', 'BUY_INSURANCE', { _internal: true });
+
       expect(state.players['player-1'].income).toBe(originalIncome);
     });
 
     it('should not mutate original state on error', () => {
-      const originalLoans = state.players['player-1'].loans;
-      state.players['player-1'].loans = 2; // Max loans
+      const originalInsurance = 3; // Max insurance
+      state.players['player-1'].insurance = originalInsurance;
 
       try {
-        processAction(state, 'player-1', 'TAKE_LOAN', {});
+        processAction(state, 'player-1', 'BUY_INSURANCE', { _internal: true });
       } catch {
         // Expected to throw
       }
 
-      expect(state.players['player-1'].loans).toBe(2);
+      expect(state.players['player-1'].insurance).toBe(originalInsurance);
     });
   });
 
-  describe('COLLECT_INCOME', () => {
-    it('should add income and crew during income phase', () => {
-      state.phase = 'income_cleanup';
-      state.players['player-1'].officerIncome = 1;
-      state.players['player-1'].engineerIncome = 2;
-
-      const result = processAction(state, 'player-1', 'COLLECT_INCOME', {});
-
-      expect(result.newState.players['player-1'].cash).toBe(110); // 100 + 10 income
-      expect(result.newState.players['player-1'].officers).toBe(3); // 2 + 1
-      expect(result.newState.players['player-1'].engineers).toBe(5); // 3 + 2
-    });
-
-    it('should reject collecting income outside income phase', () => {
-      state.phase = 'worker_placement';
-
-      expect(() => processAction(state, 'player-1', 'COLLECT_INCOME', {}))
-        .toThrow(GameRuleError);
-    });
-  });
-
-  describe('TAKE_LOAN', () => {
-    it('should add cash and reduce income', () => {
-      const result = processAction(state, 'player-1', 'TAKE_LOAN', {});
-
-      expect(result.newState.players['player-1'].cash).toBe(130); // 100 + 30
-      expect(result.newState.players['player-1'].income).toBe(7); // 10 - 3
-      expect(result.newState.players['player-1'].loans).toBe(1);
-    });
-
-    it('should reject when max loans reached', () => {
-      state.players['player-1'].loans = 2;
-
-      expect(() => processAction(state, 'player-1', 'TAKE_LOAN', {}))
-        .toThrow(GameRuleError);
-    });
-  });
+  // Note: COLLECT_INCOME and TAKE_LOAN actions removed - officers/engineers
+  // collected via board spaces, loans removed from game
 
   describe('BUY_GAS', () => {
     it('should require worker_placement phase', () => {
@@ -256,14 +224,12 @@ describe('Action Error Handling', () => {
     })).toThrow(GameRuleError);
   });
 
-  it('should provide meaningful error messages', () => {
-    state.players['player-1'].loans = 2;
-
+  it('should provide meaningful error messages for unknown actions', () => {
     try {
-      processAction(state, 'player-1', 'TAKE_LOAN', {});
+      processAction(state, 'player-1', 'INVALID_ACTION', {});
       fail('Expected to throw');
     } catch (error) {
-      expect(error.message).toContain('loan');
+      expect(error.message).toContain('Unknown action type');
     }
   });
 });
