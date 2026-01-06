@@ -180,9 +180,9 @@
 			<span class="age-badge">Age {age}</span>
 		</div>
 		<div class="hull-cost">
-			<Icon name="cash" size={16} />
 			<span class="cost-value">{hullCost.total}</span>
-			<span class="cost-breakdown">(£2 + £{hullCost.frameCost} frame + £{hullCost.fabricCost} fabric)</span>
+			<Icon name="cash" size={16} />
+			<span class="cost-breakdown">= 2 base + {hullCost.frameCost} frame + {hullCost.fabricCost} fabric</span>
 		</div>
 	</div>
 
