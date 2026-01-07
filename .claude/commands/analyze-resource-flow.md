@@ -30,9 +30,9 @@ The script automatically finds the most recent flow JSON and outputs:
 
 | Metric | Target | Rationale |
 |--------|--------|-----------|
-| **Tech tiles** | **1** per player per round (rarely 2) | Age progression should be gradual |
-| **Market cards** | **1** per player per round (rarely 2) | Deck building should be steady |
-| **Total purchases** | **2** baseline, **3** on exceptional rounds | Creates meaningful decisions |
+| **Tech tiles** | **1.1** per player per round (rarely 2) | Age progression should be gradual |
+| **Market cards** | **1.1** per player per round (rarely 2) | Deck building should be steady |
+| **Total purchases** | **2.2** baseline, **3** on exceptional rounds | Creates meaningful decisions |
 | **Launch success rate** | **80%** | Launches should usually succeed but feel risky |
 
 The script compares actual purchases against these targets and diagnoses:
@@ -63,9 +63,9 @@ For each resource with issues, explain:
 
 | Purchase Type | Target per Player per Round | How to Achieve |
 |---------------|----------------------------|----------------|
-| **Tech tiles** | **1** (max 2 rarely) | Research gen ≈ avg tech cost |
-| **Market cards** | **1** (max 2 rarely) | Influence gen ≈ avg card cost |
-| **Total purchases** | **2** baseline | Creates meaningful scarcity |
+| **Tech tiles** | **1.1** (max 2 rarely) | Research gen ≈ 1.1× avg tech cost |
+| **Market cards** | **1.1** (max 2 rarely) | Influence gen ≈ 1.1× avg card cost |
+| **Total purchases** | **2.2** baseline | Creates meaningful scarcity |
 
 **SECONDARY TARGETS (Resource Flow):**
 
@@ -74,8 +74,8 @@ For each resource with issues, explain:
 | Currency (cash) | Sinks ≈ 80-100% of Fountains | Slight scarcity creates tension |
 | Crew (officers, engineers) | Sinks ≈ 60-80% of Fountains | Should feel valuable but available |
 | Consumables (gas) | Sinks ≈ 90-100% of Fountains | Should be mostly consumed |
-| Research | Generation ≈ 1× avg tech cost | Afford exactly 1 tech per round |
-| Influence | Generation ≈ 1× avg card cost | Afford exactly 1 card per round |
+| Research | Generation ≈ 1.1× avg tech cost | Afford ~1.1 techs per round |
+| Influence | Generation ≈ 1.1× avg card cost | Afford ~1.1 cards per round |
 | Income tracks | Sinks = 0 is OK | These are permanent upgrades |
 | VP | Fountains only | Victory condition, no sinks |
 
@@ -109,14 +109,14 @@ For each recommendation, suggest concrete code changes:
 
 EXECUTIVE SUMMARY:
 The economy has a critical pacing problem. Players buy 2.8 techs/round
-(goal: 1), causing ages to progress 3x too fast. The game ends in 3 rounds
+(goal: 1.1), causing ages to progress 2.5x too fast. The game ends in 3 rounds
 instead of the target 8-10 rounds.
 
 === PURCHASING POWER (PRIMARY METRIC) ===
 
 DESIGN GOALS:
-  - Techs per player per round: 1 (max 2 on rare rounds)
-  - Cards per player per round: 1 (max 2 on rare rounds)
+  - Techs per player per round: 1.1 (max 2 on rare rounds)
+  - Cards per player per round: 1.1 (max 2 on rare rounds)
 
 ACTUAL RESULTS:
 Round | Techs/Player | Cards/Player | Total | Status
@@ -127,9 +127,9 @@ R3    | 3.0          | 1.0          | 4.0   | ❌ WAY TOO MANY TECHS
 
 CURRENCY ANALYSIS:
   Research: 4.5 generated/player/round, avg tech cost 1.4
-            → Purchasing power: 3.2 techs (goal: 1) ❌
+            → Purchasing power: 3.2 techs (goal: 1.1) ❌
   Influence: 3.0 generated/player/round, avg card cost 2.8
-            → Purchasing power: 1.1 cards (goal: 1) ✓
+            → Purchasing power: 1.1 cards (goal: 1.1) ✓
 
 CRITICAL FIX NEEDED:
   Option A: Triple tech costs (from avg 1.4 to avg 4.0)

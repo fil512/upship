@@ -3,9 +3,9 @@
 Resource Flow Analysis Script
 
 Analyzes resource flow JSON logs against design goals:
-- Techs per player per round: 1 (max 2 rarely)
-- Cards per player per round: 1 (max 2 rarely)
-- Total purchases: 2 baseline, 3 on exceptional rounds
+- Techs per player per round: 1.1 (max 2 rarely)
+- Cards per player per round: 1.1 (max 2 rarely)
+- Total purchases: 2.2 baseline, 3 on exceptional rounds
 
 Usage:
     python scripts/analyze_flow.py [json_file]
@@ -21,9 +21,9 @@ from pathlib import Path
 
 
 # Design goals
-TECH_GOAL = 1.0  # techs per player per round
-CARD_GOAL = 1.0  # cards per player per round
-TOTAL_GOAL = 2.0  # total purchases per player per round
+TECH_GOAL = 1.1  # techs per player per round
+CARD_GOAL = 1.1  # cards per player per round
+TOTAL_GOAL = 2.2  # total purchases per player per round
 LAUNCH_SUCCESS_GOAL = 0.80  # 80% launch success rate
 
 

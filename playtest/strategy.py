@@ -267,14 +267,17 @@ def evaluate_launch_readiness(
                 priorities.insert(1, 'blueprint_design')  # Install drive upgrades
 
     # Check 6: Do we have engineers for hazard mitigation?
-    if engineers < 2:
-        missing.append(f'low engineers ({engineers}/2 recommended)')
+    # IMPORTANT: Having at least 2 engineers greatly improves hazard check success
+    # Most hazards need 2-4 engineers to pass, so launching with 0-1 is risky
+    min_engineers_for_safe_launch = 2
+    if engineers < min_engineers_for_safe_launch:
+        missing.append(f'need {min_engineers_for_safe_launch - engineers} more engineer(s) for safe launch')
         priorities.append('engineering_depot')  # Collect engineers from income track
         priorities.append('technical_institute')  # Increase engineer income track
 
     can_launch = (len(hangar_ships) > 0 and slots_ready and
                   officers >= officers_needed and total_gas >= gas_needed and
-                  has_achievable_target)
+                  has_achievable_target and engineers >= min_engineers_for_safe_launch)
 
     return {
         'can_launch': can_launch,
@@ -407,11 +410,11 @@ def find_strategic_placement(
 ) -> tuple[dict | None, dict | None] | tuple[dict | None, dict | None, dict]:
     """Find a strategic card/location combination using intelligent evaluation.
 
-    Strategy:
-    1. Evaluate what's needed to launch (ships, gas, route access, engineers)
-    2. Prioritize getting missing requirements
-    3. If launch-ready, go to launchpad
-    4. Fall back through sensible strategic options
+    VP-MAXIMIZING STRATEGY:
+    1. LAUNCH ships whenever possible - routes are the primary VP source
+    2. Build ships to have something to launch
+    3. Get gas to fuel launches
+    4. Only invest in income upgrades when truly blocked
 
     Args:
         player: Player username.
@@ -481,51 +484,93 @@ def find_strategic_placement(
 
     priority_locations = []
 
-    # Phase 1: Address launch requirements
-    if launch_eval['can_launch'] and routes:
+    # =======================================================================
+    # VP-MAXIMIZING STRATEGY: Prioritize actions that score VP
+    # =======================================================================
+
+    # PRIORITY 1: LAUNCH if ready - this is how you score VP!
+    # There are TWO launchpad spaces - try both!
+    if launch_eval['can_launch'] and (routes or missions):
         priority_locations.append('launchpad')
-        decision_info['priority_reason'] = 'launch ready - going to launchpad'
-    elif launch_eval['missing']:
-        decision_info['priority_reason'] = f"not launch ready: {'; '.join(launch_eval['missing'])}"
+        priority_locations.append('launchpad_2')  # Second launchpad space
+        decision_info['priority_reason'] = 'VP STRATEGY: launch ready - going to launchpad!'
+    else:
+        decision_info['priority_reason'] = f"not launch ready: {'; '.join(launch_eval.get('missing', []))}"
 
-    priority_locations.extend(launch_eval['priorities'])
+    # PRIORITY 2: Fix launch blockers in order of importance
+    # Officers are needed per Age (1/2/3) - critical blocker
+    officers_needed = current_age
+    if officers < officers_needed:
+        if 'personnel_office' not in priority_locations:
+            priority_locations.append('personnel_office')  # Collect officers from track
 
-    # Phase 2: Strategic investments based on game state
+    # Need a ship to launch
+    if hangar_count == 0:
+        if cash >= 5:
+            priority_locations.append('construction_hall')
+        else:
+            priority_locations.append('treasury')  # Get cash first
+            priority_locations.append('construction_hall')
 
-    # Invest in research_institute early to build tech purchasing power
-    # Target: research_level 2 by Age II, level 3 by Age III
-    # Cost is £4 per level, so need cash >= 4
-    target_research_level = min(current_age + 1, 3)  # Age 1->2, Age 2->3, Age 3->3
-    if research_level < target_research_level and cash >= 4:
-        priority_locations.append('research_institute')
+    # Need gas to launch
+    if total_gas < 1:
+        priority_locations.append('gas_depot')
 
-    if on_route_count >= 2:
-        priority_locations.append('flight_school')
-        priority_locations.append('technical_institute')
+    # Need blueprint slots filled
+    blueprint = player_data.blueprint
+    if blueprint:
+        frame_empty = sum(1 for s in (blueprint.frame_slots or []) if s is None)
+        fabric_empty = sum(1 for s in (blueprint.fabric_slots or []) if s is None)
+        if frame_empty > 0 or fabric_empty > 0:
+            priority_locations.append('blueprint_design')
 
+    # PRIORITY 3: Build up for NEXT launch (secondary)
+    # Build more ships if we have cash and hangar is low
     if hangar_count < 2 and cash >= 5:
         priority_locations.append('construction_hall')
 
-    # Collect cash from income track if running low
-    if cash < 10:
-        priority_locations.append('treasury')
-
-    if total_gas < 3:
+    # Stock up on gas for next launch
+    if total_gas < 2:
         priority_locations.append('gas_depot')
 
-    if officers < 2 and cash >= 5:
-        priority_locations.append('flight_school')  # Build officer income
+    # Get engineers for hazard mitigation (2 is a good safety buffer)
+    if engineers < 2:
+        priority_locations.append('engineering_depot')  # Collect from track
 
-    if hangar_count > 0 or on_route_count > 0:
+    # PRIORITY 4: Income investments ONLY if we have excess actions
+    # These are low priority - VP comes from routes, not income tracks
+
+    # Research level helps buy techs (which may give VP)
+    # But only invest if we're otherwise blocked
+    if research_level < 2 and cash >= 4 and hangar_count >= 1 and total_gas >= 1:
+        priority_locations.append('research_institute')
+
+    # Officer income only if we keep running out
+    if officers < officers_needed and cash >= 4:
+        priority_locations.append('flight_school')
+
+    # Engineer income only if we keep running out
+    if engineers < 1 and cash >= 4:
+        priority_locations.append('technical_institute')
+
+    # PRIORITY 5: Insurance only if we have ships at risk
+    if on_route_count > 0:
         priority_locations.append('insurance_bureau')
 
-    # Phase 3: General fallback priorities
+    # PRIORITY 6: Fallback - fill remaining slots
+    # Treasury to collect income if low on cash
+    if cash < 5:
+        priority_locations.append('treasury')
+
+    # General fallbacks (low priority)
+    # Note: launchpad and launchpad_2 are at the END - only use if no better option
+    # because going to launchpad without ships/gas/officers is wasteful
     fallback_priorities = [
-        'blueprint_design', 'research_institute', 'construction_hall',
-        'gas_depot', 'technical_institute', 'ministry',
-        'flight_school', 'weather_bureau', 'government_liaison',
-        'insurance_bureau', 'launchpad', 'launchpad_2',
+        'construction_hall', 'gas_depot', 'blueprint_design',
         'personnel_office', 'engineering_depot', 'treasury',
+        'ministry', 'weather_bureau', 'research_institute',
+        'technical_institute', 'flight_school', 'government_liaison',
+        'insurance_bureau', 'launchpad', 'launchpad_2',
     ]
 
     for loc in fallback_priorities:
@@ -608,28 +653,40 @@ def get_reveal_acquisitions(player: str, game_id: str) -> tuple[list[str], list[
             available_techs = [t for t in techs if t.get('id') not in owned_techs]
 
             if available_techs:
-                # Categorize techs by strategic priority
-                # Priority: drive > gas > structure > fabric > component
-                drive_keywords = {'engine', 'propeller', 'diesel', 'supercharg', 'turbo', 'pitch'}
-                gas_keywords = {'gas', 'valv', 'ballonet', 'cell', 'vent', 'recovery', 'helium', 'blaugas'}
-                structure_keywords = {'frame', 'girder', 'bracing', 'keel', 'geodetic', 'modular'}
-                fabric_keywords = {'fabric', 'skin', 'canvas', 'cotton', 'latex', 'coating', 'doping', 'covering'}
+                # VP-MAXIMIZING TECH ACQUISITION STRATEGY
+                # Priority order:
+                # 1. Techs that give VP directly (highest value)
+                # 2. Drive techs (range/speed enable more route options = more VP)
+                # 3. Structure techs (lift enables larger ships)
+                # 4. Fabric techs (weight reduction)
+                # 5. Gas techs (efficiency)
+                # 6. Component techs (income/luxury)
 
-                def get_tech_priority(tech: dict) -> int:
-                    """Lower number = higher priority."""
+                drive_keywords = {'engine', 'propeller', 'diesel', 'supercharg', 'turbo', 'pitch'}
+                structure_keywords = {'frame', 'girder', 'bracing', 'keel', 'geodetic', 'modular', 'hull'}
+                fabric_keywords = {'fabric', 'skin', 'canvas', 'cotton', 'latex', 'coating', 'doping', 'covering'}
+                gas_keywords = {'gas', 'valv', 'ballonet', 'cell', 'vent', 'recovery', 'helium', 'blaugas'}
+
+                def get_tech_priority(tech: dict) -> tuple[int, int]:
+                    """Returns (priority, -vp) for sorting. Lower = better."""
                     tech_id = tech.get('id', '').lower()
                     tech_name = tech.get('name', '').lower()
                     combined = tech_id + ' ' + tech_name
+                    tech_vp = tech.get('vp', 0) or 0
+
+                    # Techs with VP get highest priority (negative VP for descending sort)
+                    if tech_vp > 0:
+                        return (0, -tech_vp)
 
                     if any(kw in combined for kw in drive_keywords):
-                        return 1  # Highest priority - range/speed for routes
-                    if any(kw in combined for kw in gas_keywords):
-                        return 2  # Gas efficiency
+                        return (1, 0)  # High priority - range/speed for routes
                     if any(kw in combined for kw in structure_keywords):
-                        return 3  # Frame/lift
+                        return (2, 0)  # Frame/lift
                     if any(kw in combined for kw in fabric_keywords):
-                        return 4  # Fabric/weight
-                    return 5  # Components and other
+                        return (3, 0)  # Fabric/weight
+                    if any(kw in combined for kw in gas_keywords):
+                        return (4, 0)  # Gas efficiency
+                    return (5, 0)  # Components and other
 
                 # Sort by priority first, then by cost (prefer cheaper within same priority)
                 available_techs.sort(key=lambda t: (get_tech_priority(t), t.get('cost', 0)))
@@ -651,21 +708,35 @@ def get_reveal_acquisitions(player: str, game_id: str) -> tuple[list[str], list[
     # player, the bot will try the next best option instead of giving up.
     market_cards = get_market_cards(game_id)
     if market_cards:
-        # Prioritize cards by symbol usefulness
-        # Priority: operations (propeller) > technical (wrench) > business (coin) > any > reserve
-        def get_card_priority(card: dict) -> int:
-            """Lower number = higher priority."""
+        # VP-MAXIMIZING CARD ACQUISITION STRATEGY
+        # Priority order:
+        # 1. Cards that give VP directly (highest value)
+        # 2. Operations cards (propeller) - useful for launchpad
+        # 3. Technical cards (wrench) - useful for construction, blueprint
+        # 4. Business cards (coin) - useful for gas depot, treasury
+        # 5. Any/wild cards
+        # 6. Reserve card (always available fallback)
+
+        def get_card_priority(card: dict) -> tuple[int, int]:
+            """Returns (priority, -vp) for sorting. Lower = better."""
             # Reserve card (always available) is lowest priority - it's a fallback
             if card.get('is_reserve') or card.get('id') == 'reserve_aeronaut':
-                return 5
+                return (6, 0)
+
+            card_vp = card.get('vp', 0) or 0
+
+            # Cards with VP get highest priority
+            if card_vp > 0:
+                return (0, -card_vp)
+
             symbol = card.get('symbol', '').lower()
             if symbol == 'propeller' or symbol == 'operations':
-                return 1  # Operations - useful for launchpad
+                return (1, 0)  # Operations - useful for launchpad
             if symbol == 'wrench' or symbol == 'technical':
-                return 2  # Technical - useful for construction, blueprint
+                return (2, 0)  # Technical - useful for construction, blueprint
             if symbol == 'coin' or symbol == 'business':
-                return 3  # Business - useful for gas depot, insurance
-            return 4  # Any/wild or unknown
+                return (3, 0)  # Business - useful for gas depot, insurance
+            return (4, 0)  # Any/wild or unknown
 
         # Sort by priority, then by cost (prefer cheaper)
         market_cards.sort(key=lambda c: (get_card_priority(c), c.get('cost', 3)))

@@ -271,8 +271,13 @@ def _attempt_route_launches(
     client = get_client()
     launched = 0
 
-    # Sort routes by difficulty (easier first)
-    routes_list = sorted(routes, key=lambda r: (r.distance or 1, r.speed_requirement or 0))
+    # Sort routes by VALUE first (higher income = more VP), then by achievability
+    # This maximizes VP by claiming the most valuable routes we can fly
+    routes_list = sorted(routes, key=lambda r: (
+        -(r.income or 0),  # Higher income first (negative for descending)
+        r.distance or 1,    # Then easier routes (lower distance)
+        r.speed_requirement or 0  # Then lower speed requirement
+    ))
 
     current_officers = player_data.officers or 0
 
@@ -827,7 +832,7 @@ def _log_decision_info(player: str, decision_info: dict, logger: PlaytestLogger)
         logger.log_action(None, f"  └─ {state_str}", "worker_placement")
 
     # Log why this location was chosen
-    if chosen_location != 'launchpad' and priority_reason:
+    if chosen_location not in ('launchpad', 'launchpad_2') and priority_reason:
         priorities = launch_eval.get('priorities', [])[:5]
         if priorities:
             logger.log_action(None, f"  └─ Priorities: {' → '.join(priorities)}", "worker_placement")
@@ -940,7 +945,7 @@ def _execute_placement(player: str, game_id: str, card: dict, location: dict, lo
             if he_after != he_before:
                 logger.log_action(None, f"  └─ Helium: {he_before} → {he_after}", "worker_placement")
 
-        if loc_id == 'launchpad':
+        if loc_id in ('launchpad', 'launchpad_2'):
             handle_launchpad_launches(player, game_id, logger)
 
         if post_state:
