@@ -11,6 +11,7 @@
 	export let onlinePlayers: string[] = [];
 	export let myPlayerId: string | null = null;
 	export let viewedPlayerId: string | null = null;
+	export let firstPlayer: string | null = null;
 
 	const dispatch = createEventDispatcher<{
 		selectPlayer: { playerId: string };
@@ -93,6 +94,9 @@
 						<span class="faction-name" style:color={borderColor}>
 							{player.faction || 'Unknown'}
 						</span>
+						{#if playerId === firstPlayer}
+							<span class="start-player" title="Start Player">★</span>
+						{/if}
 						{#if !player.isBot}
 							<span class="online-dot" class:online={isOnline(playerId)}></span>
 						{/if}
@@ -122,15 +126,15 @@
 						<Icon name="cash" size={14} color="var(--color-accent-gold)" />
 						<span class="income" class:negative={netIncome < 0}>{formatIncome(netIncome)}</span>
 					</div>
-					<div class="resource" title="Officers: {player.officers}, Income: +{player.officerIncome || 0}">
+					<div class="resource" title="Officers: {player.officers}, Income: +{player.officerIncome ?? 1}">
 						<span class="value">{player.officers}</span>
 						<Icon name="officers" size={14} />
-						<span class="income">+{player.officerIncome || 0}</span>
+						<span class="income">+{player.officerIncome ?? 1}</span>
 					</div>
-					<div class="resource" title="Engineers: {player.engineers}, Income: +{player.engineerIncome || 0}">
+					<div class="resource" title="Engineers: {player.engineers}, Income: +{player.engineerIncome ?? 1}">
 						<span class="value">{player.engineers}</span>
 						<Icon name="engineers" size={14} />
-						<span class="income">+{player.engineerIncome || 0}</span>
+						<span class="income">+{player.engineerIncome ?? 1}</span>
 					</div>
 				</div>
 
@@ -156,6 +160,12 @@
 						<div class="resource damaged" title="Damaged Ships: {getDamagedShipCount(player)} (need repair)">
 							<span class="value">{getDamagedShipCount(player)}</span>
 							<Icon name="ship-damaged" size={14} />
+						</div>
+					{/if}
+					{#if (player.insurance ?? 0) > 0}
+						<div class="resource" title="Insurance Policies: {player.insurance}">
+							<span class="value">{player.insurance}</span>
+							<Icon name="insurance" size={14} />
 						</div>
 					{/if}
 				</div>
@@ -228,6 +238,11 @@
 		font-size: 0.75rem;
 		font-weight: 700;
 		text-transform: capitalize;
+	}
+
+	.start-player {
+		color: var(--color-accent-gold);
+		font-size: 0.75rem;
 	}
 
 	.online-dot {

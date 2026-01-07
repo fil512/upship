@@ -180,6 +180,7 @@
 			<span class="age-badge">Age {age}</span>
 		</div>
 		<div class="hull-cost">
+			<span class="cost-label">Cost:</span>
 			<span class="cost-value">{hullCost.total}</span>
 			<Icon name="cash" size={16} />
 			<span class="cost-breakdown">= 2 base + {hullCost.frameCost} frame + {hullCost.fabricCost} fabric</span>
@@ -540,15 +541,21 @@
 		align-items: center;
 		gap: var(--spacing-xs);
 		padding: 4px 10px;
-		background: rgba(34, 197, 94, 0.15);
-		border: 1px solid rgba(34, 197, 94, 0.3);
+		background: var(--color-bg-hover);
+		border: 1px solid var(--color-border);
 		border-radius: var(--radius-md);
+	}
+
+	.cost-label {
+		font-size: 0.75rem;
+		font-weight: 600;
+		color: var(--color-text-muted);
 	}
 
 	.cost-value {
 		font-size: 0.875rem;
 		font-weight: 700;
-		color: var(--color-cash, #22c55e);
+		color: var(--color-text-primary);
 	}
 
 	.cost-breakdown {

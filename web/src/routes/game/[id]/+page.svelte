@@ -1070,6 +1070,7 @@
 					onlinePlayers={$onlinePlayers}
 					myPlayerId={$effectiveUserId}
 					viewedPlayerId={viewedPlayerIdResolved}
+					firstPlayer={$gameState.firstPlayer}
 					on:selectPlayer={handleSelectPlayer}
 				/>
 
