@@ -441,13 +441,13 @@ def _check_and_handle_hazard(client, player: str, game_id: str, ship_id: str, pl
     pending_launch = raw_player.get('pendingLaunch')
     if not pending_launch:
         # No pending launch = launch completed without hazard or already resolved
-        # Check if route was claimed to determine success
-        routes_claimed = raw_player.get('routes', [])
-        hangar_count = raw_player.get('hangarShips', 0)
-        repair_count = raw_player.get('repairShips', 0)
+        # Check if this player claimed any routes on the MAP (routes are tracked on map, not player)
+        map_data = state_data.get('map', {})
+        map_routes = map_data.get('routes', [])
+        player_claimed_routes = [r for r in map_routes if r.get('claimed') == player_id]
 
-        # If hangar decreased and no pending launch, assume success or abort
-        return 'on_route' if routes_claimed else 'hangar'
+        # If player has routes on map, assume success
+        return 'on_route' if player_claimed_routes else 'hangar'
 
     # Get hazard info from pendingLaunch
     hazard_info = pending_launch.get('hazardInfo')
@@ -455,12 +455,15 @@ def _check_and_handle_hazard(client, player: str, game_id: str, ship_id: str, pl
         logger.log_action(None, f"  └─ ERROR: pendingLaunch but no hazardInfo", "worker_placement")
         return 'unknown'
 
+    # Extract routeId from pendingLaunch so we can check if THIS route was claimed
+    route_id = pending_launch.get('routeId')
+
     # Handle the hazard response - use fresh engineer count from raw_player
     fresh_engineers = raw_player.get('engineers', 0)
-    return _handle_hazard_response(player, game_id, ship_id, hazard_info, player_data, logger, fresh_engineers)
+    return _handle_hazard_response(player, game_id, ship_id, hazard_info, player_data, logger, fresh_engineers, route_id)
 
 
-def _handle_hazard_response(player: str, game_id: str, ship_id: str, pending_hazard: dict, player_data: Player, logger: PlaytestLogger, fresh_engineers: int | None = None) -> str:
+def _handle_hazard_response(player: str, game_id: str, ship_id: str, pending_hazard: dict, player_data: Player, logger: PlaytestLogger, fresh_engineers: int | None = None, route_id: str | None = None) -> str:
     """Handle responding to a hazard check. Returns final ship status.
 
     Args:
@@ -471,6 +474,7 @@ def _handle_hazard_response(player: str, game_id: str, ship_id: str, pending_haz
         player_data: Player object.
         logger: PlaytestLogger instance.
         fresh_engineers: Fresh engineer count from API (overrides player_data.engineers).
+        route_id: The ID of the route being claimed (to verify success).
 
     Returns:
         Final ship status string.
@@ -529,28 +533,34 @@ def _handle_hazard_response(player: str, game_id: str, ship_id: str, pending_haz
         logger.log_action(None, f"  └─ RESPOND_TO_HAZARD error: {result.error}", "worker_placement")
         return 'unknown'
 
-    # Fetch raw state to check outcome (routes claimed, hangar count, repair count)
+    # Fetch raw state to check outcome (routes are tracked on MAP, not player)
     raw_state = client._api_get(player, f"/api/state/{game_id}")
     game_state_wrapper = raw_state.get('gameState', raw_state)
     state_data = game_state_wrapper.get('state', {})
     players_data = state_data.get('players', {})
 
     faction = get_faction_from_player(player)
+    player_id_for_route = None
     for pid, pdata in players_data.items():
         if pdata.get('faction') == faction:
-            routes_claimed = pdata.get('routes', [])
+            player_id_for_route = pid
             repair_ships = pdata.get('repairShips', 0)
-
-            # If route was claimed, launch succeeded
-            if routes_claimed:
-                return 'on_route'
             # If ship went to repair, it was damaged
             if repair_ships > 0:
                 return 'repair'
-            # Otherwise ship returned to hangar (abort or other)
-            return 'hangar'
+            break
 
-    return 'unknown'
+    # Check if THIS SPECIFIC route was claimed by this player
+    # Routes are tracked on map.routes[].claimed, not on player.routes
+    if player_id_for_route and route_id:
+        map_data = state_data.get('map', {})
+        map_routes = map_data.get('routes', [])
+        target_route = next((r for r in map_routes if r.get('id') == route_id), None)
+        if target_route and target_route.get('claimed') == player_id_for_route:
+            return 'on_route'
+
+    # Otherwise ship returned to hangar (abort or other)
+    return 'hangar'
 
 
 def _determine_launch_outcome(log_entries: list[dict], ship_id: str, ship_status: str) -> str:
