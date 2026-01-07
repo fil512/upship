@@ -234,40 +234,41 @@ describe('Rules Compliance - Technology Tiles', () => {
     it('should have costs matching Appendix C', () => {
       const all = getAllTechnologies();
 
-      // Cost checks from Appendix C (Section A.3 specifies: Age I: 1-2, Age II: 2-4, Age III: 4-6)
+      // Cost checks - balanced for 1.1 techs/player/round purchasing power
+      // Age I: 3-5 Research, Age II: 6-8 Research, Age III: 9-11 Research
       const costChecks = [
-        // Age I (1-2 Research per Appendix C)
-        { name: 'Daimler Petrol Engine', cost: 1 },
-        { name: 'Improved Propeller', cost: 1 },
-        { name: 'Dual Engine Mount', cost: 2 },
-        { name: 'Wooden Framework', cost: 1 },
-        { name: 'Wire Bracing', cost: 2 },
-        { name: 'Rubberized Cotton', cost: 1 },
-        { name: 'Doped Canvas', cost: 2 },
-        { name: 'Improved Valving', cost: 1 },
-        { name: 'Manual Ballonets', cost: 1 },
-        { name: 'Observation Platform', cost: 1 },
-        { name: 'Mail Compartment', cost: 1 },
-        { name: 'Cargo Nets', cost: 2 },
-        // Age II (2-4 Research per Appendix C)
-        { name: 'Maybach Engine Design', cost: 3 },
-        { name: 'Diesel Powerplant', cost: 3 },
-        { name: 'Swiveling Propeller', cost: 4 },
-        { name: 'Duralumin Framework', cost: 3 },
-        { name: 'Steel Framework', cost: 2 },
-        { name: "Goldbeater's Skin", cost: 4 },
-        { name: 'Fireproof Coating', cost: 3 },
-        { name: 'Multiple Gas Cells', cost: 3 },
-        { name: 'Automatic Valves', cost: 4 },
-        { name: 'Bomb Bay Design', cost: 4 },
-        // Age III (4-6 Research per Appendix C)
-        { name: 'Streamlined Nacelle', cost: 4 },
-        { name: 'Supercharged Engine', cost: 5 },
-        { name: 'Geodetic Structure', cost: 4 },
-        { name: 'Modular Construction', cost: 5 },
-        { name: 'Pressure Altitude System', cost: 5 },
-        { name: 'Luxury Accommodation', cost: 4 },
-        { name: 'Promenade Deck', cost: 6 }
+        // Age I (3-5 Research)
+        { name: 'Daimler Petrol Engine', cost: 3 },
+        { name: 'Improved Propeller', cost: 3 },
+        { name: 'Dual Engine Mount', cost: 5 },
+        { name: 'Wooden Framework', cost: 3 },
+        { name: 'Wire Bracing', cost: 5 },
+        { name: 'Rubberized Cotton', cost: 3 },
+        { name: 'Doped Canvas', cost: 5 },
+        { name: 'Improved Valving', cost: 3 },
+        { name: 'Manual Ballonets', cost: 3 },
+        { name: 'Observation Platform', cost: 3 },
+        { name: 'Mail Compartment', cost: 3 },
+        { name: 'Cargo Nets', cost: 5 },
+        // Age II (6-8 Research)
+        { name: 'Maybach Engine Design', cost: 7 },
+        { name: 'Diesel Powerplant', cost: 7 },
+        { name: 'Swiveling Propeller', cost: 8 },
+        { name: 'Duralumin Framework', cost: 7 },
+        { name: 'Steel Framework', cost: 6 },
+        { name: "Goldbeater's Skin", cost: 8 },
+        { name: 'Fireproof Coating', cost: 7 },
+        { name: 'Multiple Gas Cells', cost: 7 },
+        { name: 'Automatic Valves', cost: 8 },
+        { name: 'Bomb Bay Design', cost: 8 },
+        // Age III (9-11 Research)
+        { name: 'Streamlined Nacelle', cost: 9 },
+        { name: 'Supercharged Engine', cost: 10 },
+        { name: 'Geodetic Structure', cost: 9 },
+        { name: 'Modular Construction', cost: 10 },
+        { name: 'Pressure Altitude System', cost: 10 },
+        { name: 'Luxury Accommodation', cost: 9 },
+        { name: 'Promenade Deck', cost: 11 }
       ];
 
       for (const { name, cost } of costChecks) {

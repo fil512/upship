@@ -440,8 +440,26 @@ function completeAgeTransition(state: AgeTransitionState): void {
   // Add new age tech cards to bag per Section 3.1
   addAgeTechCards(state, newAge);
 
+  // Clear R&D Board - return unsold cards to bag and shuffle
+  // This ensures new age's tech cards appear immediately
+  if (state.rdBoard && state.rdBoard.length > 0) {
+    state.techBag = state.techBag || [];
+    state.techBag.push(...state.rdBoard);
+    state.techBag = shuffleArray(state.techBag) as Technology[];
+    state.rdBoard = [];
+  }
+
   // Refill R&D board with new age tech cards
   refillRDBoard(state);
+
+  // Clear Market Row - return unsold cards to deck and shuffle
+  // This ensures new age's market cards appear immediately
+  if (state.marketCards && state.marketCards.length > 0) {
+    state.marketDeck = state.marketDeck || [];
+    state.marketDeck.push(...(state.marketCards as Card[]));
+    state.marketDeck = shuffleArray(state.marketDeck) as Card[];
+    state.marketCards = [];
+  }
 
   // Reset gas market prices for new age (Section 4.4: Helium resets to £2 at Age Transitions)
   state.gasMarket = { hydrogen: 1, helium: 2 };

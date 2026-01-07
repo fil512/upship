@@ -16,13 +16,14 @@ interface ActionResult {
   newState: GameState;
 }
 
-// Tech card with metadata
+// Tech card with metadata (extends Technology type with additional fields)
 interface TechCardWithMeta {
   id: string;
   name: string;
   type: string;
   cost: number;
-  age?: number;
+  category: string;
+  age: number;
   [key: string]: unknown;
 }
 
@@ -425,6 +426,30 @@ function processUpgradeResearchLevel(state: GameState, playerId: string, data: U
     playerId,
     type: 'action'
   } as LogEntry);
+
+  // Bonus effect: Remove all tech cards from prior ages from R&D Board
+  // This helps players access current-age technologies faster
+  const currentAge = state.age || 1;
+  const rdBoard = (state.rdBoard || []) as TechCardWithMeta[];
+  const priorAgeCards = rdBoard.filter(card => card.age < currentAge);
+
+  if (priorAgeCards.length > 0) {
+    // Return prior-age cards to the tech bag and shuffle
+    state.techBag = state.techBag || [];
+    state.rdBoard = rdBoard.filter(card => card.age >= currentAge) as typeof state.rdBoard;
+    state.techBag.push(...(priorAgeCards as typeof state.techBag));
+    state.techBag = shuffleArray(state.techBag);
+
+    // Refill R&D Board from the bag
+    refillRDBoard(state);
+
+    state.log.push({
+      timestamp: new Date().toISOString(),
+      message: `Cleared ${priorAgeCards.length} obsolete tech card(s) from R&D Board`,
+      playerId,
+      type: 'action'
+    } as LogEntry);
+  }
 
   return { newState: state };
 }

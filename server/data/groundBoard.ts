@@ -43,7 +43,7 @@ export const GROUND_BOARD_LOCATIONS: Record<string, GroundBoardLocation> = {
     action: {
       type: 'UPGRADE_RESEARCH_LEVEL',
       cost: 4, // Per Section 6.1: £4 per level
-      effect: 'Increase your Research Level Track by 1 step'
+      effect: 'Increase Research Level by 1. Also clears prior-age tech cards from R&D Board.'
     }
   },
 
@@ -196,7 +196,7 @@ export const GROUND_BOARD_LOCATIONS: Record<string, GroundBoardLocation> = {
   personnel_office: {
     id: 'personnel_office',
     name: 'Personnel Office',
-    symbol: 'coin',
+    symbol: 'propeller',
     position: 13,
     description: 'Recruit trained officers',
     action: {

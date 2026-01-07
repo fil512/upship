@@ -323,9 +323,9 @@ The Ground Board has 15 action spaces. Each requires a matching card symbol.
 
 **Cost:** £4 per level.
 
-**Effect:** Increase your Research Level Track by 1 step.
+**Effect:** Increase your Research Level Track by 1 step. **Bonus:** Remove all tech cards from prior Ages from the R&D Board (returned to bag, shuffled, board refilled). This helps players access current-Age technologies faster.
 
-> **Example:** Marco plays a Propeller card and spends £8 to increase his Research Level from 0 to 2. He will now have 2 base Research each round when he Reveals.
+> **Example:** Marco plays a Coin card and spends £8 to increase his Research Level from 0 to 2. He will now have 2 base Research each round when he Reveals. Since the game is in Age II, any remaining Age I tech cards are cleared from the R&D Board.
 
 ## 6.2 Blueprint Design (Wrench)
 
@@ -796,7 +796,7 @@ When the Progress Track reaches the Age threshold (checked during Income & Clean
 
 5. **Free Blueprint Update (Mandatory):** Each player **must** fill all structural slots (Frame and Fabric) using their free Blueprint Design action. Players take turns in player order to install Tech Tiles. Hull Tech Tile Rule does not apply during this free action. Use duplicate Tech Tiles from the same Technology if needed—every faction starts with at least one Frame and one Fabric Technology, so all slots can always be filled.
 
-6. **Set Up New Age:** Place new Map, add new Technologies to bag, refresh R&D Board.
+6. **Set Up New Age:** Place new Map, add new Technologies to bag. **Clear both markets** (R&D Board and Market Row)—unsold cards return to their respective decks, shuffled, then boards are refilled. This ensures new Age's cards appear immediately.
 
 ## 12.2 Victory Point Scoring
 
