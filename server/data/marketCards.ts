@@ -52,7 +52,7 @@ export const MARKET_CARDS: MarketCard[] = [
     cost: 4,
     symbol: 'wrench',
     effect: null,
-    reveal: { engineers: 1 },
+    reveal: { engineers: 1, research: 2 },
     flavor: 'Senior officer of the engineering department'
   },
   {
@@ -82,7 +82,7 @@ export const MARKET_CARDS: MarketCard[] = [
     cost: 4,
     symbol: 'propeller',
     effect: 'Ignore Weather hazards this launch',
-    reveal: { engineers: 1 },
+    reveal: { engineers: 1, research: 1 },
     flavor: 'Reads the sky better than any bureau telegram'
   },
   {
@@ -92,7 +92,7 @@ export const MARKET_CARDS: MarketCard[] = [
     cost: 3,
     symbol: 'wrench',
     effect: 'Install Gas upgrade: -1 Weight',
-    reveal: { gas: 1 },
+    reveal: { gas: 1, research: 1 },
     flavor: 'Specialist in gas cells and lifting calculations'
   },
   {
@@ -256,7 +256,7 @@ export const MARKET_CARDS: MarketCard[] = [
     cost: 4,
     symbol: 'propeller',
     effect: '-2 per Technology this round',
-    reveal: { research: 2 },
+    reveal: { research: 3 },
     flavor: 'Brilliant academic with theoretical insights'
   },
   {
@@ -266,7 +266,7 @@ export const MARKET_CARDS: MarketCard[] = [
     cost: 3,
     symbol: 'propeller',
     effect: '-1 to Technology Research cost',
-    reveal: { influence: 2 },
+    reveal: { influence: 2, research: 1 },
     flavor: 'Knows which ideas are truly novel'
   },
   {
@@ -308,7 +308,7 @@ export const MARKET_CARDS: MarketCard[] = [
     cost: 6,
     symbol: 'wrench',
     effect: 'Install 1 Upgrade ignoring Tech requirement',
-    reveal: { engineers: 1, influence: 2 },
+    reveal: { engineers: 1, influence: 2, research: 1 },
     flavor: 'Patrons of exploration and scientific discovery'
   },
   {
