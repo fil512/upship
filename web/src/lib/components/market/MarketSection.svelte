@@ -4,10 +4,15 @@
 	import MarketRow from './MarketRow.svelte';
 	import TechRow from './TechRow.svelte';
 	import CardComponent from '$lib/components/cards/Card.svelte';
+	import CostBadge from '$lib/components/ui/CostBadge.svelte';
+	import TechTileBox from '$lib/components/ui/TechTileBox.svelte';
+	import { getTilesForCard } from '$lib/utils/techCardToTiles';
+	import { getTechCardImageFilename } from '$lib/utils/cardImages';
 
 	export let marketCards: Card[] = [];
 	export let reserveCard: Card | null = null;
 	export let techCards: Technology[] = [];
+	export let reserveTechCard: Technology | null = null;
 	export let claimedMarket: Record<string, string> = {};
 	export let claimedTech: Record<string, string> = {};
 	export let pendingMarketPurchases: PendingPurchase[] = [];
@@ -16,6 +21,12 @@
 	export let myPlayerId: string = '';
 	export let players: Record<string, { faction: Faction }> = {};
 	export let playerTechCards: string[] = [];
+
+	// Check if player already owns the reserve tech
+	$: ownsReserveTech = reserveTechCard ? playerTechCards.includes(reserveTechCard.id) : false;
+	$: reserveTechTiles = reserveTechCard ? getTilesForCard(reserveTechCard.id) : [];
+	$: reserveTechCost = (reserveTechCard as { cost?: number })?.cost || 5;
+	$: reserveTechImage = reserveTechCard ? getTechCardImageFilename(reserveTechCard.name) : null;
 
 	const dispatch = createEventDispatcher<{
 		buyMarket: { cardId: string };
@@ -77,17 +88,56 @@
 			<span class="hint">Click to acquire with Research</span>
 		{/if}
 	</div>
-	<TechRow
-		cards={techCards}
-		claimed={claimedTech}
-		pendingAcquisitions={pendingTechAcquisitions}
-		{interactive}
-		{myPlayerId}
-		{players}
-		{playerTechCards}
-		on:buy={handleBuyTech}
-		on:undo={handleUndoTech}
-	/>
+	<div class="tech-cards-row">
+		{#if reserveTechCard}
+			<div class="reserve-section tech-reserve">
+				<div class="reserve-label">Always Available</div>
+				<button
+					class="reserve-tech-card"
+					class:owned={ownsReserveTech}
+					class:interactive
+					disabled={!interactive || ownsReserveTech}
+					on:click={() => dispatch('buyTech', { cardId: reserveTechCard.id })}
+				>
+					<div class="reserve-tech-header">
+						<span class="reserve-tech-name">{reserveTechCard.name}</span>
+						<CostBadge type="research" value={reserveTechCost} size={26} />
+					</div>
+					{#if reserveTechImage}
+						<div class="reserve-tech-image-area">
+							<img
+								src="/cards/tech/{reserveTechImage}.png"
+								alt=""
+								class="reserve-tech-image"
+								on:error={(e) => (e.currentTarget as HTMLImageElement).style.display = 'none'}
+							/>
+						</div>
+					{/if}
+					{#if reserveTechTiles.length > 0}
+						<div class="reserve-tech-tiles">
+							{#each reserveTechTiles as tile}
+								<TechTileBox {tile} />
+							{/each}
+						</div>
+					{/if}
+					{#if ownsReserveTech}
+						<div class="owned-overlay">Owned</div>
+					{/if}
+				</button>
+			</div>
+		{/if}
+		<TechRow
+			cards={techCards}
+			claimed={claimedTech}
+			pendingAcquisitions={pendingTechAcquisitions}
+			{interactive}
+			{myPlayerId}
+			{players}
+			{playerTechCards}
+			on:buy={handleBuyTech}
+			on:undo={handleUndoTech}
+		/>
+	</div>
 </div>
 
 <style>
@@ -144,5 +194,132 @@
 		text-transform: uppercase;
 		letter-spacing: 0.5px;
 		margin-bottom: 0.25rem;
+	}
+
+	.tech-cards-row {
+		display: flex;
+		align-items: flex-start;
+		gap: 0.5rem;
+		flex-wrap: nowrap;
+	}
+
+	.tech-reserve {
+		background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+		border: 2px solid #64b5f6;
+	}
+
+	.tech-reserve .reserve-label {
+		color: #1565c0;
+	}
+
+	/* Reserve tech card - matches TechRow.svelte .tech-card exactly */
+	.reserve-tech-card {
+		position: relative;
+		width: 160px;
+		height: 225px;
+		background: #e8e4d9;
+		border: 2px solid #9a8c70;
+		border-radius: 8px;
+		padding: 0;
+		margin: 0;
+		display: flex;
+		flex-direction: column;
+		cursor: default;
+		transition: all 0.2s ease;
+		overflow: hidden;
+	}
+
+	.reserve-tech-card.interactive:not(.owned) {
+		cursor: pointer;
+	}
+
+	.reserve-tech-card.interactive:not(.owned):hover {
+		transform: translateY(-2px);
+		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+		border-color: #555;
+	}
+
+	.reserve-tech-card.owned {
+		opacity: 0.7;
+		filter: grayscale(30%);
+	}
+
+	.reserve-tech-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		padding: 4px 6px;
+		margin: 0;
+		gap: 4px;
+		background: rgba(0, 0, 0, 0.08);
+		border-bottom: 1px solid #c4b8a0;
+		border-radius: 0;
+	}
+
+	.reserve-tech-image-area {
+		flex: 1;
+		min-height: 90px;
+		margin: 0;
+		background: rgba(154, 140, 112, 0.15);
+		border-radius: 0;
+		position: relative;
+		overflow: hidden;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.reserve-tech-image {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+	}
+
+	.reserve-tech-name {
+		flex: 1;
+		font-size: 0.65rem;
+		font-weight: 700;
+		color: #333;
+		text-transform: uppercase;
+		line-height: 1.1;
+		min-width: 0;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+
+	.reserve-tech-effect {
+		padding: 4px 6px;
+		margin: 0;
+		font-size: 0.6rem;
+		color: #555;
+		line-height: 1.3;
+		background: rgba(255, 255, 255, 0.5);
+		border-top: 1px solid #c4b8a0;
+		border-radius: 0;
+	}
+
+	.reserve-tech-tiles {
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: center;
+		gap: 4px;
+		margin: 0;
+		border-top: 1px solid #c4b8a0;
+		padding: 4px 6px;
+		background: rgba(0, 0, 0, 0.08);
+		border-radius: 0;
+	}
+
+	.owned-overlay {
+		position: absolute;
+		inset: 0;
+		background: rgba(76, 175, 80, 0.85);
+		color: white;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		font-size: 0.8rem;
+		font-weight: 600;
+		border-radius: 4px;
 	}
 </style>

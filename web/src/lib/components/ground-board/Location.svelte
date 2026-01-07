@@ -77,11 +77,11 @@
 		},
 		flight_school: {
 			costs: [{ resourceBadge: [{ type: 'cash', value: 5 }] }],
-			benefits: [{ icon: 'income', resourceBadge: { type: 'officers', count: 1 }, arrow: true }]
+			benefits: [{ icon: 'arrow_up', icon2: 'officers' }]
 		},
 		technical_institute: {
 			costs: [{ resourceBadge: [{ type: 'cash', value: 6 }] }],
-			benefits: [{ icon: 'income', resourceBadge: { type: 'engineers', count: 1 }, arrow: true }]
+			benefits: [{ icon: 'arrow_up', icon2: 'engineers' }]
 		},
 		government_liaison: {
 			costs: [{ resourceBadge: [{ type: 'officers', value: 1 }, { type: 'officers', value: 3 }], separator: '-' }],
@@ -225,6 +225,7 @@
 				{#each locationData.benefits as benefit, i (i)}
 					<div class="benefit-item">
 						{#if hasIconWithArrow(benefit)}
+							<Icon name="arrow_up" size={18} />
 							<Icon name={benefit.icon} size={18} color="var(--color-text-primary)" />
 							<ResourceBadge type={benefit.resourceBadge.type} value={benefit.resourceBadge.count} size={16} />
 						{:else if hasBenefitResourceBadge(benefit)}

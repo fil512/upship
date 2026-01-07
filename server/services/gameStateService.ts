@@ -8,6 +8,7 @@ import type { PoolClient } from 'pg';
 
 const { pool } = require('../db');
 const { TECH_CARD_BAG, PROGRESS_THRESHOLDS } = require('../config/constants');
+const { RESERVE_TECH_CARD } = require('../data/upgrades');
 // calculateShipStats is imported for use in launch/hazard actions
 // TECH_TILES is no longer needed here - ships use blueprint stats at launch time
 const { resourceFlowLogger } = require('./resourceFlowLogger');
@@ -116,8 +117,8 @@ function createPlayerState(faction: Faction): PlayerState {
     faction,
     cash: 15,
     income: 5,
-    officerIncome: 0,  // Starts at 0 - requires Flight School investment
-    engineerIncome: 1,
+    officerIncome: 1,  // Per rules Section 3.5: starts at 1
+    engineerIncome: 1,  // Per rules Section 3.5: starts at 1
     officers: 1,
     engineers: 2,
     gasCubes: startingGas,
@@ -458,8 +459,8 @@ function createTechCardBagAndRDBoard(
   }
   const shuffledBag = shuffleArray(bag);
 
-  // Draw 4 cards for the R&D board from the shuffled bag
-  const rdBoard = shuffledBag.splice(0, 4);
+  // Draw 5 cards for the R&D board from the shuffled bag
+  const rdBoard = shuffledBag.splice(0, 5);
 
   return { rdBoard, techCardBag: shuffledBag };
 }
@@ -761,7 +762,8 @@ async function initializeGameState(
       techBag: techCardBag,
       marketCards,
       marketDeck,
-      reserveCard,  // Always-available card (like Dune's Arrakis Liaison)
+      reserveCard,  // Always-available agent card (like Dune's Arrakis Liaison)
+      reserveTechCard: RESERVE_TECH_CARD,  // Always-available tech card (Helium Handling)
       progressTrack: 0,
       progressThresholds: PROGRESS_THRESHOLDS[playerCount],
       gasMarket: { hydrogen: 1, helium: 2 }, // Prices per cube (Section 4.4: H₂ fixed at £1, He starts at £2)

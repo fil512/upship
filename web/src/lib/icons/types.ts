@@ -58,7 +58,8 @@ export type GameIconName =
   | 'eye'
   | 'insurance'
   | 'politics'
-  | 'gas';
+  | 'gas'
+  | 'arrow_up';
 
 export type IconName =
   | ResourceIconName

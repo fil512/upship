@@ -13,6 +13,7 @@ import blueprintSvg from './svg/blueprint.svg?raw';
 import eyeSvg from './svg/eye.svg?raw';
 import politicsSvg from './svg/politics.svg?raw';
 import gasSvg from './svg/gas.svg?raw';
+import arrowUpSvg from './svg/arrow_up.svg?raw';
 
 export const gameIcons: Record<GameIconName, IconDefinition> = {
   ship: {
@@ -85,5 +86,11 @@ export const gameIcons: Record<GameIconName, IconDefinition> = {
     svg: gasSvg,
     category: 'game',
     tooltip: 'Gas - lifting gas for airships'
+  },
+
+  arrow_up: {
+    svg: arrowUpSvg,
+    category: 'game',
+    tooltip: 'Increase - raise income or level'
   }
 };

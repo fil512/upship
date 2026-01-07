@@ -370,7 +370,8 @@ export interface GameState {
 	techBag: Technology[];
 	marketCards: Card[];
 	marketDeck: Card[];
-	reserveCard: Card;  // Always-available card (like Dune's Arrakis Liaison)
+	reserveCard: Card;  // Always-available agent card (like Dune's Arrakis Liaison)
+	reserveTechCard?: Technology;  // Always-available tech card (Helium Handling)
 	// Cards tentatively claimed during reveal (cardId -> playerId)
 	marketCardsClaimed?: Record<string, string>;
 	techCardsClaimed?: Record<string, string>;

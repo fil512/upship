@@ -1306,10 +1306,24 @@ export function canLaunch(blueprint: Blueprint, factionBonuses: FactionBonuses =
   };
 }
 
+/**
+ * Reserve Tech Card - Always Available
+ * Like Dune Imperium's Arrakis Liaison, this card is always available for acquisition.
+ * Helium Handling allows any faction to use Helium gas (normally a USA-only ability).
+ */
+export const RESERVE_TECH_CARD: TechCard = {
+  id: 'helium_handling',
+  name: 'Helium Handling',
+  type: 'gas',
+  cost: 5,  // Requires 5 research to acquire
+  age: 1
+};
+
 // CommonJS compatibility
 module.exports = {
   TECH_TILES,
   TECH_CARDS,
+  RESERVE_TECH_CARD,
   AGE_BASELINES,
   getAvailableTechTiles,
   calculateShipStats,
