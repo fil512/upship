@@ -47,17 +47,7 @@
 			<span class="hint">Click to purchase with Influence</span>
 		{/if}
 	</div>
-	<div class="market-with-reserve">
-		<MarketRow
-			cards={marketCards}
-			claimed={claimedMarket}
-			{pendingMarketPurchases}
-			{interactive}
-			{myPlayerId}
-			{players}
-			on:buy={handleBuyMarket}
-			on:undo={handleUndoMarket}
-		/>
+	<div class="market-cards-row">
 		{#if reserveCard}
 			<div class="reserve-section">
 				<div class="reserve-label">Always Available</div>
@@ -69,6 +59,16 @@
 				/>
 			</div>
 		{/if}
+		<MarketRow
+			cards={marketCards}
+			claimed={claimedMarket}
+			{pendingMarketPurchases}
+			{interactive}
+			{myPlayerId}
+			{players}
+			on:buy={handleBuyMarket}
+			on:undo={handleUndoMarket}
+		/>
 	</div>
 
 	<div class="section-header">
@@ -119,10 +119,11 @@
 		font-style: italic;
 	}
 
-	.market-with-reserve {
+	.market-cards-row {
 		display: flex;
 		align-items: flex-start;
 		gap: 0.5rem;
+		flex-wrap: nowrap;
 	}
 
 	.reserve-section {
@@ -133,7 +134,7 @@
 		background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
 		border: 2px solid #81c784;
 		border-radius: 8px;
-		min-width: fit-content;
+		flex-shrink: 0;
 	}
 
 	.reserve-label {

@@ -63,9 +63,9 @@
 <style>
 	.market-row {
 		display: flex;
-		gap: 0.75rem;
+		gap: 0.5rem;
 		padding: 0.5rem;
-		flex-wrap: wrap;
+		flex-wrap: nowrap;
 	}
 
 	.empty-slot {

@@ -1,5 +1,5 @@
 <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-  <!-- Influence: Diamond -->
-  <path d="M12 2L22 12L12 22L2 12Z" fill="#888888" stroke="#666" stroke-width="1"/>
-  <path d="M12 5L19 12L12 19L5 12Z" fill="none" stroke="#666" stroke-width="1"/>
+  <!-- Influence: Diamond (sized to match research square height) -->
+  <path d="M12 4L20 12L12 20L4 12Z" fill="#888888" stroke="#666" stroke-width="1"/>
+  <path d="M12 7L17 12L12 17L7 12Z" fill="none" stroke="#666" stroke-width="1"/>
 </svg>
