@@ -44,18 +44,13 @@
 		return value >= 0 ? `+${value}` : `${value}`;
 	}
 
-	interface Ship {
-		status?: string;
-	}
-
+	// Ships are now counters, not individual objects
 	function getHangarShipCount(player: PlayerState): number {
-		const ships = (player.ships as Ship[]) || [];
-		return ships.filter(s => s.status === 'hangar').length;
+		return player.hangarShips || 0;
 	}
 
 	function getDamagedShipCount(player: PlayerState): number {
-		const ships = (player.ships as Ship[]) || [];
-		return ships.filter(s => s.status === 'damaged').length;
+		return player.repairShips || 0;
 	}
 </script>
 

@@ -29,7 +29,6 @@
 	import Blueprint from '$lib/components/blueprint/Blueprint.svelte';
 	import AirshipBlueprint from '$lib/components/blueprint/AirshipBlueprint.svelte';
 	import ShipStats from '$lib/components/blueprint/ShipStats.svelte';
-	import FleetPanel from '$lib/components/ships/FleetPanel.svelte';
 	import { openModal } from '$lib/stores/ui';
 	import GroundBoard from '$lib/components/ground-board/GroundBoard.svelte';
 	import HandSection from '$lib/components/cards/HandSection.svelte';
@@ -1081,12 +1080,6 @@
 						<ShipStats stats={shipStats} />
 					</div>
 				{/if}
-
-				<!-- Fleet Panel - shows ship counts -->
-				<FleetPanel
-					hangarShips={hangarShipsCount}
-					repairShips={repairShipsCount}
-				/>
 			</aside>
 
 			<!-- Center - Tabbed content -->
