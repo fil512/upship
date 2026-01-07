@@ -34,6 +34,16 @@
 	$: symbolColor = SYMBOL_COLORS[card.symbol] || SYMBOL_COLORS.any;
 	$: isInteractive = marketMode ? (!claimedByOther) : selectable;
 
+	// Derive image filename from card name (e.g., "Lloyd's Man" -> "lloyds_man.png")
+	function getImageFilename(name: string): string {
+		return name
+			.toLowerCase()
+			.replace(/['']/g, '')  // Remove apostrophes
+			.replace(/[^a-z0-9]+/g, '_')  // Replace non-alphanumeric with underscore
+			.replace(/^_|_$/g, '');  // Trim leading/trailing underscores
+	}
+	$: imageFilename = getImageFilename(card.name);
+
 	function handleClick() {
 		if (marketMode) {
 			if (claimedByMe) {
@@ -78,9 +88,14 @@
 		{/if}
 	</div>
 
-	<!-- Center: Image area (placeholder for now) -->
+	<!-- Center: Image area -->
 	<div class="card-image-area">
-		<!-- Future: card image will go here -->
+		<img
+			src="/cards/agent/{imageFilename}.png"
+			alt=""
+			class="card-image"
+			on:error={(e) => e.currentTarget.style.display = 'none'}
+		/>
 	</div>
 
 	<!-- Effect description above reveal -->
@@ -252,13 +267,23 @@
 		flex-shrink: 0;
 	}
 
-	/* Center section - Image placeholder */
+	/* Center section - Image area */
 	.card-image-area {
 		flex: 1;
 		min-height: 90px;
 		margin: 0;
 		background: color-mix(in srgb, var(--card-color) 10%, #e8e4d9);
 		border-radius: 0;
+		overflow: hidden;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.card-image {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
 	}
 
 	/* Effect description - above reveal */

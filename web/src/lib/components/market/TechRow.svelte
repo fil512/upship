@@ -65,6 +65,15 @@
 		const finalCost = Math.max(0, baseCost - discount);
 		return { cost: finalCost, discounted: discount > 0 };
 	}
+
+	// Derive image filename from card name (e.g., "Goldbeater's Skin" -> "goldbeaters_skin.png")
+	function getImageFilename(name: string): string {
+		return name
+			.toLowerCase()
+			.replace(/['']/g, '')  // Remove apostrophes
+			.replace(/[^a-z0-9]+/g, '_')  // Replace non-alphanumeric with underscore
+			.replace(/^_|_$/g, '');  // Trim leading/trailing underscores
+	}
 </script>
 
 <div class="tech-row">
@@ -73,6 +82,7 @@
 		{@const claimedByOther = isClaimedByOther(card.id)}
 		{@const costInfo = getDisplayCost(card)}
 		{@const tiles = getTilesForCard(card.id)}
+		{@const imageFilename = getImageFilename(card.name)}
 
 		<button
 			class="tech-card"
@@ -88,9 +98,14 @@
 				<CostBadge type="research" value={costInfo.cost} size={26} discounted={costInfo.discounted} />
 			</div>
 
-			<!-- Image area placeholder -->
+			<!-- Image area -->
 			<div class="card-image-area">
-				<!-- Future: tech image will go here -->
+				<img
+					src="/cards/tech/{imageFilename}.png"
+					alt=""
+					class="card-image"
+					on:error={(e) => e.currentTarget.style.display = 'none'}
+				/>
 				<div class="age-badge">Age {card.age}</div>
 			</div>
 
@@ -221,6 +236,16 @@
 		background: rgba(154, 140, 112, 0.15);
 		border-radius: 0;
 		position: relative;
+		overflow: hidden;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.card-image {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
 	}
 
 	.card-effect {
