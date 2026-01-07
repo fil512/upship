@@ -90,6 +90,8 @@ function processEndTurn(state: GameState, playerId: string): ActionResult {
         const pendingMarket = playerState.pendingMarketPurchases || [];
         for (const purchase of pendingMarket) {
           const cardIndex = turnState.marketCards.findIndex(c => c.id === purchase.cardId);
+          const isReserveCard = cardIndex === -1 && state.reserveCard?.id === purchase.cardId;
+
           if (cardIndex !== -1) {
             const card = turnState.marketCards[cardIndex];
             // Move card to player's discard pile
@@ -106,6 +108,25 @@ function processEndTurn(state: GameState, playerId: string): ActionResult {
             state.log.push({
               timestamp: new Date().toISOString(),
               message: `Purchased ${card.name} for ${purchase.cost} Influence`,
+              playerId,
+              type: 'action',
+              round: state.round,
+              age: state.age
+            } as LogEntry);
+          } else if (isReserveCard) {
+            // Reserve card: add a copy to discard pile (reserve card stays always available)
+            const card = { ...state.reserveCard };
+            playerState.discardPile = playerState.discardPile || [];
+            playerState.discardPile.push(card);
+            // Clear claim (reserve card can be bought by multiple players)
+            if (turnState.marketCardsClaimed) {
+              delete turnState.marketCardsClaimed[purchase.cardId];
+            }
+
+            state.log = state.log || [];
+            state.log.push({
+              timestamp: new Date().toISOString(),
+              message: `Purchased ${card.name} (Reserve) for ${purchase.cost} Influence`,
               playerId,
               type: 'action',
               round: state.round,
@@ -173,6 +194,8 @@ function processEndTurn(state: GameState, playerId: string): ActionResult {
       const pendingMarket = playerState.pendingMarketPurchases || [];
       for (const purchase of pendingMarket) {
         const cardIndex = turnState.marketCards.findIndex(c => c.id === purchase.cardId);
+        const isReserveCard = cardIndex === -1 && state.reserveCard?.id === purchase.cardId;
+
         if (cardIndex !== -1) {
           const card = turnState.marketCards[cardIndex];
           // Move card to player's discard pile
@@ -189,6 +212,25 @@ function processEndTurn(state: GameState, playerId: string): ActionResult {
           state.log.push({
             timestamp: new Date().toISOString(),
             message: `Purchased ${card.name} for ${purchase.cost} Influence`,
+            playerId,
+            type: 'action',
+            round: state.round,
+            age: state.age
+          } as LogEntry);
+        } else if (isReserveCard) {
+          // Reserve card: add a copy to discard pile (reserve card stays always available)
+          const card = { ...state.reserveCard };
+          playerState.discardPile = playerState.discardPile || [];
+          playerState.discardPile.push(card);
+          // Clear claim (reserve card can be bought by multiple players)
+          if (turnState.marketCardsClaimed) {
+            delete turnState.marketCardsClaimed[purchase.cardId];
+          }
+
+          state.log = state.log || [];
+          state.log.push({
+            timestamp: new Date().toISOString(),
+            message: `Purchased ${card.name} (Reserve) for ${purchase.cost} Influence`,
             playerId,
             type: 'action',
             round: state.round,

@@ -24,6 +24,12 @@ Usage:
     python -m playtest healthcheck [timeout] # Wait for server to be healthy
     python -m playtest reset                 # Drop all game data (dev only)
     python -m playtest poke                  # Trigger bot execution (for stuck games)
+
+Superuser Debugging Commands (uses superuser account for full state access):
+    python -m playtest rdboard               # Show R&D board tech cards
+    python -m playtest techstate             # Show progress track, tech bag, player techs
+    python -m playtest gamelogs [filter] [N] # Show game log entries (optional filter, last N)
+    python -m playtest players               # Show player debug info (bot status, IDs, etc.)
 """
 
 import sys
@@ -39,7 +45,8 @@ from .state import get_state, get_phase, get_player_id
 from .autoplay import autoplay, autoplay_until, autoturn, get_current_turn_faction
 from .display import (
     show_status, show_summary, show_sessions, show_routes,
-    debug_state, tail_log, show_claude_output
+    debug_state, tail_log, show_claude_output,
+    show_rdboard, show_techstate, show_gamelogs, show_players_debug
 )
 
 
@@ -763,6 +770,23 @@ def main():
                 print(f"✗ Poke failed: {result}")
         except Exception as e:
             print(f"✗ Error: {e}")
+
+    # === SUPERUSER DEBUGGING COMMANDS ===
+    # These commands use the superuser account to access full game state
+
+    elif cmd == "rdboard":
+        show_rdboard()
+
+    elif cmd == "techstate":
+        show_techstate()
+
+    elif cmd == "gamelogs":
+        filter_text = sys.argv[2] if len(sys.argv) > 2 else None
+        num_entries = int(sys.argv[3]) if len(sys.argv) > 3 else 30
+        show_gamelogs(filter_text=filter_text, num_entries=num_entries)
+
+    elif cmd == "players":
+        show_players_debug()
 
     else:
         print(f"Unknown command: {cmd}")

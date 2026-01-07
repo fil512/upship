@@ -69,6 +69,25 @@ UPSHIP_PROD=1 python -m playtest autoplay
 | `tail [N]` | Show last N lines of playtest log (default: 50) |
 | `output [N]` | Show Claude background task output (default: 100) |
 
+### Superuser Debugging
+
+These commands use the superuser account to access full game state. They are essential for debugging game issues like stuck ages, missing tech acquisitions, etc.
+
+| Command | Description |
+|---------|-------------|
+| `rdboard` | Show R&D board tech cards (available for acquisition) |
+| `techstate` | Show progress track, thresholds, tech bag contents, and player technologies |
+| `gamelogs [filter] [N]` | Show game log entries with optional filter text (last N entries, default 30) |
+| `players` | Show player debug info: IDs, usernames, bot status, research, cash, techs |
+
+**Example usage:**
+```bash
+python -m playtest techstate              # Debug why age isn't advancing
+python -m playtest rdboard                # Check what techs are available
+python -m playtest gamelogs tech          # Show only tech-related log entries
+python -m playtest gamelogs reveal 50     # Show last 50 reveal-related entries
+```
+
 ### Utility
 
 | Command | Description |

@@ -322,3 +322,290 @@ def show_routes(game_id: str = None) -> None:
     print("  route_6: Amsterdam → Berlin (distance 2, speed 1, income +3)")
     print("  route_7: Paris → Rome (distance 3, speed 2, income +5)")
     print("  route_8: Rome → Vienna (distance 2, speed 1, income +3)")
+
+
+# ============================================================
+# SUPERUSER DEBUGGING COMMANDS
+# These commands access the full game state via the superuser account
+# to provide debugging information not available to normal players.
+# ============================================================
+
+
+def _get_raw_state_as_superuser(game_id: str) -> dict:
+    """Get raw game state using superuser account.
+
+    Args:
+        game_id: The game ID.
+
+    Returns:
+        The raw state dictionary from the API.
+    """
+    client = get_client()
+    login_superuser()
+    raw_state = client._api_get(SUPERUSER, f"/api/state/{game_id}")
+
+    # Extract the state data
+    game_state_wrapper = raw_state.get('gameState', raw_state)
+    state_data = game_state_wrapper.get('state', {})
+    return state_data
+
+
+def show_rdboard(game_id: str = None) -> None:
+    """Show the R&D board state (available tech cards).
+
+    This is a superuser-only command that shows the tech cards
+    available for acquisition on the R&D board.
+
+    Args:
+        game_id: The game ID (uses current game if None).
+    """
+    if game_id is None:
+        game_id = get_game_id()
+    if not game_id:
+        print("No current game. Run 'setup' first.")
+        return
+
+    try:
+        state_data = _get_raw_state_as_superuser(game_id)
+
+        print("=== R&D Board (Tech Cards Available) ===\n")
+
+        rd_board = state_data.get('rdBoard', [])
+        if not rd_board:
+            print("R&D Board is EMPTY!")
+            print("\nThis may indicate a bug - check tech bag initialization.")
+        else:
+            print(f"Cards on R&D Board: {len(rd_board)}\n")
+            for i, card in enumerate(rd_board):
+                card_id = card.get('id', 'unknown')
+                name = card.get('name', 'Unknown')
+                age = card.get('age', '?')
+                cost = card.get('cost', '?')
+                slot_type = card.get('slotType', '?')
+                claimed = card.get('claimed', False)
+                claimed_by = card.get('claimedBy', None)
+
+                status = f"[CLAIMED by {claimed_by[:8]}...]" if claimed else "[available]"
+                print(f"  [{i}] {name} (id={card_id})")
+                print(f"      Age {age}, Cost {cost} research, Type: {slot_type} {status}")
+
+        # Show tech bag summary
+        tech_bag = state_data.get('techBag', [])
+        print(f"\nTech Bag: {len(tech_bag)} cards remaining")
+
+        # Count by age
+        if tech_bag:
+            age_counts = {}
+            for card in tech_bag:
+                age = card.get('age', '?')
+                age_counts[age] = age_counts.get(age, 0) + 1
+            print(f"  By age: {age_counts}")
+
+    except Exception as e:
+        print(f"Error: {e}")
+
+
+def show_techstate(game_id: str = None) -> None:
+    """Show technology/progress state for debugging age transitions.
+
+    This is a superuser-only command that shows:
+    - Progress track position and thresholds
+    - Tech bag contents
+    - Technologies owned by each player
+
+    Args:
+        game_id: The game ID (uses current game if None).
+    """
+    if game_id is None:
+        game_id = get_game_id()
+    if not game_id:
+        print("No current game. Run 'setup' first.")
+        return
+
+    try:
+        state_data = _get_raw_state_as_superuser(game_id)
+
+        print("=== Technology & Progress State ===\n")
+
+        # Progress track
+        progress = state_data.get('progressTrack', 0)
+        thresholds = state_data.get('progressThresholds', {})
+        age = state_data.get('age', 1)
+        age2_threshold = thresholds.get('age2', 8)
+        age3_threshold = thresholds.get('age3', 16)
+        end_threshold = thresholds.get('end', 24)
+
+        print("=== Progress Track ===")
+        print(f"  Current Progress: {progress}")
+        print(f"  Age 2 Threshold: {age2_threshold} {'(PASSED)' if progress >= age2_threshold else ''}")
+        print(f"  Age 3 Threshold: {age3_threshold} {'(PASSED)' if progress >= age3_threshold else ''}")
+        print(f"  Game End: {end_threshold}")
+        print(f"  Current Age: {age}")
+
+        # Visual progress bar
+        bar_length = 30
+        progress_pct = min(progress / end_threshold, 1.0)
+        filled = int(bar_length * progress_pct)
+        bar = '█' * filled + '░' * (bar_length - filled)
+        print(f"\n  [{bar}] {progress}/{end_threshold}")
+
+        # Show markers for age transitions
+        age2_pos = int(bar_length * age2_threshold / end_threshold)
+        age3_pos = int(bar_length * age3_threshold / end_threshold)
+        markers = [' '] * bar_length
+        markers[age2_pos - 1] = '2'
+        markers[age3_pos - 1] = '3'
+        print(f"   {''.join(markers)}")
+
+        # R&D Board summary
+        rd_board = state_data.get('rdBoard', [])
+        tech_bag = state_data.get('techBag', [])
+
+        print(f"\n=== Tech Supply ===")
+        print(f"  R&D Board: {len(rd_board)} cards")
+        print(f"  Tech Bag: {len(tech_bag)} cards remaining")
+
+        # Tech bag by age
+        if tech_bag:
+            age_counts = {}
+            for card in tech_bag:
+                card_age = card.get('age', '?')
+                age_counts[card_age] = age_counts.get(card_age, 0) + 1
+            print(f"  Bag by age: {age_counts}")
+
+        # Player technologies
+        players = state_data.get('players', {})
+        print(f"\n=== Player Technologies ===")
+        for pid, pdata in players.items():
+            faction = pdata.get('faction', 'unknown').upper()
+            tech_cards = pdata.get('techCards', [])
+            technologies = pdata.get('technologies', [])
+            research = pdata.get('research', 0)
+            research_level = pdata.get('researchLevel', 0)
+
+            # Use whichever is populated
+            techs = tech_cards if tech_cards else technologies
+
+            print(f"\n  {faction}:")
+            print(f"    Research: {research} (level: {research_level})")
+            print(f"    Technologies: {len(techs)}")
+            for tech in techs[:5]:
+                print(f"      - {tech}")
+            if len(techs) > 5:
+                print(f"      ... and {len(techs) - 5} more")
+
+    except Exception as e:
+        print(f"Error: {e}")
+
+
+def show_players_debug(game_id: str = None) -> None:
+    """Show detailed player information including bot status.
+
+    This is a superuser-only command that shows:
+    - Player IDs and usernames
+    - Bot status (whether player is a server-side bot)
+    - Faction, research, cash, income, etc.
+
+    Args:
+        game_id: The game ID (uses current game if None).
+    """
+    if game_id is None:
+        game_id = get_game_id()
+    if not game_id:
+        print("No current game. Run 'setup' first.")
+        return
+
+    try:
+        client = get_client()
+        login_superuser()
+        data = client._api_get(SUPERUSER, f"/api/state/{game_id}/players-debug")
+
+        print("=== Player Debug Info ===\n")
+        print(f"Game ID: {game_id}")
+        print(f"Phase: {data.get('phase')}")
+        print(f"Bot Count: {data.get('botCount')}")
+
+        print(f"\n{'Faction':<10} {'Username':<20} {'Bot?':<5} {'Research':>8} {'Cash':>6} {'Income':>7} {'Techs':>6}")
+        print("=" * 75)
+
+        for player in data.get('players', []):
+            faction = (player.get('faction') or '?').upper()
+            username = player.get('username', 'Unknown')[:20]
+            is_bot = "YES" if player.get('isBot') else "no"
+            research = player.get('researchLevel', 0)
+            cash = player.get('cash', 0)
+            income = player.get('income', 0)
+            techs = player.get('techCards', 0)
+
+            print(f"{faction:<10} {username:<20} {is_bot:<5} {research:>8} £{cash:>5} {income:>5}/t {techs:>6}")
+
+        print("=" * 75)
+
+        if data.get('botIds'):
+            print(f"\nBot Player IDs:")
+            for bid in data.get('botIds', []):
+                print(f"  {bid}")
+
+    except Exception as e:
+        print(f"Error: {e}")
+
+
+def show_gamelogs(game_id: str = None, filter_text: str = None, num_entries: int = 30) -> None:
+    """Show game log entries with optional filtering.
+
+    This is a superuser-only command that shows the in-game log
+    entries, which can be filtered by text content.
+
+    Args:
+        game_id: The game ID (uses current game if None).
+        filter_text: Optional text to filter log entries (case-insensitive).
+        num_entries: Maximum number of entries to show (default 30).
+    """
+    if game_id is None:
+        game_id = get_game_id()
+    if not game_id:
+        print("No current game. Run 'setup' first.")
+        return
+
+    try:
+        state_data = _get_raw_state_as_superuser(game_id)
+
+        log = state_data.get('log', [])
+
+        if filter_text:
+            filter_lower = filter_text.lower()
+            log = [entry for entry in log
+                   if filter_lower in entry.get('message', '').lower()
+                   or filter_lower in entry.get('type', '').lower()]
+            print(f"=== Game Log (filtered: '{filter_text}', last {num_entries}) ===\n")
+        else:
+            print(f"=== Game Log (last {num_entries} entries) ===\n")
+
+        if not log:
+            print("No log entries found.")
+            return
+
+        # Show last N entries
+        for entry in log[-num_entries:]:
+            msg = entry.get('message', '')
+            etype = entry.get('type', 'log')
+            player_id = entry.get('playerId', '')
+            timestamp = entry.get('timestamp', '')
+
+            # Format timestamp if present (just show time part)
+            time_str = ''
+            if timestamp:
+                try:
+                    time_str = timestamp.split('T')[1][:8] + ' '
+                except Exception:
+                    pass
+
+            # Format player ID (show short version)
+            player_str = f"[{player_id[:8]}] " if player_id else ''
+
+            print(f"  {time_str}[{etype}] {player_str}{msg}")
+
+        print(f"\n  Total log entries: {len(state_data.get('log', []))}")
+
+    except Exception as e:
+        print(f"Error: {e}")

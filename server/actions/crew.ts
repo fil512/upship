@@ -61,7 +61,7 @@ function processUpgradeOfficerIncome(state: GameState, playerId: string, data: I
   }
 
   playerState.cash -= FLIGHT_SCHOOL_COST as number;
-  playerState.officerIncome = (playerState.officerIncome || 0) + 1;
+  playerState.officerIncome = (playerState.officerIncome || 1) + 1;
 
   // Log resource flows
   const flowContext = createFlowContext(state, (state as { gameId?: string }).gameId || 'unknown');

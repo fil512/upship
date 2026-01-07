@@ -424,7 +424,7 @@ function executeLocationAction(
       // Per Section 5.1: Execute action immediately when placing agent
       try {
         processUpgradeOfficerIncome(state, playerId, { _internal: true });
-        const newOfficerIncome = (playerState as PlayerState & { officerIncome?: number }).officerIncome || 0;
+        const newOfficerIncome = (playerState as PlayerState & { officerIncome?: number }).officerIncome || 1;
         return { success: true, message: `Upgraded Officer Income to ${newOfficerIncome}/round` };
       } catch (error) {
         return { success: false, error: (error as Error).message };
@@ -556,7 +556,7 @@ function executeLocationAction(
 
     case 'personnel_office': {
       // Gain officers equal to Officer Income Track
-      const officerIncome = (playerState as PlayerState & { officerIncome?: number }).officerIncome || 0;
+      const officerIncome = (playerState as PlayerState & { officerIncome?: number }).officerIncome || 1;
       if (officerIncome <= 0) {
         state.log.push({
           timestamp: new Date().toISOString(),

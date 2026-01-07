@@ -7,13 +7,15 @@ import type {
   GameState,
   PlayerState,
   Card,
-  Ship
+  Blueprint
 } from '@upship/api';
 
 // Import game data for slot type lookup
 import type { TechTile } from '../data/upgrades';
 const { UPGRADES } = require('../data/upgrades') as { UPGRADES: Record<string, TechTile> };
 const { GROUND_BOARD_LOCATIONS } = require('../data/groundBoard');
+// Import calculateBlueprintStats from launch.ts for ship stat calculations
+const { calculateBlueprintStats } = require('../actions/launch');
 
 // Types for bot decisions
 export interface PlacementDecision {
@@ -23,7 +25,7 @@ export interface PlacementDecision {
 }
 
 export interface LaunchDecision {
-  shipId: string;
+  // shipId removed - ships are fungible tokens
   routeId: string;
   gasType: 'hydrogen' | 'helium';
 }
@@ -41,7 +43,7 @@ export interface LaunchReadiness {
   hasAchievableTarget: boolean;
   missing: string[];
   priorities: string[];
-  hangarShips: Ship[];
+  hangarShipCount: number;  // Changed from Ship[] to number - ships are now counters
   totalGas: number;
   engineers: number;
 }
@@ -134,60 +136,56 @@ function isTechSuperiorToInstalled(
   player: PlayerState
 ): boolean {
   const blueprint = player.blueprint;
-  if (!blueprint) return true; // No blueprint = always accept
+  if (!blueprint) {
+    console.log(`[SUPERIOR CHECK] No blueprint - accepting`);
+    return true;
+  }
 
   const slotType = newTile.slotType as keyof typeof blueprint;
   const installedTiles = blueprint[slotType] as (string | null)[] | undefined;
 
+  console.log(`[SUPERIOR CHECK] Tile ${newTile.id} slotType=${slotType}, installedTiles=${JSON.stringify(installedTiles)}`);
+
   if (!installedTiles || installedTiles.length === 0) {
-    return true; // Empty slots = always accept
+    console.log(`[SUPERIOR CHECK] Empty slots array - accepting`);
+    return true;
   }
 
   // Calculate score for the new tile
   const newScore = calculateTechScore(newTile);
+  console.log(`[SUPERIOR CHECK] New tile score: ${newScore}`);
 
   // Check all installed tiles in this slot type
   // If the new tile is better than ANY installed tile, it's worth acquiring
   // (Bot can potentially upgrade a slot later)
   for (const installedId of installedTiles) {
     if (!installedId) {
-      // There's an empty slot - new tech is useful
+      console.log(`[SUPERIOR CHECK] Found null slot - accepting`);
       return true;
     }
 
     const installedTile = UPGRADES[installedId];
-    if (!installedTile) continue;
+    if (!installedTile) {
+      console.log(`[SUPERIOR CHECK] Installed ${installedId} not found in UPGRADES - skipping`);
+      continue;
+    }
 
     const installedScore = calculateTechScore(installedTile);
+    console.log(`[SUPERIOR CHECK] Comparing: new=${newScore} vs installed ${installedId}=${installedScore}`);
 
     // If new tile is better than any installed tile, it's superior
     if (newScore > installedScore) {
+      console.log(`[SUPERIOR CHECK] New tile is better - accepting`);
       return true;
     }
   }
 
-  // New tile is not better than any installed tile
+  console.log(`[SUPERIOR CHECK] New tile not better than any installed - rejecting`);
   return false;
 }
 
-/**
- * Calculate ship stats from blueprint
- */
-export function calculateShipStats(
-  ship: Ship,
-  _player: PlayerState
-): { lift: number; weight: number; range: number; speed: number; ceiling: number; reliability: number } {
-  // Ships have their stats calculated at build time
-  // Use the stats directly from the ship object
-  return {
-    lift: ship.lift || 0,
-    weight: ship.weight || 0,
-    range: ship.range || 1,
-    speed: ship.speed || 0,
-    ceiling: ship.ceiling || 0,
-    reliability: ship.reliability || 0
-  };
-}
+// calculateShipStats removed - ships are now fungible tokens
+// Ship stats come from calculateBlueprintStats(player.blueprint, age) in launch.ts
 
 /**
  * Determine the desired blueprint configuration for Blueprint Design action.
@@ -307,6 +305,8 @@ export function getBlueprintDesignBlueprint(
 
 /**
  * Evaluate what a player needs to be able to launch
+ * NOTE: Ships are now counters (hangarShips: number), not an array of Ship objects.
+ * Ship stats come from the player's current blueprint at launch time.
  */
 export function evaluateLaunchReadiness(
   state: GameState,
@@ -319,13 +319,14 @@ export function evaluateLaunchReadiness(
       hasAchievableTarget: false,
       missing: ['player not found'],
       priorities: [],
-      hangarShips: [],
+      hangarShipCount: 0,
       totalGas: 0,
       engineers: 0
     };
   }
 
-  const hangarShips = (player.ships || []).filter(s => s.status === 'hangar');
+  // Ships are now counters, not an array
+  const hangarShipCount = player.hangarShips || 0;
   const hydrogen = player.gasCubes?.hydrogen || 0;
   const helium = player.gasCubes?.helium || 0;
   const totalGas = hydrogen + helium;
@@ -338,7 +339,7 @@ export function evaluateLaunchReadiness(
   const priorities: string[] = [];
 
   // Check 1: Do we have a ship?
-  if (hangarShips.length === 0) {
+  if (hangarShipCount === 0) {
     missing.push('no ship in hangar');
     if (cash >= 5) {
       priorities.push('construction_hall');
@@ -351,7 +352,7 @@ export function evaluateLaunchReadiness(
       hasAchievableTarget: false,
       missing,
       priorities,
-      hangarShips,
+      hangarShipCount,
       totalGas,
       engineers
     };
@@ -393,12 +394,13 @@ export function evaluateLaunchReadiness(
   }
 
   // Check 5: Do we have achievable routes?
+  // Ship stats now come from blueprint, not from ship objects
   let hasAchievableTarget = false;
   const routes = (state.map?.routes || []).filter(r => !r.claimed);
 
-  if (hangarShips.length > 0 && routes.length > 0) {
-    const ship = hangarShips[0];
-    const shipStats = calculateShipStats(ship, player);
+  if (hangarShipCount > 0 && routes.length > 0 && player.blueprint) {
+    // Calculate ship stats from blueprint (this is how launch.ts does it)
+    const shipStats = calculateBlueprintStats(player.blueprint, currentAge);
 
     for (const route of routes) {
       const routeRange = route.distance || route.range || 1;
@@ -426,7 +428,7 @@ export function evaluateLaunchReadiness(
     priorities.push('technical_institute');
   }
 
-  const canLaunch = hangarShips.length > 0 && slotsReady &&
+  const canLaunch = hangarShipCount > 0 && slotsReady &&
                     officers >= officersNeeded && totalGas >= 1 &&
                     hasAchievableTarget;
 
@@ -435,7 +437,7 @@ export function evaluateLaunchReadiness(
     hasAchievableTarget,
     missing,
     priorities,
-    hangarShips,
+    hangarShipCount,
     totalGas,
     engineers
   };
@@ -483,10 +485,11 @@ export function findStrategicPlacement(
   const cash = player.cash || 0;
   const totalGas = launchEval.totalGas;
   const officers = player.officers || 0;
-  const hangarCount = launchEval.hangarShips.length;
-  const onRouteCount = (player.ships || []).filter(s => s.status === 'on_route').length;
+  const hangarCount = launchEval.hangarShipCount;
+  // Routes are now tracked by claimed routes on the map, not player.ships
+  const claimedRouteCount = (state.map?.routes || []).filter(r => r.claimed === playerId).length;
 
-  if (onRouteCount >= 2) {
+  if (claimedRouteCount >= 2) {
     priorityLocations.push('research_institute');
     priorityLocations.push('flight_school');
     priorityLocations.push('technical_institute');
@@ -500,6 +503,7 @@ export function findStrategicPlacement(
     priorityLocations.push('research_institute');
   }
 
+  // Only build ships if we have room (max 3 in hangar)
   if (hangarCount < 2 && cash >= 5) {
     priorityLocations.push('construction_hall');
   }
@@ -517,7 +521,7 @@ export function findStrategicPlacement(
     priorityLocations.push('flight_school');  // Build officer income
   }
 
-  if (hangarCount > 0 || onRouteCount > 0) {
+  if (hangarCount > 0 || claimedRouteCount > 0) {
     priorityLocations.push('insurance_bureau');
   }
 
@@ -612,6 +616,7 @@ function buildLocationAction(
 
 /**
  * Find best launch decision for a ship
+ * NOTE: Ships are now fungible tokens. Stats come from blueprint.
  */
 export function findLaunchDecision(
   state: GameState,
@@ -620,14 +625,16 @@ export function findLaunchDecision(
   const player = state.players[playerId];
   if (!player) return null;
 
-  const hangarShips = (player.ships || []).filter(s => s.status === 'hangar');
-  if (hangarShips.length === 0) return null;
+  // Ships are counters now
+  const hangarShipCount = player.hangarShips || 0;
+  if (hangarShipCount === 0) return null;
 
   const routes = (state.map?.routes || []).filter(r => !r.claimed);
   if (routes.length === 0) return null;
 
-  const ship = hangarShips[0];
-  const shipStats = calculateShipStats(ship, player);
+  // Ship stats come from blueprint
+  if (!player.blueprint) return null;
+  const shipStats = calculateBlueprintStats(player.blueprint, state.age || 1);
 
   // Find achievable routes
   const achievableRoutes = routes.filter(route => {
@@ -649,7 +656,6 @@ export function findLaunchDecision(
   const gasType = player.faction === 'usa' ? 'helium' : 'hydrogen';
 
   return {
-    shipId: ship.id,
     routeId: achievableRoutes[0].id,
     gasType
   };
@@ -674,45 +680,43 @@ export function getRevealAcquisitions(
   const rdBoard = state.rdBoard || [];
   const ownedTechs = new Set(player.techCards || []);
 
+  console.log(`[BOT REVEAL] Player ${player.faction}: rdBoard has ${rdBoard.length} cards, owns ${ownedTechs.size} techs`);
+
   // Filter to available techs not already owned
   const availableTechs = rdBoard.filter(t => !ownedTechs.has(t.id));
+  console.log(`[BOT REVEAL] Available (not owned): ${availableTechs.length} techs: ${availableTechs.map(t => t.id).join(', ')}`);
 
   if (availableTechs.length > 0) {
-    // Filter to techs that provide superior upgrades
-    const superiorTechs = availableTechs.filter(techCard => {
+    // Calculate tech value: direct card benefits (VP, income) + upgrade tile score
+    const techsWithValue = availableTechs.map(techCard => {
+      const cardVp = (techCard as { vp?: number }).vp || 0;
+      const cardIncome = (techCard as { income?: number }).income || 0;
       const upgradeInfo = getUpgradeForTech(techCard.id);
-      if (!upgradeInfo) return false; // No upgrade tile found
-
-      // Check if this upgrade is better than what's installed
-      return isTechSuperiorToInstalled(upgradeInfo.tile, player);
+      const upgradeScore = upgradeInfo ? calculateTechScore(upgradeInfo.tile) : 0;
+      // VP worth ~3 points, income worth ~2 points, upgrade score as-is
+      const totalValue = cardVp * 3 + cardIncome * 2 + upgradeScore;
+      return { tech: techCard, value: totalValue };
     });
 
-    if (superiorTechs.length > 0) {
-      // Sort by score (highest first)
-      superiorTechs.sort((a, b) => {
-        const upgradeA = getUpgradeForTech(a.id);
-        const upgradeB = getUpgradeForTech(b.id);
-        if (!upgradeA || !upgradeB) return 0;
+    // Sort by value (highest first)
+    techsWithValue.sort((a, b) => b.value - a.value);
 
-        const scoreA = calculateTechScore(upgradeA.tile);
-        const scoreB = calculateTechScore(upgradeB.tile);
-        return scoreB - scoreA; // Descending order
-      });
+    // Calculate available research: saved research + engineers (matches technology.ts logic)
+    const savedResearch = (player as PlayerState & { research?: number }).research || 0;
+    const engineers = player.engineers || 0;
+    let availableResearch = savedResearch + engineers;
 
-      // Calculate available research (research_level + engineers + estimate card bonus)
-      const researchLevel = player.researchLevel || 0;
-      const engineers = player.engineers || 0;
-      const cardBonusEstimate = 1; // Conservative estimate
-      let availableResearch = researchLevel + engineers + cardBonusEstimate;
+    console.log(`[BOT REVEAL] Available research: ${availableResearch} (saved=${savedResearch}, engineers=${engineers})`);
 
-      // Buy as many superior techs as affordable
-      for (const tech of superiorTechs) {
-        const cost = (tech as { cost?: number }).cost || 0;
-        if (cost <= availableResearch) {
-          techIds.push(tech.id);
-          availableResearch -= cost;
-          if (availableResearch <= 0) break;
-        }
+    // Buy techs by value until out of research
+    for (const { tech, value } of techsWithValue) {
+      const cost = (tech as { cost?: number }).cost || 0;
+      console.log(`[BOT REVEAL] Considering ${tech.id}: cost=${cost}, value=${value}, affordable=${cost <= availableResearch}`);
+      if (cost <= availableResearch) {
+        techIds.push(tech.id);
+        availableResearch -= cost;
+        console.log(`[BOT REVEAL] → BUYING ${tech.id}, remaining research=${availableResearch}`);
+        if (availableResearch <= 0) break;
       }
     }
   }
@@ -754,22 +758,22 @@ export function getRevealAcquisitions(
 
 /**
  * Decide whether to spend engineers on hazard response
+ * NOTE: Hazard info is now in player.pendingLaunch.hazardInfo, not ship.pendingHazard
  */
 export function getHazardResponse(
   state: GameState,
-  playerId: string,
-  shipId: string
+  playerId: string
 ): { spendEngineers: boolean } {
   const player = state.players[playerId];
   if (!player) return { spendEngineers: false };
 
-  // Find the ship with pending hazard
-  const ship = (player.ships || []).find(s => s.id === shipId);
-  if (!ship || !ship.pendingHazard) return { spendEngineers: false };
+  // Hazard info is now in pendingLaunch
+  const pendingLaunch = player.pendingLaunch as { hazardInfo?: { engineersNeeded?: number } } | undefined;
+  if (!pendingLaunch?.hazardInfo) return { spendEngineers: false };
 
-  const hazard = ship.pendingHazard;
+  const hazardInfo = pendingLaunch.hazardInfo;
   const engineers = player.engineers || 0;
-  const engineersNeeded = hazard.engineerCost || 0;
+  const engineersNeeded = hazardInfo.engineersNeeded || 0;
 
   // Spend engineers if we have enough
   return { spendEngineers: engineers >= engineersNeeded };
@@ -782,6 +786,6 @@ module.exports = {
   getBlueprintDesignBlueprint,
   findLaunchDecision,
   getRevealAcquisitions,
-  getHazardResponse,
-  calculateShipStats
+  getHazardResponse
+  // calculateShipStats removed - use calculateBlueprintStats from launch.ts
 };

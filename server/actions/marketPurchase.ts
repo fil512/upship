@@ -63,15 +63,19 @@ function processBuyMarketCardTentative(state: GameState, playerId: string, data:
     throw new GameRuleError('Can only buy market cards after revealing');
   }
 
-  // Find the card in market
-  const card = marketState.marketCards.find(c => c.id === cardId);
+  // Find the card in market or reserve
+  let card = marketState.marketCards.find(c => c.id === cardId);
+  const isReserveCard = !card && state.reserveCard?.id === cardId;
+  if (isReserveCard) {
+    card = state.reserveCard;
+  }
   if (!card) {
     throw new GameRuleError('Card not found in market');
   }
 
-  // Check if card is already claimed
+  // Check if card is already claimed (reserve card can be bought by multiple players)
   marketState.marketCardsClaimed = marketState.marketCardsClaimed || {};
-  if (marketState.marketCardsClaimed[cardId]) {
+  if (!isReserveCard && marketState.marketCardsClaimed[cardId]) {
     const claimingPlayer = state.players[marketState.marketCardsClaimed[cardId]];
     const faction = claimingPlayer?.faction || 'another player';
     throw new GameRuleError(`This card is already claimed by ${faction}`);

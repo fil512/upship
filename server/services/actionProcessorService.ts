@@ -670,7 +670,7 @@ function processCollectIncome(state: GameState, playerId: string, _data: Record<
   playerState.cash += incomeGained;
 
   // Gain crew from income tracks
-  const officersGained = playerState.officerIncome || 0;
+  const officersGained = playerState.officerIncome || 1;
   const engineersGained = playerState.engineerIncome || 1;
 
   playerState.officers += officersGained;
@@ -1051,7 +1051,7 @@ function processUpgradeOfficerIncome(state: GameState, playerId: string, _data: 
   }
 
   playerState.cash -= cost;
-  playerState.officerIncome = (playerState.officerIncome || 0) + 1;
+  playerState.officerIncome = (playerState.officerIncome || 1) + 1;
 
   stateWithLog.log.push({
     timestamp: new Date().toISOString(),

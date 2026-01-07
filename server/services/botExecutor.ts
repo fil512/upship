@@ -164,10 +164,34 @@ async function executeBotWorkerPlacement(
 
   // Check if bot has already revealed (hasPassed = true)
   if (player.hasPassed) {
-    logger.info({ gameId, botId }, 'BOT EXECUTOR: Bot has already revealed, finishing purchase selection');
-    // Bot has revealed and needs to finish purchase selection
-    // For now, bots don't select purchases interactively, so just end turn
-    return await executeBotAction(io, gameId, botId, 'END_TURN', {}, version);
+    logger.info({ gameId, botId }, 'BOT EXECUTOR: Bot has already revealed, making purchases');
+    // Bot has revealed - resources (research, influence) were collected during REVEAL
+    // Now make purchases before ending turn
+
+    // Get reveal acquisitions
+    const acquisitions = botService.getRevealAcquisitions(state, botId);
+    logger.info({ gameId, botId, techCount: acquisitions.techIds.length, cardCount: acquisitions.cardIds.length }, 'BOT EXECUTOR: Reveal acquisitions');
+
+    // Acquire techs
+    for (const techId of acquisitions.techIds) {
+      const freshState = await gameStateService.getGameState(gameId);
+      if (!freshState) break;
+      await executeBotAction(io, gameId, botId, 'ACQUIRE_TECH_CARD_TENTATIVE', { techCardId: techId }, freshState.version);
+    }
+
+    // Buy market cards (tries in priority order, stops when influence runs out)
+    for (const cardId of acquisitions.cardIds) {
+      const freshState = await gameStateService.getGameState(gameId);
+      if (!freshState) break;
+      await executeBotAction(io, gameId, botId, 'BUY_MARKET_CARD_TENTATIVE', { cardId }, freshState.version);
+    }
+
+    // End turn to finalize purchases
+    const finalState = await gameStateService.getGameState(gameId);
+    if (finalState) {
+      return await executeBotAction(io, gameId, botId, 'END_TURN', {}, finalState.version);
+    }
+    return false;
   }
 
   // Check if bot has agents remaining
@@ -225,10 +249,9 @@ async function executeBotLaunches(
     const player = state.players[botId];
     if (!player) return;
 
-    // Check for pending hazard response
-    const shipAwaitingHazard = (player.ships || []).find(s => s.status === 'awaiting_hazard');
-    if (shipAwaitingHazard) {
-      await handleBotHazardResponse(io, gameId, state, botId, shipAwaitingHazard.id, gameStateWrapper.version);
+    // Check for pending hazard response (now stored in pendingLaunch)
+    if (player.pendingLaunch?.hazard) {
+      await handleBotHazardResponse(io, gameId, state, botId, gameStateWrapper.version);
       continue;
     }
 
@@ -248,8 +271,8 @@ async function executeBotLaunches(
         break;
       }
 
+      // Ships are fungible tokens - no shipId needed
       await executeBotAction(io, gameId, botId, 'LAUNCH_SHIP', {
-        shipId: launchDecision.shipId,
         routeId: launchDecision.routeId,
         gasType: launchDecision.gasType
       }, gameStateWrapper.version);
@@ -268,19 +291,18 @@ async function executeBotLaunches(
 
 /**
  * Handle hazard response for bot
+ * NOTE: shipId is no longer needed - hazard info is in pendingLaunch
  */
 async function handleBotHazardResponse(
   io: SocketIOServer,
   gameId: string,
   state: GameState,
   botId: string,
-  shipId: string,
   version: number
 ): Promise<void> {
-  const response = botService.getHazardResponse(state, botId, shipId);
+  const response = botService.getHazardResponse(state, botId);
 
   await executeBotAction(io, gameId, botId, 'RESPOND_TO_HAZARD', {
-    shipId,
     spendEngineers: response.spendEngineers
   }, version);
 }

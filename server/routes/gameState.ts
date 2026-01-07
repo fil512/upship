@@ -34,6 +34,8 @@ const { processAction } = require('../actions');
 const { executeUndo, getUndoInfo } = require('../actions/undo');
 const { broadcastStateUpdate } = require('../socket');
 const { checkAndExecuteBotMoves } = require('../services/botExecutor');
+const { isUserAdmin } = require('../services/userService');
+const gameService = require('../services/gameService');
 
 // Extended request with session and app
 interface AuthenticatedRequest extends Request {
@@ -376,6 +378,74 @@ router.post('/:gameId/poke', requireGamePlayer, async (req: Request, res: Respon
     res.json({ success: true, message: 'Bot execution triggered', diagnostics });
   } catch (error) {
     console.error('[POKE] Error:', error);
+    next(error);
+  }
+});
+
+/**
+ * GET /api/state/:gameId/players-debug
+ * Superuser-only endpoint for debugging player information including bot status.
+ * Returns detailed player info from both game_players and game state.
+ */
+router.get('/:gameId/players-debug', requireAuth, async (req: Request, res: Response, next: NextFunction) => {
+  const authReq = req as AuthenticatedRequest;
+  try {
+    const gameId = req.params.gameId;
+    const userId = authReq.session.userId;
+
+    // Check if user is superuser
+    const isAdmin = await isUserAdmin(userId);
+    if (!isAdmin) {
+      res.status(403).json({ error: 'Superuser access required' });
+      return;
+    }
+
+    // Get game info from database (includes player info)
+    const game = await gameService.getGameById(gameId);
+    if (!game) {
+      res.status(404).json({ error: 'Game not found' });
+      return;
+    }
+
+    // Get game state for additional player details
+    const gameState = await gameStateService.getGameState(gameId);
+    const statePlayers = gameState?.state?.players || {};
+
+    // Combine data from game.players and game state
+    const dbPlayers = game.players || [];
+    const players = dbPlayers.map((dbPlayer: { id: string; username?: string; isBot?: boolean; botName?: string; faction?: string }) => {
+      // The player ID in game state is the game_players.id (UUID)
+      const statePlayer = statePlayers[dbPlayer.id] || {};
+      return {
+        playerId: dbPlayer.id,
+        username: dbPlayer.username || dbPlayer.botName || (dbPlayer.isBot ? `[Bot ${dbPlayer.faction}]` : 'Unknown'),
+        isBot: dbPlayer.isBot || false,
+        faction: dbPlayer.faction || statePlayer.faction,
+        // State info
+        research: statePlayer.research || 0,
+        researchLevel: statePlayer.researchLevel || 0,
+        techCards: (statePlayer.techCards || []).length,
+        cash: statePlayer.cash || 0,
+        income: statePlayer.income || 0,
+        agentsRemaining: statePlayer.agentsRemaining || 0,
+        hasPassed: statePlayer.hasPassed || false
+      };
+    });
+
+    // Also include bot IDs for reference
+    const botIds = dbPlayers
+      .filter((p: { isBot?: boolean }) => p.isBot)
+      .map((p: { id: string }) => p.id);
+
+    res.json({
+      gameId,
+      phase: gameState?.state?.phase,
+      players,
+      botCount: botIds.length,
+      botIds
+    });
+  } catch (error) {
+    console.error('[PLAYERS-DEBUG] Error:', error);
     next(error);
   }
 });
