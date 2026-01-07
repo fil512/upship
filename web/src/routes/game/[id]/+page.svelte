@@ -29,6 +29,7 @@
 	import Blueprint from '$lib/components/blueprint/Blueprint.svelte';
 	import AirshipBlueprint from '$lib/components/blueprint/AirshipBlueprint.svelte';
 	import ShipStats from '$lib/components/blueprint/ShipStats.svelte';
+	import FleetPanel from '$lib/components/ships/FleetPanel.svelte';
 	import { openModal } from '$lib/stores/ui';
 	import GroundBoard from '$lib/components/ground-board/GroundBoard.svelte';
 	import HandSection from '$lib/components/cards/HandSection.svelte';
@@ -703,6 +704,7 @@
 	$: hangarShipsCount = $myState?.hangarShips || 0;
 	$: repairShipsCount = $myState?.repairShips || 0;
 	$: hasShipsToLaunch = hangarShipsCount > 0;
+	$: routesOwnedCount = ($myState?.routes || []).length;
 	$: launchGasRequired = calculateGasRequired(viewedPlayerState?.blueprint || $myState?.blueprint);
 	$: canAffordHydrogen = ($myState?.gasCubes?.hydrogen || 0) >= launchGasRequired;
 	$: canAffordHelium = ($myState?.gasCubes?.helium || 0) >= launchGasRequired;
@@ -1080,6 +1082,15 @@
 						<ShipStats stats={shipStats} />
 					</div>
 				{/if}
+
+				<!-- Fleet Panel - shows ship counts -->
+				<FleetPanel
+					hangarShips={hangarShipsCount}
+					repairShips={repairShipsCount}
+					pendingLaunch={pendingLaunch}
+					routesOwned={routesOwnedCount}
+					selectable={isLaunchpadActive}
+				/>
 			</aside>
 
 			<!-- Center - Tabbed content -->
