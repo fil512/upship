@@ -199,7 +199,8 @@ async function executeBotWorkerPlacement(
     return success;
   } else {
     // No valid placement, must reveal
-    return await executeBotAction(io, gameId, botId, 'END_TURN', {}, version);
+    logger.info({ gameId, botId }, 'BOT EXECUTOR: No valid placement found, revealing');
+    return await executeBotAction(io, gameId, botId, 'REVEAL', {}, version);
   }
 }
 
