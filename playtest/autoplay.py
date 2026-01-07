@@ -19,6 +19,7 @@ from .phases import (
     handle_age_transition_blueprint_design
 )
 from .display import show_summary
+from .shared_state import init_shared_state
 
 
 class StuckDetector:
@@ -157,6 +158,9 @@ def autoplay(num_turns: int | None = None, game_id: str | None = None) -> None:
 
     login_all_players()
 
+    # Initialize shared state for routes/missions tracking
+    init_shared_state(game_id)
+
     stuck_detector = StuckDetector(threshold=10)
     turn_count = 0
     max_iterations = 1000
@@ -221,6 +225,8 @@ def autoplay(num_turns: int | None = None, game_id: str | None = None) -> None:
                     print(f"\n  *** AGE {current_age} BEGINS! ***")
                     logger.log_action(None, f"Age {last_age} -> Age {current_age} transition", "age_transition", is_phase_transition=True)
                     last_age = current_age
+                    # Refresh shared state with new age's routes/missions
+                    init_shared_state(game_id)
 
                 print(f"\n  Turn {turn_count} complete")
                 logger.log_action(None, f"Turn {turn_count} complete", "income_cleanup", is_phase_transition=True)
@@ -249,6 +255,8 @@ def autoplay(num_turns: int | None = None, game_id: str | None = None) -> None:
                     logger.log_age_change(current_age)
                     print(f"\n  *** AGE {current_age} BEGINS! ***")
                     last_age = current_age
+                    # Refresh shared state with new age's routes/missions
+                    init_shared_state(game_id)
                 stuck_detector.reset()
 
         else:

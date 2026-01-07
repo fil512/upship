@@ -18,6 +18,7 @@ from .state import (
     get_blueprint_stats, format_blueprint_log, get_last_log_entries, get_gas_preference,
     get_player_data
 )
+from .shared_state import get_shared_state
 from .strategy import (
     find_strategic_placement, get_blueprint_design_blueprint, get_reveal_acquisitions,
     evaluate_combat_mission_readiness, find_best_combat_mission
@@ -92,7 +93,12 @@ def handle_launchpad_launches(player: str, game_id: str, logger: PlaytestLogger)
 
     # Age II: Combat missions instead of routes
     if current_age == 2:
-        missions = get_mission_row(game_id)
+        # Use shared state to avoid stale data - all bots share the same mission list
+        shared = get_shared_state()
+        missions = shared.get_available_missions()
+        if not missions:
+            # Fallback to server fetch if shared state is empty
+            missions = get_mission_row(game_id)
         if missions:
             mission_launches = _attempt_combat_missions(
                 player, game_id, hangar_ships, missions, player_data, officers_needed, logger
@@ -103,7 +109,12 @@ def handle_launchpad_launches(player: str, game_id: str, logger: PlaytestLogger)
             return
     else:
         # Try regular routes (Age I and III)
-        routes = get_available_routes(game_id)
+        # Use shared state to avoid stale data - all bots share the same route list
+        shared = get_shared_state()
+        routes = shared.get_available_routes()
+        if not routes:
+            # Fallback to server fetch if shared state is empty
+            routes = get_available_routes(game_id)
         if routes:
             route_launches = _attempt_route_launches(
                 player, game_id, hangar_ships, routes, player_data, officers_needed, logger
@@ -207,8 +218,9 @@ def _attempt_combat_missions(
                 ship_status = post_ship.status if post_ship else 'unknown'
 
                 # Handle hazard response if ship is awaiting_hazard
+                # For combat missions, pass mission.id as route_id since missions work similarly
                 ship_status = _check_and_handle_hazard(
-                    client, player, game_id, ship.id, post_player_id, post_player_data, logger
+                    client, player, game_id, ship.id, post_player_id, post_player_data, logger, route_id=mission.id
                 )
 
                 # Determine launch outcome
@@ -229,6 +241,8 @@ def _attempt_combat_missions(
                     launched += 1
                     faction = get_faction_from_player(player)
                     logger.track_mission_claimed(mission.name, faction)
+                    # Update shared state so other bots know this mission is claimed
+                    get_shared_state().mark_mission_claimed(mission.id, player)
 
                     # Check if we have officers left for more launches
                     if post_player_data:
@@ -329,6 +343,10 @@ def _attempt_route_launches(
                     # For gas/resource issues, break out - no point trying more routes with same ship
                     if "not enough" in error_str or "insufficient" in error_str:
                         break
+                    # For "already claimed", remove this route from routes_list to avoid retrying
+                    # This prevents subsequent ships from trying this route
+                    if "already claimed" in error_str:
+                        routes_list = [r for r in routes_list if r.id != route.id]
                     continue
                 else:
                     # Re-raise unexpected errors
@@ -348,7 +366,7 @@ def _attempt_route_launches(
 
                 # Handle hazard response if ship is awaiting_hazard
                 ship_status = _check_and_handle_hazard(
-                    client, player, game_id, ship.id, post_player_id, post_player_data, logger
+                    client, player, game_id, ship.id, post_player_id, post_player_data, logger, route_id=route.id
                 )
 
                 # Determine launch outcome
@@ -372,6 +390,8 @@ def _attempt_route_launches(
                     launched += 1
                     faction = get_faction_from_player(player)
                     logger.track_route_claimed(route.name, faction)
+                    # Update shared state so other bots know this route is claimed
+                    get_shared_state().mark_route_claimed(route.id, player)
 
                     # Check if we have officers left for more launches
                     if current_officers < officers_needed:
@@ -403,7 +423,7 @@ def _no_more_launches_quiet(player: str, game_id: str) -> None:
         pass
 
 
-def _check_and_handle_hazard(client, player: str, game_id: str, ship_id: str, player_id: str | None, player_data: Player, logger: PlaytestLogger) -> str:
+def _check_and_handle_hazard(client, player: str, game_id: str, ship_id: str, player_id: str | None, player_data: Player, logger: PlaytestLogger, route_id: str | None = None) -> str:
     """Check if ship needs hazard response and handle it.
 
     Ships are fungible tokens tracked as counters (hangarShips, repairShips).
@@ -418,6 +438,7 @@ def _check_and_handle_hazard(client, player: str, game_id: str, ship_id: str, pl
         player_id: The player's UUID (may be None).
         player_data: Player object (for engineer count).
         logger: PlaytestLogger instance.
+        route_id: The ID of the route being claimed (to verify success).
 
     Returns:
         Final ship status string after hazard resolution.
@@ -446,13 +467,22 @@ def _check_and_handle_hazard(client, player: str, game_id: str, ship_id: str, pl
     pending_launch = raw_player.get('pendingLaunch')
     if not pending_launch:
         # No pending launch = launch completed without hazard or already resolved
-        # Check if this player claimed any routes on the MAP (routes are tracked on map, not player)
+        # Check if THIS SPECIFIC route was claimed (not just any route)
         map_data = state_data.get('map', {})
         map_routes = map_data.get('routes', [])
-        player_claimed_routes = [r for r in map_routes if r.get('claimed') == player_id]
 
-        # If player has routes on map, assume success
-        return 'on_route' if player_claimed_routes else 'hangar'
+        if route_id:
+            # Check if the specific route we targeted was claimed by this player
+            target_route = next((r for r in map_routes if r.get('id') == route_id), None)
+            if target_route and target_route.get('claimed') == player_id:
+                return 'on_route'
+            else:
+                # Route not claimed - ship must have been destroyed or launch failed
+                return 'hangar'
+        else:
+            # No route_id provided - fall back to checking any claimed routes
+            player_claimed_routes = [r for r in map_routes if r.get('claimed') == player_id]
+            return 'on_route' if player_claimed_routes else 'hangar'
 
     # Get hazard info from pendingLaunch
     hazard_info = pending_launch.get('hazardInfo')

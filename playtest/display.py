@@ -304,10 +304,22 @@ def show_routes(game_id: str = None) -> None:
     else:
         state = get_state(game_id)
         if state and state.routes:
-            print("\n=== Available Routes ===\n")
+            print(f"\n=== Routes (Age {state.age}) ===\n")
+            available_count = 0
+            claimed_count = 0
             for route in state.routes:
-                status = "CLAIMED" if not route.available else "available"
+                if route.available:
+                    available_count += 1
+                    status = "available"
+                else:
+                    claimed_count += 1
+                    status = f"CLAIMED by {route.claimed_by or 'unknown'}"
                 print(f"  {route.id}: {route.name} (dist={route.distance}, speed={route.speed_requirement}, income=+{route.income}) [{status}]")
+            print(f"\nTotal: {len(state.routes)} routes ({available_count} available, {claimed_count} claimed)")
+
+            # Also show available_routes if different
+            if state.available_routes and len(state.available_routes) != available_count:
+                print(f"\nNote: state.available_routes has {len(state.available_routes)} routes (filtered)")
             return
 
     # Fallback to static info
