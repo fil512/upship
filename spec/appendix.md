@@ -91,9 +91,9 @@ These items are physical component specifications for manufacturing. Rules are c
 ## A.3 Economy Balancing (All Resolved)
 
 1. **Research Costs:** **RESOLVED** - See Appendix C for all Technology costs:
-   - Age I: 1-2 Research
-   - Age II: 2-4 Research
-   - Age III: 4-6 Research
+   - Age I: 3-5 Research
+   - Age II: 6-8 Research
+   - Age III: 9-11 Research
    - Specialization discounts: -1 at 3+ tiles, -2 at 5+ tiles (Section 9.1)
 
 2. **Engineer Economy:** **RESOLVED** - See Sections 5.2, 6.5, 6.7:
@@ -279,17 +279,17 @@ The Reserve Tech Card is always available for acquisition, separate from the R&D
 
 | Age | Name | Cost | £ | VP | Unlocks |
 |-----|------|------|---|----|---------|
-| I | Daimler Petrol Engine | 1 | 1 | — | Basic Engine |
-| I | Improved Propeller | 1 | 1 | — | Efficient Propeller |
-| I | Dual Engine Mount | 2 | 1 | 1 | Twin Engine |
-| II | Maybach Engine Design | 3 | 2 | — | Maybach CX Engine |
-| II | Diesel Powerplant | 3 | 1 | 1 | Diesel Engine |
-| II | Swiveling Propeller | 4 | 2 | 1 | Vectored Thrust |
-| II | Contra-Rotating Props | 4 | 2 | — | Balanced Propulsion |
-| III | Streamlined Nacelle | 4 | 2 | — | Aerodynamic Engine |
-| III | Supercharged Engine | 5 | 3 | 1 | High-Altitude Engine |
-| III | Diesel-Electric Drive | 5 | 2 | 1 | Hybrid Powerplant |
-| III | Variable-Pitch Propeller | 4 | 2 | — | Adaptive Propeller |
+| I | Daimler Petrol Engine | 3 | 1 | — | Basic Engine |
+| I | Improved Propeller | 3 | 1 | — | Efficient Propeller |
+| I | Dual Engine Mount | 5 | 1 | 1 | Twin Engine |
+| II | Maybach Engine Design | 7 | 2 | — | Maybach CX Engine |
+| II | Diesel Powerplant | 7 | 1 | 1 | Diesel Engine |
+| II | Swiveling Propeller | 8 | 2 | 1 | Vectored Thrust |
+| II | Contra-Rotating Props | 8 | 2 | — | Balanced Propulsion |
+| III | Streamlined Nacelle | 9 | 2 | — | Aerodynamic Engine |
+| III | Supercharged Engine | 10 | 3 | 1 | High-Altitude Engine |
+| III | Diesel-Electric Drive | 10 | 2 | 1 | Hybrid Powerplant |
+| III | Variable-Pitch Propeller | 9 | 2 | — | Adaptive Propeller |
 
 ## Frame Track (10 tiles)
 
@@ -297,16 +297,16 @@ Frame technologies unlock structural skeleton upgrades. Each Frame slot on the B
 
 | Age | Name | Cost | £ | VP | Unlocks |
 |-----|------|------|---|----|---------|
-| I | Wooden Framework | 1 | 1 | — | Wooden Frame |
-| I | Wire Bracing | 2 | 1 | 1 | Tensioned Frame |
-| II | Duralumin Framework | 3 | 2 | — | Duralumin Frame |
-| II | Steel Framework | 2 | 1 | 2 | Steel Frame |
-| II | Internal Keel | 3 | 1 | 1 | Semi-Rigid Keel |
-| II | Articulated Keel Design | 3 | 1 | 2 | Flexible Frame |
-| II | Aerodynamic Hull Design | 3 | 1 | 1 | Streamlined Hull |
-| III | Geodetic Structure | 4 | 2 | — | Geodetic Frame |
-| III | Modular Construction | 5 | 2 | 3 | Modular Frame |
-| III | Dynamic Lift Surfaces | 5 | 2 | 2 | Aerodynamic Lift System |
+| I | Wooden Framework | 3 | 1 | — | Wooden Frame |
+| I | Wire Bracing | 5 | 1 | 1 | Tensioned Frame |
+| II | Duralumin Framework | 7 | 2 | — | Duralumin Frame |
+| II | Steel Framework | 6 | 1 | 2 | Steel Frame |
+| II | Internal Keel | 7 | 1 | 1 | Semi-Rigid Keel |
+| II | Articulated Keel Design | 7 | 1 | 2 | Flexible Frame |
+| II | Aerodynamic Hull Design | 7 | 1 | 1 | Streamlined Hull |
+| III | Geodetic Structure | 9 | 2 | — | Geodetic Frame |
+| III | Modular Construction | 10 | 2 | 3 | Modular Frame |
+| III | Dynamic Lift Surfaces | 10 | 2 | 2 | Aerodynamic Lift System |
 
 ## Fabric Track (8 tiles)
 
@@ -314,29 +314,29 @@ Fabric technologies unlock outer covering and gas cell material upgrades.
 
 | Age | Name | Cost | £ | VP | Unlocks |
 |-----|------|------|---|----|---------|
-| I | Rubberized Cotton | 1 | 1 | — | Cotton Envelope |
-| I | Doped Canvas | 2 | 1 | — | Doped Covering |
-| II | Goldbeater's Skin | 4 | 2 | 2 | Premium Envelope |
-| II | Fireproof Coating | 3 | 1 | 2 | Fire-Resistant Fabric |
-| II | Aluminum Doping | 3 | 1 | 1 | Reflective Covering |
-| II | Grounding Systems | 3 | 1 | 1 | Conductive Covering |
-| III | Gelatinized Latex | 4 | 2 | — | Synthetic Envelope |
-| III | Composite Covering | 5 | 2 | 1 | Advanced Fabric |
+| I | Rubberized Cotton | 3 | 1 | — | Cotton Envelope |
+| I | Doped Canvas | 5 | 1 | — | Doped Covering |
+| II | Goldbeater's Skin | 8 | 2 | 2 | Premium Envelope |
+| II | Fireproof Coating | 7 | 1 | 2 | Fire-Resistant Fabric |
+| II | Aluminum Doping | 7 | 1 | 1 | Reflective Covering |
+| II | Grounding Systems | 7 | 1 | 1 | Conductive Covering |
+| III | Gelatinized Latex | 9 | 2 | — | Synthetic Envelope |
+| III | Composite Covering | 10 | 2 | 1 | Advanced Fabric |
 
 ## Gas Systems Track (10 tiles)
 
 | Age | Name | Cost | £ | VP | Unlocks |
 |-----|------|------|---|----|---------|
-| I | Improved Valving | 1 | 1 | — | Pressure Control |
-| I | Manual Ballonets | 1 | 1 | — | Altitude Ballonets |
-| II | Multiple Gas Cells | 3 | 1 | — | Compartmented Gas |
-| II | Blaugas Fuel System | 3 | 2 | 2 | Blaugas Tank |
-| II | Automatic Valves | 4 | 2 | 1 | Smart Valving |
-| III | Pressure Altitude System | 5 | 3 | 1 | High-Ceiling Gas |
-| III | Triple Gas Cell | 4 | 2 | — | Redundant Cells |
-| III | Emergency Venting | 4 | 2 | 2 | Rapid Descent System |
-| III | Gas Recovery | 5 | 2 | 2 | Reclamation System |
-| III | Water Recovery System | 5 | 2 | 1 | Exhaust Condensers |
+| I | Improved Valving | 3 | 1 | — | Pressure Control |
+| I | Manual Ballonets | 3 | 1 | — | Altitude Ballonets |
+| II | Multiple Gas Cells | 7 | 1 | — | Compartmented Gas |
+| II | Blaugas Fuel System | 7 | 2 | 2 | Blaugas Tank |
+| II | Automatic Valves | 8 | 2 | 1 | Smart Valving |
+| III | Pressure Altitude System | 10 | 3 | 1 | High-Ceiling Gas |
+| III | Triple Gas Cell | 9 | 2 | — | Redundant Cells |
+| III | Emergency Venting | 9 | 2 | 2 | Rapid Descent System |
+| III | Gas Recovery | 10 | 2 | 2 | Reclamation System |
+| III | Water Recovery System | 10 | 2 | 1 | Exhaust Condensers |
 
 *Note: Helium Handling is not in the Technology Bag—it is always available as the Reserve Tech Card.*
 
@@ -344,20 +344,20 @@ Fabric technologies unlock outer covering and gas cell material upgrades.
 
 | Age | Name | Cost | £ | VP | Unlocks |
 |-----|------|------|---|----|---------|
-| I | Observation Platform | 1 | 1 | — | Spotter Gondola |
-| I | Mail Compartment | 1 | 1 | — | Postal Service |
-| I | Cargo Nets | 2 | 1 | 1 | External Cargo |
-| II | Passenger Gondola | 3 | 1 | — | Basic Cabin |
-| II | Bomb Bay Design | 4 | 2 | 3 | Bombing Equipment |
-| II | Trapeze System | 4 | 2 | 2 | Sparrowhawk Hangar |
-| II | Radio Equipment | 3 | 1 | 1 | Communications Suite |
-| II | Armored Gondola | 3 | 1 | 1 | Light Armor Plating |
-| II | Reinforced Hull | 4 | 2 | 2 | Heavy Armor Plating |
-| III | Luxury Accommodation | 4 | 2 | — | Luxury Cabin |
-| III | Dining Saloon | 5 | 3 | — | Restaurant |
-| III | Promenade Deck | 6 | 3 | 2 | Observation Lounge |
-| III | Sleeping Quarters | 4 | 2 | 1 | Private Berths |
-| III | Smoking Room | 5 | 2 | 3 | Pressurized Lounge |
+| I | Observation Platform | 3 | 1 | — | Spotter Gondola |
+| I | Mail Compartment | 3 | 1 | — | Postal Service |
+| I | Cargo Nets | 5 | 1 | 1 | External Cargo |
+| II | Passenger Gondola | 7 | 1 | — | Basic Cabin |
+| II | Bomb Bay Design | 8 | 2 | 3 | Bombing Equipment |
+| II | Trapeze System | 8 | 2 | 2 | Sparrowhawk Hangar |
+| II | Radio Equipment | 7 | 1 | 1 | Communications Suite |
+| II | Armored Gondola | 7 | 1 | 1 | Light Armor Plating |
+| II | Reinforced Hull | 8 | 2 | 2 | Heavy Armor Plating |
+| III | Luxury Accommodation | 9 | 2 | — | Luxury Cabin |
+| III | Dining Saloon | 10 | 3 | — | Restaurant |
+| III | Promenade Deck | 11 | 3 | 2 | Observation Lounge |
+| III | Sleeping Quarters | 9 | 2 | 1 | Private Berths |
+| III | Smoking Room | 10 | 2 | 3 | Pressurized Lounge |
 
 **53 Unique Technology Tiles** (Propulsion 11, Frame 10, Fabric 8, Gas Systems 10, Payload 14) + 1 Reserve Tech Card (Helium Handling)
 
