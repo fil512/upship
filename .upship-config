@@ -1,5 +1,6 @@
 # UP SHIP! Playtest Configuration
 # This file configures the playtest tool behavior
-
-# Use local server (localhost:3000) instead of production
-UPSHIP_LOCAL=1
+#
+# By default, playtest uses the local server (localhost:3000).
+# To use production instead, uncomment the line below:
+# UPSHIP_PROD=1

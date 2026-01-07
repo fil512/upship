@@ -28,11 +28,12 @@ The script automatically finds the most recent flow JSON and outputs:
 
 #### Design Goals (PRIMARY METRICS):
 
-| Purchase Type | Target per Player per Round | Rationale |
-|---------------|----------------------------|-----------|
-| **Tech tiles** | **1** (rarely 2) | Age progression should be gradual |
-| **Market cards** | **1** (rarely 2) | Deck building should be steady |
+| Metric | Target | Rationale |
+|--------|--------|-----------|
+| **Tech tiles** | **1** per player per round (rarely 2) | Age progression should be gradual |
+| **Market cards** | **1** per player per round (rarely 2) | Deck building should be steady |
 | **Total purchases** | **2** baseline, **3** on exceptional rounds | Creates meaningful decisions |
+| **Launch success rate** | **80%** | Launches should usually succeed but feel risky |
 
 The script compares actual purchases against these targets and diagnoses:
 - Whether research generation is too high or tech costs too low
@@ -77,6 +78,17 @@ For each resource with issues, explain:
 | Influence | Generation ≈ 1× avg card cost | Afford exactly 1 card per round |
 | Income tracks | Sinks = 0 is OK | These are permanent upgrades |
 | VP | Fountains only | Victory condition, no sinks |
+
+**LAUNCH OUTCOMES TARGET:**
+
+| Outcome | Target % | Rationale |
+|---------|----------|-----------|
+| Success | **80%** | Launches should usually succeed |
+| Aborted | 10-15% | Failed hazard checks return ship to hangar |
+| Damaged | 5-10% | Fire hazards controlled, ship to repair |
+| Destroyed | <5% | Rare catastrophic failures |
+
+Launch success depends on hazard difficulty vs ship stats + engineers. If success rate is below 80%, consider lowering hazard difficulties or increasing starting ship stats.
 
 #### 4.4 Specific Recommendations
 
@@ -133,6 +145,15 @@ HEALTHY RESOURCES:
 PROBLEM RESOURCES:
 - Engineers: 17 in, 1 out (94% overflow - no sinks!)
 - Officers: 6 in, 1 out (83% overflow - few launches)
+
+=== LAUNCH OUTCOMES ===
+Total launches: 11
+  SUCCESS:   9 (82%) - Ship claimed route ✓
+  ABORTED:   1 (9%) - Ship returned to hangar ✓
+  DAMAGED:   1 (9%) - Ship to repair bay ✓
+  DESTROYED: 0 (0%) - Ship lost ✓
+
+Success Rate: 82% (target: 80%) ✓
 ```
 
 ## Reference: Resource Types

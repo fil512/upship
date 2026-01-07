@@ -35,16 +35,16 @@ describe('Rules Compliance - Hazard Deck', () => {
       });
     });
 
-    it('should contain exactly 8 Minor Hazard cards (difficulty 3-4)', () => {
+    it('should contain exactly 8 Minor Hazard cards (difficulty 1-3)', () => {
       const deck = createHazardDeck();
       const minorHazards = deck.filter(card => card.category === 'minor');
       expect(minorHazards.length).toBe(8);
 
-      // All minor hazards should have difficulty 3 or 4
-      // (increased from 2-3 to require more engineer intervention)
+      // All minor hazards should have difficulty 1-3
+      // Balanced for stat + 2 engineers (check value 2-3) to achieve ~60% pass rate
       minorHazards.forEach(card => {
-        expect(card.difficulty).toBeGreaterThanOrEqual(3);
-        expect(card.difficulty).toBeLessThanOrEqual(4);
+        expect(card.difficulty).toBeGreaterThanOrEqual(1);
+        expect(card.difficulty).toBeLessThanOrEqual(3);
       });
 
       // Minor hazards should have challenge types
@@ -53,16 +53,16 @@ describe('Rules Compliance - Hazard Deck', () => {
       });
     });
 
-    it('should contain exactly 8 Major Hazard cards (difficulty 5-6)', () => {
+    it('should contain exactly 8 Major Hazard cards (difficulty 3-4)', () => {
       const deck = createHazardDeck();
       const majorHazards = deck.filter(card => card.category === 'major');
       expect(majorHazards.length).toBe(8);
 
-      // All major hazards should have difficulty 5 or 6
-      // (increased from 4-5 to require more engineer intervention)
+      // All major hazards should have difficulty 3-4
+      // Challenging but passable with upgrades (stat=2 + 2eng or stat=0 + 3eng)
       majorHazards.forEach(card => {
-        expect(card.difficulty).toBeGreaterThanOrEqual(5);
-        expect(card.difficulty).toBeLessThanOrEqual(6);
+        expect(card.difficulty).toBeGreaterThanOrEqual(3);
+        expect(card.difficulty).toBeLessThanOrEqual(4);
       });
 
       // Major hazards should have challenge types
@@ -108,13 +108,13 @@ describe('Rules Compliance - Hazard Deck', () => {
       });
     });
 
-    it('should have Static Discharge with difficulty 5 Reliability check', () => {
+    it('should have Static Discharge with difficulty 2 Reliability check', () => {
       const deck = createHazardDeck();
       const staticDischarge = deck.find(card => card.type === 'static_discharge');
 
       expect(staticDischarge).toBeDefined();
-      // Difficulty increased from 4 to 5 to require more engineer intervention
-      expect(staticDischarge.difficulty).toBe(5);
+      // Difficulty 2: passable with stat=0 + 2 engineers (check value 2)
+      expect(staticDischarge.difficulty).toBe(2);
       expect(staticDischarge.challengeType).toBe('reliability');
       expect(staticDischarge.hydrogenOnly).toBe(true);
     });

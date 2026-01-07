@@ -59,7 +59,7 @@ sleep 2
 
 # Wait for Express API to be healthy (up to 30 seconds)
 echo "Waiting for Express API to be healthy..."
-UPSHIP_LOCAL=1 python -m playtest healthcheck
+python -m playtest healthcheck
 
 # Quick check that SvelteKit is responding
 echo "Checking SvelteKit frontend..."

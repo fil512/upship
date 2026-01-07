@@ -81,6 +81,26 @@ export interface ResourceFlowEntry {
   playerTotal: number;      // Player's total of this resource after change
 }
 
+// Launch outcome types for tracking hazard results
+export type LaunchOutcome = 'success' | 'damaged' | 'aborted' | 'destroyed';
+
+export interface LaunchOutcomeEntry {
+  timestamp: string;
+  gameId: string;
+  turn: number;
+  round: number;
+  age: number;
+  playerId: string;
+  faction: string;
+
+  outcome: LaunchOutcome;
+  hazardType: string;       // Type of hazard drawn
+  hazardName: string;       // Name of hazard
+  routeId?: string;         // Route attempted (if applicable)
+  gasType: 'hydrogen' | 'helium';
+  reason: string;           // Why this outcome occurred
+}
+
 interface GameContext {
   gameId: string;
   turn: number;
@@ -91,6 +111,7 @@ interface GameContext {
 
 class ResourceFlowLogger {
   private entries: ResourceFlowEntry[] = [];
+  private launchOutcomes: LaunchOutcomeEntry[] = [];
   private logDir: string;
   private currentGameId: string | null = null;
   private enabled: boolean = true;
@@ -112,6 +133,7 @@ class ResourceFlowLogger {
   startGame(gameId: string): void {
     this.currentGameId = gameId;
     this.entries = [];
+    this.launchOutcomes = [];
     console.log(`[ResourceFlow] Started tracking game ${gameId}`);
   }
 
@@ -190,6 +212,41 @@ class ResourceFlowLogger {
   }
 
   /**
+   * Log a launch outcome (hazard check result)
+   */
+  logLaunchOutcome(
+    context: GameContext,
+    playerId: string,
+    faction: string,
+    outcome: LaunchOutcome,
+    hazardType: string,
+    hazardName: string,
+    gasType: 'hydrogen' | 'helium',
+    reason: string,
+    routeId?: string
+  ): void {
+    if (!this.enabled) return;
+
+    const entry: LaunchOutcomeEntry = {
+      timestamp: new Date().toISOString(),
+      gameId: context.gameId,
+      turn: context.turn,
+      round: context.round,
+      age: context.age,
+      playerId,
+      faction,
+      outcome,
+      hazardType,
+      hazardName,
+      gasType,
+      reason,
+      routeId
+    };
+
+    this.launchOutcomes.push(entry);
+  }
+
+  /**
    * Save the current game's flow log to file
    */
   saveLog(): string | null {
@@ -200,8 +257,12 @@ class ResourceFlowLogger {
     const filename = `flow_${this.currentGameId}_${Date.now()}.json`;
     const filepath = path.join(this.logDir, filename);
 
-    // Write detailed JSON log
-    fs.writeFileSync(filepath, JSON.stringify(this.entries, null, 2));
+    // Write detailed JSON log with both resource flows and launch outcomes
+    const fullData = {
+      resourceFlows: this.entries,
+      launchOutcomes: this.launchOutcomes
+    };
+    fs.writeFileSync(filepath, JSON.stringify(fullData, null, 2));
 
     // Also write summary CSV for spreadsheet analysis
     const csvPath = filepath.replace('.json', '.csv');
@@ -456,6 +517,84 @@ class ResourceFlowLogger {
       }
     }
 
+    // Launch outcomes analysis
+    if (this.launchOutcomes.length > 0) {
+      analysis.push('');
+      analysis.push('=== LAUNCH OUTCOMES ===');
+      analysis.push(`Total launches: ${this.launchOutcomes.length}`);
+      analysis.push('');
+
+      // Count by outcome
+      const outcomeCounts = { success: 0, damaged: 0, aborted: 0, destroyed: 0 };
+      for (const entry of this.launchOutcomes) {
+        outcomeCounts[entry.outcome]++;
+      }
+
+      const total = this.launchOutcomes.length;
+      const successRate = total > 0 ? Math.round((outcomeCounts.success / total) * 100) : 0;
+      const survivalRate = total > 0 ? Math.round(((outcomeCounts.success + outcomeCounts.damaged + outcomeCounts.aborted) / total) * 100) : 0;
+
+      analysis.push('Outcome Summary:');
+      analysis.push(`  SUCCESS:   ${outcomeCounts.success} (${Math.round((outcomeCounts.success / total) * 100)}%) - Ship claimed route`);
+      analysis.push(`  DAMAGED:   ${outcomeCounts.damaged} (${Math.round((outcomeCounts.damaged / total) * 100)}%) - Ship to repair bay`);
+      analysis.push(`  ABORTED:   ${outcomeCounts.aborted} (${Math.round((outcomeCounts.aborted / total) * 100)}%) - Ship returned to hangar`);
+      analysis.push(`  DESTROYED: ${outcomeCounts.destroyed} (${Math.round((outcomeCounts.destroyed / total) * 100)}%) - Ship lost`);
+      analysis.push('');
+      analysis.push(`Success Rate: ${successRate}% (ships that claimed routes)`);
+      analysis.push(`Survival Rate: ${survivalRate}% (ships not destroyed)`);
+      analysis.push('');
+
+      // Count by gas type
+      const byGas = { hydrogen: { total: 0, success: 0, destroyed: 0 }, helium: { total: 0, success: 0, destroyed: 0 } };
+      for (const entry of this.launchOutcomes) {
+        byGas[entry.gasType].total++;
+        if (entry.outcome === 'success') byGas[entry.gasType].success++;
+        if (entry.outcome === 'destroyed') byGas[entry.gasType].destroyed++;
+      }
+
+      analysis.push('By Gas Type:');
+      for (const gas of ['hydrogen', 'helium'] as const) {
+        if (byGas[gas].total > 0) {
+          const rate = Math.round((byGas[gas].success / byGas[gas].total) * 100);
+          const destroyRate = Math.round((byGas[gas].destroyed / byGas[gas].total) * 100);
+          analysis.push(`  ${gas.toUpperCase()}: ${byGas[gas].total} launches, ${rate}% success, ${destroyRate}% destroyed`);
+        }
+      }
+      analysis.push('');
+
+      // Count by hazard type
+      const byHazard = new Map<string, { total: number; success: number; aborted: number; destroyed: number }>();
+      for (const entry of this.launchOutcomes) {
+        if (!byHazard.has(entry.hazardName)) {
+          byHazard.set(entry.hazardName, { total: 0, success: 0, aborted: 0, destroyed: 0 });
+        }
+        const stats = byHazard.get(entry.hazardName)!;
+        stats.total++;
+        if (entry.outcome === 'success') stats.success++;
+        if (entry.outcome === 'aborted') stats.aborted++;
+        if (entry.outcome === 'destroyed') stats.destroyed++;
+      }
+
+      analysis.push('By Hazard Type:');
+      analysis.push('Hazard                  | Total | Success | Aborted | Destroyed');
+      analysis.push('------------------------|-------|---------|---------|----------');
+      for (const [hazard, stats] of Array.from(byHazard.entries()).sort((a, b) => b[1].total - a[1].total)) {
+        analysis.push(
+          `${hazard.padEnd(23)} | ${String(stats.total).padStart(5)} | ${String(stats.success).padStart(7)} | ${String(stats.aborted).padStart(7)} | ${String(stats.destroyed).padStart(9)}`
+        );
+      }
+      analysis.push('');
+
+      // Detailed log
+      analysis.push('Launch Details:');
+      for (const entry of this.launchOutcomes) {
+        const outcome = entry.outcome.toUpperCase().padEnd(9);
+        const age = `Age${entry.age}`;
+        const round = `R${entry.round}`;
+        analysis.push(`  [${age} ${round}] ${entry.faction.padEnd(10)} ${outcome} ${entry.gasType.padEnd(8)} ${entry.hazardName} - ${entry.reason}`);
+      }
+    }
+
     fs.writeFileSync(filepath, analysis.join('\n'));
   }
 
@@ -478,7 +617,15 @@ class ResourceFlowLogger {
    */
   clear(): void {
     this.entries = [];
+    this.launchOutcomes = [];
     this.currentGameId = null;
+  }
+
+  /**
+   * Get launch outcomes for analysis
+   */
+  getLaunchOutcomes(): LaunchOutcomeEntry[] {
+    return [...this.launchOutcomes];
   }
 }
 

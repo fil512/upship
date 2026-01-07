@@ -24,10 +24,11 @@ from pathlib import Path
 TECH_GOAL = 1.0  # techs per player per round
 CARD_GOAL = 1.0  # cards per player per round
 TOTAL_GOAL = 2.0  # total purchases per player per round
+LAUNCH_SUCCESS_GOAL = 0.80  # 80% launch success rate
 
 
-def load_flow_data(filepath: str = None) -> list:
-    """Load flow data from JSON file."""
+def load_flow_data(filepath: str = None) -> tuple:
+    """Load flow data from JSON file. Returns (resource_flows, launch_outcomes)."""
     if filepath is None:
         # Find most recent JSON file
         pattern = "logs/resource-flows/*.json"
@@ -40,7 +41,13 @@ def load_flow_data(filepath: str = None) -> list:
     print(f"Analyzing: {filepath}\n")
 
     with open(filepath) as f:
-        return json.load(f)
+        data = json.load(f)
+
+    # Handle both old format (array) and new format (object with resourceFlows/launchOutcomes)
+    if isinstance(data, list):
+        return data, []
+    else:
+        return data.get('resourceFlows', []), data.get('launchOutcomes', [])
 
 
 def analyze_purchases(data: list) -> dict:
@@ -128,6 +135,46 @@ def get_rounds_and_factions(data: list) -> tuple:
     rounds = sorted(set(f"R{e['round']}" for e in data))
     factions = sorted(set(e['faction'] for e in data))
     return rounds, factions
+
+
+def analyze_launch_outcomes(outcomes: list) -> dict:
+    """Analyze launch outcomes."""
+    if not outcomes:
+        return None
+
+    counts = {'success': 0, 'damaged': 0, 'aborted': 0, 'destroyed': 0}
+    by_gas = {'hydrogen': {'total': 0, 'success': 0}, 'helium': {'total': 0, 'success': 0}}
+    by_hazard = defaultdict(lambda: {'total': 0, 'success': 0, 'aborted': 0, 'destroyed': 0})
+
+    for entry in outcomes:
+        outcome = entry.get('outcome', 'unknown')
+        gas = entry.get('gasType', 'hydrogen')
+        hazard = entry.get('hazardName', 'Unknown')
+
+        if outcome in counts:
+            counts[outcome] += 1
+
+        by_gas[gas]['total'] += 1
+        if outcome == 'success':
+            by_gas[gas]['success'] += 1
+
+        by_hazard[hazard]['total'] += 1
+        if outcome in by_hazard[hazard]:
+            by_hazard[hazard][outcome] += 1
+
+    total = sum(counts.values())
+    success_rate = counts['success'] / total if total > 0 else 0
+    survival_rate = (counts['success'] + counts['damaged'] + counts['aborted']) / total if total > 0 else 0
+
+    return {
+        'total': total,
+        'counts': counts,
+        'success_rate': success_rate,
+        'survival_rate': survival_rate,
+        'by_gas': dict(by_gas),
+        'by_hazard': dict(by_hazard),
+        'outcomes': outcomes
+    }
 
 
 def print_purchasing_power_report(purchases: dict, rounds: list, factions: list):
@@ -329,27 +376,125 @@ def print_per_round_detail(purchases: dict, generation: dict, rounds: list, fact
         print()
 
 
+def print_launch_outcomes_report(launch_data: dict):
+    """Print launch outcomes analysis."""
+    if launch_data is None:
+        print("=" * 60)
+        print("LAUNCH OUTCOMES")
+        print("=" * 60)
+        print()
+        print("No launch outcome data available.")
+        print()
+        return
+
+    print("=" * 60)
+    print("LAUNCH OUTCOMES")
+    print("=" * 60)
+    print()
+
+    total = launch_data['total']
+    counts = launch_data['counts']
+    success_rate = launch_data['success_rate']
+    survival_rate = launch_data['survival_rate']
+
+    print(f"DESIGN GOAL: {LAUNCH_SUCCESS_GOAL*100:.0f}% success rate")
+    print()
+    print(f"Total launches: {total}")
+    print()
+
+    print("Outcome Summary:")
+    for outcome in ['success', 'damaged', 'aborted', 'destroyed']:
+        count = counts[outcome]
+        pct = (count / total * 100) if total > 0 else 0
+        desc = {
+            'success': 'Ship claimed route',
+            'damaged': 'Ship to repair bay',
+            'aborted': 'Ship returned to hangar',
+            'destroyed': 'Ship lost'
+        }[outcome]
+        print(f"  {outcome.upper():<10}: {count:>3} ({pct:>5.1f}%) - {desc}")
+    print()
+
+    # Success rate vs goal
+    success_pct = success_rate * 100
+    goal_pct = LAUNCH_SUCCESS_GOAL * 100
+    diff = success_pct - goal_pct
+
+    if success_rate >= LAUNCH_SUCCESS_GOAL:
+        status = "✓ ON TARGET"
+    elif success_rate >= LAUNCH_SUCCESS_GOAL * 0.8:
+        status = "⚠️  BELOW TARGET"
+    else:
+        status = "❌ FAR BELOW TARGET"
+
+    print(f"Success Rate: {success_pct:.0f}% (goal: {goal_pct:.0f}%) → {diff:+.0f}% {status}")
+    print(f"Survival Rate: {survival_rate*100:.0f}% (ships not destroyed)")
+    print()
+
+    # By gas type
+    by_gas = launch_data['by_gas']
+    print("By Gas Type:")
+    for gas in ['hydrogen', 'helium']:
+        stats = by_gas.get(gas, {'total': 0, 'success': 0})
+        if stats['total'] > 0:
+            rate = stats['success'] / stats['total'] * 100
+            print(f"  {gas.upper():<10}: {stats['total']} launches, {rate:.0f}% success")
+    print()
+
+    # By hazard type (top 5)
+    by_hazard = launch_data['by_hazard']
+    if by_hazard:
+        print("By Hazard Type (top causes of failure):")
+        sorted_hazards = sorted(by_hazard.items(), key=lambda x: x[1]['total'] - x[1]['success'], reverse=True)
+        for hazard, stats in sorted_hazards[:5]:
+            if stats['total'] > 0:
+                success_rate = stats['success'] / stats['total'] * 100
+                failures = stats['total'] - stats['success']
+                if failures > 0:
+                    print(f"  {hazard:<25}: {stats['total']} total, {failures} failures ({100-success_rate:.0f}% fail rate)")
+        print()
+
+    # Diagnosis
+    if success_rate < LAUNCH_SUCCESS_GOAL:
+        print("DIAGNOSIS:")
+        if success_rate < LAUNCH_SUCCESS_GOAL * 0.6:
+            print("  ❌ Critical: Hazard difficulties are too high")
+            print("     → Lower minor hazard difficulties (target: 1-3)")
+            print("     → Lower major hazard difficulties (target: 3-4)")
+        else:
+            print("  ⚠️  Success rate below 80% target")
+            print("     → Consider lowering hazard difficulties by 1")
+            print("     → Or increase starting ship stats")
+        print()
+
+
 def main():
     # Load data
     filepath = sys.argv[1] if len(sys.argv) > 1 else None
-    data = load_flow_data(filepath)
+    resource_flows, launch_outcomes = load_flow_data(filepath)
+
+    if not resource_flows:
+        print("ERROR: No resource flow data found")
+        sys.exit(1)
 
     # Get metadata
-    rounds, factions = get_rounds_and_factions(data)
+    rounds, factions = get_rounds_and_factions(resource_flows)
 
-    print(f"Game: {data[0].get('gameId', 'unknown')}")
+    print(f"Game: {resource_flows[0].get('gameId', 'unknown')}")
     print(f"Rounds: {len(rounds)}, Players: {len(factions)}")
     print()
 
     # Analyze
-    purchases = analyze_purchases(data)
-    costs = analyze_costs(data)
-    generation = analyze_generation(data)
-    flows = analyze_resource_flows(data)
+    purchases = analyze_purchases(resource_flows)
+    costs = analyze_costs(resource_flows)
+    generation = analyze_generation(resource_flows)
+    flows = analyze_resource_flows(resource_flows)
+    launch_data = analyze_launch_outcomes(launch_outcomes)
 
     # Print reports
     print_purchasing_power_report(purchases, rounds, factions)
     print_currency_analysis(costs, generation, rounds, factions)
+    print_launch_outcomes_report(launch_data)
     print_resource_flow_report(flows)
     print_per_round_detail(purchases, generation, rounds, factions)
 

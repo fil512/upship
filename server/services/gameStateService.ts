@@ -277,16 +277,17 @@ function createHazardDeck(): HazardCard[] {
   }
 
   // 8 Minor Hazards per Appendix D with specific names, stats, and flak values
-  // Difficulty 3-4 (increased from 2-3 to require more engineer intervention)
+  // Difficulty 1-3: reliability/ceiling use 1-2 (stat=0), speed/range use 2-3 (stat=1)
+  // Target: passable with stat + 2 engineers (check value 2-3)
   const minorHazards = [
-    { name: 'Light Turbulence', difficulty: 3, challengeType: 'speed', hazardType: 'weather', flak: 0 },
-    { name: 'Minor Engine Trouble', difficulty: 3, challengeType: 'reliability', hazardType: 'mechanical', flak: 1 },
-    { name: 'Crosswind', difficulty: 4, challengeType: 'speed', hazardType: 'weather', flak: 0 },
-    { name: 'Gas Leak', difficulty: 4, challengeType: 'reliability', hazardType: 'mechanical', flak: 1 },
-    { name: 'Low Visibility', difficulty: 3, challengeType: 'ceiling', hazardType: 'weather', flak: 1 },
-    { name: 'Fuel Concern', difficulty: 4, challengeType: 'range', hazardType: 'supply', flak: 0 },
-    { name: 'Headwind', difficulty: 4, challengeType: 'speed', hazardType: 'weather', flak: 1 },
-    { name: 'Structural Stress', difficulty: 3, challengeType: 'reliability', hazardType: 'mechanical', flak: 2 }
+    { name: 'Light Turbulence', difficulty: 2, challengeType: 'speed', hazardType: 'weather', flak: 0 },
+    { name: 'Minor Engine Trouble', difficulty: 1, challengeType: 'reliability', hazardType: 'mechanical', flak: 1 },
+    { name: 'Crosswind', difficulty: 3, challengeType: 'speed', hazardType: 'weather', flak: 0 },
+    { name: 'Gas Leak', difficulty: 2, challengeType: 'reliability', hazardType: 'mechanical', flak: 1 },
+    { name: 'Low Visibility', difficulty: 2, challengeType: 'ceiling', hazardType: 'weather', flak: 1 },
+    { name: 'Fuel Concern', difficulty: 2, challengeType: 'range', hazardType: 'supply', flak: 0 },
+    { name: 'Headwind', difficulty: 3, challengeType: 'speed', hazardType: 'weather', flak: 1 },
+    { name: 'Structural Stress', difficulty: 2, challengeType: 'reliability', hazardType: 'mechanical', flak: 2 }
   ];
 
   minorHazards.forEach((h, i) => {
@@ -303,20 +304,21 @@ function createHazardDeck(): HazardCard[] {
   });
 
   // 8 Major Hazards per Appendix D with specific names, stats, flak, and special effects
-  // Difficulty 5-6 (increased from 4-5 to require more engineer intervention)
+  // Difficulty 3-4: reliability/ceiling use 3 (stat=0), speed/range use 4 (stat=1)
+  // Target: challenging but passable with upgrades (stat=2 + 2eng or stat=0 + 3eng)
   const majorHazards = [
-    { name: 'Strong Headwind', difficulty: 5, challengeType: 'speed', hazardType: 'weather', flak: 2 },
-    { name: 'Icing Conditions', difficulty: 5, challengeType: 'ceiling', hazardType: 'weather', flak: 2,
+    { name: 'Strong Headwind', difficulty: 4, challengeType: 'speed', hazardType: 'weather', flak: 2 },
+    { name: 'Icing Conditions', difficulty: 3, challengeType: 'ceiling', hazardType: 'weather', flak: 2,
       special: 'On failure, also lose 1 gas cube. If no gas remains, ship Destroyed.',
       gasLossOnFailure: 1 },
-    { name: 'Engine Failure', difficulty: 6, challengeType: 'reliability', hazardType: 'mechanical', flak: 3 },
-    { name: 'Storm System', difficulty: 6, challengeType: 'speed', hazardType: 'weather', flak: 3 },
-    { name: 'Structural Damage', difficulty: 5, challengeType: 'reliability', hazardType: 'mechanical', flak: 4 },
-    { name: 'Navigation Error', difficulty: 5, challengeType: 'range', hazardType: 'supply', flak: 3 },
-    { name: 'Squall Line', difficulty: 6, challengeType: 'reliability', hazardType: 'weather', flak: 3,
+    { name: 'Engine Failure', difficulty: 4, challengeType: 'reliability', hazardType: 'mechanical', flak: 3 },
+    { name: 'Storm System', difficulty: 4, challengeType: 'speed', hazardType: 'weather', flak: 3 },
+    { name: 'Structural Damage', difficulty: 3, challengeType: 'reliability', hazardType: 'mechanical', flak: 4 },
+    { name: 'Navigation Error', difficulty: 4, challengeType: 'range', hazardType: 'supply', flak: 3 },
+    { name: 'Squall Line', difficulty: 4, challengeType: 'reliability', hazardType: 'weather', flak: 3,
       special: 'Ships with 3+ Payload slots suffer +1 Difficulty.',
       payloadSlotModifier: { threshold: 3, difficultyIncrease: 1 } },
-    { name: 'Severe Icing', difficulty: 6, challengeType: 'ceiling', hazardType: 'weather', flak: 2,
+    { name: 'Severe Icing', difficulty: 3, challengeType: 'ceiling', hazardType: 'weather', flak: 2,
       special: 'On failure, lose 2 gas cubes. If gas remains < ship\'s minimum, ship Destroyed.',
       gasLossOnFailure: 2 }
   ];
@@ -368,8 +370,8 @@ function createHazardDeck(): HazardCard[] {
     });
   }
 
-  // 1x Static Discharge - Difficulty 5 Reliability check, Fail = Crash - 4 Flak
-  // (increased from 4 to require more engineer intervention)
+  // 1x Static Discharge - Difficulty 2 Reliability check, Fail = Crash - 4 Flak
+  // Target: passable with stat=0 + 2 engineers (check value 2)
   hazards.push({
     id: 'static_discharge_0',
     type: 'static_discharge',
@@ -377,7 +379,7 @@ function createHazardDeck(): HazardCard[] {
     name: 'Static Discharge',
     hydrogenOnly: true,
     challengeType: 'reliability',
-    difficulty: 5,
+    difficulty: 2,
     flak: 4
   });
 

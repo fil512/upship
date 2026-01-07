@@ -18,6 +18,32 @@ const { processCompleteMission, resolveFlakCheck, calculateEquipmentBonus } = re
 const { resourceFlowLogger, createFlowContext } = require('../services/resourceFlowLogger');
 const { HANGAR_CAPACITY, REPAIR_CAPACITY } = require('./building');
 
+// Helper to log launch outcomes
+function logOutcome(
+  state: GameState,
+  playerId: string,
+  outcome: 'success' | 'damaged' | 'aborted' | 'destroyed',
+  hazard: HazardCard | HazardCardDetails,
+  gasType: 'hydrogen' | 'helium',
+  reason: string,
+  routeId?: string
+): void {
+  const playerState = state.players[playerId];
+  const flowContext = createFlowContext(state, (state as { gameId?: string }).gameId || 'unknown');
+  const faction = playerState?.faction || 'unknown';
+  resourceFlowLogger.logLaunchOutcome(
+    flowContext,
+    playerId,
+    faction,
+    outcome,
+    hazard.type,
+    hazard.name || hazard.type,
+    gasType,
+    reason,
+    routeId
+  );
+}
+
 interface ActionResult {
   newState: GameState;
 }
@@ -192,6 +218,8 @@ function processHazardCheck(state: GameState, playerId: string, data: HazardChec
     hazardState.gameEndAfterRound = true;
     playerState.vp = (playerState.vp || 0) + 3;
 
+    logOutcome(state, playerId, 'destroyed', hazard, gasType!, 'Hindenburg Disaster - catastrophic explosion on luxury hydrogen route', pendingRouteId);
+
     state.log.push({
       timestamp: new Date().toISOString(),
       message: `THE HINDENBURG DISASTER! A Catastrophic Explosion has destroyed a luxury hydrogen airship. The era of airships has ended. Complete the current round, then final scoring. Triggering player gains 3 VP (historical infamy).`,
@@ -336,8 +364,12 @@ function resolveFireHazard(state: GameState, playerId: string, hazard: HazardCar
   const playerState = state.players[playerId] as HazardPlayerState;
   const pendingLaunch = playerState.pendingLaunch;
   const shipStats = pendingLaunch?.stats || {};
+  const gasType = pendingLaunch?.gasType || 'hydrogen';
+  const routeId = pendingLaunch?.routeId;
 
   if (hazard.noSave || hazard.type === 'catastrophic_explosion') {
+    // Log before clearing pendingLaunch
+    logOutcome(state, playerId, 'destroyed', hazard, gasType, 'Catastrophic Explosion - no save possible', routeId);
     // Ship destroyed - clear pendingLaunch (ship is lost)
     delete playerState.pendingLaunch;
 
@@ -369,9 +401,12 @@ function resolveFireHazard(state: GameState, playerId: string, hazard: HazardCar
         `Static Discharge Reliability check passed: ${totalCheck} >= ${hazard.difficulty}`);
     } else {
       if (applyInsuranceRecovery(state, playerId, 'STATIC DISCHARGE')) {
+        logOutcome(state, playerId, 'destroyed', hazard, gasType, `Static Discharge failed (${totalCheck} < ${hazard.difficulty}), recovered by insurance`, routeId);
         return { newState: state };
       }
 
+      // Log before clearing pendingLaunch
+      logOutcome(state, playerId, 'destroyed', hazard, gasType, `Static Discharge Reliability check failed: ${totalCheck} < ${hazard.difficulty}`, routeId);
       // Ship destroyed - clear pendingLaunch
       delete playerState.pendingLaunch;
 
@@ -391,6 +426,8 @@ function resolveFireHazard(state: GameState, playerId: string, hazard: HazardCar
   const actualSpend = Math.min(engineersToSpend, availableEngineers);
 
   if (actualSpend >= engineerCost) {
+    // Log before clearing pendingLaunch
+    logOutcome(state, playerId, 'damaged', hazard, gasType, `Fire controlled with ${engineerCost} engineer(s), ship to repair bay`, routeId);
     playerState.engineers -= engineerCost;
     // Ship damaged - move to repair bay
     playerState.repairShips = Math.min(REPAIR_CAPACITY, (playerState.repairShips || 0) + 1);
@@ -411,9 +448,12 @@ function resolveFireHazard(state: GameState, playerId: string, hazard: HazardCar
     return { newState: state };
   } else {
     if (applyInsuranceRecovery(state, playerId, hazard.name || 'Fire Hazard')) {
+      logOutcome(state, playerId, 'destroyed', hazard, gasType, `Fire hazard, insufficient engineers (need ${engineerCost}, have ${availableEngineers}), recovered by insurance`, routeId);
       return { newState: state };
     }
 
+    // Log before clearing pendingLaunch
+    logOutcome(state, playerId, 'destroyed', hazard, gasType, `Insufficient engineers (need ${engineerCost}, have ${availableEngineers})`, routeId);
     // Ship destroyed - clear pendingLaunch
     delete playerState.pendingLaunch;
 
@@ -443,6 +483,10 @@ function resolveHazardSuccess(state: GameState, playerId: string, route: Extende
   }
 
   const shipStats = pendingLaunch.stats || {};
+  const gasType = pendingLaunch.gasType || 'hydrogen';
+
+  // Log success outcome
+  logOutcome(state, playerId, 'success', hazard, gasType, message, pendingLaunch.routeId);
 
   // Handle Age 2 combat missions
   if (pendingLaunch.missionId && state.age === 2) {
@@ -552,6 +596,12 @@ function resolveHazardSuccess(state: GameState, playerId: string, route: Extende
  */
 function resolveHazardAbort(state: GameState, playerId: string, hazard: HazardCard, message: string): ActionResult {
   const playerState = state.players[playerId] as HazardPlayerState;
+  const pendingLaunch = playerState.pendingLaunch;
+  const gasType = pendingLaunch?.gasType || 'hydrogen';
+  const routeId = pendingLaunch?.routeId;
+
+  // Log aborted outcome
+  logOutcome(state, playerId, 'aborted', hazard, gasType, message, routeId);
 
   // Ship returns to hangar - increment counter
   playerState.hangarShips = Math.min(HANGAR_CAPACITY, (playerState.hangarShips || 0) + 1);
@@ -741,11 +791,17 @@ function processRespondToHazard(state: GameState, playerId: string, data: Respon
  */
 function resolveFireCrash(state: GameState, playerId: string, hazard: HazardCard): ActionResult {
   const playerState = state.players[playerId] as HazardPlayerState;
+  const pendingLaunch = playerState.pendingLaunch;
+  const gasType = pendingLaunch?.gasType || 'hydrogen';
+  const routeId = pendingLaunch?.routeId;
 
   if (applyInsuranceRecovery(state, playerId, hazard.name || 'Fire Hazard')) {
+    logOutcome(state, playerId, 'destroyed', hazard, gasType, `${hazard.name} - recovered by insurance`, routeId);
     return { newState: state };
   }
 
+  // Log before clearing pendingLaunch
+  logOutcome(state, playerId, 'destroyed', hazard, gasType, `${hazard.name} - ship destroyed`, routeId);
   // Ship destroyed - clear pendingLaunch
   delete playerState.pendingLaunch;
 

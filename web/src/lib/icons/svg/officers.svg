@@ -6,13 +6,13 @@
     </clipPath>
   </defs>
   <!-- Shoulders -->
-  <path d="M4 24v-4c0-3 4-5 8-5s8 2 8 5v4H4z" fill="#e0e0e0"/>
+  <path d="M4 24v-4c0-3 4-5 8-5s8 2 8 5v4H4z" fill="#e0e0e0" stroke="#333" stroke-width="0.75"/>
   <!-- Head -->
-  <circle cx="12" cy="10" r="4.5" fill="#e0e0e0"/>
+  <circle cx="12" cy="10" r="4.5" fill="#e0e0e0" stroke="#333" stroke-width="0.75"/>
   <!-- Cap Visor -->
   <path d="M5 9c0-1 2-2 7-2s7 1 7 2" fill="none" stroke="#333" stroke-width="1.5"/>
   <!-- Cap Top -->
-  <path d="M6 7c0-3 2.5-5 6-5s6 2 6 5H6z" fill="#e0e0e0"/>
+  <path d="M6 7c0-3 2.5-5 6-5s6 2 6 5H6z" fill="#e0e0e0" stroke="#333" stroke-width="0.75"/>
   <!-- Gold Band -->
   <rect x="6" y="7" width="12" height="1.5" fill="#f1c40f"/>
   <!-- Epaulettes -->
