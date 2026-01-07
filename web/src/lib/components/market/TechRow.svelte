@@ -5,6 +5,7 @@
 	import TechTileBox from '$lib/components/ui/TechTileBox.svelte';
 	import { getTilesForCard } from '$lib/utils/techCardToTiles';
 	import { TECH_CARDS } from '$lib/data/techTiles';
+	import { getTechCardImageFilename } from '$lib/utils/cardImages';
 
 	export let cards: Technology[] = [];
 	export let claimed: Record<string, string> = {};
@@ -64,17 +65,7 @@
 		const discount = cardData ? calculateDiscount(cardData.type) : 0;
 		const finalCost = Math.max(0, baseCost - discount);
 		return { cost: finalCost, discounted: discount > 0 };
-	}
-
-	// Derive image filename from card name (e.g., "Goldbeater's Skin" -> "goldbeaters_skin.png")
-	function getImageFilename(name: string): string {
-		return name
-			.toLowerCase()
-			.replace(/['']/g, '')  // Remove apostrophes
-			.replace(/[^a-z0-9]+/g, '_')  // Replace non-alphanumeric with underscore
-			.replace(/^_|_$/g, '');  // Trim leading/trailing underscores
-	}
-</script>
+	}</script>
 
 <div class="tech-row">
 	{#each cards as card, idx (card.instanceId ?? `${card.id}-${idx}`)}
@@ -82,7 +73,7 @@
 		{@const claimedByOther = isClaimedByOther(card.id)}
 		{@const costInfo = getDisplayCost(card)}
 		{@const tiles = getTilesForCard(card.id)}
-		{@const imageFilename = getImageFilename(card.name)}
+		{@const imageFilename = getTechCardImageFilename(card.name)}
 
 		<button
 			class="tech-card"
@@ -104,7 +95,7 @@
 					src="/cards/tech/{imageFilename}.png"
 					alt=""
 					class="card-image"
-					on:error={(e) => e.currentTarget.style.display = 'none'}
+					on:error={(e) => (e.currentTarget as HTMLImageElement).style.display = 'none'}
 				/>
 				<div class="age-badge">Age {card.age}</div>
 			</div>

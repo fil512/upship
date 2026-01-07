@@ -5,6 +5,7 @@
 	import CostBadge from '$lib/components/ui/CostBadge.svelte';
 	import ResourceBadge from '$lib/components/ui/ResourceBadge.svelte';
 	import type { SymbolIconName } from '$lib/icons/types';
+	import { getImageFilename } from '$lib/utils/cardImages';
 
 	export let card: Card;
 	export let index: number = 0;
@@ -33,15 +34,6 @@
 	$: iconName = (card.symbol || 'any') as SymbolIconName;
 	$: symbolColor = SYMBOL_COLORS[card.symbol] || SYMBOL_COLORS.any;
 	$: isInteractive = marketMode ? (!claimedByOther) : selectable;
-
-	// Derive image filename from card name (e.g., "Lloyd's Man" -> "lloyds_man.png")
-	function getImageFilename(name: string): string {
-		return name
-			.toLowerCase()
-			.replace(/['']/g, '')  // Remove apostrophes
-			.replace(/[^a-z0-9]+/g, '_')  // Replace non-alphanumeric with underscore
-			.replace(/^_|_$/g, '');  // Trim leading/trailing underscores
-	}
 	$: imageFilename = getImageFilename(card.name);
 
 	function handleClick() {
@@ -94,7 +86,7 @@
 			src="/cards/agent/{imageFilename}.png"
 			alt=""
 			class="card-image"
-			on:error={(e) => e.currentTarget.style.display = 'none'}
+			on:error={(e) => (e.currentTarget as HTMLImageElement).style.display = 'none'}
 		/>
 	</div>
 

@@ -3,6 +3,7 @@
 	import CostBadge from '$lib/components/ui/CostBadge.svelte';
 	import TechTileBox from '$lib/components/ui/TechTileBox.svelte';
 	import { getTilesForCard } from '$lib/utils/techCardToTiles';
+	import { getTechCardImageFilename } from '$lib/utils/cardImages';
 
 	export let tech: {
 		id: string;
@@ -22,6 +23,7 @@
 
 	// Get tech tiles provided by this card
 	$: tiles = showTiles ? getTilesForCard(tech.id) : [];
+	$: imageFilename = getTechCardImageFilename(tech.name);
 
 	function handleClick() {
 		if (selectable) {
@@ -54,9 +56,14 @@
 			{/if}
 		</div>
 
-		<!-- Image area placeholder -->
+		<!-- Image area -->
 		<div class="tech-image-area">
-			<!-- Future: tech image will go here -->
+			<img
+				src="/cards/tech/{imageFilename}.png"
+				alt=""
+				class="tech-image"
+				on:error={(e) => (e.currentTarget as HTMLImageElement).style.display = 'none'}
+			/>
 		</div>
 
 		<!-- Effect description -->
@@ -150,13 +157,23 @@
 		flex-shrink: 0;
 	}
 
-	/* Image area placeholder */
+	/* Image area */
 	.tech-image-area {
 		flex: 1;
 		min-height: 90px;
 		margin: 0;
 		background: rgba(154, 140, 112, 0.15);
 		border-radius: 0;
+		overflow: hidden;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.tech-image {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
 	}
 
 	/* Effect section */
