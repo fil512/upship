@@ -48,6 +48,7 @@
 	import LocationActionModal from '$lib/components/modals/LocationActionModal.svelte';
 	import CitySelectionModal from '$lib/components/modals/CitySelectionModal.svelte';
 	import LaunchSuccessModal from '$lib/components/modals/LaunchSuccessModal.svelte';
+	import MinistryCardModal from '$lib/components/modals/MinistryCardModal.svelte';
 	import GameComplete from '$lib/components/game/GameComplete.svelte';
 
 	// Utilities
@@ -773,6 +774,12 @@
 		}
 	}
 
+	function handleMinistryCardSelect(event: CustomEvent<{ keepIndex: number }>) {
+		// Convert keepIndex to discardIndex (discard the other card)
+		const discardIndex = event.detail.keepIndex === 0 ? 1 : 0;
+		handleDiscardMinistryCard(discardIndex);
+	}
+
 	async function handleKeepHazard() {
 		const result = await sendAction({
 			actionType: 'KEEP_HAZARD',
@@ -862,6 +869,7 @@
 	$: hasPendingPurchases = (pendingMarketPurchases.length > 0) || (pendingTechAcquisitions.length > 0);
 	$: marketCards = $gameState?.marketCards || [];
 	$: reserveCard = $gameState?.reserveCard || null;
+	$: reserveTechCard = $gameState?.reserveTechCard || null;
 	$: techCards = $gameState?.rdBoard || [];
 	$: marketCardsClaimed = $gameState?.marketCardsClaimed || {};
 	$: techCardsClaimed = $gameState?.techCardsClaimed || {};
@@ -1215,6 +1223,7 @@
 							<MarketSection
 								{marketCards}
 								{reserveCard}
+								{reserveTechCard}
 								{techCards}
 								claimedMarket={marketCardsClaimed}
 								claimedTech={techCardsClaimed}
@@ -1396,34 +1405,7 @@
 						</div>
 					{/if}
 
-					{#if drawnMinistryCards?.length === 2}
-						<!-- Ministry Card Selection - choose one to keep -->
-						<div class="ministry-panel">
-							<h4>🏛️ Ministry</h4>
-							<p class="ministry-instruction">Choose one card to keep:</p>
-							<div class="ministry-cards">
-								{#each drawnMinistryCards as card, index (card.id || index)}
-									<div class="ministry-card">
-										<div class="card-info">
-											<span class="card-name">{card.name}</span>
-											{#if card.symbol}
-												<span class="card-symbol">({card.symbol})</span>
-											{/if}
-										</div>
-										{#if $isMyTurn}
-											<button
-												class="btn primary"
-												on:click={() => handleDiscardMinistryCard(index === 0 ? 1 : 0)}
-											>
-												Keep
-											</button>
-										{/if}
-									</div>
-								{/each}
-							</div>
-						</div>
-					{/if}
-					{#if $isMyTurn}
+						{#if $isMyTurn}
 						{#if pendingLaunch && pendingHazard}
 							<!-- Hazard Response UI - ship awaiting hazard check -->
 							<div class="hazard-panel">
@@ -1597,6 +1579,13 @@
 				showLaunchSuccessModal = false;
 				launchSuccessData = null;
 			}}
+		/>
+	{/if}
+
+	{#if $isMyTurn && drawnMinistryCards?.length === 2}
+		<MinistryCardModal
+			cards={drawnMinistryCards}
+			on:select={handleMinistryCardSelect}
 		/>
 	{/if}
 
@@ -2355,62 +2344,6 @@
 		font-size: 0.8rem;
 		color: var(--color-text-secondary);
 		margin: 0;
-	}
-
-	/* Ministry Panel - card selection after visiting Ministry */
-	.ministry-panel {
-		display: flex;
-		flex-direction: column;
-		gap: var(--spacing-sm);
-		padding: var(--spacing-sm);
-		background: rgba(168, 85, 247, 0.1);
-		border: 2px solid #a855f7;
-		border-radius: var(--radius-md);
-		margin-bottom: var(--spacing-sm);
-	}
-
-	.ministry-panel h4 {
-		margin: 0;
-		font-size: 0.9rem;
-		color: #a855f7;
-	}
-
-	.ministry-instruction {
-		font-size: 0.85rem;
-		color: var(--color-text-secondary);
-		margin: 0;
-	}
-
-	.ministry-cards {
-		display: flex;
-		flex-direction: column;
-		gap: var(--spacing-sm);
-	}
-
-	.ministry-card {
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-		padding: var(--spacing-sm);
-		background: rgba(0, 0, 0, 0.2);
-		border-radius: var(--radius-sm);
-		border: 1px solid var(--color-border);
-	}
-
-	.ministry-card .card-info {
-		display: flex;
-		flex-direction: column;
-		gap: 2px;
-	}
-
-	.ministry-card .card-name {
-		font-weight: 500;
-		color: var(--color-text-primary);
-	}
-
-	.ministry-card .card-symbol {
-		font-size: 0.75rem;
-		color: var(--color-text-secondary);
 	}
 
 	.peeked-hazard-card .hazard-cost {
