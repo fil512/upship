@@ -422,6 +422,9 @@
 		if (!result.success) {
 			showToast(result.error || 'Failed to reveal', 'error');
 		} else {
+			// Clear card selection and pending action - can't place agents after revealing
+			selectedCardIndex = null;
+			pendingActionPreview = null;
 			// Auto-switch to market tab for purchasing
 			activeTab = 'market';
 		}
@@ -1553,7 +1556,7 @@
 					<HandSection
 						hand={Array.isArray($myState?.hand) ? $myState.hand : []}
 						selectedIndex={selectedCardIndex}
-						selectable={$isMyTurn && isWorkerPlacementPhase}
+						selectable={$isMyTurn && isWorkerPlacementPhase && !$myState?.hasPassed}
 						deckSize={typeof $myState?.deck === 'number' ? $myState.deck : ($myState?.deck?.length || 0)}
 						discardSize={typeof $myState?.discardPile === 'number' ? $myState.discardPile : ($myState?.discardPile?.length || 0)}
 						on:selectCard={handleCardSelect}

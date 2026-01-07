@@ -108,10 +108,12 @@
 
 	// Reactive map of which locations can be placed at
 	// This MUST be reactive ($:) so it updates when selectedCardSymbol changes
+	// Also check hasPassed - after revealing, players can't place more agents
 	$: canPlaceMap = (() => {
 		const map: Record<string, boolean> = {};
+		const hasPassed = $myState?.hasPassed ?? false;
 		for (const loc of locations) {
-			if (!isMyTurn || !isWorkerPlacementPhase || !selectedCardSymbol) {
+			if (!isMyTurn || !isWorkerPlacementPhase || !selectedCardSymbol || hasPassed) {
 				map[loc.id] = false;
 			} else if (selectedCardSymbol === 'any') {
 				map[loc.id] = true;

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte';
-	import { myState } from '$lib/stores/gameState';
+	import { myState, isMyTurn } from '$lib/stores/gameState';
 	import Icon from '$lib/components/ui/Icon.svelte';
 
 	export let locationId: string;
@@ -95,6 +95,12 @@
 		if (event.key === 'Escape') {
 			handleCancel();
 		}
+	}
+
+	// Auto-close modal when turn passes (race condition fix)
+	// This prevents submitting actions after bots have taken their turns
+	$: if (!$isMyTurn) {
+		handleCancel();
 	}
 </script>
 
