@@ -19,9 +19,11 @@ describe('Rules Compliance - Technology Tiles', () => {
       return all;
     };
 
-    it('should have 54 total technology tiles per Appendix C', () => {
+    // 53 tiles in bag + 1 Reserve Tech Card (Helium Handling) = 54 unique tiles
+    // But the bag itself only contains 53 tiles
+    it('should have 53 technology tiles in the bag per Appendix C', () => {
       const all = getAllTechnologies();
-      expect(all.length).toBe(54);
+      expect(all.length).toBe(53);
     });
 
     it('should have 11 Propulsion/Drive track tiles', () => {
@@ -42,10 +44,11 @@ describe('Rules Compliance - Technology Tiles', () => {
       expect(fabric.length).toBe(8);
     });
 
-    it('should have 11 Gas Systems track tiles', () => {
+    // 10 Gas Systems tiles in bag (Helium Handling is the Reserve Tech Card, not in bag)
+    it('should have 10 Gas Systems track tiles in bag', () => {
       const all = getAllTechnologies();
       const gas = all.filter(t => t.type === 'gas');
-      expect(gas.length).toBe(11);
+      expect(gas.length).toBe(10);
     });
 
     it('should have 14 Payload/Component track tiles', () => {
@@ -61,11 +64,11 @@ describe('Rules Compliance - Technology Tiles', () => {
       expect(TECHNOLOGY_BAG[1].length).toBe(12);
     });
 
-    // Verify Age II distribution (23 tiles)
-    // Per Appendix C table: (4 Propulsion, 5 Frame, 4 Fabric, 4 Gas, 6 Payload)
-    // Note: Summary says 23 tiles, which matches the actual table content
-    it('should have 23 Age II tiles', () => {
-      expect(TECHNOLOGY_BAG[2].length).toBe(23);
+    // Verify Age II distribution (22 tiles)
+    // Per Appendix C table: (4 Propulsion, 5 Frame, 4 Fabric, 3 Gas, 6 Payload)
+    // Note: Helium Handling is the Reserve Tech Card, not in the Age II bag
+    it('should have 22 Age II tiles', () => {
+      expect(TECHNOLOGY_BAG[2].length).toBe(22);
     });
 
     // Verify Age III distribution (19 tiles)
@@ -140,14 +143,15 @@ describe('Rules Compliance - Technology Tiles', () => {
       }
     });
 
-    // Verify all required Gas Systems tiles exist
+    // Verify all required Gas Systems tiles exist in the bag
+    // Note: Helium Handling is the Reserve Tech Card, always available separately
     it('should have all Gas Systems track tiles per Appendix C', () => {
       const all = getAllTechnologies();
       const expectedGas = [
         'Improved Valving',
         'Manual Ballonets',
         'Multiple Gas Cells',
-        'Helium Handling',
+        // 'Helium Handling' is NOT in the bag - it's the Reserve Tech Card
         'Blaugas Fuel System',
         'Automatic Valves',
         'Pressure Altitude System',
@@ -226,36 +230,44 @@ describe('Rules Compliance - Technology Tiles', () => {
       }
     });
 
-    // Verify costs are correct
+    // Verify costs are correct per Appendix C
     it('should have costs matching Appendix C', () => {
       const all = getAllTechnologies();
 
-      // Sample cost checks from Appendix C (rebalanced for 1 tech/player/round)
+      // Cost checks from Appendix C (Section A.3 specifies: Age I: 1-2, Age II: 2-4, Age III: 4-6)
       const costChecks = [
-        // Age I (avg 5 Research - matches early game research generation)
-        { name: 'Daimler Petrol Engine', cost: 5 },
-        { name: 'Improved Propeller', cost: 6 },
-        { name: 'Dual Engine Mount', cost: 5 },
-        { name: 'Wooden Framework', cost: 5 },
-        { name: 'Wire Bracing', cost: 5 },
-        { name: 'Rubberized Cotton', cost: 4 },
-        { name: 'Doped Canvas', cost: 5 },
-        // Age II (avg 7 Research - matches mid game research generation)
-        { name: 'Maybach Engine Design', cost: 6 },
-        { name: 'Diesel Powerplant', cost: 7 },
-        { name: 'Duralumin Framework', cost: 6 },
-        { name: 'Steel Framework', cost: 6 },
-        { name: "Goldbeater's Skin", cost: 7 },
-        { name: 'Multiple Gas Cells', cost: 6 },
-        { name: 'Helium Handling', cost: 7 },
-        // Age III (avg 9 Research - matches late game research generation)
-        { name: 'Streamlined Nacelle', cost: 8 },
-        { name: 'Supercharged Engine', cost: 10 },
-        { name: 'Geodetic Structure', cost: 9 },
-        { name: 'Modular Construction', cost: 9 },
-        { name: 'Pressure Altitude System', cost: 9 },
-        { name: 'Luxury Accommodation', cost: 8 },
-        { name: 'Promenade Deck', cost: 10 }
+        // Age I (1-2 Research per Appendix C)
+        { name: 'Daimler Petrol Engine', cost: 1 },
+        { name: 'Improved Propeller', cost: 1 },
+        { name: 'Dual Engine Mount', cost: 2 },
+        { name: 'Wooden Framework', cost: 1 },
+        { name: 'Wire Bracing', cost: 2 },
+        { name: 'Rubberized Cotton', cost: 1 },
+        { name: 'Doped Canvas', cost: 2 },
+        { name: 'Improved Valving', cost: 1 },
+        { name: 'Manual Ballonets', cost: 1 },
+        { name: 'Observation Platform', cost: 1 },
+        { name: 'Mail Compartment', cost: 1 },
+        { name: 'Cargo Nets', cost: 2 },
+        // Age II (2-4 Research per Appendix C)
+        { name: 'Maybach Engine Design', cost: 3 },
+        { name: 'Diesel Powerplant', cost: 3 },
+        { name: 'Swiveling Propeller', cost: 4 },
+        { name: 'Duralumin Framework', cost: 3 },
+        { name: 'Steel Framework', cost: 2 },
+        { name: "Goldbeater's Skin", cost: 4 },
+        { name: 'Fireproof Coating', cost: 3 },
+        { name: 'Multiple Gas Cells', cost: 3 },
+        { name: 'Automatic Valves', cost: 4 },
+        { name: 'Bomb Bay Design', cost: 4 },
+        // Age III (4-6 Research per Appendix C)
+        { name: 'Streamlined Nacelle', cost: 4 },
+        { name: 'Supercharged Engine', cost: 5 },
+        { name: 'Geodetic Structure', cost: 4 },
+        { name: 'Modular Construction', cost: 5 },
+        { name: 'Pressure Altitude System', cost: 5 },
+        { name: 'Luxury Accommodation', cost: 4 },
+        { name: 'Promenade Deck', cost: 6 }
       ];
 
       for (const { name, cost } of costChecks) {

@@ -126,7 +126,7 @@ const createTestPlayerState = (faction = 'germany') => ({
   faction,
   cash: 15,
   income: 5,
-  officerIncome: 0,
+  officerIncome: 1,  // Per rules Section 4.6: Officer Income Track starts at 1
   engineerIncome: 1,
   officers: 1,
   engineers: 2,

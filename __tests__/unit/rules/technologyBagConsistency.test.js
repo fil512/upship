@@ -39,17 +39,20 @@ describe('TECHNOLOGY_BAG Consistency', () => {
   });
 
   describe('Technology Counts', () => {
-    it('should have 54 total technologies', () => {
+    // 53 tiles in bag + 1 Reserve Tech Card (Helium Handling) = 54 unique tiles
+    // But the TECH_CARD_BAG only contains the 53 tiles that go in the bag
+    it('should have 53 total technologies in the bag', () => {
       const total = constantsBag[1].length + constantsBag[2].length + constantsBag[3].length;
-      expect(total).toBe(54);
+      expect(total).toBe(53);
     });
 
     it('should have 12 Age I technologies', () => {
       expect(constantsBag[1].length).toBe(12);
     });
 
-    it('should have 23 Age II technologies', () => {
-      expect(constantsBag[2].length).toBe(23);
+    // 22 tiles in Age II bag (Helium Handling is the Reserve Tech Card, always available)
+    it('should have 22 Age II technologies', () => {
+      expect(constantsBag[2].length).toBe(22);
     });
 
     it('should have 19 Age III technologies', () => {

@@ -189,7 +189,7 @@ describe('GameStateService', () => {
       });
     });
 
-    it('should create R&D board with 4 technologies', async () => {
+    it('should create R&D board with 5 technologies', async () => {
       mockClient.query
         .mockResolvedValueOnce({})
         .mockResolvedValueOnce({})
@@ -197,7 +197,7 @@ describe('GameStateService', () => {
 
       const result = await initializeGameState(1, players);
 
-      expect(result.rdBoard.length).toBe(4);
+      expect(result.rdBoard.length).toBe(5);
     });
 
     it('should scale tech copies based on player count (N-1 per tech)', async () => {
@@ -215,8 +215,8 @@ describe('GameStateService', () => {
       // the total tech count changed. Current expected: 33 total.
       const totalTechsInBag = result.rdBoard.length + result.techBag.length;
       expect(totalTechsInBag).toBe(33);
-      expect(result.rdBoard.length).toBe(4);
-      expect(result.techBag.length).toBe(29);
+      expect(result.rdBoard.length).toBe(5);
+      expect(result.techBag.length).toBe(28);
     });
 
     it('should set correct progress thresholds for player count', async () => {
