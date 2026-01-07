@@ -1,17 +1,20 @@
 /**
  * Bot Strategy Service
  * Ports the Python playtest/strategy.py logic to TypeScript for AI bot opponents.
+ *
+ * SYNC: Keep in sync with playtest/strategy.py and playtest/phases.py
+ * Run `/bot-logic` command to analyze sync status between server and playtest bots.
  */
 
 import type {
   GameState,
   PlayerState,
-  Card,
-  Blueprint
+  Card
 } from '@upship/api';
 
 // Import game data for slot type lookup
 import type { TechTile } from '../data/upgrades';
+import type { CombatMission } from '../data/combatMissions';
 const { UPGRADES } = require('../data/upgrades') as { UPGRADES: Record<string, TechTile> };
 const { GROUND_BOARD_LOCATIONS } = require('../data/groundBoard');
 // Import calculateBlueprintStats from launch.ts for ship stat calculations
@@ -28,6 +31,17 @@ export interface LaunchDecision {
   // shipId removed - ships are fungible tokens
   routeId: string;
   gasType: 'hydrogen' | 'helium';
+}
+
+export interface CombatMissionDecision {
+  missionId: string;
+  gasType: 'hydrogen' | 'helium';
+}
+
+export interface MissionReadinessResult {
+  mission: CombatMission;
+  canAttempt: boolean;
+  failures: string[];
 }
 
 // Blueprint changes for Blueprint Design action
@@ -94,6 +108,7 @@ function getUpgradeForTech(techId: string): { id: string; slotType: string; tile
 /**
  * Get priority for a market card based on symbol usefulness
  * Lower number = higher priority
+ * [BOT-CARD-PRIORITY-01] SYNC: Keep in sync with get_card_priority() in playtest/strategy.py
  */
 function getMarketCardPriority(card: Card): number {
   const symbol = (card.symbol || '').toLowerCase();
@@ -106,7 +121,10 @@ function getMarketCardPriority(card: Card): number {
 /**
  * Calculate a utility score for a tech tile
  * Higher score = better tech. Accounts for stats and weight.
+ * [BOT-TECH-SCORE-01] SYNC: Keep in sync with get_tech_priority() in playtest/strategy.py
  */
+// [BOT-TECH-SCORE-01] Calculate tech tile score for prioritization
+// Note: VP bonus is handled separately at the TechCard level in getRevealAcquisitions()
 function calculateTechScore(tile: TechTile): number {
   const stats = tile.stats || {};
   let score = 0;
@@ -131,7 +149,7 @@ function calculateTechScore(tile: TechTile): number {
  * Check if a new tech tile is superior to what's currently in the slot
  * Returns true if the new tech is better than existing, or slot is empty
  */
-function isTechSuperiorToInstalled(
+function _isTechSuperiorToInstalled(
   newTile: TechTile,
   player: PlayerState
 ): boolean {
@@ -193,6 +211,7 @@ function isTechSuperiorToInstalled(
  *
  * For age transitions, all empty frame/fabric slots MUST be filled.
  * For normal play, bot will fill empty slots opportunistically.
+ * [BOT-BLUEPRINT-01] SYNC: Keep in sync with get_blueprint_design_blueprint() in playtest/strategy.py
  */
 export function getBlueprintDesignBlueprint(
   player: PlayerState,
@@ -307,6 +326,7 @@ export function getBlueprintDesignBlueprint(
  * Evaluate what a player needs to be able to launch
  * NOTE: Ships are now counters (hangarShips: number), not an array of Ship objects.
  * Ship stats come from the player's current blueprint at launch time.
+ * [BOT-LAUNCH-READY-01] SYNC: Keep in sync with evaluate_launch_readiness() in playtest/strategy.py
  */
 export function evaluateLaunchReadiness(
   state: GameState,
@@ -381,10 +401,12 @@ export function evaluateLaunchReadiness(
   }
 
   // Check 3: Do we have enough officers?
+  // [BOT-LAUNCH-READY-01] SYNC: Match playtest - personnel_office first (collect), then flight_school (build)
   const officersNeeded = currentAge;
   if (officers < officersNeeded) {
     missing.push(`need ${officersNeeded - officers} more officer(s) for Age ${currentAge}`);
-    priorities.push('flight_school');  // Build officer income
+    priorities.push('personnel_office');  // Collect officers from income track
+    priorities.push('flight_school');     // Build officer income
   }
 
   // Check 4: Do we have gas?
@@ -423,14 +445,18 @@ export function evaluateLaunchReadiness(
   }
 
   // Check 6: Do we have engineers for hazard mitigation?
-  if (engineers < 2) {
-    missing.push(`low engineers (${engineers}/2 recommended)`);
-    priorities.push('technical_institute');
+  // [BOT-LAUNCH-READY-01] SYNC: Match playtest - require 2+ engineers for safe launch (blocks canLaunch)
+  // Most hazards need 2-4 engineers to pass, so launching with 0-1 is risky
+  const minEngineersForSafeLaunch = 2;
+  if (engineers < minEngineersForSafeLaunch) {
+    missing.push(`need ${minEngineersForSafeLaunch - engineers} more engineer(s) for safe launch`);
+    priorities.push('engineering_depot');   // Collect engineers from income track
+    priorities.push('technical_institute'); // Build engineer income
   }
 
   const canLaunch = hangarShipCount > 0 && slotsReady &&
                     officers >= officersNeeded && totalGas >= 1 &&
-                    hasAchievableTarget;
+                    hasAchievableTarget && engineers >= minEngineersForSafeLaunch;
 
   return {
     canLaunch,
@@ -445,6 +471,7 @@ export function evaluateLaunchReadiness(
 
 /**
  * Find strategic card/location placement for worker placement phase
+ * [BOT-PLACEMENT-01] SYNC: Keep in sync with find_strategic_placement() in playtest/strategy.py
  */
 export function findStrategicPlacement(
   state: GameState,
@@ -473,65 +500,116 @@ export function findStrategicPlacement(
   // Build priority list
   const priorityLocations: string[] = [];
 
-  // Phase 1: If launch-ready, go to launchpad
+  // [BOT-PLACEMENT-01] SYNC: VP-MAXIMIZING STRATEGY from playtest
+  // Phase 1: LAUNCH if ready - this is how you score VP!
+  // There are TWO launchpad spaces - try both!
   if (launchEval.canLaunch) {
     priorityLocations.push('launchpad');
+    priorityLocations.push('launchpad_2');  // Second launchpad space
   }
 
-  // Add priorities from launch evaluation
+  // Add priorities from launch evaluation (fixes for missing requirements)
   priorityLocations.push(...launchEval.priorities);
 
-  // Phase 2: Strategic investments based on state
+  // [BOT-PLACEMENT-01] SYNC: VP-MAXIMIZING STRATEGY from playtest
+  // Phase 2: Fix launch blockers in order of importance
   const cash = player.cash || 0;
   const totalGas = launchEval.totalGas;
   const officers = player.officers || 0;
+  const engineers = launchEval.engineers;
   const hangarCount = launchEval.hangarShipCount;
+  const currentAge = state.age || 1;
+  const researchLevel = player.researchLevel || 0;
   // Routes are now tracked by claimed routes on the map, not player.ships
   const claimedRouteCount = (state.map?.routes || []).filter(r => r.claimed === playerId).length;
 
-  if (claimedRouteCount >= 2) {
-    priorityLocations.push('research_institute');
-    priorityLocations.push('flight_school');
-    priorityLocations.push('technical_institute');
+  // Officers are needed per Age (1/2/3) - critical blocker
+  const officersNeeded = currentAge;
+  if (officers < officersNeeded) {
+    if (!priorityLocations.includes('personnel_office')) {
+      priorityLocations.push('personnel_office');  // Collect officers from track
+    }
   }
 
-  // Target research_level = age + 1 (max 3) for tech purchasing power
-  const currentAge = state.age || 1;
-  const researchLevel = player.researchLevel || 0;
-  const targetResearchLevel = Math.min(currentAge + 1, 3);
-  if (researchLevel < targetResearchLevel && cash >= 4) {
-    priorityLocations.push('research_institute');
+  // Need a ship to launch
+  if (hangarCount === 0) {
+    if (cash >= 5) {
+      priorityLocations.push('construction_hall');
+    } else {
+      priorityLocations.push('treasury');  // Get cash first
+      priorityLocations.push('construction_hall');
+    }
   }
 
-  // Only build ships if we have room (max 3 in hangar)
+  // Need gas to launch
+  if (totalGas < 1) {
+    priorityLocations.push('gas_depot');
+  }
+
+  // Need blueprint slots filled
+  if (player.blueprint) {
+    const frameSlots = player.blueprint.frameSlots || [];
+    const fabricSlots = player.blueprint.fabricSlots || [];
+    const frameEmpty = frameSlots.filter(s => s === null).length;
+    const fabricEmpty = fabricSlots.filter(s => s === null).length;
+    if (frameEmpty > 0 || fabricEmpty > 0) {
+      priorityLocations.push('blueprint_design');
+    }
+  }
+
+  // Phase 3: Build up for NEXT launch (secondary)
+  // Build more ships if we have cash and hangar is low
   if (hangarCount < 2 && cash >= 5) {
     priorityLocations.push('construction_hall');
   }
 
-  // Collect cash from income track if running low
-  if (cash < 10) {
-    priorityLocations.push('treasury');
-  }
-
-  if (totalGas < 3) {
+  // Stock up on gas for next launch
+  if (totalGas < 2) {
     priorityLocations.push('gas_depot');
   }
 
-  if (officers < 2 && cash >= 5) {
-    priorityLocations.push('flight_school');  // Build officer income
+  // Get engineers for hazard mitigation (2 is a good safety buffer)
+  if (engineers < 2) {
+    priorityLocations.push('engineering_depot');  // Collect from track
   }
 
-  if (hangarCount > 0 || claimedRouteCount > 0) {
+  // Phase 4: Income investments ONLY if we have excess actions
+  // These are low priority - VP comes from routes, not income tracks
+
+  // Research level helps buy techs (which may give VP)
+  // But only invest if we're otherwise blocked
+  if (researchLevel < 2 && cash >= 4 && hangarCount >= 1 && totalGas >= 1) {
+    priorityLocations.push('research_institute');
+  }
+
+  // Officer income only if we keep running out
+  if (officers < officersNeeded && cash >= 4) {
+    priorityLocations.push('flight_school');
+  }
+
+  // Engineer income only if we keep running out
+  if (engineers < 1 && cash >= 4) {
+    priorityLocations.push('technical_institute');
+  }
+
+  // Phase 5: Insurance only if we have ships at risk
+  if (claimedRouteCount > 0) {
     priorityLocations.push('insurance_bureau');
   }
 
-  // Phase 3: Fallback priorities
+  // Phase 6: Treasury to collect income if low on cash
+  if (cash < 5) {
+    priorityLocations.push('treasury');
+  }
+
+  // Phase 7: Fallback priorities (match playtest order)
+  // Note: launchpad at END - only use if no better option (wasteful without resources)
   const fallbackPriorities = [
-    'blueprint_design', 'research_institute', 'construction_hall',
-    'gas_depot', 'technical_institute', 'ministry',
-    'flight_school', 'weather_bureau', 'government_liaison',
-    'insurance_bureau', 'launchpad', 'launchpad_2',
-    'personnel_office', 'engineering_depot', 'treasury'
+    'construction_hall', 'gas_depot', 'blueprint_design',
+    'personnel_office', 'engineering_depot', 'treasury',
+    'ministry', 'weather_bureau', 'research_institute',
+    'technical_institute', 'flight_school', 'government_liaison',
+    'insurance_bureau', 'launchpad', 'launchpad_2'
   ];
 
   for (const loc of fallbackPriorities) {
@@ -577,6 +655,7 @@ export function findStrategicPlacement(
 
 /**
  * Build location-specific action parameters
+ * [BOT-LOC-ACTION-01] SYNC: Keep in sync with _execute_placement() kwargs in playtest/phases.py
  */
 function buildLocationAction(
   locationId: string,
@@ -617,6 +696,7 @@ function buildLocationAction(
 /**
  * Find best launch decision for a ship
  * NOTE: Ships are now fungible tokens. Stats come from blueprint.
+ * [BOT-LAUNCH-01] SYNC: Keep in sync with _attempt_route_launches() in playtest/phases.py
  */
 export function findLaunchDecision(
   state: GameState,
@@ -662,9 +742,125 @@ export function findLaunchDecision(
 }
 
 /**
+ * Evaluate which combat missions a ship can attempt
+ * [BOT-COMBAT-01] SYNC: Keep in sync with evaluate_combat_mission_readiness() in playtest/strategy.py
+ *
+ * @param missions - Available combat missions
+ * @param shipStats - Ship's calculated stats (range, speed, ceiling, reliability)
+ * @returns Array of mission evaluations sorted by value (achievable first, then by VP)
+ */
+export function evaluateCombatMissionReadiness(
+  missions: CombatMission[],
+  shipStats: { range: number; speed: number; ceiling: number; reliability: number }
+): MissionReadinessResult[] {
+  const results: MissionReadinessResult[] = [];
+
+  for (const mission of missions) {
+    const failures: string[] = [];
+
+    // Check stat requirements
+    if (mission.range > 0 && shipStats.range < mission.range) {
+      failures.push(`Range ${shipStats.range} < required ${mission.range}`);
+    }
+    if ((mission.speed || 0) > 0 && shipStats.speed < (mission.speed || 0)) {
+      failures.push(`Speed ${shipStats.speed} < required ${mission.speed}`);
+    }
+    if ((mission.ceiling || 0) > 0 && shipStats.ceiling < (mission.ceiling || 0)) {
+      failures.push(`Ceiling ${shipStats.ceiling} < required ${mission.ceiling}`);
+    }
+    if ((mission.reliability || 0) > 0 && shipStats.reliability < (mission.reliability || 0)) {
+      failures.push(`Reliability ${shipStats.reliability} < required ${mission.reliability}`);
+    }
+
+    results.push({
+      mission,
+      canAttempt: failures.length === 0,
+      failures
+    });
+  }
+
+  // Sort: achievable first, then by VP (highest), then by income (highest)
+  results.sort((a, b) => {
+    if (a.canAttempt !== b.canAttempt) {
+      return a.canAttempt ? -1 : 1;
+    }
+    if (a.mission.vp !== b.mission.vp) {
+      return b.mission.vp - a.mission.vp;
+    }
+    return b.mission.income - a.mission.income;
+  });
+
+  return results;
+}
+
+/**
+ * Find best combat mission for a player's ships (Age II)
+ * [BOT-COMBAT-02] SYNC: Keep in sync with find_best_combat_mission() in playtest/strategy.py
+ *
+ * @param state - Current game state
+ * @param playerId - Player ID
+ * @returns Best mission decision or null if none achievable
+ */
+export function findBestCombatMission(
+  state: GameState,
+  playerId: string
+): CombatMissionDecision | null {
+  const player = state.players[playerId];
+  if (!player) return null;
+
+  // Only valid in Age II
+  if ((state.age || 1) !== 2) return null;
+
+  // Ships are counters now
+  const hangarShipCount = player.hangarShips || 0;
+  if (hangarShipCount === 0) return null;
+
+  // Get available missions from missionRow
+  const missionRow = (state as { missionRow?: CombatMission[] }).missionRow || [];
+  if (missionRow.length === 0) return null;
+
+  // Ship stats come from blueprint
+  if (!player.blueprint) return null;
+  const shipStats = calculateBlueprintStats(player.blueprint, state.age || 1);
+
+  // USA faction restriction: cannot take missions until all other players have at least one
+  if (player.faction === 'usa') {
+    const allOthersHaveMissions = Object.entries(state.players).every(([pid, p]) => {
+      if (pid === playerId) return true; // Skip self
+      const completed = (p as { completedMissions?: unknown[] }).completedMissions || [];
+      return completed.length > 0;
+    });
+    if (!allOthersHaveMissions) {
+      return null;
+    }
+  }
+
+  // Evaluate all missions
+  const evaluations = evaluateCombatMissionReadiness(missionRow, {
+    range: shipStats.range,
+    speed: shipStats.speed,
+    ceiling: shipStats.ceiling,
+    reliability: shipStats.reliability || 0
+  });
+
+  // Find first achievable mission (already sorted by value)
+  const bestEval = evaluations.find(e => e.canAttempt);
+  if (!bestEval) return null;
+
+  // Use helium for USA, hydrogen for others
+  const gasType = player.faction === 'usa' ? 'helium' : 'hydrogen';
+
+  return {
+    missionId: bestEval.mission.id,
+    gasType
+  };
+}
+
+/**
  * Get reveal phase acquisitions (tech priorities and market cards)
  * Only acquires techs that are superior to what's already installed
  * Returns all market cards sorted by priority - executor tries each in order
+ * [BOT-REVEAL-01] SYNC: Keep in sync with get_reveal_acquisitions() in playtest/strategy.py
  */
 export function getRevealAcquisitions(
   state: GameState,
@@ -701,12 +897,14 @@ export function getRevealAcquisitions(
     // Sort by value (highest first)
     techsWithValue.sort((a, b) => b.value - a.value);
 
-    // Calculate available research: saved research + engineers (matches technology.ts logic)
+    // [BOT-REVEAL-01] Calculate available research: saved research + engineers + card bonus estimate
+    // Card bonus estimate matches playtest/strategy.py behavior
     const savedResearch = (player as PlayerState & { research?: number }).research || 0;
     const engineers = player.engineers || 0;
-    let availableResearch = savedResearch + engineers;
+    const cardBonusEstimate = 1; // Conservative estimate for card research bonuses
+    let availableResearch = savedResearch + engineers + cardBonusEstimate;
 
-    console.log(`[BOT REVEAL] Available research: ${availableResearch} (saved=${savedResearch}, engineers=${engineers})`);
+    console.log(`[BOT REVEAL] Available research: ${availableResearch} (saved=${savedResearch}, engineers=${engineers}, cardBonus=${cardBonusEstimate})`);
 
     // Buy techs by value until out of research
     for (const { tech, value } of techsWithValue) {
@@ -759,6 +957,7 @@ export function getRevealAcquisitions(
 /**
  * Decide whether to spend engineers on hazard response
  * NOTE: Hazard info is now in player.pendingLaunch.hazardInfo, not ship.pendingHazard
+ * [BOT-HAZARD-01] SYNC: Keep in sync with _handle_hazard_response() in playtest/phases.py
  */
 export function getHazardResponse(
   state: GameState,
@@ -768,14 +967,40 @@ export function getHazardResponse(
   if (!player) return { spendEngineers: false };
 
   // Hazard info is now in pendingLaunch
-  const pendingLaunch = player.pendingLaunch as { hazardInfo?: { engineersNeeded?: number } } | undefined;
+  interface HazardInfo {
+    engineersNeeded?: number;
+    engineerCost?: number;    // Fire hazard specific cost
+    autoPassReason?: string;  // Auto-pass (e.g., "helium immunity")
+    noSave?: boolean;         // Cannot be saved, must abort
+  }
+  const pendingLaunch = player.pendingLaunch as { hazardInfo?: HazardInfo } | undefined;
   if (!pendingLaunch?.hazardInfo) return { spendEngineers: false };
 
   const hazardInfo = pendingLaunch.hazardInfo;
   const engineers = player.engineers || 0;
-  const engineersNeeded = hazardInfo.engineersNeeded || 0;
 
-  // Spend engineers if we have enough
+  // Case 1: Auto-pass (e.g., helium immunity, stat already sufficient)
+  if (hazardInfo.autoPassReason) {
+    return { spendEngineers: true };
+  }
+
+  // Case 2: No save possible - cannot spend engineers to fix this
+  if (hazardInfo.noSave) {
+    return { spendEngineers: false };
+  }
+
+  // Case 3: Fire hazard with specific engineer cost
+  if (hazardInfo.engineerCost !== undefined) {
+    return { spendEngineers: engineers >= hazardInfo.engineerCost };
+  }
+
+  // Case 4: Standard hazard - check if engineers needed is 0 (stat sufficient)
+  const engineersNeeded = hazardInfo.engineersNeeded || 0;
+  if (engineersNeeded === 0) {
+    return { spendEngineers: true };
+  }
+
+  // Case 5: Standard hazard - spend engineers if we have enough
   return { spendEngineers: engineers >= engineersNeeded };
 }
 
@@ -786,6 +1011,9 @@ module.exports = {
   getBlueprintDesignBlueprint,
   findLaunchDecision,
   getRevealAcquisitions,
-  getHazardResponse
+  getHazardResponse,
+  // [BOT-COMBAT-01/02] Combat mission functions for Age II
+  evaluateCombatMissionReadiness,
+  findBestCombatMission
   // calculateShipStats removed - use calculateBlueprintStats from launch.ts
 };

@@ -281,6 +281,7 @@ See `plans/overview.md` for the 27-phase implementation plan tracking progress f
 - `/playtest-rest` - Run a full automated playtest against the local dev server (http://localhost:3000)
 - `/playtest-ui` - Create a game with 3 server bots, play through UI until completion; if stuck, fix the issue and retry
 - `/play-with-me` - Interactive game where you (kenny) play Britain and Claude controls Germany, USA, Italy via browser
+- `/bot-logic` - Analyze and synchronize bot logic between server (TypeScript) and playtest (Python) implementations
 
 ## Available Skills
 

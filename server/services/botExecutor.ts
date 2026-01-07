@@ -230,6 +230,7 @@ async function executeBotWorkerPlacement(
 
 /**
  * Execute launches for bot at launchpad
+ * [BOT-LAUNCH-01] Handles both Age I routes and Age II combat missions
  */
 async function executeBotLaunches(
   io: SocketIOServer,
@@ -255,30 +256,45 @@ async function executeBotLaunches(
       continue;
     }
 
-    // Find best launch decision
-    const launchDecision = botService.findLaunchDecision(state, botId);
+    // Check resources first
+    const officers = player.officers || 0;
+    const officersNeeded = state.age || 1;
+    const hydrogen = player.gasCubes?.hydrogen || 0;
+    const helium = player.gasCubes?.helium || 0;
+    const totalGas = hydrogen + helium;
 
-    if (launchDecision) {
-      // Check resources
-      const officers = player.officers || 0;
-      const officersNeeded = state.age || 1;
-      const hydrogen = player.gasCubes?.hydrogen || 0;
-      const helium = player.gasCubes?.helium || 0;
-      const totalGas = hydrogen + helium;
+    if (officers < officersNeeded || totalGas < 1) {
+      // Not enough resources, stop launching
+      break;
+    }
 
-      if (officers < officersNeeded || totalGas < 1) {
-        // Not enough resources, stop launching
+    // [BOT-COMBAT-01/02] Age II: Use combat missions instead of routes
+    if (state.age === 2) {
+      const missionDecision = botService.findBestCombatMission(state, botId);
+
+      if (missionDecision) {
+        await executeBotAction(io, gameId, botId, 'LAUNCH_COMBAT_MISSION', {
+          missionId: missionDecision.missionId,
+          gasType: missionDecision.gasType
+        }, gameStateWrapper.version);
+      } else {
+        // No achievable missions, stop launching
         break;
       }
-
-      // Ships are fungible tokens - no shipId needed
-      await executeBotAction(io, gameId, botId, 'LAUNCH_SHIP', {
-        routeId: launchDecision.routeId,
-        gasType: launchDecision.gasType
-      }, gameStateWrapper.version);
     } else {
-      // No more launches possible
-      break;
+      // Age I or III: Use routes
+      const launchDecision = botService.findLaunchDecision(state, botId);
+
+      if (launchDecision) {
+        // Ships are fungible tokens - no shipId needed
+        await executeBotAction(io, gameId, botId, 'LAUNCH_SHIP', {
+          routeId: launchDecision.routeId,
+          gasType: launchDecision.gasType
+        }, gameStateWrapper.version);
+      } else {
+        // No more launches possible
+        break;
+      }
     }
   }
 

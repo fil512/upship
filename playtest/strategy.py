@@ -2,6 +2,9 @@
 
 This module contains the AI logic for autonomous playtesting,
 including card/location selection and launch readiness evaluation.
+
+SYNC: Keep in sync with server/services/botService.ts
+Run `/bot-logic` command to analyze sync status between server and playtest bots.
 """
 
 from typing import Any
@@ -40,6 +43,8 @@ def get_blueprint_design_blueprint(player_data: Player, current_age: int = 1, is
     In Age II/III, prioritizes Drive slots (for range/speed needed for missions/routes).
 
     During age transitions, ALL empty Frame and Fabric slots MUST be filled per Section 12.1 step 5.
+
+    [BOT-BLUEPRINT-01] SYNC: Keep in sync with getBlueprintDesignBlueprint() in server/services/botService.ts
 
     Args:
         player_data: Player object with blueprint and technologies.
@@ -140,6 +145,8 @@ def evaluate_launch_readiness(
     missions: list[CombatMission] | None = None
 ) -> dict:
     """Evaluate what a player needs to be able to launch a ship.
+
+    [BOT-LAUNCH-READY-01] SYNC: Keep in sync with evaluateLaunchReadiness() in server/services/botService.ts
 
     Args:
         player_data: Player object.
@@ -298,6 +305,8 @@ def evaluate_combat_mission_readiness(
 ) -> list[dict]:
     """Evaluate which combat missions a ship can attempt.
 
+    [BOT-COMBAT-01] NOTE: Server bots don't have this function yet (Age II not fully implemented)
+
     Args:
         player_data: Player object.
         missions: List of available CombatMission objects.
@@ -347,6 +356,8 @@ def find_best_combat_mission(
 
     Considers all hangar ships and returns the highest-value mission
     that any ship can attempt.
+
+    [BOT-COMBAT-02] NOTE: Server bots don't have this function yet (Age II not fully implemented)
 
     Args:
         player_data: Player object.
@@ -415,6 +426,8 @@ def find_strategic_placement(
     2. Build ships to have something to launch
     3. Get gas to fuel launches
     4. Only invest in income upgrades when truly blocked
+
+    [BOT-PLACEMENT-01] SYNC: Keep in sync with findStrategicPlacement() in server/services/botService.ts
 
     Args:
         player: Player username.
@@ -615,6 +628,8 @@ def get_reveal_acquisitions(player: str, game_id: str) -> tuple[list[str], list[
     and buys as many techs as affordable, prioritizing by strategic value.
 
     Also calculates available influence and buys market cards (agent cards).
+
+    [BOT-REVEAL-01] SYNC: Keep in sync with getRevealAcquisitions() in server/services/botService.ts
 
     Args:
         player: Player username.

@@ -2,6 +2,9 @@
 
 This module handles the game loop phases using the client library
 for direct HTTP communication instead of CLI subprocesses.
+
+SYNC: Keep in sync with server/services/botExecutor.ts
+Run `/bot-logic` command to analyze sync status between server and playtest bots.
 """
 
 import json
@@ -270,6 +273,8 @@ def _attempt_route_launches(
 ) -> int:
     """Attempt to launch ships on regular routes.
 
+    [BOT-LAUNCH-01] SYNC: Keep in sync with findLaunchDecision() in server/services/botService.ts
+
     Args:
         player: Player username.
         game_id: The game ID.
@@ -500,6 +505,8 @@ def _check_and_handle_hazard(client, player: str, game_id: str, ship_id: str, pl
 
 def _handle_hazard_response(player: str, game_id: str, ship_id: str, pending_hazard: dict, player_data: Player, logger: PlaytestLogger, fresh_engineers: int | None = None, route_id: str | None = None) -> str:
     """Handle responding to a hazard check. Returns final ship status.
+
+    [BOT-HAZARD-01] SYNC: Keep in sync with getHazardResponse() in server/services/botService.ts
 
     Args:
         player: Player username.
@@ -870,6 +877,8 @@ def _log_decision_info(player: str, decision_info: dict, logger: PlaytestLogger)
 
 def _execute_placement(player: str, game_id: str, card: dict, location: dict, logger: PlaytestLogger, decision_info: dict | None = None) -> None:
     """Execute a single agent placement action.
+
+    [BOT-LOC-ACTION-01] SYNC: Keep kwargs in sync with buildLocationAction() in server/services/botService.ts
 
     Args:
         player: Player username.
