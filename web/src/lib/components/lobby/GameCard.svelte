@@ -107,19 +107,22 @@
 		display: flex;
 		flex-direction: column;
 		gap: var(--spacing-sm);
-		padding: var(--spacing-md);
-		background: var(--color-bg-card);
-		border: 2px solid transparent;
+		padding: var(--spacing-md) var(--spacing-lg);
+		background: rgba(42, 42, 78, 0.4);
+		backdrop-filter: blur(4px);
+		border: 1px solid rgba(196, 163, 90, 0.2);
 		border-radius: var(--radius-lg);
 		cursor: pointer;
-		transition: all var(--transition-fast);
+		transition: all var(--transition-normal);
 		text-align: left;
 		width: 100%;
 	}
 
 	.game-card:hover {
 		border-color: var(--color-accent-gold);
-		transform: translateY(-2px);
+		background: rgba(58, 58, 94, 0.5);
+		transform: translateY(-4px);
+		box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
 	}
 
 	.game-header {
@@ -129,67 +132,83 @@
 	}
 
 	.game-name {
-		font-size: 1rem;
-		color: var(--color-text-primary);
+		font-family: 'Cinzel', serif;
+		font-size: 1.25rem;
+		color: var(--color-accent-gold);
+		letter-spacing: 0.05em;
 	}
 
 	.game-status {
 		padding: var(--spacing-xs) var(--spacing-sm);
-		border-radius: var(--radius-full);
-		font-size: 0.75rem;
-		font-weight: 500;
+		border-radius: var(--radius-sm);
+		font-family: 'Cinzel', serif;
+		font-size: 0.7rem;
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
 	}
 
 	.status-waiting {
-		background: rgba(96, 165, 250, 0.2);
+		background: rgba(96, 165, 250, 0.15);
 		color: var(--color-info);
+		border: 1px solid rgba(96, 165, 250, 0.3);
 	}
 
 	.status-active {
-		background: rgba(74, 222, 128, 0.2);
+		background: rgba(74, 222, 128, 0.15);
 		color: var(--color-success);
+		border: 1px solid rgba(74, 222, 128, 0.3);
 	}
 
 	.status-completed {
-		background: rgba(136, 136, 136, 0.2);
+		background: rgba(136, 136, 136, 0.15);
 		color: var(--color-text-muted);
+		border: 1px solid rgba(136, 136, 136, 0.3);
 	}
 
 	.game-details {
 		display: flex;
 		align-items: center;
 		gap: var(--spacing-md);
-		font-size: 0.8rem;
+		font-size: 0.85rem;
+		margin: var(--spacing-xs) 0;
 	}
 
 	.faction {
 		color: var(--faction-color);
-		font-weight: 600;
+		font-weight: 700;
+		font-family: 'Cinzel', serif;
 	}
 
 	.progress {
-		color: var(--color-text-secondary);
+		color: var(--color-text-primary);
+		opacity: 0.8;
 	}
 
 	.game-info {
 		display: flex;
 		justify-content: space-between;
-		font-size: 0.875rem;
+		font-size: 0.9rem;
 		color: var(--color-text-secondary);
+		margin-top: var(--spacing-xs);
 	}
 
 	.action-text {
-		font-weight: 500;
-		color: var(--color-text-secondary);
+		font-weight: 700;
+		font-family: 'Cinzel', serif;
+		text-transform: uppercase;
+		font-size: 0.8rem;
+		letter-spacing: 0.1em;
 	}
 
 	.action-text.highlight {
 		color: var(--color-accent-gold);
-		font-weight: 600;
+		text-shadow: 0 0 10px rgba(196, 163, 90, 0.4);
 	}
 
 	.game-card.my-turn {
 		border-color: var(--color-accent-gold);
-		box-shadow: 0 0 10px rgba(196, 163, 90, 0.3);
+		background: rgba(58, 58, 94, 0.6);
+		box-shadow: 0 0 20px rgba(196, 163, 90, 0.2);
 	}
 </style>

@@ -115,40 +115,68 @@
 	.container {
 		max-width: 900px;
 		margin: 0 auto;
-		padding: var(--spacing-lg);
+		padding: var(--spacing-xl) var(--spacing-lg);
 		min-height: 100vh;
 	}
 
 	.hero {
 		text-align: center;
-		margin-bottom: var(--spacing-xl);
+		margin-bottom: 4rem;
+		padding: 2rem;
+		border-bottom: 2px solid var(--color-accent-gold-dark);
+		position: relative;
+	}
+
+	.hero::after {
+		content: '';
+		position: absolute;
+		bottom: -5px;
+		left: 50%;
+		transform: translateX(-50%);
+		width: 100px;
+		height: 8px;
+		background: var(--color-accent-gold);
+		clip-path: polygon(0 0, 100% 0, 85% 100%, 15% 100%);
 	}
 
 	.hero h1 {
-		font-size: 3rem;
-		margin-bottom: var(--spacing-sm);
-		text-shadow: 0 2px 10px rgba(196, 163, 90, 0.3);
+		font-size: 4.5rem;
+		margin-bottom: var(--spacing-xs);
+		text-shadow: 0 4px 15px rgba(0, 0, 0, 0.5), 0 0 20px rgba(196, 163, 90, 0.4);
+		letter-spacing: 0.2em;
+		font-weight: 900;
 	}
 
 	.subtitle {
-		color: var(--color-text-secondary);
-		font-size: 1.25rem;
+		color: var(--color-accent-gold-light);
+		font-family: 'Cinzel', serif;
+		font-size: 1.5rem;
+		letter-spacing: 0.1em;
+		opacity: 0.9;
 	}
 
 	.landing {
 		text-align: center;
+		background: rgba(42, 42, 78, 0.4);
+		backdrop-filter: blur(8px);
+		padding: 3rem;
+		border-radius: var(--radius-lg);
+		border: 1px solid rgba(196, 163, 90, 0.2);
+		box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+		animation: fadeIn var(--transition-slow) ease-out;
 	}
 
 	.description {
-		max-width: 600px;
-		margin: 0 auto var(--spacing-xl);
-		color: var(--color-text-secondary);
-		font-size: 1.125rem;
-		line-height: 1.6;
+		max-width: 650px;
+		margin: 0 auto 3rem;
+		color: var(--color-text-primary);
+		font-size: 1.25rem;
+		line-height: 1.8;
+		font-style: italic;
 	}
 
 	.lobby {
-		animation: fadeIn var(--transition-normal) ease-out;
+		animation: slideIn var(--transition-normal) ease-out;
 	}
 
 	.user-header {
@@ -156,52 +184,64 @@
 		align-items: center;
 		justify-content: space-between;
 		margin-bottom: var(--spacing-lg);
-		padding: var(--spacing-md);
-		background: var(--color-bg-card);
+		padding: var(--spacing-md) var(--spacing-lg);
+		background: rgba(42, 42, 78, 0.6);
+		backdrop-filter: blur(4px);
 		border-radius: var(--radius-lg);
+		border: 1px solid rgba(196, 163, 90, 0.2);
 	}
 
 	.username {
 		color: var(--color-accent-gold);
-		font-weight: 600;
+		font-weight: 700;
+		font-family: 'Cinzel', serif;
+		font-size: 1.1rem;
 	}
 
 	.lobby-tabs {
 		display: flex;
-		gap: var(--spacing-sm);
-		margin-bottom: var(--spacing-md);
+		gap: var(--spacing-md);
+		margin-bottom: var(--spacing-lg);
 	}
 
 	.lobby-tab {
-		padding: var(--spacing-sm) var(--spacing-md);
-		border: none;
+		padding: var(--spacing-md) var(--spacing-xl);
+		border: 1px solid rgba(196, 163, 90, 0.3);
 		border-radius: var(--radius-md);
-		background: var(--color-bg-card);
+		background: rgba(42, 42, 78, 0.4);
 		color: var(--color-text-secondary);
-		font-size: 0.875rem;
-		font-weight: 500;
+		font-family: 'Cinzel', serif;
+		font-size: 1rem;
+		font-weight: 700;
 		cursor: pointer;
-		transition: all var(--transition-fast);
+		transition: all var(--transition-normal);
+		letter-spacing: 0.05em;
 	}
 
 	.lobby-tab:hover {
-		background: var(--color-bg-hover);
+		background: rgba(58, 58, 94, 0.6);
 		color: var(--color-text-primary);
+		border-color: var(--color-accent-gold);
 	}
 
 	.lobby-tab.active {
 		background: var(--color-accent-gold);
 		color: var(--color-bg-primary);
+		border-color: var(--color-accent-gold);
+		box-shadow: 0 0 15px rgba(196, 163, 90, 0.4);
 	}
 
 	.lobby-header {
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		margin-bottom: var(--spacing-md);
+		margin-bottom: var(--spacing-lg);
+		padding: 0 var(--spacing-sm);
 	}
 
 	.lobby-header h2 {
-		font-size: 1.25rem;
+		font-size: 2rem;
+		text-transform: uppercase;
+		letter-spacing: 0.1em;
 	}
 </style>

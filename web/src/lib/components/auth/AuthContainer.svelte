@@ -36,15 +36,17 @@
 	.auth-container {
 		max-width: 400px;
 		margin: 0 auto;
-		background: var(--color-bg-card);
+		background: rgba(42, 42, 78, 0.4);
+		backdrop-filter: blur(8px);
 		border-radius: var(--radius-lg);
 		overflow: hidden;
-		box-shadow: var(--shadow-lg);
+		box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+		border: 1px solid rgba(196, 163, 90, 0.2);
 	}
 
 	.auth-tabs {
 		display: flex;
-		border-bottom: 1px solid var(--color-bg-hover);
+		border-bottom: 1px solid rgba(196, 163, 90, 0.2);
 	}
 
 	.auth-tab {
@@ -53,23 +55,25 @@
 		border: none;
 		background: transparent;
 		color: var(--color-text-secondary);
+		font-family: 'Cinzel', serif;
 		font-size: 1rem;
-		font-weight: 500;
+		font-weight: 700;
 		cursor: pointer;
-		transition: all var(--transition-fast);
+		transition: all var(--transition-normal);
+		letter-spacing: 0.05em;
 	}
 
 	.auth-tab:hover {
 		color: var(--color-text-primary);
-		background: var(--color-bg-hover);
+		background: rgba(58, 58, 94, 0.4);
 	}
 
 	.auth-tab.active {
 		color: var(--color-accent-gold);
-		background: var(--color-bg-hover);
+		background: rgba(58, 58, 94, 0.6);
 	}
 
 	.auth-form {
-		padding: var(--spacing-lg);
+		padding: var(--spacing-xl);
 	}
 </style>

@@ -63,7 +63,7 @@
 	form {
 		display: flex;
 		flex-direction: column;
-		gap: var(--spacing-md);
+		gap: var(--spacing-lg);
 	}
 
 	.form-group {
@@ -71,17 +71,43 @@
 		flex-direction: column;
 	}
 
-	.form-group input {
+	label {
+		font-family: 'Cinzel', serif;
+		letter-spacing: 0.05em;
+		font-weight: 700;
+		font-size: 0.8rem;
+		margin-bottom: var(--spacing-xs);
+		color: var(--color-accent-gold);
+	}
+
+	input {
 		width: 100%;
+		background: rgba(26, 26, 46, 0.4);
+		border: 1px solid rgba(196, 163, 90, 0.2);
+		font-family: 'Montserrat', sans-serif;
+	}
+
+	input:focus {
+		background: rgba(26, 26, 46, 0.6);
+		border-color: var(--color-accent-gold);
+		box-shadow: 0 0 10px rgba(196, 163, 90, 0.2);
+	}
+
+	.btn {
+		font-family: 'Cinzel', serif;
+		letter-spacing: 0.1em;
+		text-transform: uppercase;
+		margin-top: var(--spacing-sm);
 	}
 
 	.error-message {
 		padding: var(--spacing-sm) var(--spacing-md);
-		background: rgba(248, 113, 113, 0.1);
+		background: rgba(248, 113, 113, 0.15);
 		border: 1px solid var(--color-error);
-		border-radius: var(--radius-md);
+		border-radius: var(--radius-sm);
 		color: var(--color-error);
-		font-size: 0.875rem;
+		font-size: 0.85rem;
+		font-weight: 600;
 	}
 
 	.spinner-small {
