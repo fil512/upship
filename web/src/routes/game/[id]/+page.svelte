@@ -704,7 +704,6 @@
 	$: hangarShipsCount = $myState?.hangarShips || 0;
 	$: repairShipsCount = $myState?.repairShips || 0;
 	$: hasShipsToLaunch = hangarShipsCount > 0;
-	$: routesOwnedCount = ($myState?.routes || []).length;
 	$: launchGasRequired = calculateGasRequired(viewedPlayerState?.blueprint || $myState?.blueprint);
 	$: canAffordHydrogen = ($myState?.gasCubes?.hydrogen || 0) >= launchGasRequired;
 	$: canAffordHelium = ($myState?.gasCubes?.helium || 0) >= launchGasRequired;
@@ -1087,9 +1086,6 @@
 				<FleetPanel
 					hangarShips={hangarShipsCount}
 					repairShips={repairShipsCount}
-					pendingLaunch={pendingLaunch}
-					routesOwned={routesOwnedCount}
-					selectable={isLaunchpadActive}
 				/>
 			</aside>
 
