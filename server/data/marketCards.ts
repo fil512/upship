@@ -52,7 +52,7 @@ export const MARKET_CARDS: MarketCard[] = [
     cost: 4,
     symbol: 'wrench',
     effect: null,
-    reveal: { engineers: 1, research: 2 },
+    reveal: { engineers: 1, research: 2, influence: 1 },
     flavor: 'Senior officer of the engineering department'
   },
   {
@@ -62,7 +62,7 @@ export const MARKET_CARDS: MarketCard[] = [
     cost: 5,
     symbol: 'propeller',
     effect: '+2 Reliability for this launch',
-    reveal: { officers: 1 },
+    reveal: { officers: 1, influence: 1 },
     flavor: 'RFC slang for a daring aviator'
   },
   {
@@ -72,7 +72,7 @@ export const MARKET_CARDS: MarketCard[] = [
     cost: 3,
     symbol: 'propeller',
     effect: '+1 Range for this launch',
-    reveal: { cash: 1, influence: 1 },
+    reveal: { cash: 1, influence: 2 },
     flavor: 'Dead reckoning specialist using course, speed, and drift'
   },
   {
@@ -82,7 +82,7 @@ export const MARKET_CARDS: MarketCard[] = [
     cost: 4,
     symbol: 'propeller',
     effect: 'Ignore Weather hazards this launch',
-    reveal: { engineers: 1, research: 1 },
+    reveal: { engineers: 1, research: 1, influence: 1 },
     flavor: 'Reads the sky better than any bureau telegram'
   },
   {
@@ -92,7 +92,7 @@ export const MARKET_CARDS: MarketCard[] = [
     cost: 3,
     symbol: 'wrench',
     effect: 'Install Gas upgrade: -1 Weight',
-    reveal: { gas: 1, research: 1 },
+    reveal: { gas: 1, research: 1, influence: 1 },
     flavor: 'Specialist in gas cells and lifting calculations'
   },
   {
@@ -112,7 +112,7 @@ export const MARKET_CARDS: MarketCard[] = [
     cost: 4,
     symbol: 'wrench',
     effect: '+2 Reliability for this launch',
-    reveal: { engineers: 1 },
+    reveal: { engineers: 1, influence: 1 },
     flavor: 'Official inspector ensuring airworthiness'
   },
   {
@@ -132,7 +132,7 @@ export const MARKET_CARDS: MarketCard[] = [
     cost: 3,
     symbol: 'wrench',
     effect: 'Install Structure upgrade: +1 Lift',
-    reveal: { research: 1 },
+    reveal: { research: 1, influence: 1 },
     flavor: 'Expert in the lightweight alloy that makes rigids possible'
   },
   {
@@ -204,7 +204,7 @@ export const MARKET_CARDS: MarketCard[] = [
     cost: 3,
     symbol: 'coin',
     effect: 'Loan gives 35 instead of 30',
-    reveal: { influence: 2 },
+    reveal: { influence: 3 },
     flavor: 'Capital from abroad, no questions asked'
   },
   {
@@ -214,7 +214,7 @@ export const MARKET_CARDS: MarketCard[] = [
     cost: 3,
     symbol: 'coin',
     effect: 'Gain 1 Insurance policy',
-    reveal: { influence: 2 },
+    reveal: { influence: 3 },
     flavor: 'Underwriter from the famous London exchange'
   },
   {
@@ -224,7 +224,7 @@ export const MARKET_CARDS: MarketCard[] = [
     cost: 2,
     symbol: 'propeller',
     effect: 'Go first in turn order next round',
-    reveal: { influence: 2 },
+    reveal: { influence: 3 },
     flavor: 'Knows which forms to file and when'
   },
   {
@@ -234,7 +234,7 @@ export const MARKET_CARDS: MarketCard[] = [
     cost: 2,
     symbol: 'coin',
     effect: '-1 per crew recruited this action',
-    reveal: { influence: 1, officers: 1 },
+    reveal: { influence: 2, officers: 1 },
     flavor: 'Voice of the working men on the factory floor'
   },
   {
@@ -244,7 +244,7 @@ export const MARKET_CARDS: MarketCard[] = [
     cost: 3,
     symbol: 'propeller',
     effect: 'Claim route even if tied',
-    reveal: { influence: 2 },
+    reveal: { influence: 3 },
     flavor: "His Majesty's collector of duties and tariffs"
   },
 
@@ -276,7 +276,7 @@ export const MARKET_CARDS: MarketCard[] = [
     cost: 2,
     symbol: 'propeller',
     effect: '+1 Research this round',
-    reveal: { influence: 1, research: 1 },
+    reveal: { influence: 2, research: 1 },
     flavor: 'Tireless experimenter in applied sciences'
   },
   {
@@ -286,7 +286,7 @@ export const MARKET_CARDS: MarketCard[] = [
     cost: 3,
     symbol: 'propeller',
     effect: 'Look at top 3 R&D tiles; reorder them',
-    reveal: { research: 2 },
+    reveal: { research: 2, influence: 1 },
     flavor: 'Repository of accumulated aeronautical knowledge'
   },
   {
@@ -296,7 +296,7 @@ export const MARKET_CARDS: MarketCard[] = [
     cost: 4,
     symbol: 'propeller',
     effect: 'Acquire Tech another player owns (pay double)',
-    reveal: { research: 1, cash: 1, influence: 1 },
+    reveal: { research: 1, cash: 1, influence: 2 },
     flavor: "Brings expertise from Europe's leading programs"
   },
 
@@ -308,7 +308,7 @@ export const MARKET_CARDS: MarketCard[] = [
     cost: 6,
     symbol: 'wrench',
     effect: 'Install 1 Upgrade ignoring Tech requirement',
-    reveal: { engineers: 1, influence: 2, research: 1 },
+    reveal: { engineers: 1, influence: 3, research: 1 },
     flavor: 'Patrons of exploration and scientific discovery'
   },
   {
@@ -318,7 +318,7 @@ export const MARKET_CARDS: MarketCard[] = [
     cost: 5,
     symbol: 'propeller',
     effect: 'Gain 8; Combat missions: +2 Income',
-    reveal: { officers: 1, cash: 1 },
+    reveal: { officers: 1, cash: 1, influence: 1 },
     flavor: "Survivor of the Kaiser's 'contemptible little army'"
   },
   {
@@ -338,7 +338,7 @@ export const MARKET_CARDS: MarketCard[] = [
     cost: 4,
     symbol: 'coin',
     effect: 'Recruit 1 Officer free',
-    reveal: { influence: 2, officers: 1 },
+    reveal: { influence: 3, officers: 1 },
     flavor: 'Gentlemen aviators and aerial enthusiasts'
   },
   {
@@ -348,7 +348,7 @@ export const MARKET_CARDS: MarketCard[] = [
     cost: 4,
     symbol: 'coin',
     effect: 'Recruit 1 Engineer at -1',
-    reveal: { influence: 1, engineers: 1 },
+    reveal: { influence: 2, engineers: 1 },
     flavor: 'Brotherhood of skilled craftsmen and artificers'
   }
 ];
@@ -365,7 +365,7 @@ export const RESERVE_CARD: MarketCard = {
   cost: 2,
   symbol: 'any',
   effect: null,
-  reveal: { influence: 2 },
+  reveal: { influence: 3 },
   flavor: 'Veteran balloonist and lighter-than-air pioneer'
 };
 
