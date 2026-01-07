@@ -202,11 +202,11 @@ interface StarterCard {
 
 // Create starter deck of 10 cards (Section 11.3)
 // Distribution: 3 Wrench, 3 Coin, 3 Propeller, 1 Any
-// Total 9 Influence (avg 0.9/card): 30% zeros, 50% ones, 20% twos (matches Dune Imperium)
+// Total 14 Influence (avg 1.4/card): balanced for ~1.1 market cards/player/round purchasing power
 function createStarterDeck(): Card[] {
   return [
     // 1 Any card
-    { id: 'starter_1', name: 'Apprentice', symbol: 'any', reveal: { influence: 1 }, effect: null },
+    { id: 'starter_1', name: 'Apprentice', symbol: 'any', reveal: { influence: 2 }, effect: null },
     // 3 Wrench cards
     { id: 'starter_2', name: 'Mechanic', symbol: 'wrench', reveal: { cash: 1, influence: 1 }, effect: null },
     { id: 'starter_3', name: 'Draftsman', symbol: 'wrench', reveal: { influence: 1, research: 1 }, effect: 'Draw 1 card' },
@@ -218,7 +218,7 @@ function createStarterDeck(): Card[] {
     // 3 Propeller cards
     { id: 'starter_8', name: 'Researcher', symbol: 'propeller', reveal: { research: 2, influence: 1 }, effect: '-£1 per Research' },
     { id: 'starter_9', name: 'Helmsman', symbol: 'propeller', reveal: { officers: 1, influence: 1 }, effect: '+1 ship stat' },
-    { id: 'starter_10', name: 'Navigator', symbol: 'propeller', reveal: { influence: 1 }, effect: 'Look at top Hazard' }
+    { id: 'starter_10', name: 'Navigator', symbol: 'propeller', reveal: { influence: 2 }, effect: 'Look at top Hazard' }
   ] as Card[];
 }
 

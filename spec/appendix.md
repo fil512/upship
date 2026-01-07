@@ -729,23 +729,23 @@ The Reserve Card is always available for purchase, separate from the Market Row.
 
 | Name | Cost | Symbol | Agent Effect | Reveal | Flavor |
 |------|------|--------|--------------|--------|--------|
-| The Aeronaut | 2 | Any | None | 2 Influence | *Veteran balloonist and lighter-than-air pioneer* |
+| The Aeronaut | 2 | Any | None | 3 Influence | *Veteran balloonist and lighter-than-air pioneer* |
 
-**Design Note:** The Reserve Card prevents market stagnation by ensuring players always have an affordable purchase option. At cost 2, it's accessible early game; at reveal 2, it builds purchasing power for later rounds.
+**Design Note:** The Reserve Card prevents market stagnation by ensuring players always have an affordable purchase option. At cost 2, it's accessible early game; at reveal 3, it builds purchasing power for later rounds.
 
 ## Technical Personnel (10 Agent Cards)
 
 | Name | Cost | Symbol | Agent Effect | Reveal | Flavor |
 |------|------|--------|--------------|--------|--------|
-| Chief Engineer | 4 | Wrench | — | 1 Engineer | *Senior officer of the engineering department* |
-| Kite Jockey | 5 | Propeller | +2 Reliability for this launch | 1 Officer | *RFC slang for a daring aviator* |
-| Navigator | 3 | Propeller | +1 Range for this launch | 1 £, 1 Influence | *Dead reckoning specialist using course, speed, and drift* |
-| The Weatherman | 4 | Propeller | Ignore Weather hazards this launch | 1 Engineer | *Reads the sky better than any bureau telegram* |
-| Gasbag Man | 3 | Wrench | Install Gas Tech Tile: -1 Weight | 1 Gas | *Specialist in gas cells and lifting calculations* |
+| Chief Engineer | 4 | Wrench | — | 1 Engineer, 2 Research, 1 Influence | *Senior officer of the engineering department* |
+| Kite Jockey | 5 | Propeller | +2 Reliability for this launch | 1 Officer, 1 Influence | *RFC slang for a daring aviator* |
+| Navigator | 3 | Propeller | +1 Range for this launch | 1 £, 2 Influence | *Dead reckoning specialist using course, speed, and drift* |
+| The Weatherman | 4 | Propeller | Ignore Weather hazards this launch | 1 Engineer, 1 Research, 1 Influence | *Reads the sky better than any bureau telegram* |
+| Gasbag Man | 3 | Wrench | Install Gas Tech Tile: -1 Weight | 1 Gas, 1 Research, 1 Influence | *Specialist in gas cells and lifting calculations* |
 | Engine Room Mechanic | 3 | Wrench | Install Propulsion Tech Tile: -1 Weight | 1 £, 1 Research, 1 Influence | *Machinist assigned to the engine gondolas* |
-| The Scrutineer | 4 | Wrench | +2 Reliability for this launch | 1 Engineer | *Official inspector ensuring airworthiness* |
+| The Scrutineer | 4 | Wrench | +2 Reliability for this launch | 1 Engineer, 1 Influence | *Official inspector ensuring airworthiness* |
 | Rigger Chief | 2 | Wrench | -£2 Hull Cost | 2 £, 1 Influence | *Commands the ground handling crew* |
-| Duralumin Man | 3 | Wrench | Install Frame Tech Tile: +1 Lift | 1 Research | *Expert in the lightweight alloy that makes rigids possible* |
+| Duralumin Man | 3 | Wrench | Install Frame Tech Tile: +1 Lift | 1 Research, 1 Influence | *Expert in the lightweight alloy that makes rigids possible* |
 | Blaugas Handler | 3 | Wrench | -£2 Lifting Gas cost | 1 Gas, 1 £, 1 Influence | *Manages the special fuel gas carried in the hull* |
 
 ## Political/Financial Personnel (10 Agent Cards)
@@ -757,31 +757,31 @@ The Reserve Card is always available for purchase, separate from the Market Row.
 | The Mandarin | 5 | Propeller | Take 2 Ministry actions | 2 Influence, 1 £ | *Senior civil servant with considerable influence* |
 | Merchant Prince | 4 | Propeller | +£2 Income from this route | 3 Influence | *Controls lucrative trade routes across continents* |
 | Fleet Street Baron | 4 | Any | No action effect | 2 Influence, 2 £ | *The newspapers dance to his tune* |
-| The Moneybags | 3 | Coin | Loan gives £35 instead of £30 | 2 Influence | *Capital from abroad, no questions asked* |
-| Lloyd's Man | 3 | Coin | Gain 1 Insurance policy | 2 Influence | *Underwriter from the famous London exchange* |
-| The Pen-Pusher | 2 | Propeller | Go first in turn order next round | 2 Influence | *Knows which forms to file and when* |
-| Shop Steward | 2 | Coin | -£1 per crew recruited this action | 1 Influence, 1 Officer | *Voice of the working men on the factory floor* |
-| The Exciseman | 3 | Propeller | Claim route even if tied | 2 Influence | *His Majesty's collector of duties and tariffs* |
+| The Moneybags | 3 | Coin | Loan gives £35 instead of £30 | 3 Influence | *Capital from abroad, no questions asked* |
+| Lloyd's Man | 3 | Coin | Gain 1 Insurance policy | 3 Influence | *Underwriter from the famous London exchange* |
+| The Pen-Pusher | 2 | Propeller | Go first in turn order next round | 3 Influence | *Knows which forms to file and when* |
+| Shop Steward | 2 | Coin | -£1 per crew recruited this action | 2 Influence, 1 Officer | *Voice of the working men on the factory floor* |
+| The Exciseman | 3 | Propeller | Claim route even if tied | 3 Influence | *His Majesty's collector of duties and tariffs* |
 
 ## Research Personnel (5 Agent Cards)
 
 | Name | Cost | Symbol | Agent Effect | Reveal | Flavor |
 |------|------|--------|--------------|--------|--------|
-| The Boffin | 4 | Propeller | -£2 per Technology this round | 2 Research | *Brilliant academic with theoretical insights* |
-| Patent Clerk | 3 | Propeller | -1 to Technology Research cost | 2 Influence | *Knows which ideas are truly novel* |
-| The Lab Coat | 2 | Propeller | +1 Research this round | 1 Influence, 1 Research | *Tireless experimenter in applied sciences* |
-| The Archives | 3 | Propeller | Look at top 3 R&D tiles; reorder them | 2 Research | *Repository of accumulated aeronautical knowledge* |
-| Continental Expert | 4 | Propeller | Acquire Tech another player owns (pay double) | 1 Research, 1 £, 1 Influence | *Brings expertise from Europe's leading programs* |
+| The Boffin | 4 | Propeller | -£2 per Technology this round | 3 Research | *Brilliant academic with theoretical insights* |
+| Patent Clerk | 3 | Propeller | -1 to Technology Research cost | 2 Influence, 1 Research | *Knows which ideas are truly novel* |
+| The Lab Coat | 2 | Propeller | +1 Research this round | 2 Influence, 1 Research | *Tireless experimenter in applied sciences* |
+| The Archives | 3 | Propeller | Look at top 3 R&D tiles; reorder them | 2 Research, 1 Influence | *Repository of accumulated aeronautical knowledge* |
+| Continental Expert | 4 | Propeller | Acquire Tech another player owns (pay double) | 1 Research, 1 £, 2 Influence | *Brings expertise from Europe's leading programs* |
 
 ## Organizations (5 Agent Cards)
 
 | Name | Cost | Symbol | Agent Effect | Reveal | Flavor |
 |------|------|--------|--------------|--------|--------|
-| Royal Geographic Society | 6 | Wrench | Install 1 Tech Tile ignoring Tech requirement | 1 Engineer, 2 Influence | *Patrons of exploration and scientific discovery* |
-| Old Contemptible | 5 | Propeller | Gain £8; Combat missions: +£2 Income | 1 Officer, 1 £ | *Survivor of the Kaiser's 'contemptible little army'* |
+| Royal Geographic Society | 6 | Wrench | Install 1 Tech Tile ignoring Tech requirement | 1 Engineer, 3 Influence, 1 Research | *Patrons of exploration and scientific discovery* |
+| Old Contemptible | 5 | Propeller | Gain £8; Combat missions: +£2 Income | 1 Officer, 1 £, 1 Influence | *Survivor of the Kaiser's 'contemptible little army'* |
 | Cook's Man | 5 | Propeller | +1 Luxury stat for this launch | 3 Influence | *Agent of Thomas Cook & Son, travel pioneers* |
-| Aero Club | 4 | Coin | Recruit 1 Officer free | 2 Influence, 1 Officer | *Gentlemen aviators and aerial enthusiasts* |
-| Engineering Guild | 4 | Coin | Recruit 1 Engineer at -£1 | 1 Influence, 1 Engineer | *Brotherhood of skilled craftsmen and artificers* |
+| Aero Club | 4 | Coin | Recruit 1 Officer free | 3 Influence, 1 Officer | *Gentlemen aviators and aerial enthusiasts* |
+| Engineering Guild | 4 | Coin | Recruit 1 Engineer at -£1 | 2 Influence, 1 Engineer | *Brotherhood of skilled craftsmen and artificers* |
 
 **Market Row Mechanics:** Agent Cards are added to the right side of the row. When Agent Cards are purchased, remaining cards slide left (oldest on left, newest on right). The Academy action can purge the leftmost Agent Card. Refill to 5 Agent Cards at end of each round.
 

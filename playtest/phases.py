@@ -689,26 +689,30 @@ def submit_reveal(player: str, game_id: str, logger: PlaytestLogger, reason: str
 
     # Step 2b: Make tentative market card purchases (uses influence)
     # card_ids contains ALL market cards sorted by priority - we try them in order
-    # and stop when influence runs out or a card is already claimed
+    # Don't break early on "not enough influence" since cheaper cards may still be affordable
     acquired_cards = []
+    consecutive_influence_failures = 0
     if card_ids:
         for card_id in card_ids:
             try:
                 card_result = client.buy_market_card_tentative(player, game_id, card_id)
                 if card_result.success:
                     acquired_cards.append(card_id)
-                    # Successfully purchased a card - continue to try more if we have influence
+                    consecutive_influence_failures = 0  # Reset on success
                 else:
                     error_msg = (card_result.error or '').lower()
-                    # Stop trying if we're out of influence
                     if 'not enough influence' in error_msg or 'insufficient influence' in error_msg:
-                        break
+                        consecutive_influence_failures += 1
+                        # Only break after 3+ consecutive influence failures (tried enough options)
+                        if consecutive_influence_failures >= 3:
+                            break
                     # Card already claimed or other error - try next card
-                    # (Don't log every failure to avoid spam)
             except Exception as e:
                 error_str = str(e).lower()
                 if 'not enough influence' in error_str or 'insufficient influence' in error_str:
-                    break
+                    consecutive_influence_failures += 1
+                    if consecutive_influence_failures >= 3:
+                        break
                 # Other errors - continue to next card
 
     # Step 3: Send END_TURN to finalize acquisitions and advance to next placer

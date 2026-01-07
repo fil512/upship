@@ -750,24 +750,24 @@ Distribution: 3 Wrench, 3 Coin, 3 Propeller, 1 Any.
 
 | Card | Symbol | Agent Effect | Reveal |
 |------|--------|--------------|--------|
-| Apprentice | Any | None | 1 Influence |
+| Apprentice | Any | None | 2 Influence |
 | Mechanic | Wrench | None | 1 £, 1 Influence |
-| Draftsman | Wrench | Draw 1 card | 1 Influence |
-| Rigger | Wrench | −£2 ship build cost | 1 Research |
+| Draftsman | Wrench | Draw 1 card | 1 Influence, 1 Research |
+| Rigger | Wrench | −£2 ship build cost | 1 Research, 1 Influence |
 | Purser | Coin | Gain £2 | 2 Influence |
 | Clerk | Coin | Gain £1 | 1 £, 1 Influence |
 | Investor | Coin | None | 2 Influence |
-| Researcher | Propeller | −£1 per Research | 1 Research |
-| Helmsman | Propeller | +1 ship stat this launch | 1 Officer |
-| Navigator | Propeller | Look at top Hazard card | 1 Influence |
+| Researcher | Propeller | −£1 per Research | 2 Research, 1 Influence |
+| Helmsman | Propeller | +1 ship stat this launch | 1 Officer, 1 Influence |
+| Navigator | Propeller | Look at top Hazard card | 2 Influence |
 
-**Starting Deck Influence:** Total 9 Influence (average 0.9/card). Distribution: 30% give 0, 50% give 1, 20% give 2.
+**Starting Deck Influence:** Total 14 Influence (average 1.4/card). Distribution: 60% give 1, 40% give 2.
 
 ## 11.4 Market Deck
 
 Purchase cards from the Market Row using Influence when you Reveal.
 
-**Reserve Card:** The Aeronaut is always available beside the Market Row, separate from the 5 displayed cards. It never runs out, costs 2 Influence, and provides 2 Influence when revealed.
+**Reserve Card:** The Aeronaut is always available beside the Market Row, separate from the 5 displayed cards. It never runs out, costs 2 Influence, and provides 3 Influence when revealed.
 
 **Categories:**
 - **Technical Support:** Engineering bonuses
