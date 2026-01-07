@@ -1,5 +1,12 @@
 <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-  <!-- Blueprint: Grid -->
-  <path d="M21 21H3V3h18v18zM5 5v14h14V5H5z" fill="#9ca3af" opacity="0.3"/>
-  <path d="M9 3v18M15 3v18M3 9h18M3 15h18" stroke="#9ca3af" stroke-width="1"/>
+  <!-- Blueprint: Airship outline being designed -->
+  <!-- Airship envelope outline (dashed to suggest design) -->
+  <ellipse cx="12" cy="11" rx="11" ry="6" fill="none" stroke="#60a5fa" stroke-width="1.5" stroke-dasharray="3 2"/>
+  <!-- Tail fins outline -->
+  <path d="M2 11L0 8v6l2-3z" fill="none" stroke="#60a5fa" stroke-width="1.5" stroke-dasharray="2 1"/>
+  <!-- Gondola outline -->
+  <rect x="7" y="18" width="10" height="3" rx="0.5" fill="none" stroke="#60a5fa" stroke-width="1.5" stroke-dasharray="3 2"/>
+  <!-- Support lines -->
+  <line x1="10" y1="17" x2="10" y2="16" stroke="#60a5fa" stroke-width="1" stroke-dasharray="1 1"/>
+  <line x1="14" y1="17" x2="14" y2="16" stroke="#60a5fa" stroke-width="1" stroke-dasharray="1 1"/>
 </svg>

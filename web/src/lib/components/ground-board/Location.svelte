@@ -14,6 +14,9 @@
 	export let canPlace: boolean = false;
 	export let hullCost: number | undefined = undefined;
 	export let heliumPrice: number | undefined = undefined;
+	export let age: number = 1;
+	export let engineerIncome: number = 1;
+	export let officerIncome: number = 1;
 
 	// Tooltip descriptions based on game rules (Section 6)
 	const LOCATION_DESCRIPTIONS: Record<string, string> = {
@@ -50,7 +53,7 @@
 	> = {
 		research_institute: {
 			costs: [{ resourceBadge: [{ type: 'cash', value: 4 }] }],
-			benefits: [{ icon: 'research' }]
+			benefits: [{ icon: 'arrow_up', icon2: 'research' }]
 		},
 		blueprint_design: {
 			costs: [],
@@ -82,7 +85,7 @@
 		},
 		government_liaison: {
 			costs: [{ resourceBadge: [{ type: 'officers', value: 1 }, { type: 'officers', value: 3 }], separator: '-' }],
-			benefits: [{ icon: 'cash' }]
+			benefits: [{ icon: 'arrow_up', icon2: 'income' }]
 		},
 		ministry: {
 			costs: [],
@@ -99,6 +102,18 @@
 		weather_bureau: {
 			costs: [{ resourceBadge: [{ type: 'cash', value: 2 }] }],
 			benefits: [{ icon: 'eye', icon2: 'hazard' }]
+		},
+		personnel_office: {
+			costs: [],
+			benefits: [{ icon: 'officers' }]
+		},
+		engineering_depot: {
+			costs: [],
+			benefits: [{ icon: 'engineers' }]
+		},
+		treasury: {
+			costs: [],
+			benefits: [{ icon: 'cash' }]
 		}
 	};
 
@@ -156,16 +171,21 @@
 			<Icon name={symbol as SymbolIconName} size={16} color="var(--symbol-color)" />
 		</div>
 		{#if id === 'gas_depot' && heliumPrice !== undefined}
-			<!-- Gas Depot: show H:1 and He:X prices -->
-			<div class="cost-item gas-prices">
-				<div class="gas-price-row">
-					<Icon name="hydrogen" size={12} />
-					<span class="gas-price-value">1</span>
+			<!-- Gas Depot: show £1 (hydrogen) / £X (helium) -->
+			<div class="cost-item resource-cost">
+				<ResourceBadge type="cash" value={1} size={14} />
+				<span class="cost-separator">/</span>
+				<ResourceBadge type="cash" value={heliumPrice} size={14} />
+			</div>
+		{:else if id === 'launchpad' || id === 'launchpad_2'}
+			<!-- Launchpad: show dynamic officer cost based on age -->
+			<div class="cost-item launchpad-cost">
+				<div class="officer-icons">
+					{#each Array(age) as _, i (i)}
+						<Icon name="officers" size={12} />
+					{/each}
 				</div>
-				<div class="gas-price-row">
-					<Icon name="helium" size={12} />
-					<span class="gas-price-value">{heliumPrice}</span>
-				</div>
+				<Icon name="gas" size={12} />
 			</div>
 		{:else}
 			{#each locationData.costs as cost, i (i)}
@@ -199,7 +219,42 @@
 			<span class="name">{name}</span>
 		</div>
 
-		<div class="location-content">
+		<div class="location-content" class:occupied={isOccupied}>
+			<!-- Benefits always shown on the left -->
+			<div class="location-benefit">
+				{#each locationData.benefits as benefit, i (i)}
+					<div class="benefit-item">
+						{#if hasIconWithArrow(benefit)}
+							<Icon name={benefit.icon} size={18} color="var(--color-text-primary)" />
+							<ResourceBadge type={benefit.resourceBadge.type} value={benefit.resourceBadge.count} size={16} />
+						{:else if hasBenefitResourceBadge(benefit)}
+							<ResourceBadge type={benefit.resourceBadge.type} value={benefit.resourceBadge.count} size={16} />
+							{#if benefit.separator}
+								<span class="benefit-separator">/</span>
+							{/if}
+							{#if benefit.icon2Badge}
+								<ResourceBadge type={benefit.icon2Badge.type} value={benefit.icon2Badge.count} size={16} />
+							{/if}
+						{:else if id === 'engineering_depot'}
+							<span class="income-amount">+{engineerIncome}</span>
+							<Icon name={benefit.icon} size={24} color="var(--color-text-primary)" />
+						{:else if id === 'personnel_office'}
+							<span class="income-amount">+{officerIncome}</span>
+							<Icon name={benefit.icon} size={24} color="var(--color-text-primary)" />
+						{:else}
+							<Icon name={benefit.icon} size={24} color="var(--color-text-primary)" />
+							{#if benefit.icon2}
+								{#if benefit.separator}
+									<span class="benefit-separator">/</span>
+								{/if}
+								<Icon name={benefit.icon2} size={24} color="var(--color-text-primary)" />
+							{/if}
+						{/if}
+					</div>
+				{/each}
+			</div>
+
+			<!-- Pawn on the right when occupied, or hint when available -->
 			{#if isOccupied && placement}
 				<div class="agent-marker">
 					<div
@@ -211,33 +266,6 @@
 				</div>
 			{:else if canPlace}
 				<div class="place-hint">Click to place</div>
-			{:else}
-				<div class="location-benefit">
-					{#each locationData.benefits as benefit, i (i)}
-						<div class="benefit-item">
-							{#if hasIconWithArrow(benefit)}
-								<Icon name={benefit.icon} size={18} color="var(--color-text-primary)" />
-								<ResourceBadge type={benefit.resourceBadge.type} value={benefit.resourceBadge.count} size={16} />
-							{:else if hasBenefitResourceBadge(benefit)}
-								<ResourceBadge type={benefit.resourceBadge.type} value={benefit.resourceBadge.count} size={16} />
-								{#if benefit.separator}
-									<span class="benefit-separator">/</span>
-								{/if}
-								{#if benefit.icon2Badge}
-									<ResourceBadge type={benefit.icon2Badge.type} value={benefit.icon2Badge.count} size={16} />
-								{/if}
-							{:else}
-								<Icon name={benefit.icon} size={24} color="var(--color-text-primary)" />
-								{#if benefit.icon2}
-									{#if benefit.separator}
-										<span class="benefit-separator">/</span>
-									{/if}
-									<Icon name={benefit.icon2} size={20} color="var(--color-text-primary)" />
-								{/if}
-							{/if}
-						</div>
-					{/each}
-				</div>
 			{/if}
 		</div>
 	</div>
@@ -345,6 +373,20 @@
 		color: var(--color-text-primary);
 	}
 
+	.launchpad-cost {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 4px;
+		padding: 4px;
+	}
+
+	.officer-icons {
+		display: flex;
+		flex-direction: row;
+		gap: 1px;
+	}
+
 	.symbol-cost {
 		border-bottom: 1px solid var(--symbol-color);
 		padding-bottom: 4px;
@@ -378,7 +420,11 @@
 		flex: 1;
 		display: flex;
 		align-items: center;
-		justify-content: center;
+		justify-content: flex-start;
+	}
+
+	.location-content.occupied {
+		justify-content: space-between;
 	}
 
 	.location-benefit {
@@ -391,6 +437,12 @@
 		display: flex;
 		align-items: center;
 		gap: var(--spacing-xs);
+	}
+
+	.income-amount {
+		font-size: 1rem;
+		font-weight: 700;
+		color: #4caf50;
 	}
 
 	.benefit-separator {
