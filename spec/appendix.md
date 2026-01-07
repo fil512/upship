@@ -265,6 +265,16 @@ Minimum £0. Technologies cushion the transition; routes cost £1 each when wipe
 
 Technology tiles are acquired from the R&D Board using Research. Each tile shows: Research Cost, Track (color), Age, £ Value, VP Value (if any), and which Tech Tile it unlocks.
 
+## Reserve Tech Card (Always Available)
+
+The Reserve Tech Card is always available for acquisition, separate from the R&D Board. Like the Aeronaut agent card, it provides a reliable option that never runs out.
+
+| Name | Cost | Track | £ | VP | Unlocks |
+|------|------|-------|---|----|---------|
+| Helium Handling | 5 | Gas Systems | 2 | — | Helium Gas Cell |
+
+**Design Note:** Helium Handling is essential for safe launches in Age III (immunity to Fire hazards). Making it always available ensures players aren't locked out of a critical technology by bad draw luck, while the high cost (5 Research) keeps it a meaningful investment.
+
 ## Propulsion Track (11 tiles)
 
 | Age | Name | Cost | £ | VP | Unlocks |
@@ -313,14 +323,13 @@ Fabric technologies unlock outer covering and gas cell material upgrades.
 | III | Gelatinized Latex | 4 | 2 | — | Synthetic Envelope |
 | III | Composite Covering | 5 | 2 | 1 | Advanced Fabric |
 
-## Gas Systems Track (11 tiles)
+## Gas Systems Track (10 tiles)
 
 | Age | Name | Cost | £ | VP | Unlocks |
 |-----|------|------|---|----|---------|
 | I | Improved Valving | 1 | 1 | — | Pressure Control |
 | I | Manual Ballonets | 1 | 1 | — | Altitude Ballonets |
 | II | Multiple Gas Cells | 3 | 1 | — | Compartmented Gas |
-| II | Helium Handling | 4 | 2 | — | Helium Gas Cell |
 | II | Blaugas Fuel System | 3 | 2 | 2 | Blaugas Tank |
 | II | Automatic Valves | 4 | 2 | 1 | Smart Valving |
 | III | Pressure Altitude System | 5 | 3 | 1 | High-Ceiling Gas |
@@ -328,6 +337,8 @@ Fabric technologies unlock outer covering and gas cell material upgrades.
 | III | Emergency Venting | 4 | 2 | 2 | Rapid Descent System |
 | III | Gas Recovery | 5 | 2 | 2 | Reclamation System |
 | III | Water Recovery System | 5 | 2 | 1 | Exhaust Condensers |
+
+*Note: Helium Handling is not in the Technology Bag—it is always available as the Reserve Tech Card.*
 
 ## Payload Track (14 tiles)
 
@@ -348,11 +359,11 @@ Fabric technologies unlock outer covering and gas cell material upgrades.
 | III | Sleeping Quarters | 4 | 2 | 1 | Private Berths |
 | III | Smoking Room | 5 | 2 | 3 | Pressurized Lounge |
 
-**54 Unique Technology Tiles** (Propulsion 11, Frame 10, Fabric 8, Gas Systems 11, Payload 14)
+**53 Unique Technology Tiles** (Propulsion 11, Frame 10, Fabric 8, Gas Systems 10, Payload 14) + 1 Reserve Tech Card (Helium Handling)
 
 **Tiles by Age:**
 - Age I: 12 tiles (3 Propulsion, 2 Frame, 2 Fabric, 2 Gas, 3 Payload)
-- Age II: 23 tiles (4 Propulsion, 5 Frame, 4 Fabric, 4 Gas, 6 Payload)
+- Age II: 22 tiles (4 Propulsion, 5 Frame, 4 Fabric, 3 Gas, 6 Payload) — *Helium Handling is always available, not in bag*
 - Age III: 19 tiles (4 Propulsion, 3 Frame, 2 Fabric, 5 Gas, 5 Payload)
 
 **Player Scaling (§3.1):** The game includes (N−1) copies of each tile where N = number of players. Faction starting technologies are removed from the bag (one copy per player who starts with that tech).

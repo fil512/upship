@@ -99,11 +99,11 @@ When the marker reaches an Age threshold, that Age ends after the current round.
    - Remove copies of faction starting technologies equal to the number of players who have them.
    - *Example: If Germany and USA both start with Duralumin Girders, remove 2 copies from the bag.*
    - Shuffle all Age I tiles together to form the Technology Bag.
-4. Place the **R&D Board** and draw 5 Technology tiles from the Age I bag to fill it.
+4. Place the **R&D Board** and draw 5 Technology tiles from the Age I bag to fill it. Place **Helium Handling** beside the R&D Board as the always-available Reserve Tech Card.
 5. Organize the **Tech Tile Supply** by type.
 6. Set the **Progress Track** marker to 0.
 7. Set up **Officer** and **Engineer** token supplies.
-8. Shuffle the **Market Deck** and deal 5 cards face-up to form the Market Row.
+8. Shuffle the **Market Deck** and deal 5 cards face-up to form the Market Row. Place **The Aeronaut** beside the Market Row as the always-available Reserve Card.
 9. Set the **Helium Market Track** to £2.
 
 ## 3.2 Player Setup
@@ -288,9 +288,9 @@ The player with the **First Player** pawn goes first.
 
 | Symbol | Locations |
 |--------|-----------|
-| **Wrench** | Blueprint Design, Construction Hall, Gas Depot, Technical Institute |
-| **Coin** | Research Institute, Flight School, Government Liaison, Insurance Bureau |
-| **Propeller** | Launchpad, Launchpad 2, Ministry, Weather Bureau |
+| **Wrench** | Blueprint Design, Construction Hall, Gas Depot, Technical Institute, Engineering Depot |
+| **Coin** | Treasury, Research Institute, Flight School, Government Liaison, Insurance Bureau |
+| **Propeller** | Launchpad, Launchpad 2, Ministry, Weather Bureau, Personnel Office |
 | **Any** | Can visit any location |
 
 ### Earning Your Third Agent
@@ -430,7 +430,7 @@ See **Section 8: Launching Ships** for the complete procedure.
 
 **Effect:** Look at the top card of your Hazard Deck. Either leave it on top or discard it.
 
-## 6.12 Personnel Office (Coin)
+## 6.12 Personnel Office (Propeller)
 
 **Action:** Recruit trained officers.
 
@@ -580,6 +580,8 @@ Technologies represent patents and manufacturing capability. Acquire them from t
 ### The R&D Board
 
 Draw tiles to fill the board to 5 after each player's Reveal turn (same as Market Row).
+
+**Reserve Tech Card:** Helium Handling is always available beside the R&D Board, separate from the 5 displayed tiles. It never runs out and costs 5 Research to acquire.
 
 At each Age Transition, new Age tiles are **added** to the bag—all previous Ages remain available.
 
@@ -763,7 +765,9 @@ Distribution: 3 Wrench, 3 Coin, 3 Propeller, 1 Any.
 
 ## 11.4 Market Deck
 
-Purchase cards from the Market Row using Influence when you Reveal:
+Purchase cards from the Market Row using Influence when you Reveal.
+
+**Reserve Card:** The Aeronaut is always available beside the Market Row, separate from the 5 displayed cards. It never runs out, costs 2 Influence, and provides 2 Influence when revealed.
 
 **Categories:**
 - **Technical Support:** Engineering bonuses
@@ -1045,9 +1049,9 @@ When Catastrophic Explosion occurs during a Luxury Launch in Age III using Hydro
 
 | Symbol | Locations |
 |--------|-----------|
-| Wrench | Blueprint Design, Construction Hall, Gas Depot, Technical Institute |
-| Coin | Research Institute, Flight School, Government Liaison, Insurance Bureau |
-| Propeller | Launchpad, Launchpad 2, Ministry, Weather Bureau |
+| Wrench | Blueprint Design, Construction Hall, Gas Depot, Technical Institute, Engineering Depot |
+| Coin | Treasury, Research Institute, Flight School, Government Liaison, Insurance Bureau |
+| Propeller | Launchpad, Launchpad 2, Ministry, Weather Bureau, Personnel Office |
 
 ## Scoring Summary
 
