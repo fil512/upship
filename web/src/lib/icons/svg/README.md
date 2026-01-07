@@ -16,9 +16,9 @@ Icons marked "Player color" use `currentColor` and are colored based on the owni
 
 | Faction | Fill Color | Border Color |
 |---------|------------|--------------|
-| Germany | #1a1a1a (Black) | #525252 |
+| Germany | #dc2626 (Red) | #f87171 |
 | Britain | #1e40af (Royal Blue) | #3b82f6 |
-| USA | #dc2626 (Red) | #f87171 |
+| USA | #ffffff (White) | #e5e5e5 |
 | Italy | #16a34a (Green) | #4ade80 |
 
 ## Icon Reference

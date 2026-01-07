@@ -500,15 +500,15 @@
 	}
 
 	.faction-germany {
-		--btn-color: #cc0000;
+		--btn-color: #dc2626; /* Red */
 	}
 	.faction-britain {
-		--btn-color: #4a7fc1;
+		--btn-color: #4a7fc1; /* Blue */
 	}
 	.faction-usa {
-		--btn-color: #5588bb;
+		--btn-color: #ffffff; /* White */
 	}
 	.faction-italy {
-		--btn-color: #00b050;
+		--btn-color: #00b050; /* Green */
 	}
 </style>

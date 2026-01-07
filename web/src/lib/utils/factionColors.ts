@@ -2,16 +2,16 @@
 // Based on historical/traditional colors for these nations
 
 export const FACTION_COLORS: Record<string, string> = {
-	germany: '#1a1a1a', // Black (German Empire)
+	germany: '#dc2626', // Red
 	britain: '#1e40af', // Royal Blue
-	usa: '#dc2626', // Red
+	usa: '#ffffff', // White
 	italy: '#16a34a' // Green
 };
 
 export const FACTION_BORDER_COLORS: Record<string, string> = {
-	germany: '#525252', // Lighter for contrast
+	germany: '#f87171', // Lighter red for contrast
 	britain: '#3b82f6',
-	usa: '#f87171',
+	usa: '#e5e5e5', // Light gray for contrast
 	italy: '#4ade80'
 };
 

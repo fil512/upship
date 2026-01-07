@@ -24,10 +24,10 @@
 	};
 
 	const factionColors: Record<string, string> = {
-		germany: '#dc2626',
-		britain: '#2563eb',
-		usa: '#16a34a',
-		italy: '#ca8a04'
+		germany: '#dc2626', // Red
+		britain: '#2563eb', // Blue
+		usa: '#ffffff', // White
+		italy: '#16a34a' // Green
 	};
 
 	function formatDate(dateString: string): string {

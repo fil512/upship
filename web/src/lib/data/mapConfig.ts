@@ -35,10 +35,10 @@ export const SHIP_SIZE = {
 
 // Faction colors (matches CSS variables)
 export const FACTION_COLORS: Record<string, string> = {
-  germany: '#cc0000',
-  britain: '#003399',
-  usa: '#336699',
-  italy: '#009246'
+  germany: '#dc2626', // Red
+  britain: '#003399', // Blue
+  usa: '#ffffff', // White
+  italy: '#009246' // Green
 };
 
 // Faction home bases

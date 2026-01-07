@@ -144,18 +144,18 @@
   }
 
   .legend-item.germany::before {
-    background: #cc0000;
+    background: #dc2626; /* Red */
   }
 
   .legend-item.britain::before {
-    background: #003399;
+    background: #003399; /* Blue */
   }
 
   .legend-item.usa::before {
-    background: #336699;
+    background: #ffffff; /* White */
   }
 
   .legend-item.italy::before {
-    background: #009246;
+    background: #009246; /* Green */
   }
 </style>

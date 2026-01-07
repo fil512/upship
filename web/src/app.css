@@ -27,10 +27,10 @@
 	--color-propeller: #2dd4bf;
 
 	/* Faction colors */
-	--color-germany: #cc0000;
-	--color-britain: #003399;
-	--color-usa: #336699;
-	--color-italy: #009246;
+	--color-germany: #dc2626; /* Red */
+	--color-britain: #003399; /* Blue */
+	--color-usa: #ffffff; /* White */
+	--color-italy: #009246; /* Green */
 
 	/* Spacing */
 	--spacing-xs: 0.25rem;

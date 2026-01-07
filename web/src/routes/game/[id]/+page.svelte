@@ -1713,10 +1713,10 @@
 		text-transform: capitalize;
 	}
 
-	.faction-badge.germany { background: var(--color-faction-germany, #2d2d2d); color: white; }
-	.faction-badge.britain { background: var(--color-faction-britain, #1a365d); color: white; }
-	.faction-badge.usa { background: var(--color-faction-usa, #2f4f4f); color: white; }
-	.faction-badge.italy { background: var(--color-faction-italy, #5c4033); color: white; }
+	.faction-badge.germany { background: var(--color-faction-germany, #dc2626); color: white; } /* Red */
+	.faction-badge.britain { background: var(--color-faction-britain, #1a365d); color: white; } /* Blue */
+	.faction-badge.usa { background: var(--color-faction-usa, #ffffff); color: #1a1a2e; border: 1px solid #ccc; } /* White with dark text */
+	.faction-badge.italy { background: var(--color-faction-italy, #16a34a); color: white; } /* Green */
 
 	.faction-pending {
 		font-size: 0.75rem;
