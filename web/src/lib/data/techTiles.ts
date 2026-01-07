@@ -34,6 +34,168 @@ export const SLOT_TYPE_LABELS: Record<string, string> = {
 };
 
 export const TECH_TILES: Record<string, TechTile> = {
+  // === FACTION STARTER TILES ===
+  // These are pre-installed on faction blueprints at game start
+
+  // Germany starters
+  zeppelin_frame: {
+    id: 'zeppelin_frame',
+    name: 'Zeppelin Frame',
+    type: 'frame',
+    slotType: 'frameSlots',
+    requiredCard: 'zeppelin_girders',
+    weight: 3,
+    hullCost: 1,
+    stats: { gas_socket: 1 },
+    special: null,
+    age: 1
+  },
+  goldbeater_envelope: {
+    id: 'goldbeater_envelope',
+    name: "Goldbeater's Envelope",
+    type: 'fabric',
+    slotType: 'fabricSlots',
+    requiredCard: 'goldbeater_skin',
+    weight: 0,
+    hullCost: 1,
+    stats: {},
+    special: 'best_gas_tightness',
+    age: 1
+  },
+  maybach_hl: {
+    id: 'maybach_hl',
+    name: 'Maybach HL Engine',
+    type: 'drive',
+    slotType: 'driveSlots',
+    requiredCard: 'maybach_engine',
+    weight: 2,
+    stats: { speed: 1 },
+    special: null,
+    age: 1
+  },
+
+  // Britain starters
+  wire_braced_frame: {
+    id: 'wire_braced_frame',
+    name: 'Wire-Braced Frame',
+    type: 'frame',
+    slotType: 'frameSlots',
+    requiredCard: 'wire_bracing',
+    weight: 2,
+    hullCost: 1,
+    stats: { gas_socket: 1 },
+    special: null,
+    age: 1
+  },
+  doped_canvas_envelope: {
+    id: 'doped_canvas_envelope',
+    name: 'Doped Canvas Envelope',
+    type: 'fabric',
+    slotType: 'fabricSlots',
+    requiredCard: 'doped_canvas',
+    weight: 1,
+    hullCost: 1,
+    stats: {},
+    special: null,
+    age: 1
+  },
+  standard_engine: {
+    id: 'standard_engine',
+    name: 'Standard Engine',
+    type: 'drive',
+    slotType: 'driveSlots',
+    requiredCard: 'standard_propeller',
+    weight: 2,
+    stats: {},
+    special: null,
+    age: 1
+  },
+  passenger_cabin: {
+    id: 'passenger_cabin',
+    name: 'Passenger Cabin',
+    type: 'component',
+    slotType: 'componentSlots',
+    requiredCard: 'passenger_accommodation',
+    weight: 0,
+    stats: { income: 1 },
+    special: null,
+    age: 1
+  },
+
+  // USA starters
+  rigid_duralumin_frame: {
+    id: 'rigid_duralumin_frame',
+    name: 'Rigid Duralumin Frame',
+    type: 'frame',
+    slotType: 'frameSlots',
+    requiredCard: 'duralumin_girders',
+    weight: 3,
+    hullCost: 2,
+    stats: { ceiling: 1, gas_socket: 1 },
+    special: null,
+    age: 1
+  },
+  latex_envelope: {
+    id: 'latex_envelope',
+    name: 'Latex Envelope',
+    type: 'fabric',
+    slotType: 'fabricSlots',
+    requiredCard: 'gelatinized_latex',
+    weight: 1,
+    hullCost: 1,
+    stats: { reliability: 1 },
+    special: null,
+    age: 1
+  },
+  reliable_engine: {
+    id: 'reliable_engine',
+    name: 'Reliable Engine',
+    type: 'drive',
+    slotType: 'driveSlots',
+    requiredCard: 'basic_powerplant',
+    weight: 1,
+    stats: {},
+    special: null,
+    age: 1
+  },
+
+  // Italy starters
+  semi_rigid_frame: {
+    id: 'semi_rigid_frame',
+    name: 'Semi-Rigid Frame',
+    type: 'frame',
+    slotType: 'frameSlots',
+    requiredCard: 'internal_keel',
+    weight: 2,
+    hullCost: 1,
+    stats: { gas_socket: 1 },
+    special: 'semi_rigid',
+    age: 1
+  },
+  rubberized_envelope: {
+    id: 'rubberized_envelope',
+    name: 'Rubberized Envelope',
+    type: 'fabric',
+    slotType: 'fabricSlots',
+    requiredCard: 'rubberized_cotton',
+    weight: 1,
+    hullCost: 0,
+    stats: {},
+    special: null,
+    age: 1
+  },
+  expedition_engine: {
+    id: 'expedition_engine',
+    name: 'Expedition Engine',
+    type: 'drive',
+    slotType: 'driveSlots',
+    requiredCard: 'expedition_propeller',
+    weight: 2,
+    stats: { range: 1 },
+    special: null,
+    age: 1
+  },
+
   // === PROPULSION/DRIVE UPGRADES ===
   basic_engine: {
     id: 'basic_engine',
