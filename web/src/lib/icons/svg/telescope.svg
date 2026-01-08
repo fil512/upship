@@ -1,15 +1,26 @@
 <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-  <!-- Gold Telescope - angled, wide end down -->
-  <!-- Main tube - angled from top-left to bottom-right -->
-  <path d="M6 4 L8 4 L18 18 L20 20 L17 21 L15 19 L5 5 Z" fill="#d4af37"/>
-  <!-- Wide lens end (bottom-right) -->
-  <ellipse cx="17.5" cy="19.5" rx="3.5" ry="2.5" fill="#c9a227" transform="rotate(45 17.5 19.5)"/>
-  <ellipse cx="18" cy="20" rx="2" ry="1.3" fill="#87ceeb" opacity="0.7" transform="rotate(45 18 20)"/>
-  <!-- Narrow eyepiece (top-left) -->
-  <ellipse cx="6" cy="4" rx="1.5" ry="1" fill="#b8960c" transform="rotate(45 6 4)"/>
-  <!-- Brass bands -->
-  <rect x="9" y="8" width="2" height="1.2" rx="0.3" fill="#e5c158" transform="rotate(45 10 8.6)"/>
-  <rect x="13" y="13" width="2" height="1.2" rx="0.3" fill="#e5c158" transform="rotate(45 14 13.6)"/>
-  <!-- Highlight along tube -->
-  <path d="M7 5 L14 12" stroke="#e8d48a" stroke-width="1" opacity="0.5"/>
+  <!-- Brass Spyglass - angled like reference image -->
+  <g transform="rotate(-35 12 12)">
+    <!-- Wide lens housing (bronze/brown) -->
+    <ellipse cx="5" cy="12" rx="2" ry="4" fill="#8b6914"/>
+    <rect x="5" y="8" width="4" height="8" fill="#9a7b2c"/>
+    <!-- Blue glass lens -->
+    <ellipse cx="5" cy="12" rx="1.5" ry="3" fill="#5ba3d0"/>
+    <ellipse cx="4.5" cy="11" rx="0.8" ry="1.5" fill="#8ecae6" opacity="0.6"/>
+    <!-- Gold ring at lens -->
+    <ellipse cx="7" cy="12" rx="0.6" ry="3.8" fill="#e5c158"/>
+    <!-- Main gold tube section 1 -->
+    <rect x="7" y="9" width="5" height="6" fill="#d4af37"/>
+    <!-- Gold ring -->
+    <ellipse cx="12" cy="12" rx="0.5" ry="2.8" fill="#e5c158"/>
+    <!-- Main gold tube section 2 (narrower) -->
+    <rect x="12" y="9.5" width="5" height="5" fill="#d4af37"/>
+    <!-- Gold ring -->
+    <ellipse cx="17" cy="12" rx="0.4" ry="2.3" fill="#e5c158"/>
+    <!-- Eyepiece (narrow end) -->
+    <rect x="17" y="10" width="3" height="4" fill="#c9a227"/>
+    <ellipse cx="20" cy="12" rx="0.8" ry="1.8" fill="#b8960c"/>
+    <!-- Highlight on tube -->
+    <rect x="8" y="9.2" width="8" height="1" rx="0.5" fill="#f0dc82" opacity="0.5"/>
+  </g>
 </svg>
