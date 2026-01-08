@@ -63,7 +63,15 @@ type LaunchPlayerState = PlayerState & {
   fireProtectionUsedThisAge?: boolean;
   hazardDeck?: HazardCard[];
   hazardDiscardPile?: HazardCard[];
-  launchBonuses?: Record<string, unknown>;
+  launchBonuses?: {
+    range?: number;
+    luxury?: number;
+    speed?: number;
+    reliability?: number;
+    ignoreWeather?: boolean;
+    routeIncomeBonus?: number;
+    combatIncomeBonus?: number;
+  };
   pendingLaunch?: ExtendedPendingLaunch;
 };
 
@@ -440,6 +448,14 @@ function processLaunchShip(state: GameState, playerId: string, data: LaunchShipD
   // Calculate ship stats to validate against route requirements
   const stats = calculateBlueprintStats(playerState.blueprint, state.age);
 
+  // Apply launch bonuses from card effects (Navigator +1 Range, Cook's Man +1 Luxury, Helmsman +1 Speed)
+  const launchBonuses = (playerState as LaunchPlayerState).launchBonuses;
+  if (launchBonuses) {
+    if (launchBonuses.range) stats.range += launchBonuses.range;
+    if (launchBonuses.luxury) stats.luxury = (stats.luxury || 0) + launchBonuses.luxury;
+    if (launchBonuses.speed) stats.speed += launchBonuses.speed;
+  }
+
   // GAP-048/GAP-079: Check if player has Sparrowhawk Hangar UPGRADE installed for bypassing one requirement
   const canBypassRequirement = hasSparrowhawkHangar(playerState);
   const validBypassTypes = ['range', 'speed', 'ceiling', 'luxury'];
@@ -460,8 +476,8 @@ function processLaunchShip(state: GameState, playerId: string, data: LaunchShipD
   }
 
   // Validate Speed meets route speed requirement (unless bypassed)
-  const routeSpeed = route.speed || 1;
-  if (bypassRequirement !== 'speed' && stats.speed < routeSpeed) {
+  const routeSpeed = route.speed || 0;
+  if (bypassRequirement !== 'speed' && routeSpeed > 0 && stats.speed < routeSpeed) {
     throw new GameRuleError(`Ship Speed (${stats.speed}) does not meet route speed requirement (${routeSpeed})`);
   }
 
@@ -643,10 +659,16 @@ function processLaunchShip(state: GameState, playerId: string, data: LaunchShipD
   const relevantStat = stats[challengeType] || 0;
   const difficulty = hazard.difficulty || 0;
 
-  // Calculate engineers needed to pass (for non-fire, non-auto-pass hazards)
+  // Calculate engineers needed to pass
   let engineersNeeded = 0;
-  if (!hazard.autoPass && hazard.category !== 'fire') {
-    engineersNeeded = Math.max(0, difficulty - relevantStat);
+  if (!hazard.autoPass) {
+    if (hazard.category === 'fire' && hazard.engineerCost) {
+      // Fire hazards use engineerCost (Engine Fire = 1, Gas Cell Rupture = 2)
+      engineersNeeded = hazard.engineerCost;
+    } else if (hazard.category !== 'fire') {
+      // Non-fire hazards: engineers make up the difference between stat and difficulty
+      engineersNeeded = Math.max(0, difficulty - relevantStat);
+    }
   }
 
   // Check for auto-pass conditions

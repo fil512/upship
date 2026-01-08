@@ -91,7 +91,7 @@ export const MARKET_CARDS: MarketCard[] = [
     category: 'technical',
     cost: 3,
     symbol: 'wrench',
-    effect: 'Install Gas upgrade: -1 Weight',
+    effect: 'Gain 1 Hydrogen',
     reveal: { gas: 1, research: 1, influence: 1 },
     flavor: 'Specialist in gas cells and lifting calculations'
   },
@@ -101,7 +101,7 @@ export const MARKET_CARDS: MarketCard[] = [
     category: 'technical',
     cost: 3,
     symbol: 'wrench',
-    effect: 'Install Propulsion upgrade: -1 Weight',
+    effect: 'If used to build: ignore base cost',
     reveal: { cash: 1, research: 1, influence: 1 },
     flavor: 'Machinist assigned to the engine gondolas'
   },
@@ -131,7 +131,7 @@ export const MARKET_CARDS: MarketCard[] = [
     category: 'technical',
     cost: 3,
     symbol: 'wrench',
-    effect: 'Install Structure upgrade: +1 Lift',
+    effect: 'If used to build: ignore frame cost',
     reveal: { research: 1, influence: 1 },
     flavor: 'Expert in the lightweight alloy that makes rigids possible'
   },
@@ -243,7 +243,7 @@ export const MARKET_CARDS: MarketCard[] = [
     category: 'political',
     cost: 3,
     symbol: 'propeller',
-    effect: 'Claim route even if tied',
+    effect: null,
     reveal: { influence: 3 },
     flavor: "His Majesty's collector of duties and tariffs"
   },
@@ -285,7 +285,7 @@ export const MARKET_CARDS: MarketCard[] = [
     category: 'research',
     cost: 3,
     symbol: 'propeller',
-    effect: 'Look at top 3 R&D tiles; reorder them',
+    effect: 'Remove previous age tech cards from R&D',
     reveal: { research: 2, influence: 1 },
     flavor: 'Repository of accumulated aeronautical knowledge'
   },
@@ -295,7 +295,7 @@ export const MARKET_CARDS: MarketCard[] = [
     category: 'research',
     cost: 4,
     symbol: 'propeller',
-    effect: 'Acquire Tech another player owns (pay double)',
+    effect: '+2 Reveal Research this round',
     reveal: { research: 1, cash: 1, influence: 2 },
     flavor: "Brings expertise from Europe's leading programs"
   },
@@ -307,7 +307,7 @@ export const MARKET_CARDS: MarketCard[] = [
     category: 'organizations',
     cost: 6,
     symbol: 'wrench',
-    effect: 'Install 1 Upgrade ignoring Tech requirement',
+    effect: 'Gain tech card costing 3 or less',
     reveal: { engineers: 1, influence: 3, research: 1 },
     flavor: 'Patrons of exploration and scientific discovery'
   },
@@ -347,7 +347,7 @@ export const MARKET_CARDS: MarketCard[] = [
     category: 'organizations',
     cost: 4,
     symbol: 'coin',
-    effect: 'Recruit 1 Engineer at -1',
+    effect: 'Gain 1 Engineer',
     reveal: { influence: 2, engineers: 1 },
     flavor: 'Brotherhood of skilled craftsmen and artificers'
   }

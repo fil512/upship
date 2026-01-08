@@ -24,6 +24,7 @@ type ExtendedBlueprint = Blueprint & {
 // Extended player state with building-related properties
 type BuildPlayerState = PlayerState & {
   buildDiscount?: number;
+  ignoreFrameCost?: boolean;
   blueprint: ExtendedBlueprint;
 };
 
@@ -80,10 +81,12 @@ function processBuildShip(state: GameState, playerId: string, data: BuildShipDat
   // Calculate hull cost from installed upgrades
   let hullCost = 2; // Base cost
 
-  // Add Frame hull costs
-  for (const upgradeId of playerState.blueprint.frameSlots || []) {
-    if (upgradeId && UPGRADES[upgradeId]?.hullCost) {
-      hullCost += UPGRADES[upgradeId].hullCost;
+  // Add Frame hull costs (unless Duralumin Man ignoreFrameCost is active)
+  if (!playerState.ignoreFrameCost) {
+    for (const upgradeId of playerState.blueprint.frameSlots || []) {
+      if (upgradeId && UPGRADES[upgradeId]?.hullCost) {
+        hullCost += UPGRADES[upgradeId].hullCost;
+      }
     }
   }
 
@@ -114,14 +117,22 @@ function processBuildShip(state: GameState, playerId: string, data: BuildShipDat
   // Add ships to hangar (ships are just counters now)
   playerState.hangarShips = (playerState.hangarShips || 0) + count;
 
-  // Clear buildDiscount after use (it's a per-action bonus)
+  // Capture bonus info before clearing
+  const hadFrameCostWaiver = playerState.ignoreFrameCost;
+
+  // Clear build bonuses after use (they're per-action bonuses)
   playerState.buildDiscount = 0;
+  playerState.ignoreFrameCost = false;
+
+  // Build log message with applicable discounts
+  const discountParts: string[] = [];
+  if (buildDiscount > 0) discountParts.push(`£${buildDiscount} discount`);
+  if (hadFrameCostWaiver) discountParts.push('frame costs waived');
+  const discountMsg = discountParts.length > 0 ? `, ${discountParts.join(', ')}` : '';
 
   state.log.push({
     timestamp: new Date().toISOString(),
-    message: buildDiscount > 0
-      ? `Built ${count} ship(s) for £${totalCost} (£${effectiveHullCost}/ship, £${buildDiscount} Rigger discount applied)`
-      : `Built ${count} ship(s) for £${totalCost} (£${effectiveHullCost}/ship)`,
+    message: `Built ${count} ship(s) for £${totalCost} (£${effectiveHullCost}/ship${discountMsg})`,
     playerId,
     type: 'action'
   } as LogEntry);

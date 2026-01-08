@@ -217,7 +217,7 @@ function createStarterDeck(): Card[] {
     { id: 'starter_7', name: 'Investor', symbol: 'coin', reveal: { influence: 2 }, effect: null },
     // 3 Propeller cards
     { id: 'starter_8', name: 'Researcher', symbol: 'propeller', reveal: { research: 2, influence: 1 }, effect: '-£1 per Research' },
-    { id: 'starter_9', name: 'Helmsman', symbol: 'propeller', reveal: { officers: 1, influence: 1 }, effect: '+1 ship stat' },
+    { id: 'starter_9', name: 'Helmsman', symbol: 'propeller', reveal: { officers: 1, influence: 1 }, effect: '+1 Speed for this launch' },
     { id: 'starter_10', name: 'Navigator', symbol: 'propeller', reveal: { influence: 2 }, effect: 'Look at top Hazard' }
   ] as Card[];
 }

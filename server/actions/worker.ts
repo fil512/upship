@@ -100,7 +100,7 @@ interface LocationActionOptions {
  * Process Agent Card effects when used for agent placement (Section 8.1)
  * Handles both Starter Deck Agent Cards and Market Agent Cards per Appendix H
  */
-function processCardEffect(state: GameState, playerId: string, card: Card, _locationId: string): CardEffectResult {
+function processCardEffect(state: GameState, playerId: string, card: Card, locationId: string): CardEffectResult {
   const workerState = state as WorkerState;
   const playerState = state.players[playerId] as WorkerPlayerState;
   const effect = card.effect;
@@ -164,9 +164,10 @@ function processCardEffect(state: GameState, playerId: string, card: Card, _loca
       return { success: true, message: 'Gained £2' };
 
     case '+1 ship stat':
-      // Helmsman: Temporary ship stat bonus
-      playerState.launchBonuses!.statBonus = ((playerState.launchBonuses!.statBonus as number) || 0) + 1;
-      return { success: true, message: '+1 ship stat for next launch' };
+    case '+1 Speed for this launch':
+      // Helmsman: +1 Speed for this launch
+      playerState.launchBonuses!.speed = ((playerState.launchBonuses!.speed as number) || 0) + 1;
+      return { success: true, message: '+1 Speed for this launch' };
 
     // === MARKET CARD EFFECTS (GAP-050) ===
 
@@ -187,14 +188,17 @@ function processCardEffect(state: GameState, playerId: string, card: Card, _loca
       return { success: true, message: 'Ignore Weather hazards this launch' };
 
     case 'Install Gas upgrade: -1 Weight':
-      // Gas Engineer: Gas upgrades cost -1 Weight
-      playerState.launchBonuses!.gasWeightReduction = 1;
-      return { success: true, message: 'Gas upgrades -1 Weight' };
+    case 'Gain 1 Hydrogen':
+      // Gasbag Man: Gain 1 Hydrogen immediately
+      playerState.gasCubes.hydrogen = (playerState.gasCubes.hydrogen || 0) + 1;
+      return { success: true, message: 'Gained 1 Hydrogen' };
 
     case 'Install Propulsion upgrade: -1 Weight':
-      // Engine Specialist: Propulsion upgrades cost -1 Weight
-      playerState.launchBonuses!.propulsionWeightReduction = 1;
-      return { success: true, message: 'Propulsion upgrades -1 Weight' };
+    case 'If used to build: ignore base cost':
+      // Engine Room Mechanic: If used to build, ignore base cost (£3)
+      if (!playerState.buildDiscount) playerState.buildDiscount = 0;
+      playerState.buildDiscount += 3; // Base hull cost is £3
+      return { success: true, message: 'Build cost: base hull cost waived' };
 
     case '-2 Hull Cost':
       // Ground Crew Chief: -2 Hull Cost
@@ -203,9 +207,10 @@ function processCardEffect(state: GameState, playerId: string, card: Card, _loca
       return { success: true, message: '-2 Hull Cost' };
 
     case 'Install Structure upgrade: +1 Lift':
-      // Structural Engineer: Structure upgrades give +1 Lift
-      playerState.launchBonuses!.structureLiftBonus = 1;
-      return { success: true, message: 'Structure upgrades +1 Lift' };
+    case 'If used to build: ignore frame cost':
+      // Duralumin Man: If used to build, ignore frame upgrade costs
+      (playerState as WorkerPlayerState & { ignoreFrameCost?: boolean }).ignoreFrameCost = true;
+      return { success: true, message: 'Build cost: frame costs waived' };
 
     case '-2 Lifting Gas cost':
       // Fuel Specialist: -2 Lifting Gas cost
@@ -231,9 +236,22 @@ function processCardEffect(state: GameState, playerId: string, card: Card, _loca
       return { success: true, message: 'Gained 8; +2 Income on combat missions' };
 
     case 'Take 2 Ministry actions':
-      // Government Minister: Take 2 Ministry actions
-      playerState.ministryActionsRemaining = (playerState.ministryActionsRemaining || 0) + 2;
-      return { success: true, message: 'Take 2 Ministry actions' };
+      // The Mandarin: Take 2 Ministry actions (only applies when used at Ministry location)
+      if (locationId === 'ministry') {
+        // Draw 2 extra cards (Ministry normally draws 2, this adds 2 more)
+        for (let i = 0; i < 2; i++) {
+          if (playerState.deck.length === 0 && playerState.discardPile.length > 0) {
+            playerState.deck = shuffleArray([...playerState.discardPile]);
+            playerState.discardPile = [];
+          }
+          if (playerState.deck.length > 0) {
+            const drawn = playerState.deck.pop()!;
+            playerState.hand.push(drawn);
+          }
+        }
+        return { success: true, message: 'The Mandarin: Drew 2 extra cards at Ministry' };
+      }
+      return { success: true, message: 'Take 2 Ministry actions (only at Ministry)' };
 
     case '+2 Income from this route':
       // Shipping Tycoon: +2 Income from this route
@@ -263,9 +281,8 @@ function processCardEffect(state: GameState, playerId: string, card: Card, _loca
       return { success: true, message: '-1 per crew recruited' };
 
     case 'Claim route even if tied':
-      // Customs Official: Claim route even if tied
-      playerState.launchBonuses!.tiebreaker = true;
-      return { success: true, message: 'Claim route even if tied' };
+      // The Exciseman: Effect removed - no implementation needed
+      return { success: true, message: 'No action effect' };
 
     // Research Personnel
     case '-2 per Technology this round':
@@ -286,21 +303,49 @@ function processCardEffect(state: GameState, playerId: string, card: Card, _loca
       return { success: true, message: '+1 Research this round' };
 
     case 'Look at top 3 R&D tiles; reorder them':
-      // Technical Library: Look at top 3 R&D tiles; reorder them
-      // This sets a flag, the actual reordering happens via separate action
-      playerState.canReorderRD = true;
-      return { success: true, message: 'May reorder top 3 R&D tiles' };
+    case 'Remove previous age tech cards from R&D':
+      // The Archives: Remove tech cards from previous ages from R&D board
+      {
+        const workerStateTyped = state as WorkerState & { rndBoard?: Array<{ id: string; age?: number }> };
+        const currentAge = state.age || 1;
+        if (workerStateTyped.rndBoard) {
+          const beforeCount = workerStateTyped.rndBoard.length;
+          workerStateTyped.rndBoard = workerStateTyped.rndBoard.filter(tech =>
+            tech.age === undefined || tech.age >= currentAge
+          );
+          const removedCount = beforeCount - workerStateTyped.rndBoard.length;
+          return { success: true, message: `Removed ${removedCount} previous age tech card(s) from R&D` };
+        }
+        return { success: true, message: 'No R&D board to filter' };
+      }
 
     case 'Acquire Tech another player owns (pay double)':
-      // Foreign Consultant: Acquire Tech from another player (pay double)
-      playerState.canAcquireForeignTech = true;
-      return { success: true, message: 'May acquire Tech from another player (pay double)' };
+    case '+2 Reveal Research this round':
+      // Continental Expert: +2 Research when revealed this round
+      // Add bonus to research immediately (will be collected in reveal phase)
+      playerState.research = (playerState.research || 0) + 2;
+      return { success: true, message: '+2 Research for reveal phase' };
 
     // Organizations
     case 'Install 1 Upgrade ignoring Tech requirement':
-      // Royal Geographic Society: Install 1 Upgrade ignoring Tech requirement
-      playerState.canIgnoreTechRequirement = true;
-      return { success: true, message: 'May install 1 Upgrade ignoring Tech requirement' };
+    case 'Gain tech card costing 3 or less':
+      // Royal Geographic Society: Gain a tech card costing 3 or less from R&D
+      {
+        const workerStateRGS = state as WorkerState & { rndBoard?: Array<{ id: string; cost?: number; name?: string }> };
+        if (workerStateRGS.rndBoard && workerStateRGS.rndBoard.length > 0) {
+          // Find first tech card costing 3 or less
+          const eligibleIndex = workerStateRGS.rndBoard.findIndex(tech => (tech.cost || 0) <= 3);
+          if (eligibleIndex >= 0) {
+            const tech = workerStateRGS.rndBoard.splice(eligibleIndex, 1)[0];
+            // Add to player's tech cards (tech cards are stored as string IDs)
+            if (!playerState.techCards) playerState.techCards = [];
+            (playerState.techCards as string[]).push(tech.id);
+            return { success: true, message: `Gained tech: ${tech.name || tech.id}` };
+          }
+          return { success: true, message: 'No tech cards costing 3 or less available' };
+        }
+        return { success: true, message: 'No R&D board available' };
+      }
 
     case '+1 Luxury stat for this launch':
       // Luxury Travel Agency: +1 Luxury stat for this launch
@@ -313,10 +358,10 @@ function processCardEffect(state: GameState, playerId: string, card: Card, _loca
       return { success: true, message: 'Recruited 1 Officer free' };
 
     case 'Recruit 1 Engineer at -1':
-      // Engineering Guild: Recruit 1 Engineer at -1
-      if (!playerState.engineerRecruitDiscount) playerState.engineerRecruitDiscount = 0;
-      playerState.engineerRecruitDiscount += 1;
-      return { success: true, message: 'Recruit 1 Engineer at -1' };
+    case 'Gain 1 Engineer':
+      // Engineering Guild: Gain 1 Engineer immediately
+      playerState.engineers = (playerState.engineers || 0) + 1;
+      return { success: true, message: 'Gained 1 Engineer' };
 
     default:
       return { success: true, message: `Unknown effect: ${effect}` };

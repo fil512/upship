@@ -69,6 +69,16 @@ type HazardPlayerState = PlayerState & {
   // Ship counters (ships are tokens)
   hangarShips?: number;
   repairShips?: number;
+  // Launch bonuses from card effects
+  launchBonuses?: {
+    ignoreWeather?: boolean;
+    reliability?: number;
+    range?: number;
+    luxury?: number;
+    routeIncomeBonus?: number;
+    combatIncomeBonus?: number;
+    speed?: number;
+  };
 };
 
 interface HazardConditions {
@@ -260,6 +270,12 @@ function processHazardCheck(state: GameState, playerId: string, data: HazardChec
       'Weather Hazard - Auto Pass (Rapid Descent System enables emergency venting)');
   }
 
+  // Check for The Weatherman card bonus: ignoreWeather
+  if (extendedHazard.hazardType === 'weather' && playerState.launchBonuses?.ignoreWeather) {
+    return resolveHazardSuccess(state, playerId, route, hazard,
+      'Weather Hazard - Auto Pass (The Weatherman ignores weather hazards)');
+  }
+
   const hasFireResistantFabric = playerBlueprint?.fabricSlots?.some(
     (fabric: SlotEntry) => fabric === 'fire_resistant_fabric' || (fabric && typeof fabric === 'object' && fabric.id === 'fire_resistant_fabric')
   );
@@ -286,6 +302,15 @@ function processHazardCheck(state: GameState, playerId: string, data: HazardChec
   const challengeType = hazard.challengeType || 'reliability';
   let relevantStat = getRelevantStat(shipStats, challengeType);
   const engineerBonus = Math.min(engineersToSpend, playerState.engineers || 0);
+
+  // Apply card bonuses from Kite Jockey/Scrutineer (+2 Reliability)
+  if (challengeType === 'reliability' && playerState.launchBonuses?.reliability) {
+    relevantStat += playerState.launchBonuses.reliability;
+  }
+  // Apply Helmsman speed bonus (+1 Speed)
+  if (challengeType === 'speed' && playerState.launchBonuses?.speed) {
+    relevantStat += playerState.launchBonuses.speed;
+  }
 
   let weatherPenalty = 0;
   const hasFlexibleFrame = playerBlueprint?.frameSlots?.some(
@@ -506,10 +531,12 @@ function resolveHazardSuccess(state: GameState, playerId: string, route: Extende
     }
 
     const bonusIncome = calculateEquipmentBonus(playerState, mission);
+    // Apply Old Contemptible bonus (+2 Income for combat missions)
+    const combatCardBonus = playerState.launchBonuses?.combatIncomeBonus || 0;
 
     processCompleteMission(state, playerId, {
       ...mission,
-      income: mission.income + bonusIncome
+      income: mission.income + bonusIncome + combatCardBonus
     });
 
     state.log.push({
@@ -567,10 +594,12 @@ function resolveHazardSuccess(state: GameState, playerId: string, route: Extende
       round: state.round
     };
 
-    // Calculate income: route income + ship income bonus from components
+    // Calculate income: route income + ship income bonus from components + card bonuses
     const routeIncome = route.income || 0;
     const shipIncome = shipStats.income || 0;
-    const totalIncome = routeIncome + shipIncome;
+    // Apply Merchant Prince bonus (+2 Income from this route)
+    const cardIncomeBonus = playerState.launchBonuses?.routeIncomeBonus || 0;
+    const totalIncome = routeIncome + shipIncome + cardIncomeBonus;
     playerState.income += totalIncome;
 
     if (CITY_BONUSES) {
@@ -580,9 +609,13 @@ function resolveHazardSuccess(state: GameState, playerId: string, route: Extende
     }
 
     // Log with income bonus if applicable
-    const incomeMessage = shipIncome > 0
-      ? ` Route income: £${routeIncome} + £${shipIncome} ship bonus = £${totalIncome}`
-      : '';
+    let incomeMessage = '';
+    if (shipIncome > 0 || cardIncomeBonus > 0) {
+      const bonusParts: string[] = [];
+      if (shipIncome > 0) bonusParts.push(`£${shipIncome} ship`);
+      if (cardIncomeBonus > 0) bonusParts.push(`£${cardIncomeBonus} card`);
+      incomeMessage = ` Route income: £${routeIncome} + ${bonusParts.join(' + ')} = £${totalIncome}`;
+    }
 
     state.log.push({
       timestamp: new Date().toISOString(),

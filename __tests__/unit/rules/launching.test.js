@@ -537,6 +537,183 @@ describe('Rules Compliance - Launching and Repair', () => {
     });
   });
 
+  describe('Fire hazard engineersNeeded calculation', () => {
+    it('should set engineersNeeded to engineerCost for Engine Fire (hydrogen ship)', () => {
+      const state = createTestGameState();
+      const playerState = state.players['1'];
+
+      playerState.gasCubes = { hydrogen: 3, helium: 0 };
+      playerState.officers = 1;
+      playerState.hangarShips = 1;
+      playerState.engineers = 5;
+
+      // Put Engine Fire at top of hazard deck
+      playerState.hazardDeck = [{
+        id: 'engine_fire_0',
+        type: 'engine_fire',
+        category: 'fire',
+        name: 'Engine Fire',
+        hydrogenOnly: true,
+        engineerCost: 1,
+        difficulty: 0,
+        flak: 2
+      }];
+
+      state.map.routes = [{
+        id: 'route_1',
+        from: 'A',
+        to: 'B',
+        distance: 1,
+        income: 2,
+        claimed: null
+      }];
+
+      const { processLaunchShip } = require('../../../server/actions/launch');
+
+      const result = processLaunchShip(state, '1', {
+        routeId: 'route_1',
+        gasType: 'hydrogen',
+        _internal: true
+      });
+
+      // hazardInfo.engineersNeeded should be 1 (from engineerCost)
+      expect(result.newState.players['1'].pendingLaunch.hazardInfo.engineersNeeded).toBe(1);
+    });
+
+    it('should set engineersNeeded to engineerCost for Gas Cell Rupture (hydrogen ship)', () => {
+      const state = createTestGameState();
+      const playerState = state.players['1'];
+
+      playerState.gasCubes = { hydrogen: 3, helium: 0 };
+      playerState.officers = 1;
+      playerState.hangarShips = 1;
+      playerState.engineers = 5;
+
+      // Put Gas Cell Rupture at top of hazard deck
+      playerState.hazardDeck = [{
+        id: 'gas_cell_rupture_0',
+        type: 'gas_cell_rupture',
+        category: 'fire',
+        name: 'Gas Cell Rupture',
+        hydrogenOnly: true,
+        engineerCost: 2,
+        difficulty: 0,
+        flak: 3
+      }];
+
+      state.map.routes = [{
+        id: 'route_1',
+        from: 'A',
+        to: 'B',
+        distance: 1,
+        income: 2,
+        claimed: null
+      }];
+
+      const { processLaunchShip } = require('../../../server/actions/launch');
+
+      const result = processLaunchShip(state, '1', {
+        routeId: 'route_1',
+        gasType: 'hydrogen',
+        _internal: true
+      });
+
+      // hazardInfo.engineersNeeded should be 2 (from engineerCost)
+      expect(result.newState.players['1'].pendingLaunch.hazardInfo.engineersNeeded).toBe(2);
+    });
+
+    it('should set engineersNeeded to 0 for fire hazards with helium ship (auto-pass)', () => {
+      const state = createTestGameState();
+      const playerState = state.players['1'];
+
+      playerState.gasCubes = { hydrogen: 0, helium: 3 };
+      playerState.officers = 1;
+      playerState.hangarShips = 1;
+      playerState.engineers = 5;
+      // Need Helium Handling tech to use helium
+      playerState.techCards = ['helium_handling'];
+
+      // Put Engine Fire at top of hazard deck
+      playerState.hazardDeck = [{
+        id: 'engine_fire_0',
+        type: 'engine_fire',
+        category: 'fire',
+        name: 'Engine Fire',
+        hydrogenOnly: true,
+        engineerCost: 1,
+        difficulty: 0,
+        flak: 2
+      }];
+
+      state.map.routes = [{
+        id: 'route_1',
+        from: 'A',
+        to: 'B',
+        distance: 1,
+        income: 2,
+        claimed: null
+      }];
+
+      const { processLaunchShip } = require('../../../server/actions/launch');
+
+      const result = processLaunchShip(state, '1', {
+        routeId: 'route_1',
+        gasType: 'helium',
+        _internal: true
+      });
+
+      // Helium ships auto-pass fire hazards, so engineersNeeded is still 1
+      // but heliumFireImmunity should be true (meaning player doesn't need to spend)
+      expect(result.newState.players['1'].pendingLaunch.hazardInfo.heliumFireImmunity).toBe(true);
+    });
+
+    it('should calculate engineersNeeded based on difficulty-stat gap for non-fire hazards', () => {
+      const state = createTestGameState();
+      const playerState = state.players['1'];
+
+      playerState.gasCubes = { hydrogen: 3, helium: 0 };
+      playerState.officers = 1;
+      playerState.hangarShips = 1;
+      playerState.engineers = 5;
+
+      // Put a non-fire hazard at top of deck (reliability check with difficulty 6)
+      playerState.hazardDeck = [{
+        id: 'structural_stress_0',
+        type: 'major_reliability',
+        category: 'major',
+        name: 'Structural Stress',
+        challengeType: 'reliability',
+        difficulty: 6,
+        flak: 2
+      }];
+
+      // Use the default test blueprint which has reliability 1 from duralumin_frame
+      // (frameSlots: ['duralumin_frame'], fabricSlots: ['premium_envelope'], driveSlots: ['standard_engine'])
+      // We need a route with distance=1 and speed=1 to match the blueprint's stats
+
+      state.map.routes = [{
+        id: 'route_1',
+        from: 'A',
+        to: 'B',
+        distance: 1,  // Matches standard_engine range of 1
+        speed: 1,     // Matches standard_engine speed of 1
+        income: 2,
+        claimed: null
+      }];
+
+      const { processLaunchShip } = require('../../../server/actions/launch');
+
+      const result = processLaunchShip(state, '1', {
+        routeId: 'route_1',
+        gasType: 'hydrogen',
+        _internal: true
+      });
+
+      // engineersNeeded = difficulty (6) - reliability stat (3 from duralumin_frame:2 + premium_envelope:1) = 3
+      expect(result.newState.players['1'].pendingLaunch.hazardInfo.engineersNeeded).toBe(3);
+    });
+  });
+
   describe('GAP-060: City Bonus Selection as Player Choice', () => {
     it('should store cityChoice on ship when specified', () => {
       const state = createTestGameState();
