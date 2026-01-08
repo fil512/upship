@@ -26,34 +26,34 @@ export interface CityBonus {
  */
 export const AGE_I_CITIES: Record<string, CityPosition> = {
   // British Isles (left side)
-  'London': { x: 100, y: 200, labelPosition: 'right' },
-  'Dover': { x: 180, y: 280, labelPosition: 'right' },
+  'London': { x: 80, y: 180, labelPosition: 'left' },
+  'Dover': { x: 160, y: 300, labelPosition: 'left' },
 
   // France/Benelux (center-left)
-  'Calais': { x: 260, y: 250, labelPosition: 'top' },
-  'Paris': { x: 200, y: 400, labelPosition: 'right' },
-  'Brussels': { x: 340, y: 280, labelPosition: 'right' },
-  'Amsterdam': { x: 380, y: 160, labelPosition: 'top' },
+  'Calais': { x: 280, y: 280, labelPosition: 'top' },
+  'Paris': { x: 180, y: 440, labelPosition: 'left' },
+  'Brussels': { x: 360, y: 320, labelPosition: 'top' },
+  'Amsterdam': { x: 400, y: 180, labelPosition: 'top' },
 
   // Germany (center)
-  'Cologne': { x: 440, y: 260, labelPosition: 'bottom' },
-  'Hamburg': { x: 520, y: 100, labelPosition: 'bottom' },
-  'Berlin': { x: 700, y: 140, labelPosition: 'right' },
-  'Frankfurt': { x: 540, y: 340, labelPosition: 'right' },
-  'Friedrichshafen': { x: 600, y: 480, labelPosition: 'right' },
+  'Cologne': { x: 480, y: 280, labelPosition: 'right' },
+  'Hamburg': { x: 540, y: 100, labelPosition: 'top' },
+  'Berlin': { x: 740, y: 140, labelPosition: 'right' },
+  'Frankfurt': { x: 560, y: 380, labelPosition: 'right' },
+  'Friedrichshafen': { x: 640, y: 500, labelPosition: 'right' },
 
   // Scandinavia
-  'Copenhagen': { x: 660, y: 60, labelPosition: 'bottom' },
+  'Copenhagen': { x: 680, y: 60, labelPosition: 'right' },
 
   // Central Europe
-  'Zurich': { x: 520, y: 480, labelPosition: 'left' },
-  'Vienna': { x: 900, y: 300, labelPosition: 'left' },
+  'Zurich': { x: 500, y: 520, labelPosition: 'left' },
+  'Vienna': { x: 900, y: 320, labelPosition: 'right' },
 
   // Italy/Mediterranean
-  'Milan': { x: 540, y: 560, labelPosition: 'right' },
-  'Rome': { x: 740, y: 600, labelPosition: 'left' },
-  'Marseille': { x: 320, y: 540, labelPosition: 'right' },
-  'Barcelona': { x: 120, y: 600, labelPosition: 'right' }
+  'Milan': { x: 540, y: 600, labelPosition: 'bottom' },
+  'Rome': { x: 760, y: 620, labelPosition: 'right' },
+  'Marseille': { x: 340, y: 560, labelPosition: 'left' },
+  'Barcelona': { x: 140, y: 620, labelPosition: 'left' }
 };
 
 /**
@@ -63,37 +63,37 @@ export const AGE_I_CITIES: Record<string, CityPosition> = {
  */
 export const AGE_III_CITIES: Record<string, CityPosition> = {
   // North America - West Coast
-  'San Francisco': { x: 60, y: 220, labelPosition: 'right' },
-  'Los Angeles': { x: 80, y: 300, labelPosition: 'right' },
-  'Honolulu': { x: 40, y: 440, labelPosition: 'right' },
+  'San Francisco': { x: 60, y: 180, labelPosition: 'left' },
+  'Los Angeles': { x: 100, y: 280, labelPosition: 'left' },
+  'Honolulu': { x: 40, y: 480, labelPosition: 'left' },
 
   // North America - Central/East
-  'Chicago': { x: 180, y: 200, labelPosition: 'bottom' },
-  'New York': { x: 300, y: 220, labelPosition: 'bottom' },
-  'Lakehurst': { x: 320, y: 280, labelPosition: 'right' },
-  'Miami': { x: 280, y: 400, labelPosition: 'right' },
+  'Chicago': { x: 200, y: 160, labelPosition: 'top' },
+  'New York': { x: 340, y: 180, labelPosition: 'top' },
+  'Lakehurst': { x: 380, y: 260, labelPosition: 'right' },
+  'Miami': { x: 320, y: 380, labelPosition: 'right' },
 
   // Caribbean
-  'Havana': { x: 320, y: 440, labelPosition: 'right' },
+  'Havana': { x: 280, y: 460, labelPosition: 'left' },
 
   // South America
-  'Manaus': { x: 440, y: 520, labelPosition: 'right' },
-  'Recife': { x: 560, y: 500, labelPosition: 'right' },
-  'Rio de Janeiro': { x: 500, y: 600, labelPosition: 'right' },
-  'Buenos Aires': { x: 440, y: 720, labelPosition: 'right' },
-  'Valparaiso': { x: 360, y: 720, labelPosition: 'left' },
+  'Manaus': { x: 420, y: 540, labelPosition: 'left' },
+  'Recife': { x: 580, y: 520, labelPosition: 'right' },
+  'Rio de Janeiro': { x: 520, y: 620, labelPosition: 'bottom' },
+  'Buenos Aires': { x: 460, y: 740, labelPosition: 'left' },
+  'Valparaiso': { x: 360, y: 740, labelPosition: 'left' },
 
   // Europe
-  'London': { x: 820, y: 180, labelPosition: 'left' },
-  'Berlin': { x: 940, y: 160, labelPosition: 'left' },
-  'Frankfurt': { x: 920, y: 240, labelPosition: 'left' },
-  'Friedrichshafen': { x: 940, y: 320, labelPosition: 'left' },
-  'Rome': { x: 980, y: 420, labelPosition: 'left' },
-  'Oslo': { x: 900, y: 80, labelPosition: 'bottom' },
-  'Svalbard': { x: 980, y: 50, labelPosition: 'bottom' },
+  'London': { x: 780, y: 200, labelPosition: 'top' },
+  'Berlin': { x: 920, y: 180, labelPosition: 'top' },
+  'Frankfurt': { x: 880, y: 280, labelPosition: 'left' },
+  'Friedrichshafen': { x: 920, y: 380, labelPosition: 'right' },
+  'Rome': { x: 1000, y: 480, labelPosition: 'right' },
+  'Oslo': { x: 860, y: 80, labelPosition: 'left' },
+  'Svalbard': { x: 980, y: 60, labelPosition: 'right' },
 
   // Africa/Middle East
-  'Cairo': { x: 1080, y: 560, labelPosition: 'left' }
+  'Cairo': { x: 1100, y: 580, labelPosition: 'right' }
 };
 
 /**

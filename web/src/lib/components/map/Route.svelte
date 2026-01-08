@@ -71,21 +71,39 @@
   $: midX = isValid ? (offsetFrom.x + offsetTo.x) / 2 : 0;
   $: midY = isValid ? (offsetFrom.y + offsetTo.y) / 2 : 0;
 
-  // Calculate perpendicular offset for label (beside the line, not on it)
-  $: labelOffset = isValid ? calculateLabelOffset(from, to) : { x: 0, y: 0 };
+  // Calculate angle of the route line in degrees
+  $: lineAngle = isValid ? calculateLineAngle(offsetFrom, offsetTo) : 0;
 
-  function calculateLabelOffset(fromPos: CityPosition, toPos: CityPosition): { x: number; y: number } {
+  function calculateLineAngle(fromPos: { x: number; y: number }, toPos: { x: number; y: number }): number {
+    const dx = toPos.x - fromPos.x;
+    const dy = toPos.y - fromPos.y;
+    let angle = Math.atan2(dy, dx) * (180 / Math.PI);
+
+    // Keep text readable: flip if angle would make text upside down
+    if (angle > 90) angle -= 180;
+    if (angle < -90) angle += 180;
+
+    return angle;
+  }
+
+  // Calculate perpendicular offsets for labels (one on each side of the line)
+  $: labelOffsets = isValid ? calculateLabelOffsets(offsetFrom, offsetTo) : { above: { x: 0, y: 0 }, below: { x: 0, y: 0 } };
+
+  function calculateLabelOffsets(fromPos: { x: number; y: number }, toPos: { x: number; y: number }): { above: { x: number; y: number }; below: { x: number; y: number } } {
     const dx = toPos.x - fromPos.x;
     const dy = toPos.y - fromPos.y;
     const distance = Math.sqrt(dx * dx + dy * dy);
-    if (distance === 0) return { x: 0, y: 0 };
+    if (distance === 0) return { above: { x: 0, y: 0 }, below: { x: 0, y: 0 } };
 
-    // Perpendicular direction (rotate 90 degrees), offset by 28px for larger labels
+    // Perpendicular direction (rotate 90 degrees)
     const perpX = -dy / distance;
     const perpY = dx / distance;
-    const offset = 28;
+    const offset = 12;
 
-    return { x: perpX * offset, y: perpY * offset };
+    return {
+      above: { x: perpX * offset, y: perpY * offset },
+      below: { x: -perpX * offset, y: -perpY * offset }
+    };
   }
 
   // Determine stroke color based on claim status
@@ -159,18 +177,32 @@
       opacity={route.claimed ? 1 : 0.8}
     />
 
-    <!-- Label beside the line (only for unclaimed routes) -->
+    <!-- Labels on opposite sides of the line (only for unclaimed routes) -->
     {#if !route.claimed}
-      <g transform="translate({midX + labelOffset.x}, {midY + labelOffset.y})">
+      <!-- Requirements above the line -->
+      <g transform="translate({midX + labelOffsets.above.x}, {midY + labelOffsets.above.y}) rotate({lineAngle})">
         <text
           class="route-label"
           text-anchor="middle"
           dominant-baseline="central"
-          font-size="13"
+          font-size="12"
           font-weight="600"
+          fill="#94a3b8"
         >
-          <tspan fill="#94a3b8">{requirements}</tspan>
-          <tspan fill="#4ade80"> +£{route.income}</tspan>
+          {requirements}
+        </text>
+      </g>
+      <!-- Income below the line -->
+      <g transform="translate({midX + labelOffsets.below.x}, {midY + labelOffsets.below.y}) rotate({lineAngle})">
+        <text
+          class="route-label"
+          text-anchor="middle"
+          dominant-baseline="central"
+          font-size="12"
+          font-weight="600"
+          fill="#4ade80"
+        >
+          +£{route.income}
         </text>
       </g>
     {/if}
