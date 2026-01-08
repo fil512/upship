@@ -8,6 +8,88 @@
 
 ---
 
+# GAME ANNOUNCEMENTS
+
+*Read these aloud at the indicated times to set the mood. Best delivered in your finest 1920s radio announcer voice!*
+
+## Start of Game — The Dawn of the Airship Age
+
+> *Static crackles... a distant wireless signal grows stronger...*
+>
+> GOOD EVENING, LADIES AND GENTLEMEN! This is your announcer speaking to you LIVE from the magnificent grounds of the International Aeronautical Exhibition! What a STUPENDOUS occasion this is! The year is 1900, and we stand at the very precipice of a NEW AGE OF WONDER!
+>
+> All around me, the great powers of the world have assembled their finest engineers and boldest aviators! Germany's Count von Zeppelin promises to REVOLUTIONIZE transportation! Britain's Royal Airship Works speaks of connecting an Empire upon which the sun NEVER sets! The Americans talk of CONQUERING the very skies themselves! And the Italians—oh, those daring Italians—they say they shall fly where NO MAN has flown before!
+>
+> The race is ON, dear listeners! Who among these industrial titans shall DOMINATE the heavens? Will YOU be the one to build an empire among the clouds? The engines are warming, the gas cells are filling, and the mooring cables strain against the wind!
+>
+> *UP SHIP!*
+
+## Start of Age II — The Great War
+
+> *The wireless crackles with urgency... distant artillery rumbles in the background...*
+>
+> ATTENTION! ATTENTION ALL STATIONS! This is an EMERGENCY broadcast! War has ENGULFED the continent of Europe!
+>
+> The skies that once carried passengers and mail now DARKEN with the silhouettes of military airships! Your peaceful vessels must answer the call of DUTY! Reconnaissance over enemy lines! Bombing runs against fortified positions! Resupply missions to our brave boys in the trenches!
+>
+> But BE WARNED, brave aviators—the enemy has prepared a DEADLY reception! Anti-aircraft batteries line every approach! The infamous FLAK GUNS of the Central Powers have already claimed dozens of our finest ships! Each mission could be your LAST!
+>
+> This is NO LONGER a gentleman's competition! This is WAR! Armor your vessels! Train your crews! The nation that COMMANDS the skies shall command the FUTURE!
+>
+> *May fortune favor the bold! Over and out!*
+
+## Start of Age III — The Golden Age
+
+> *Triumphant orchestral music swells... champagne glasses clink...*
+>
+> MAGNIFICENT NEWS from the world of aviation! The war to end all wars is OVER, and a GLORIOUS new era has begun!
+>
+> Ladies and gentlemen, we stand at the dawn of the GOLDEN AGE OF AIRSHIPS! No longer mere weapons of war, these MAJESTIC LEVIATHANS of the sky now carry passengers in UNPARALLELED LUXURY across the very OCEANS themselves!
+>
+> Picture it, dear listeners! Dining rooms with crystal chandeliers! Observation decks with grand pianos! Sleeping berths more comfortable than the finest hotels! The Atlantic crossing that once took a WEEK by steamship now accomplished in mere DAYS—floating serenely above the waves!
+>
+> New York to London! Rio de Janeiro to Seville! The whole WORLD is connected as never before! But remember—some still choose the DANGEROUS path of hydrogen to save their precious pennies. Will THEY tempt fate one time too many?
+>
+> The future is LIMITLESS! The sky is NOT the limit—it is merely the BEGINNING!
+>
+> *ALL ABOARD for the adventure of a LIFETIME!*
+
+## Game End — The Hindenburg Disaster
+
+> *Frantic static... a reporter's voice breaking with emotion...*
+>
+> Oh... oh, the HUMANITY! Ladies and gentlemen, I... I hardly know how to describe what we have just witnessed at Lakehurst Naval Air Station!
+>
+> The mighty airship—that PROUD symbol of human achievement—has burst into FLAME! In mere SECONDS, decades of progress, of DREAMS, of countless hours of engineering brilliance have been consumed by an INFERNO the likes of which...
+>
+> *voice steadies*
+>
+> This... this is the moment that historians shall mark as the END of an era. The airship—that gentle giant of the skies—has claimed its final victims. The age of the rigid airship is OVER.
+>
+> But let us remember what was accomplished! Continents were CONNECTED! The impossible was made ROUTINE! For one brief, shining moment, humanity SOARED among the clouds in vessels that seemed to defy the very laws of nature!
+>
+> To those who dared to dream of conquering the sky... we salute you. The future now belongs to the AEROPLANE.
+>
+> *This has been a special broadcast. Good night... and farewell to the airship age.*
+
+## Game End — The Rise of Fixed-Wing Aircraft
+
+> *The sound of propeller engines roaring overhead... growing louder and faster...*
+>
+> EXTRA! EXTRA! Ladies and gentlemen, the FUTURE has arrived, and it flies on FIXED WINGS!
+>
+> The magnificent airships that once ruled our skies must now yield to a NEW champion! The AEROPLANE—faster, cheaper, more maneuverable—has proven its superiority in trial after trial! What took an airship DAYS, these sleek metal birds accomplish in mere HOURS!
+>
+> It was a GLORIOUS competition while it lasted, dear listeners! The great airship companies pushed the boundaries of what humanity thought POSSIBLE! Luxury travel across oceans! Cargo routes spanning continents! A GOLDEN AGE of aerial achievement!
+>
+> But progress WAITS for no one! The very innovations our airship pioneers developed—lightweight alloys, navigation systems, weather forecasting—now power a new generation of aircraft that shall carry humanity into an even MORE remarkable future!
+>
+> Let us raise a glass to the dirigible captains, the bold engineers, and the visionary industrialists who dared to build CITIES in the sky! Their legacy shall NEVER be forgotten!
+>
+> *This is your announcer, signing off from the end of one era... and the beginning of another!*
+
+---
+
 # 1. OVERVIEW
 
 In **UP SHIP!**, you are the Director of an Airship Conglomerate representing one of the great powers of the early 20th century: **Germany**, **Britain**, **the United States**, or **Italy**. Over three historical **Ages**, you will research technology, design airship blueprints, and launch fleets into an uncertain sky.
