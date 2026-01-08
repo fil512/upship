@@ -57,6 +57,9 @@ function processEndTurn(state: GameState, playerId: string): ActionResult {
         const pendingTech = playerState.pendingTechAcquisitions || [];
         for (const acquisition of pendingTech) {
           const cardIndex = turnState.rdBoard.findIndex(c => c.id === acquisition.cardId);
+          const reserveTechCard = (state as GameState & { reserveTechCard?: { id: string; name: string } }).reserveTechCard;
+          const isReserveTechCard = cardIndex === -1 && reserveTechCard?.id === acquisition.cardId;
+
           if (cardIndex !== -1) {
             const card = turnState.rdBoard[cardIndex];
             // Add to player's tech cards
@@ -77,6 +80,28 @@ function processEndTurn(state: GameState, playerId: string): ActionResult {
             state.log.push({
               timestamp: new Date().toISOString(),
               message: `Acquired ${card.name} for ${acquisition.cost} Research. Progress: ${techState.progressTrack}`,
+              playerId,
+              type: 'action',
+              round: state.round,
+              age: state.age
+            } as LogEntry);
+          } else if (isReserveTechCard) {
+            // Reserve tech card: add to player's tech cards (card stays always available)
+            playerState.techCards = playerState.techCards || [];
+            playerState.techCards.push(reserveTechCard.id);
+            // Clear claim (reserve tech card can be acquired by multiple players)
+            if (turnState.techCardsClaimed) {
+              delete turnState.techCardsClaimed[acquisition.cardId];
+            }
+
+            // Increment progress track (needed for age transitions)
+            const techState = state as GameState & { progressTrack?: number };
+            techState.progressTrack = (techState.progressTrack || 0) + 1;
+
+            state.log = state.log || [];
+            state.log.push({
+              timestamp: new Date().toISOString(),
+              message: `Acquired ${reserveTechCard.name} (Reserve) for ${acquisition.cost} Research. Progress: ${techState.progressTrack}`,
               playerId,
               type: 'action',
               round: state.round,
@@ -244,6 +269,9 @@ function processEndTurn(state: GameState, playerId: string): ActionResult {
       const pendingTech = playerState.pendingTechAcquisitions || [];
       for (const acquisition of pendingTech) {
         const cardIndex = turnState.rdBoard.findIndex(c => c.id === acquisition.cardId);
+        const reserveTechCard = (state as GameState & { reserveTechCard?: { id: string; name: string } }).reserveTechCard;
+        const isReserveTechCard = cardIndex === -1 && reserveTechCard?.id === acquisition.cardId;
+
         if (cardIndex !== -1) {
           const card = turnState.rdBoard[cardIndex];
           // Add to player's tech cards
@@ -264,6 +292,28 @@ function processEndTurn(state: GameState, playerId: string): ActionResult {
           state.log.push({
             timestamp: new Date().toISOString(),
             message: `Acquired ${card.name} for ${acquisition.cost} Research. Progress: ${techState.progressTrack}`,
+            playerId,
+            type: 'action',
+            round: state.round,
+            age: state.age
+          } as LogEntry);
+        } else if (isReserveTechCard) {
+          // Reserve tech card: add to player's tech cards (card stays always available)
+          playerState.techCards = playerState.techCards || [];
+          playerState.techCards.push(reserveTechCard.id);
+          // Clear claim (reserve tech card can be acquired by multiple players)
+          if (turnState.techCardsClaimed) {
+            delete turnState.techCardsClaimed[acquisition.cardId];
+          }
+
+          // Increment progress track (needed for age transitions)
+          const techState = state as GameState & { progressTrack?: number };
+          techState.progressTrack = (techState.progressTrack || 0) + 1;
+
+          state.log = state.log || [];
+          state.log.push({
+            timestamp: new Date().toISOString(),
+            message: `Acquired ${reserveTechCard.name} (Reserve) for ${acquisition.cost} Research. Progress: ${techState.progressTrack}`,
             playerId,
             type: 'action',
             round: state.round,
