@@ -250,18 +250,32 @@ Blueprints have four slot types for installing **Tech Tiles**:
 
 | Slot Type | Accepts | Purpose |
 |-----------|---------|---------|
-| **Frame** | Frame tiles | Structural skeleton |
+| **Frame** | Frame tiles | Structural skeleton, provides Gas Sockets for Lift |
 | **Fabric** | Fabric tiles | Outer covering materials |
-| **Drive** | Propulsion tiles | Engines and propellers |
+| **Drive** | Drive tiles | Engines and propellers (Speed, Range) |
 | **Payload** | Payload tiles | Cargo, passengers, equipment |
 
-### Blueprint Stats by Age
+### Blueprint Slots by Age
 
-| Age | Baseline Stats | Slot Configuration |
-|-----|----------------|-------------------|
-| I | Speed 1, Range 1, Ceiling 0, Reliability 0 | 1 Frame, 1 Fabric, 1 Drive, 1 Payload |
-| II | Speed 2, Range 2, Ceiling 1, Reliability 1 | 1 Frame, 1 Fabric, 2 Drive, 2 Payload |
-| III | Speed 3, Range 3, Ceiling 2, Reliability 2 | 2 Frame, 2 Fabric, 2 Drive, 3 Payload |
+| Age | Frame | Fabric | Drive | Payload |
+|-----|-------|--------|-------|---------|
+| I   | 1     | 1      | 1     | 1       |
+| II  | 1     | 1      | 2     | 2       |
+| III | 2     | 2      | 2     | 3       |
+
+### Ship Stats
+
+Ships have **no baseline stats**—all stats come entirely from installed Tech Tiles:
+
+| Stat | Source | Purpose |
+|------|--------|---------|
+| **Speed** | Drive tiles | Meet route speed requirements |
+| **Range** | Drive tiles, some Fabric/Gas tiles | Meet route distance requirements |
+| **Ceiling** | Frame tiles, Gas tiles | Meet route altitude requirements |
+| **Reliability** | Frame tiles, Fabric tiles | Pass hazard checks |
+| **Lift** | Frame tiles (Gas Sockets) | Each Gas Socket provides +5 Lift per gas cube |
+| **Weight** | All tiles | Must not exceed Lift |
+| **Luxury** | Payload tiles | Required for Age III luxury routes |
 
 **Required Slots:** Fill all Frame and Fabric slots before launching. Empty structural slots mean the ship is not airworthy.
 
@@ -911,9 +925,14 @@ Each nation has unique advantages and constraints.
 **Archetype:** The High-Stakes Engineers
 
 **Starting Technologies:**
-- *Duralumin Framework*
-- *Goldbeater's Skin*
-- *Blaugas Fuel System* — Neutral buoyancy fuel: +1 Range, and pay £2 when launching to keep gas cubes after mission
+- *Zeppelin Girders* (Frame)
+- *Goldbeater's Skin* (Fabric)
+- *Maybach Engine* (Drive)
+- *Blaugas Fuel System* (Gas) — Pay £2 when launching to keep gas cubes after mission
+
+**Pre-installed Tech Tiles:** Zeppelin Frame, Premium Envelope, Maybach HL Engine
+
+**Starting Stats:** Speed 2, Range 2, Ceiling 0, Reliability 1
 
 **The Flaw — Helium Embargo:** Germany cannot acquire Helium Handling. Every Luxury Launch in Age III risks the Hindenburg Disaster.
 
@@ -923,14 +942,20 @@ Each nation has unique advantages and constraints.
 
 **Archetype:** The Imperial Bureaucrats
 
-**Starting Advantage:** Pre-printed Dining Saloon on Age I Blueprint (early Luxury stat and Income).
-
 **Starting Technologies:**
-- *Wire Bracing*
-- *Doped Canvas*
-- *Imperial Mooring System* (British Territories count as Home Base)
+- *Wire Bracing* (Frame)
+- *Doped Canvas* (Fabric)
+- *Standard Propeller* (Drive)
+- *Passenger Accommodation* (Payload)
+- *Imperial Mooring System* (Special) — British Territories count as Home Base
 
-**The Flaw** — Red Tape: At each Age Transition, reduce your Income Track by 1.
+**Pre-installed Tech Tiles:** Tensioned Frame, Doped Covering, Standard Engine, Passenger Cabin
+
+**Starting Stats:** Speed 2, Range 1, Ceiling 1, Reliability 0
+
+**Starting Advantage:** Pre-installed Passenger Cabin provides early Income bonus (+£1 per route).
+
+**The Flaw — Red Tape:** At each Age Transition, reduce your Income Track by 1.
 
 **Home Base (Age II):** Cardington
 
@@ -938,17 +963,22 @@ Each nation has unique advantages and constraints.
 
 **Archetype:** The Military Industrialists
 
-**Starting Advantage — Helium Monopoly:** Starts with Helium Handling.
-
 **Starting Technologies:**
-- *Duralumin Framework*
-- *Gelatinized Latex*
-- *Trapeze Fighter System* (ignore one route requirement per launch)
-- *Helium Handling*
+- *Duralumin Girders* (Frame)
+- *Gelatinized Latex* (Fabric)
+- *Basic Powerplant* (Drive)
+- *Trapeze Fighter System* (Special) — Ignore one route requirement per launch
+- *Helium Handling* (Gas)
+
+**Pre-installed Tech Tiles:** Duralumin Frame, Latex Envelope, Reliable Engine
+
+**Starting Stats:** Speed 1, Range 1, Ceiling 1, Reliability 3
+
+**Starting Advantage — Helium Monopoly:** Starts with Helium Handling and 2 Helium cubes. USA purchases do not advance the Helium market track.
 
 **Synergy — Water Recovery:** The Age III *Water Recovery System* technology pairs well with USA's helium doctrine, reducing helium costs significantly.
 
-**Flaw:** Late to enter war. Cannot acquire a combat mission until all other players have one.
+**The Flaw — Slow Starter:** Speed 1 limits early route options (only 5 of 17 Age I routes accessible without upgrades).
 
 **Home Base (Age II):** Paimboeuf, France
 **Home Base (Age III):** Lakehurst, New Jersey
@@ -958,15 +988,31 @@ Each nation has unique advantages and constraints.
 **Archetype:** The Agile Explorers
 
 **Starting Technologies:**
-- *Internal Keel*
-- *Rubberized Cotton*
-- *Articulated Keel Design* — Semi-rigid construction: +1 Ceiling, but -1 to Reliability checks during Weather hazards
+- *Internal Keel* (Frame)
+- *Rubberized Cotton* (Fabric)
+- *Expedition Propeller* (Drive)
+- *Articulated Keel Design* (Frame) — Semi-rigid: +1 Ceiling, but -1 to Reliability checks during Weather hazards
 
-**The Flaw — Compact Design:** One fewer Payload slot in Ages II and III.
+**Pre-installed Tech Tiles:** Flexible Frame, Cotton Envelope, Expedition Engine
+
+**Starting Stats:** Speed 1, Range 2, Ceiling 1, Reliability 0
+
+**Starting Advantage:** Best starting Range (2) enables longer routes early.
+
+**The Flaw — Compact Design:** One fewer Payload slot in Ages II and III. Speed 1 limits route options.
 
 **Home Base (Age II):** Rome
 
-## 13.5 Faction Blueprint Slots
+## 13.5 Faction Starting Stats Summary
+
+| Faction | Speed | Range | Ceiling | Reliability | Age I Routes |
+|---------|-------|-------|---------|-------------|--------------|
+| Germany | 2 | 2 | 0 | 1 | 10 of 17 |
+| Britain | 2 | 1 | 1 | 0 | 7 of 17 |
+| USA | 1 | 1 | 1 | 3 | 5 of 17 |
+| Italy | 1 | 2 | 1 | 0 | 5 of 17 |
+
+## 13.6 Faction Blueprint Slots
 
 | Faction | Age I | Age II | Age III |
 |---------|-------|--------|---------|

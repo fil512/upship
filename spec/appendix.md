@@ -1,172 +1,4 @@
-
-# APPENDIX A: DESIGN STATUS
-
-This appendix tracks design decisions and their resolution status. Items marked **RESOLVED** have complete rules coverage. Items marked **PLAYTESTING NOTE** or **DESIGN NOTE** require validation through play.
-
-## A.1 Component Design (Production Phase)
-
-These items are physical component specifications for manufacturing. Rules are complete; artwork and production remain.
-
-1. **The 3 Maps:** Create vector artwork for Age I (Western Europe), Age II (Europe at War), Age III (The Atlantic). Include:
-   - Route lines with stat requirements printed
-   - Luxury Route indicators for Age III
-   - City names and icons
-   - Route capacity indicators (single/double track)
-   - Foundry icons for cities with industrial bonuses
-
-2. **Player Boards:** Design the 4 faction layouts with:
-   - Drawing Office with 4 technology tracks and pre-printed faction-specific starting technology
-   - Blueprint overlay socket
-   - Barracks for crew tokens (earned from shared supply)
-   - Economy tracks (Income track only - no Research track)
-   - Blueprint stat tracking area with cube tracks for: Lift, Weight, Speed, Range, Ceiling, Reliability, Luxury (each with min/max values)
-
-3. **Blueprint Overlays (12 total):** Design 3 per faction with:
-   - Frame slots and Fabric slots for structural components
-   - Drive slots and Payload slots for systems
-   - Different slot configurations per faction (see Section 10.5)
-   - Clear slot type indicators (Frame/Fabric/Drive/Payload)
-   - Historically accurate silhouettes:
-     * Age I: Small, cigar-shaped non-rigid/semi-rigid designs
-     * Age II: Longer, refined transitional rigid designs
-     * Age III: Massive streamlined rigid giants with passenger gondolas
-   - Faction-specific design elements:
-     * Germany: Rigid Zeppelin configurations with max gas cell capacity
-     * Britain: R-series designs with passenger comfort emphasis
-     * USA: Military-influenced designs with robust structural elements
-     * Italy: Semi-rigid designs with unique keel structures (Nobile pattern)
-
-4. **Technology Tiles (~60):** Create tiles organized by track:
-   - Propulsion: Engine technologies across Ages
-   - Frame: Structural skeleton technologies (wood, duralumin, geodetic)
-   - Fabric: Outer covering technologies (cotton, goldbeater's skin, gelatinized latex)
-   - Gas Systems: Hydrogen improvements, Helium handling
-   - Payload: Cargo, passenger, and mission technologies
-
-5. **Tech Tiles (~80):** Create tiles corresponding to each Technology:
-   - Clear visual link between Technology and its Tech Tiles
-   - Stat bonuses, weights, special abilities
-
-6. **Progress Track:** Design the shared track with:
-   - Numbered spaces to threshold
-   - Player count indicators for different thresholds
-   - Thematic "fixed-wing aircraft" imagery
-
-7. **Iconography:** Create distinct icons for:
-   - Research (Lightbulb or Beaker)
-   - Influence (Diamond)
-   - Money (£ or Coin)
-   - Officer (Aviator cap)
-   - Engineer (Wrench or Gear)
-   - Gas (Balloon or Tank)
-   - Lift (Up arrow)
-   - Speed (Propeller)
-   - Range (Fuel Gauge)
-   - Reliability (Shield)
-   - Ceiling (Altimeter)
-   - Luxury (Champagne Glass)
-   - Flammable (Flame warning)
-   - Safe (Helium symbol)
-
-## A.2 Card Design (All Resolved)
-
-1. **Personal Hazard Decks (27 cards each):** **RESOLVED** - See Appendix E for final distribution:
-   - 4 Clear Weather (Auto-pass)
-   - 8 Minor Hazards (Difficulty 2-3)
-   - 8 Major Hazards (Difficulty 4-5)
-   - 6 Fire Hazards (Hydrogen ships only)
-   - 1 Mechanical Hazard (Critical Structural Stress)
-
-2. **Market Deck:** Design 30 purchasable Agent Cards with:
-   - Varied costs (2-6 Influence)
-   - Mix of resource reveal icons (£, Research, Officer, Engineer, Gas, Influence)
-   - Cards that provide resources you can't easily get elsewhere
-   - **RESOLVED:** Cards provide resources when revealed (see Section 8)
-
-3. **Starter Deck Review:** **RESOLVED** - See Section 11.3 for final deck:
-   - 3 Wrench, 3 Coin, 3 Propeller, 1 Any — balanced access to all locations
-   - Variety of reveal resources (£, Influence, Research, Officer)
-   - Total 9 Influence (avg 0.9/card): 30% zeros, 50% ones, 20% twos (matches Dune Imperium)
-
-## A.3 Economy Balancing (All Resolved)
-
-1. **Research Costs:** **RESOLVED** - See Appendix C for all Technology costs:
-   - Age I: 3-5 Research
-   - Age II: 6-8 Research
-   - Age III: 9-11 Research
-   - Specialization discounts: -1 at 3+ tiles, -2 at 5+ tiles (Section 9.1)
-
-2. **Engineer Economy:** **RESOLVED** - See Sections 5.2, 6.5, 6.7:
-   - Starting Engineers: 2 (Section 3.2)
-   - Recruit cost: £4 per Engineer at Academy (Section 6.5)
-   - Upkeep cost: £1 per Engineer per round (Section 5.2)
-   - Research generation: 1 per Engineer at Reveal (Section 5.1)
-   - Officers cost £2 to recruit (Section 6.5)
-
-3. **Route Income Values:** **RESOLVED** - See Appendix F (Routes) and Appendix G (Combat Missions):
-   - Age I routes: £2-£6 based on difficulty
-   - Age III routes: £5-£12 based on difficulty and Luxury status
-   - Combat Missions: £5-£14 based on mission type
-
-4. **Progress Track Thresholds:** **RESOLVED** - See Section 1.3 for complete table including Age transitions:
-   - Age transitions at 8/16/20 (2P), 10/20/25 (3P), 12/24/30 (4P)
-
-5. **Lifting Gas Market:** **RESOLVED** - See Sections 6.8 and 9.3:
-   - Hydrogen: £1/cube (unlimited supply)
-   - Helium: £2-£15/cube (market track, Section 9.3)
-   - USA doesn't advance Helium track (domestic monopoly)
-   - Market resets to £2 at Age Transitions
-
-## A.4 Gameplay Polish (All Resolved)
-
-1. **Age End Triggers:** **RESOLVED** - Progress Track milestones trigger Age transitions (see Section 1.3 and 9.1)
-
-2. **Action Selection Mechanism:** **RESOLVED** - See Sections 5.1 and 11:
-   - Cards have symbols (Wrench/Coin/Propeller/Any) determining valid locations
-   - Cards provide resources when revealed
-   - Starter deck includes 1 "Any" card for flexibility
-   - Playtesting note: Monitor if card-icon matching feels too restrictive
-
-3. **Agent Count:** **RESOLVED** - See Sections 3.2 and 5.1:
-   - 2 agents per player at start
-   - 3rd earned when Officer Income Track reaches +3
-   - Playtesting note: Adjust if competition for actions feels too tight/loose
-
-4. **Turn Order:** **RESOLVED** - See Sections 3.3 and 6.9:
-   - First player determined randomly at game start
-   - Ministry action grants First Player Token for next round
-
-5. **Tie-Breakers:** **RESOLVED** - Turn order handles route claiming (first to claim gets the route). Victory tie-breakers in Section 1.1.
-
-6. **Player Count Scaling:** **RESOLVED** - See Section 1.3:
-   - Progress Track thresholds scale by player count
-   - R&D Board size scales by Age (4/5/6 tiles)
-   - Routes: All available (competition varies by player count)
-
-7. **Hindenburg Disaster Tuning:** **DESIGN NOTE** - See Section 1.2:
-   - +3 VP for triggering player is consolation, not compensation
-   - Germany cannot use Helium, creating meaningful Age III risk
-   - Playtesting will determine if risk/reward balance feels right
-
-## A.5 Playtesting Priorities (Validation Phase)
-
-These items require playtesting validation. Rules are complete but balance may need adjustment.
-
-1. **Engineer Economy Test:** Verify the tension between Research generation and emergency spending feels meaningful
-
-2. **Progress Track Pacing:** Does the fixed-wing threshold create appropriate tension? Assess whether players avoid acquiring Technologies to extend the game, causing Analysis Paralysis. Verify tech acquisition pace feels balanced.
-
-3. **Technology/Tech Tile Flow:** Is the two-step system (acquire tech → install tech tile) intuitive?
-
-4. **Hindenburg Drama:** Does the Age III hydrogen risk create exciting decisions?
-
-5. **Faction Balance:** Ensure no faction dominates across all Ages
-
-6. **Age Transition Impact:** Losing Tech Tiles but keeping Technologies—does this feel fair?
-
----
-
-# APPENDIX B: QUICK REFERENCE
+# APPENDIX A: QUICK REFERENCE
 
 ## Phase Order (Each Round)
 
@@ -561,30 +393,38 @@ Routes connect cities on the map boards. Each route has stat requirements that y
 
 The Pioneer Era features 17 regional routes across Western Europe forming a fully connected network. Early airship technology limits range and reliability.
 
-| Route | From | To | Range | Speed | Other | Income | VP | Tracks | Notes |
-|-------|------|-----|-------|-------|-------|--------|-----|--------|-------|
-| London Gateway | London | Dover | 1 | — | — | £2 | 1 | 1 | Channel feeder |
-| Channel Crossing | Calais | Dover | 1 | 1 | — | £3 | 2 | 1 | First international |
-| Rhine Valley | Frankfurt | Cologne | 1 | — | — | £2 | 1 | 1 | Starter route |
-| Low Countries | Brussels | Amsterdam | 1 | 1 | — | £3 | 2 | 1 | Connects Benelux |
-| Paris Express | Paris | Brussels | 1 | 1 | — | £3 | 2 | 1 | — |
-| Rhineland | Brussels | Cologne | 1 | 1 | — | £3 | 2 | 1 | Rhine access |
-| Lake Constance | Friedrichshafen | Zurich | 1 | — | — | £3 | 2 | 1 | Alpine approach |
-| London–Paris | London | Paris | 2 | 2 | — | £5 | 3 | 2 | — |
-| North Sea Run | Hamburg | Amsterdam | 2 | 1 | — | £4 | 2 | 1 | — |
-| Baltic Passage | Hamburg | Copenhagen | 2 | 1 | — | £4 | 2 | 1 | — |
-| Alpine Transit | Zurich | Milan | 2 | — | Ceiling 1 | £4 | 2 | 1 | Mountain crossing |
-| Mediterranean Link | Marseille | Barcelona | 2 | 1 | — | £4 | 2 | 1 | — |
-| German Alps | Frankfurt | Friedrichshafen | 2 | — | Ceiling 1 | £4 | 2 | 1 | Germany's backbone |
-| Rome Approach | Milan | Rome | 2 | 1 | Ceiling 1 | £5 | 3 | 1 | Italy's home |
-| Riviera Express | Paris | Marseille | 3 | 1 | — | £4 | 2 | 1 | French corridor |
-| Berlin–Vienna | Berlin | Vienna | 3 | 1 | — | £5 | 3 | 1 | — |
-| Imperial Circuit | London | Berlin | 3 | 2 | — | £6 | 3 | 1 | Prestige route |
+| Route | From | To | Range | Speed | Ceiling | Income | VP | Tracks | Notes |
+|-------|------|-----|-------|-------|---------|--------|-----|--------|-------|
+| London Gateway | London | Dover | 1 | 1 | — | £2 | 1 | 1 | Channel feeder |
+| Channel Crossing | Calais | Dover | 1 | 2 | — | £3 | 2 | 1 | First international |
+| Rhine Valley | Frankfurt | Cologne | 1 | 1 | — | £2 | 1 | 1 | Starter route |
+| Low Countries | Brussels | Amsterdam | 1 | 2 | — | £3 | 2 | 1 | Connects Benelux |
+| Paris Express | Paris | Brussels | 1 | 2 | — | £3 | 2 | 1 | — |
+| Rhineland | Brussels | Cologne | 1 | 2 | — | £3 | 2 | 1 | Rhine access |
+| Lake Constance | Friedrichshafen | Zurich | 1 | 1 | — | £3 | 2 | 1 | Alpine approach |
+| London–Paris | London | Paris | 2 | 3 | — | £5 | 3 | 2 | — |
+| North Sea Run | Hamburg | Amsterdam | 2 | 2 | — | £4 | 2 | 1 | — |
+| Baltic Passage | Hamburg | Copenhagen | 2 | 2 | — | £4 | 2 | 1 | — |
+| Alpine Transit | Zurich | Milan | 2 | 1 | 1 | £4 | 2 | 1 | Mountain crossing |
+| Mediterranean Link | Marseille | Barcelona | 2 | 2 | — | £4 | 2 | 1 | — |
+| German Alps | Frankfurt | Friedrichshafen | 2 | 1 | 1 | £4 | 2 | 1 | Germany's backbone |
+| Rome Approach | Milan | Rome | 2 | 2 | 1 | £5 | 3 | 1 | Italy's home |
+| Riviera Express | Paris | Marseille | 3 | 2 | — | £4 | 2 | 1 | French corridor |
+| Berlin–Vienna | Berlin | Vienna | 3 | 2 | — | £5 | 3 | 1 | — |
+| Imperial Circuit | London | Berlin | 3 | 3 | — | £6 | 3 | 1 | Prestige route |
 
 **Age I Route Summary:**
 - Range 1: 7 routes (starter/regional)
 - Range 2: 7 routes (medium distance)
 - Range 3: 3 routes (long distance)
+
+**Faction Starting Stats vs Routes:**
+| Faction | Speed | Range | Ceiling | Flyable Routes at Start |
+|---------|-------|-------|---------|-------------------------|
+| Germany | 2 | 2 | 0 | 10 routes (blocked by Ceiling on 2) |
+| Britain | 2 | 1 | 1 | 7 routes (blocked by Range on 6) |
+| USA | 1 | 1 | 1 | 5 routes (blocked by Speed on 10) |
+| Italy | 1 | 2 | 1 | 5 routes (blocked by Speed on 10) |
 
 **Network Connectivity:** All 17 cities are connected through this route network. Key hubs are London (3 connections), Brussels (4 connections), and Frankfurt (3 connections).
 
@@ -594,27 +434,27 @@ The Atlantic Era features 21 hemispheric routes including luxury ocean crossings
 
 | Route | From | To | Range | Speed | Ceiling | Luxury | Income | VP | Tracks | Notes |
 |-------|------|-----|-------|-------|---------|--------|--------|-----|--------|-------|
-| Eastern Gateway | New York | Lakehurst | 1 | — | — | — | £4 | 2 | 1 | NJ connection |
-| German Hub | Frankfurt | Friedrichshafen | 1 | 1 | — | — | £4 | 2 | 1 | Zeppelin corridor |
-| South Atlantic | Rio de Janeiro | Recife | 2 | 1 | — | — | £5 | 2 | 1 | Brazil domestic |
-| Caribbean Connection | Miami | Havana | 2 | 1 | — | — | £5 | 2 | 1 | — |
-| Pacific Coast | Los Angeles | San Francisco | 2 | 1 | 1 | — | £5 | 2 | 1 | — |
-| Rio–Buenos Aires | Rio de Janeiro | Buenos Aires | 3 | 1 | — | — | £5 | 2 | 1 | South America link |
-| European Trunk | London | Berlin | 3 | 2 | 1 | — | £6 | 3 | 1 | — |
-| Eastern Seaboard | New York | Miami | 3 | 2 | — | — | £6 | 3 | 1 | — |
-| North Sea Express | London | Oslo | 3 | 1 | 1 | — | £6 | 3 | 1 | Nordic connection |
-| **Around Cape Horn** | Buenos Aires | Valparaíso | 3 | 2 | 3 | — | £7 | 3 | 1 | High altitude |
-| **Arctic Explorer** | Oslo | Svalbard | 3 | 1 | 3 | — | £7 | 3 | 1 | Extreme conditions |
-| Transcontinental | Chicago | Los Angeles | 4 | 2 | 1 | — | £7 | 3 | 1 | Coast to coast |
-| Mediterranean Express | Rome | Cairo | 4 | 2 | 1 | — | £7 | 3 | 1 | — |
-| Trans-Amazon | Rio de Janeiro | Manaus | 4 | 1 | — | — | £7 | 3 | 1 | Jungle route |
-| North Atlantic Express | New York | London | 4 | 2 | 2 | — | £8 | 4 | 2 | — |
-| **Empire State Express** | New York | Chicago | 3 | 3 | 1 | 1 | £8 | 4 | 1 | Luxury; American prestige |
-| **Imperial Airship Route** | London | Cairo | 4 | 2 | 2 | 1 | £9 | 4 | 1 | Luxury; British specialty |
-| **California Clipper** | Los Angeles | Honolulu | 5 | 2 | 1 | 1 | £10 | 5 | 1 | Luxury; Pacific crossing |
-| **Graf Zeppelin Route** | Rio de Janeiro | Friedrichshafen | 5 | 2 | 2 | 1 | £10 | 5 | 1 | Luxury |
-| **Transatlantic Luxury** | London | New York | 4 | 3 | 2 | 2 | £11 | 5 | 2 | Luxury |
-| **Hindenburg Route** | Frankfurt | Lakehurst | 5 | 3 | 2 | 2 | £12 | 6 | 1 | Luxury; Hydrogen risk |
+| Eastern Gateway | New York | Lakehurst | 1 | 1 | — | — | £4 | 2 | 1 | NJ connection |
+| German Hub | Frankfurt | Friedrichshafen | 1 | 2 | — | — | £4 | 2 | 1 | Zeppelin corridor |
+| South Atlantic | Rio de Janeiro | Recife | 2 | 2 | — | — | £5 | 2 | 1 | Brazil domestic |
+| Caribbean Connection | Miami | Havana | 2 | 2 | — | — | £5 | 2 | 1 | — |
+| Pacific Coast | Los Angeles | San Francisco | 2 | 2 | 1 | — | £5 | 2 | 1 | — |
+| Rio–Buenos Aires | Rio de Janeiro | Buenos Aires | 3 | 2 | — | — | £5 | 2 | 1 | South America link |
+| European Trunk | London | Berlin | 3 | 3 | 1 | — | £6 | 3 | 1 | — |
+| Eastern Seaboard | New York | Miami | 3 | 3 | — | — | £6 | 3 | 1 | — |
+| North Sea Express | London | Oslo | 3 | 2 | 1 | — | £6 | 3 | 1 | Nordic connection |
+| **Around Cape Horn** | Buenos Aires | Valparaíso | 3 | 3 | 3 | — | £7 | 3 | 1 | High altitude |
+| **Arctic Explorer** | Oslo | Svalbard | 3 | 2 | 3 | — | £7 | 3 | 1 | Extreme conditions |
+| Transcontinental | Chicago | Los Angeles | 4 | 3 | 1 | — | £7 | 3 | 1 | Coast to coast |
+| Mediterranean Express | Rome | Cairo | 4 | 3 | 1 | — | £7 | 3 | 1 | — |
+| Trans-Amazon | Rio de Janeiro | Manaus | 4 | 2 | — | — | £7 | 3 | 1 | Jungle route |
+| North Atlantic Express | New York | London | 4 | 3 | 2 | — | £8 | 4 | 2 | — |
+| **Empire State Express** | New York | Chicago | 3 | 4 | 1 | 1 | £8 | 4 | 1 | Luxury; American prestige |
+| **Imperial Airship Route** | London | Cairo | 4 | 3 | 2 | 1 | £9 | 4 | 1 | Luxury; British specialty |
+| **California Clipper** | Los Angeles | Honolulu | 5 | 3 | 1 | 1 | £10 | 5 | 1 | Luxury; Pacific crossing |
+| **Graf Zeppelin Route** | Rio de Janeiro | Friedrichshafen | 5 | 3 | 2 | 1 | £10 | 5 | 1 | Luxury |
+| **Transatlantic Luxury** | London | New York | 4 | 4 | 2 | 2 | £11 | 5 | 2 | Luxury |
+| **Hindenburg Route** | Frankfurt | Lakehurst | 5 | 4 | 2 | 2 | £12 | 6 | 1 | Luxury; Hydrogen risk |
 
 **Age III Route Summary:**
 - Standard routes: 13
@@ -622,7 +462,7 @@ The Atlantic Era features 21 hemispheric routes including luxury ocean crossings
 - Range 1–2: 5 routes (regional connectors)
 - Range 3: 7 routes (medium distance)
 - Range 4: 5 routes (continental)
-- Range 5: 4 routes (intercontinental)
+- Range 5: 3 routes (intercontinental)
 
 **Network Connectivity:** All 21 cities across 4 continents are connected. Key hubs are New York (5 connections), London (5 connections), and Rio de Janeiro (4 connections). The network enables travel from any city to any other city via connected routes.
 

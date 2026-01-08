@@ -253,6 +253,11 @@ def evaluate_launch_readiness(
 
             if not has_achievable_target:
                 missing.append(f'no achievable missions (range={ship_range}, speed={ship_speed}, ceil={ship_ceiling}, rel={ship_reliability})')
+                # Check if empty drive slots are the problem
+                drive_slots = blueprint.drive_slots or [] if blueprint else []
+                empty_drive = sum(1 for s in drive_slots if s is None)
+                if empty_drive > 0:
+                    missing.append(f'{empty_drive} empty Drive slot(s) - need to install speed/range upgrades')
                 # Need better stats from drive upgrades
                 priorities.insert(0, 'research_institute')  # Get more tech
                 priorities.insert(1, 'blueprint_design')  # Install drive upgrades
@@ -270,6 +275,11 @@ def evaluate_launch_readiness(
 
             if not has_achievable_target:
                 missing.append(f'no reachable routes (range={ship_range}, speed={ship_speed})')
+                # Check if empty drive slots are the problem
+                drive_slots = blueprint.drive_slots or [] if blueprint else []
+                empty_drive = sum(1 for s in drive_slots if s is None)
+                if empty_drive > 0:
+                    missing.append(f'{empty_drive} empty Drive slot(s) - need to install speed/range upgrades')
                 priorities.insert(0, 'research_institute')  # Get more tech
                 priorities.insert(1, 'blueprint_design')  # Install drive upgrades
 
@@ -529,13 +539,34 @@ def find_strategic_placement(
     if total_gas < 1:
         priority_locations.append('gas_depot')
 
-    # Need blueprint slots filled
+    # Need blueprint slots filled (frame, fabric, AND drive slots)
     blueprint = player_data.blueprint
     if blueprint:
         frame_empty = sum(1 for s in (blueprint.frame_slots or []) if s is None)
         fabric_empty = sum(1 for s in (blueprint.fabric_slots or []) if s is None)
+        drive_empty = sum(1 for s in (blueprint.drive_slots or []) if s is None)
         if frame_empty > 0 or fabric_empty > 0:
             priority_locations.append('blueprint_design')
+        # CRITICAL: Also prioritize filling drive slots - these give speed/range needed for routes
+        elif drive_empty > 0 and player_data.technologies:
+            # Check if we have any drive techs that could be installed
+            manifest = get_manifest()
+            has_drive_tech = any(
+                manifest.get_upgrade_for_tech(tech_id) and
+                manifest.get_upgrade_for_tech(tech_id).get('slotType') == 'driveSlots'
+                for tech_id in player_data.technologies
+            )
+            if has_drive_tech:
+                priority_locations.append('blueprint_design')
+
+    # CRITICAL: If no routes are achievable, prioritize getting drive upgrades
+    # This is how ships get speed/range to reach routes
+    if not launch_eval.get('has_achievable_target') and hangar_count > 0:
+        # Ship exists but can't reach any routes - need better stats
+        if 'blueprint_design' not in priority_locations:
+            priority_locations.insert(0, 'blueprint_design')
+        if 'research_institute' not in priority_locations:
+            priority_locations.insert(0, 'research_institute')
 
     # PRIORITY 3: Build up for NEXT launch (secondary)
     # Build more ships if we have cash and hangar is low
