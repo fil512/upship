@@ -21,6 +21,7 @@ fi
 mkdir -p "$DEST_DIR/agent"
 mkdir -p "$DEST_DIR/tech"
 mkdir -p "$DEST_DIR/mission"
+mkdir -p "$DEST_DIR/hazard"
 
 # Sync agent cards (from agent/ folder)
 if [ -d "$SOURCE_DIR/agent" ]; then
@@ -46,11 +47,18 @@ if [ -d "$SOURCE_DIR/mission" ]; then
     rsync -av --delete "$SOURCE_DIR/mission/" "$DEST_DIR/mission/"
 fi
 
+# Sync hazard cards
+if [ -d "$SOURCE_DIR/hazard" ]; then
+    echo "Syncing hazard cards..."
+    rsync -av --delete "$SOURCE_DIR/hazard/" "$DEST_DIR/hazard/"
+fi
+
 echo ""
 echo "Sync complete!"
 echo "  Agent cards: $(ls "$DEST_DIR/agent" 2>/dev/null | grep -c '\.png$' || echo 0)"
 echo "  Tech cards:  $(ls "$DEST_DIR/tech" 2>/dev/null | grep -c '\.png$' || echo 0)"
 echo "  Mission cards: $(ls "$DEST_DIR/mission" 2>/dev/null | grep -c '\.png$' || echo 0)"
+echo "  Hazard cards: $(ls "$DEST_DIR/hazard" 2>/dev/null | grep -c '\.png$' || echo 0)"
 
 # === Check for missing card images ===
 echo ""
@@ -131,6 +139,40 @@ EXPECTED_MISSIONS=(
     # Artillery Observation
     "mission_artillery_battery"
     "mission_artillery_longrange"
+)
+
+# Expected hazard card filenames (from Appendix E Hazard Deck)
+EXPECTED_HAZARDS=(
+    # Clear Weather
+    "hazard_clear_skies"
+    "hazard_favorable_winds"
+    "hazard_calm_conditions"
+    "hazard_perfect_visibility"
+    # Minor Hazards
+    "hazard_light_turbulence"
+    "hazard_minor_engine_trouble"
+    "hazard_crosswind"
+    "hazard_gas_leak"
+    "hazard_low_visibility"
+    "hazard_fuel_concern"
+    "hazard_headwind"
+    "hazard_structural_stress"
+    # Major Hazards
+    "hazard_strong_headwind"
+    "hazard_icing_conditions"
+    "hazard_engine_failure"
+    "hazard_storm_system"
+    "hazard_structural_damage"
+    "hazard_navigation_error"
+    "hazard_squall_line"
+    "hazard_severe_icing"
+    # Fire Hazards
+    "hazard_engine_fire"
+    "hazard_gas_cell_rupture"
+    "hazard_static_discharge"
+    "hazard_catastrophic_explosion"
+    # Mechanical Hazards
+    "hazard_critical_structural_stress"
 )
 
 # Expected tech tile image filenames (from Appendix D Tech Tile names)
@@ -248,6 +290,22 @@ else
     echo "  Total missing: $missing_missions / ${#EXPECTED_MISSIONS[@]}"
 fi
 
+# Check missing hazard cards
+echo ""
+echo "Missing HAZARD card images:"
+missing_hazards=0
+for hazard in "${EXPECTED_HAZARDS[@]}"; do
+    if [ ! -f "$DEST_DIR/hazard/${hazard}.png" ]; then
+        echo "  - ${hazard}.png"
+        ((missing_hazards++)) || true
+    fi
+done
+if [ $missing_hazards -eq 0 ]; then
+    echo "  (none - all ${#EXPECTED_HAZARDS[@]} hazard cards have images)"
+else
+    echo "  Total missing: $missing_hazards / ${#EXPECTED_HAZARDS[@]}"
+fi
+
 # Check for extra/unmatched images
 echo ""
 echo "Extra AGENT images (not matching expected names):"
@@ -318,13 +376,37 @@ if [ $extra_missions -eq 0 ]; then
     echo "  (none)"
 fi
 
+echo ""
+echo "Extra HAZARD images (not matching expected names):"
+extra_hazards=0
+for img in "$DEST_DIR/hazard"/*.png; do
+    [ -f "$img" ] || continue
+    basename="${img##*/}"
+    name="${basename%.png}"
+    found=0
+    for hazard in "${EXPECTED_HAZARDS[@]}"; do
+        if [ "$name" = "$hazard" ]; then
+            found=1
+            break
+        fi
+    done
+    if [ $found -eq 0 ]; then
+        echo "  - $basename"
+        ((extra_hazards++)) || true
+    fi
+done
+if [ $extra_hazards -eq 0 ]; then
+    echo "  (none)"
+fi
+
 # Summary
 echo ""
 echo "=== Summary ==="
 echo "Agent cards: $((${#EXPECTED_AGENTS[@]} - missing_agents))/${#EXPECTED_AGENTS[@]} have images"
 echo "Tech tiles:  $((${#EXPECTED_TECHS[@]} - missing_techs))/${#EXPECTED_TECHS[@]} have images"
 echo "Mission cards: $((${#EXPECTED_MISSIONS[@]} - missing_missions))/${#EXPECTED_MISSIONS[@]} have images"
-if [ $extra_agents -gt 0 ] || [ $extra_techs -gt 0 ] || [ $extra_missions -gt 0 ]; then
+echo "Hazard cards: $((${#EXPECTED_HAZARDS[@]} - missing_hazards))/${#EXPECTED_HAZARDS[@]} have images"
+if [ $extra_agents -gt 0 ] || [ $extra_techs -gt 0 ] || [ $extra_missions -gt 0 ] || [ $extra_hazards -gt 0 ]; then
     echo ""
     echo "Note: Extra images may use display names instead of IDs."
     echo "Consider renaming to match tile IDs for consistency."
