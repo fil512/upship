@@ -26,7 +26,7 @@ describe('Rules Compliance - Blaugas Fuel System', () => {
               blueprint: {
                 frameSlots: ['basic_frame'],
                 fabricSlots: ['basic_fabric'],
-                driveSlots: [],
+                driveSlots: ['maybach_hl'],  // Germany's starting drive (speed 2, range 1)
                 componentSlots: []
               },
               hazardDeck: [{
@@ -84,7 +84,7 @@ describe('Rules Compliance - Blaugas Fuel System', () => {
               blueprint: {
                 frameSlots: ['basic_frame'],
                 fabricSlots: ['basic_fabric'],
-                driveSlots: [],
+                driveSlots: ['maybach_hl'],  // Germany's starting drive (speed 2, range 1)
                 componentSlots: []
               },
               hazardDeck: [{
@@ -142,7 +142,7 @@ describe('Rules Compliance - Blaugas Fuel System', () => {
               blueprint: {
                 frameSlots: ['basic_frame'],
                 fabricSlots: ['basic_fabric'],
-                driveSlots: [],
+                driveSlots: ['maybach_hl'],  // Germany's starting drive (speed 2, range 1)
                 componentSlots: []
               },
               hazardDeck: [{ type: 'clear_weather', autoPass: true }],
@@ -181,7 +181,7 @@ describe('Rules Compliance - Blaugas Fuel System', () => {
               blueprint: {
                 frameSlots: ['basic_frame'],
                 fabricSlots: ['basic_fabric'],
-                driveSlots: [],
+                driveSlots: ['maybach_hl'],  // Germany's starting drive (speed 2, range 1)
                 componentSlots: []
               },
               hazardDeck: [{ type: 'clear_weather', autoPass: true }],
@@ -208,28 +208,31 @@ describe('Rules Compliance - Blaugas Fuel System', () => {
     describe('+1 Range from Blaugas technology', () => {
       it('should provide +1 Range per spec Section 13.1', () => {
         // Per Section 13.1: "Blaugas Fuel System - Neutral buoyancy fuel: +1 Range"
-        // Blaugas is an Age II technology with stats property
-        const age2Techs = TECHNOLOGY_BAG[2];
-        const blaugas = age2Techs.find(t => t.id === 'blaugas_system');
-        expect(blaugas).toBeDefined();
-        expect(blaugas.stats).toBeDefined();
-        expect(blaugas.stats.range).toBe(1);
+        // Stats come from the blaugas_tank TILE, not the tech card
+        const { TECH_TILES } = require('../../../server/data/upgrades');
+        const tile = TECH_TILES.blaugas_tank;
+        expect(tile).toBeDefined();
+        expect(tile.stats).toBeDefined();
+        expect(tile.stats.range).toBe(1);
+        expect(tile.requiredCard).toBe('blaugas_storage');
       });
 
-      it('should apply +1 Range to ship stats when player has Blaugas', () => {
+      it('should apply +1 Range to ship stats when Blaugas Tank is installed', () => {
+        // Range comes from installed tiles, not tech cards
+        // To get +1 Range from Blaugas, you need to install blaugas_tank tile
         const playerState = {
-          techCards: ['blaugas_system'],
+          techCards: ['blaugas_storage'],  // Owns the tech card
           blueprint: {
             frameSlots: ['basic_frame'],
             fabricSlots: ['basic_fabric'],
-            driveSlots: [],
-            componentSlots: []
+            driveSlots: ['maybach_hl'],  // Germany's starting drive (speed 2, range 1)
+            componentSlots: ['blaugas_tank']  // +1 Range from Blaugas tile
           }
         };
 
-        // Calculate stats with Blaugas - should include +1 Range from technology
+        // Calculate stats with Blaugas tile installed
         const stats = calculateShipStats(playerState, 1);
-        // Base Range for Age 1 is 1, plus 1 from Blaugas = 2
+        // maybach_hl provides range 1, blaugas_tank provides +1 = 2
         expect(stats.range).toBeGreaterThanOrEqual(2);
       });
     });

@@ -321,27 +321,9 @@ function calculateBlueprintStats(blueprint: Blueprint, age: number = 1): ShipSta
  * - Dynamic Lift Surfaces: +4 Lift (GAP-066)
  */
 function calculateShipStats(playerState: PlayerState, age: number = 1): ShipStats {
-  const stats = calculateBlueprintStats(playerState.blueprint, age);
-
-  // Add stats from tech cards
-  const techCards = playerState.techCards || [];
-  const techCardBag = TECH_CARD_BAG as Record<number, Array<{ id: string; stats?: Record<string, number> }>>;
-  const allCards = [...(techCardBag[1] || []), ...(techCardBag[2] || []), ...(techCardBag[3] || [])];
-
-  for (const cardRef of techCards) {
-    const cardId = typeof cardRef === 'string' ? cardRef : (cardRef as { id?: string })?.id;
-    if (!cardId) continue;
-
-    // Find card definition in TECH_CARD_BAG
-    const card = allCards.find(c => c.id === cardId);
-    if (card?.stats) {
-      for (const [stat, value] of Object.entries(card.stats)) {
-        stats[stat] = (stats[stat] || 0) + value;
-      }
-    }
-  }
-
-  return stats;
+  // All stats come from installed tiles in the blueprint
+  // Tech cards only unlock tiles, they don't provide stats directly
+  return calculateBlueprintStats(playerState.blueprint, age);
 }
 
 /**

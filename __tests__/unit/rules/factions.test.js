@@ -27,7 +27,7 @@ describe('Rules Compliance - Factions', () => {
         age: 1,
         frameSlots: ['duralumin_frame'],
         fabricSlots: ['synthetic_envelope'],
-        driveSlots: [null],
+        driveSlots: ['reliable_engine'],  // USA's starting drive (speed 1, range 1)
         componentSlots: [null]
       };
 
@@ -237,7 +237,7 @@ describe('Rules Compliance - Factions', () => {
         age: 1,
         frameSlots: ['tensioned_frame'],
         fabricSlots: ['doped_covering'],
-        driveSlots: [null],
+        driveSlots: ['standard_engine'],  // Britain's starting drive (speed 1, range 1)
         componentSlots: [null]
       };
 

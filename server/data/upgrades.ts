@@ -142,7 +142,7 @@ export const TECH_TILES: Record<string, TechTile> = {
     slotType: 'driveSlots',
     requiredCard: 'dual_engine_mount',
     weight: 3,
-    stats: { speed: 2, reliability: 1 },
+    stats: { speed: 2, range: 1, reliability: 1 },  // Redundancy for longer flights
     special: null,
     age: 2
   },
@@ -236,6 +236,8 @@ export const TECH_TILES: Record<string, TechTile> = {
   },
 
   // === FACTION STARTING DRIVE TILES ===
+  // All starting drives provide base speed 1, range 1
+  // Faction advantages add to these base stats
   maybach_hl: {
     id: 'maybach_hl',
     name: 'Maybach HL Engine',
@@ -243,7 +245,7 @@ export const TECH_TILES: Record<string, TechTile> = {
     slotType: 'driveSlots',
     requiredCard: 'maybach_engine',
     weight: 2,
-    stats: { speed: 1 },
+    stats: { speed: 2, range: 1 },  // Germany: speed advantage
     special: null,
     age: 1
   },
@@ -254,7 +256,7 @@ export const TECH_TILES: Record<string, TechTile> = {
     slotType: 'driveSlots',
     requiredCard: 'expedition_propeller',
     weight: 2,
-    stats: { range: 1 },
+    stats: { speed: 1, range: 2 },  // Italy: range advantage
     special: null,
     age: 1
   },
@@ -265,7 +267,7 @@ export const TECH_TILES: Record<string, TechTile> = {
     slotType: 'driveSlots',
     requiredCard: 'basic_powerplant',
     weight: 1,
-    stats: {},
+    stats: { speed: 1, range: 1 },  // USA: balanced
     special: null,
     age: 1
   },
@@ -276,9 +278,84 @@ export const TECH_TILES: Record<string, TechTile> = {
     slotType: 'driveSlots',
     requiredCard: 'standard_propeller',
     weight: 2,
-    stats: {},
+    stats: { speed: 1, range: 1 },  // Britain: balanced
     special: null,
     age: 1
+  },
+
+  // === RANGE-PROVIDING TILES (unlocked by tech cards) ===
+
+  // Age I Drive tiles with range
+  daimler_drive: {
+    id: 'daimler_drive',
+    name: 'Daimler Drive',
+    type: 'drive',
+    slotType: 'driveSlots',
+    requiredCard: 'daimler_engine',
+    weight: 2,
+    stats: { speed: 1, range: 1 },  // Fuel-efficient engine
+    special: null,
+    age: 1
+  },
+  // Age II Fabric/Gas tiles with range
+  aluminum_envelope: {
+    id: 'aluminum_envelope',
+    name: 'Aluminum-Doped Envelope',
+    type: 'fabric',
+    slotType: 'fabricSlots',
+    requiredCard: 'aluminum_doping',
+    weight: 0,
+    hullCost: 2,
+    stats: { range: 1 },  // Smooth surface reduces drag
+    special: null,
+    age: 2
+  },
+  compartmented_cells: {
+    id: 'compartmented_cells',
+    name: 'Compartmented Gas Cells',
+    type: 'gas',
+    slotType: 'componentSlots',
+    requiredCard: 'multiple_gas_cells',
+    weight: 1,
+    stats: { range: 1 },  // Less gas loss from compartmentalization
+    special: null,
+    age: 2
+  },
+
+  // Age III Drive/Fabric/Gas tiles with range
+  aerodynamic_nacelle: {
+    id: 'aerodynamic_nacelle',
+    name: 'Aerodynamic Nacelle',
+    type: 'drive',
+    slotType: 'driveSlots',
+    requiredCard: 'streamlined_nacelle',
+    weight: 2,
+    stats: { speed: 1, range: 1 },  // Aerodynamic engine housing
+    special: null,
+    age: 3
+  },
+  composite_envelope: {
+    id: 'composite_envelope',
+    name: 'Composite Envelope',
+    type: 'fabric',
+    slotType: 'fabricSlots',
+    requiredCard: 'composite_covering',
+    weight: 0,
+    hullCost: 2,
+    stats: { range: 1 },  // Better gas retention
+    special: null,
+    age: 3
+  },
+  triple_cell_system: {
+    id: 'triple_cell_system',
+    name: 'Triple Cell System',
+    type: 'gas',
+    slotType: 'componentSlots',
+    requiredCard: 'triple_gas_cell',
+    weight: 1,
+    stats: { range: 1 },  // More gas capacity
+    special: null,
+    age: 3
   },
 
   // === FRAME UPGRADES ===
@@ -386,7 +463,7 @@ export const TECH_TILES: Record<string, TechTile> = {
     requiredCard: 'aerodynamic_hull_design',
     weight: 1,
     hullCost: 2,
-    stats: { lift: 2, gas_socket: 1 },  // Provides lift without gas
+    stats: { lift: 2, range: 1, gas_socket: 1 },  // Drag reduction + lift
     special: null,
     age: 2
   },
@@ -1111,12 +1188,14 @@ export const TECH_CARDS: Record<string, TechCard> = {
 
 /**
  * Age-specific baseline stats
+ * Ship stats (speed, range, ceiling, reliability) come entirely from installed tech tiles.
+ * The age only determines how many slots are available.
  */
 export const AGE_BASELINES: Record<number, AgeBaseline> = {
   1: {
     name: 'Pioneer Era',
-    speed: 1,
-    range: 1,
+    speed: 0,
+    range: 0,
     ceiling: 0,
     reliability: 0,
     frameSlots: 1,
@@ -1126,10 +1205,10 @@ export const AGE_BASELINES: Record<number, AgeBaseline> = {
   },
   2: {
     name: 'Great War',
-    speed: 2,
-    range: 2,
-    ceiling: 1,
-    reliability: 1,
+    speed: 0,
+    range: 0,
+    ceiling: 0,
+    reliability: 0,
     frameSlots: 1,
     fabricSlots: 1,
     driveSlots: 2,
@@ -1137,10 +1216,10 @@ export const AGE_BASELINES: Record<number, AgeBaseline> = {
   },
   3: {
     name: 'Golden Age',
-    speed: 3,
-    range: 3,
-    ceiling: 2,
-    reliability: 2,
+    speed: 0,
+    range: 0,
+    ceiling: 0,
+    reliability: 0,
     frameSlots: 2,
     fabricSlots: 2,
     driveSlots: 2,

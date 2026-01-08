@@ -176,13 +176,16 @@ describe('Upgrades Module', () => {
       expect(stats.speed).toBe(AGE_BASELINES[1].speed + 2);
     });
 
-    it('should use correct baseline for different ages', () => {
+    it('should have zero baselines for all ages (stats come from tiles)', () => {
+      // All ship stats come from installed tech tiles, not from age baselines
       const age1Stats = calculateShipStats(emptyBlueprint, {}, 1);
       const age2Stats = calculateShipStats(emptyBlueprint, {}, 2);
       const age3Stats = calculateShipStats(emptyBlueprint, {}, 3);
 
-      expect(age2Stats.speed).toBeGreaterThan(age1Stats.speed);
-      expect(age3Stats.speed).toBeGreaterThan(age2Stats.speed);
+      // With empty blueprint, all stats should be 0 regardless of age
+      expect(age1Stats.speed).toBe(0);
+      expect(age2Stats.speed).toBe(0);
+      expect(age3Stats.speed).toBe(0);
     });
 
     it('should handle null slots gracefully', () => {

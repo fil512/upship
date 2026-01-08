@@ -285,7 +285,7 @@ describe('Rules Compliance - Launching and Repair', () => {
       playerState.blueprint = {
         frameSlots: ['duralumin_frame'],
         fabricSlots: ['premium_envelope'],
-        driveSlots: [null],
+        driveSlots: ['adaptive_propeller'],  // Provides speed 1, range 2
         componentSlots: [null], // No sparrowhawk_hangar
         gasSockets: ['hydrogen', 'hydrogen']
       };
@@ -329,7 +329,7 @@ describe('Rules Compliance - Launching and Repair', () => {
       playerState.blueprint = {
         frameSlots: ['duralumin_frame'],
         fabricSlots: ['premium_envelope'],
-        driveSlots: [null],
+        driveSlots: ['adaptive_propeller'],  // Provides speed 1, range 2
         componentSlots: ['sparrowhawk_hangar'], // Upgrade installed!
         gasSockets: ['hydrogen', 'hydrogen']
       };
@@ -377,7 +377,7 @@ describe('Rules Compliance - Launching and Repair', () => {
       playerState.blueprint = {
         frameSlots: ['duralumin_frame'],
         fabricSlots: ['premium_envelope'],
-        driveSlots: [null],
+        driveSlots: ['adaptive_propeller'],  // Provides speed 1, range 2
         componentSlots: [null],
         gasSockets: ['hydrogen', 'hydrogen']
       };
@@ -419,7 +419,7 @@ describe('Rules Compliance - Launching and Repair', () => {
       playerState.blueprint = {
         frameSlots: ['duralumin_frame'],
         fabricSlots: ['premium_envelope'],
-        driveSlots: [null],
+        driveSlots: ['adaptive_propeller'],  // Provides speed 1, range 2
         componentSlots: ['sleeping_quarters'],  // +1 luxury
         gasSockets: ['hydrogen', 'hydrogen']
       };
@@ -462,7 +462,7 @@ describe('Rules Compliance - Launching and Repair', () => {
       playerState.blueprint = {
         frameSlots: ['duralumin_frame'],
         fabricSlots: ['premium_envelope'],
-        driveSlots: [null],
+        driveSlots: ['adaptive_propeller'],  // Provides speed 1, range 2
         componentSlots: ['sparrowhawk_hangar'],  // Upgrade installed
         gasSockets: ['helium', 'helium']
       };
@@ -506,7 +506,7 @@ describe('Rules Compliance - Launching and Repair', () => {
       playerState.blueprint = {
         frameSlots: ['duralumin_frame'],
         fabricSlots: ['premium_envelope'],
-        driveSlots: [null],
+        driveSlots: ['adaptive_propeller'],  // Provides speed 1, range 2
         componentSlots: [null],
         gasSockets: ['hydrogen', 'hydrogen']
       };

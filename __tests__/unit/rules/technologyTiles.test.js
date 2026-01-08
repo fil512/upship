@@ -236,6 +236,8 @@ describe('Rules Compliance - Technology Tiles', () => {
 
       // Cost checks - balanced for 1.1 techs/player/round purchasing power
       // Age I: 3-5 Research, Age II: 6-8 Research, Age III: 9-11 Research
+      // Costs match TECH_CARD_BAG in constants.ts
+      // Age I: 3-5, Age II: 4-6, Age III: 5-7
       const costChecks = [
         // Age I (3-5 Research)
         { name: 'Daimler Petrol Engine', cost: 3 },
@@ -250,25 +252,25 @@ describe('Rules Compliance - Technology Tiles', () => {
         { name: 'Observation Platform', cost: 3 },
         { name: 'Mail Compartment', cost: 3 },
         { name: 'Cargo Nets', cost: 5 },
-        // Age II (6-8 Research)
-        { name: 'Maybach Engine Design', cost: 7 },
-        { name: 'Diesel Powerplant', cost: 7 },
-        { name: 'Swiveling Propeller', cost: 8 },
-        { name: 'Duralumin Framework', cost: 7 },
-        { name: 'Steel Framework', cost: 6 },
-        { name: "Goldbeater's Skin", cost: 8 },
-        { name: 'Fireproof Coating', cost: 7 },
-        { name: 'Multiple Gas Cells', cost: 7 },
-        { name: 'Automatic Valves', cost: 8 },
-        { name: 'Bomb Bay Design', cost: 8 },
-        // Age III (9-11 Research)
-        { name: 'Streamlined Nacelle', cost: 9 },
-        { name: 'Supercharged Engine', cost: 10 },
-        { name: 'Geodetic Structure', cost: 9 },
-        { name: 'Modular Construction', cost: 10 },
-        { name: 'Pressure Altitude System', cost: 10 },
-        { name: 'Luxury Accommodation', cost: 9 },
-        { name: 'Promenade Deck', cost: 11 }
+        // Age II (4-6 Research)
+        { name: 'Maybach Engine Design', cost: 5 },
+        { name: 'Diesel Powerplant', cost: 5 },
+        { name: 'Swiveling Propeller', cost: 6 },
+        { name: 'Duralumin Framework', cost: 5 },
+        { name: 'Steel Framework', cost: 4 },
+        { name: "Goldbeater's Skin", cost: 6 },
+        { name: 'Fireproof Coating', cost: 5 },
+        { name: 'Multiple Gas Cells', cost: 5 },
+        { name: 'Automatic Valves', cost: 6 },
+        { name: 'Bomb Bay Design', cost: 6 },
+        // Age III (5-7 Research)
+        { name: 'Streamlined Nacelle', cost: 5 },
+        { name: 'Supercharged Engine', cost: 6 },
+        { name: 'Geodetic Structure', cost: 5 },
+        { name: 'Modular Construction', cost: 6 },
+        { name: 'Pressure Altitude System', cost: 6 },
+        { name: 'Luxury Accommodation', cost: 5 },
+        { name: 'Promenade Deck', cost: 7 }
       ];
 
       for (const { name, cost } of costChecks) {

@@ -68,7 +68,7 @@ describe('Rules Compliance - Launchpad (Section 6.4)', () => {
       playerState.blueprint = {
         frameSlots: ['basic_frame'],
         fabricSlots: ['basic_envelope'],
-        driveSlots: ['basic_engine'],
+        driveSlots: ['standard_engine'],  // Provides speed 1, range 1
         componentSlots: [null]
       };
       playerState.techCards = ['duralumin_girders', 'rubberized_cotton', 'daimler_engine'];
@@ -162,7 +162,7 @@ describe('Rules Compliance - Launchpad (Section 6.4)', () => {
       playerState.blueprint = {
         frameSlots: ['basic_frame'],
         fabricSlots: ['basic_envelope'],
-        driveSlots: ['basic_engine'],
+        driveSlots: ['standard_engine'],  // Provides speed 1, range 1
         componentSlots: [null]
       };
       playerState.techCards = ['duralumin_girders', 'rubberized_cotton', 'daimler_engine'];
@@ -197,7 +197,7 @@ describe('Rules Compliance - Launchpad (Section 6.4)', () => {
       playerState.blueprint = {
         frameSlots: ['basic_frame'],
         fabricSlots: ['basic_envelope'],
-        driveSlots: ['basic_engine'],
+        driveSlots: ['standard_engine'],  // Provides speed 1, range 1
         componentSlots: [null]
       };
       playerState.techCards = ['duralumin_girders', 'rubberized_cotton', 'daimler_engine'];

@@ -283,8 +283,10 @@ describe('Rules Compliance - Blueprint Design (Section 6.2)', () => {
       const playerState = state.players[playerId];
       // maybach_engine technology unlocks maybach_cx upgrade
       playerState.techCards = ['maybach_engine'];
+      // Clear the drive slot for this test (testBlueprint has a drive installed)
+      playerState.blueprint.driveSlots[0] = null;
 
-      // Internal call bypasses validation
+      // Internal call bypasses agent placement validation
       const result = processInstallUpgrade(state, playerId, {
         slotType: 'drive',
         slotIndex: 0,

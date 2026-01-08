@@ -63,10 +63,11 @@ export const STARTING_RESEARCH = 0;
 export const STARTING_INFLUENCE = 0;
 
 // Age Baselines for ship stats
+// All stats come from installed tech tiles, not from the age itself
 export const AGE_BASELINES: Record<number, { speed: number; range: number; ceiling: number; reliability: number }> = {
-  1: { speed: 1, range: 1, ceiling: 0, reliability: 0 },
-  2: { speed: 2, range: 2, ceiling: 1, reliability: 1 },
-  3: { speed: 3, range: 3, ceiling: 2, reliability: 2 }
+  1: { speed: 0, range: 0, ceiling: 0, reliability: 0 },
+  2: { speed: 0, range: 0, ceiling: 0, reliability: 0 },
+  3: { speed: 0, range: 0, ceiling: 0, reliability: 0 }
 };
 
 // Tech Card type
@@ -118,7 +119,7 @@ export const TECH_CARD_BAG: Record<number, TechCard[]> = {
     { id: 'steel_framework', name: 'Steel Framework', type: 'structure', cost: 4, vp: 2, income: 1 },
     { id: 'internal_keel', name: 'Internal Keel', type: 'structure', cost: 5, vp: 1, income: 1 },
     { id: 'articulated_keel', name: 'Articulated Keel Design', type: 'structure', cost: 5, vp: 2, income: 1 },
-    { id: 'aerodynamic_hull', name: 'Aerodynamic Hull Design', type: 'structure', cost: 5, vp: 1, income: 1, stats: { lift: 2 } },
+    { id: 'aerodynamic_hull', name: 'Aerodynamic Hull Design', type: 'structure', cost: 5, vp: 1, income: 1 },
     // Fabric (4 tiles)
     { id: 'goldbeater_skin', name: "Goldbeater's Skin", type: 'fabric', cost: 6, vp: 2, income: 2 },
     { id: 'fireproof_coating', name: 'Fireproof Coating', type: 'fabric', cost: 5, vp: 2, income: 1 },
@@ -126,7 +127,7 @@ export const TECH_CARD_BAG: Record<number, TechCard[]> = {
     { id: 'grounding_systems', name: 'Grounding Systems', type: 'fabric', cost: 5, vp: 1, income: 1 },
     // Gas Systems (3 tiles) - Helium Handling is Reserve Tech Card, not in bag
     { id: 'multiple_gas_cells', name: 'Multiple Gas Cells', type: 'gas', cost: 5, vp: 0, income: 1 },
-    { id: 'blaugas_system', name: 'Blaugas Fuel System', type: 'gas', cost: 5, vp: 2, income: 2, stats: { range: 1 } },
+    { id: 'blaugas_system', name: 'Blaugas Fuel System', type: 'gas', cost: 5, vp: 2, income: 2 },
     { id: 'automatic_valves', name: 'Automatic Valves', type: 'gas', cost: 6, vp: 1, income: 2 },
     // Payload (6 tiles)
     { id: 'passenger_gondola', name: 'Passenger Gondola', type: 'component', cost: 5, vp: 0, income: 1 },
@@ -145,7 +146,7 @@ export const TECH_CARD_BAG: Record<number, TechCard[]> = {
     // Frame (3 tiles)
     { id: 'geodetic_structure', name: 'Geodetic Structure', type: 'structure', cost: 5, vp: 0, income: 2 },
     { id: 'modular_construction', name: 'Modular Construction', type: 'structure', cost: 6, vp: 3, income: 2 },
-    { id: 'dynamic_lift', name: 'Dynamic Lift Surfaces', type: 'structure', cost: 6, vp: 2, income: 2, stats: { lift: 4 } },
+    { id: 'dynamic_lift', name: 'Dynamic Lift Surfaces', type: 'structure', cost: 6, vp: 2, income: 2 },
     // Fabric (2 tiles)
     { id: 'gelatinized_latex', name: 'Gelatinized Latex', type: 'fabric', cost: 5, vp: 0, income: 2 },
     { id: 'composite_covering', name: 'Composite Covering', type: 'fabric', cost: 6, vp: 1, income: 2 },

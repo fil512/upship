@@ -106,7 +106,7 @@ const testBlueprint = {
   age: 1,
   frameSlots: ['duralumin_frame'],
   fabricSlots: ['premium_envelope'],
-  driveSlots: [null],
+  driveSlots: ['standard_engine'],  // Provides speed 1, range 1
   componentSlots: [null],
   gasSockets: ['hydrogen', 'hydrogen']
 };
