@@ -142,6 +142,7 @@ export const TECH_TILES: Record<string, TechTile> = {
     slotType: 'driveSlots',
     requiredCard: 'dual_engine_mount',
     weight: 3,
+    hullCost: 1,
     stats: { speed: 2, range: 1, reliability: 1 },  // Redundancy for longer flights
     special: null,
     age: 2
@@ -164,6 +165,7 @@ export const TECH_TILES: Record<string, TechTile> = {
     slotType: 'driveSlots',
     requiredCard: 'diesel_powerplant',
     weight: 2,
+    hullCost: 1,
     stats: { range: 2, reliability: 1 },
     special: null,
     age: 2
@@ -175,6 +177,7 @@ export const TECH_TILES: Record<string, TechTile> = {
     slotType: 'driveSlots',
     requiredCard: 'swiveling_propeller',
     weight: 2,
+    hullCost: 1,
     stats: { speed: 1, ceiling: 1 },
     special: null,
     age: 2
@@ -186,6 +189,7 @@ export const TECH_TILES: Record<string, TechTile> = {
     slotType: 'driveSlots',
     requiredCard: 'contra_rotating',
     weight: 2,
+    hullCost: 1,
     stats: { speed: 2, reliability: 1 },
     special: null,
     age: 2
@@ -197,6 +201,7 @@ export const TECH_TILES: Record<string, TechTile> = {
     slotType: 'driveSlots',
     requiredCard: 'streamlined_nacelle',
     weight: 2,
+    hullCost: 2,
     stats: { speed: 3 },
     special: null,
     age: 3
@@ -208,6 +213,7 @@ export const TECH_TILES: Record<string, TechTile> = {
     slotType: 'driveSlots',
     requiredCard: 'supercharged_engine',
     weight: 3,
+    hullCost: 2,
     stats: { speed: 2, ceiling: 2 },
     special: null,
     age: 3
@@ -219,6 +225,7 @@ export const TECH_TILES: Record<string, TechTile> = {
     slotType: 'driveSlots',
     requiredCard: 'diesel_electric',
     weight: 3,
+    hullCost: 2,
     stats: { range: 3, reliability: 1 },
     special: null,
     age: 3
@@ -230,6 +237,7 @@ export const TECH_TILES: Record<string, TechTile> = {
     slotType: 'driveSlots',
     requiredCard: 'variable_pitch',
     weight: 2,
+    hullCost: 1,
     stats: { speed: 1, range: 2 },
     special: null,
     age: 3
@@ -742,6 +750,7 @@ export const TECH_TILES: Record<string, TechTile> = {
     slotType: 'componentSlots',
     requiredCard: 'automatic_valves',
     weight: 1,
+    hullCost: 1,
     stats: { reliability: 1, ceiling: 1 },
     special: null,
     age: 2
@@ -753,6 +762,7 @@ export const TECH_TILES: Record<string, TechTile> = {
     slotType: 'componentSlots',
     requiredCard: 'pressure_altitude_system',
     weight: 2,
+    hullCost: 1,
     stats: { lift: 3, ceiling: 2 },
     special: null,
     age: 3
@@ -764,6 +774,7 @@ export const TECH_TILES: Record<string, TechTile> = {
     slotType: 'componentSlots',
     requiredCard: 'triple_gas_cell',
     weight: 2,
+    hullCost: 1,
     stats: { lift: 4, reliability: 2 },
     special: null,
     age: 3
@@ -775,6 +786,7 @@ export const TECH_TILES: Record<string, TechTile> = {
     slotType: 'componentSlots',
     requiredCard: 'emergency_venting',
     weight: 1,
+    hullCost: 1,
     stats: { reliability: 2 },
     special: 'weather_auto_pass',  // Auto-pass Weather-type hazards
     age: 3
@@ -786,6 +798,7 @@ export const TECH_TILES: Record<string, TechTile> = {
     slotType: 'componentSlots',
     requiredCard: 'gas_recovery',
     weight: 1,
+    hullCost: 2,
     stats: { range: 2 },
     special: 'gas_cost_reduction',  // -£2 Lifting Gas cost
     age: 3
@@ -797,6 +810,7 @@ export const TECH_TILES: Record<string, TechTile> = {
     slotType: 'componentSlots',
     requiredCard: 'water_recovery_system',
     weight: 2,
+    hullCost: 2,
     stats: {},
     special: 'helium_cost_reduction',  // -£3 Helium cost (USA specialty)
     age: 3
@@ -870,6 +884,7 @@ export const TECH_TILES: Record<string, TechTile> = {
     slotType: 'componentSlots',
     requiredCard: 'bomb_bay_design',
     weight: 3,
+    hullCost: 1,
     stats: {},
     special: 'combat_income_bonus',  // Combat Missions: +£3 Income
     age: 2
@@ -881,6 +896,7 @@ export const TECH_TILES: Record<string, TechTile> = {
     slotType: 'componentSlots',
     requiredCard: 'trapeze_system',
     weight: 3,
+    hullCost: 2,
     stats: {},
     special: 'ignore_route_requirement',  // Ignore one route requirement (USA specialty)
     age: 2
@@ -914,6 +930,7 @@ export const TECH_TILES: Record<string, TechTile> = {
     slotType: 'componentSlots',
     requiredCard: 'reinforced_hull',
     weight: 3,
+    hullCost: 1,
     stats: { armor: 2 },
     special: null,
     age: 2
@@ -927,6 +944,7 @@ export const TECH_TILES: Record<string, TechTile> = {
     slotType: 'componentSlots',
     requiredCard: 'luxury_accommodation',
     weight: 3,
+    hullCost: 2,
     stats: { income: 3, luxury: 2 },
     special: null,
     age: 3
@@ -938,6 +956,7 @@ export const TECH_TILES: Record<string, TechTile> = {
     slotType: 'componentSlots',
     requiredCard: 'dining_saloon',
     weight: 2,
+    hullCost: 2,
     stats: { income: 2, luxury: 2 },
     special: null,
     age: 3
@@ -949,6 +968,7 @@ export const TECH_TILES: Record<string, TechTile> = {
     slotType: 'componentSlots',
     requiredCard: 'promenade_deck',
     weight: 2,
+    hullCost: 2,
     stats: { income: 1, luxury: 3 },
     special: null,
     age: 3
@@ -960,6 +980,7 @@ export const TECH_TILES: Record<string, TechTile> = {
     slotType: 'componentSlots',
     requiredCard: 'sleeping_quarters',
     weight: 2,
+    hullCost: 1,
     stats: { income: 2, luxury: 1 },  // Fixed: was luxury: 2, range: 1
     special: null,
     age: 3
@@ -971,6 +992,7 @@ export const TECH_TILES: Record<string, TechTile> = {
     slotType: 'componentSlots',
     requiredCard: 'smoking_room',
     weight: 2,
+    hullCost: 2,
     stats: { income: 1, luxury: 2 },
     special: 'requires_helium',  // Requires Helium Gas Cell installed
     age: 3
@@ -1062,6 +1084,7 @@ export const TECH_TILES: Record<string, TechTile> = {
     slotType: 'componentSlots',
     requiredCard: 'advanced_navigation',
     weight: 1,
+    hullCost: 1,
     stats: { reliability: 2, range: 1 },
     special: null,
     age: 3
