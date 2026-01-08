@@ -14,6 +14,12 @@ import eyeSvg from './svg/eye.svg?raw';
 import politicsSvg from './svg/politics.svg?raw';
 import gasSvg from './svg/gas.svg?raw';
 import arrowUpSvg from './svg/arrow_up.svg?raw';
+import bombSvg from './svg/bomb.svg?raw';
+import binocularsSvg from './svg/binoculars.svg?raw';
+import supplyCrateSvg from './svg/supply_crate.svg?raw';
+import patrolSvg from './svg/patrol.svg?raw';
+import telescopeSvg from './svg/telescope.svg?raw';
+import parachuteSvg from './svg/parachute.svg?raw';
 
 export const gameIcons: Record<GameIconName, IconDefinition> = {
   ship: {
@@ -92,5 +98,41 @@ export const gameIcons: Record<GameIconName, IconDefinition> = {
     svg: arrowUpSvg,
     category: 'game',
     tooltip: 'Increase - raise income or level'
+  },
+
+  bomb: {
+    svg: bombSvg,
+    category: 'game',
+    tooltip: 'Bombing Run - aerial bombardment mission'
+  },
+
+  binoculars: {
+    svg: binocularsSvg,
+    category: 'game',
+    tooltip: 'Reconnaissance - observation mission'
+  },
+
+  supply_crate: {
+    svg: supplyCrateSvg,
+    category: 'game',
+    tooltip: 'Resupply - transport supplies mission'
+  },
+
+  patrol: {
+    svg: patrolSvg,
+    category: 'game',
+    tooltip: 'Patrol - area surveillance mission'
+  },
+
+  telescope: {
+    svg: telescopeSvg,
+    category: 'game',
+    tooltip: 'Reconnaissance - observation mission'
+  },
+
+  parachute: {
+    svg: parachuteSvg,
+    category: 'game',
+    tooltip: 'Resupply - airdrop supplies mission'
   }
 };

@@ -135,3 +135,68 @@ export function getAgentImagePath(name: string): string {
 export function getTechImagePath(name: string): string {
 	return `/cards/tech/${getTechCardImageFilename(name)}.png`;
 }
+
+/**
+ * Mission Card name to Mission image filename mapping.
+ *
+ * Mission images use a thematic naming convention (mission_type_description)
+ * rather than the display name format.
+ *
+ * Format: "Mission Display Name" -> "mission_image_filename"
+ */
+const MISSION_CARD_TO_IMAGE: Record<string, string> = {
+	// Bombing Runs
+	'Railway Bombardment': 'mission_bombing_railway',
+	'Factory Strike': 'mission_bombing_factory',
+	'Port Assault': 'mission_bombing_port',
+	'Deep Strike Mission': 'mission_bombing_deep_strike',
+	'Strategic Bombardment': 'mission_bombing_strategic',
+	'Capital Raid': 'mission_bombing_capital',
+
+	// Reconnaissance
+	'Front Line Survey': 'mission_recon_frontline',
+	'Artillery Spotting': 'mission_recon_artillery',
+	'Enemy Position Mapping': 'mission_recon_enemy_pos',
+	'Strategic Photography': 'mission_recon_strategic_photo',
+	'Deep Reconnaissance': 'mission_recon_deep',
+
+	// Resupply Missions
+	'Field Hospital Supply': 'mission_resupply_hospital',
+	'Ammunition Delivery': 'mission_resupply_ammo',
+	'Forward Base Resupply': 'mission_resupply_base',
+	'Emergency Provisions': 'mission_resupply_emergency',
+	'Siege Relief': 'mission_resupply_siege',
+
+	// Naval Patrols
+	'Coastal Patrol': 'mission_naval_coastal',
+	'Submarine Hunter': 'mission_naval_sub_hunter',
+
+	// Artillery Observation
+	'Battery Direction': 'mission_artillery_battery',
+	'Long-Range Observation': 'mission_artillery_longrange'
+};
+
+/**
+ * Get the image filename for a mission card, using the mapping table.
+ * Falls back to standard name conversion if not in mapping.
+ * @param name - Mission Card display name (e.g., "Railway Bombardment")
+ * @returns Filename without extension (e.g., "mission_bombing_railway")
+ */
+export function getMissionImageFilename(name: string): string {
+	// Check mapping first
+	const mapped = MISSION_CARD_TO_IMAGE[name];
+	if (mapped) {
+		return mapped;
+	}
+	// Fall back to standard conversion
+	return getImageFilename(name);
+}
+
+/**
+ * Get the full image path for a mission card
+ * @param name - Card display name
+ * @returns Full path (e.g., "/cards/mission/mission_bombing_railway.png")
+ */
+export function getMissionImagePath(name: string): string {
+	return `/cards/mission/${getMissionImageFilename(name)}.png`;
+}

@@ -53,9 +53,11 @@
     flex-direction: column;
     gap: var(--space-md);
     padding: var(--space-md);
-    background: var(--color-bg-primary);
+    /* Wartime atmosphere background */
+    background: linear-gradient(180deg, #1a1916 0%, #242220 100%);
     border-radius: var(--radius-md);
     min-height: 400px;
+    border: 1px solid #3a3830;
   }
 
   .mission-header {
@@ -63,18 +65,21 @@
     align-items: center;
     justify-content: space-between;
     padding-bottom: var(--space-sm);
-    border-bottom: 1px solid var(--color-border);
+    border-bottom: 1px solid #4a473d;
   }
 
   .mission-header h3 {
     margin: 0;
     font-size: 1.1rem;
-    color: var(--color-accent-gold);
+    /* Military gold/brass color */
+    color: #c9a227;
+    text-transform: uppercase;
+    letter-spacing: 1px;
   }
 
   .mission-count {
     font-size: 0.85rem;
-    color: var(--color-text-muted);
+    color: #8a8070;
   }
 
   .mission-row {
@@ -89,20 +94,22 @@
     align-items: center;
     justify-content: center;
     flex: 1;
-    color: var(--color-text-muted);
+    color: #6a6050;
     font-style: italic;
   }
 
   .completed-section {
     margin-top: auto;
     padding-top: var(--space-md);
-    border-top: 1px solid var(--color-border);
+    border-top: 1px solid #4a473d;
   }
 
   .completed-section h4 {
     margin: 0 0 var(--space-sm) 0;
     font-size: 0.9rem;
-    color: var(--color-text-secondary);
+    color: #8a8070;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
   }
 
   .completed-row {
@@ -113,6 +120,6 @@
   }
 
   .completed-row :global(.mission-card) {
-    transform: scale(0.9);
+    transform: scale(0.85);
   }
 </style>

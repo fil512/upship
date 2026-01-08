@@ -91,6 +91,17 @@ Icons representing various game actions and concepts.
 | `politics.svg` | Government influence and regulations | TBD | #9ca3af (Grey) |
 | `gas.svg` | Generic lifting gas (hydrogen or helium) | Gas canister | #9ca3af (Grey) |
 
+### Combat Missions (Age III)
+
+Icons for WWI-era military operations during the Great War.
+
+| File | Game Meaning | Current Shape | Color |
+|------|--------------|---------------|-------|
+| `bomb.svg` | Bombing Run—aerial bombardment | WWI cylindrical bomb with tail fins | #4a4a4a (Dark grey) |
+| `binoculars.svg` | Reconnaissance—observation mission | Military field binoculars | #5c5040 (Olive brown) |
+| `supply_crate.svg` | Resupply/Transport—deliver supplies | Wooden crate with metal bands | #8b7355 (Wood brown) |
+| `patrol.svg` | Patrol—area surveillance | WWI searchlight | #6a6a6a (Grey) with #f0e68c (Light beam) |
+
 ## Design Notes
 
 ### Era & Theme

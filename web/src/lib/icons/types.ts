@@ -59,7 +59,13 @@ export type GameIconName =
   | 'insurance'
   | 'politics'
   | 'gas'
-  | 'arrow_up';
+  | 'arrow_up'
+  | 'bomb'
+  | 'binoculars'
+  | 'supply_crate'
+  | 'patrol'
+  | 'telescope'
+  | 'parachute';
 
 export type IconName =
   | ResourceIconName

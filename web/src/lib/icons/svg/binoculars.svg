@@ -1,0 +1,18 @@
+<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <!-- WWI Field Binoculars - brass/military style -->
+  <!-- Left barrel -->
+  <rect x="3" y="7" width="7" height="12" rx="3" fill="#5c5040"/>
+  <ellipse cx="6.5" cy="7" rx="3.5" ry="2" fill="#6a5d4a"/>
+  <ellipse cx="6.5" cy="19" rx="3" ry="1.5" fill="#4a4030"/>
+  <!-- Right barrel -->
+  <rect x="14" y="7" width="7" height="12" rx="3" fill="#5c5040"/>
+  <ellipse cx="17.5" cy="7" rx="3.5" ry="2" fill="#6a5d4a"/>
+  <ellipse cx="17.5" cy="19" rx="3" ry="1.5" fill="#4a4030"/>
+  <!-- Center bridge -->
+  <rect x="9" y="10" width="6" height="4" rx="1" fill="#4a4030"/>
+  <!-- Lens reflections -->
+  <ellipse cx="6.5" cy="7" rx="2" ry="1" fill="#8090a0" opacity="0.6"/>
+  <ellipse cx="17.5" cy="7" rx="2" ry="1" fill="#8090a0" opacity="0.6"/>
+  <!-- Focus wheel -->
+  <ellipse cx="12" cy="12" rx="1.5" ry="1" fill="#3a3530"/>
+</svg>

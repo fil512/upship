@@ -2,6 +2,9 @@
   import { createEventDispatcher } from 'svelte';
   import type { Mission } from '$lib/types/game';
   import { FACTION_COLORS } from '$lib/data/mapConfig';
+  import { getMissionImageFilename } from '$lib/utils/cardImages';
+  import Icon from '$lib/components/ui/Icon.svelte';
+  import type { IconName } from '$lib/icons/types';
 
   export let mission: Mission;
   export let selectable: boolean = false;
@@ -11,6 +14,27 @@
 
   $: isClaimed = !!mission.claimed;
   $: claimedColor = mission.claimed ? FACTION_COLORS[mission.claimed] : null;
+  $: imageFilename = getMissionImageFilename(mission.name);
+
+  // Mission type colors for wartime theme
+  const TYPE_COLORS: Record<string, string> = {
+    bombing_run: '#8b2020',    // Dark red
+    reconnaissance: '#2d4a6b', // Navy blue
+    transport: '#3d5c3d',      // Military green
+    patrol: '#5c4d2d',         // Khaki/brown
+    resupply: '#3d5c3d'        // Military green
+  };
+
+  // Mission type to icon mapping (clear, colorful icons)
+  const TYPE_ICONS: Record<string, IconName> = {
+    bombing_run: 'bomb',
+    reconnaissance: 'telescope',
+    transport: 'parachute',
+    patrol: 'patrol',
+    resupply: 'parachute',
+    naval_patrol: 'patrol',
+    artillery_observation: 'telescope'
+  };
 
   function getMissionTypeLabel(type: string): string {
     switch (type) {
@@ -22,23 +46,10 @@
         return 'Transport';
       case 'patrol':
         return 'Patrol';
+      case 'resupply':
+        return 'Resupply';
       default:
         return type;
-    }
-  }
-
-  function getMissionTypeIcon(type: string): string {
-    switch (type) {
-      case 'bombing_run':
-        return '💣';
-      case 'reconnaissance':
-        return '🔭';
-      case 'transport':
-        return '📦';
-      case 'patrol':
-        return '🛡️';
-      default:
-        return '✈️';
     }
   }
 
@@ -47,6 +58,9 @@
       dispatch('select', { mission });
     }
   }
+
+  $: typeColor = TYPE_COLORS[mission.type] || '#4a4a4a';
+  $: typeIcon = TYPE_ICONS[mission.type] || 'ship';
 </script>
 
 <button
@@ -54,22 +68,34 @@
   class:selectable={selectable && !isClaimed && !completed}
   class:claimed={isClaimed}
   class:completed
-  class:bombing={mission.type === 'bombing_run'}
-  class:recon={mission.type === 'reconnaissance'}
-  class:transport={mission.type === 'transport'}
-  class:patrol={mission.type === 'patrol'}
+  style:--type-color={typeColor}
   style:--claimed-color={claimedColor}
   on:click={handleClick}
   disabled={!selectable || isClaimed || completed}
 >
-  <div class="mission-header">
-    <span class="mission-icon">{getMissionTypeIcon(mission.type)}</span>
+  <!-- Header: Icon + Type (left) + VP (right) -->
+  <div class="card-header">
+    <span class="mission-icon">
+      <Icon name={typeIcon} size={20} />
+    </span>
     <span class="mission-type">{getMissionTypeLabel(mission.type)}</span>
     <span class="mission-vp">{mission.vp} VP</span>
   </div>
 
-  <h4 class="mission-name">{mission.name}</h4>
+  <!-- Center: Image area for artwork -->
+  <div class="card-image-area">
+    <img
+      src="/cards/mission/{imageFilename}.png"
+      alt=""
+      class="card-image"
+      on:error={(e) => (e.currentTarget as HTMLImageElement).style.display = 'none'}
+    />
+  </div>
 
+  <!-- Mission name -->
+  <div class="mission-name">{mission.name}</div>
+
+  <!-- Requirements row -->
   <div class="mission-requirements">
     {#if mission.range}
       <span class="req" title="Range">R{mission.range}</span>
@@ -85,162 +111,199 @@
     {/if}
   </div>
 
-  <div class="mission-reward">
+  <!-- Reward section -->
+  <div class="card-reward">
     <span class="income">+£{mission.income}</span>
+    {#if mission.specialBonus}
+      <span class="bonus">{mission.specialBonus.description}</span>
+    {/if}
   </div>
 
-  {#if mission.specialBonus}
-    <div class="mission-special">
-      {mission.specialBonus.description}
-    </div>
-  {/if}
-
+  <!-- Status badges -->
   {#if isClaimed}
-    <div class="claimed-badge">Assigned</div>
+    <div class="status-badge claimed">Assigned</div>
   {/if}
 
   {#if completed}
-    <div class="completed-badge">Completed</div>
+    <div class="status-badge completed">Completed</div>
   {/if}
 </button>
 
 <style>
   .mission-card {
+    position: relative;
     display: flex;
     flex-direction: column;
-    gap: var(--space-xs);
-    padding: var(--space-sm);
-    background: var(--color-bg-secondary);
-    border: 2px solid var(--color-border);
+    width: 100%;
+    min-width: 150px;
+    max-width: 180px;
+    min-height: 260px;
+    padding: 0;
+    margin: 0;
+    /* Wartime khaki/olive base */
+    background: #4a473d;
+    border: 2px solid #5c584a;
     border-radius: var(--radius-md);
-    min-width: 160px;
-    max-width: 200px;
-    text-align: left;
     cursor: default;
-    transition: all 0.2s ease;
-    position: relative;
+    transition: all var(--transition-fast);
+    overflow: hidden;
   }
 
   .mission-card.selectable {
     cursor: pointer;
-    border-color: var(--color-accent-gold);
+    border-color: #8b7355;
   }
 
   .mission-card.selectable:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    border-color: var(--color-accent-gold);
+    transform: translateY(-4px);
+    box-shadow: 0 4px 12px rgba(139, 32, 32, 0.4);
+    border-color: #a08060;
   }
 
   .mission-card.claimed {
     opacity: 0.7;
-    border-color: var(--claimed-color, var(--color-success));
+    border-color: var(--claimed-color, #666);
   }
 
   .mission-card.completed {
     opacity: 0.5;
-    border-color: var(--color-success);
+    border-color: #666;
   }
 
-  .mission-header {
+  .mission-card:disabled {
+    cursor: not-allowed;
+  }
+
+  /* Header section */
+  .card-header {
     display: flex;
     align-items: center;
-    gap: var(--space-xs);
-    font-size: 0.75rem;
+    padding: 4px 6px;
+    gap: 4px;
+    /* Dark military header */
+    background: #2d2b26;
+    border-bottom: 1px solid #5c584a;
   }
 
   .mission-icon {
-    font-size: 1rem;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
   }
 
   .mission-type {
-    color: var(--color-text-muted);
-    text-transform: uppercase;
-    font-weight: 500;
     flex: 1;
+    font-size: 0.6rem;
+    font-weight: 600;
+    color: #a09080;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
   }
 
   .mission-vp {
-    color: var(--color-accent-gold);
-    font-weight: 600;
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: #c9a227;
+    flex-shrink: 0;
   }
 
+  /* Image area for artwork */
+  .card-image-area {
+    flex: 1;
+    min-height: 110px;
+    /* Tinted with mission type color */
+    background: linear-gradient(135deg, var(--type-color) 0%, #3a3830 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  .card-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  /* Mission name */
   .mission-name {
-    margin: 0;
-    font-size: 0.9rem;
+    font-size: 0.65rem;
     font-weight: 600;
-    color: var(--color-text);
+    color: #d4c8b0;
+    text-align: center;
+    padding: 4px 6px;
+    background: rgba(0, 0, 0, 0.3);
+    border-top: 1px solid #5c584a;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    line-height: 1.2;
   }
 
+  /* Requirements */
   .mission-requirements {
     display: flex;
-    gap: var(--space-xs);
+    gap: 4px;
+    padding: 4px 6px;
+    justify-content: center;
     flex-wrap: wrap;
+    background: #3a3830;
   }
 
   .req {
-    background: var(--color-bg-tertiary);
+    background: #2d2b26;
     padding: 2px 6px;
-    border-radius: var(--radius-sm);
-    font-size: 0.7rem;
+    border-radius: 3px;
+    font-size: 0.65rem;
     font-family: var(--font-mono);
-    color: var(--color-text-secondary);
+    color: #b0a090;
+    border: 1px solid #5c584a;
   }
 
-  .mission-reward {
-    margin-top: auto;
+  /* Reward section */
+  .card-reward {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: 4px 6px;
+    background: #2d2b26;
+    border-top: 1px solid #5c584a;
   }
 
   .income {
-    color: var(--color-success);
-    font-weight: 600;
-    font-size: 0.85rem;
+    color: #6b8e6b;
+    font-weight: 700;
+    font-size: 0.8rem;
   }
 
-  .mission-special {
-    font-size: 0.7rem;
+  .bonus {
+    font-size: 0.55rem;
     font-style: italic;
-    color: var(--color-accent-gold);
-    padding-top: var(--space-xs);
-    border-top: 1px solid var(--color-border);
+    color: #c9a227;
+    text-align: center;
+    line-height: 1.2;
   }
 
-  .claimed-badge,
-  .completed-badge {
+  /* Status badges */
+  .status-badge {
     position: absolute;
-    top: -8px;
-    right: -8px;
-    padding: 2px 8px;
-    border-radius: var(--radius-sm);
-    font-size: 0.65rem;
+    top: -6px;
+    right: -6px;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 0.55rem;
     font-weight: 600;
     text-transform: uppercase;
+    letter-spacing: 0.3px;
   }
 
-  .claimed-badge {
-    background: var(--claimed-color, var(--color-warning));
+  .status-badge.claimed {
+    background: var(--claimed-color, #8b6914);
     color: white;
   }
 
-  .completed-badge {
-    background: var(--color-success);
+  .status-badge.completed {
+    background: #4a7c4a;
     color: white;
-  }
-
-  /* Mission type accent colors */
-  .bombing {
-    border-left: 3px solid #ef4444;
-  }
-
-  .recon {
-    border-left: 3px solid #3b82f6;
-  }
-
-  .transport {
-    border-left: 3px solid #22c55e;
-  }
-
-  .patrol {
-    border-left: 3px solid #f59e0b;
   }
 </style>
