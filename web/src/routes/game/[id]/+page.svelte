@@ -57,6 +57,7 @@
 	import { TECH_TILES } from '$lib/data/techTiles';
 	import { getFactionBorderColor } from '$lib/utils/factionColors';
 	import Icon from '$lib/components/ui/Icon.svelte';
+	import HazardCard from '$lib/components/cards/HazardCard.svelte';
 	import TechTileSelector from '$lib/components/blueprint/TechTileSelector.svelte';
 	import type { Blueprint as BlueprintType } from '$lib/types/game';
 
@@ -1382,15 +1383,16 @@
 					{#if peekedHazard}
 						<!-- Peeked Hazard Display - from Navigator card or Weather Bureau -->
 						<div class="peeked-hazard-panel">
-							<h4>👁️ Peeked Hazard</h4>
-							<div class="peeked-hazard-card">
-								<p class="hazard-name">{peekedHazard.name || peekedHazard.type}</p>
-								<p class="hazard-details">
-									Type: {peekedHazard.category || 'unknown'} | Difficulty: {peekedHazard.difficulty || '?'}
-								</p>
-								{#if peekedHazard.engineerCost}
-									<p class="hazard-cost">Engineers needed: {peekedHazard.engineerCost}</p>
-								{/if}
+							<h4>Peeked Hazard</h4>
+							<div class="hazard-card-wrapper">
+								<HazardCard
+									name={peekedHazard.name || peekedHazard.type}
+									category={peekedHazard.category || 'minor'}
+									difficulty={peekedHazard.difficulty || 0}
+									challengeType={peekedHazard.challengeType || ''}
+									engineerCost={peekedHazard.engineerCost}
+									compact={true}
+								/>
 							</div>
 							<p class="peeked-hint">This is the top card of your hazard deck.</p>
 							{#if $isMyTurn}
@@ -1410,9 +1412,18 @@
 						{#if pendingLaunch && pendingHazard}
 							<!-- Hazard Response UI - ship awaiting hazard check -->
 							<div class="hazard-panel">
-								<h4>⚠️ Hazard Check</h4>
-								<div class="hazard-card">
-									<p class="hazard-name">{pendingHazard.name}</p>
+								<h4>Hazard Check</h4>
+								<div class="hazard-card-wrapper">
+									<HazardCard
+										name={pendingHazard.name}
+										category={pendingHazard.category || 'minor'}
+										difficulty={pendingHazard.difficulty || 0}
+										challengeType={pendingHazard.challengeType || pendingHazard.statName || ''}
+										engineerCost={pendingHazard.engineersNeeded}
+										compact={true}
+									/>
+								</div>
+								<div class="hazard-actions">
 									{#if pendingHazard.autoPassReason}
 										<p class="hazard-auto-pass">Auto-pass: {pendingHazard.autoPassReason}</p>
 										<button class="btn primary w-full" on:click={() => handleRespondToHazard(false)}>
@@ -1425,9 +1436,6 @@
 											Acknowledge
 										</button>
 									{:else if pendingHazard.engineersNeeded > 0}
-										<p class="hazard-requirement">
-											Requires: {pendingHazard.engineersNeeded} Engineers
-										</p>
 										<p class="hazard-available">
 											You have: {$myState?.engineers || 0} Engineers
 										</p>
@@ -2358,6 +2366,19 @@
 		color: var(--color-text-muted);
 		font-style: italic;
 		margin: 0;
+	}
+
+	/* Hazard Card Wrapper - centers the HazardCard component */
+	.hazard-card-wrapper {
+		display: flex;
+		justify-content: center;
+		padding: var(--spacing-xs) 0;
+	}
+
+	.hazard-actions {
+		display: flex;
+		flex-direction: column;
+		gap: var(--spacing-xs);
 	}
 
 	/* Hazard Panel */

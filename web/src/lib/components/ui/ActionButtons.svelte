@@ -2,6 +2,7 @@
 	import { createEventDispatcher } from 'svelte';
 	import { turnUIState, type ActionButton } from '$lib/stores/turnState';
 	import Icon from './Icon.svelte';
+	import HazardCard from '$lib/components/cards/HazardCard.svelte';
 	import type { IconName } from '$lib/icons';
 
 	const dispatch = createEventDispatcher<{
@@ -69,13 +70,16 @@
 	{/if}
 
 	{#if uiState.actionContext.peekedHazard}
-		<div class="context-info hazard-preview">
-			<Icon name="hazard" size={20} />
-			<div class="context-details">
-				<span class="context-label">Peeked Hazard</span>
-				<span class="context-value">{uiState.actionContext.peekedHazard.name}</span>
-				<span class="context-meta">Difficulty: {uiState.actionContext.peekedHazard.difficulty}</span>
-			</div>
+		<div class="hazard-card-display">
+			<span class="hazard-context-label">Peeked Hazard</span>
+			<HazardCard
+				name={uiState.actionContext.peekedHazard.name}
+				category={uiState.actionContext.peekedHazard.category}
+				difficulty={uiState.actionContext.peekedHazard.difficulty}
+				challengeType={uiState.actionContext.peekedHazard.challengeType}
+				engineerCost={uiState.actionContext.peekedHazard.engineerCost}
+				compact={true}
+			/>
 		</div>
 	{/if}
 
@@ -96,17 +100,16 @@
 	{/if}
 
 	{#if uiState.actionContext.pendingHazard}
-		<div class="context-info hazard-check">
-			<Icon name="hazard" size={20} color="var(--color-warning)" />
-			<div class="context-details">
-				<span class="context-label">Hazard Check</span>
-				<span class="context-value">{uiState.actionContext.pendingHazard.name}</span>
-				{#if uiState.actionContext.pendingHazard.engineerCost}
-					<span class="context-meta">
-						Engineers needed: {uiState.actionContext.pendingHazard.engineerCost}
-					</span>
-				{/if}
-			</div>
+		<div class="hazard-card-display">
+			<span class="hazard-context-label warning">Hazard Check</span>
+			<HazardCard
+				name={uiState.actionContext.pendingHazard.name}
+				category={uiState.actionContext.pendingHazard.category}
+				difficulty={uiState.actionContext.pendingHazard.difficulty}
+				challengeType={uiState.actionContext.pendingHazard.challengeType}
+				engineerCost={uiState.actionContext.pendingHazard.engineerCost}
+				compact={true}
+			/>
 		</div>
 	{/if}
 </div>
@@ -272,5 +275,30 @@
 
 	.card-name {
 		font-weight: 500;
+	}
+
+	/* Hazard card display */
+	.hazard-card-display {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: var(--spacing-sm);
+		margin-top: var(--spacing-md);
+		padding: var(--spacing-md);
+		background: var(--color-bg-secondary);
+		border-radius: var(--radius-md);
+		border: 1px solid var(--color-border);
+	}
+
+	.hazard-context-label {
+		font-size: 0.75rem;
+		font-weight: 600;
+		text-transform: uppercase;
+		color: var(--color-text-muted);
+		letter-spacing: 0.5px;
+	}
+
+	.hazard-context-label.warning {
+		color: var(--color-warning);
 	}
 </style>

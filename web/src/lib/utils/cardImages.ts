@@ -200,3 +200,22 @@ export function getMissionImageFilename(name: string): string {
 export function getMissionImagePath(name: string): string {
 	return `/cards/mission/${getMissionImageFilename(name)}.png`;
 }
+
+/**
+ * Get the image filename for a hazard card.
+ * Hazard images use the pattern: hazard_<name_in_snake_case>
+ * @param name - Hazard display name (e.g., "Engine Fire")
+ * @returns Filename without extension (e.g., "hazard_engine_fire")
+ */
+export function getHazardImageFilename(name: string): string {
+	return `hazard_${getImageFilename(name)}`;
+}
+
+/**
+ * Get the full image path for a hazard card
+ * @param name - Card display name
+ * @returns Full path (e.g., "/cards/hazard/hazard_engine_fire.png")
+ */
+export function getHazardImagePath(name: string): string {
+	return `/cards/hazard/${getHazardImageFilename(name)}.png`;
+}
