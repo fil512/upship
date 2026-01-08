@@ -816,25 +816,30 @@
 	async function handleRespondToHazard(spendEngineers: boolean) {
 		if (!pendingLaunch) return;
 
-		// Determine if hazard will pass (need city choice) or fail (no city needed)
-		// noSave hazards (like Catastrophic Explosion) always destroy the ship
+		// Determine outcome based on hazard type and response
 		const isNoSave = pendingHazard?.noSave || pendingHazard?.type === 'catastrophic_explosion';
-		const willPass = !isNoSave && (
+		const isFireHazard = pendingHazard?.category === 'fire';
+
+		// For fire hazards (hydrogen), spending engineers → Damaged (ship to repair, no route)
+		// For non-fire hazards, spending engineers → Success (route claimed)
+		// Auto-pass always claims route (including helium fire immunity)
+		const willClaimRoute = !isNoSave && (
 			pendingHazard?.autoPassReason ||
-			pendingHazard?.engineersNeeded === 0 ||
-			(spendEngineers && canAffordEngineers)
+			(!isFireHazard && (
+				pendingHazard?.engineersNeeded === 0 ||
+				(spendEngineers && canAffordEngineers)
+			))
 		);
 
 		// Age 2 missions don't need city choice - just complete the mission
 		const isMission = pendingLaunch.missionId && ($gameState?.age === 2);
 
-		if (willPass && !isMission && hazardRoute) {
+		if (willClaimRoute && !isMission && hazardRoute) {
 			// Show city modal - city choice needed for successful route launch
 			pendingHazardResponse = { spendEngineers };
 			showCityModal = true;
 		} else {
-			// Either: hazard fails, OR it's a mission (no city), OR no valid route, OR noSave
-			// Ships are tokens - no shipId needed
+			// Fire hazard (damaged/destroyed), mission, or abort
 			const result = await sendAction({
 				actionType: 'RESPOND_TO_HAZARD',
 				actionData: {
@@ -846,7 +851,11 @@
 					showToast('Ship destroyed!', 'error');
 				} else if (isMission) {
 					showToast('Mission completed!', 'success');
-				} else if (!willPass) {
+				} else if (isFireHazard && spendEngineers) {
+					showToast('Fire controlled - ship damaged, moved to repair bay', 'warning');
+				} else if (isFireHazard) {
+					showToast('Ship destroyed by fire!', 'error');
+				} else {
 					showToast('Launch aborted - ship returns to hangar', 'info');
 				}
 			} else {
@@ -1448,19 +1457,28 @@
 										<p class="hazard-available">
 											You have: {$myState?.engineers || 0} Engineers
 										</p>
+										{@const isFireHazard = pendingHazard.category === 'fire'}
 										{#if !canAffordEngineers}
 											<p class="hazard-abort-outcome">
-												Launch aborted: {abortGasAmount} {abortGasType} lost, officers refunded, ship returns to hangar.
+												{#if isFireHazard}
+													Ship destroyed: insufficient engineers to control fire.
+												{:else}
+													Launch aborted: {abortGasAmount} {abortGasType} lost, officers refunded, ship returns to hangar.
+												{/if}
 											</p>
 										{/if}
 										<div class="hazard-buttons">
 											{#if canAffordEngineers}
 												<button class="btn primary w-full" on:click={() => handleRespondToHazard(true)}>
-													Spend {pendingHazard.engineersNeeded} Engineers (Pass)
+													Spend {pendingHazard.engineersNeeded} Engineer{pendingHazard.engineersNeeded > 1 ? 's' : ''} → {isFireHazard ? 'Damaged' : 'Success'}
 												</button>
 											{/if}
-											<button class="btn secondary w-full" on:click={() => handleRespondToHazard(false)}>
-												{canAffordEngineers ? 'Abort Launch' : 'Confirm'}
+											<button class="btn {canAffordEngineers ? 'secondary' : 'danger'} w-full" on:click={() => handleRespondToHazard(false)}>
+												{#if canAffordEngineers}
+													Don't Spend → {isFireHazard ? 'Destroyed' : 'Aborted'}
+												{:else}
+													Confirm {isFireHazard ? 'Destroyed' : 'Aborted'}
+												{/if}
 											</button>
 										</div>
 									{:else}
