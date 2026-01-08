@@ -2,6 +2,7 @@
 	import { createEventDispatcher } from 'svelte';
 	import { myState, isMyTurn } from '$lib/stores/gameState';
 	import Icon from '$lib/components/ui/Icon.svelte';
+	import { calculateHullCost } from '$lib/utils/shipStats';
 
 	export let locationId: string;
 	export let locationName: string;
@@ -56,6 +57,22 @@
 	$: canAffordResearch = playerCash >= researchCost;
 
 	$: canAffordOfficers = playerOfficers >= officerCount;
+
+	// Ship building costs and constraints
+	const HANGAR_CAPACITY = 3;
+	$: hullCostData = calculateHullCost($myState?.blueprint);
+	$: hullCostPerShip = hullCostData.total;
+	$: buildCost = hullCostPerShip * buildCount;
+	$: canAffordBuild = playerCash >= buildCost;
+	$: currentHangarShips = $myState?.hangarShips || 0;
+	$: availableHangarSlots = HANGAR_CAPACITY - currentHangarShips;
+	$: maxBuildable = Math.min(3, availableHangarSlots);
+	$: wouldExceedHangar = buildCount > availableHangarSlots;
+
+	// Constrain buildCount to available slots when modal opens or constraints change
+	$: if (locationId === 'construction_hall' && buildCount > maxBuildable && maxBuildable > 0) {
+		buildCount = maxBuildable;
+	}
 
 	function handleConfirm() {
 		let params: Record<string, unknown> = {};
@@ -299,24 +316,43 @@
 			{:else if locationId === 'construction_hall'}
 				<div class="form-section">
 					<label class="form-label">Ships to Build</label>
-					<div class="number-selector">
-						<button
-							class="num-btn"
-							disabled={buildCount <= 1}
-							on:click={() => (buildCount = Math.max(1, buildCount - 1))}
-						>
-							-
-						</button>
-						<span class="num-value">{buildCount}</span>
-						<button
-							class="num-btn"
-							disabled={buildCount >= 3}
-							on:click={() => (buildCount = Math.min(3, buildCount + 1))}
-						>
-							+
-						</button>
-					</div>
+					{#if availableHangarSlots <= 0}
+						<div class="error-text">Hangar is full ({HANGAR_CAPACITY} ships max)</div>
+					{:else}
+						<div class="number-selector">
+							<button
+								class="num-btn"
+								disabled={buildCount <= 1}
+								on:click={() => (buildCount = Math.max(1, buildCount - 1))}
+							>
+								-
+							</button>
+							<span class="num-value">{buildCount}</span>
+							<button
+								class="num-btn"
+								disabled={buildCount >= maxBuildable}
+								on:click={() => (buildCount = Math.min(maxBuildable, buildCount + 1))}
+							>
+								+
+							</button>
+						</div>
+						<p class="form-hint">Hull cost: £{hullCostPerShip}/ship (£2 base + £{hullCostData.frameCost} frame + £{hullCostData.fabricCost} fabric)</p>
+					{/if}
 				</div>
+
+				{#if availableHangarSlots > 0}
+					<div class="cost-display">
+						<span>Cost: £{buildCost}</span>
+						<span class="available">You have: £{playerCash}</span>
+					</div>
+					<div class="info-text">
+						<Icon name="ship" size={14} />
+						<span>Hangar: {currentHangarShips}/{HANGAR_CAPACITY} ships</span>
+					</div>
+					{#if !canAffordBuild}
+						<div class="error-text">Not enough cash!</div>
+					{/if}
+				{/if}
 			{/if}
 		</div>
 
@@ -331,7 +367,8 @@
 					(locationId === 'gas_depot' && !canAffordGas) ||
 					(locationId === 'academy' && !canAffordCrew) ||
 					(locationId === 'government_liaison' && !canAffordOfficers) ||
-					(locationId === 'research_institute' && !canAffordResearch)
+					(locationId === 'research_institute' && !canAffordResearch) ||
+					(locationId === 'construction_hall' && (!canAffordBuild || availableHangarSlots <= 0))
 				}
 				on:click={handleConfirm}
 			>
