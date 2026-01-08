@@ -70,9 +70,40 @@
 		return { name: upgradeId.replace(/_/g, ' '), weight: 0, stats: {} };
 	}
 
+	// Split long names into lines for SVG text wrapping
+	// Max ~12 chars per line at font-size 9px in a 100px wide slot
+	function splitName(name: string): string[] {
+		if (name.length <= 14) return [name];
+
+		// Try to split at a space near the middle
+		const words = name.split(' ');
+		if (words.length === 1) {
+			// No spaces - just truncate
+			return [name.slice(0, 12) + '...'];
+		}
+
+		// Find best split point
+		let line1 = '';
+		let line2 = '';
+		for (const word of words) {
+			if (line1.length === 0 || line1.length + word.length + 1 <= 12) {
+				line1 = line1 ? line1 + ' ' + word : word;
+			} else {
+				line2 = line2 ? line2 + ' ' + word : word;
+			}
+		}
+
+		// Truncate line2 if still too long
+		if (line2.length > 14) {
+			line2 = line2.slice(0, 11) + '...';
+		}
+
+		return line2 ? [line1, line2] : [line1];
+	}
+
 	// Slot positions on the airship (viewBox is 800x300)
 	const slotWidth = 100;
-	const slotHeight = 54;
+	const slotHeight = 62; // Increased from 54 to accommodate 2-line names
 	const slotPositions = {
 		// Frame: along the central keel/spine (3 slots)
 		frame: [
@@ -307,8 +338,13 @@
 								</g>
 							{/each}
 						</g>
-						<!-- Name below icons -->
-						<text x={slotWidth/2} y="46" text-anchor="middle" class="slot-name" style="--slot-color: {slotColors.fabric}">{info.name}</text>
+						<!-- Name below icons (with text wrapping) -->
+						{@const nameLines = splitName(info.name)}
+						<text x={slotWidth/2} y={nameLines.length > 1 ? 42 : 48} text-anchor="middle" class="slot-name" style="--slot-color: {slotColors.fabric}">
+							{#each nameLines as line, i}
+								<tspan x={slotWidth/2} dy={i === 0 ? 0 : 10}>{line}</tspan>
+							{/each}
+						</text>
 					{:else}
 						<text x={slotWidth/2} y="32" text-anchor="middle" class="slot-empty">+ FABRIC</text>
 					{/if}
@@ -350,8 +386,13 @@
 								</g>
 							{/each}
 						</g>
-						<!-- Name below icons -->
-						<text x={slotWidth/2} y="46" text-anchor="middle" class="slot-name" style="--slot-color: {slotColors.frame}">{info.name}</text>
+						<!-- Name below icons (with text wrapping) -->
+						{@const nameLines = splitName(info.name)}
+						<text x={slotWidth/2} y={nameLines.length > 1 ? 42 : 48} text-anchor="middle" class="slot-name" style="--slot-color: {slotColors.frame}">
+							{#each nameLines as line, i}
+								<tspan x={slotWidth/2} dy={i === 0 ? 0 : 10}>{line}</tspan>
+							{/each}
+						</text>
 					{:else}
 						<text x={slotWidth/2} y="32" text-anchor="middle" class="slot-empty">+ FRAME</text>
 					{/if}
@@ -393,8 +434,13 @@
 								</g>
 							{/each}
 						</g>
-						<!-- Name below icons -->
-						<text x={slotWidth/2} y="46" text-anchor="middle" class="slot-name" style="--slot-color: {slotColors.drive}">{info.name}</text>
+						<!-- Name below icons (with text wrapping) -->
+						{@const nameLines = splitName(info.name)}
+						<text x={slotWidth/2} y={nameLines.length > 1 ? 42 : 48} text-anchor="middle" class="slot-name" style="--slot-color: {slotColors.drive}">
+							{#each nameLines as line, i}
+								<tspan x={slotWidth/2} dy={i === 0 ? 0 : 10}>{line}</tspan>
+							{/each}
+						</text>
 					{:else}
 						<text x={slotWidth/2} y="32" text-anchor="middle" class="slot-empty">+ DRIVE</text>
 					{/if}
@@ -436,8 +482,13 @@
 								</g>
 							{/each}
 						</g>
-						<!-- Name below icons -->
-						<text x={slotWidth/2} y="46" text-anchor="middle" class="slot-name" style="--slot-color: {slotColors.component}">{info.name}</text>
+						<!-- Name below icons (with text wrapping) -->
+						{@const nameLines = splitName(info.name)}
+						<text x={slotWidth/2} y={nameLines.length > 1 ? 42 : 48} text-anchor="middle" class="slot-name" style="--slot-color: {slotColors.component}">
+							{#each nameLines as line, i}
+								<tspan x={slotWidth/2} dy={i === 0 ? 0 : 10}>{line}</tspan>
+							{/each}
+						</text>
 					{:else}
 						<text x={slotWidth/2} y="32" text-anchor="middle" class="slot-empty">+ COMPONENT</text>
 					{/if}

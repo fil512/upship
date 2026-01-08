@@ -31,12 +31,12 @@ interface FactionBonuses {
   [key: string]: number | undefined;
 }
 
-// Starting tech tiles configuration
+// Starting tech tiles configuration - arrays to support multiple slots
 interface StartingTechTiles {
-  frame?: string;
-  fabric?: string;
-  drive?: string;
-  component?: string;
+  frame?: string[];
+  fabric?: string[];
+  drive?: string[];
+  component?: string[];
 }
 
 // Faction configuration
@@ -51,14 +51,16 @@ interface FactionConfig {
 
 // Faction-specific starting configurations
 // Per rules Section 10: Each nation has unique starting tech cards and blueprint configuration
+// All starting tech tiles are pre-installed in the 2 slots per type (Age I: 2/2/2/2)
 const FACTION_CONFIG: Record<string, FactionConfig> = {
   germany: {
     // Zeppelin-style design: Heavy frame, powerful Maybach engine (+1 speed)
     startingTechCards: ['zeppelin_girders', 'goldbeater_skin', 'maybach_engine', 'blaugas_storage'],
     startingTechTiles: {
-      frame: 'zeppelin_frame',     // weight 3, gas_socket: 1
-      fabric: 'premium_envelope',  // weight 0, reliability: +1, range: +1 (best from goldbeater_skin)
-      drive: 'maybach_hl'          // weight 2, speed: +2, range: +1
+      frame: ['zeppelin_frame'],                      // 1 frame tile (zeppelin_girders provides 1)
+      fabric: ['premium_envelope', 'goldbeater_envelope'], // 2 fabric tiles from goldbeater_skin
+      drive: ['maybach_hl', 'maybach_cx'],            // 2 drive tiles from maybach_engine
+      component: ['blaugas_tank']                     // 1 component tile from blaugas_storage
     },
     bonuses: {},
     // The Flaw: Cannot acquire helium_handling tech card
@@ -68,10 +70,10 @@ const FACTION_CONFIG: Record<string, FactionConfig> = {
     // R-Class design: Lightweight efficient frame with passenger cabin (ships earn +1 income on routes)
     startingTechCards: ['wire_bracing', 'doped_canvas', 'standard_propeller', 'passenger_accommodation', 'imperial_mooring'],
     startingTechTiles: {
-      frame: 'tensioned_frame',   // weight 1, ceiling: +1, gas_socket: 1 (best from wire_bracing)
-      fabric: 'doped_covering',   // weight 0, speed: +1 (best from doped_canvas)
-      drive: 'standard_engine',   // weight 2, speed: +1, range: +1
-      component: 'passenger_cabin' // weight 0, income: +1 on route completion
+      frame: ['tensioned_frame', 'wire_braced_frame'],     // 2 frame tiles from wire_bracing
+      fabric: ['doped_covering', 'doped_canvas_envelope'], // 2 fabric tiles from doped_canvas
+      drive: ['standard_engine'],                          // 1 drive tile from standard_propeller
+      component: ['passenger_cabin', 'imperial_mast']      // 2 component tiles from passenger_accommodation + imperial_mooring
     },
     bonuses: {}
   },
@@ -79,9 +81,10 @@ const FACTION_CONFIG: Record<string, FactionConfig> = {
     // Goodyear-Zeppelin design: Safety-focused with high ceiling and reliability
     startingTechCards: ['duralumin_girders', 'gelatinized_latex', 'basic_powerplant', 'trapeze_system', 'helium_handling'],
     startingTechTiles: {
-      frame: 'duralumin_frame',   // weight 2, reliability: +2, ceiling: +1, gas_socket: 1 (best from duralumin_girders)
-      fabric: 'latex_envelope',   // weight 1, reliability: +1
-      drive: 'reliable_engine'    // weight 1, speed: +1, range: +1
+      frame: ['duralumin_frame', 'rigid_duralumin_frame'], // 2 frame tiles from duralumin_girders
+      fabric: ['latex_envelope', 'synthetic_envelope'],    // 2 fabric tiles from gelatinized_latex
+      drive: ['reliable_engine'],                          // 1 drive tile from basic_powerplant
+      component: ['helium_gas_cell', 'sparrowhawk_hangar'] // 2 component tiles from helium_handling + trapeze_system
     },
     bonuses: {},
     // Starting Advantage: Helium Monopoly - market doesn't advance when USA buys helium
@@ -89,11 +92,13 @@ const FACTION_CONFIG: Record<string, FactionConfig> = {
   },
   italy: {
     // Nobile semi-rigid design: Long-range expedition capability (+1 range)
+    // Italy has 3 frame tiles (from internal_keel + articulated_keel) but only 2 slots - install best 2
     startingTechCards: ['internal_keel', 'rubberized_cotton', 'expedition_propeller', 'articulated_keel'],
     startingTechTiles: {
-      frame: 'flexible_frame',   // weight 0, ceiling: +1, gas_socket: 1 (best from articulated_keel)
-      fabric: 'cotton_envelope', // weight 0 (best from rubberized_cotton - lighter than rubberized_envelope)
-      drive: 'expedition_engine' // weight 2, speed: +1, range: +2
+      frame: ['flexible_frame', 'semi_rigid_keel'],        // 2 of 3 frame tiles (articulated_keel + internal_keel)
+      fabric: ['cotton_envelope', 'rubberized_envelope'],  // 2 fabric tiles from rubberized_cotton
+      drive: ['expedition_engine']                         // 1 drive tile from expedition_propeller
+      // No starting component tiles
     },
     bonuses: {},
     // The Flaw: Low Ceiling - fewer payload slots (handled in blueprint)
@@ -155,36 +160,45 @@ function createInitialBlueprint(faction: Faction): Blueprint {
   const startingTechTiles = config.startingTechTiles || {};
 
   // Blueprint Configuration by Age (Section 3.2):
-  // Age I: 1 Frame, 1 Fabric, 1 Drive, 1 Payload slot
-  // Age II: 1 Frame, 1 Fabric, 2 Drive, 2 Payload slots
-  // Age III: 2 Frame, 2 Fabric, 2 Drive, 3 Payload slots
+  // Age I: 2 Frame, 2 Fabric, 2 Drive, 2 Payload slots
+  // Age II: 2 Frame, 2 Fabric, 3 Drive, 3 Payload slots
+  // Age III: 3 Frame, 3 Fabric, 3 Drive, 4 Payload slots
 
   const blueprint: Blueprint = {
     age: 1,
-    frameSlots: [null],      // Age I: 1 frame slot
-    fabricSlots: [null],     // Age I: 1 fabric slot
-    driveSlots: [null],      // Age I: 1 drive slot
-    componentSlots: [null]   // Age I: 1 payload slot (Italy: -1 in Ages II & III)
+    frameSlots: [null, null],      // Age I: 2 frame slots
+    fabricSlots: [null, null],     // Age I: 2 fabric slots
+    driveSlots: [null, null],      // Age I: 2 drive slots
+    componentSlots: [null, null]   // Age I: 2 payload slots (Italy: -1 in Ages II & III)
     // Note: Gas sockets removed - gas is spent directly from reserve when launching
   };
 
   // Pre-install starting tech tiles so faction can launch on turn 1
+  // Install all tiles from the startingTechTiles arrays into available slots
   if (startingTechTiles.frame) {
-    blueprint.frameSlots[0] = startingTechTiles.frame;
+    for (let i = 0; i < startingTechTiles.frame.length && i < blueprint.frameSlots.length; i++) {
+      blueprint.frameSlots[i] = startingTechTiles.frame[i];
+    }
   }
   if (startingTechTiles.fabric) {
-    blueprint.fabricSlots[0] = startingTechTiles.fabric;
+    for (let i = 0; i < startingTechTiles.fabric.length && i < blueprint.fabricSlots.length; i++) {
+      blueprint.fabricSlots[i] = startingTechTiles.fabric[i];
+    }
   }
   if (startingTechTiles.drive) {
-    blueprint.driveSlots[0] = startingTechTiles.drive;
+    for (let i = 0; i < startingTechTiles.drive.length && i < blueprint.driveSlots.length; i++) {
+      blueprint.driveSlots[i] = startingTechTiles.drive[i];
+    }
   }
   if (startingTechTiles.component) {
-    blueprint.componentSlots[0] = startingTechTiles.component;
+    for (let i = 0; i < startingTechTiles.component.length && i < blueprint.componentSlots.length; i++) {
+      blueprint.componentSlots[i] = startingTechTiles.component[i];
+    }
   }
 
   // Italy's "Low Ceiling" flaw affects Ages II & III, not Age I
-  // Age I: all factions have 1 payload slot
-  // Italy will get -1 in blueprint transitions (Age II: 1 instead of 2, Age III: 2 instead of 3)
+  // Age I: all factions have 2 payload slots
+  // Italy will get -1 in blueprint transitions (Age II: 2 instead of 3, Age III: 3 instead of 4)
 
   return blueprint;
 }

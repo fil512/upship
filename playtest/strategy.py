@@ -83,11 +83,23 @@ def get_blueprint_design_blueprint(player_data: Player, current_age: int = 1, is
         print(f"  WARNING: Player has no technologies - cannot fill blueprint slots!", file=sys.stderr)
         return new_blueprint if is_age_transition else None
 
-    # Track installed drive upgrades (no duplicates allowed)
-    installed_drive_upgrades = set(s for s in new_blueprint['driveSlots'] if s is not None)
+    # Track ALL installed tiles across all slot types (no duplicates per Section 4.2)
+    installed_tiles = set()
+    for s in new_blueprint['frameSlots']:
+        if s is not None:
+            installed_tiles.add(s)
+    for s in new_blueprint['fabricSlots']:
+        if s is not None:
+            installed_tiles.add(s)
+    for s in new_blueprint['driveSlots']:
+        if s is not None:
+            installed_tiles.add(s)
+    for s in new_blueprint['componentSlots']:
+        if s is not None:
+            installed_tiles.add(s)
 
     manifest = get_manifest()
-    # Collect available upgrades from technologies
+    # Collect available upgrades from technologies (excluding already installed)
     frame_upgrades = []
     fabric_upgrades = []
     drive_upgrades = []
@@ -97,38 +109,46 @@ def get_blueprint_design_blueprint(player_data: Player, current_age: int = 1, is
         if upgrade_info:
             upgrade_id = upgrade_info['id']
             slot_type = upgrade_info['slotType']
-            if slot_type == 'frameSlots':
-                frame_upgrades.append(upgrade_id)
-            elif slot_type == 'fabricSlots':
-                fabric_upgrades.append(upgrade_id)
-            elif slot_type == 'driveSlots':
-                if upgrade_id not in installed_drive_upgrades:
+            # Only include if not already installed anywhere in blueprint
+            if upgrade_id not in installed_tiles:
+                if slot_type == 'frameSlots':
+                    frame_upgrades.append(upgrade_id)
+                elif slot_type == 'fabricSlots':
+                    fabric_upgrades.append(upgrade_id)
+                elif slot_type == 'driveSlots':
                     drive_upgrades.append(upgrade_id)
 
     changes_made = False
 
-    # Fill empty frame slots (duplicates allowed)
+    # Fill empty frame slots (no duplicates - each tile can only be used once)
+    frame_idx = 0
     for idx in empty_frame_indices:
-        if frame_upgrades:
-            new_blueprint['frameSlots'][idx] = frame_upgrades[0]  # Reuse first available
+        if frame_idx < len(frame_upgrades):
+            upgrade_id = frame_upgrades[frame_idx]
+            new_blueprint['frameSlots'][idx] = upgrade_id
+            installed_tiles.add(upgrade_id)
             changes_made = True
+            frame_idx += 1
 
-    # Fill empty fabric slots (duplicates allowed)
+    # Fill empty fabric slots (no duplicates - each tile can only be used once)
+    fabric_idx = 0
     for idx in empty_fabric_indices:
-        if fabric_upgrades:
-            new_blueprint['fabricSlots'][idx] = fabric_upgrades[0]  # Reuse first available
+        if fabric_idx < len(fabric_upgrades):
+            upgrade_id = fabric_upgrades[fabric_idx]
+            new_blueprint['fabricSlots'][idx] = upgrade_id
+            installed_tiles.add(upgrade_id)
             changes_made = True
+            fabric_idx += 1
 
     # Fill empty drive slots (no duplicates)
     drive_idx = 0
     for idx in empty_drive_indices:
         if drive_idx < len(drive_upgrades):
             upgrade_id = drive_upgrades[drive_idx]
-            if upgrade_id not in installed_drive_upgrades:
-                new_blueprint['driveSlots'][idx] = upgrade_id
-                installed_drive_upgrades.add(upgrade_id)
-                changes_made = True
-                drive_idx += 1
+            new_blueprint['driveSlots'][idx] = upgrade_id
+            installed_tiles.add(upgrade_id)
+            changes_made = True
+            drive_idx += 1
 
     # For age transition, always return the blueprint (even if incomplete - server validates)
     # For normal play, only return if we made changes

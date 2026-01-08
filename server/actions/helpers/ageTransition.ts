@@ -266,9 +266,9 @@ function calculateTransitionIncome(state: AgeTransitionState): void {
  * Note: Italy has -1 componentSlots in Ages II and III (Section 13.4)
  */
 const BLUEPRINT_SLOTS: Record<number, { frameSlots: number; fabricSlots: number; driveSlots: number; componentSlots: number }> = {
-  1: { frameSlots: 1, fabricSlots: 1, driveSlots: 1, componentSlots: 1 },
-  2: { frameSlots: 1, fabricSlots: 1, driveSlots: 2, componentSlots: 2 },
-  3: { frameSlots: 2, fabricSlots: 2, driveSlots: 2, componentSlots: 3 }
+  1: { frameSlots: 2, fabricSlots: 2, driveSlots: 2, componentSlots: 2 },
+  2: { frameSlots: 2, fabricSlots: 2, driveSlots: 3, componentSlots: 3 },
+  3: { frameSlots: 3, fabricSlots: 3, driveSlots: 3, componentSlots: 4 }
 };
 
 /**

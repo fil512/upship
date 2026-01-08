@@ -259,9 +259,11 @@ Blueprints have four slot types for installing **Tech Tiles**:
 
 | Age | Frame | Fabric | Drive | Payload |
 |-----|-------|--------|-------|---------|
-| I   | 1     | 1      | 1     | 1       |
-| II  | 1     | 1      | 2     | 2       |
-| III | 2     | 2      | 2     | 3       |
+| I   | 2     | 2      | 2     | 2       |
+| II  | 2     | 2      | 3     | 3       |
+| III | 3     | 3      | 3     | 4       |
+
+**No Duplicate Tech Tiles:** Each Tech Tile in a Blueprint must be unique. You cannot install the same tile in multiple slots, even if they are the same type. If you have 2 Frame slots, each must contain a different Frame tile.
 
 ### Ship Stats
 
@@ -1016,10 +1018,10 @@ Each nation has unique advantages and constraints.
 
 | Faction | Age I | Age II | Age III |
 |---------|-------|--------|---------|
-| Germany | 1/1/1/1 | 1/1/2/2 | 2/2/2/3 |
-| Britain | 1/1/1/1 | 1/1/2/2 | 2/2/2/3 |
-| USA | 1/1/1/1 | 1/1/2/2 | 2/2/2/3 |
-| Italy | 1/1/1/1 | 1/1/2/1 | 2/2/2/2 |
+| Germany | 2/2/2/2 | 2/2/3/3 | 3/3/3/4 |
+| Britain | 2/2/2/2 | 2/2/3/3 | 3/3/3/4 |
+| USA | 2/2/2/2 | 2/2/3/3 | 3/3/3/4 |
+| Italy | 2/2/2/2 | 2/2/3/2 | 3/3/3/3 |
 
 *Format: Frame/Fabric/Drive/Payload*
 

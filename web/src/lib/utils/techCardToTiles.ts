@@ -76,14 +76,50 @@ export interface AvailableTilesBySlot {
   componentSlots: TechTile[];
 }
 
+export interface Blueprint {
+  frameSlots: (string | null)[];
+  fabricSlots: (string | null)[];
+  driveSlots: (string | null)[];
+  componentSlots: (string | null)[];
+}
+
+/**
+ * Get all tile IDs currently installed in a blueprint
+ */
+function getInstalledTileIds(blueprint: Blueprint | undefined): Set<string> {
+  const installed = new Set<string>();
+  if (!blueprint) return installed;
+
+  for (const tileId of blueprint.frameSlots || []) {
+    if (tileId) installed.add(tileId);
+  }
+  for (const tileId of blueprint.fabricSlots || []) {
+    if (tileId) installed.add(tileId);
+  }
+  for (const tileId of blueprint.driveSlots || []) {
+    if (tileId) installed.add(tileId);
+  }
+  for (const tileId of blueprint.componentSlots || []) {
+    if (tileId) installed.add(tileId);
+  }
+
+  return installed;
+}
+
 /**
  * Get all tech tiles available to a player based on their owned tech cards and current age.
  * Tiles are grouped by slot type for easy rendering.
+ * Per Section 4.2: Each Tech Tile must be unique - excludes already-installed tiles.
  * @param techCards Array of tech card IDs the player owns
  * @param currentAge Current game age (1, 2, or 3)
+ * @param blueprint Optional current blueprint to exclude already-installed tiles
  * @returns Object with tiles grouped by slot type
  */
-export function getAvailableTilesForPlayer(techCards: string[], currentAge: number): AvailableTilesBySlot {
+export function getAvailableTilesForPlayer(
+  techCards: string[],
+  currentAge: number,
+  blueprint?: Blueprint
+): AvailableTilesBySlot {
   const result: AvailableTilesBySlot = {
     frameSlots: [],
     fabricSlots: [],
@@ -91,9 +127,15 @@ export function getAvailableTilesForPlayer(techCards: string[], currentAge: numb
     componentSlots: []
   };
 
+  // Get tiles already installed (cannot use duplicates)
+  const installedTileIds = getInstalledTileIds(blueprint);
+
   for (const tile of Object.values(TECH_TILES)) {
-    // Check if player owns the required card and tile is available in current age
-    if (techCards.includes(tile.requiredCard) && tile.age <= currentAge) {
+    // Check if player owns the required card, tile is available in current age,
+    // and tile is not already installed (no duplicates per Section 4.2)
+    if (techCards.includes(tile.requiredCard) &&
+        tile.age <= currentAge &&
+        !installedTileIds.has(tile.id)) {
       // Add to appropriate slot type array
       if (tile.slotType in result) {
         result[tile.slotType as keyof AvailableTilesBySlot].push(tile);

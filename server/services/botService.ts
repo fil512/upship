@@ -255,10 +255,22 @@ export function getBlueprintDesignBlueprint(
     return isAgeTransition ? newBlueprint : null;
   }
 
-  // Track installed drive upgrades (no duplicates allowed)
-  const installedDriveUpgrades = new Set(newBlueprint.driveSlots!.filter(s => s !== null));
+  // Track ALL installed tiles across all slot types (no duplicates per Section 4.2)
+  const installedTiles = new Set<string>();
+  for (const s of newBlueprint.frameSlots!) {
+    if (s !== null) installedTiles.add(s);
+  }
+  for (const s of newBlueprint.fabricSlots!) {
+    if (s !== null) installedTiles.add(s);
+  }
+  for (const s of newBlueprint.driveSlots!) {
+    if (s !== null) installedTiles.add(s);
+  }
+  for (const s of newBlueprint.componentSlots!) {
+    if (s !== null) installedTiles.add(s);
+  }
 
-  // Collect available upgrades from technologies
+  // Collect available upgrades from technologies (excluding already installed)
   const frameUpgrades: string[] = [];
   const fabricUpgrades: string[] = [];
   const driveUpgrades: string[] = [];
@@ -266,14 +278,14 @@ export function getBlueprintDesignBlueprint(
   for (const techId of technologies) {
     const upgradeInfo = getUpgradeForTech(techId);
     if (upgradeInfo) {
-      // slotType is 'frameSlots', 'fabricSlots', 'driveSlots', etc.
-      const slotType = upgradeInfo.slotType;
-      if (slotType === 'frameSlots') {
-        frameUpgrades.push(upgradeInfo.id);
-      } else if (slotType === 'fabricSlots') {
-        fabricUpgrades.push(upgradeInfo.id);
-      } else if (slotType === 'driveSlots') {
-        if (!installedDriveUpgrades.has(upgradeInfo.id)) {
+      // Only include if not already installed anywhere in blueprint
+      if (!installedTiles.has(upgradeInfo.id)) {
+        const slotType = upgradeInfo.slotType;
+        if (slotType === 'frameSlots') {
+          frameUpgrades.push(upgradeInfo.id);
+        } else if (slotType === 'fabricSlots') {
+          fabricUpgrades.push(upgradeInfo.id);
+        } else if (slotType === 'driveSlots') {
           driveUpgrades.push(upgradeInfo.id);
         }
       }
@@ -283,19 +295,27 @@ export function getBlueprintDesignBlueprint(
   // Track changes made
   let changesMade = false;
 
-  // Fill empty frame slots (duplicates allowed for frame/fabric)
+  // Fill empty frame slots (no duplicates - each tile can only be used once)
+  let frameIdx = 0;
   for (const idx of emptyFrameIndices) {
-    if (frameUpgrades.length > 0) {
-      newBlueprint.frameSlots![idx] = frameUpgrades[0]; // Reuse first available
+    if (frameIdx < frameUpgrades.length) {
+      const upgradeId = frameUpgrades[frameIdx];
+      newBlueprint.frameSlots![idx] = upgradeId;
+      installedTiles.add(upgradeId);
       changesMade = true;
+      frameIdx++;
     }
   }
 
-  // Fill empty fabric slots
+  // Fill empty fabric slots (no duplicates - each tile can only be used once)
+  let fabricIdx = 0;
   for (const idx of emptyFabricIndices) {
-    if (fabricUpgrades.length > 0) {
-      newBlueprint.fabricSlots![idx] = fabricUpgrades[0]; // Reuse first available
+    if (fabricIdx < fabricUpgrades.length) {
+      const upgradeId = fabricUpgrades[fabricIdx];
+      newBlueprint.fabricSlots![idx] = upgradeId;
+      installedTiles.add(upgradeId);
       changesMade = true;
+      fabricIdx++;
     }
   }
 
@@ -304,12 +324,10 @@ export function getBlueprintDesignBlueprint(
   for (const idx of emptyDriveIndices) {
     if (driveIdx < driveUpgrades.length) {
       const upgradeId = driveUpgrades[driveIdx];
-      if (!installedDriveUpgrades.has(upgradeId)) {
-        newBlueprint.driveSlots![idx] = upgradeId;
-        installedDriveUpgrades.add(upgradeId);
-        changesMade = true;
-        driveIdx++;
-      }
+      newBlueprint.driveSlots![idx] = upgradeId;
+      installedTiles.add(upgradeId);
+      changesMade = true;
+      driveIdx++;
     }
   }
 

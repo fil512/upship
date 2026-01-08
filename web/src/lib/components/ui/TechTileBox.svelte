@@ -57,14 +57,14 @@
 </div>
 
 <style>
-	/* Tile box matching blueprint rendered size: ~108x59px */
+	/* Tile box matching blueprint rendered size: ~108x68px (taller for text wrapping) */
 	.tile-box {
 		display: flex;
 		flex-direction: column;
 		align-items: center;
 		justify-content: space-between;
 		width: 108px;
-		height: 59px;
+		height: 68px;
 		padding: 4px;
 		background: color-mix(in srgb, var(--slot-color) 20%, rgba(30, 41, 59, 0.9));
 		border: 2px solid var(--slot-color);
@@ -103,16 +103,18 @@
 		flex: 1;
 	}
 
-	/* Name at bottom of tile */
+	/* Name at bottom of tile - allows wrapping to 2 lines */
 	.tile-name {
 		font-size: 9px;
 		font-weight: 600;
 		color: var(--slot-color);
 		text-align: center;
-		white-space: nowrap;
-		overflow: hidden;
-		text-overflow: ellipsis;
 		max-width: 100%;
-		line-height: 1;
+		line-height: 1.2;
+		overflow: hidden;
+		display: -webkit-box;
+		-webkit-line-clamp: 2;
+		-webkit-box-orient: vertical;
+		word-break: break-word;
 	}
 </style>

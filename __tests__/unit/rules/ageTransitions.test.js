@@ -223,21 +223,21 @@ describe('Rules Compliance - Age Transitions', () => {
       const state = createTestGameState();
       state.age = 1;
 
-      // Age I blueprint: 1/1/1/1 slots
+      // Age I blueprint: 2/2/2/2 slots
       state.players['1'].blueprint = {
         age: 1,
-        frameSlots: ['duralumin_frame'],
-        fabricSlots: ['premium_envelope'],
-        driveSlots: [null],
-        componentSlots: [null]
+        frameSlots: ['duralumin_frame', null],
+        fabricSlots: ['premium_envelope', null],
+        driveSlots: [null, null],
+        componentSlots: [null, null]
       };
 
       performAgeTransition(state, 2);
 
-      // Age II blueprint: 1/1/2/2 slots per Section 4.2
+      // Age II blueprint: 2/2/3/3 slots per Section 4.2
       expect(state.players['1'].blueprint.age).toBe(2);
-      expect(state.players['1'].blueprint.driveSlots.length).toBe(2);
-      expect(state.players['1'].blueprint.componentSlots.length).toBe(2);
+      expect(state.players['1'].blueprint.driveSlots.length).toBe(3);
+      expect(state.players['1'].blueprint.componentSlots.length).toBe(3);
 
       // Existing upgrades should be preserved
       expect(state.players['1'].blueprint.frameSlots[0]).toBe('duralumin_frame');
@@ -247,22 +247,22 @@ describe('Rules Compliance - Age Transitions', () => {
       const state = createTestGameState();
       state.age = 2;
 
-      // Age II blueprint
+      // Age II blueprint: 2/2/3/3 slots
       state.players['1'].blueprint = {
         age: 2,
-        frameSlots: ['duralumin_frame'],
-        fabricSlots: ['premium_envelope'],
-        driveSlots: ['maybach_engine', null],
-        componentSlots: ['cargo_systems', null]
+        frameSlots: ['duralumin_frame', null],
+        fabricSlots: ['premium_envelope', null],
+        driveSlots: ['maybach_engine', null, null],
+        componentSlots: ['cargo_systems', null, null]
       };
 
       performAgeTransition(state, 3);
 
-      // Age III blueprint: 2/2/2/3 slots per Section 4.2
+      // Age III blueprint: 3/3/3/4 slots per Section 4.2
       expect(state.players['1'].blueprint.age).toBe(3);
-      expect(state.players['1'].blueprint.frameSlots.length).toBe(2);
-      expect(state.players['1'].blueprint.fabricSlots.length).toBe(2);
-      expect(state.players['1'].blueprint.componentSlots.length).toBe(3);
+      expect(state.players['1'].blueprint.frameSlots.length).toBe(3);
+      expect(state.players['1'].blueprint.fabricSlots.length).toBe(3);
+      expect(state.players['1'].blueprint.componentSlots.length).toBe(4);
 
       // Existing upgrades preserved
       expect(state.players['1'].blueprint.driveSlots[0]).toBe('maybach_engine');
@@ -339,14 +339,14 @@ describe('Rules Compliance - Age Transitions', () => {
       state.age = 1;
       state.playerOrder = ['1', '2'];
 
-      // Set up player with a technology and one empty frame slot (second slot)
-      // First frame slot and fabric slot already filled to pass completeness check
-      state.players['1'].techCards = ['duralumin_girders'];
+      // Set up player with two frame technologies and one empty frame slot
+      // First frame slot and fabric slots already filled to pass completeness check
+      state.players['1'].techCards = ['duralumin_girders', 'zeppelin_girders'];
       state.players['1'].blueprint = {
-        frameSlots: ['duralumin_frame', null],  // First filled, second empty
-        fabricSlots: ['cotton_envelope'],       // Already filled
-        driveSlots: [null],
-        componentSlots: [null]
+        frameSlots: ['duralumin_frame', null],     // First filled, second empty
+        fabricSlots: ['cotton_envelope', 'premium_envelope'],  // Both filled
+        driveSlots: [null, null],
+        componentSlots: [null, null]
       };
       state.players['1'].ships = [{ id: 'ship1', status: 'hangar' }];
       state.players['1'].cash = 10;
@@ -354,17 +354,17 @@ describe('Rules Compliance - Age Transitions', () => {
       // Start transition
       performAgeTransition(state, 2);
 
-      // Player 1 installs an upgrade - filling the second frame slot with a duplicate
+      // Player 1 installs a different upgrade - filling the second frame slot
       const result = processAgeTransitionBlueprintDesign(state, '1', {
-        blueprint: { frameSlots: ['duralumin_frame', 'duralumin_frame'] }
+        blueprint: { frameSlots: ['duralumin_frame', 'zeppelin_frame'] }
       });
 
-      expect(result.newState.players['1'].blueprint.frameSlots[1]).toBe('duralumin_frame');
+      expect(result.newState.players['1'].blueprint.frameSlots[1]).toBe('zeppelin_frame');
       // Cash should not be affected (no Hull Upgrade Rule)
       expect(result.newState.players['1'].cash).toBe(10);
     });
 
-    it('should allow duplicate upgrades during age transition', () => {
+    it('should reject duplicate upgrades during age transition per Section 4.2', () => {
       const { processAgeTransitionBlueprintDesign } = require('../../../server/actions/blueprint');
 
       const state = createTestGameState();
@@ -372,25 +372,22 @@ describe('Rules Compliance - Age Transitions', () => {
       state.playerOrder = ['1', '2'];
 
       // Set up player with frame tech and slots - one already filled
-      // Fabric slot already filled to pass completeness check
       state.players['1'].techCards = ['duralumin_girders'];
       state.players['1'].blueprint = {
         frameSlots: ['duralumin_frame', null],  // First slot already has this upgrade
-        fabricSlots: ['cotton_envelope'],        // Already filled
-        driveSlots: [null],
-        componentSlots: [null]
+        fabricSlots: ['cotton_envelope', 'premium_envelope'],
+        driveSlots: [null, null],
+        componentSlots: [null, null]
       };
 
       performAgeTransition(state, 2);
 
-      // Try to install same upgrade in second slot (duplicates allowed)
-      const result = processAgeTransitionBlueprintDesign(state, '1', {
-        blueprint: { frameSlots: ['duralumin_frame', 'duralumin_frame'] }
-      });
-
-      // Both slots should now have the same upgrade
-      expect(result.newState.players['1'].blueprint.frameSlots[0]).toBe('duralumin_frame');
-      expect(result.newState.players['1'].blueprint.frameSlots[1]).toBe('duralumin_frame');
+      // Try to install same upgrade in second slot (should fail - duplicates not allowed)
+      expect(() => {
+        processAgeTransitionBlueprintDesign(state, '1', {
+          blueprint: { frameSlots: ['duralumin_frame', 'duralumin_frame'] }
+        });
+      }).toThrow(/duplicate/i);
     });
 
     it('should complete age transition after all players submit their actions', () => {
@@ -400,18 +397,18 @@ describe('Rules Compliance - Age Transitions', () => {
       state.age = 1;
       state.playerOrder = ['1', '2'];
 
-      // Set up complete blueprints (no empty frame/fabric slots)
+      // Set up complete blueprints with 2/2/2/2 slots (Age I)
       state.players['1'].blueprint = {
-        frameSlots: ['duralumin_frame'],
-        fabricSlots: ['cotton_envelope'],
-        driveSlots: [],
-        componentSlots: []
+        frameSlots: ['duralumin_frame', 'zeppelin_frame'],
+        fabricSlots: ['cotton_envelope', 'premium_envelope'],
+        driveSlots: [null, null],
+        componentSlots: [null, null]
       };
       state.players['2'].blueprint = {
-        frameSlots: ['duralumin_frame'],
-        fabricSlots: ['cotton_envelope'],
-        driveSlots: [],
-        componentSlots: []
+        frameSlots: ['duralumin_frame', 'zeppelin_frame'],
+        fabricSlots: ['cotton_envelope', 'premium_envelope'],
+        driveSlots: [null, null],
+        componentSlots: [null, null]
       };
 
       performAgeTransition(state, 2);

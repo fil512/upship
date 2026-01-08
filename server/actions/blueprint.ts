@@ -86,10 +86,53 @@ interface BlueprintValidation {
   valid: boolean;
   emptyFrameSlots: number;
   emptyFabricSlots: number;
+  duplicateTiles: string[];
 }
 
 /**
- * Validate that blueprint has no empty frame or fabric slots.
+ * Get all installed tile IDs from a blueprint
+ */
+function getAllInstalledTiles(blueprint: Blueprint): string[] {
+  const tiles: string[] = [];
+  for (const tileId of blueprint.frameSlots || []) {
+    if (tileId) tiles.push(tileId);
+  }
+  for (const tileId of blueprint.fabricSlots || []) {
+    if (tileId) tiles.push(tileId);
+  }
+  for (const tileId of blueprint.driveSlots || []) {
+    if (tileId) tiles.push(tileId);
+  }
+  for (const tileId of blueprint.componentSlots || []) {
+    if (tileId) tiles.push(tileId);
+  }
+  return tiles;
+}
+
+/**
+ * Find duplicate tiles in a blueprint
+ * Per Section 4.2: Each Tech Tile in a Blueprint must be unique
+ */
+function findDuplicateTiles(blueprint: Blueprint): string[] {
+  const tiles = getAllInstalledTiles(blueprint);
+  const seen = new Set<string>();
+  const duplicates: string[] = [];
+
+  for (const tileId of tiles) {
+    if (seen.has(tileId)) {
+      if (!duplicates.includes(tileId)) {
+        duplicates.push(tileId);
+      }
+    } else {
+      seen.add(tileId);
+    }
+  }
+
+  return duplicates;
+}
+
+/**
+ * Validate that blueprint has no empty frame or fabric slots and no duplicate tiles.
  * Blueprints must always be complete after any modification.
  */
 function validateBlueprintComplete(blueprint: Blueprint): BlueprintValidation {
@@ -98,11 +141,13 @@ function validateBlueprintComplete(blueprint: Blueprint): BlueprintValidation {
 
   const emptyFrameSlots = frameSlots.filter(s => s === null || s === undefined).length;
   const emptyFabricSlots = fabricSlots.filter(s => s === null || s === undefined).length;
+  const duplicateTiles = findDuplicateTiles(blueprint);
 
   return {
-    valid: emptyFrameSlots === 0 && emptyFabricSlots === 0,
+    valid: emptyFrameSlots === 0 && emptyFabricSlots === 0 && duplicateTiles.length === 0,
     emptyFrameSlots,
-    emptyFabricSlots
+    emptyFabricSlots,
+    duplicateTiles
   };
 }
 
@@ -191,6 +236,12 @@ function processInstallTechTile(state: GameState, playerId: string, data: Instal
     if (!hasHeliumGasCell) {
       throw new GameRuleError(`${tile.name} requires a Helium Gas Cell to be installed first`);
     }
+  }
+
+  // Validate no duplicate tiles in blueprint (Section 4.2)
+  const currentTiles = getAllInstalledTiles(playerState.blueprint);
+  if (currentTiles.includes(targetId!)) {
+    throw new GameRuleError(`${tile.name} is already installed in your blueprint. Each Tech Tile must be unique.`);
   }
 
   // GAP-032: Hull Upgrade Rule - charge hull cost difference for ships in hangar
@@ -414,7 +465,7 @@ function processUpdateBlueprint(state: GameState, playerId: string, data: Update
     componentSlots: newBlueprint.componentSlots || oldBlueprint.componentSlots
   } as Blueprint;
 
-  // Validate blueprint completeness
+  // Validate blueprint completeness and no duplicates
   const validation = validateBlueprintComplete(mergedBlueprint);
   if (!validation.valid) {
     const errors: string[] = [];
@@ -424,7 +475,17 @@ function processUpdateBlueprint(state: GameState, playerId: string, data: Update
     if (validation.emptyFabricSlots > 0) {
       errors.push(`${validation.emptyFabricSlots} empty Fabric slot(s)`);
     }
-    throw new GameRuleError(`Blueprint incomplete: ${errors.join(', ')}. All Frame and Fabric slots must be filled.`);
+    if (validation.duplicateTiles.length > 0) {
+      const tileNames = validation.duplicateTiles.map(id => {
+        const tile = TECH_TILES[id] as TechTile | undefined;
+        return tile?.name || id;
+      });
+      errors.push(`duplicate tile(s): ${tileNames.join(', ')}`);
+    }
+    const errorMessage = validation.duplicateTiles.length > 0
+      ? `Blueprint invalid: ${errors.join(', ')}. All Tech Tiles must be unique.`
+      : `Blueprint incomplete: ${errors.join(', ')}. All Frame and Fabric slots must be filled.`;
+    throw new GameRuleError(errorMessage);
   }
 
   // Calculate Hull Upgrade Rule charges (unless skipped for age transitions)
@@ -535,7 +596,7 @@ function processAgeTransitionBlueprintDesign(state: GameState, playerId: string,
   }
   // If no blueprint provided, player is keeping their current configuration
 
-  // Validate blueprint is complete (no empty frame/fabric slots)
+  // Validate blueprint is complete (no empty frame/fabric slots, no duplicates)
   const validation = validateBlueprintComplete(playerState.blueprint);
   if (!validation.valid) {
     const errors: string[] = [];
@@ -545,7 +606,17 @@ function processAgeTransitionBlueprintDesign(state: GameState, playerId: string,
     if (validation.emptyFabricSlots > 0) {
       errors.push(`${validation.emptyFabricSlots} empty Fabric slot(s)`);
     }
-    throw new GameRuleError(`Blueprint incomplete: ${errors.join(', ')}. All Frame and Fabric slots must be filled.`);
+    if (validation.duplicateTiles.length > 0) {
+      const tileNames = validation.duplicateTiles.map(id => {
+        const tile = TECH_TILES[id] as TechTile | undefined;
+        return tile?.name || id;
+      });
+      errors.push(`duplicate tile(s): ${tileNames.join(', ')}`);
+    }
+    const errorMessage = validation.duplicateTiles.length > 0
+      ? `Blueprint invalid: ${errors.join(', ')}. All Tech Tiles must be unique.`
+      : `Blueprint incomplete: ${errors.join(', ')}. All Frame and Fabric slots must be filled.`;
+    throw new GameRuleError(errorMessage);
   }
 
   // Mark player as complete

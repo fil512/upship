@@ -126,12 +126,12 @@ describe('Rules Compliance - Factions', () => {
       const { performAgeTransition } = require('../../../server/actions/helpers/ageTransition');
       performAgeTransition(state, 2);
 
-      // Italy should have 1/1/2/1 in Age II per Section 13.5
-      // (one fewer payload slot: 1 instead of 2)
-      expect(italyPlayer.blueprint.frameSlots.length).toBe(1);
-      expect(italyPlayer.blueprint.fabricSlots.length).toBe(1);
-      expect(italyPlayer.blueprint.driveSlots.length).toBe(2);
-      expect(italyPlayer.blueprint.componentSlots.length).toBe(1); // 1 instead of 2
+      // Italy should have 2/2/3/2 in Age II per Section 13.5
+      // (one fewer payload slot: 2 instead of 3)
+      expect(italyPlayer.blueprint.frameSlots.length).toBe(2);
+      expect(italyPlayer.blueprint.fabricSlots.length).toBe(2);
+      expect(italyPlayer.blueprint.driveSlots.length).toBe(3);
+      expect(italyPlayer.blueprint.componentSlots.length).toBe(2); // 2 instead of 3
     });
 
     it('should give Italy one fewer Payload slot in Age III per Section 13.4', () => {
@@ -142,25 +142,25 @@ describe('Rules Compliance - Factions', () => {
       const italyPlayer = state.players['4'];
       expect(italyPlayer.faction).toBe('italy');
 
-      // Set up Age II blueprint for Italy (1/1/2/1)
+      // Set up Age II blueprint for Italy (2/2/3/2)
       italyPlayer.blueprint = {
         age: 2,
-        frameSlots: ['semi_rigid_keel'],
-        fabricSlots: ['cotton_envelope'],
-        driveSlots: [null, null],
-        componentSlots: [null]
+        frameSlots: ['semi_rigid_keel', null],
+        fabricSlots: ['cotton_envelope', null],
+        driveSlots: [null, null, null],
+        componentSlots: [null, null]
       };
 
       // Import and call age transition
       const { performAgeTransition } = require('../../../server/actions/helpers/ageTransition');
       performAgeTransition(state, 3);
 
-      // Italy should have 2/2/2/2 in Age III per Section 13.5
-      // (one fewer payload slot: 2 instead of 3)
-      expect(italyPlayer.blueprint.frameSlots.length).toBe(2);
-      expect(italyPlayer.blueprint.fabricSlots.length).toBe(2);
-      expect(italyPlayer.blueprint.driveSlots.length).toBe(2);
-      expect(italyPlayer.blueprint.componentSlots.length).toBe(2); // 2 instead of 3
+      // Italy should have 3/3/3/3 in Age III per Section 13.5
+      // (one fewer payload slot: 3 instead of 4)
+      expect(italyPlayer.blueprint.frameSlots.length).toBe(3);
+      expect(italyPlayer.blueprint.fabricSlots.length).toBe(3);
+      expect(italyPlayer.blueprint.driveSlots.length).toBe(3);
+      expect(italyPlayer.blueprint.componentSlots.length).toBe(3); // 3 instead of 4
     });
 
     it('should NOT reduce payload slots for non-Italy factions', () => {
@@ -173,17 +173,17 @@ describe('Rules Compliance - Factions', () => {
 
       germanyPlayer.blueprint = {
         age: 1,
-        frameSlots: ['duralumin_frame'],
-        fabricSlots: ['premium_envelope'],
-        driveSlots: [null],
-        componentSlots: [null]
+        frameSlots: ['duralumin_frame', null],
+        fabricSlots: ['premium_envelope', null],
+        driveSlots: [null, null],
+        componentSlots: [null, null]
       };
 
       const { performAgeTransition } = require('../../../server/actions/helpers/ageTransition');
       performAgeTransition(state, 2);
 
-      // Germany should have normal 1/1/2/2 in Age II
-      expect(germanyPlayer.blueprint.componentSlots.length).toBe(2);
+      // Germany should have normal 2/2/3/3 in Age II
+      expect(germanyPlayer.blueprint.componentSlots.length).toBe(3);
     });
   });
 

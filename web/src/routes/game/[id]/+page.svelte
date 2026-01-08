@@ -625,7 +625,12 @@
 
 	// Blueprint Design mode handlers
 	// Available tech tiles - compute whenever on blueprint tab or in blueprint design mode
-	$: availableTechTiles = getAvailableTilesForPlayer($myState?.techCards || [], $gameState?.age || 1);
+	// Pass current blueprint to filter out already-installed tiles (no duplicates per Section 4.2)
+	$: availableTechTiles = getAvailableTilesForPlayer(
+		$myState?.techCards || [],
+		$gameState?.age || 1,
+		pendingBlueprint || $myState?.blueprint
+	);
 
 	// Is the blueprint tab active and we can show tech tiles?
 	$: showBlueprintTiles = activeTab === 'blueprint';

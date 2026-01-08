@@ -73,7 +73,7 @@ describe('GameStateService', () => {
       });
 
       it('should have pre-installed passenger cabin (Luxury Focus)', () => {
-        expect(FACTION_CONFIG.britain.startingTechTiles.component).toBe('passenger_cabin');
+        expect(FACTION_CONFIG.britain.startingTechTiles.component).toContain('passenger_cabin');
       });
 
       it('should have passenger accommodation tech card for the cabin tile', () => {
