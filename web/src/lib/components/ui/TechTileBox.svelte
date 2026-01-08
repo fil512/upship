@@ -4,6 +4,7 @@
 	import type { TechTile } from '$lib/data/techTiles';
 
 	export let tile: TechTile;
+	export let alreadyOwned: boolean = false;
 
 	// Slot type colors matching AirshipBlueprint
 	const slotColors: Record<string, string> = {
@@ -40,9 +41,13 @@
 
 <div
 	class="tile-box"
+	class:already-owned={alreadyOwned}
 	style="--slot-color: {slotColor}"
 	title="{tile.name}"
 >
+	{#if alreadyOwned}
+		<div class="owned-overlay">Already Owned</div>
+	{/if}
 	<div class="tile-icons">
 		{#each icons as icon}
 			<Icon name={icon.type as IconName} size={14} />
@@ -64,6 +69,27 @@
 		background: color-mix(in srgb, var(--slot-color) 20%, rgba(30, 41, 59, 0.9));
 		border: 2px solid var(--slot-color);
 		border-radius: 6px;
+		position: relative;
+	}
+
+	.tile-box.already-owned {
+		opacity: 0.5;
+		filter: grayscale(50%);
+	}
+
+	.owned-overlay {
+		position: absolute;
+		inset: 0;
+		background: rgba(0, 0, 0, 0.6);
+		color: white;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		font-size: 0.6rem;
+		font-weight: bold;
+		text-transform: uppercase;
+		border-radius: 4px;
+		z-index: 1;
 	}
 
 	/* Icons area - centered horizontally */

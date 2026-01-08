@@ -14,6 +14,7 @@
 	export let myPlayerId: string = '';
 	export let players: Record<string, { faction: Faction }> = {};
 	export let playerTechCards: string[] = [];
+	export let installedTileIds: string[] = [];
 
 	const dispatch = createEventDispatcher<{
 		buy: { cardId: string };
@@ -109,7 +110,7 @@
 			{#if tiles.length > 0}
 				<div class="tiles-section">
 					{#each tiles as tile}
-						<TechTileBox {tile} />
+						<TechTileBox {tile} alreadyOwned={installedTileIds.includes(tile.id)} />
 					{/each}
 				</div>
 			{/if}

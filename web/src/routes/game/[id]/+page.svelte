@@ -599,6 +599,14 @@
 	// Ship stats from blueprint (uses viewed player's blueprint when viewing another player)
 	$: shipStats = calculateShipStats(viewedPlayerState?.blueprint || $myState?.blueprint);
 
+	// Installed tile IDs from blueprint (for showing "already owned" in market)
+	$: installedTileIds = $myState?.blueprint ? [
+		...($myState.blueprint.frameSlots || []),
+		...($myState.blueprint.fabricSlots || []),
+		...($myState.blueprint.driveSlots || []),
+		...($myState.blueprint.componentSlots || [])
+	].filter((id): id is string => id !== null) : [];
+
 	// Game advancement track
 	$: progressThresholds = $gameState?.progressThresholds || { age2: 4, age3: 8, end: 12 };
 	$: progressTrack = $gameState?.progressTrack || 0;
@@ -1235,6 +1243,7 @@
 								myPlayerId={$effectiveUserId}
 								players={$gameState.players}
 								playerTechCards={$myState?.techCards || []}
+								{installedTileIds}
 								on:buyMarket={handleBuyMarketCard}
 								on:buyTech={handleBuyTechCard}
 								on:undoPurchase={handleUndoPurchase}

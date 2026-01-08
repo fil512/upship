@@ -21,6 +21,7 @@
 	export let myPlayerId: string = '';
 	export let players: Record<string, { faction: Faction }> = {};
 	export let playerTechCards: string[] = [];
+	export let installedTileIds: string[] = [];
 
 	// Check if player already owns the reserve tech
 	$: ownsReserveTech = reserveTechCard ? playerTechCards.includes(reserveTechCard.id) : false;
@@ -123,7 +124,7 @@
 					{#if reserveTechTiles.length > 0}
 						<div class="reserve-tech-tiles">
 							{#each reserveTechTiles as tile}
-								<TechTileBox {tile} />
+								<TechTileBox {tile} alreadyOwned={installedTileIds.includes(tile.id)} />
 							{/each}
 						</div>
 					{/if}
@@ -149,6 +150,7 @@
 			{myPlayerId}
 			{players}
 			{playerTechCards}
+			{installedTileIds}
 			on:buy={handleBuyTech}
 			on:undo={handleUndoTech}
 		/>
