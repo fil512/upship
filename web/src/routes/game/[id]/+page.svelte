@@ -1131,7 +1131,7 @@
 						class:active={activeTab === 'map'}
 						on:click={() => (activeTab = 'map')}
 					>
-						Map
+						{$gameState?.age === 2 ? 'Missions' : 'Map'}
 					</button>
 					<button
 						class="tab-btn"
