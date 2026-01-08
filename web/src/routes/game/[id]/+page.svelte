@@ -1043,6 +1043,9 @@
 							class:age2={i === progressThresholds.age2}
 							class:age3={i === progressThresholds.age3}
 							class:game-end={i === progressThresholds.end}
+							class:age-1-zone={i < progressThresholds.age2}
+							class:age-2-zone={i >= progressThresholds.age2 && i < progressThresholds.age3}
+							class:age-3-zone={i >= progressThresholds.age3}
 						>
 							{#if i === progressTrack}
 								<span class="marker">●</span>
@@ -1946,6 +1949,50 @@
 
 	.track-space.passed.age3 {
 		background: color-mix(in srgb, var(--color-accent-gold) 30%, transparent);
+	}
+
+	/* Age zone colors - green for Age 1, red for Age 2, gold for Age 3 */
+	.track-space.age-1-zone {
+		border: 1px solid var(--color-success);
+		color: var(--color-success);
+	}
+
+	.track-space.age-2-zone {
+		border: 1px solid var(--color-error);
+		color: var(--color-error);
+	}
+
+	.track-space.age-3-zone {
+		border: 1px solid var(--color-accent-gold);
+		color: var(--color-accent-gold);
+	}
+
+	.track-space.passed.age-1-zone {
+		background: color-mix(in srgb, var(--color-success) 30%, transparent);
+	}
+
+	.track-space.passed.age-2-zone {
+		background: color-mix(in srgb, var(--color-error) 30%, transparent);
+	}
+
+	.track-space.passed.age-3-zone {
+		background: color-mix(in srgb, var(--color-accent-gold) 30%, transparent);
+	}
+
+	/* Current marker inherits zone color but with full opacity background */
+	.track-space.current.age-1-zone {
+		background: var(--color-success);
+		color: var(--color-bg-primary);
+	}
+
+	.track-space.current.age-2-zone {
+		background: var(--color-error);
+		color: var(--color-bg-primary);
+	}
+
+	.track-space.current.age-3-zone {
+		background: var(--color-accent-gold);
+		color: var(--color-bg-primary);
 	}
 
 	.milestone-label {

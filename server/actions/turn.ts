@@ -72,14 +72,10 @@ function processEndTurn(state: GameState, playerId: string): ActionResult {
               delete turnState.techCardsClaimed[acquisition.cardId];
             }
 
-            // Increment progress track (needed for age transitions)
-            const techState = state as GameState & { progressTrack?: number };
-            techState.progressTrack = (techState.progressTrack || 0) + 1;
-
             state.log = state.log || [];
             state.log.push({
               timestamp: new Date().toISOString(),
-              message: `Acquired ${card.name} for ${acquisition.cost} Research. Progress: ${techState.progressTrack}`,
+              message: `Acquired ${card.name} for ${acquisition.cost} Research`,
               playerId,
               type: 'action',
               round: state.round,
@@ -94,14 +90,10 @@ function processEndTurn(state: GameState, playerId: string): ActionResult {
               delete turnState.techCardsClaimed[acquisition.cardId];
             }
 
-            // Increment progress track (needed for age transitions)
-            const techState = state as GameState & { progressTrack?: number };
-            techState.progressTrack = (techState.progressTrack || 0) + 1;
-
             state.log = state.log || [];
             state.log.push({
               timestamp: new Date().toISOString(),
-              message: `Acquired ${reserveTechCard.name} (Reserve) for ${acquisition.cost} Research. Progress: ${techState.progressTrack}`,
+              message: `Acquired ${reserveTechCard.name} (Reserve) for ${acquisition.cost} Research`,
               playerId,
               type: 'action',
               round: state.round,
@@ -284,14 +276,10 @@ function processEndTurn(state: GameState, playerId: string): ActionResult {
             delete turnState.techCardsClaimed[acquisition.cardId];
           }
 
-          // Increment progress track (needed for age transitions)
-          const techState = state as GameState & { progressTrack?: number };
-          techState.progressTrack = (techState.progressTrack || 0) + 1;
-
           state.log = state.log || [];
           state.log.push({
             timestamp: new Date().toISOString(),
-            message: `Acquired ${card.name} for ${acquisition.cost} Research. Progress: ${techState.progressTrack}`,
+            message: `Acquired ${card.name} for ${acquisition.cost} Research`,
             playerId,
             type: 'action',
             round: state.round,
@@ -306,14 +294,10 @@ function processEndTurn(state: GameState, playerId: string): ActionResult {
             delete turnState.techCardsClaimed[acquisition.cardId];
           }
 
-          // Increment progress track (needed for age transitions)
-          const techState = state as GameState & { progressTrack?: number };
-          techState.progressTrack = (techState.progressTrack || 0) + 1;
-
           state.log = state.log || [];
           state.log.push({
             timestamp: new Date().toISOString(),
-            message: `Acquired ${reserveTechCard.name} (Reserve) for ${acquisition.cost} Research. Progress: ${techState.progressTrack}`,
+            message: `Acquired ${reserveTechCard.name} (Reserve) for ${acquisition.cost} Research`,
             playerId,
             type: 'action',
             round: state.round,

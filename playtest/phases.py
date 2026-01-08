@@ -341,7 +341,7 @@ def _attempt_route_launches(
                 if any(phrase in error_str for phrase in [
                     "already claimed", "not enough", "insufficient",
                     "not found", "no hazard cards", "helium handling",
-                    "cannot use helium"
+                    "cannot use helium", "does not meet route"
                 ]):
                     print(f"    {player}: launch blocked ({str(e)[:50]}...)")
                     logger.log_action(player, f"LAUNCH BLOCKED: {str(e)[:60]}", "worker_placement")

@@ -673,8 +673,7 @@ When you Reveal:
 1. Calculate Research: Research Level + Engineers in Barracks + card bonuses.
 2. Pay Research equal to tile cost minus specialization discount.
 3. Add tiles to your Drawing Office.
-4. Advance Progress Track by 1 for each tile acquired.
-5. Unspent Research is lost.
+4. Unspent Research is lost.
 
 ## 9.2 Tech Tiles
 
