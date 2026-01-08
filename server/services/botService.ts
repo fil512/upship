@@ -841,14 +841,14 @@ export function findBestCombatMission(
   if (!player.blueprint) return null;
   const shipStats = calculateBlueprintStats(player.blueprint, state.age || 1);
 
-  // USA faction restriction: cannot take missions until all other players have at least one
+  // USA faction restriction: cannot be the first to complete a mission
   if (player.faction === 'usa') {
-    const allOthersHaveMissions = Object.entries(state.players).every(([pid, p]) => {
-      if (pid === playerId) return true; // Skip self
+    const anyOtherHasMission = Object.entries(state.players).some(([pid, p]) => {
+      if (pid === playerId) return false; // Skip self
       const completed = (p as { completedMissions?: unknown[] }).completedMissions || [];
       return completed.length > 0;
     });
-    if (!allOthersHaveMissions) {
+    if (!anyOtherHasMission) {
       return null;
     }
   }

@@ -32,7 +32,7 @@
 			color: 'var(--color-usa)',
 			shortDesc: 'Helium monopoly holders',
 			ability: 'Helium Monopoly: Start with Helium Handling. Buy helium at £2 (others pay market rate).',
-			flaw: 'Late to enter war. Cannot acquire a combat mission until all others have one.'
+			flaw: 'Late to enter war. Cannot be the first to complete a combat mission.'
 		},
 		{
 			id: 'italy',

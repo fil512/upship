@@ -170,6 +170,9 @@ class Route:
     prestige: int = 0
     available: bool = True
     claimed_by: str | None = None
+    from_city: str | None = None  # Origin city for double-track detection
+    to_city: str | None = None    # Destination city for double-track detection
+    track: int | None = None      # Track number (1 or 2) for double-track routes
 
     @classmethod
     def from_dict(cls, data: dict) -> 'Route':
@@ -209,6 +212,9 @@ class Route:
             prestige=data.get('prestige', data.get('vp', 0)),
             available=available,
             claimed_by=claimed_by,
+            from_city=data.get('from'),
+            to_city=data.get('to'),
+            track=data.get('track'),
         )
 
 

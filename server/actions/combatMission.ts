@@ -431,8 +431,8 @@ function calculateShipArmor(blueprint: Blueprint): number {
 
 /**
  * Validate USA faction's late war entry restriction
- * Per Section 13.3: "Flaw: Late to enter war. Cannot acquire a combat
- * mission until all other players have one."
+ * Per Section 13.3: "Flaw: Late to enter war. Cannot be the first to
+ * complete a combat mission (must wait until at least one other player has one)."
  */
 function validateUsaMissionRestriction(state: GameState, playerId: string): UsaRestrictionResult {
   const playerState = state.players[playerId] as CombatPlayerState;
@@ -447,23 +447,24 @@ function validateUsaMissionRestriction(state: GameState, playerId: string): UsaR
     return { allowed: true };
   }
 
-  // Check if all other players have at least one completed mission
+  // Check if at least one other player has completed a mission
   for (const otherId of Object.keys(state.players)) {
     if (otherId === playerId) continue;
 
     const otherPlayer = state.players[otherId] as CombatPlayerState;
     const otherMissions = otherPlayer.completedMissions || [];
 
-    if (otherMissions.length === 0) {
-      return {
-        allowed: false,
-        reason: 'Late to enter war: USA cannot acquire a combat mission until all other players have one'
-      };
+    if (otherMissions.length > 0) {
+      // At least one other player has a mission - USA can enter the war
+      return { allowed: true };
     }
   }
 
-  // All other players have at least one mission
-  return { allowed: true };
+  // No other player has completed a mission yet - USA cannot be first
+  return {
+    allowed: false,
+    reason: 'Late to enter war: USA cannot be the first to complete a combat mission'
+  };
 }
 
 export {

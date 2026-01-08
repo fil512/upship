@@ -206,8 +206,8 @@ describe('Rules Compliance - Combat Missions (GAP-028)', () => {
   });
 
   describe('GAP-044: USA Faction Late War Entry Restriction', () => {
-    // Per Section 13.3: "Flaw: Late to enter war. Cannot acquire a combat
-    // mission until all other players have one."
+    // Per Section 13.3: "Flaw: Late to enter war. Cannot be the first to
+    // complete a combat mission (must wait until at least one other player has one)."
 
     let validateUsaMissionRestriction;
 
@@ -220,7 +220,7 @@ describe('Rules Compliance - Combat Missions (GAP-028)', () => {
       }
     });
 
-    it('should block USA from claiming first mission if any opponent has zero missions', () => {
+    it('should block USA from being first to complete a mission', () => {
       const state = createTestGameState([1, 2, 3]); // 3 players only
       state.age = 2;
       state.players['1'].faction = 'usa';
@@ -232,18 +232,18 @@ describe('Rules Compliance - Combat Missions (GAP-028)', () => {
 
       const result = validateUsaMissionRestriction(state, '1');
       expect(result.allowed).toBe(false);
-      expect(result.reason).toMatch(/late.*war|other players/i);
+      expect(result.reason).toMatch(/late.*war|first/i);
     });
 
-    it('should allow USA to claim mission once all opponents have at least one', () => {
+    it('should allow USA to claim mission once one opponent has completed one', () => {
       const state = createTestGameState([1, 2, 3]); // 3 players only
       state.age = 2;
       state.players['1'].faction = 'usa';
       state.players['1'].completedMissions = [];
       state.players['2'].faction = 'germany';
-      state.players['2'].completedMissions = [{ id: 'm1' }];
+      state.players['2'].completedMissions = [{ id: 'm1' }]; // One opponent has a mission
       state.players['3'].faction = 'britain';
-      state.players['3'].completedMissions = [{ id: 'm2' }];
+      state.players['3'].completedMissions = []; // Other opponent has none - still allowed
 
       const result = validateUsaMissionRestriction(state, '1');
       expect(result.allowed).toBe(true);
@@ -267,7 +267,7 @@ describe('Rules Compliance - Combat Missions (GAP-028)', () => {
       state.players['1'].faction = 'usa';
       state.players['1'].completedMissions = [{ id: 'm1' }]; // USA already has one
       state.players['2'].faction = 'germany';
-      state.players['2'].completedMissions = [{ id: 'm2' }];
+      state.players['2'].completedMissions = []; // Even if opponent has none
 
       const result = validateUsaMissionRestriction(state, '1');
       expect(result.allowed).toBe(true);

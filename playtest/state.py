@@ -164,6 +164,56 @@ def get_available_routes(game_id: str) -> list[Route]:
     return []
 
 
+def get_available_routes_for_player(game_id: str, player: str) -> list[Route]:
+    """Get list of unclaimed routes that the player can claim.
+
+    Filters out routes where the player already owns the other track of a
+    double-track route (same player cannot claim both tracks).
+
+    Args:
+        game_id: The game ID.
+        player: The player username.
+
+    Returns:
+        List of available Route objects the player can legally claim.
+    """
+    state = get_state(game_id, player)
+    if not state:
+        return []
+
+    # Get all routes (need full list to check what player already owns)
+    all_routes = state.routes or []
+
+    # Get player's claimed routes
+    player_id = get_player_user_id(player)
+    player_claimed = [r for r in all_routes if r.claimed_by == player_id]
+
+    # Build set of (from, to) pairs for double-track routes the player owns
+    owned_double_track_pairs = set()
+    for route in player_claimed:
+        if route.track is not None and route.from_city and route.to_city:
+            # Normalize the pair (alphabetical order) to catch both directions
+            pair = tuple(sorted([route.from_city, route.to_city]))
+            owned_double_track_pairs.add(pair)
+
+    # Filter available routes
+    available = []
+    for route in all_routes:
+        if not route.available:
+            continue
+
+        # Check if this is a double-track route where player owns the other track
+        if route.track is not None and route.from_city and route.to_city:
+            pair = tuple(sorted([route.from_city, route.to_city]))
+            if pair in owned_double_track_pairs:
+                # Player already owns the other track - skip this route
+                continue
+
+        available.append(route)
+
+    return available
+
+
 def get_mission_row(game_id: str) -> list[CombatMission]:
     """Get list of available combat missions (Age II only).
 

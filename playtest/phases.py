@@ -17,9 +17,9 @@ from .client import get_client, get_faction_from_player
 from .logging import get_logger, PlaytestLogger
 from .state import (
     get_state, get_phase, get_player_agents, get_player_hand, get_available_locations,
-    get_current_placer, get_available_routes, get_mission_row, get_player_id, get_ship_details,
-    get_blueprint_stats, format_blueprint_log, get_last_log_entries, get_gas_preference,
-    get_player_data
+    get_current_placer, get_available_routes, get_available_routes_for_player, get_mission_row,
+    get_player_id, get_ship_details, get_blueprint_stats, format_blueprint_log,
+    get_last_log_entries, get_gas_preference, get_player_data
 )
 from .shared_state import get_shared_state
 from .strategy import (
@@ -112,12 +112,9 @@ def handle_launchpad_launches(player: str, game_id: str, logger: PlaytestLogger)
             return
     else:
         # Try regular routes (Age I and III)
-        # Use shared state to avoid stale data - all bots share the same route list
-        shared = get_shared_state()
-        routes = shared.get_available_routes()
-        if not routes:
-            # Fallback to server fetch if shared state is empty
-            routes = get_available_routes(game_id)
+        # Use player-specific route filtering to exclude double-track routes
+        # where this player already owns the other track
+        routes = get_available_routes_for_player(game_id, player)
         if routes:
             route_launches = _attempt_route_launches(
                 player, game_id, hangar_ships, routes, player_data, officers_needed, logger

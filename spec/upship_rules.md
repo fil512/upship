@@ -980,7 +980,9 @@ Each nation has unique advantages and constraints.
 
 **Synergy — Water Recovery:** The Age III *Water Recovery System* technology pairs well with USA's helium doctrine, reducing helium costs significantly.
 
-**The Flaw — Slow Starter:** Speed 1 limits early route options (only 5 of 17 Age I routes accessible without upgrades).
+**The Flaw — Late to Enter War:** Cannot be the first to complete a combat mission. USA must wait until at least one other player has completed a mission before acquiring one themselves.
+
+**Note — Slow Starter:** Speed 1 limits early route options (only 5 of 17 Age I routes accessible without upgrades).
 
 **Home Base (Age II):** Paimboeuf, France
 **Home Base (Age III):** Lakehurst, New Jersey

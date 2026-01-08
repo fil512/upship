@@ -11,7 +11,7 @@ from typing import Any
 
 from client import Player, Ship, Blueprint, Route, Card, CombatMission
 
-from .state import get_state, get_available_routes, get_mission_row, get_player_id, get_rd_board, get_market_cards, get_ship_details
+from .state import get_state, get_available_routes, get_available_routes_for_player, get_mission_row, get_player_id, get_rd_board, get_market_cards, get_ship_details
 from .client import get_player_user_id, get_manifest
 
 
@@ -405,19 +405,19 @@ def find_best_combat_mission(
         return None
 
     # Check USA faction restriction
-    # USA cannot take missions until all other players have one
+    # USA cannot be the first to complete a mission (must wait until one other player has one)
     if player_data.faction == 'usa':
         state = get_state(game_id)
         if state:
-            # Check if all other players have at least one mission
-            all_others_have_missions = True
+            # Check if at least one other player has completed a mission
+            any_other_has_mission = False
             for pid, pdata in state.players.items():
                 if pdata.faction != 'usa':
                     completed = getattr(pdata, 'completed_missions', None) or []
-                    if len(completed) == 0:
-                        all_others_have_missions = False
+                    if len(completed) > 0:
+                        any_other_has_mission = True
                         break
-            if not all_others_have_missions:
+            if not any_other_has_mission:
                 return None
 
     best_mission = None
@@ -497,7 +497,9 @@ def find_strategic_placement(
     hangar_count = sum(1 for s in ships if s.status == 'hangar')
     on_route_count = sum(1 for s in ships if s.status == 'on_route')
 
-    routes = get_available_routes(game_id)
+    # Use player-specific route filtering to exclude double-track routes
+    # where this player already owns the other track
+    routes = get_available_routes_for_player(game_id, player)
     current_age = state.age or 1
 
     # Get missions for Age II
