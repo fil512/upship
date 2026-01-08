@@ -10,7 +10,7 @@ import type { GameState, PlayerState, Route, LogEntry, HazardCard, Blueprint, Pe
 
 const { GameRuleError, InsufficientFundsError } = require('../errors');
 const { TECH_TILES } = require('../data/upgrades');
-const { AGE_BASELINES, TECH_CARD_BAG } = require('../config/constants');
+const { AGE_BASELINES } = require('../config/constants');
 const { shuffleArray } = require('../utils/random');
 const { resourceFlowLogger, createFlowContext } = require('../services/resourceFlowLogger');
 

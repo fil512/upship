@@ -219,7 +219,7 @@ describe('GameStateService', () => {
       expect(result.techBag.length).toBe(28);
     });
 
-    it('should set correct progress thresholds for player count', async () => {
+    it('should set fixed progress thresholds (launch-based)', async () => {
       mockClient.query
         .mockResolvedValueOnce({})
         .mockResolvedValueOnce({})
@@ -227,8 +227,8 @@ describe('GameStateService', () => {
 
       const result = await initializeGameState(1, players);
 
-      // 4 players - per Section 1.3 of the rules
-      expect(result.progressThresholds).toEqual({ age2: 8, age3: 16, end: 24 });
+      // Per Section 1.3: Fixed thresholds based on successful launches (8, 8, 6 per age)
+      expect(result.progressThresholds).toEqual({ age2: 8, age3: 16, end: 22 });
     });
 
     it('should rollback on error', async () => {

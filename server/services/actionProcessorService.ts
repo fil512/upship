@@ -26,8 +26,6 @@ const {
   advanceHeliumMarket,
   processCardEffect,
   executeLocationAction,
-  addAgeTechCards,
-  refillRDBoard,
   calculateSpecializationDiscount,
   calculateBlueprintStats,
   calculateRequiredGasCubes
@@ -469,42 +467,12 @@ function processAcquireTechnology(state: GameState, playerId: string, data: Reco
     stateWithTech.rdBoard.push(stateWithTech.techBag.shift()!);
   }
 
-  // Advance progress track
-  stateWithTech.progressTrack = (stateWithTech.progressTrack || 0) + 1;
-
-  // Check for age transition
-  const thresholds = stateWithTech.progressThresholds || { age2: 4, age3: 8, end: 12 };
-  if (state.age === 1 && stateWithTech.progressTrack >= thresholds.age2) {
-    state.age = 2;
-    // Add Age 2 tech cards to the tech card bag
-    addAgeTechCards(state, 2);
-    // Refill R&D board with new tech cards
-    refillRDBoard(state);
-    // Reset gas market prices for new age (Section 4.4: Helium resets to £2 at Age Transitions)
-    state.gasMarket = { hydrogen: 1, helium: 2 };
-    stateWithLog.log.push({
-      timestamp: new Date().toISOString(),
-      message: `Age II begins! New tech cards available. Gas market reset.`,
-      type: 'system'
-    });
-  } else if (state.age === 2 && stateWithTech.progressTrack >= thresholds.age3) {
-    state.age = 3;
-    // Add Age 3 tech cards to the tech card bag
-    addAgeTechCards(state, 3);
-    // Refill R&D board with new tech cards
-    refillRDBoard(state);
-    // Reset gas market prices for new age (Section 4.4: Helium resets to £2 at Age Transitions)
-    state.gasMarket = { hydrogen: 1, helium: 2 };
-    stateWithLog.log.push({
-      timestamp: new Date().toISOString(),
-      message: `Age III begins! Final era tech cards unlocked. Gas market reset.`,
-      type: 'system'
-    });
-  }
+  // Note: Progress track no longer advances on tech acquisition (per Section 1.3)
+  // It now advances on successful launches
 
   stateWithLog.log.push({
     timestamp: new Date().toISOString(),
-    message: `Acquired ${card.name} tech card. Progress: ${stateWithTech.progressTrack}`,
+    message: `Acquired ${card.name} tech card`,
     playerId,
     type: 'action'
   });
@@ -1165,41 +1133,13 @@ function processAcquireTechnologyResearch(state: GameState, playerId: string, da
     stateWithTech.rdBoard.push(stateWithTech.techBag.shift()!);
   }
 
-  // Advance progress track
-  stateWithTech.progressTrack = (stateWithTech.progressTrack || 0) + 1;
-
-  // Check for age transition
-  const thresholds = stateWithTech.progressThresholds || { age2: 4, age3: 8, end: 12 };
-  if (state.age === 1 && stateWithTech.progressTrack >= thresholds.age2) {
-    state.age = 2;
-    addAgeTechCards(state, 2);
-    // Refill R&D board with new tech cards
-    refillRDBoard(state);
-    // Reset gas market prices for new age (Section 4.4: Helium resets to £2 at Age Transitions)
-    state.gasMarket = { hydrogen: 1, helium: 2 };
-    stateWithLog.log.push({
-      timestamp: new Date().toISOString(),
-      message: `Age II begins! New tech cards available. Gas market reset.`,
-      type: 'system'
-    });
-  } else if (state.age === 2 && stateWithTech.progressTrack >= thresholds.age3) {
-    state.age = 3;
-    addAgeTechCards(state, 3);
-    // Refill R&D board with new tech cards
-    refillRDBoard(state);
-    // Reset gas market prices for new age (Section 4.4: Helium resets to £2 at Age Transitions)
-    state.gasMarket = { hydrogen: 1, helium: 2 };
-    stateWithLog.log.push({
-      timestamp: new Date().toISOString(),
-      message: `Age III begins! Final era tech cards unlocked. Gas market reset.`,
-      type: 'system'
-    });
-  }
+  // Note: Progress track no longer advances on tech acquisition (per Section 1.3)
+  // It now advances on successful launches
 
   const discountNote = discount > 0 ? ` (${discount} discount)` : '';
   stateWithLog.log.push({
     timestamp: new Date().toISOString(),
-    message: `Acquired ${card.name} for ${cost} research${discountNote}. Progress: ${stateWithTech.progressTrack}`,
+    message: `Acquired ${card.name} for ${cost} research${discountNote}`,
     playerId,
     type: 'action'
   });
@@ -1613,7 +1553,8 @@ function processCalculateScores(state: GameState, _playerId: string, data: Recor
   const stateWithLog = state as StateWithLog;
 
   // Check if game end conditions are met
-  const thresholds = stateWithScores.progressThresholds || { age2: 4, age3: 8, end: 12 };
+  // Fixed thresholds per Section 1.3: 8 launches for Age 1, 8 more for Age 2, 6 more for Age 3
+  const thresholds = stateWithScores.progressThresholds || { age2: 8, age3: 16, end: 22 };
   const progressTrack = stateWithScores.progressTrack || 0;
   const forceEnd = (data as CalculateScoresData)?.forceEnd === true; // Allow admin/debug override
 

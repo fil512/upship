@@ -765,7 +765,7 @@ async function initializeGameState(
       reserveCard,  // Always-available agent card (like Dune's Arrakis Liaison)
       reserveTechCard: RESERVE_TECH_CARD,  // Always-available tech card (Helium Handling)
       progressTrack: 0,
-      progressThresholds: PROGRESS_THRESHOLDS[playerCount],
+      progressThresholds: PROGRESS_THRESHOLDS,
       gasMarket: { hydrogen: 1, helium: 2 }, // Prices per cube (Section 4.4: H₂ fixed at £1, He starts at £2)
       map: createAgeIMap(),
       log: [{

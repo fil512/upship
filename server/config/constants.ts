@@ -32,13 +32,9 @@ export const RESEARCH_INSTITUTE_COST = 4; // £4 per level per Section 6.1
 // Insurance
 export const MAX_INSURANCE_POLICIES = 3;
 
-// Progress Track Thresholds by player count
-// Balanced for medium-length games (~20-24 progress to end)
-export const PROGRESS_THRESHOLDS: Record<number, { age2: number; age3: number; end: number }> = {
-  2: { age2: 4, age3: 8, end: 12 },
-  3: { age2: 6, age3: 12, end: 18 },
-  4: { age2: 8, age3: 16, end: 24 }
-};
+// Progress Track Thresholds (fixed per Section 1.3)
+// Based on successful launches: 8 in Age 1, 8 in Age 2, 6 in Age 3
+export const PROGRESS_THRESHOLDS = { age2: 8, age3: 16, end: 22 };
 
 // Valid game phases
 export const PHASES: Record<string, GamePhase> = {

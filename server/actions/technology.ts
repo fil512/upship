@@ -38,11 +38,6 @@ type TechPlayerState = PlayerState & {
 type TechState = GameState & {
   rdBoard: TechCardWithMeta[];
   progressTrack?: number;
-  progressThresholds?: {
-    age2: number;
-    age3: number;
-    end: number;
-  };
   playerCount?: number;
 };
 
@@ -84,11 +79,13 @@ function addAgeTechCards(state: GameState, age: number): void {
 
 /**
  * Check and handle age transition based on progress track
- * Per Section 12.1, this triggers all age transition steps when threshold reached
+ * Per Section 1.3 and 12.1: Progress advances with successful launches
+ * Thresholds: Age 1 ends at 8, Age 2 ends at 16, Game ends at 22
  */
 function checkAgeTransition(state: GameState): void {
   const techState = state as TechState;
-  const thresholds = techState.progressThresholds || { age2: 4, age3: 8, end: 12 };
+  // Fixed thresholds per Section 1.3: 8 launches for Age 1, 8 more for Age 2, 6 more for Age 3
+  const thresholds = { age2: 8, age3: 16, end: 22 };
   const progressTrack = techState.progressTrack || 0;
 
   if (state.age === 1 && progressTrack >= thresholds.age2) {
@@ -179,15 +176,9 @@ function processAcquireTechCard(state: GameState, playerId: string, data: Acquir
     techState.rdBoard.push(techState.techBag.shift()!);
   }
 
-  // Advance progress track
-  techState.progressTrack = (techState.progressTrack || 0) + 1;
-
-  // Check for age transition
-  checkAgeTransition(state);
-
   state.log.push({
     timestamp: new Date().toISOString(),
-    message: `Acquired ${card.name} tech card. Progress: ${techState.progressTrack}`,
+    message: `Acquired ${card.name} tech card`,
     playerId,
     type: 'action'
   } as LogEntry);
@@ -324,16 +315,10 @@ function processAcquireTechCardResearch(state: GameState, playerId: string, data
     techState.rdBoard.push(techState.techBag.shift()!);
   }
 
-  // Advance progress track
-  techState.progressTrack = (techState.progressTrack || 0) + 1;
-
-  // Check for age transition
-  checkAgeTransition(state);
-
   const discountNote = discount > 0 ? ` (${discount} discount)` : '';
   state.log.push({
     timestamp: new Date().toISOString(),
-    message: `Acquired ${card.name} for ${cost} research${discountNote}. Progress: ${techState.progressTrack}`,
+    message: `Acquired ${card.name} for ${cost} research${discountNote}`,
     playerId,
     type: 'action'
   } as LogEntry);
@@ -460,7 +445,8 @@ export {
   processGainResearch,
   processUpgradeResearchLevel,
   addAgeTechCards,
-  calculateSpecializationDiscount
+  calculateSpecializationDiscount,
+  checkAgeTransition
 };
 
 // Legacy aliases for backwards compatibility during migration
@@ -476,6 +462,7 @@ module.exports = {
   processUpgradeResearchLevel,
   addAgeTechCards,
   calculateSpecializationDiscount,
+  checkAgeTransition,
   // Legacy aliases
   processAcquireTechnology,
   processAcquireTechnologyResearch,

@@ -17,6 +17,7 @@ const { shuffleArray } = require('../utils/random');
 const { processCompleteMission, resolveFlakCheck, calculateEquipmentBonus } = require('./combatMission');
 const { resourceFlowLogger, createFlowContext } = require('../services/resourceFlowLogger');
 const { HANGAR_CAPACITY, REPAIR_CAPACITY } = require('./building');
+const { checkAgeTransition } = require('./technology');
 
 // Helper to log launch outcomes
 function logOutcome(
@@ -540,6 +541,18 @@ function resolveHazardSuccess(state: GameState, playerId: string, route: Extende
       } as LogEntry);
     }
 
+    // Advance progress track for successful launch (Section 1.3)
+    const progressState = state as GameState & { progressTrack?: number };
+    progressState.progressTrack = (progressState.progressTrack || 0) + 1;
+    state.log.push({
+      timestamp: new Date().toISOString(),
+      message: `Progress Track: ${progressState.progressTrack} (successful mission)`,
+      type: 'system'
+    } as LogEntry);
+
+    // Check for age transition
+    checkAgeTransition(state);
+
     return { newState: state };
   }
 
@@ -585,6 +598,18 @@ function resolveHazardSuccess(state: GameState, playerId: string, route: Extende
       type: 'hazard'
     } as LogEntry);
   }
+
+  // Advance progress track for successful launch (Section 1.3)
+  const progressState = state as GameState & { progressTrack?: number };
+  progressState.progressTrack = (progressState.progressTrack || 0) + 1;
+  state.log.push({
+    timestamp: new Date().toISOString(),
+    message: `Progress Track: ${progressState.progressTrack} (successful launch)`,
+    type: 'system'
+  } as LogEntry);
+
+  // Check for age transition
+  checkAgeTransition(state);
 
   return { newState: state };
 }

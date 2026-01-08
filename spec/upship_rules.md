@@ -39,15 +39,15 @@ The game ends immediately when either condition occurs:
 
 ## 1.3 The Progress Track
 
-A shared track represents the advancement of heavier-than-air aviation. Each time any player acquires a Technology tile, advance the Progress marker by 1 space.
+A shared track represents the advancement of heavier-than-air aviation. Each time any player successfully launches a ship (passes the hazard check and claims a route or completes a mission), advance the Progress marker by 1 space.
 
-| Player Count | Age I Ends | Age II Ends | Game Ends |
-|--------------|------------|-------------|-----------|
-| 2 Players | 4 | 8 | 12 |
-| 3 Players | 6 | 12 | 18 |
-| 4 Players | 8 | 16 | 24 |
+| Age | Launches to End Age |
+|-----|---------------------|
+| Age I | 8 |
+| Age II | 8 |
+| Age III | 6 |
 
-When the marker reaches an Age threshold, that Age ends after the current round. When it reaches the Game End threshold, the game ends after the current round.
+When the marker reaches an Age threshold (8, 16, or 22 cumulative launches), that Age ends after the current round. When it reaches the Game End threshold (22), the game ends after the current round.
 
 ---
 

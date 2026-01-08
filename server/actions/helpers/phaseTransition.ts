@@ -319,7 +319,8 @@ function startNewRound(state: PhaseState): void {
 
   // Per Section 5.2 step 3: Check Age Transition based on Progress Track
   // Age transitions are triggered by Progress Track thresholds, NOT turn count
-  const thresholds = state.progressThresholds || { age2: 4, age3: 8, end: 12 };
+  // Fixed thresholds per Section 1.3: 8 launches for Age 1, 8 more for Age 2, 6 more for Age 3
+  const thresholds = state.progressThresholds || { age2: 8, age3: 16, end: 22 };
   let needsAgeTransition = false;
   let newAge: number | null = null;
 
