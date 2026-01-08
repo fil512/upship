@@ -56,22 +56,22 @@ const FACTION_CONFIG: Record<string, FactionConfig> = {
     // Zeppelin-style design: Heavy frame, powerful Maybach engine (+1 speed)
     startingTechCards: ['zeppelin_girders', 'goldbeater_skin', 'maybach_engine', 'blaugas_storage'],
     startingTechTiles: {
-      frame: 'zeppelin_frame',       // weight 3, gas_socket: 1
-      fabric: 'goldbeater_envelope', // weight 0
-      drive: 'maybach_hl'            // weight 2, speed: +1
+      frame: 'zeppelin_frame',     // weight 3, gas_socket: 1
+      fabric: 'premium_envelope',  // weight 0, reliability: +1, range: +1 (best from goldbeater_skin)
+      drive: 'maybach_hl'          // weight 2, speed: +2, range: +1
     },
     bonuses: {},
     // The Flaw: Cannot acquire helium_handling tech card
     bannedTechCards: ['helium_handling']
   },
   britain: {
-    // R-Class design: Wire-braced frame with passenger cabin (ships earn +1 income on routes)
+    // R-Class design: Lightweight efficient frame with passenger cabin (ships earn +1 income on routes)
     startingTechCards: ['wire_bracing', 'doped_canvas', 'standard_propeller', 'passenger_accommodation', 'imperial_mooring'],
     startingTechTiles: {
-      frame: 'wire_braced_frame',      // weight 2, gas_socket: 1
-      fabric: 'doped_canvas_envelope', // weight 1
-      drive: 'standard_engine',        // weight 2
-      component: 'passenger_cabin'     // weight 0, income: +1 on route completion
+      frame: 'tensioned_frame',   // weight 1, ceiling: +1, gas_socket: 1 (best from wire_bracing)
+      fabric: 'doped_covering',   // weight 0, speed: +1 (best from doped_canvas)
+      drive: 'standard_engine',   // weight 2, speed: +1, range: +1
+      component: 'passenger_cabin' // weight 0, income: +1 on route completion
     },
     bonuses: {}
   },
@@ -79,9 +79,9 @@ const FACTION_CONFIG: Record<string, FactionConfig> = {
     // Goodyear-Zeppelin design: Safety-focused with high ceiling and reliability
     startingTechCards: ['duralumin_girders', 'gelatinized_latex', 'basic_powerplant', 'trapeze_system', 'helium_handling'],
     startingTechTiles: {
-      frame: 'rigid_duralumin_frame', // weight 3, ceiling: +1, gas_socket: 1
-      fabric: 'latex_envelope',       // weight 1, reliability: +1
-      drive: 'reliable_engine'        // weight 1
+      frame: 'duralumin_frame',   // weight 2, reliability: +2, ceiling: +1, gas_socket: 1 (best from duralumin_girders)
+      fabric: 'latex_envelope',   // weight 1, reliability: +1
+      drive: 'reliable_engine'    // weight 1, speed: +1, range: +1
     },
     bonuses: {},
     // Starting Advantage: Helium Monopoly - market doesn't advance when USA buys helium
@@ -91,9 +91,9 @@ const FACTION_CONFIG: Record<string, FactionConfig> = {
     // Nobile semi-rigid design: Long-range expedition capability (+1 range)
     startingTechCards: ['internal_keel', 'rubberized_cotton', 'expedition_propeller', 'articulated_keel'],
     startingTechTiles: {
-      frame: 'semi_rigid_frame',     // weight 2, gas_socket: 1
-      fabric: 'rubberized_envelope', // weight 1
-      drive: 'expedition_engine'     // weight 2, range: +1
+      frame: 'flexible_frame',   // weight 0, ceiling: +1, gas_socket: 1 (best from articulated_keel)
+      fabric: 'cotton_envelope', // weight 0 (best from rubberized_cotton - lighter than rubberized_envelope)
+      drive: 'expedition_engine' // weight 2, speed: +1, range: +2
     },
     bonuses: {},
     // The Flaw: Low Ceiling - fewer payload slots (handled in blueprint)
