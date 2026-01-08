@@ -24,6 +24,8 @@
 
 	// Check if player already owns the reserve tech
 	$: ownsReserveTech = reserveTechCard ? playerTechCards.includes(reserveTechCard.id) : false;
+	// Check if player has pending acquisition for reserve tech
+	$: pendingReserveTech = reserveTechCard ? pendingTechAcquisitions.some(p => p.cardId === reserveTechCard.id) : false;
 	$: reserveTechTiles = reserveTechCard ? getTilesForCard(reserveTechCard.id) : [];
 	$: reserveTechCost = (reserveTechCard as { cost?: number })?.cost || 5;
 	$: reserveTechImage = reserveTechCard ? getTechCardImageFilename(reserveTechCard.name) : null;
@@ -95,8 +97,9 @@
 				<button
 					class="reserve-tech-card"
 					class:owned={ownsReserveTech}
+					class:pending={pendingReserveTech}
 					class:interactive
-					disabled={!interactive || ownsReserveTech}
+					disabled={!interactive || ownsReserveTech || pendingReserveTech}
 					on:click={() => dispatch('buyTech', { cardId: reserveTechCard.id })}
 				>
 					<div class="reserve-tech-header">
@@ -122,6 +125,14 @@
 					{/if}
 					{#if ownsReserveTech}
 						<div class="owned-overlay">Owned</div>
+					{:else if pendingReserveTech}
+						<div class="pending-overlay">
+							<span>Purchased</span>
+							<button
+								class="undo-btn"
+								on:click|stopPropagation={() => dispatch('undoPurchase', { cardId: reserveTechCard.id, type: 'tech' })}
+							>Undo</button>
+						</div>
 					{/if}
 				</button>
 			</div>
@@ -321,5 +332,40 @@
 		font-size: 0.8rem;
 		font-weight: 600;
 		border-radius: 4px;
+	}
+
+	.reserve-tech-card.pending {
+		opacity: 0.9;
+	}
+
+	.pending-overlay {
+		position: absolute;
+		inset: 0;
+		background: rgba(76, 175, 80, 0.85);
+		color: white;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		gap: 0.5rem;
+		font-size: 0.8rem;
+		font-weight: 600;
+		border-radius: 4px;
+	}
+
+	.pending-overlay .undo-btn {
+		background: rgba(255, 255, 255, 0.2);
+		border: 1px solid rgba(255, 255, 255, 0.5);
+		color: white;
+		padding: 0.25rem 0.75rem;
+		border-radius: 4px;
+		cursor: pointer;
+		font-size: 0.7rem;
+		font-weight: 600;
+		transition: background 0.2s;
+	}
+
+	.pending-overlay .undo-btn:hover {
+		background: rgba(255, 255, 255, 0.3);
 	}
 </style>

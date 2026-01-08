@@ -139,18 +139,34 @@ function processAcquireTechCardTentative(state: GameState, playerId: string, dat
     throw new GameRuleError('Can only acquire tech cards after revealing');
   }
 
-  // Find the card on R&D board
-  const card = marketState.rdBoard.find(c => c.id === cardId);
+  // Find the card on R&D board or check if it's the reserve tech card
+  let card = marketState.rdBoard.find(c => c.id === cardId);
+  const reserveTechCard = (state as GameState & { reserveTechCard?: TechCard }).reserveTechCard;
+  const isReserveTechCard = !card && reserveTechCard?.id === cardId;
+  if (isReserveTechCard) {
+    card = reserveTechCard;
+  }
   if (!card) {
     throw new GameRuleError('Tech card not found on R&D board');
   }
 
-  // Check if card is already claimed
+  // Check if card is already claimed (reserve tech card can be acquired by multiple players)
   marketState.techCardsClaimed = marketState.techCardsClaimed || {};
-  if (marketState.techCardsClaimed[cardId]) {
-    const claimingPlayer = state.players[marketState.techCardsClaimed[cardId]];
+  if (!isReserveTechCard && marketState.techCardsClaimed[cardId!]) {
+    const claimingPlayer = state.players[marketState.techCardsClaimed[cardId!]];
     const faction = claimingPlayer?.faction || 'another player';
     throw new GameRuleError(`This tech card is already claimed by ${faction}`);
+  }
+
+  // Check if player already owns this tech card
+  if (playerState.techCards?.includes(cardId!)) {
+    throw new GameRuleError('You already own this tech card');
+  }
+
+  // Check if player already has a pending acquisition for this card
+  const pendingAcquisitions = playerState.pendingTechAcquisitions || [];
+  if (pendingAcquisitions.some(p => p.cardId === cardId)) {
+    throw new GameRuleError('You have already claimed this tech card');
   }
 
   // Calculate cost (specialization discount not applied here - will be added later)
