@@ -20,6 +20,7 @@ fi
 # Create destination directories if they don't exist
 mkdir -p "$DEST_DIR/agent"
 mkdir -p "$DEST_DIR/tech"
+mkdir -p "$DEST_DIR/mission"
 
 # Sync agent cards (from agent/ folder)
 if [ -d "$SOURCE_DIR/agent" ]; then
@@ -39,10 +40,17 @@ if [ -d "$SOURCE_DIR/tech" ]; then
     rsync -av --delete "$SOURCE_DIR/tech/" "$DEST_DIR/tech/"
 fi
 
+# Sync mission cards
+if [ -d "$SOURCE_DIR/mission" ]; then
+    echo "Syncing mission cards..."
+    rsync -av --delete "$SOURCE_DIR/mission/" "$DEST_DIR/mission/"
+fi
+
 echo ""
 echo "Sync complete!"
 echo "  Agent cards: $(ls "$DEST_DIR/agent" 2>/dev/null | grep -c '\.png$' || echo 0)"
 echo "  Tech cards:  $(ls "$DEST_DIR/tech" 2>/dev/null | grep -c '\.png$' || echo 0)"
+echo "  Mission cards: $(ls "$DEST_DIR/mission" 2>/dev/null | grep -c '\.png$' || echo 0)"
 
 # === Check for missing card images ===
 echo ""
@@ -94,6 +102,35 @@ EXPECTED_AGENTS=(
     "aero_club"
     "engineering_guild"
     "the_aeronaut"
+)
+
+# Expected combat mission filenames (from Age II Combat Missions)
+EXPECTED_MISSIONS=(
+    # Bombing Runs
+    "mission_bombing_railway"
+    "mission_bombing_factory"
+    "mission_bombing_port"
+    "mission_bombing_deep_strike"
+    "mission_bombing_strategic"
+    "mission_bombing_capital"
+    # Reconnaissance
+    "mission_recon_frontline"
+    "mission_recon_artillery"
+    "mission_recon_enemy_pos"
+    "mission_recon_strategic_photo"
+    "mission_recon_deep"
+    # Naval Patrols
+    "mission_naval_coastal"
+    "mission_naval_sub_hunter"
+    # Resupply
+    "mission_resupply_hospital"
+    "mission_resupply_ammo"
+    "mission_resupply_base"
+    "mission_resupply_emergency"
+    "mission_resupply_siege"
+    # Artillery Observation
+    "mission_artillery_battery"
+    "mission_artillery_longrange"
 )
 
 # Expected tech tile image filenames (from Appendix D Tech Tile names)
@@ -195,6 +232,22 @@ else
     echo "  Total missing: $missing_techs / ${#EXPECTED_TECHS[@]}"
 fi
 
+# Check missing mission cards
+echo ""
+echo "Missing MISSION card images:"
+missing_missions=0
+for mission in "${EXPECTED_MISSIONS[@]}"; do
+    if [ ! -f "$DEST_DIR/mission/${mission}.png" ]; then
+        echo "  - ${mission}.png"
+        ((missing_missions++)) || true
+    fi
+done
+if [ $missing_missions -eq 0 ]; then
+    echo "  (none - all ${#EXPECTED_MISSIONS[@]} mission cards have images)"
+else
+    echo "  Total missing: $missing_missions / ${#EXPECTED_MISSIONS[@]}"
+fi
+
 # Check for extra/unmatched images
 echo ""
 echo "Extra AGENT images (not matching expected names):"
@@ -242,12 +295,36 @@ if [ $extra_techs -eq 0 ]; then
     echo "  (none)"
 fi
 
+echo ""
+echo "Extra MISSION images (not matching expected names):"
+extra_missions=0
+for img in "$DEST_DIR/mission"/*.png; do
+    [ -f "$img" ] || continue
+    basename="${img##*/}"
+    name="${basename%.png}"
+    found=0
+    for mission in "${EXPECTED_MISSIONS[@]}"; do
+        if [ "$name" = "$mission" ]; then
+            found=1
+            break
+        fi
+    done
+    if [ $found -eq 0 ]; then
+        echo "  - $basename"
+        ((extra_missions++)) || true
+    fi
+done
+if [ $extra_missions -eq 0 ]; then
+    echo "  (none)"
+fi
+
 # Summary
 echo ""
 echo "=== Summary ==="
 echo "Agent cards: $((${#EXPECTED_AGENTS[@]} - missing_agents))/${#EXPECTED_AGENTS[@]} have images"
 echo "Tech tiles:  $((${#EXPECTED_TECHS[@]} - missing_techs))/${#EXPECTED_TECHS[@]} have images"
-if [ $extra_agents -gt 0 ] || [ $extra_techs -gt 0 ]; then
+echo "Mission cards: $((${#EXPECTED_MISSIONS[@]} - missing_missions))/${#EXPECTED_MISSIONS[@]} have images"
+if [ $extra_agents -gt 0 ] || [ $extra_techs -gt 0 ] || [ $extra_missions -gt 0 ]; then
     echo ""
     echo "Note: Extra images may use display names instead of IDs."
     echo "Consider renaming to match tile IDs for consistency."
