@@ -204,7 +204,7 @@ function calculateEquipmentBonus(playerState: PlayerState, mission: Mission): nu
 }
 
 interface LaunchCombatMissionData {
-  shipId: string;
+  shipId?: string;  // Deprecated - ships are now fungible tokens
   missionId: string;
   gasType?: 'hydrogen' | 'helium';
   _internal?: boolean;
@@ -212,10 +212,22 @@ interface LaunchCombatMissionData {
 
 /**
  * Process launching a ship for a combat mission in Age II
+ * Ships are tokens, not individual entities. Ship stats come from blueprint at launch time.
  */
 function processLaunchCombatMission(state: GameState, playerId: string, data: LaunchCombatMissionData): ActionResult {
-  const { shipId, missionId, gasType = 'hydrogen' } = data;
-  const playerState = state.players[playerId] as CombatPlayerState;
+  const { missionId, gasType = 'hydrogen' } = data;
+  const playerState = state.players[playerId] as CombatPlayerState & {
+    hangarShips?: number;
+    pendingLaunch?: {
+      missionId?: string;
+      gasType?: 'hydrogen' | 'helium';
+      stats?: ShipStats;
+      launchedAge?: number;
+      armor?: number;
+      hazardInfo?: Record<string, unknown>;
+      hazard?: HazardCard;
+    };
+  };
   const combatState = state as CombatState;
 
   // Verify we're in Age II
@@ -237,11 +249,15 @@ function processLaunchCombatMission(state: GameState, playerId: string, data: La
 
   const mission = combatState.missionRow![missionIndex];
 
-  // Validate ship exists in hangar
-  const ships = playerState.ships || [];
-  const shipIndex = ships.findIndex(s => s.id === shipId && s.status === 'hangar');
-  if (shipIndex === -1) {
-    throw new GameRuleError('Ship not found in hangar');
+  // Validate ship exists in hangar - ships are now fungible tokens
+  const hangarShips = playerState.hangarShips || 0;
+  if (hangarShips <= 0) {
+    throw new GameRuleError('No ships available in hangar');
+  }
+
+  // Check if already mid-launch
+  if (playerState.pendingLaunch) {
+    throw new GameRuleError('Already have a ship mid-launch awaiting hazard resolution');
   }
 
   // Calculate ship stats and validate mission requirements
@@ -294,17 +310,22 @@ function processLaunchCombatMission(state: GameState, playerId: string, data: La
   const resourceType = gasType === 'hydrogen' ? 'hydrogen' : 'helium';
   resourceFlowLogger.logSink(flowContext, playerId, faction, resourceType, requiredCubes, 'launch', 'Combat mission gas', playerState.gasCubes[gasType]);
 
-  // Set ship to awaiting hazard check
-  const combatShip = ships[shipIndex] as CombatShip;
-  combatShip.status = 'awaiting_hazard';
-  combatShip.stats = stats;
-  combatShip.pendingMissionId = missionId;
-  combatShip.gasType = gasType;
-  combatShip.launchedAge = state.age;
+  // Decrement hangar count - ship is now "in transit" awaiting hazard check
+  playerState.hangarShips = hangarShips - 1;
 
   // Calculate armor for flak check
   const armor = calculateShipArmor(playerState.blueprint);
-  combatShip.armor = armor;
+
+  // Initialize pendingLaunch with mission info (will add hazard info below)
+  // Note: routeId is required by PendingLaunch type but not used for combat missions
+  playerState.pendingLaunch = {
+    routeId: '',  // Not used for combat missions
+    missionId,
+    gasType,
+    stats,
+    launchedAge: state.age,
+    armor
+  };
 
   state.log = state.log || [];
   state.log.push({
@@ -348,9 +369,9 @@ function processLaunchCombatMission(state: GameState, playerId: string, data: La
   }
 
   // Check for auto-pass conditions
-  const isFireHazard = hazard.category === 'fire' || hazard.hydrogenOnly;
+  const isFireHazard = hazard.category === 'fire' || !!hazard.hydrogenOnly;
   const autoPassHeliumFire = isFireHazard && gasType === 'helium';
-  const autoPassClearWeather = hazard.autoPass || hazard.type === 'clear_weather';
+  const autoPassClearWeather = !!hazard.autoPass || hazard.type === 'clear_weather';
 
   // Check for Conductive Covering (auto-pass static discharge)
   const hasCondictiveCovering = playerState.blueprint?.fabricSlots?.some(
@@ -373,8 +394,8 @@ function processLaunchCombatMission(state: GameState, playerId: string, data: La
     return null;
   };
 
-  // Store pending hazard on ship for client to respond
-  combatShip.pendingHazard = {
+  // Store pending hazard info on pendingLaunch for client to respond
+  playerState.pendingLaunch!.hazardInfo = {
     type: hazard.type,
     name: hazard.name,
     category: hazard.category,
@@ -390,14 +411,17 @@ function processLaunchCombatMission(state: GameState, playerId: string, data: La
     statName: challengeType,
     engineersNeeded,
     autoPass: autoPassClearWeather,
-    autoPassReason: getAutoPassReason(autoPassClearWeather, autoPassHeliumFire, autoPassCondictiveCovering, fireProtectionAvailable),
+    autoPassReason: getAutoPassReason(autoPassClearWeather, autoPassHeliumFire, autoPassCondictiveCovering || false, fireProtectionAvailable),
     heliumFireImmunity: autoPassHeliumFire,
-    conductiveCoveringImmunity: autoPassCondictiveCovering,
+    conductiveCoveringImmunity: autoPassCondictiveCovering || false,
     fireResistantFabricAvailable: fireProtectionAvailable
   };
 
+  // Also store the hazard card for API compatibility
+  playerState.pendingLaunch!.hazard = hazard;
+
   // Build log message
-  const autoPassReason = getAutoPassReason(autoPassClearWeather, autoPassHeliumFire, autoPassCondictiveCovering, fireProtectionAvailable);
+  const autoPassReason = getAutoPassReason(autoPassClearWeather, autoPassHeliumFire, autoPassCondictiveCovering || false, fireProtectionAvailable);
   const hazardDetails = autoPassReason
     ? ' (' + autoPassReason + ')'
     : ' (' + challengeType + ' ' + difficulty + ' vs ' + relevantStat + ', Flak ' + hazard.flak + ')';

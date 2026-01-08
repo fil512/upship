@@ -193,7 +193,7 @@ def _attempt_combat_missions(
                 # Handle various validation errors gracefully
                 if any(phrase in error_str for phrase in [
                     "not found", "already", "not enough", "insufficient",
-                    "cannot", "no hazard cards"
+                    "cannot", "no hazard cards", "does not meet"
                 ]):
                     print(f"    {player}: mission blocked ({str(e)[:50]}...)")
                     logger.log_action(player, f"MISSION BLOCKED: {str(e)[:60]}", "worker_placement")
@@ -338,12 +338,14 @@ def _attempt_route_launches(
                 if any(phrase in error_str for phrase in [
                     "already claimed", "not enough", "insufficient",
                     "not found", "no hazard cards", "helium handling",
-                    "cannot use helium", "does not meet route"
+                    "cannot use helium", "does not meet route",
+                    "already own", "other track", "double-track",
+                    "not your turn"
                 ]):
                     print(f"    {player}: launch blocked ({str(e)[:50]}...)")
                     logger.log_action(player, f"LAUNCH BLOCKED: {str(e)[:60]}", "worker_placement")
-                    # For gas/resource issues, break out - no point trying more routes with same ship
-                    if "not enough" in error_str or "insufficient" in error_str:
+                    # For gas/resource issues or turn issues, break out - no point trying more routes
+                    if "not enough" in error_str or "insufficient" in error_str or "not your turn" in error_str:
                         break
                     # For "already claimed", remove this route from routes_list to avoid retrying
                     # This prevents subsequent ships from trying this route

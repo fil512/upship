@@ -499,8 +499,9 @@ def get_ship_details(ship: Ship, player_data: Player) -> dict:
     manifest = get_manifest()
 
     # Calculate weight and stats from blueprint upgrades
+    # All stats start at 0 - stats come entirely from installed tech tiles (per server constants)
     weight = 0
-    stats = {'range': 1, 'speed': 1, 'ceiling': 0, 'reliability': 0}  # Age 1 baselines
+    stats = {'range': 0, 'speed': 0, 'ceiling': 0, 'reliability': 0, 'luxury': 0, 'income': 0}
 
     if blueprint:
         all_slots = (
@@ -550,16 +551,17 @@ def get_blueprint_stats(player_data: Player) -> dict:
     if not bp:
         return {
             'lift': 0, 'weight': 0, 'cargo': 0,
-            'range': 1, 'speed': 1, 'ceiling': 0, 'reliability': 0,
+            'range': 0, 'speed': 0, 'ceiling': 0, 'reliability': 0,
             'frame_slots': 0, 'fabric_slots': 0,
             'drive_slots': 0, 'component_slots': 0,
             'gas_sockets': 0
         }
 
     # Calculate weight and stats from upgrades
+    # All stats start at 0 - stats come entirely from installed tech tiles (per server constants)
     manifest = get_manifest()
     weight = 0
-    stats = {'range': 1, 'speed': 1, 'ceiling': 0, 'reliability': 0}  # Age 1 baselines
+    stats = {'range': 0, 'speed': 0, 'ceiling': 0, 'reliability': 0, 'luxury': 0, 'income': 0}
 
     all_slots = bp.drive_slots + bp.frame_slots + bp.fabric_slots + bp.component_slots
     for upgrade_id in all_slots:
