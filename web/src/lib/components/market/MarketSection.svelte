@@ -26,6 +26,8 @@
 	$: ownsReserveTech = reserveTechCard ? playerTechCards.includes(reserveTechCard.id) : false;
 	// Check if player has pending acquisition for reserve tech
 	$: pendingReserveTech = reserveTechCard ? pendingTechAcquisitions.some(p => p.cardId === reserveTechCard.id) : false;
+	// Check if player has pending purchase for reserve agent card
+	$: pendingReserveAgent = reserveCard ? pendingMarketPurchases.some(p => p.cardId === reserveCard.id) : false;
 	$: reserveTechTiles = reserveTechCard ? getTilesForCard(reserveTechCard.id) : [];
 	$: reserveTechCost = (reserveTechCard as { cost?: number })?.cost || 5;
 	$: reserveTechImage = reserveTechCard ? getTechCardImageFilename(reserveTechCard.name) : null;
@@ -67,8 +69,10 @@
 				<CardComponent
 					card={reserveCard}
 					marketMode={true}
-					selectable={interactive}
+					selectable={interactive && !pendingReserveAgent}
+					claimedByMe={pendingReserveAgent}
 					on:buy={handleBuyMarket}
+					on:undo={handleUndoMarket}
 				/>
 			</div>
 		{/if}
