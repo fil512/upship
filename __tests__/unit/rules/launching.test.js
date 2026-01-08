@@ -7,6 +7,126 @@ const { createTestGameState } = require('../../fixtures/testData');
 
 describe('Rules Compliance - Launching and Repair', () => {
 
+  describe('Ship range validation against route distance/range', () => {
+    it('should validate ship range against route.range property', () => {
+      const state = createTestGameState();
+      const playerState = state.players['1'];
+
+      playerState.gasCubes = { hydrogen: 3, helium: 0 };
+      playerState.officers = 1;
+      playerState.hangarShips = 1;
+
+      // Blueprint: base range 1 + premium_envelope (+1) = 2 total range
+      playerState.blueprint = {
+        frameSlots: ['duralumin_frame'],
+        fabricSlots: ['premium_envelope'],  // +1 range
+        driveSlots: [null],
+        componentSlots: [null],
+        gasSockets: ['hydrogen', 'hydrogen']
+      };
+
+      // Route uses 'range' property - requires range 3 (ship has 2)
+      state.map.routes = [{
+        id: 'long_route',
+        from: 'London',
+        to: 'Berlin',
+        range: 3,  // Uses 'range' property, ship has only 2
+        speed: 1,
+        income: 4,
+        claimed: null
+      }];
+
+      const { processLaunchShip, calculateBlueprintStats } = require('../../../server/actions/launch');
+
+      // Verify ship stats: baseline 1 + premium_envelope 1 = 2
+      const shipStats = calculateBlueprintStats(playerState.blueprint, state.age);
+      expect(shipStats.range).toBe(2);
+
+      // Verify route has range property set correctly
+      expect(state.map.routes[0].range).toBe(3);
+
+      // Should FAIL - ship range 2 < route range requirement 3
+      expect(() => {
+        processLaunchShip(state, '1', {
+          routeId: 'long_route',
+          gasType: 'hydrogen',
+          _internal: true
+        });
+      }).toThrow(/range/i);
+    });
+
+    it('should allow launch when ship range meets route.range requirement', () => {
+      const state = createTestGameState();
+      const playerState = state.players['1'];
+
+      playerState.gasCubes = { hydrogen: 3, helium: 0 };
+      playerState.officers = 1;
+      playerState.hangarShips = 1;
+
+      // Blueprint: base range 1 + premium_envelope (+1) = 2 total range
+      playerState.blueprint = {
+        frameSlots: ['duralumin_frame'],
+        fabricSlots: ['premium_envelope'],  // +1 range
+        driveSlots: [null],
+        componentSlots: [null],
+        gasSockets: ['hydrogen', 'hydrogen']
+      };
+
+      // Route uses 'range' property - requires range 2 (ship has exactly 2)
+      state.map.routes = [{
+        id: 'short_route',
+        from: 'London',
+        to: 'Dover',
+        range: 2,  // Uses 'range' property, ship has 2
+        speed: 1,
+        income: 2,
+        claimed: null
+      }];
+
+      const { processLaunchShip } = require('../../../server/actions/launch');
+
+      // Should succeed - ship range 2 >= route range 2
+      const result = processLaunchShip(state, '1', {
+        routeId: 'short_route',
+        gasType: 'hydrogen',
+        _internal: true
+      });
+
+      expect(result.newState.players['1'].pendingLaunch).toBeDefined();
+    });
+
+    it('should handle routes with neither distance nor range (defaults to 1)', () => {
+      const state = createTestGameState();
+      const playerState = state.players['1'];
+
+      playerState.gasCubes = { hydrogen: 3, helium: 0 };
+      playerState.officers = 1;
+      playerState.hangarShips = 1;
+
+      // Route with NO range or distance property
+      state.map.routes = [{
+        id: 'basic_route',
+        from: 'London',
+        to: 'Dover',
+        // no range or distance property
+        speed: 1,
+        income: 2,
+        claimed: null
+      }];
+
+      const { processLaunchShip } = require('../../../server/actions/launch');
+
+      // Should succeed - defaults to range 1, ship has 1
+      const result = processLaunchShip(state, '1', {
+        routeId: 'basic_route',
+        gasType: 'hydrogen',
+        _internal: true
+      });
+
+      expect(result.newState.players['1'].pendingLaunch).toBeDefined();
+    });
+  });
+
   describe('GAP-027: Ship repair cost', () => {
     it('should allow repairing damaged ships for £3 per Section 4.4', () => {
       const state = createTestGameState();

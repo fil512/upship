@@ -473,8 +473,10 @@ function processLaunchShip(state: GameState, playerId: string, data: LaunchShipD
   }
 
   // Validate Range meets route distance requirement (unless bypassed)
-  if (bypassRequirement !== 'range' && stats.range < route.distance) {
-    throw new GameRuleError(`Ship Range (${stats.range}) does not meet route distance requirement (${route.distance})`);
+  // Routes use 'range' property (or 'distance' as legacy alias), default to 1
+  const routeDistance = route.range ?? route.distance ?? 1;
+  if (bypassRequirement !== 'range' && stats.range < routeDistance) {
+    throw new GameRuleError(`Ship Range (${stats.range}) does not meet route distance requirement (${routeDistance})`);
   }
 
   // Validate Speed meets route speed requirement (unless bypassed)
@@ -786,8 +788,10 @@ function processClaimRoute(state: GameState, playerId: string, data: ClaimRouteD
   }
 
   // Check ship meets route requirements
-  if (stats.range < (route.distance || 1)) {
-    throw new GameRuleError(`Ship range (${stats.range}) < route distance (${route.distance})`);
+  // Routes use 'range' property (or 'distance' as legacy alias), default to 1
+  const routeDistance = route.range ?? route.distance ?? 1;
+  if (stats.range < routeDistance) {
+    throw new GameRuleError(`Ship range (${stats.range}) < route distance (${routeDistance})`);
   }
   if (route.speed && stats.speed < route.speed) {
     throw new GameRuleError(`Ship speed (${stats.speed}) < route requirement (${route.speed})`);

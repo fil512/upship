@@ -425,7 +425,7 @@ export function evaluateLaunchReadiness(
     const shipStats = calculateBlueprintStats(player.blueprint, currentAge);
 
     for (const route of routes) {
-      const routeRange = route.distance || route.range || 1;
+      const routeRange = route.range ?? route.distance ?? 1;
       const routeSpeed = route.speedRequirement || route.speed || 0;
       const routeCeiling = route.ceilingRequirement || route.ceiling || 0;
 
@@ -718,7 +718,7 @@ export function findLaunchDecision(
 
   // Find achievable routes
   const achievableRoutes = routes.filter(route => {
-    const routeRange = route.distance || route.range || 1;
+    const routeRange = route.range ?? route.distance ?? 1;
     const routeSpeed = route.speedRequirement || route.speed || 0;
     const routeCeiling = route.ceilingRequirement || route.ceiling || 0;
 
