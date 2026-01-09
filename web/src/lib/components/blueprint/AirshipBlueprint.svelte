@@ -53,7 +53,7 @@
 	}
 
 	// Get upgrade info from the canonical TECH_TILES data
-	function getUpgradeInfo(upgradeId: string | null): { name: string; weight: number; stats: Record<string, number> } | null {
+	function getUpgradeInfo(upgradeId: string | null): { name: string; weight: number; stats: Record<string, number>; hullCost: number } | null {
 		if (!upgradeId) return null;
 
 		// Look up in TECH_TILES
@@ -62,12 +62,13 @@
 			return {
 				name: tile.name,
 				weight: tile.weight,
-				stats: tile.stats as Record<string, number>
+				stats: tile.stats as Record<string, number>,
+				hullCost: tile.hullCost || 1
 			};
 		}
 
 		// Fallback for unknown tiles
-		return { name: upgradeId.replace(/_/g, ' '), weight: 0, stats: {} };
+		return { name: upgradeId.replace(/_/g, ' '), weight: 0, stats: {}, hullCost: 1 };
 	}
 
 	// Split long names into lines for SVG text wrapping
@@ -211,10 +212,8 @@
 			<span class="age-badge">Age {age}</span>
 		</div>
 		<div class="hull-cost">
-			<span class="cost-label">Cost:</span>
-			<span class="cost-value">{hullCost.total}</span>
-			<Icon name="cash" size={16} />
-			<span class="cost-breakdown">= 2 base + {hullCost.frameCost} frame + {hullCost.fabricCost} fabric</span>
+			<span class="cost-label">Build Cost:</span>
+			<span class="cost-value">£{hullCost}</span>
 		</div>
 	</div>
 
@@ -328,6 +327,11 @@
 						style="--slot-color: {slotColors.fabric}"
 					/>
 					{#if info}
+						<!-- Cost badge (top right) -->
+						<g transform="translate({slotWidth - 12}, 11)">
+							<circle r="8" class="cost-badge" />
+							<text x="0" y="3" text-anchor="middle" class="cost-text">{info.hullCost}</text>
+						</g>
 						<!-- Icons row - compact to fit within tile -->
 						<g transform="translate({slotWidth/2}, 22)">
 							{#each iconPositions as icon}
@@ -376,6 +380,11 @@
 						style="--slot-color: {slotColors.frame}"
 					/>
 					{#if info}
+						<!-- Cost badge (top right) -->
+						<g transform="translate({slotWidth - 12}, 11)">
+							<circle r="8" class="cost-badge" />
+							<text x="0" y="3" text-anchor="middle" class="cost-text">{info.hullCost}</text>
+						</g>
 						<!-- Icons row - compact to fit within tile -->
 						<g transform="translate({slotWidth/2}, 22)">
 							{#each iconPositions as icon}
@@ -424,6 +433,11 @@
 						style="--slot-color: {slotColors.drive}"
 					/>
 					{#if info}
+						<!-- Cost badge (top right) -->
+						<g transform="translate({slotWidth - 12}, 11)">
+							<circle r="8" class="cost-badge" />
+							<text x="0" y="3" text-anchor="middle" class="cost-text">{info.hullCost}</text>
+						</g>
 						<!-- Icons row - compact to fit within tile -->
 						<g transform="translate({slotWidth/2}, 22)">
 							{#each iconPositions as icon}
@@ -472,6 +486,11 @@
 						style="--slot-color: {slotColors.component}"
 					/>
 					{#if info}
+						<!-- Cost badge (top right) -->
+						<g transform="translate({slotWidth - 12}, 11)">
+							<circle r="8" class="cost-badge" />
+							<text x="0" y="3" text-anchor="middle" class="cost-text">{info.hullCost}</text>
+						</g>
 						<!-- Icons row - compact to fit within tile -->
 						<g transform="translate({slotWidth/2}, 22)">
 							{#each iconPositions as icon}
@@ -609,11 +628,6 @@
 		color: var(--color-text-primary);
 	}
 
-	.cost-breakdown {
-		font-size: 0.65rem;
-		color: var(--color-text-muted);
-	}
-
 	.airship-svg {
 		width: 100%;
 		height: auto;
@@ -685,6 +699,20 @@
 		fill: #64748b;
 		pointer-events: none;
 		font-family: var(--font-sans);
+	}
+
+	.cost-badge {
+		fill: #9ca3af;
+		stroke: #6b7280;
+		stroke-width: 1;
+	}
+
+	.cost-text {
+		font-size: 9px;
+		font-weight: 700;
+		fill: #1f2937;
+		font-family: var(--font-sans);
+		pointer-events: none;
 	}
 
 	.legend {
