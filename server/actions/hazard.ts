@@ -16,7 +16,7 @@ const { applyCityBonus, CITY_BONUSES } = require('../data/cities');
 const { shuffleArray } = require('../utils/random');
 const { processCompleteMission, resolveFlakCheck, calculateEquipmentBonus } = require('./combatMission');
 const { resourceFlowLogger, createFlowContext } = require('../services/resourceFlowLogger');
-const { HANGAR_CAPACITY, REPAIR_CAPACITY } = require('./building');
+const { HANGAR_CAPACITY, REPAIR_CAPACITY, TOTAL_SHIP_CAPACITY } = require('./building');
 const { checkAgeTransition } = require('./technology');
 
 // Helper to log launch outcomes
@@ -358,15 +358,32 @@ function processHazardCheck(state: GameState, playerId: string, data: HazardChec
 /**
  * Apply insurance policy to recover crashed ship per Section 6.11
  * Ships are tokens - recovery means incrementing hangarShips counter
+ * Per Section 4.4: Total fleet limited to 6 ships (hangar + repair combined)
  */
 function applyInsuranceRecovery(state: GameState, playerId: string, hazardName: string): boolean {
   const playerState = state.players[playerId] as HazardPlayerState;
   const insurancePolicies = playerState.insurance || 0;
 
   if (insurancePolicies > 0) {
+    // Check combined fleet capacity
+    const currentHangar = playerState.hangarShips || 0;
+    const currentRepair = playerState.repairShips || 0;
+    const totalFleet = currentHangar + currentRepair;
+
+    if (totalFleet >= TOTAL_SHIP_CAPACITY) {
+      // Fleet at capacity - insurance cannot recover
+      state.log.push({
+        timestamp: new Date().toISOString(),
+        message: `${hazardName}! Insurance claim failed: fleet at capacity (${totalFleet}/${TOTAL_SHIP_CAPACITY} ships)`,
+        playerId,
+        type: 'hazard'
+      } as LogEntry);
+      return false;
+    }
+
     playerState.insurance = insurancePolicies - 1;
     // Ship recovered - increment hangar counter
-    playerState.hangarShips = Math.min(HANGAR_CAPACITY, (playerState.hangarShips || 0) + 1);
+    playerState.hangarShips = currentHangar + 1;
     // Clear pending launch
     delete playerState.pendingLaunch;
 
@@ -455,8 +472,11 @@ function resolveFireHazard(state: GameState, playerId: string, hazard: HazardCar
     // Log before clearing pendingLaunch
     logOutcome(state, playerId, 'damaged', hazard, gasType, `Fire controlled with ${engineerCost} engineer(s), ship to repair bay`, routeId);
     playerState.engineers -= engineerCost;
-    // Ship damaged - move to repair bay
-    playerState.repairShips = Math.min(REPAIR_CAPACITY, (playerState.repairShips || 0) + 1);
+    // Ship damaged - move to repair bay (combined capacity limit: 6 ships total)
+    const currentTotal = (playerState.hangarShips || 0) + (playerState.repairShips || 0);
+    if (currentTotal < TOTAL_SHIP_CAPACITY) {
+      playerState.repairShips = (playerState.repairShips || 0) + 1;
+    }
     delete playerState.pendingLaunch;
 
     // Log engineer consumption for fire hazard
@@ -524,8 +544,11 @@ function resolveHazardSuccess(state: GameState, playerId: string, route: Extende
         playerId,
         type: 'error'
       } as LogEntry);
-      // Return ship to hangar
-      playerState.hangarShips = Math.min(HANGAR_CAPACITY, (playerState.hangarShips || 0) + 1);
+      // Return ship to hangar (combined capacity limit: 6 ships total)
+      const currentTotal = (playerState.hangarShips || 0) + (playerState.repairShips || 0);
+      if (currentTotal < TOTAL_SHIP_CAPACITY) {
+        playerState.hangarShips = (playerState.hangarShips || 0) + 1;
+      }
       delete playerState.pendingLaunch;
       return { newState: state };
     }
@@ -661,8 +684,11 @@ function resolveHazardAbort(state: GameState, playerId: string, hazard: HazardCa
   // Log aborted outcome
   logOutcome(state, playerId, 'aborted', hazard, gasType, message, routeId);
 
-  // Ship returns to hangar - increment counter
-  playerState.hangarShips = Math.min(HANGAR_CAPACITY, (playerState.hangarShips || 0) + 1);
+  // Ship returns to hangar (combined capacity limit: 6 ships total)
+  const currentTotal = (playerState.hangarShips || 0) + (playerState.repairShips || 0);
+  if (currentTotal < TOTAL_SHIP_CAPACITY) {
+    playerState.hangarShips = (playerState.hangarShips || 0) + 1;
+  }
   // Clear pending launch
   delete playerState.pendingLaunch;
 
@@ -780,8 +806,11 @@ function processRespondToHazard(state: GameState, playerId: string, data: Respon
 
     if (spendEngineers && availableEngineers >= engineerCost) {
       playerState.engineers -= engineerCost;
-      // Ship damaged - move to repair bay
-      playerState.repairShips = Math.min(REPAIR_CAPACITY, (playerState.repairShips || 0) + 1);
+      // Ship damaged - move to repair bay (combined capacity limit: 6 ships total)
+      const currentTotal = (playerState.hangarShips || 0) + (playerState.repairShips || 0);
+      if (currentTotal < TOTAL_SHIP_CAPACITY) {
+        playerState.repairShips = (playerState.repairShips || 0) + 1;
+      }
       delete playerState.pendingLaunch;
 
       // Log engineer consumption for fire hazard response

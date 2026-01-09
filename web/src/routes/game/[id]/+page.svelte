@@ -503,6 +503,7 @@
 
 		// Capture launch data before the request
 		const launchRoute = hazardRoute;
+		const launchRouteId = launchRoute?.id;
 		const selectedCity = event.detail.city;
 		const cityBonusData = CITY_BONUSES[selectedCity];
 
@@ -516,15 +517,27 @@
 		});
 		pendingHazardResponse = null;
 		if (result.success && launchRoute) {
-			// Show the launch success modal
-			launchSuccessData = {
-				routeName: launchRoute.name || `${launchRoute.from} → ${launchRoute.to}`,
-				routeIncome: launchRoute.income || 0,
-				cityBonus: cityBonusData ? { city: selectedCity, ...cityBonusData } : null,
-				missionName: null,
-				missionVp: 0
-			};
-			showLaunchSuccessModal = true;
+			// Verify the route was actually claimed by checking updated game state
+			// The state is updated synchronously before sendAction returns
+			const updatedRoutes = $gameState?.map?.routes || [];
+			const claimedRoute = updatedRoutes.find((r: { id: string; claimed?: string }) =>
+				r.id === launchRouteId && r.claimed === $effectiveUserId
+			);
+
+			if (claimedRoute) {
+				// Route was successfully claimed - show success modal
+				launchSuccessData = {
+					routeName: launchRoute.name || `${launchRoute.from} → ${launchRoute.to}`,
+					routeIncome: launchRoute.income || 0,
+					cityBonus: cityBonusData ? { city: selectedCity, ...cityBonusData } : null,
+					missionName: null,
+					missionVp: 0
+				};
+				showLaunchSuccessModal = true;
+			} else {
+				// Hazard check failed despite frontend prediction - show abort message
+				showToast('Launch aborted - ship returns to hangar', 'info');
+			}
 		} else if (!result.success) {
 			showToast(result.error || 'Failed to respond to hazard', 'error');
 		}
@@ -1599,7 +1612,9 @@
 											</button>
 										</div>
 									{:else}
-										<p class="hazard-info">No engineers needed.</p>
+										<p class="hazard-info">
+											{pendingHazard.statName ? `${pendingHazard.statName.charAt(0).toUpperCase() + pendingHazard.statName.slice(1)} check passed: ${pendingHazard.relevantStat} ≥ ${pendingHazard.difficulty}` : 'Check passed automatically.'}
+										</p>
 										<button class="btn primary w-full" on:click={() => handleRespondToHazard(false)}>
 											Continue
 										</button>

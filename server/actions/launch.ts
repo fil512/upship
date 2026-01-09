@@ -677,10 +677,12 @@ function processLaunchShip(state: GameState, playerId: string, data: LaunchShipD
   let engineersNeeded = 0;
   if (!hazard.autoPass) {
     if (hazard.category === 'fire' && hazard.engineerCost) {
-      // Fire hazards use engineerCost (Engine Fire = 1, Gas Cell Rupture = 2)
+      // Fire hazards with fixed engineer cost (Engine Fire = 1, Gas Cell Rupture = 2)
+      // Spending engineers saves the ship but it goes to Repair Bay
       engineersNeeded = hazard.engineerCost;
-    } else if (hazard.category !== 'fire') {
-      // Non-fire hazards: engineers make up the difference between stat and difficulty
+    } else if (hazard.category !== 'fire' || hazard.type === 'static_discharge') {
+      // Non-fire hazards OR Static Discharge use stat checks
+      // Static Discharge is categorized as 'fire' (hydrogen-only) but uses a reliability check
       engineersNeeded = Math.max(0, difficulty - relevantStat);
     }
   }
