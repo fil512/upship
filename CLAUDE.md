@@ -335,6 +335,41 @@ python -m playtest setup      # Setup new 4-player game (all AI)
 python -m playtest autoplay   # Run until game ends or gets stuck
 ```
 
+### Troubleshooting Stuck Playtests
+
+When a playtest hangs or gets stuck, verbose output is enabled by default to help diagnose the issue.
+
+**What the verbose output shows:**
+- Player status: cash, officers, engineers, gas
+- Ship counts: hangar, on_route, repair
+- Launch readiness analysis with reasons why not ready
+- Priority list being built (e.g., `+construction_hall (no ships, have £15)`)
+- Available locations and hand card symbols
+- Which location was chosen and why
+
+**Example output:**
+```
+[GERMANY] Status: £15, 1 officers, 2 eng, 2H2+0He gas
+[GERMANY] Ships: 1 hangar, 0 on_route, 0 repair
+[GERMANY] Not launch ready: need 1 more engineer(s) for safe launch
+[GERMANY]   +engineering_depot (need engineers to repair)
+[GERMANY] Priorities: engineering_depot -> construction_hall -> gas_depot
+[GERMANY] CHOSEN: engineering_depot (priority #1) with Rigger
+```
+
+**Controlling verbose output:**
+```bash
+python -m playtest autoplay          # Verbose ON (default)
+python -m playtest --quiet autoplay  # Verbose OFF
+UPSHIP_VERBOSE=0 python -m playtest autoplay  # Verbose OFF via env
+```
+
+**Common stuck scenarios:**
+1. **No valid placement**: Bot can't match any card symbol to available locations → reveals early
+2. **Launch blocked**: Bot goes to launchpad but missing Frame/Fabric/Drive tiles
+3. **No achievable routes**: Ship stats too low for any available route → prioritizes research/blueprint
+4. **Resource deadlock**: Not enough cash/engineers/officers to make progress
+
 ## Working with This Project
 
 ### Icons in the Web Interface
