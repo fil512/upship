@@ -418,10 +418,6 @@ function executeLocationAction(
       // Upgrade Engineer income track (handled via UPGRADE_ENGINEER_INCOME)
       return { success: true, message: 'May upgrade Engineer income' };
 
-    case 'the_bank':
-      // Take a loan (handled via TAKE_LOAN)
-      return { success: true, message: 'May take a loan' };
-
     case 'ministry': {
       // Ministry action (Section 6.3):
       // 1. Draw 2 cards, discard 1

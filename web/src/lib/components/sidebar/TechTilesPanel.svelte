@@ -62,7 +62,7 @@
 
 <div class="tech-tiles-panel">
 	<div class="panel-header">
-		<h4>Your Tech Tiles</h4>
+		<h4>Available Tech Tiles</h4>
 	</div>
 
 	{#if hasTiles}
@@ -98,7 +98,7 @@
 			{/each}
 		</div>
 	{:else}
-		<p class="no-tiles">No tech tiles available. Acquire tech cards to unlock tiles.</p>
+		<p class="no-tiles">All tiles from your tech cards are installed. Acquire new tech cards to unlock more tiles.</p>
 	{/if}
 </div>
 

@@ -44,7 +44,6 @@ export type ActionType =
 	| 'DISCARD_MINISTRY_CARD'
 	| 'DISCARD_MARKET_CARD'
 	// Economy
-	| 'TAKE_LOAN'
 	| 'BUY_INSURANCE'
 	| 'COLLECT_INCOME'
 	// Crew
@@ -121,10 +120,6 @@ export interface RecruitCrewActionData {
 	type: 'officer' | 'engineer';
 }
 
-export interface TakeLoanActionData {
-	amount: number;
-}
-
 export interface BuyInsuranceActionData {
 	policyCount: number;
 }
@@ -177,7 +172,6 @@ export type ActionData =
 	| AcquireTechCardTentativeActionData
 	| UndoMarketPurchaseActionData
 	| RecruitCrewActionData
-	| TakeLoanActionData
 	| BuyInsuranceActionData
 	| DiscardHazardActionData
 	| KeepHazardActionData

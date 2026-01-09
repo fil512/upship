@@ -624,7 +624,6 @@ class CLI:
             print('  NO_MORE_LAUNCHES            - Signal done launching at launchpad')
             print('  PLACE_AGENT locationId=<id> cardIndex=<n> - Place agent at location')
             print('  BUY_GAS gasType=hydrogen amount=2 - Buy gas cubes')
-            print('  TAKE_LOAN                   - Take a £30 loan')
             print('  COLLECT_INCOME              - Collect your income')
             print('  DRAW_CARDS count=2          - Draw cards')
             print('  PLAY_CARD cardIndex=0       - Play card from hand')
@@ -754,13 +753,6 @@ class CLI:
         amount = args[2] if len(args) > 2 else '1'
         self.cmd_action(username, [game_id, 'BUY_GAS', f"gasType={gas_type}", f"amount={amount}"])
 
-    def cmd_loan(self, username: str, args: list[str]) -> None:
-        """Take a loan."""
-        if not args:
-            print('Usage: upship <user> loan <gameId>')
-            return
-        self.cmd_action(username, [args[0], 'TAKE_LOAN'])
-
     def cmd_draw(self, username: str, args: list[str]) -> None:
         """Draw cards."""
         if not args:
@@ -862,7 +854,6 @@ class CLI:
 {c(Colors.YELLOW, 'Actions (shorthand):')}
   upship <user> endturn <gameId>              End your turn
   upship <user> buygas <id> <type> [amount]   Buy gas cubes
-  upship <user> loan <gameId>                 Take a loan (£30, -3 income)
   upship <user> draw <gameId> [count]         Draw cards
   upship <user> build <gameId> [count]        Build ships
   upship <user> launch <gameId> <shipId> <routeId> [gas]  Launch ship

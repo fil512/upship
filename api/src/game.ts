@@ -301,7 +301,6 @@ export interface PlayerState {
 	peekedHazard?: HazardCard;
 	drawnMinistryCards?: Card[]; // Cards drawn at Ministry (must discard one)
 	bonuses: Record<string, number>;
-	loans?: number;
 	insurance?: number;
 	heliumMonopoly?: boolean;
 	bannedTechnologies?: string[];

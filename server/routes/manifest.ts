@@ -18,9 +18,6 @@ const {
 const {
   HYDROGEN_PRICE,
   HELIUM_PRICE_TRACK,
-  MAX_LOANS,
-  LOAN_AMOUNT,
-  LOAN_INCOME_PENALTY,
   HAND_SIZE,
   INITIAL_AGENTS,
   RD_BOARD_SIZE,
@@ -75,11 +72,6 @@ router.get('/', (req: Request, res: Response) => {
       // Gas Market
       hydrogenPrice: HYDROGEN_PRICE,
       heliumPriceTrack: HELIUM_PRICE_TRACK,
-
-      // Loans
-      maxLoans: MAX_LOANS,
-      loanAmount: LOAN_AMOUNT,
-      loanIncomePenalty: LOAN_INCOME_PENALTY,
 
       // Game Progression
       handSize: HAND_SIZE,

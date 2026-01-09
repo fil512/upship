@@ -35,7 +35,7 @@ Analysis proceeds in this hierarchy (high-level to fine-grained):
 12. `GAS_SYSTEM` - Hydrogen/Helium mechanics (Section 9.3)
 13. `HAZARD_CHECKS` - Hazard deck and fire mechanics (Section 8.2, 8.3)
 14. `DECK_BUILDING` - Card mechanics (Section 11)
-15. `ECONOMY` - Cash, income, loans (Section 4.6, 5.3)
+15. `ECONOMY` - Cash, income (Section 4.6)
 
 **Level 4 - Data Validation** (after Level 3 complete)
 16. `FACTION_CONFIG` - Faction starting values and abilities (Section 10)

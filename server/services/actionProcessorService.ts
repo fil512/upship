@@ -149,9 +149,6 @@ function processAction(
     case 'REMOVE_UPGRADE':
       return processRemoveUpgrade(newState, playerId, data);
 
-    case 'TAKE_LOAN':
-      return processTakeLoan(newState, playerId, data);
-
     case 'COLLECT_INCOME':
       return processCollectIncome(newState, playerId, data);
 
@@ -579,42 +576,6 @@ function processRemoveUpgrade(state: GameState, playerId: string, data: Record<s
   stateWithLog.log.push({
     timestamp: new Date().toISOString(),
     message: `Removed ${upgradeName} from ${slotType} slot ${slotIndex + 1}`,
-    playerId,
-    type: 'action'
-  });
-
-  return { newState: state };
-}
-
-// Extended player state with loans
-type PlayerWithLoans = PlayerState & { loans?: number };
-
-// Take a loan at The Bank
-function processTakeLoan(state: GameState, playerId: string, _data: Record<string, unknown>): ActionResult {
-  const playerState = state.players[playerId] as PlayerWithLoans;
-  const stateWithLog = state as StateWithLog;
-
-  // Limit maximum loans to 2
-  const maxLoans = 2;
-  const currentLoans = playerState.loans || 0;
-  if (currentLoans >= maxLoans) {
-    return { error: `Maximum ${maxLoans} loans allowed. Pay off existing debt first.` };
-  }
-
-  // Give the player £30
-  const loanAmount = 30;
-  playerState.cash += loanAmount;
-
-  // Reduce income track by 3 (permanent penalty, minimum 0)
-  const incomePenalty = 3;
-  playerState.income = Math.max(0, playerState.income - incomePenalty);
-
-  // Track loan count for reference
-  playerState.loans = currentLoans + 1;
-
-  stateWithLog.log.push({
-    timestamp: new Date().toISOString(),
-    message: `Took loan ${playerState.loans}/${maxLoans}: gained £${loanAmount}, income reduced by ${incomePenalty}`,
     playerId,
     type: 'action'
   });
@@ -1689,7 +1650,6 @@ module.exports = {
   processAcquireTechnology,
   processInstallUpgrade,
   processRemoveUpgrade,
-  processTakeLoan,
   processCollectIncome,
   processPlayCard,
   processDrawCards,

@@ -17,9 +17,8 @@ describe('Rules Compliance - Ground Board', () => {
   });
 
   describe('GAP-024: The Bank should not be a Ground Board location', () => {
-    it('should NOT have The Bank as a Ground Board location per Section 5.3', () => {
-      // Per Section 5.3: "You may take a loan at any time during your turn—this does not require an Agent or card."
-      // The Bank should not be in GROUND_BOARD_LOCATIONS
+    it('should NOT have The Bank as a Ground Board location', () => {
+      // The Bank was removed from the game (loans system eliminated)
       expect(GROUND_BOARD_LOCATIONS.the_bank).toBeUndefined();
     });
   });

@@ -550,10 +550,6 @@ class UpshipClient:
         """
         return self.action(username, game_id, 'BUY_GAS', gasType=gas_type, amount=amount)
 
-    def take_loan(self, username: str, game_id: str) -> ActionResult:
-        """Take a loan (gain cash, lose income)."""
-        return self.action(username, game_id, 'TAKE_LOAN')
-
     def draw_cards(self, username: str, game_id: str, count: int = 1) -> ActionResult:
         """Draw cards from the deck."""
         return self.action(username, game_id, 'DRAW_CARDS', count=count)

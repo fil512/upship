@@ -758,24 +758,39 @@ export const TECH_TILES: Record<string, TechTile> = {
 };
 
 export const TECH_CARDS: Record<string, TechCard> = {
-  // Faction starting techs
-  duralumin_girders: { id: 'duralumin_girders', name: 'Duralumin Framework', type: 'structure', cost: 0, age: 1, faction: 'germany' },
+  // === FACTION STARTING TECHS ===
+  // These are pre-printed on player boards (cost 0, don't advance Progress)
+
+  // Germany starting techs
+  zeppelin_girders: { id: 'zeppelin_girders', name: 'Zeppelin Girders', type: 'structure', cost: 0, age: 1, faction: 'germany' },
   goldbeater_skin: { id: 'goldbeater_skin', name: "Goldbeater's Skin", type: 'fabric', cost: 0, age: 1, faction: 'germany' },
   blaugas_storage: { id: 'blaugas_storage', name: 'Blaugas Fuel System', type: 'gas', cost: 0, age: 1, faction: 'germany' },
+  maybach_engine: { id: 'maybach_engine', name: 'Maybach Engine', type: 'drive', cost: 0, age: 1, faction: 'germany' },
+
+  // Britain starting techs
   wire_bracing: { id: 'wire_bracing', name: 'Wire Bracing', type: 'structure', cost: 0, age: 1, faction: 'britain' },
   doped_canvas: { id: 'doped_canvas', name: 'Doped Canvas', type: 'fabric', cost: 0, age: 1, faction: 'britain' },
+  standard_propeller: { id: 'standard_propeller', name: 'Standard Propeller', type: 'drive', cost: 0, age: 1, faction: 'britain' },
+  passenger_accommodation: { id: 'passenger_accommodation', name: 'Passenger Accommodation', type: 'component', cost: 0, age: 1, faction: 'britain' },
   imperial_mooring: { id: 'imperial_mooring', name: 'Imperial Mooring System', type: 'special', cost: 0, age: 1, faction: 'britain' },
-  gelatinized_latex: { id: 'gelatinized_latex', name: 'Gelatinized Latex', type: 'fabric', cost: 0, age: 1, faction: 'usa' },
-  trapeze_system: { id: 'trapeze_system', name: 'Trapeze Fighter System', type: 'special', cost: 0, age: 1, faction: 'usa' },
+
+  // USA starting techs
+  duralumin_girders: { id: 'duralumin_girders', name: 'Duralumin Framework', type: 'structure', cost: 0, age: 1, faction: 'usa' },
+  usa_latex_covering: { id: 'usa_latex_covering', name: 'Latex Covering', type: 'fabric', cost: 0, age: 1, faction: 'usa' },
+  basic_powerplant: { id: 'basic_powerplant', name: 'Basic Powerplant', type: 'drive', cost: 0, age: 1, faction: 'usa' },
   helium_handling: { id: 'helium_handling', name: 'Helium Handling', type: 'gas', cost: 0, age: 1, faction: 'usa' },
+  trapeze_system: { id: 'trapeze_system', name: 'Trapeze Fighter System', type: 'special', cost: 0, age: 1, faction: 'usa' },
+
+  // Italy starting techs
   internal_keel: { id: 'internal_keel', name: 'Internal Keel', type: 'structure', cost: 0, age: 1, faction: 'italy' },
   rubberized_cotton: { id: 'rubberized_cotton', name: 'Rubberized Cotton', type: 'fabric', cost: 0, age: 1, faction: 'italy' },
+  expedition_propeller: { id: 'expedition_propeller', name: 'Expedition Propeller', type: 'drive', cost: 0, age: 1, faction: 'italy' },
   articulated_keel: { id: 'articulated_keel', name: 'Articulated Keel Design', type: 'structure', cost: 0, age: 1, faction: 'italy' },
 
   // Drive techs
   daimler_engine: { id: 'daimler_engine', name: 'Daimler Engine', type: 'drive', cost: 2, age: 1 },
   improved_propeller: { id: 'improved_propeller', name: 'Improved Propeller', type: 'drive', cost: 3, age: 1 },
-  maybach_engine: { id: 'maybach_engine', name: 'Maybach Engine', type: 'drive', cost: 4, age: 1 },
+  // maybach_engine is a Germany faction starting tech defined above
   dual_engine_mount: { id: 'dual_engine_mount', name: 'Dual Engine Mount', type: 'drive', cost: 4, age: 2 },
   diesel_powerplant: { id: 'diesel_powerplant', name: 'Diesel Powerplant', type: 'drive', cost: 5, age: 2 },
   swiveling_propeller: { id: 'swiveling_propeller', name: 'Swiveling Propeller', type: 'drive', cost: 4, age: 2 },
@@ -797,6 +812,7 @@ export const TECH_CARDS: Record<string, TechCard> = {
   fireproof_coating: { id: 'fireproof_coating', name: 'Fireproof Coating', type: 'fabric', cost: 4, age: 2 },
   aluminum_doping: { id: 'aluminum_doping', name: 'Aluminum Doping', type: 'fabric', cost: 3, age: 2 },
   grounding_systems: { id: 'grounding_systems', name: 'Grounding Systems', type: 'fabric', cost: 3, age: 2 },
+  gelatinized_latex: { id: 'gelatinized_latex', name: 'Gelatinized Latex', type: 'fabric', cost: 5, age: 3 },
   composite_covering: { id: 'composite_covering', name: 'Composite Covering', type: 'fabric', cost: 5, age: 3 },
 
   // Gas System techs

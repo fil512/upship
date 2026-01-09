@@ -257,7 +257,7 @@ export const TECH_TILES: Record<string, TechTile> = {
     slotType: 'driveSlots',
     requiredCard: 'expedition_propeller',
     weight: 2,
-    hullCost: 0,  // Starting equipment
+    hullCost: 1,
     stats: { speed: 1, range: 2 },  // Italy: range advantage
     special: null,
     age: 1
@@ -269,7 +269,7 @@ export const TECH_TILES: Record<string, TechTile> = {
     slotType: 'driveSlots',
     requiredCard: 'basic_powerplant',
     weight: 1,
-    hullCost: 0,  // Starting equipment
+    hullCost: 1,
     stats: { speed: 1, range: 1 },  // USA: balanced
     special: null,
     age: 1
@@ -281,7 +281,7 @@ export const TECH_TILES: Record<string, TechTile> = {
     slotType: 'driveSlots',
     requiredCard: 'standard_propeller',
     weight: 2,
-    hullCost: 0,  // Starting equipment
+    hullCost: 1,
     stats: { speed: 1, range: 1 },  // Britain: balanced
     special: null,
     age: 1
@@ -486,7 +486,7 @@ export const TECH_TILES: Record<string, TechTile> = {
     slotType: 'fabricSlots',
     requiredCard: 'rubberized_cotton',
     weight: 0,
-    hullCost: 0,
+    hullCost: 1,
     stats: {},
     special: null,
     age: 1

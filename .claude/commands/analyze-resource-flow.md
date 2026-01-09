@@ -162,7 +162,7 @@ Success Rate: 82% (target: 80%) ✓
 
 | Resource | Typical Fountains | Typical Sinks |
 |----------|-------------------|---------------|
-| cash | income phase, loans, routes | purchases, builds, recruits |
+| cash | income phase, routes | purchases, builds, recruits |
 | officers | academy, flight school, income | launches |
 | engineers | technical institute, income | hazard checks, repairs |
 | hydrogen | gas depot | launches |

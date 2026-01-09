@@ -30,7 +30,6 @@ export type ResourceType =
   | 'ships'
   | 'technologies'
   | 'routes'
-  | 'loans'
   | 'vp';
 
 // Flow classification (from Lost Garden methodology)
@@ -43,8 +42,7 @@ export type SourceType =
   | 'action'       // Gained via player action (e.g., location bonus)
   | 'card'         // From card effects
   | 'route'        // From completed routes
-  | 'conversion'   // Converted from another resource
-  | 'loan';        // From taking loans
+  | 'conversion';  // Converted from another resource
 
 export type SinkType =
   | 'upkeep'       // Recurring cost (e.g., engineer maintenance)
@@ -53,8 +51,7 @@ export type SinkType =
   | 'launch'       // Launch cost (e.g., gas consumption)
   | 'hazard'       // Lost to hazards
   | 'action'       // Spent via player action
-  | 'conversion'   // Converted to another resource
-  | 'loan_penalty';// Income reduction from loans
+  | 'conversion';  // Converted to another resource
 
 export interface ResourceFlowEntry {
   timestamp: string;

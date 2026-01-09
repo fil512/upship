@@ -203,7 +203,7 @@ export const MARKET_CARDS: MarketCard[] = [
     category: 'political',
     cost: 3,
     symbol: 'coin',
-    effect: 'Loan gives 35 instead of 30',
+    effect: 'Treasury gives +3',
     reveal: { influence: 3 },
     flavor: 'Capital from abroad, no questions asked'
   },

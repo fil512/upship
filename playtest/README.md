@@ -144,7 +144,6 @@ Execute a single action. Supported commands:
 | Build ship | `build [count]` | `action playtest_germany build 2` |
 | Buy gas | `buygas <type> [amount]` | `action playtest_usa buygas helium 3` |
 | Install upgrade | `install <slot> <idx> <id>` | `action playtest_usa install frame 0 upgrade_id` |
-| Take loan | `loan` | `action playtest_italy loan` |
 
 ### launch <player> <ship> <route> [gas]
 

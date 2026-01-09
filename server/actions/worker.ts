@@ -258,10 +258,10 @@ function processCardEffect(state: GameState, playerId: string, card: Card, locat
       playerState.launchBonuses!.routeIncomeBonus = 2;
       return { success: true, message: '+2 Income from this route' };
 
-    case 'Loan gives 35 instead of 30':
-      // Foreign Investor: Loans removed from game - give cash bonus instead
-      playerState.cash += 5;
-      return { success: true, message: 'Gained £5 (loan bonus converted)' };
+    case 'Treasury gives +3':
+      // The Moneybags: Treasury gives +£3 bonus
+      (playerState as { treasuryBonus?: number }).treasuryBonus = ((playerState as { treasuryBonus?: number }).treasuryBonus || 0) + 3;
+      return { success: true, message: 'Treasury will give +£3' };
 
     case 'Gain 1 Insurance policy':
       // Insurance Agent: Gain 1 Insurance policy
@@ -644,9 +644,12 @@ function executeLocationAction(
     }
 
     case 'treasury': {
-      // Gain cash equal to Income Track (if positive)
+      // Gain cash equal to Income Track (if positive) + any Treasury bonus
       const incomeTrack = playerState.income || 0;
-      if (incomeTrack <= 0) {
+      const treasuryBonus = (playerState as { treasuryBonus?: number }).treasuryBonus || 0;
+      const totalGain = incomeTrack + treasuryBonus;
+
+      if (totalGain <= 0) {
         state.log.push({
           timestamp: new Date().toISOString(),
           message: `The Treasury: Income Track is ${incomeTrack}, no cash to collect`,
@@ -655,14 +658,19 @@ function executeLocationAction(
         } as LogEntry);
         return { success: true, message: `Income Track is ${incomeTrack} - no cash to collect` };
       }
-      playerState.cash = (playerState.cash || 0) + incomeTrack;
+      playerState.cash = (playerState.cash || 0) + totalGain;
+      const bonusMsg = treasuryBonus > 0 ? ` (+£${treasuryBonus} bonus)` : '';
       state.log.push({
         timestamp: new Date().toISOString(),
-        message: `The Treasury: Collected £${incomeTrack} (now have £${playerState.cash})`,
+        message: `The Treasury: Collected £${totalGain}${bonusMsg} (now have £${playerState.cash})`,
         playerId,
         type: 'action'
       } as LogEntry);
-      return { success: true, message: `Collected £${incomeTrack}` };
+      // Clear the bonus after use (one-time per action)
+      if (treasuryBonus > 0) {
+        (playerState as { treasuryBonus?: number }).treasuryBonus = 0;
+      }
+      return { success: true, message: `Collected £${totalGain}${bonusMsg}` };
     }
 
     default:

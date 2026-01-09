@@ -10,7 +10,7 @@ On your turn, either:
 
 **Phase B: Income & Cleanup**
 
-1. Collect Income (Income Track − Engineers; if negative, take loans)
+1. Collect Income (Income Track − Engineers)
 2. Collect Officers/Engineers from Income Tracks
 3. Check Age transition
 4. Refresh Agents
@@ -49,7 +49,7 @@ On your turn, either:
 - **Gas Rule:** Choose Hydrogen or Helium per launch—no mixing within a single launch
 - **Hazard Check:** Ship Stat + Engineers spent ≥ Hazard Difficulty
 - **Research per Round:** Research Level + Engineers in Barracks + Research icons from revealed cards (unspent lost)
-- **Net Income:** Income Track − Engineers in Barracks (if negative, take loans)
+- **Net Income:** Income Track − Engineers in Barracks
 - **Tech Cost:** Listed cost − Specialization Discount
 - **Transition Income:** (£ from Tech tiles) − (£1 × routes lost), minimum £0
 - **Repair Cost:** £3 per ship to move from Repair Hangar to Launch Hangar
@@ -102,7 +102,7 @@ All factions begin with a standardized baseline plus one unique bonus:
 **Base Requirements (All Factions):**
 - At least 1 Frame tile, 1 Fabric tile, 1 Drive tile (3 base tiles)
 - Minimum net lift: 0 (Weight ≤ Lift from gas)
-- Minimum stats: Speed 1, Range 1, Ceiling 0, Reliability 0, Luxury 0
+- Minimum stats from starting tech tiles: Speed 1, Range 1, Ceiling 0, Reliability 0, Luxury 0
 - 1 bonus tile (can be any slot type)
 
 **Faction Bonuses:**
@@ -120,7 +120,7 @@ All factions begin with a standardized baseline plus one unique bonus:
 - **Frame:** Zeppelin Frame (from Zeppelin Girders)
 - **Fabric:** Premium Envelope (from Goldbeater's Skin)
 - **Drive:** Basic Engine (from Daimler Engine) — Speed 1
-- **Bonus Drive:** Maybach CX (from Maybach Engine) — Speed +2, Range +1
+- **Bonus Drive:** Maybach CX (from Maybach Engine) — Speed +1, Range +1
 - **Starting Cards:** Zeppelin Girders, Goldbeater's Skin, Daimler Engine, Maybach Engine
 
 ### Britain (4 tiles, +1 Income)
@@ -138,11 +138,11 @@ All factions begin with a standardized baseline plus one unique bonus:
 - **Starting Cards:** Duralumin Girders, Gelatinized Latex, Basic Powerplant, Helium Handling
 
 ### Italy (4 tiles, +1 Range)
-- **Frame:** Semi-Rigid Keel (from Internal Keel)
+- **Frame:** Flexible Frame (from Articulated Keel Design) — Ceiling +1
 - **Fabric:** Cotton Envelope (from Rubberized Cotton)
 - **Drive:** Basic Engine (from Daimler Engine) — Speed 1
-- **Bonus Drive:** Expedition Engine (from Expedition Propeller) — Speed +1, Range +2
-- **Starting Cards:** Internal Keel, Rubberized Cotton, Daimler Engine, Expedition Propeller
+- **Bonus Drive:** Expedition Engine (from Expedition Propeller) — Range +2
+- **Starting Cards:** Articulated Keel Design, Rubberized Cotton, Daimler Engine, Expedition Propeller
 
 ---
 
@@ -244,6 +244,20 @@ Fabric technologies unlock outer covering and gas cell material upgrades.
 | III | Sleeping Quarters | 9 | 2 | 1 | Private Berths |
 | III | Smoking Room | 10 | 2 | 3 | Pressurized Lounge |
 
+## Faction Starting Technologies (5 cards)
+
+These technologies are given to specific factions at game start and are NOT available in the R&D Board. Each faction receives their starting tech cards during setup.
+
+| Faction | Name | Track | £ | Unlocks |
+|---------|------|-------|---|---------|
+| Germany | Zeppelin Girders | Frame | 1 | Zeppelin Frame |
+| Britain | Standard Propeller | Propulsion | 1 | Standard Engine |
+| Britain | Passenger Accommodation | Payload | 1 | Passenger Cabin |
+| USA | Basic Powerplant | Propulsion | 1 | Reliable Engine |
+| Italy | Expedition Propeller | Propulsion | 1 | Expedition Engine |
+
+*Note: These 5 tech cards + their tiles are faction-exclusive starting equipment. The other starting techs (Goldbeater's Skin, Wire Bracing, Doped Canvas, etc.) are available in the R&D Board and one copy is removed per faction that starts with it.*
+
 **53 Unique Technology Tiles** (Propulsion 11, Frame 10, Fabric 8, Gas Systems 10, Payload 14) + 1 Reserve Tech Card (Helium Handling)
 
 **Tiles by Age:**
@@ -274,7 +288,7 @@ Tech Tiles are installed on your Blueprint. You must own the corresponding Techn
 | Basic Engine | Daimler Petrol Engine | 1 | Speed +1 | — |
 | Efficient Propeller | Improved Propeller | 1 | Speed +1, Range +1 | — |
 | Twin Engine | Dual Engine Mount | 3 | Speed +2, Reliability +1 | — |
-| Maybach CX Engine | Maybach Engine Design | 2 | Speed +2, Range +1 | — |
+| Maybach CX Engine | Maybach Engine Design | 2 | Speed +1, Range +1 | — |
 | Diesel Engine | Diesel Powerplant | 2 | Range +2, Reliability +1 | — |
 | Vectored Thrust | Swiveling Propeller | 2 | Speed +1, Ceiling +1 | — |
 | Balanced Propulsion | Contra-Rotating Props | 2 | Speed +2, Reliability +1 | — |
@@ -282,6 +296,9 @@ Tech Tiles are installed on your Blueprint. You must own the corresponding Techn
 | High-Altitude Engine | Supercharged Engine | 3 | Speed +2, Ceiling +2 | — |
 | Hybrid Powerplant | Diesel-Electric Drive | 3 | Range +3, Reliability +1 | — |
 | Adaptive Propeller | Variable-Pitch Propeller | 2 | Speed +1, Range +2 | — |
+| Standard Engine | Standard Propeller | 1 | Speed +1, Range +1 | Britain starting tech |
+| Reliable Engine | Basic Powerplant | 1 | Speed +1, Range +1 | USA starting tech |
+| Expedition Engine | Expedition Propeller | 1 | Range +2 | Italy starting tech |
 
 ## Frame Tech Tiles
 
@@ -289,6 +306,7 @@ Frame tiles go in Frame slots. Each Frame slot shows a gas cube icon—this indi
 
 | Name | Required Tech | Weight | Hull Cost | Stats | Special |
 |------|---------------|--------|-----------|-------|---------|
+| Zeppelin Frame | Zeppelin Girders | 1 | +£1 | — | Germany starting tech |
 | Wooden Frame | Wooden Framework | 2 | +£1 | Reliability +1 | — |
 | Tensioned Frame | Wire Bracing | 1 | +£1 | Ceiling +1 | — |
 | Duralumin Frame | Duralumin Framework | 2 | +£2 | Reliability +2, Ceiling +1 | — |
@@ -306,6 +324,7 @@ Fabric tiles go in Fabric slots. The **Hull Cost** column shows how much this ti
 
 | Name | Required Tech | Weight | Hull Cost | Stats | Special |
 |------|---------------|--------|-----------|-------|---------|
+| Latex Envelope | Gelatinized Latex | 0 | +£1 | Reliability +1 | USA starting tech |
 | Cotton Envelope | Rubberized Cotton | 0 | +£0 | — | Basic default |
 | Doped Covering | Doped Canvas | 0 | +£1 | Speed +1 | Improved aerodynamics |
 | Premium Envelope | Goldbeater's Skin | 0 | +£3 | Reliability +1, Range +1 | Best gas-tightness |
@@ -337,6 +356,7 @@ Fabric tiles go in Fabric slots. The **Hull Cost** column shows how much this ti
 
 | Name | Required Tech | Weight | Stats | Special |
 |------|---------------|--------|-------|---------|
+| Passenger Cabin | Passenger Accommodation | 1 | Income +1 | Britain starting tech |
 | Spotter Gondola | Observation Platform | 1 | Income +1 | — |
 | Postal Service | Mail Compartment | 1 | Income +2 | — |
 | External Cargo | Cargo Nets | 2 | Income +2 | — |
@@ -353,7 +373,7 @@ Fabric tiles go in Fabric slots. The **Hull Cost** column shows how much this ti
 | Pressurized Lounge | Smoking Room | 2 | Income +1, Luxury +2 | Requires Helium Gas Cell installed |
 | Imperial Mast | Imperial Mooring System | 1 | — | British Territories count as Home Base (Britain specialty) |
 
-**Total: 56 Tech Tiles** (Propulsion 11, Frame 10, Fabric 8, Gas Systems 11, Payload 16)
+**Total: 62 Tech Tiles** (Propulsion 14, Frame 11, Fabric 9, Gas Systems 11, Payload 17)
 
 ---
 
@@ -650,7 +670,7 @@ The Reserve Card is always available for purchase, separate from the Market Row.
 | The Mandarin | 5 | Propeller | Take 2 Ministry actions | 2 Influence, 1 £ | *Senior civil servant with considerable influence* |
 | Merchant Prince | 4 | Propeller | +£2 Income from this route | 3 Influence | *Controls lucrative trade routes across continents* |
 | Fleet Street Baron | 4 | Any | No action effect | 2 Influence, 2 £ | *The newspapers dance to his tune* |
-| The Moneybags | 3 | Coin | Loan gives £35 instead of £30 | 3 Influence | *Capital from abroad, no questions asked* |
+| The Moneybags | 3 | Coin | Treasury gives +£3 | 3 Influence | *Capital from abroad, no questions asked* |
 | Lloyd's Man | 3 | Coin | Gain 1 Insurance policy | 3 Influence | *Underwriter from the famous London exchange* |
 | The Pen-Pusher | 2 | Propeller | Go first in turn order next round | 3 Influence | *Knows which forms to file and when* |
 | Shop Steward | 2 | Coin | -£1 per crew recruited this action | 2 Influence, 1 Officer | *Voice of the working men on the factory floor* |

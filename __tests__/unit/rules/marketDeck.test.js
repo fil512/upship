@@ -321,19 +321,19 @@ describe('Rules Compliance - Market Deck', () => {
       expect(state.players.player1.cash).toBe(15);
     });
 
-    it('should handle Foreign Investor effect (converted to £5 cash bonus since loans removed)', () => {
+    it('should handle The Moneybags effect (Treasury gives +£3)', () => {
       const state = {
         players: {
-          player1: { cash: 10 }
+          player1: { cash: 10, treasuryBonus: 0 }
         }
       };
-      const card = { name: 'Foreign Investor', effect: 'Loan gives 35 instead of 30' };
+      const card = { name: 'The Moneybags', effect: 'Treasury gives +3' };
 
-      const result = processCardEffect(state, 'player1', card, 'the_bank');
+      const result = processCardEffect(state, 'player1', card, 'treasury');
 
       expect(result.success).toBe(true);
-      // Loans removed from game, effect converted to £5 cash bonus
-      expect(state.players.player1.cash).toBe(15);
+      // Sets treasuryBonus which will be applied when visiting Treasury
+      expect(state.players.player1.treasuryBonus).toBe(3);
     });
 
     it('should handle Insurance Agent effect (Gain 1 Insurance policy)', () => {

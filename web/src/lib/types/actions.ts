@@ -17,7 +17,6 @@ export type {
 	DrawCardsActionData,
 	BuyMarketCardActionData,
 	RecruitCrewActionData,
-	TakeLoanActionData,
 	BuyInsuranceActionData,
 	DiscardHazardActionData,
 	KeepHazardActionData,

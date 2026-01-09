@@ -621,3 +621,57 @@ def show_gamelogs(game_id: str = None, filter_text: str = None, num_entries: int
 
     except Exception as e:
         print(f"Error: {e}")
+
+
+def show_blueprints(game_id: str = None) -> None:
+    """Show blueprint tiles for all players.
+
+    This is a superuser-only command that shows the installed tiles
+    on each player's blueprint, along with their tech cards.
+
+    Args:
+        game_id: The game ID (uses current game if None).
+    """
+    if game_id is None:
+        game_id = get_game_id()
+    if not game_id:
+        print("No current game. Run 'setup' first.")
+        return
+
+    try:
+        state_data = _get_raw_state_as_superuser(game_id)
+
+        print("=== Player Blueprints ===\n")
+
+        players = state_data.get('players', {})
+        player_order = state_data.get('playerOrder', [])
+
+        for player_id in player_order:
+            player = players.get(player_id, {})
+            faction = (player.get('faction') or '?').upper()
+            tech_cards = player.get('techCards', [])
+            blueprint = player.get('blueprint', {})
+
+            print(f"  {faction}:")
+            print(f"    Tech Cards ({len(tech_cards)}):")
+            for tc in tech_cards:
+                print(f"      - {tc}")
+
+            print(f"    Blueprint Tiles:")
+            for slot_type in ['frameSlots', 'fabricSlots', 'driveSlots', 'componentSlots']:
+                slots = blueprint.get(slot_type, [])
+                slot_label = slot_type.replace('Slots', '').capitalize()
+                installed = [s for s in slots if s]
+                if installed:
+                    print(f"      {slot_label}: {', '.join(installed)}")
+                else:
+                    print(f"      {slot_label}: (empty)")
+
+            # Count total tiles
+            total = sum(1 for st in ['frameSlots', 'fabricSlots', 'driveSlots', 'componentSlots']
+                        for s in blueprint.get(st, []) if s)
+            print(f"    Total installed: {total} tiles")
+            print()
+
+    except Exception as e:
+        print(f"Error: {e}")

@@ -879,7 +879,6 @@ const commands: Record<string, CommandFunction> = {
       console.log('  NO_MORE_LAUNCHES            - Signal done launching at launchpad');
       console.log('  PLACE_AGENT locationId=<id> cardIndex=<n> - Place agent at location');
       console.log('  BUY_GAS type=hydrogen amt=2 - Buy gas cubes');
-      console.log('  TAKE_LOAN                   - Take a £30 loan');
       console.log('  COLLECT_INCOME              - Collect your income');
       console.log('  DRAW_CARDS count=2          - Draw cards');
       console.log('  PLAY_CARD idx=0             - Play card from hand');
@@ -1033,11 +1032,6 @@ const commands: Record<string, CommandFunction> = {
     return commands.action(user, [gameId, 'BUY_GAS', `gasType=${gasType}`, `amount=${amount || 1}`]);
   },
 
-  async loan(username: string | string[], args?: string[]): Promise<void> {
-    const argsArray = args || [];
-    return commands.action(username, [argsArray[0], 'TAKE_LOAN']);
-  },
-
   async draw(username: string | string[], args?: string[]): Promise<void> {
     const user = typeof username === 'string' ? username : username[0];
     const [gameId, count] = args || [];
@@ -1170,7 +1164,6 @@ ${c(COLORS.yellow, 'Worker Placement:')}
 ${c(COLORS.yellow, 'Actions (shorthand):')}
   upship <user> endturn <gameId>              End your turn
   upship <user> buygas <id> <type> [amount]   Buy gas cubes
-  upship <user> loan <gameId>                 Take a loan (£30, -3 income)
   upship <user> draw <gameId> [count]         Draw cards
   upship <user> build <gameId> [count]        Build ships
   upship <user> launch <gameId> <shipId> <routeId> [gas]  Launch ship to claim route

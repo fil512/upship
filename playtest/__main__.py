@@ -28,6 +28,7 @@ Usage:
 Superuser Debugging Commands (uses superuser account for full state access):
     python -m playtest rdboard               # Show R&D board tech cards
     python -m playtest techstate             # Show progress track, tech bag, player techs
+    python -m playtest blueprints            # Show blueprint tiles for all players
     python -m playtest gamelogs [filter] [N] # Show game log entries (optional filter, last N)
     python -m playtest players               # Show player debug info (bot status, IDs, etc.)
 """
@@ -46,7 +47,8 @@ from .autoplay import autoplay, autoplay_until, autoturn, get_current_turn_facti
 from .display import (
     show_status, show_summary, show_sessions, show_routes,
     debug_state, tail_log, show_claude_output,
-    show_rdboard, show_techstate, show_gamelogs, show_players_debug
+    show_rdboard, show_techstate, show_gamelogs, show_players_debug,
+    show_blueprints
 )
 
 
@@ -464,8 +466,6 @@ def run_action(player: str, command: str, *args, game_id: str = None) -> None:
                 return
             slot_type, slot_index, upgrade_id = args[0], int(args[1]), args[2]
             result = client.install_upgrade(player, game_id, slot_type, slot_index, upgrade_id)
-        elif command_lower == 'loan':
-            result = client.take_loan(player, game_id)
         else:
             # Try as generic action
             action_type = command.upper()
@@ -779,6 +779,9 @@ def main():
 
     elif cmd == "techstate":
         show_techstate()
+
+    elif cmd == "blueprints":
+        show_blueprints()
 
     elif cmd == "gamelogs":
         filter_text = sys.argv[2] if len(sys.argv) > 2 else None

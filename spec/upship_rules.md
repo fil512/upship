@@ -1057,15 +1057,7 @@ A **network** is a group of your routes that share at least one city.
 
 **Age III Example:** You have routes London–Paris and Paris–Berlin (1 network). You want to claim New York–Rio (disconnected). Pay £1 to start your second network. Later, claiming Tokyo–Sydney would cost £2 (you now have 2 networks).
 
-## 14.4 Loans
-
-Loans are a free action—take one anytime on your turn without using an Agent or card. Each loan gives £30 but reduces Income by 3.
-
-During Income & Cleanup, if your net income (Income Track − Engineers) is negative, you must take loans until solvent.
-
-**Debt Limit:** Income cannot go below −10. If forced below −10, you are bankrupt: lose 10 VP and reset Income to 0.
-
-## 14.5 The Hindenburg Disaster
+## 14.4 The Hindenburg Disaster
 
 When Catastrophic Explosion occurs during a Luxury Launch in Age III using Hydrogen:
 1. Game end triggered
@@ -1073,7 +1065,7 @@ When Catastrophic Explosion occurs during a Luxury Launch in Age III using Hydro
 3. Triggering player gains 3 VP (historical infamy)
 4. Final scoring
 
-## 14.6 Engineer Timing
+## 14.5 Engineer Timing
 
 - Contribute to Research when you Reveal (+1 each)
 - May spend reactively after seeing Hazard Card
@@ -1115,7 +1107,6 @@ When Catastrophic Explosion occurs during a Luxury Launch in Age III using Hydro
 | **Install** | Place a Tech Tile on Blueprint | §9.2 |
 | **Launch** | Send a ship to claim a route | §8 |
 | **Lift** | Upward force from gas (5 per cube) | §9.3 |
-| **Loan** | Free action: gain £30, reduce Income by 3 (limit: Income ≥ −10) | §5.3 |
 | **Luxury** | Ship stat for passenger comfort | §4.2 |
 | **Market Deck** | Purchasable Agent Cards | §11.4, Appendix H |
 | **Combat Mission** | Age II mission card replacing routes | §10.5, Appendix G |
