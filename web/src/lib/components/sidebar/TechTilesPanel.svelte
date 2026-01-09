@@ -84,6 +84,7 @@
 									on:click={() => handleTileClick(tile.id)}
 									disabled={!selectable}
 								>
+									<div class="cost-badge">{tile.hullCost || 1}</div>
 									<div class="tile-icons">
 										{#each icons as icon}
 											<Icon name={icon.type as IconName} size={14} />
@@ -162,6 +163,25 @@
 		border-radius: 6px;
 		cursor: default;
 		transition: all var(--transition-fast);
+		position: relative;
+	}
+
+	.cost-badge {
+		position: absolute;
+		top: 3px;
+		right: 3px;
+		width: 16px;
+		height: 16px;
+		background: #9ca3af;
+		border: 1px solid #6b7280;
+		border-radius: 50%;
+		font-size: 9px;
+		font-weight: 700;
+		color: #1f2937;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		line-height: 1;
 	}
 
 	.tile-box.selectable {

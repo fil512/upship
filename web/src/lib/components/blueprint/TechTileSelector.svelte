@@ -57,6 +57,7 @@
 							style="--slot-color: {slotColors[slotType]}"
 							on:click={() => handleTileClick(tile.id)}
 						>
+							<div class="cost-badge">{tile.hullCost || 1}</div>
 							<span class="tile-name">{tile.name}</span>
 							<div class="tile-stats">
 								<span class="weight" class:negative={tile.weight < 0} class:positive={tile.weight > 0}>
@@ -137,6 +138,25 @@
 		transition: all var(--transition-fast);
 		text-align: left;
 		min-width: 100px;
+		position: relative;
+	}
+
+	.cost-badge {
+		position: absolute;
+		top: 3px;
+		right: 3px;
+		width: 16px;
+		height: 16px;
+		background: #9ca3af;
+		border: 1px solid #6b7280;
+		border-radius: 50%;
+		font-size: 9px;
+		font-weight: 700;
+		color: #1f2937;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		line-height: 1;
 	}
 
 	.tile-card:hover {
