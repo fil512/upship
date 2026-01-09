@@ -34,6 +34,29 @@ def find_playable_card(cards: list[dict], locations: list[dict]) -> tuple[dict |
     return None, None
 
 
+def _get_tile_hull_cost(manifest, tile_id: str | None) -> int:
+    """Get hull cost of a single tech tile.
+
+    [BOT-BLUEPRINT-01] SYNC: Keep in sync with getTileHullCost() in server/services/botService.ts
+    """
+    if not tile_id:
+        return 0
+    upgrade = manifest.upgrades.get(tile_id, {})
+    return upgrade.get('hullCost', 0)
+
+
+def _calculate_hull_cost(manifest, blueprint_dict: dict) -> int:
+    """Calculate total hull cost from all installed tech tiles.
+
+    [BOT-BLUEPRINT-01] SYNC: Keep in sync with calculateHullCost() in server/actions/blueprint.ts
+    """
+    total = 0
+    for slot_key in ['frameSlots', 'fabricSlots', 'driveSlots', 'componentSlots']:
+        for tile_id in blueprint_dict.get(slot_key, []):
+            total += _get_tile_hull_cost(manifest, tile_id)
+    return total
+
+
 def get_blueprint_design_blueprint(player_data: Player, current_age: int = 1, is_age_transition: bool = False) -> dict | None:
     """Determine the desired blueprint configuration for Blueprint Design action.
 
@@ -43,6 +66,10 @@ def get_blueprint_design_blueprint(player_data: Player, current_age: int = 1, is
     In Age II/III, prioritizes Drive slots (for range/speed needed for missions/routes).
 
     During age transitions, ALL empty Frame and Fabric slots MUST be filled per Section 12.1 step 5.
+    Retrofit costs are free during age transitions.
+
+    For normal play, considers retrofit costs before adding tiles:
+    Retrofit cost = (new hull cost - old hull cost) × (hangar_ships + repair_ships)
 
     [BOT-BLUEPRINT-01] SYNC: Keep in sync with getBlueprintDesignBlueprint() in server/services/botService.ts
 
@@ -123,35 +150,69 @@ def get_blueprint_design_blueprint(player_data: Player, current_age: int = 1, is
 
     changes_made = False
 
+    # Calculate retrofit cost constraints (only for normal play, not age transition)
+    # Retrofit cost = (new hull cost - old hull cost) × (hangarShips + repairShips)
+    hangar_ships = player_data.hangar_ships or 0
+    repair_ships = player_data.repair_ships or 0
+    ships_to_retrofit = hangar_ships + repair_ships
+    player_cash = player_data.cash or 0
+
+    # Calculate old hull cost from current blueprint
+    old_blueprint_dict = {
+        'frameSlots': list(blueprint.frame_slots or []),
+        'fabricSlots': list(blueprint.fabric_slots or []),
+        'driveSlots': list(blueprint.drive_slots or []),
+        'componentSlots': list(blueprint.component_slots or []),
+    }
+    old_hull_cost = _calculate_hull_cost(manifest, old_blueprint_dict)
+    current_hull_cost = old_hull_cost  # Track cumulative hull cost as we add tiles
+
+    # Sort upgrades by hull cost (prefer cheaper tiles first to maximize what we can afford)
+    frame_upgrades.sort(key=lambda tid: _get_tile_hull_cost(manifest, tid))
+    fabric_upgrades.sort(key=lambda tid: _get_tile_hull_cost(manifest, tid))
+    drive_upgrades.sort(key=lambda tid: _get_tile_hull_cost(manifest, tid))
+
+    def can_afford_tile(tile_id: str) -> bool:
+        """Check if we can afford to add a tile considering retrofit cost."""
+        if is_age_transition:
+            return True  # Free during age transition
+        if ships_to_retrofit == 0:
+            return True  # No retrofit cost if no ships
+
+        tile_hull_cost = _get_tile_hull_cost(manifest, tile_id)
+        new_total_hull_cost = current_hull_cost + tile_hull_cost
+        retrofit_cost = max(0, new_total_hull_cost - old_hull_cost) * ships_to_retrofit
+        return player_cash >= retrofit_cost
+
+    def add_tile(tile_id: str):
+        """Add a tile and update cost tracking."""
+        nonlocal current_hull_cost, changes_made
+        tile_hull_cost = _get_tile_hull_cost(manifest, tile_id)
+        current_hull_cost += tile_hull_cost
+        installed_tiles.add(tile_id)
+        changes_made = True
+
     # Fill empty frame slots (no duplicates - each tile can only be used once)
-    frame_idx = 0
     for idx in empty_frame_indices:
-        if frame_idx < len(frame_upgrades):
-            upgrade_id = frame_upgrades[frame_idx]
-            new_blueprint['frameSlots'][idx] = upgrade_id
-            installed_tiles.add(upgrade_id)
-            changes_made = True
-            frame_idx += 1
+        # Find first affordable upgrade not yet installed
+        affordable = next((uid for uid in frame_upgrades if uid not in installed_tiles and can_afford_tile(uid)), None)
+        if affordable:
+            new_blueprint['frameSlots'][idx] = affordable
+            add_tile(affordable)
 
     # Fill empty fabric slots (no duplicates - each tile can only be used once)
-    fabric_idx = 0
     for idx in empty_fabric_indices:
-        if fabric_idx < len(fabric_upgrades):
-            upgrade_id = fabric_upgrades[fabric_idx]
-            new_blueprint['fabricSlots'][idx] = upgrade_id
-            installed_tiles.add(upgrade_id)
-            changes_made = True
-            fabric_idx += 1
+        affordable = next((uid for uid in fabric_upgrades if uid not in installed_tiles and can_afford_tile(uid)), None)
+        if affordable:
+            new_blueprint['fabricSlots'][idx] = affordable
+            add_tile(affordable)
 
     # Fill empty drive slots (no duplicates)
-    drive_idx = 0
     for idx in empty_drive_indices:
-        if drive_idx < len(drive_upgrades):
-            upgrade_id = drive_upgrades[drive_idx]
-            new_blueprint['driveSlots'][idx] = upgrade_id
-            installed_tiles.add(upgrade_id)
-            changes_made = True
-            drive_idx += 1
+        affordable = next((uid for uid in drive_upgrades if uid not in installed_tiles and can_afford_tile(uid)), None)
+        if affordable:
+            new_blueprint['driveSlots'][idx] = affordable
+            add_tile(affordable)
 
     # For age transition, always return the blueprint (even if incomplete - server validates)
     # For normal play, only return if we made changes
