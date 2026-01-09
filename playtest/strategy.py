@@ -5,6 +5,23 @@ including card/location selection and launch readiness evaluation.
 
 SYNC: Keep in sync with server/services/botService.ts
 Run `/bot-logic` command to analyze sync status between server and playtest bots.
+
+HAZARD CHECK FORMULA (Section 8.2):
+    When a ship is launched, it faces hazard checks. The success formula is:
+
+    Net Difficulty = Hazard Difficulty + Route/Mission Difficulty - Ship Reliability (min 0)
+    Ship Stat + Engineers >= Net Difficulty → Pass
+
+    Key points:
+    - Hazard difficulty comes from the drawn hazard card (typically 2-6)
+    - Route/Mission difficulty adds to hazard difficulty (Age II combat missions have this)
+    - Ship reliability REDUCES net difficulty (higher reliability = easier hazards)
+    - Engineers can be spent to increase the Ship Stat side of the check
+    - Only Range, Speed, and Ceiling are prerequisites; reliability/difficulty are modifiers
+
+    Example: Hazard difficulty=4, Mission difficulty=2, Ship reliability=3
+             Net Difficulty = max(0, 4 + 2 - 3) = 3
+             If ship has Speed=2 and player spends 1 engineer: 2 + 1 = 3 >= 3 → Pass
 """
 
 from typing import Any
@@ -224,6 +241,66 @@ def get_blueprint_design_blueprint(player_data: Player, current_age: int = 1, is
     return new_blueprint if changes_made else None
 
 
+def calculate_expected_engineers_for_launch(
+    ship_reliability: int,
+    current_age: int,
+    missions: list[CombatMission] | None = None
+) -> tuple[int, str]:
+    """Calculate expected engineers needed for a safe launch.
+
+    Uses the new hazard check formula (Section 8.2):
+        Net Difficulty = Hazard Difficulty + Route/Mission Difficulty - Ship Reliability (min 0)
+        Ship Stat + Engineers >= Net Difficulty to pass
+
+    Args:
+        ship_reliability: Ship's reliability stat.
+        current_age: Current game age (1, 2, or 3).
+        missions: List of combat missions (for Age II).
+
+    Returns:
+        Tuple of (engineers_needed, reason_string)
+    """
+    # Average hazard difficulty in the deck is about 3-4
+    # Using 4 as a conservative estimate for safety
+    AVG_HAZARD_DIFFICULTY = 4
+
+    # Mission/route difficulty
+    # Age I/III routes have difficulty 0
+    # Age II missions have difficulty 2-3
+    if current_age == 2 and missions:
+        # Find the lowest difficulty mission that's achievable (prefer easier ones)
+        mission_difficulties = [getattr(m, 'difficulty', 0) or 0 for m in missions]
+        if mission_difficulties:
+            # Use the minimum available mission difficulty for the estimate
+            mission_difficulty = min(mission_difficulties)
+        else:
+            mission_difficulty = 2  # Default if no missions
+    else:
+        mission_difficulty = 0  # Routes in Age I/III have no difficulty
+
+    # Net difficulty formula: Hazard + Mission - Reliability (min 0)
+    net_difficulty = max(0, AVG_HAZARD_DIFFICULTY + mission_difficulty - ship_reliability)
+
+    # Engineers needed to pass: max(0, net_difficulty - avg_ship_stat)
+    # But we can't predict which stat hazard will check, so we assume
+    # we need engineers equal to net_difficulty for safety
+    # A ship with matching stat ~3-4 would need 0-1 engineers
+    # Assuming average ship stat of 2-3, we need net_difficulty - 2 engineers
+    AVG_SHIP_STAT = 2
+    engineers_needed = max(0, net_difficulty - AVG_SHIP_STAT)
+
+    # Build explanation
+    if current_age == 2:
+        reason = (f"hazard(~{AVG_HAZARD_DIFFICULTY}) + mission({mission_difficulty}) "
+                  f"- reliability({ship_reliability}) = net({net_difficulty}), "
+                  f"need ~{engineers_needed} engineers")
+    else:
+        reason = (f"hazard(~{AVG_HAZARD_DIFFICULTY}) - reliability({ship_reliability}) "
+                  f"= net({net_difficulty}), need ~{engineers_needed} engineers")
+
+    return engineers_needed, reason
+
+
 def evaluate_launch_readiness(
     player_data: Player,
     routes: list[Route],
@@ -389,11 +466,15 @@ def evaluate_launch_readiness(
                     priorities.insert(1, 'blueprint_design')  # Install drive upgrades
 
     # Check 7: Do we have engineers for hazard mitigation?
-    # IMPORTANT: Having at least 2 engineers greatly improves hazard check success
-    # Most hazards need 2-4 engineers to pass, so launching with 0-1 is risky
-    min_engineers_for_safe_launch = 2
+    # Use the new hazard formula (Section 8.2):
+    #   Net Difficulty = Hazard Difficulty + Route/Mission Difficulty - Ship Reliability (min 0)
+    #   Ship Stat + Engineers >= Net Difficulty to pass
+    # Calculate expected engineers needed based on ship reliability and mission difficulty
+    min_engineers_for_safe_launch, engineer_reason = calculate_expected_engineers_for_launch(
+        ship_reliability, current_age, missions
+    )
     if engineers < min_engineers_for_safe_launch:
-        missing.append(f'need {min_engineers_for_safe_launch - engineers} more engineer(s) for safe launch')
+        missing.append(f'need {min_engineers_for_safe_launch - engineers} more engineer(s) ({engineer_reason})')
         priorities.append('engineering_depot')  # Collect engineers from income track
         priorities.append('technical_institute')  # Increase engineer income track
 
@@ -506,18 +587,34 @@ def find_best_combat_mission(
 
     best_mission = None
     best_value = -1
+    engineers = player_data.engineers or 0
 
     for ship in hangar_ships:
         # Calculate ship stats from blueprint (ships don't store their own stats)
         ship_stats = get_ship_details(ship, player_data)
+        ship_reliability = ship_stats.get('reliability', 0)
 
         evaluations = evaluate_combat_mission_readiness(player_data, missions, ship_stats, current_age=2)
 
         for eval_result in evaluations:
             if eval_result['can_attempt']:
                 mission = eval_result['mission']
-                # Value = VP * 10 + income (rough prioritization)
-                value = mission.vp * 10 + mission.income
+                mission_difficulty = getattr(mission, 'difficulty', 0) or 0
+
+                # Calculate net difficulty using new formula (Section 8.2):
+                # Net Difficulty = Hazard Difficulty + Mission Difficulty - Ship Reliability (min 0)
+                # Average hazard difficulty is ~4
+                avg_hazard_difficulty = 4
+                net_difficulty = max(0, avg_hazard_difficulty + mission_difficulty - ship_reliability)
+
+                # Estimate hazard pass chance based on engineers available
+                # Higher engineers = better chance = we can take harder missions
+                # If net_difficulty - engineers <= 2, we have good odds with average ship stats
+                risk_factor = max(0, net_difficulty - engineers - 2)
+
+                # Value = VP * 10 + income - risk penalty
+                # Risk penalty: each point of unfavorable difficulty costs 5 value points
+                value = mission.vp * 10 + mission.income - (risk_factor * 5)
                 if value > best_value:
                     best_value = value
                     best_mission = mission
