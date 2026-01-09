@@ -9,12 +9,16 @@ Analyze the game's economic balance by running a playtest and examining resource
 ```bash
 ./scripts/restart_server.sh
 python -m playtest setup
-python -m playtest autoplay 100
+timeout 120 python -m playtest autoplay 100 | tail -80
 ```
 
 Note: The playtest is capped at 100 turns. If it hits this limit, the game likely has a bug causing an infinite loop.
 
-### Step 2: Run the analysis script
+### Step 2a: If the game hung, timed out or reached 100 turns
+
+Use the tools in playtest/README.md to troubleshoot why the game failed and recommend remedies.  Once fixed, return to Step 1.
+
+### Step 2b: If the game successfully completed in fewer than 100 turns. Run the analysis script
 
 ```bash
 python scripts/analyze_flow.py
