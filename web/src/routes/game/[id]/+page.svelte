@@ -1925,23 +1925,29 @@
 	}
 
 	.track-space.milestone {
-		width: 24px;
-		border: 1px solid var(--color-text-muted);
+		width: 28px;
+		height: 24px;
+		border: 2px solid var(--color-text-muted);
+		background: rgba(255, 255, 255, 0.08);
+		font-weight: 600;
 	}
 
 	.track-space.age2 {
 		border-color: var(--color-info);
 		color: var(--color-info);
+		background: rgba(59, 130, 246, 0.15);
 	}
 
 	.track-space.age3 {
 		border-color: var(--color-accent-gold);
 		color: var(--color-accent-gold);
+		background: rgba(245, 158, 11, 0.15);
 	}
 
 	.track-space.game-end {
 		border-color: var(--color-warning);
 		color: var(--color-warning);
+		background: rgba(234, 179, 8, 0.15);
 	}
 
 	.track-space.passed.milestone {
@@ -1956,32 +1962,32 @@
 		background: color-mix(in srgb, var(--color-accent-gold) 30%, transparent);
 	}
 
-	/* Age zone colors - green for Age 1, red for Age 2, gold for Age 3 */
+	/* Age zone colors - subtle styling for regular spaces */
 	.track-space.age-1-zone {
-		border: 1px solid var(--color-success);
-		color: var(--color-success);
+		border: 1px solid rgba(34, 197, 94, 0.25);
+		color: rgba(34, 197, 94, 0.5);
 	}
 
 	.track-space.age-2-zone {
-		border: 1px solid var(--color-error);
-		color: var(--color-error);
+		border: 1px solid rgba(239, 68, 68, 0.25);
+		color: rgba(239, 68, 68, 0.5);
 	}
 
 	.track-space.age-3-zone {
-		border: 1px solid var(--color-accent-gold);
-		color: var(--color-accent-gold);
+		border: 1px solid rgba(245, 158, 11, 0.25);
+		color: rgba(245, 158, 11, 0.5);
 	}
 
 	.track-space.passed.age-1-zone {
-		background: color-mix(in srgb, var(--color-success) 30%, transparent);
+		background: rgba(34, 197, 94, 0.15);
 	}
 
 	.track-space.passed.age-2-zone {
-		background: color-mix(in srgb, var(--color-error) 30%, transparent);
+		background: rgba(239, 68, 68, 0.15);
 	}
 
 	.track-space.passed.age-3-zone {
-		background: color-mix(in srgb, var(--color-accent-gold) 30%, transparent);
+		background: rgba(245, 158, 11, 0.15);
 	}
 
 	/* Current marker inherits zone color but with full opacity background */

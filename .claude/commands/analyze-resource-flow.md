@@ -9,8 +9,10 @@ Analyze the game's economic balance by running a playtest and examining resource
 ```bash
 ./scripts/restart_server.sh
 python -m playtest setup
-python -m playtest autoplay
+python -m playtest autoplay 100
 ```
+
+Note: The playtest is capped at 100 turns. If it hits this limit, the game likely has a bug causing an infinite loop.
 
 ### Step 2: Run the analysis script
 

@@ -93,6 +93,59 @@ Minimum £0. Technologies cushion the transition; routes cost £1 each when wipe
 
 ---
 
+# APPENDIX B: FACTION STARTING CONFIGURATIONS
+
+## Design Goals
+
+All factions begin with a standardized baseline plus one unique bonus:
+
+**Base Requirements (All Factions):**
+- At least 1 Frame tile, 1 Fabric tile, 1 Drive tile (3 base tiles)
+- Minimum net lift: 0 (Weight ≤ Lift from gas)
+- Minimum stats: Speed 1, Range 1, Ceiling 0, Reliability 0, Luxury 0
+- 1 bonus tile (can be any slot type)
+
+**Faction Bonuses:**
+
+| Faction | Bonus | Historical Rationale | Extra Tech Card |
+|---------|-------|---------------------|-----------------|
+| Germany | +1 Speed | Powerful Maybach engines, fastest rigid airships | Maybach Engine → Maybach CX |
+| Britain | +1 Income | Imperial Airship Scheme focused on passenger service | Passenger Accommodation → Passenger Cabin |
+| USA | Fire Immunity | Helium monopoly enabled safe non-flammable operations | Helium Handling → Helium Gas Cell |
+| Italy | +1 Range | Nobile's polar expeditions required long range | Expedition Propeller → Expedition Engine |
+
+## Starting Configurations
+
+### Germany (4 tiles, +1 Speed)
+- **Frame:** Zeppelin Frame (from Zeppelin Girders)
+- **Fabric:** Premium Envelope (from Goldbeater's Skin)
+- **Drive:** Basic Engine (from Daimler Engine) — Speed 1
+- **Bonus Drive:** Maybach CX (from Maybach Engine) — Speed +2, Range +1
+- **Starting Cards:** Zeppelin Girders, Goldbeater's Skin, Daimler Engine, Maybach Engine
+
+### Britain (4 tiles, +1 Income)
+- **Frame:** Tensioned Frame (from Wire Bracing) — Ceiling +1
+- **Fabric:** Doped Covering (from Doped Canvas) — Speed +1
+- **Drive:** Standard Engine (from Standard Propeller) — Speed 1, Range 1
+- **Bonus Component:** Passenger Cabin (from Passenger Accommodation) — Income +1
+- **Starting Cards:** Wire Bracing, Doped Canvas, Standard Propeller, Passenger Accommodation
+
+### USA (4 tiles, Fire Immunity)
+- **Frame:** Duralumin Frame (from Duralumin Girders) — Reliability +2, Ceiling +1
+- **Fabric:** Latex Envelope (from Gelatinized Latex) — Reliability +1
+- **Drive:** Reliable Engine (from Basic Powerplant) — Speed 1, Range 1
+- **Bonus Component:** Helium Gas Cell (from Helium Handling) — Fire immunity, enables helium
+- **Starting Cards:** Duralumin Girders, Gelatinized Latex, Basic Powerplant, Helium Handling
+
+### Italy (4 tiles, +1 Range)
+- **Frame:** Semi-Rigid Keel (from Internal Keel)
+- **Fabric:** Cotton Envelope (from Rubberized Cotton)
+- **Drive:** Basic Engine (from Daimler Engine) — Speed 1
+- **Bonus Drive:** Expedition Engine (from Expedition Propeller) — Speed +1, Range +2
+- **Starting Cards:** Internal Keel, Rubberized Cotton, Daimler Engine, Expedition Propeller
+
+---
+
 # APPENDIX C: TECHNOLOGY TILES
 
 Technology tiles are acquired from the R&D Board using Research. Each tile shows: Research Cost, Track (color), Age, £ Value, VP Value (if any), and which Tech Tile it unlocks.

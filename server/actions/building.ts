@@ -78,8 +78,9 @@ function processBuildShip(state: GameState, playerId: string, data: BuildShipDat
     );
   }
 
-  // Calculate hull cost from installed upgrades
-  let hullCost = 2; // Base cost
+  // Calculate hull cost from ALL installed tech tiles
+  // Formula: £4 base + hullCost from every installed tile
+  let hullCost = 4; // Base cost
 
   // Add Frame hull costs (unless Duralumin Man ignoreFrameCost is active)
   if (!playerState.ignoreFrameCost) {
@@ -92,6 +93,27 @@ function processBuildShip(state: GameState, playerId: string, data: BuildShipDat
 
   // Add Fabric hull costs
   for (const upgradeId of playerState.blueprint.fabricSlots || []) {
+    if (upgradeId && UPGRADES[upgradeId]?.hullCost) {
+      hullCost += UPGRADES[upgradeId].hullCost;
+    }
+  }
+
+  // Add Drive hull costs
+  for (const upgradeId of playerState.blueprint.driveSlots || []) {
+    if (upgradeId && UPGRADES[upgradeId]?.hullCost) {
+      hullCost += UPGRADES[upgradeId].hullCost;
+    }
+  }
+
+  // Add Gas hull costs
+  for (const upgradeId of playerState.blueprint.gasSockets || []) {
+    if (upgradeId && UPGRADES[upgradeId]?.hullCost) {
+      hullCost += UPGRADES[upgradeId].hullCost;
+    }
+  }
+
+  // Add Component hull costs
+  for (const upgradeId of playerState.blueprint.componentSlots || []) {
     if (upgradeId && UPGRADES[upgradeId]?.hullCost) {
       hullCost += UPGRADES[upgradeId].hullCost;
     }

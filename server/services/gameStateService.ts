@@ -54,37 +54,39 @@ interface FactionConfig {
 // All starting tech tiles are pre-installed in the 2 slots per type (Age I: 2/2/2/2)
 const FACTION_CONFIG: Record<string, FactionConfig> = {
   germany: {
-    // Zeppelin-style design: Heavy frame, powerful Maybach engine (+1 speed)
-    startingTechCards: ['zeppelin_girders', 'goldbeater_skin', 'maybach_engine', 'blaugas_storage'],
+    // Zeppelin-style design: Powerful Maybach engine (+1 speed)
+    // Per Appendix B: 4 tiles (1 frame + 1 fabric + 2 drive for speed bonus)
+    startingTechCards: ['zeppelin_girders', 'goldbeater_skin', 'daimler_engine', 'maybach_engine'],
     startingTechTiles: {
-      frame: ['zeppelin_frame'],                      // 1 frame tile (zeppelin_girders provides 1)
-      fabric: ['premium_envelope', 'goldbeater_envelope'], // 2 fabric tiles from goldbeater_skin
-      drive: ['maybach_hl', 'maybach_cx'],            // 2 drive tiles from maybach_engine
-      component: ['blaugas_tank']                     // 1 component tile from blaugas_storage
+      frame: ['zeppelin_frame'],           // From zeppelin_girders
+      fabric: ['premium_envelope'],        // From goldbeater_skin (reliability +1, range +1)
+      drive: ['basic_engine', 'maybach_cx'] // From daimler_engine + maybach_engine (speed bonus)
     },
     bonuses: {},
     // The Flaw: Cannot acquire helium_handling tech card
     bannedTechCards: ['helium_handling']
   },
   britain: {
-    // R-Class design: Lightweight efficient frame with passenger cabin (ships earn +1 income on routes)
-    startingTechCards: ['wire_bracing', 'doped_canvas', 'standard_propeller', 'passenger_accommodation', 'imperial_mooring'],
+    // R-Class design: Passenger service focus (+1 income)
+    // Per Appendix B: 4 tiles (1 frame + 1 fabric + 1 drive + 1 component)
+    startingTechCards: ['wire_bracing', 'doped_canvas', 'standard_propeller', 'passenger_accommodation'],
     startingTechTiles: {
-      frame: ['tensioned_frame', 'wire_braced_frame'],     // 2 frame tiles from wire_bracing
-      fabric: ['doped_covering', 'doped_canvas_envelope'], // 2 fabric tiles from doped_canvas
-      drive: ['standard_engine'],                          // 1 drive tile from standard_propeller
-      component: ['passenger_cabin', 'imperial_mast']      // 2 component tiles from passenger_accommodation + imperial_mooring
+      frame: ['tensioned_frame'],          // From wire_bracing (ceiling +1)
+      fabric: ['doped_covering'],          // From doped_canvas (speed +1)
+      drive: ['standard_engine'],          // From standard_propeller (speed 1, range 1)
+      component: ['passenger_cabin']       // From passenger_accommodation (income +1)
     },
     bonuses: {}
   },
   usa: {
-    // Goodyear-Zeppelin design: Safety-focused with high ceiling and reliability
-    startingTechCards: ['duralumin_girders', 'gelatinized_latex', 'basic_powerplant', 'trapeze_system', 'helium_handling'],
+    // Goodyear-Zeppelin design: Safety-focused with helium (fire immunity)
+    // Per Appendix B: 4 tiles (1 frame + 1 fabric + 1 drive + 1 component)
+    startingTechCards: ['duralumin_girders', 'usa_latex_covering', 'basic_powerplant', 'helium_handling'],
     startingTechTiles: {
-      frame: ['duralumin_frame', 'rigid_duralumin_frame'], // 2 frame tiles from duralumin_girders
-      fabric: ['latex_envelope', 'synthetic_envelope'],    // 2 fabric tiles from gelatinized_latex
-      drive: ['reliable_engine'],                          // 1 drive tile from basic_powerplant
-      component: ['helium_gas_cell', 'sparrowhawk_hangar'] // 2 component tiles from helium_handling + trapeze_system
+      frame: ['duralumin_frame'],          // From duralumin_girders (reliability +2, ceiling +1)
+      fabric: ['latex_envelope'],          // From usa_latex_covering (reliability +1)
+      drive: ['reliable_engine'],          // From basic_powerplant (speed 1, range 1)
+      component: ['helium_gas_cell']       // From helium_handling (fire immunity)
     },
     bonuses: {},
     // Starting Advantage: Helium Monopoly - market doesn't advance when USA buys helium
@@ -92,13 +94,12 @@ const FACTION_CONFIG: Record<string, FactionConfig> = {
   },
   italy: {
     // Nobile semi-rigid design: Long-range expedition capability (+1 range)
-    // Italy has 3 frame tiles (from internal_keel + articulated_keel) but only 2 slots - install best 2
-    startingTechCards: ['internal_keel', 'rubberized_cotton', 'expedition_propeller', 'articulated_keel'],
+    // Per Appendix B: 4 tiles (1 frame + 1 fabric + 2 drive for range bonus)
+    startingTechCards: ['internal_keel', 'rubberized_cotton', 'daimler_engine', 'expedition_propeller'],
     startingTechTiles: {
-      frame: ['flexible_frame', 'semi_rigid_keel'],        // 2 of 3 frame tiles (articulated_keel + internal_keel)
-      fabric: ['cotton_envelope', 'rubberized_envelope'],  // 2 fabric tiles from rubberized_cotton
-      drive: ['expedition_engine']                         // 1 drive tile from expedition_propeller
-      // No starting component tiles
+      frame: ['semi_rigid_keel'],          // From internal_keel
+      fabric: ['cotton_envelope'],         // From rubberized_cotton
+      drive: ['basic_engine', 'expedition_engine'] // From daimler_engine + expedition_propeller (range bonus)
     },
     bonuses: {},
     // The Flaw: Low Ceiling - fewer payload slots (handled in blueprint)

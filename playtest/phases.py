@@ -96,12 +96,8 @@ def handle_launchpad_launches(player: str, game_id: str, logger: PlaytestLogger)
 
     # Age II: Combat missions instead of routes
     if current_age == 2:
-        # Use shared state to avoid stale data - all bots share the same mission list
-        shared = get_shared_state()
-        missions = shared.get_available_missions()
-        if not missions:
-            # Fallback to server fetch if shared state is empty
-            missions = get_mission_row(game_id)
+        # Always fetch fresh missions from server - it returns only unclaimed missions
+        missions = get_mission_row(game_id)
         if missions:
             mission_launches = _attempt_combat_missions(
                 player, game_id, hangar_ships, missions, player_data, officers_needed, logger
@@ -236,17 +232,21 @@ def _attempt_combat_missions(
                 logger.log_action(None, f"  └─ Outcome: {launch_outcome} (status={ship_status})", "worker_placement")
 
                 if launch_outcome == "SUCCESS" or ship_status == 'on_route':
-                    # Remove mission from list
-                    missions = [m for m in missions if m.id != mission.id]
                     launched += 1
                     faction = get_faction_from_player(player)
                     logger.track_mission_claimed(mission.name, faction)
-                    # Update shared state so other bots know this mission is claimed
-                    get_shared_state().mark_mission_claimed(mission.id, player)
+
+                    # Refresh missions from server state (source of truth)
+                    fresh_state = get_state(game_id, player)
+                    if fresh_state and fresh_state.mission_row:
+                        missions = fresh_state.mission_row
+                    else:
+                        missions = [m for m in missions if m.id != mission.id]
 
                     # Check if we have officers left for more launches
-                    if post_player_data:
-                        post_officers = post_player_data.officers or 0
+                    fresh_player_data = fresh_state.get_player(post_player_id) if fresh_state and post_player_id else post_player_data
+                    if fresh_player_data:
+                        post_officers = fresh_player_data.officers or 0
                         if post_officers < officers_needed:
                             return launched
                 break

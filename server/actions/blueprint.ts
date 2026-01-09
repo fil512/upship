@@ -55,7 +55,7 @@ type AgeTransitionGameState = GameState & {
 
 /**
  * Calculate hull cost for a tech tile
- * Only Frame and Fabric tech tiles contribute to hull cost per Section 7.1
+ * All tech tiles can contribute to hull cost
  */
 function getTechTileHullCost(tileId: string | null): number {
   if (!tileId) return 0;
@@ -65,9 +65,10 @@ function getTechTileHullCost(tileId: string | null): number {
 
 /**
  * Calculate total hull cost for a blueprint
+ * Formula: £4 base + hullCost from every installed tile
  */
 function calculateHullCost(blueprint: Blueprint): number {
-  let cost = 2; // Base cost per Section 7.1
+  let cost = 4; // Base cost
 
   // Add Frame hull costs
   for (const tileId of blueprint.frameSlots || []) {
@@ -76,6 +77,21 @@ function calculateHullCost(blueprint: Blueprint): number {
 
   // Add Fabric hull costs
   for (const tileId of blueprint.fabricSlots || []) {
+    cost += getTechTileHullCost(tileId);
+  }
+
+  // Add Drive hull costs
+  for (const tileId of blueprint.driveSlots || []) {
+    cost += getTechTileHullCost(tileId);
+  }
+
+  // Add Gas hull costs
+  for (const tileId of (blueprint as { gasSockets?: string[] }).gasSockets || []) {
+    cost += getTechTileHullCost(tileId);
+  }
+
+  // Add Component hull costs
+  for (const tileId of blueprint.componentSlots || []) {
     cost += getTechTileHullCost(tileId);
   }
 

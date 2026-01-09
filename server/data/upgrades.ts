@@ -120,6 +120,7 @@ export const TECH_TILES: Record<string, TechTile> = {
     slotType: 'driveSlots',
     requiredCard: 'daimler_engine',
     weight: 1,
+    hullCost: 1,  // Simple proven engine design
     stats: { speed: 1 },
     special: null,
     age: 1
@@ -131,6 +132,7 @@ export const TECH_TILES: Record<string, TechTile> = {
     slotType: 'driveSlots',
     requiredCard: 'improved_propeller',
     weight: 1,
+    hullCost: 1,  // Refined propeller design
     stats: { speed: 1, range: 1 },
     special: null,
     age: 1
@@ -154,6 +156,7 @@ export const TECH_TILES: Record<string, TechTile> = {
     slotType: 'driveSlots',
     requiredCard: 'maybach_engine',
     weight: 2,
+    hullCost: 2,  // Premium German engineering
     stats: { speed: 2, range: 1 },
     special: null,
     age: 1
@@ -246,17 +249,7 @@ export const TECH_TILES: Record<string, TechTile> = {
   // === FACTION STARTING DRIVE TILES ===
   // All starting drives provide base speed 1, range 1
   // Faction advantages add to these base stats
-  maybach_hl: {
-    id: 'maybach_hl',
-    name: 'Maybach HL Engine',
-    type: 'drive',
-    slotType: 'driveSlots',
-    requiredCard: 'maybach_engine',
-    weight: 2,
-    stats: { speed: 2, range: 1 },  // Germany: speed advantage
-    special: null,
-    age: 1
-  },
+  // Starting equipment has £0 hull cost (included in base ship price)
   expedition_engine: {
     id: 'expedition_engine',
     name: 'Expedition Engine',
@@ -264,6 +257,7 @@ export const TECH_TILES: Record<string, TechTile> = {
     slotType: 'driveSlots',
     requiredCard: 'expedition_propeller',
     weight: 2,
+    hullCost: 0,  // Starting equipment
     stats: { speed: 1, range: 2 },  // Italy: range advantage
     special: null,
     age: 1
@@ -275,6 +269,7 @@ export const TECH_TILES: Record<string, TechTile> = {
     slotType: 'driveSlots',
     requiredCard: 'basic_powerplant',
     weight: 1,
+    hullCost: 0,  // Starting equipment
     stats: { speed: 1, range: 1 },  // USA: balanced
     special: null,
     age: 1
@@ -286,6 +281,7 @@ export const TECH_TILES: Record<string, TechTile> = {
     slotType: 'driveSlots',
     requiredCard: 'standard_propeller',
     weight: 2,
+    hullCost: 0,  // Starting equipment
     stats: { speed: 1, range: 1 },  // Britain: balanced
     special: null,
     age: 1
@@ -301,6 +297,7 @@ export const TECH_TILES: Record<string, TechTile> = {
     slotType: 'driveSlots',
     requiredCard: 'daimler_engine',
     weight: 2,
+    hullCost: 1,  // Standard automotive engine adapted for airships
     stats: { speed: 1, range: 1 },  // Fuel-efficient engine
     special: null,
     age: 1
@@ -318,17 +315,6 @@ export const TECH_TILES: Record<string, TechTile> = {
     special: null,
     age: 2
   },
-  compartmented_cells: {
-    id: 'compartmented_cells',
-    name: 'Compartmented Gas Cells',
-    type: 'gas',
-    slotType: 'componentSlots',
-    requiredCard: 'multiple_gas_cells',
-    weight: 1,
-    stats: { range: 1 },  // Less gas loss from compartmentalization
-    special: null,
-    age: 2
-  },
 
   // Age III Drive/Fabric/Gas tiles with range
   aerodynamic_nacelle: {
@@ -338,6 +324,7 @@ export const TECH_TILES: Record<string, TechTile> = {
     slotType: 'driveSlots',
     requiredCard: 'streamlined_nacelle',
     weight: 2,
+    hullCost: 2,  // Precision-engineered streamlined housing
     stats: { speed: 1, range: 1 },  // Aerodynamic engine housing
     special: null,
     age: 3
@@ -351,17 +338,6 @@ export const TECH_TILES: Record<string, TechTile> = {
     weight: 0,
     hullCost: 2,
     stats: { range: 1 },  // Better gas retention
-    special: null,
-    age: 3
-  },
-  triple_cell_system: {
-    id: 'triple_cell_system',
-    name: 'Triple Cell System',
-    type: 'gas',
-    slotType: 'componentSlots',
-    requiredCard: 'triple_gas_cell',
-    weight: 1,
-    stats: { range: 1 },  // More gas capacity
     special: null,
     age: 3
   },
@@ -501,42 +477,6 @@ export const TECH_TILES: Record<string, TechTile> = {
     special: null,
     age: 1
   },
-  semi_rigid_frame: {
-    id: 'semi_rigid_frame',
-    name: 'Semi-Rigid Frame',
-    type: 'frame',
-    slotType: 'frameSlots',
-    requiredCard: 'internal_keel',
-    weight: 2,
-    hullCost: 1,
-    stats: { gas_socket: 1 },
-    special: 'semi_rigid',
-    age: 1
-  },
-  rigid_duralumin_frame: {
-    id: 'rigid_duralumin_frame',
-    name: 'Rigid Duralumin Frame',
-    type: 'frame',
-    slotType: 'frameSlots',
-    requiredCard: 'duralumin_girders',
-    weight: 3,
-    hullCost: 2,
-    stats: { ceiling: 1, gas_socket: 1 },
-    special: null,
-    age: 1
-  },
-  wire_braced_frame: {
-    id: 'wire_braced_frame',
-    name: 'Wire-Braced Frame',
-    type: 'frame',
-    slotType: 'frameSlots',
-    requiredCard: 'wire_bracing',
-    weight: 2,
-    hullCost: 1,
-    stats: { gas_socket: 1 },
-    special: null,
-    age: 1
-  },
 
   // === FABRIC UPGRADES ===
   cotton_envelope: {
@@ -637,51 +577,15 @@ export const TECH_TILES: Record<string, TechTile> = {
   },
 
   // === FACTION STARTING FABRIC TILES ===
-  goldbeater_envelope: {
-    id: 'goldbeater_envelope',
-    name: "Goldbeater's Envelope",
-    type: 'fabric',
-    slotType: 'fabricSlots',
-    requiredCard: 'goldbeater_skin',
-    weight: 0,
-    hullCost: 1,
-    stats: {},
-    special: 'best_gas_tightness',
-    age: 1
-  },
-  rubberized_envelope: {
-    id: 'rubberized_envelope',
-    name: 'Rubberized Envelope',
-    type: 'fabric',
-    slotType: 'fabricSlots',
-    requiredCard: 'rubberized_cotton',
-    weight: 1,
-    hullCost: 0,
-    stats: {},
-    special: null,
-    age: 1
-  },
   latex_envelope: {
     id: 'latex_envelope',
     name: 'Latex Envelope',
     type: 'fabric',
     slotType: 'fabricSlots',
-    requiredCard: 'gelatinized_latex',
+    requiredCard: 'usa_latex_covering',  // USA faction-specific starting tech
     weight: 1,
     hullCost: 1,
     stats: { reliability: 1 },
-    special: null,
-    age: 1
-  },
-  doped_canvas_envelope: {
-    id: 'doped_canvas_envelope',
-    name: 'Doped Canvas Envelope',
-    type: 'fabric',
-    slotType: 'fabricSlots',
-    requiredCard: 'doped_canvas',
-    weight: 1,
-    hullCost: 1,
-    stats: {},
     special: null,
     age: 1
   },
@@ -695,6 +599,7 @@ export const TECH_TILES: Record<string, TechTile> = {
     slotType: 'componentSlots',  // Gas upgrades go in component/payload slots
     requiredCard: 'improved_valving',
     weight: 1,
+    hullCost: 1,  // Basic valve and pressure regulation systems
     stats: { ceiling: 1 },
     special: null,
     age: 1
@@ -706,6 +611,7 @@ export const TECH_TILES: Record<string, TechTile> = {
     slotType: 'componentSlots',
     requiredCard: 'manual_ballonets',
     weight: 1,
+    hullCost: 1,  // Internal air bags for pressure compensation
     stats: { ceiling: 1 },
     special: null,
     age: 1
@@ -717,6 +623,7 @@ export const TECH_TILES: Record<string, TechTile> = {
     slotType: 'componentSlots',
     requiredCard: 'multiple_gas_cells',
     weight: 1,
+    hullCost: 1,  // Multiple gas cell construction
     stats: { lift: 2, reliability: 1 },
     special: null,
     age: 2
@@ -728,6 +635,7 @@ export const TECH_TILES: Record<string, TechTile> = {
     slotType: 'componentSlots',
     requiredCard: 'helium_handling',
     weight: 1,
+    hullCost: 2,  // Specialized non-permeable cells for rare helium
     stats: {},
     special: 'fire_immunity',  // Safe: immune to Fire hazards; use Helium cubes
     age: 2
@@ -739,6 +647,7 @@ export const TECH_TILES: Record<string, TechTile> = {
     slotType: 'componentSlots',
     requiredCard: 'blaugas_storage',
     weight: 0,
+    hullCost: 1,  // Propane-based fuel gas storage system
     stats: { range: 1 },
     special: 'gas_retention',  // Pay £2 to keep gas cubes after mission (Germany)
     age: 2
@@ -827,6 +736,7 @@ export const TECH_TILES: Record<string, TechTile> = {
     slotType: 'componentSlots',
     requiredCard: 'observation_platform',
     weight: 1,
+    hullCost: 1,  // Simple external observation platform
     stats: { income: 1 },
     special: null,
     age: 1
@@ -838,6 +748,7 @@ export const TECH_TILES: Record<string, TechTile> = {
     slotType: 'componentSlots',
     requiredCard: 'mail_compartment',
     weight: 1,
+    hullCost: 1,  // Mail sorting and storage compartment
     stats: { income: 2 },
     special: null,
     age: 1
@@ -849,6 +760,7 @@ export const TECH_TILES: Record<string, TechTile> = {
     slotType: 'componentSlots',
     requiredCard: 'cargo_nets',
     weight: 2,
+    hullCost: 1,  // Cargo rigging and attachment points
     stats: { income: 2 },
     special: null,
     age: 1
@@ -860,6 +772,7 @@ export const TECH_TILES: Record<string, TechTile> = {
     slotType: 'componentSlots',
     requiredCard: 'passenger_accommodation',
     weight: 0,
+    hullCost: 1,  // Basic passenger seating
     stats: { income: 1 },
     special: null,
     age: 1
@@ -873,6 +786,7 @@ export const TECH_TILES: Record<string, TechTile> = {
     slotType: 'componentSlots',
     requiredCard: 'passenger_gondola',
     weight: 2,
+    hullCost: 1,  // Enclosed passenger gondola
     stats: { income: 2, luxury: 1 },  // Fixed: income was 1, now 2
     special: null,
     age: 2
@@ -908,6 +822,7 @@ export const TECH_TILES: Record<string, TechTile> = {
     slotType: 'componentSlots',
     requiredCard: 'radio_equipment',
     weight: 1,
+    hullCost: 1,  // Radio transmitter and navigation equipment
     stats: { reliability: 1 },
     special: 'navigation_bonus',  // +1 to Navigation hazards
     age: 2
@@ -919,6 +834,7 @@ export const TECH_TILES: Record<string, TechTile> = {
     slotType: 'componentSlots',
     requiredCard: 'armored_gondola',
     weight: 2,
+    hullCost: 1,  // Thin steel armor panels
     stats: { armor: 1 },
     special: null,
     age: 2
@@ -1004,6 +920,7 @@ export const TECH_TILES: Record<string, TechTile> = {
     slotType: 'componentSlots',
     requiredCard: 'imperial_mooring',
     weight: 1,
+    hullCost: 1,  // Specialized mooring equipment
     stats: {},
     special: 'british_territories_home',  // British Territories count as Home Base (Britain specialty)
     age: 2
@@ -1018,6 +935,7 @@ export const TECH_TILES: Record<string, TechTile> = {
     slotType: 'componentSlots',
     requiredCard: 'observation_platform',
     weight: 1,
+    hullCost: 1,  // Legacy: same as spotter_gondola
     stats: { income: 1 },  // Updated to match spotter_gondola
     special: null,
     age: 1
@@ -1029,6 +947,7 @@ export const TECH_TILES: Record<string, TechTile> = {
     slotType: 'componentSlots',
     requiredCard: 'cargo_nets',
     weight: 2,
+    hullCost: 1,  // Legacy: same as external_cargo
     stats: { income: 2 },
     special: null,
     age: 1
@@ -1040,6 +959,7 @@ export const TECH_TILES: Record<string, TechTile> = {
     slotType: 'componentSlots',
     requiredCard: 'dining_saloon',
     weight: 2,  // Fixed: was -3
+    hullCost: 2,  // Legacy: same as restaurant
     stats: { income: 2, luxury: 2 },  // Fixed: was luxury: 3, no income
     special: null,
     age: 3
@@ -1051,6 +971,7 @@ export const TECH_TILES: Record<string, TechTile> = {
     slotType: 'componentSlots',
     requiredCard: 'radio_equipment',
     weight: 1,
+    hullCost: 1,  // Legacy: same as communications_suite
     stats: { reliability: 1 },
     special: 'navigation_bonus',
     age: 2
@@ -1062,6 +983,7 @@ export const TECH_TILES: Record<string, TechTile> = {
     slotType: 'componentSlots',
     requiredCard: 'luxury_accommodation',
     weight: 3,
+    hullCost: 2,  // Legacy: same as luxury_cabin
     stats: { income: 3, luxury: 2 },
     special: null,
     age: 3
@@ -1073,6 +995,7 @@ export const TECH_TILES: Record<string, TechTile> = {
     slotType: 'componentSlots',
     requiredCard: 'mail_compartment',
     weight: 1,
+    hullCost: 1,  // Legacy: same as postal_service
     stats: { income: 2 },
     special: null,
     age: 1
@@ -1096,6 +1019,7 @@ export const TECH_TILES: Record<string, TechTile> = {
     slotType: 'componentSlots',
     requiredCard: 'smoking_room',
     weight: 2,
+    hullCost: 2,  // Legacy: same as pressurized_lounge
     stats: { income: 1, luxury: 2 },
     special: 'requires_helium',
     age: 3
@@ -1123,9 +1047,8 @@ export const TECH_CARDS: Record<string, TechCard> = {
 
   // USA starting techs
   duralumin_girders: { id: 'duralumin_girders', name: 'Duralumin Framework', type: 'structure', cost: 0, age: 1, faction: 'usa' },
-  gelatinized_latex: { id: 'gelatinized_latex', name: 'Gelatinized Latex', type: 'fabric', cost: 0, age: 1, faction: 'usa' },
+  usa_latex_covering: { id: 'usa_latex_covering', name: 'Latex Covering', type: 'fabric', cost: 0, age: 1, faction: 'usa' },
   basic_powerplant: { id: 'basic_powerplant', name: 'Basic Powerplant', type: 'drive', cost: 0, age: 1, faction: 'usa' },
-  trapeze_system: { id: 'trapeze_system', name: 'Trapeze Fighter System', type: 'special', cost: 0, age: 1, faction: 'usa' },
   helium_handling: { id: 'helium_handling', name: 'Helium Handling', type: 'gas', cost: 0, age: 1, faction: 'usa' },
 
   // Italy starting techs
