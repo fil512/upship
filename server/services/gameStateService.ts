@@ -400,7 +400,7 @@ function createHazardDeck(): HazardCard[] {
   });
 
   // 1x Catastrophic Explosion - No save, Crash. Age III Luxury = Hindenburg - 5 Flak
-  // Changed from difficulty 99 to 3 - still deadly (noSave) but theoretically requires Reliability 3 ship
+  // Difficulty 99 ensures this is always fatal - there must always be risk of catastrophic failure
   hazards.push({
     id: 'catastrophic_explosion_0',
     type: 'catastrophic_explosion',
@@ -408,7 +408,7 @@ function createHazardDeck(): HazardCard[] {
     name: 'Catastrophic Explosion',
     hydrogenOnly: true,
     noSave: true,
-    difficulty: 3,
+    difficulty: 99,
     flak: 5
   });
 
