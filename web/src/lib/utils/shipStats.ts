@@ -37,6 +37,9 @@ export interface ShipStatsData {
 	luxury: number;
 	income: number;
 	canLaunch: boolean;
+	hasFrame: boolean;
+	hasFabric: boolean;
+	hasDrive: boolean;
 }
 
 /**
@@ -75,7 +78,10 @@ export function calculateShipStats(blueprint: Blueprint | null | undefined, age 
 		reliability: 0,
 		luxury: 0,
 		income: 0,
-		canLaunch: false
+		canLaunch: false,
+		hasFrame: false,
+		hasFabric: false,
+		hasDrive: false
 	};
 
 	// Sum stats from all installed tech tiles
@@ -112,15 +118,16 @@ export function calculateShipStats(blueprint: Blueprint | null | undefined, age 
 	// Calculate net lift
 	stats.netLift = stats.lift - stats.weight;
 
+	// Check if minimum components are installed (at least one of each required type)
+	stats.hasFrame = (blueprint.frameSlots || []).some(s => s !== null);
+	stats.hasFabric = (blueprint.fabricSlots || []).some(s => s !== null);
+	stats.hasDrive = (blueprint.driveSlots || []).some(s => s !== null);
+
 	// Can launch if:
 	// - lift >= weight (net lift >= 0)
-	// - all frame and fabric slots filled
+	// - at least one Frame, one Fabric, and one Drive tile installed
 	// - range >= 1 and speed >= 1 (minimum required to reach any destination)
-	const frameCount = (blueprint.frameSlots || []).filter(s => s).length;
-	const fabricCount = (blueprint.fabricSlots || []).filter(s => s).length;
-	const frameFilled = frameCount === (blueprint.frameSlots || []).length;
-	const fabricFilled = fabricCount === (blueprint.fabricSlots || []).length;
-	stats.canLaunch = stats.lift >= stats.weight && frameFilled && fabricFilled && stats.range >= 1 && stats.speed >= 1;
+	stats.canLaunch = stats.lift >= stats.weight && stats.hasFrame && stats.hasFabric && stats.hasDrive && stats.range >= 1 && stats.speed >= 1;
 
 	return stats;
 }

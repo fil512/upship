@@ -25,7 +25,7 @@ On your turn, either:
 
 ## Launch Checklist (Launchpad Action)
 
-1. ✓ Verify Physics Check (Lift ≥ Weight) AND all Frame/Fabric slots filled
+1. ✓ Verify Physics Check (Lift ≥ Weight) AND at least one Frame/Fabric/Drive tile AND Range ≥ 1 AND Speed ≥ 1
 2. ✓ Select a ship from Launch Hangar
 3. ✓ Spend Officers equal to Age (1/2/3) (Barracks → shared supply)
 4. ✓ Choose gas type (Hydrogen or Helium—no mixing)

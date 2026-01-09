@@ -9,16 +9,18 @@
 		reliability: number;
 		luxury: number;
 		canLaunch: boolean;
-		frameFilled?: boolean;
-		fabricFilled?: boolean;
+		hasFrame?: boolean;
+		hasFabric?: boolean;
+		hasDrive?: boolean;
 	};
 
 	// Compute failure reasons
 	$: failureReasons = (() => {
 		const reasons: string[] = [];
 		if (stats.netLift < 0) reasons.push('Insufficient Lift');
-		if (stats.frameFilled === false) reasons.push('Fill Frame Slots');
-		if (stats.fabricFilled === false) reasons.push('Fill Fabric Slots');
+		if (stats.hasFrame === false) reasons.push('Need Frame');
+		if (stats.hasFabric === false) reasons.push('Need Fabric');
+		if (stats.hasDrive === false) reasons.push('Need Drive');
 		if (stats.range < 1) reasons.push('Need Range >= 1');
 		if (stats.speed < 1) reasons.push('Need Speed >= 1');
 		return reasons;

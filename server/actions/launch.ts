@@ -533,18 +533,23 @@ function processLaunchShip(state: GameState, playerId: string, data: LaunchShipD
     }
   }
 
-  // Validate structural slots are filled
+  // Validate minimum components installed (at least one Frame, one Fabric, one Drive)
   const frameSlots = playerState.blueprint.frameSlots || [];
   const fabricSlots = playerState.blueprint.fabricSlots || [];
+  const driveSlots = playerState.blueprint.driveSlots || [];
 
-  const emptyFrameSlots = frameSlots.filter(s => s === null).length;
-  const emptyFabricSlots = fabricSlots.filter(s => s === null).length;
+  const hasFrame = frameSlots.some(s => s !== null);
+  const hasFabric = fabricSlots.some(s => s !== null);
+  const hasDrive = driveSlots.some(s => s !== null);
 
-  if (emptyFrameSlots > 0) {
-    throw new GameRuleError(`Cannot launch: ${emptyFrameSlots} Frame slot(s) must be filled`);
+  if (!hasFrame) {
+    throw new GameRuleError('Cannot launch: At least one Frame tile must be installed.');
   }
-  if (emptyFabricSlots > 0) {
-    throw new GameRuleError(`Cannot launch: ${emptyFabricSlots} Fabric slot(s) must be filled`);
+  if (!hasFabric) {
+    throw new GameRuleError('Cannot launch: At least one Fabric tile must be installed.');
+  }
+  if (!hasDrive) {
+    throw new GameRuleError('Cannot launch: At least one Drive tile must be installed.');
   }
 
   // Step 3: Validate ship availability and resources

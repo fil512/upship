@@ -100,8 +100,9 @@ function calculateHullCost(blueprint: Blueprint): number {
 
 interface BlueprintValidation {
   valid: boolean;
-  emptyFrameSlots: number;
-  emptyFabricSlots: number;
+  hasFrame: boolean;
+  hasFabric: boolean;
+  hasDrive: boolean;
   duplicateTiles: string[];
 }
 
@@ -148,21 +149,24 @@ function findDuplicateTiles(blueprint: Blueprint): string[] {
 }
 
 /**
- * Validate that blueprint has no empty frame or fabric slots and no duplicate tiles.
- * Blueprints must always be complete after any modification.
+ * Validate that blueprint has minimum required components and no duplicate tiles.
+ * Requires at least one Frame, one Fabric, and one Drive tile installed.
  */
 function validateBlueprintComplete(blueprint: Blueprint): BlueprintValidation {
   const frameSlots = blueprint.frameSlots || [];
   const fabricSlots = blueprint.fabricSlots || [];
+  const driveSlots = blueprint.driveSlots || [];
 
-  const emptyFrameSlots = frameSlots.filter(s => s === null || s === undefined).length;
-  const emptyFabricSlots = fabricSlots.filter(s => s === null || s === undefined).length;
+  const hasFrame = frameSlots.some(s => s !== null && s !== undefined);
+  const hasFabric = fabricSlots.some(s => s !== null && s !== undefined);
+  const hasDrive = driveSlots.some(s => s !== null && s !== undefined);
   const duplicateTiles = findDuplicateTiles(blueprint);
 
   return {
-    valid: emptyFrameSlots === 0 && emptyFabricSlots === 0 && duplicateTiles.length === 0,
-    emptyFrameSlots,
-    emptyFabricSlots,
+    valid: hasFrame && hasFabric && hasDrive && duplicateTiles.length === 0,
+    hasFrame,
+    hasFabric,
+    hasDrive,
     duplicateTiles
   };
 }
@@ -482,15 +486,18 @@ function processUpdateBlueprint(state: GameState, playerId: string, data: Update
     componentSlots: newBlueprint.componentSlots || oldBlueprint.componentSlots
   } as Blueprint;
 
-  // Validate blueprint completeness and no duplicates
+  // Validate blueprint has minimum components and no duplicates
   const validation = validateBlueprintComplete(mergedBlueprint);
   if (!validation.valid) {
     const errors: string[] = [];
-    if (validation.emptyFrameSlots > 0) {
-      errors.push(`${validation.emptyFrameSlots} empty Frame slot(s)`);
+    if (!validation.hasFrame) {
+      errors.push('missing Frame tile');
     }
-    if (validation.emptyFabricSlots > 0) {
-      errors.push(`${validation.emptyFabricSlots} empty Fabric slot(s)`);
+    if (!validation.hasFabric) {
+      errors.push('missing Fabric tile');
+    }
+    if (!validation.hasDrive) {
+      errors.push('missing Drive tile');
     }
     if (validation.duplicateTiles.length > 0) {
       const tileNames = validation.duplicateTiles.map(id => {
@@ -501,7 +508,7 @@ function processUpdateBlueprint(state: GameState, playerId: string, data: Update
     }
     const errorMessage = validation.duplicateTiles.length > 0
       ? `Blueprint invalid: ${errors.join(', ')}. All Tech Tiles must be unique.`
-      : `Blueprint incomplete: ${errors.join(', ')}. All Frame and Fabric slots must be filled.`;
+      : `Blueprint incomplete: ${errors.join(', ')}. At least one Frame, one Fabric, and one Drive tile required.`;
     throw new GameRuleError(errorMessage);
   }
 
@@ -615,15 +622,18 @@ function processAgeTransitionBlueprintDesign(state: GameState, playerId: string,
   }
   // If no blueprint provided, player is keeping their current configuration
 
-  // Validate blueprint is complete (no empty frame/fabric slots, no duplicates)
+  // Validate blueprint has minimum components (at least one Frame, one Fabric, one Drive)
   const validation = validateBlueprintComplete(playerState.blueprint);
   if (!validation.valid) {
     const errors: string[] = [];
-    if (validation.emptyFrameSlots > 0) {
-      errors.push(`${validation.emptyFrameSlots} empty Frame slot(s)`);
+    if (!validation.hasFrame) {
+      errors.push('missing Frame tile');
     }
-    if (validation.emptyFabricSlots > 0) {
-      errors.push(`${validation.emptyFabricSlots} empty Fabric slot(s)`);
+    if (!validation.hasFabric) {
+      errors.push('missing Fabric tile');
+    }
+    if (!validation.hasDrive) {
+      errors.push('missing Drive tile');
     }
     if (validation.duplicateTiles.length > 0) {
       const tileNames = validation.duplicateTiles.map(id => {
@@ -634,7 +644,7 @@ function processAgeTransitionBlueprintDesign(state: GameState, playerId: string,
     }
     const errorMessage = validation.duplicateTiles.length > 0
       ? `Blueprint invalid: ${errors.join(', ')}. All Tech Tiles must be unique.`
-      : `Blueprint incomplete: ${errors.join(', ')}. All Frame and Fabric slots must be filled.`;
+      : `Blueprint incomplete: ${errors.join(', ')}. At least one Frame, one Fabric, and one Drive tile required.`;
     throw new GameRuleError(errorMessage);
   }
 

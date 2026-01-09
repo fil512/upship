@@ -279,7 +279,7 @@ Ships have **no baseline stats**—all stats come entirely from installed Tech T
 | **Weight** | All tiles | Must not exceed Lift |
 | **Luxury** | Payload tiles | Required for Age III luxury routes |
 
-**Required Slots:** Fill all Frame and Fabric slots before launching. Empty structural slots mean the ship is not airworthy.
+**Minimum Components:** To launch, your Blueprint must have at least one Frame tile, at least one Fabric tile, and at least one Drive tile installed. Empty slots are allowed as long as these minimums are met.
 
 ### The Physics Check
 
@@ -589,7 +589,8 @@ Select an unclaimed route on the map. Your Blueprint stats must meet all route r
 
 **Step 2: Verify Launch Requirements**
 - Physics Check must pass (Lift ≥ Weight)
-- All Frame and Fabric slots must be filled
+- At least one Frame, one Fabric, and one Drive tile installed
+- Range ≥ 1 and Speed ≥ 1
 
 **Step 3: Select Ship and Pay Costs**
 - Choose a ship from your Launch Hangar
@@ -891,7 +892,7 @@ When the Progress Track reaches the Age threshold (checked during Income & Clean
    
 4. **Replace Blueprint:** Install new Age's Blueprint overlay. Transfer Tech Tiles to new Blueprint.
 
-5. **Free Blueprint Update (Mandatory):** Each player **must** fill all structural slots (Frame and Fabric) using their free Blueprint Design action. Players take turns in player order to install Tech Tiles. Hull Tech Tile Rule does not apply during this free action. Use duplicate Tech Tiles from the same Technology if needed—every faction starts with at least one Frame and one Fabric Technology, so all slots can always be filled.
+5. **Free Blueprint Update (Mandatory):** Each player **must** ensure their Blueprint has at least one Frame tile, one Fabric tile, and one Drive tile installed using their free Blueprint Design action. Players take turns in player order to install Tech Tiles. Hull Tech Tile Rule does not apply during this free action. Every faction starts with the necessary starting Technologies to meet these minimums.
 
 6. **Set Up New Age:** Place new Map, add new Technologies to bag. **Clear both markets** (R&D Board and Market Row)—unsold cards return to their respective decks, shuffled, then boards are refilled. This ensures new Age's cards appear immediately.
 
