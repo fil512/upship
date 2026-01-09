@@ -10,13 +10,48 @@ import type { GameState, PlayerState, Route, LogEntry, HazardCard, PendingLaunch
 
 // Type alias for slot entries (can be string ID or object with id)
 type SlotEntry = string | { id: string } | null;
+type SlotType = 'frameSlots' | 'fabricSlots' | 'driveSlots' | 'componentSlots';
+
+// Blueprint interface for slot access
+interface BlueprintSlots {
+  frameSlots?: SlotEntry[];
+  fabricSlots?: SlotEntry[];
+  driveSlots?: SlotEntry[];
+  componentSlots?: SlotEntry[];
+}
+
+/**
+ * Check if a blueprint has a specific upgrade installed in a slot type
+ */
+function hasUpgrade(blueprint: BlueprintSlots | undefined, slotType: SlotType, upgradeId: string): boolean {
+  const slots = blueprint?.[slotType];
+  if (!slots) return false;
+  return slots.some(slot =>
+    slot === upgradeId || (slot && typeof slot === 'object' && slot.id === upgradeId)
+  );
+}
+
+/**
+ * Count filled slots of a given type
+ */
+function countFilledSlots(blueprint: BlueprintSlots | undefined, slotType: SlotType): number {
+  const slots = blueprint?.[slotType];
+  return slots?.filter(slot => slot !== null).length || 0;
+}
+
+/**
+ * Check if hazard is a fire hazard (category fire OR hydrogenOnly)
+ */
+function isFireHazard(hazard: HazardCard | HazardCardDetails): boolean {
+  return hazard.category === 'fire' || !!hazard.hydrogenOnly;
+}
 
 const { GameRuleError } = require('../errors');
 const { applyCityBonus, CITY_BONUSES } = require('../data/cities');
 const { shuffleArray } = require('../utils/random');
 const { processCompleteMission, resolveFlakCheck, calculateEquipmentBonus } = require('./combatMission');
 const { resourceFlowLogger, createFlowContext } = require('../services/resourceFlowLogger');
-const { HANGAR_CAPACITY, REPAIR_CAPACITY, TOTAL_SHIP_CAPACITY } = require('./building');
+const { TOTAL_SHIP_CAPACITY } = require('./building');
 const { checkAgeTransition } = require('./technology');
 
 // Helper to log launch outcomes
@@ -50,7 +85,8 @@ interface ActionResult {
 }
 
 // Extended pending launch with hazard info
-interface ExtendedPendingLaunch extends PendingLaunch {
+// Use Omit to avoid type conflict with hazardInfo
+interface ExtendedPendingLaunch extends Omit<PendingLaunch, 'hazardInfo'> {
   hazardInfo?: HazardCardDetails;
   stats?: Record<string, number>;
   launchedAge?: number;
@@ -112,7 +148,8 @@ interface HazardCardDetails {
   hazardType?: string;
   flak?: number;
   special?: string;
-  gasLossOnFailure?: boolean;
+  gasLossOnFailure?: number;
+  payloadSlotModifier?: { threshold: number; difficultyIncrease: number };
 }
 
 type HazardState = GameState & {
@@ -127,6 +164,100 @@ type ExtendedRoute = Route & {
   claimed?: string;
   claimedBy?: { playerId: string; round: number };
 };
+
+// ============================================================================
+// AUTO-PASS CONDITION SYSTEM
+// Order matters: first matching condition wins
+// ============================================================================
+
+interface AutoPassContext {
+  hazard: HazardCard | HazardCardDetails;
+  gasType: 'hydrogen' | 'helium';
+  blueprint: BlueprintSlots | undefined;
+  launchBonuses?: { ignoreWeather?: boolean; [key: string]: unknown };
+  fireProtectionUsedThisAge: boolean;
+  playerState: HazardPlayerState;
+  state: GameState;
+}
+
+interface AutoPassCheck {
+  name: string;
+  reason: string;
+  check: (ctx: AutoPassContext) => boolean;
+  onPass?: (ctx: AutoPassContext) => void;
+}
+
+const AUTO_PASS_CHECKS: AutoPassCheck[] = [
+  // 1. Clear Weather - always passes
+  {
+    name: 'clearWeather',
+    reason: 'Clear Weather - Auto Pass',
+    check: (ctx) => !!ctx.hazard.autoPass || ctx.hazard.type === 'clear_weather'
+  },
+  // 2. Helium + Fire hazard - helium ships immune to fire
+  {
+    name: 'heliumFire',
+    reason: 'Fire Immunity (Helium) - Auto Pass',
+    check: (ctx) => isFireHazard(ctx.hazard) && ctx.gasType === 'helium'
+  },
+  // 3. Conductive Covering + Static Discharge - grounds electrical charge
+  {
+    name: 'conductiveCovering',
+    reason: 'Static Discharge - Auto Pass (Conductive Covering grounds electrical charge)',
+    check: (ctx) => ctx.hazard.type === 'static_discharge' && hasUpgrade(ctx.blueprint, 'fabricSlots', 'conductive_covering')
+  },
+  // 4. Rapid Descent System + Weather hazard - emergency venting
+  {
+    name: 'rapidDescent',
+    reason: 'Weather Hazard - Auto Pass (Rapid Descent System enables emergency venting)',
+    check: (ctx) => {
+      const extHazard = ctx.hazard as HazardCard & { hazardType?: string };
+      return extHazard.hazardType === 'weather' && hasUpgrade(ctx.blueprint, 'componentSlots', 'rapid_descent_system');
+    }
+  },
+  // 5. The Weatherman card bonus - ignores weather
+  {
+    name: 'weatherman',
+    reason: 'Weather Hazard - Auto Pass (The Weatherman ignores weather hazards)',
+    check: (ctx) => {
+      const extHazard = ctx.hazard as HazardCard & { hazardType?: string };
+      return extHazard.hazardType === 'weather' && !!ctx.launchBonuses?.ignoreWeather;
+    }
+  },
+  // 6. Fire-Resistant Fabric - once per age, auto-pass fire hazard
+  {
+    name: 'fireResistantFabric',
+    reason: 'Fire Hazard - Auto Pass (Fire-Resistant Fabric, once per Age)',
+    check: (ctx) => {
+      return isFireHazard(ctx.hazard) &&
+        hasUpgrade(ctx.blueprint, 'fabricSlots', 'fire_resistant_fabric') &&
+        !ctx.fireProtectionUsedThisAge;
+    },
+    onPass: (ctx) => {
+      ctx.playerState.fireProtectionUsedThisAge = true;
+      ctx.state.log.push({
+        timestamp: new Date().toISOString(),
+        message: `Fire-Resistant Fabric activated! Auto-passing ${ctx.hazard.name}.`,
+        playerId: Object.keys(ctx.state.players).find(id => ctx.state.players[id] === ctx.playerState),
+        type: 'action'
+      } as LogEntry);
+    }
+  }
+];
+
+/**
+ * Check all auto-pass conditions in order
+ * Returns first matching condition or { passes: false }
+ */
+function checkAutoPass(ctx: AutoPassContext): { passes: boolean; reason?: string } {
+  for (const check of AUTO_PASS_CHECKS) {
+    if (check.check(ctx)) {
+      check.onPass?.(ctx);
+      return { passes: true, reason: check.reason };
+    }
+  }
+  return { passes: false };
+}
 
 /**
  * Check if Hindenburg Disaster conditions are met per Section 1.2
@@ -241,63 +372,36 @@ function processHazardCheck(state: GameState, playerId: string, data: HazardChec
     return { newState: state };
   }
 
-  if (hazard.autoPass || hazard.type === 'clear_weather') {
-    return resolveHazardSuccess(state, playerId, route, hazard, 'Clear Weather - Auto Pass');
+  // Check all auto-pass conditions using unified system
+  const autoPass = checkAutoPass({
+    hazard,
+    gasType: gasType!,
+    blueprint: playerState.blueprint as BlueprintSlots,
+    launchBonuses: playerState.launchBonuses,
+    fireProtectionUsedThisAge: playerState.fireProtectionUsedThisAge || false,
+    playerState,
+    state
+  });
+
+  if (autoPass.passes) {
+    return resolveHazardSuccess(state, playerId, route, hazard, autoPass.reason!);
   }
 
-  const isFireHazard = hazard.category === 'fire' || hazard.hydrogenOnly;
-  if (isFireHazard && gasType === 'helium') {
-    return resolveHazardSuccess(state, playerId, route, hazard, 'Fire Immunity (Helium) - Auto Pass');
-  }
-
-  const playerBlueprint = playerState.blueprint;
-  const hasCondictiveCovering = playerBlueprint?.fabricSlots?.some(
-    (fabric: SlotEntry) => fabric === 'conductive_covering' || (fabric && typeof fabric === 'object' && fabric.id === 'conductive_covering')
-  );
-
-  if (hazard.type === 'static_discharge' && hasCondictiveCovering) {
-    return resolveHazardSuccess(state, playerId, route, hazard,
-      'Static Discharge - Auto Pass (Conductive Covering grounds electrical charge)');
-  }
-
-  const hasRapidDescentSystem = playerBlueprint?.componentSlots?.some(
-    (comp: SlotEntry) => comp === 'rapid_descent_system' || (comp && typeof comp === 'object' && comp.id === 'rapid_descent_system')
-  );
-
-  const extendedHazard = hazard as HazardCard & { hazardType?: string };
-  if (extendedHazard.hazardType === 'weather' && hasRapidDescentSystem) {
-    return resolveHazardSuccess(state, playerId, route, hazard,
-      'Weather Hazard - Auto Pass (Rapid Descent System enables emergency venting)');
-  }
-
-  // Check for The Weatherman card bonus: ignoreWeather
-  if (extendedHazard.hazardType === 'weather' && playerState.launchBonuses?.ignoreWeather) {
-    return resolveHazardSuccess(state, playerId, route, hazard,
-      'Weather Hazard - Auto Pass (The Weatherman ignores weather hazards)');
-  }
-
-  const hasFireResistantFabric = playerBlueprint?.fabricSlots?.some(
-    (fabric: SlotEntry) => fabric === 'fire_resistant_fabric' || (fabric && typeof fabric === 'object' && fabric.id === 'fire_resistant_fabric')
-  );
-  const fireProtectionAvailable = hasFireResistantFabric && !playerState.fireProtectionUsedThisAge;
-
-  if (isFireHazard && fireProtectionAvailable) {
-    playerState.fireProtectionUsedThisAge = true;
-
-    state.log.push({
-      timestamp: new Date().toISOString(),
-      message: `Fire-Resistant Fabric activated! Auto-passing ${hazard.name}.`,
-      playerId,
-      type: 'action'
-    } as LogEntry);
-
-    return resolveHazardSuccess(state, playerId, route, hazard,
-      'Fire Hazard - Auto Pass (Fire-Resistant Fabric, once per Age)');
-  }
-
-  if (isFireHazard && gasType === 'hydrogen') {
+  // Dispatch to specific resolution handlers based on hazard type
+  if (isFireHazard(hazard) && gasType === 'hydrogen') {
     return resolveFireHazard(state, playerId, hazard, engineersToSpend, route);
   }
+
+  // Handle mechanical hazards with engineer costs (like Critical Structural Stress)
+  // These work like fire hazards: spend X engineers to save (Damaged) or crash
+  const isMechanicalWithEngineerCost = hazard.category === 'mechanical' && hazard.engineerCost;
+  if (isMechanicalWithEngineerCost) {
+    return resolveMechanicalHazard(state, playerId, hazard, engineersToSpend, route);
+  }
+
+  // Stat check hazard resolution
+  const playerBlueprint = playerState.blueprint as BlueprintSlots;
+  const extendedHazard = hazard as HazardCard & { hazardType?: string; payloadSlotModifier?: { threshold: number; difficultyIncrease: number } };
 
   const challengeType = hazard.challengeType || 'reliability';
   let relevantStat = getRelevantStat(shipStats, challengeType);
@@ -312,19 +416,25 @@ function processHazardCheck(state: GameState, playerId: string, data: HazardChec
     relevantStat += playerState.launchBonuses.speed;
   }
 
-  let weatherPenalty = 0;
-  const hasFlexibleFrame = playerBlueprint?.frameSlots?.some(
-    (frame: SlotEntry) => frame === 'flexible_frame' || (frame && typeof frame === 'object' && frame.id === 'flexible_frame')
-  );
+  // Apply Italy Articulated Keel -1 Reliability penalty for weather hazards
+  const hasFlexibleFrame = hasUpgrade(playerBlueprint, 'frameSlots', 'flexible_frame');
   const isWeatherHazard = extendedHazard.hazardType === 'weather';
 
   if (hasFlexibleFrame && isWeatherHazard && challengeType === 'reliability') {
-    weatherPenalty = 1;
-    relevantStat = Math.max(0, relevantStat - weatherPenalty);
+    relevantStat = Math.max(0, relevantStat - 1);
+  }
+
+  // Apply Squall Line-style payload slot modifier (ships with 3+ payload slots suffer +1 difficulty)
+  let adjustedDifficulty = hazard.difficulty;
+  if (extendedHazard.payloadSlotModifier) {
+    const payloadSlotCount = countFilledSlots(playerBlueprint, 'componentSlots');
+    if (payloadSlotCount >= extendedHazard.payloadSlotModifier.threshold) {
+      adjustedDifficulty += extendedHazard.payloadSlotModifier.difficultyIncrease;
+    }
   }
 
   const totalCheck = relevantStat + engineerBonus;
-  const success = totalCheck >= hazard.difficulty;
+  const success = totalCheck >= adjustedDifficulty;
 
   if (engineerBonus > 0) {
     playerState.engineers -= engineerBonus;
@@ -337,7 +447,7 @@ function processHazardCheck(state: GameState, playerId: string, data: HazardChec
   const checkDetails = {
     hazardType: hazard.type,
     challengeType,
-    difficulty: hazard.difficulty,
+    difficulty: adjustedDifficulty,
     statValue: relevantStat,
     engineersSpent: engineerBonus,
     totalCheck,
@@ -348,10 +458,10 @@ function processHazardCheck(state: GameState, playerId: string, data: HazardChec
 
   if (success) {
     return resolveHazardSuccess(state, playerId, route, hazard,
-      `${challengeType.toUpperCase()} check passed: ${totalCheck} >= ${hazard.difficulty}`);
+      `${challengeType.toUpperCase()} check passed: ${totalCheck} >= ${adjustedDifficulty}`);
   } else {
     return resolveHazardAbort(state, playerId, hazard,
-      `${challengeType.toUpperCase()} check failed: ${totalCheck} < ${hazard.difficulty}`);
+      `${challengeType.toUpperCase()} check failed: ${totalCheck} < ${adjustedDifficulty}`);
   }
 }
 
@@ -501,6 +611,67 @@ function resolveFireHazard(state: GameState, playerId: string, hazard: HazardCar
     // Log before clearing pendingLaunch
     logOutcome(state, playerId, 'destroyed', hazard, gasType, `Insufficient engineers (need ${engineerCost}, have ${availableEngineers})`, routeId);
     // Ship destroyed - clear pendingLaunch
+    delete playerState.pendingLaunch;
+
+    state.log.push({
+      timestamp: new Date().toISOString(),
+      message: `${hazard.name}! Insufficient Engineers (need ${engineerCost}, have ${availableEngineers}). Ship destroyed!`,
+      playerId,
+      type: 'hazard'
+    } as LogEntry);
+
+    return { newState: state };
+  }
+}
+
+/**
+ * Handle mechanical hazard resolution per Appendix E (Critical Structural Stress)
+ * Mechanical hazards work like fire hazards: spend X engineers → Damaged, else → Crash
+ * Unlike fire hazards, mechanical hazards affect ALL ships (both hydrogen and helium)
+ */
+function resolveMechanicalHazard(state: GameState, playerId: string, hazard: HazardCard, engineersToSpend: number, _route: ExtendedRoute | undefined): ActionResult {
+  const playerState = state.players[playerId] as HazardPlayerState;
+  const pendingLaunch = playerState.pendingLaunch;
+  const gasType = pendingLaunch?.gasType || 'hydrogen';
+  const routeId = pendingLaunch?.routeId;
+
+  const engineerCost = hazard.engineerCost || 2;
+  const availableEngineers = playerState.engineers || 0;
+  const actualSpend = Math.min(engineersToSpend, availableEngineers);
+
+  if (actualSpend >= engineerCost) {
+    // Ship damaged but saved - move to repair bay
+    logOutcome(state, playerId, 'damaged', hazard, gasType, `Mechanical damage controlled with ${engineerCost} engineer(s), ship to repair bay`, routeId);
+    playerState.engineers -= engineerCost;
+
+    // Ship damaged - move to repair bay (combined capacity limit: 6 ships total)
+    const currentTotal = (playerState.hangarShips || 0) + (playerState.repairShips || 0);
+    if (currentTotal < TOTAL_SHIP_CAPACITY) {
+      playerState.repairShips = (playerState.repairShips || 0) + 1;
+    }
+    delete playerState.pendingLaunch;
+
+    // Log engineer consumption
+    const flowContext = createFlowContext(state, (state as { gameId?: string }).gameId || 'unknown');
+    const faction = playerState.faction || 'unknown';
+    resourceFlowLogger.logSink(flowContext, playerId, faction, 'engineers', engineerCost, 'hazard', `Mechanical hazard: ${hazard.name}`, playerState.engineers);
+
+    state.log.push({
+      timestamp: new Date().toISOString(),
+      message: `${hazard.name} controlled! Spent ${engineerCost} Engineer(s). Ship damaged - moved to Repair Bay.`,
+      playerId,
+      type: 'hazard'
+    } as LogEntry);
+
+    return { newState: state };
+  } else {
+    // Insufficient engineers - ship destroyed
+    if (applyInsuranceRecovery(state, playerId, hazard.name || 'Mechanical Hazard')) {
+      logOutcome(state, playerId, 'destroyed', hazard, gasType, `Mechanical hazard, insufficient engineers (need ${engineerCost}, have ${availableEngineers}), recovered by insurance`, routeId);
+      return { newState: state };
+    }
+
+    logOutcome(state, playerId, 'destroyed', hazard, gasType, `Insufficient engineers (need ${engineerCost}, have ${availableEngineers})`, routeId);
     delete playerState.pendingLaunch;
 
     state.log.push({
@@ -681,6 +852,44 @@ function resolveHazardAbort(state: GameState, playerId: string, hazard: HazardCa
   const gasType = pendingLaunch?.gasType || 'hydrogen';
   const routeId = pendingLaunch?.routeId;
 
+  // Handle Icing Conditions / Severe Icing gas loss on failure
+  const extHazard = hazard as HazardCard & { gasLossOnFailure?: number };
+  if (extHazard.gasLossOnFailure && extHazard.gasLossOnFailure > 0) {
+    const gasCubes = playerState.gasCubes || { hydrogen: 0, helium: 0 };
+    const currentGas = gasCubes[gasType] || 0;
+    const gasLoss = Math.min(extHazard.gasLossOnFailure, currentGas);
+    gasCubes[gasType] = currentGas - gasLoss;
+    playerState.gasCubes = gasCubes;
+
+    // Log gas loss
+    const flowContext = createFlowContext(state, (state as { gameId?: string }).gameId || 'unknown');
+    const faction = playerState.faction || 'unknown';
+    resourceFlowLogger.logSink(flowContext, playerId, faction, gasType, gasLoss, 'hazard', `${hazard.name} gas loss`, gasCubes[gasType]);
+
+    // If ship has no gas remaining, it's destroyed instead of aborted
+    if (currentGas <= extHazard.gasLossOnFailure) {
+      logOutcome(state, playerId, 'destroyed', hazard, gasType, `${message}. Lost ${gasLoss} ${gasType} cube(s), ship destroyed (no gas remaining)`, routeId);
+      delete playerState.pendingLaunch;
+
+      state.log.push({
+        timestamp: new Date().toISOString(),
+        message: `Hazard check FAILED (${hazard.type}): ${message}. Lost ${gasLoss} ${gasType} cube(s). Ship destroyed - no gas remaining!`,
+        playerId,
+        type: 'hazard'
+      } as LogEntry);
+
+      return { newState: state };
+    }
+
+    // Gas lost but ship survives - continue to normal abort
+    state.log.push({
+      timestamp: new Date().toISOString(),
+      message: `${hazard.name}: Lost ${gasLoss} ${gasType} cube(s) (${gasCubes[gasType]} remaining)`,
+      playerId,
+      type: 'hazard'
+    } as LogEntry);
+  }
+
   // Log aborted outcome
   logOutcome(state, playerId, 'aborted', hazard, gasType, message, routeId);
 
@@ -799,8 +1008,7 @@ function processRespondToHazard(state: GameState, playerId: string, data: Respon
     return { newState: state };
   }
 
-  const isFireHazard = hazard.category === 'fire' || hazard.hydrogenOnly;
-  if (isFireHazard && hazard.engineerCost !== undefined) {
+  if (isFireHazard(hazard) && hazard.engineerCost !== undefined) {
     const engineerCost = hazard.engineerCost;
     const availableEngineers = playerState.engineers || 0;
 
