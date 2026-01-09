@@ -251,6 +251,12 @@ def _attempt_combat_missions(
                     else:
                         missions = [m for m in missions if m.id != mission.id]
 
+                    # Check if phase changed (e.g., age transition triggered)
+                    # If so, we need to exit and let the autoplay loop handle it
+                    if fresh_state and fresh_state.phase != 'worker_placement':
+                        print(f"    {player}: phase changed to {fresh_state.phase}, exiting launch loop")
+                        return launched
+
                     # Check if we have officers left for more launches
                     fresh_player_data = fresh_state.get_player(post_player_id) if fresh_state and post_player_id else post_player_data
                     if fresh_player_data:
@@ -405,6 +411,13 @@ def _attempt_route_launches(
                     # Update shared state so other bots know this route is claimed
                     get_shared_state().mark_route_claimed(route.id, player)
 
+                    # Check if phase changed (e.g., age transition triggered)
+                    # If so, we need to exit and let the autoplay loop handle it
+                    fresh_state = get_state(game_id, player)
+                    if fresh_state and fresh_state.phase != 'worker_placement':
+                        print(f"    {player}: phase changed to {fresh_state.phase}, exiting launch loop")
+                        return launched
+
                     # Check if we have officers left for more launches
                     if current_officers < officers_needed:
                         return launched
@@ -479,20 +492,32 @@ def _check_and_handle_hazard(client, player: str, game_id: str, ship_id: str, pl
     pending_launch = raw_player.get('pendingLaunch')
     if not pending_launch:
         # No pending launch = launch completed without hazard or already resolved
-        # Check if THIS SPECIFIC route was claimed (not just any route)
-        map_data = state_data.get('map', {})
-        map_routes = map_data.get('routes', [])
 
         if route_id:
-            # Check if the specific route we targeted was claimed by this player
-            target_route = next((r for r in map_routes if r.get('id') == route_id), None)
-            if target_route and target_route.get('claimed') == player_id:
-                return 'on_route'
+            # Check if this is a combat mission (Age II) or a route
+            current_age = state_data.get('age', 1)
+            if current_age == 2:
+                # Combat mission: check if mission was completed (added to completedMissions)
+                completed_missions = raw_player.get('completedMissions', [])
+                if any(m.get('id') == route_id for m in completed_missions):
+                    return 'on_route'  # Mission completed successfully
+                else:
+                    # Mission not completed - ship was destroyed or aborted
+                    return 'hangar'
             else:
-                # Route not claimed - ship must have been destroyed or launch failed
-                return 'hangar'
+                # Route: check if route was claimed in map.routes
+                map_data = state_data.get('map', {})
+                map_routes = map_data.get('routes', [])
+                target_route = next((r for r in map_routes if r.get('id') == route_id), None)
+                if target_route and target_route.get('claimed') == player_id:
+                    return 'on_route'
+                else:
+                    # Route not claimed - ship must have been destroyed or launch failed
+                    return 'hangar'
         else:
             # No route_id provided - fall back to checking any claimed routes
+            map_data = state_data.get('map', {})
+            map_routes = map_data.get('routes', [])
             player_claimed_routes = [r for r in map_routes if r.get('claimed') == player_id]
             return 'on_route' if player_claimed_routes else 'hangar'
 
@@ -924,6 +949,19 @@ def _execute_placement(player: str, game_id: str, card: dict, location: dict, lo
         if blueprint:
             kwargs['blueprint'] = blueprint
             action_desc = f"placed at {loc_id} and updated blueprint"
+        else:
+            # Debug: log why no blueprint changes (only when verbose)
+            from .config import is_verbose
+            if is_verbose() and pre_player_data and pre_player_data.blueprint:
+                bp = pre_player_data.blueprint
+                empty_slots = []
+                for key, slots in [('frame', bp.frame_slots), ('fabric', bp.fabric_slots),
+                                   ('drive', bp.drive_slots), ('component', bp.component_slots)]:
+                    empties = sum(1 for s in (slots or []) if s is None)
+                    if empties > 0:
+                        empty_slots.append(f"{key}:{empties}")
+                if empty_slots:
+                    print(f"    [DEBUG] {player} has empty slots: {', '.join(empty_slots)} but no tech cards for them")
     elif loc_id == 'gas_depot':
         # USA faction uses helium (per Section 10.2.4 faction ability)
         faction = get_faction_from_player(player)

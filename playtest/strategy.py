@@ -63,6 +63,46 @@ def _get_tile_hull_cost(manifest, tile_id: str | None) -> int:
     return upgrade.get('hullCost', 0)
 
 
+def _get_tile_stats(manifest, tile_id: str | None) -> dict:
+    """Get stats of a single tech tile.
+
+    Returns dict with 'range', 'speed', 'ceiling', 'reliability', 'luxury', 'income' keys.
+    """
+    if not tile_id:
+        return {'range': 0, 'speed': 0, 'ceiling': 0, 'reliability': 0, 'luxury': 0, 'income': 0}
+    upgrade = manifest.upgrades.get(tile_id, {})
+    stats = upgrade.get('stats', {})
+    return {
+        'range': stats.get('range', 0),
+        'speed': stats.get('speed', 0),
+        'ceiling': stats.get('ceiling', 0),
+        'reliability': stats.get('reliability', 0),
+        'luxury': stats.get('luxury', 0),
+        'income': stats.get('income', 0),
+    }
+
+
+def _calculate_stat_score(stats: dict, priority_stats: list[str] | None = None) -> float:
+    """Calculate a weighted score for tile stats.
+
+    Prioritizes the specified stats (default: range + ceiling for Age 2 missions).
+    Other stats are secondary contributors.
+
+    Args:
+        stats: Dict of stat name -> value.
+        priority_stats: List of stats to prioritize (each gets 10x weight).
+                       Default: ['range', 'ceiling'] since Age 2 missions require both.
+    """
+    if priority_stats is None:
+        priority_stats = ['range', 'ceiling']  # Both needed for Age 2 missions
+
+    # Priority stats get 10x weight each
+    priority_value = sum(stats.get(stat, 0) * 10 for stat in priority_stats)
+    # Secondary stats get normal weight
+    secondary_value = sum(v for k, v in stats.items() if k not in priority_stats)
+    return priority_value + secondary_value
+
+
 def _calculate_hull_cost(manifest, blueprint_dict: dict) -> int:
     """Calculate total hull cost from all installed tech tiles.
 
@@ -118,9 +158,14 @@ def get_blueprint_design_blueprint(player_data: Player, current_age: int = 1, is
     empty_fabric_indices = [i for i, s in enumerate(new_blueprint['fabricSlots']) if s is None]
     empty_drive_indices = [i for i, s in enumerate(new_blueprint['driveSlots']) if s is None]
 
-    # No empty slots = no changes needed
-    if not empty_frame_indices and not empty_fabric_indices and not empty_drive_indices:
-        return None
+    # Find filled slot indices (for potential replacement)
+    filled_frame_indices = [i for i, s in enumerate(new_blueprint['frameSlots']) if s is not None]
+    filled_fabric_indices = [i for i, s in enumerate(new_blueprint['fabricSlots']) if s is not None]
+    filled_drive_indices = [i for i, s in enumerate(new_blueprint['driveSlots']) if s is not None]
+
+    # Determine priority stats based on age
+    # Age 2+ missions require BOTH range AND ceiling, so prioritize both
+    priority_stats = ['range', 'ceiling'] if current_age >= 2 else ['speed', 'range']
 
     # If no technologies, can't fill anything
     if not technologies:
@@ -232,6 +277,86 @@ def get_blueprint_design_blueprint(player_data: Player, current_age: int = 1, is
         if affordable:
             new_blueprint['driveSlots'][idx] = affordable
             add_tile(affordable)
+
+    # === REPLACEMENT LOGIC ===
+    # Consider replacing existing tiles with better ones (especially for Range in Age 2)
+    # Only do this if not during age transition (free retrofits make this moot)
+    # and if we have cash to afford potential retrofit costs
+
+    def can_afford_replacement(old_tile: str, new_tile: str) -> bool:
+        """Check if we can afford to replace a tile considering retrofit cost."""
+        if is_age_transition:
+            return True  # Free during age transition
+        if ships_to_retrofit == 0:
+            return True  # No retrofit cost if no ships
+
+        old_hull = _get_tile_hull_cost(manifest, old_tile)
+        new_hull = _get_tile_hull_cost(manifest, new_tile)
+        hull_delta = new_hull - old_hull
+        if hull_delta <= 0:
+            return True  # Cheaper or same cost, always affordable
+
+        retrofit_cost = hull_delta * ships_to_retrofit
+        return player_cash >= retrofit_cost
+
+    def find_best_replacement(current_tile: str, available_upgrades: list, slot_type: str) -> str | None:
+        """Find the best available upgrade to replace current tile, if it improves stats."""
+        if not current_tile:
+            return None
+
+        current_stats = _get_tile_stats(manifest, current_tile)
+        current_score = _calculate_stat_score(current_stats, priority_stats)
+
+        best_replacement = None
+        best_score = current_score
+
+        for upgrade_id in available_upgrades:
+            if upgrade_id in installed_tiles:
+                continue  # Can't use a tile that's already installed elsewhere
+            if not can_afford_replacement(current_tile, upgrade_id):
+                continue  # Can't afford the retrofit
+
+            upgrade_stats = _get_tile_stats(manifest, upgrade_id)
+            upgrade_score = _calculate_stat_score(upgrade_stats, priority_stats)
+
+            # Only replace if the new tile is significantly better (score > current + 5)
+            # This prevents unnecessary churn for marginal improvements
+            if upgrade_score > best_score + 5:
+                best_replacement = upgrade_id
+                best_score = upgrade_score
+
+        return best_replacement
+
+    def do_replacement(slot_key: str, idx: int, old_tile: str, new_tile: str):
+        """Execute a tile replacement and update tracking."""
+        nonlocal current_hull_cost, changes_made
+        old_hull = _get_tile_hull_cost(manifest, old_tile)
+        new_hull = _get_tile_hull_cost(manifest, new_tile)
+        current_hull_cost = current_hull_cost - old_hull + new_hull
+        installed_tiles.discard(old_tile)
+        installed_tiles.add(new_tile)
+        new_blueprint[slot_key][idx] = new_tile
+        changes_made = True
+
+    # Try to replace drive tiles first (most important for Range/Speed stats)
+    for idx in filled_drive_indices:
+        current_tile = new_blueprint['driveSlots'][idx]
+        replacement = find_best_replacement(current_tile, drive_upgrades, 'driveSlots')
+        if replacement:
+            do_replacement('driveSlots', idx, current_tile, replacement)
+
+    # Also consider replacing frame/fabric tiles if they provide stats
+    for idx in filled_frame_indices:
+        current_tile = new_blueprint['frameSlots'][idx]
+        replacement = find_best_replacement(current_tile, frame_upgrades, 'frameSlots')
+        if replacement:
+            do_replacement('frameSlots', idx, current_tile, replacement)
+
+    for idx in filled_fabric_indices:
+        current_tile = new_blueprint['fabricSlots'][idx]
+        replacement = find_best_replacement(current_tile, fabric_upgrades, 'fabricSlots')
+        if replacement:
+            do_replacement('fabricSlots', idx, current_tile, replacement)
 
     # For age transition, always return the blueprint (even if incomplete - server validates)
     # For normal play, only return if we made changes
