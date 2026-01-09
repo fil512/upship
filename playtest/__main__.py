@@ -48,7 +48,7 @@ from .display import (
     show_status, show_summary, show_sessions, show_routes,
     debug_state, tail_log, show_claude_output,
     show_rdboard, show_techstate, show_gamelogs, show_players_debug,
-    show_blueprints
+    show_blueprints, save_flow_log
 )
 
 
@@ -790,6 +790,9 @@ def main():
 
     elif cmd == "players":
         show_players_debug()
+
+    elif cmd == "save-flow-log" or cmd == "saveflow":
+        save_flow_log()
 
     else:
         print(f"Unknown command: {cmd}")

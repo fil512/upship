@@ -115,7 +115,7 @@ export async function requireGameHost(
  * Handles different turn logic based on game phase:
  * - worker_placement: Uses workerPlacement.currentPlacerIndex
  * - reveal: All players can act simultaneously
- * - income_cleanup: Uses currentPlayerIndex
+ * - cleanup: Uses currentPlayerIndex
  *
  * @example
  * router.post('/:gameId/action', requirePlayerTurn, asyncHandler(async (req, res) => {

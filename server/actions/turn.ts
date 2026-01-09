@@ -5,7 +5,7 @@
 
 import type { GameState, PlayerState, Card, LogEntry } from '@upship/api';
 
-const { transitionToIncomeCleanup, startNewRound } = require('./helpers/phaseTransition');
+const { transitionToCleanup, startNewRound } = require('./helpers/phaseTransition');
 const { advanceToNextPlacer } = require('./helpers/turnOrder');
 const { refreshMarketRow, refreshRnDBoard } = require('./helpers/marketHelpers');
 
@@ -179,7 +179,7 @@ function processEndTurn(state: GameState, playerId: string): ActionResult {
 
         if (allRevealedAndFinished) {
           // All players done - transition to income/cleanup phase
-          transitionToIncomeCleanup(state);
+          transitionToCleanup(state);
         } else {
           // Not all players done yet - advance to next placer who hasn't revealed
           advanceToNextPlacer(state);
@@ -332,12 +332,12 @@ function processEndTurn(state: GameState, playerId: string): ActionResult {
       );
 
       if (allDone) {
-        transitionToIncomeCleanup(state);
+        transitionToCleanup(state);
       }
       break;
     }
 
-    case 'income_cleanup':
+    case 'cleanup':
       // During income/cleanup, END_TURN advances to next player
       // When all players done, start new round
       state.currentPlayerIndex = (state.currentPlayerIndex + 1) % state.playerOrder.length;

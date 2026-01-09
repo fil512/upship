@@ -207,79 +207,27 @@ function collectRevealResources(state: PhaseState): void {
 }
 
 /**
- * Transition from Reveal phase to Income & Cleanup phase
- * Per Section 5.2: Net income = Income Track - Engineers in Barracks (upkeep)
- * If negative, lose VP equal to the deficit (minimum 0 VP)
- * Officers and Engineers are NOT auto-collected - must visit Personnel Office / Engineering Depot
+ * Transition from Reveal phase to Cleanup phase
+ * Per Section 5.2: No automatic income collection - players must visit Treasury to collect income.
+ * Cash, Officers, and Engineers are NOT auto-collected - must visit respective locations.
  */
-function transitionToIncomeCleanup(state: PhaseState): void {
-  state.phase = 'income_cleanup';
+function transitionToCleanup(state: PhaseState): void {
+  state.phase = 'cleanup';
 
   state.log.push({
     timestamp: new Date().toISOString(),
-    message: 'Entering Income & Cleanup phase',
+    message: 'Entering Cleanup phase',
     type: 'phase',
     round: state.round,
     age: state.age
   } as LogEntry);
 
-  // Process income collection for all players simultaneously
+  // Process cleanup for all players simultaneously
   for (const playerId of state.playerOrder) {
     const playerState = state.players[playerId] as TransitionPlayerState;
 
-    // Per Section 5.2: Net income = Income Track - Engineers in Barracks (£1 upkeep each)
-    const grossIncome = playerState.income || 0;
-    const engineerUpkeep = playerState.engineers || 0;
-    const netIncome = grossIncome - engineerUpkeep;
-
-    // Log resource flows
-    const flowContext = createFlowContext(state, (state as { gameId?: string }).gameId || 'unknown');
-    const faction = playerState.faction || 'unknown';
-
-    if (netIncome >= 0) {
-      // Positive net income: gain cash
-      playerState.cash += netIncome;
-
-      // Log gross income as fountain, upkeep as sink
-      if (grossIncome > 0) {
-        resourceFlowLogger.logFountain(flowContext, playerId, faction, 'cash', grossIncome, 'trickle', 'Income Track', playerState.cash);
-      }
-      if (engineerUpkeep > 0) {
-        resourceFlowLogger.logSink(flowContext, playerId, faction, 'cash', engineerUpkeep, 'upkeep', 'Engineer upkeep', playerState.cash);
-      }
-
-      state.log.push({
-        timestamp: new Date().toISOString(),
-        message: `${playerState.faction.toUpperCase()} collected £${netIncome} (£${grossIncome} income - £${engineerUpkeep} engineer upkeep)`,
-        playerId,
-        type: 'income',
-        round: state.round,
-        age: state.age
-      } as LogEntry);
-    } else {
-      // Negative net income: lose VP equal to the deficit (VP cannot go below 0)
-      const vpLoss = Math.abs(netIncome);
-      const currentVp = playerState.vp || 0;
-      const actualVpLost = Math.min(vpLoss, currentVp);
-      playerState.vp = Math.max(0, currentVp - vpLoss);
-
-      // Log VP loss
-      if (actualVpLost > 0) {
-        resourceFlowLogger.logSink(flowContext, playerId, faction, 'vp', actualVpLost, 'upkeep_penalty', 'Negative net income', playerState.vp);
-      }
-
-      state.log.push({
-        timestamp: new Date().toISOString(),
-        message: `${playerState.faction.toUpperCase()} lost ${actualVpLost} VP (net income: £${grossIncome} - £${engineerUpkeep} upkeep = ${netIncome})`,
-        playerId,
-        type: 'income',
-        round: state.round,
-        age: state.age
-      } as LogEntry);
-    }
-
-    // NOTE: Officers and Engineers are NOT auto-collected anymore
-    // Players must visit Personnel Office and Engineering Depot board spaces to collect them
+    // NOTE: Cash is NOT auto-collected - players must visit Treasury
+    // NOTE: Officers and Engineers are NOT auto-collected - must visit Personnel Office / Engineering Depot
 
     // Discard remaining hand
     if (playerState.hand && playerState.hand.length > 0) {
@@ -291,7 +239,7 @@ function transitionToIncomeCleanup(state: PhaseState): void {
     playerState.influence = 0;
   }
 
-  // Auto-advance: Income phase has no player decisions, so immediately start next round
+  // Auto-advance: Cleanup phase has no player decisions, so immediately start next round
   // startNewRound() will either:
   // - Trigger age transition (phase = 'age_transition_blueprint_design') if thresholds met
   // - Start worker placement (phase = 'worker_placement') for normal rounds
@@ -309,8 +257,8 @@ function triggerFinalScoring(state: PhaseState): void {
 }
 
 /**
- * Start a new round (called after Income & Cleanup)
- * Per Section 5.2: Check Age Transition during Income & Cleanup phase
+ * Start a new round (called after Cleanup)
+ * Per Section 5.2: Check Age Transition during Cleanup phase
  * Per Section 1.2: Check game end conditions
  */
 function startNewRound(state: PhaseState): void {
@@ -432,7 +380,7 @@ function startNewRound(state: PhaseState): void {
 export {
   transitionToRevealPhase,
   collectRevealResources,
-  transitionToIncomeCleanup,
+  transitionToCleanup,
   startNewRound
 };
 
@@ -440,6 +388,6 @@ export {
 module.exports = {
   transitionToRevealPhase,
   collectRevealResources,
-  transitionToIncomeCleanup,
+  transitionToCleanup,
   startNewRound
 };

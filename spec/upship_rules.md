@@ -322,7 +322,7 @@ Store purchased **Gas Cubes** here:
 
 | Track | Function | Starting Value |
 |-------|----------|----------------|
-| **Income Track** | £ earned at The Treasury; used for upkeep calculation | £5 |
+| **Income Track** | £ earned when visiting The Treasury | £5 |
 | **Research Level Track** | Base Research when you Reveal | 0 |
 | **Officer Income Track** | Officers recruited at Personnel Office; reaching +3 grants your 3rd Agent | 1 |
 | **Engineer Income Track** | Engineers hired at Engineering Depot | 1 |
@@ -395,19 +395,18 @@ The player with the **First Player** pawn goes first.
 
 Players start with 2 Agents. When your **Officer Income Track reaches +3**, immediately gain your 3rd Agent from the supply. This represents your growing officer corps providing the management capacity to expand operations.
 
-## 5.2 Phase B: Income & Cleanup
+## 5.2 Phase B: Cleanup
 
 After all players have revealed:
 
-1. **Calculate Net Income:** Net Income = Income Track − Engineers in Barracks (each Engineer costs £1 upkeep).
-2. **Apply Net Income:**
-   - If positive: Gain that many £.
-   - If negative: Lose that many VP (minimum 0 VP).
-3. **Check Age Transition:** If Progress Track reached threshold, trigger Age Transition (see Section 12).
-4. **Refresh Agents:** Return all Agents to player supplies.
-5. **Draw Cards:** Draw until you have 5 cards (if fewer). If your draw deck runs out, shuffle your discard pile as a new draw deck.
+1. **Check Age Transition:** If Progress Track reached threshold, trigger Age Transition (see Section 12).
+2. **Refresh Agents:** Return all Agents to player supplies.
+3. **Draw Cards:** Draw until you have 5 cards (if fewer). If your draw deck runs out, shuffle your discard pile as a new draw deck.
 
-**Important:** Officers and Engineers are NOT automatically collected during Income & Cleanup. You must visit the Personnel Office (for Officers) or Engineering Depot (for Engineers) during the Worker Placement phase to recruit crew based on your income tracks.
+**Important:** Cash, Officers, and Engineers are NOT automatically collected during Cleanup. You must visit:
+- **The Treasury** to collect cash based on your Income Track
+- **Personnel Office** to recruit Officers based on your Officer Income Track
+- **Engineering Depot** to hire Engineers based on your Engineer Income Track
 
 ---
 
@@ -895,7 +894,7 @@ Purchase cards from the Market Row using Influence when you Reveal.
 
 ## 12.1 Triggering the Transition
 
-When the Progress Track reaches the Age threshold (checked during Income & Cleanup):
+When the Progress Track reaches the Age threshold (checked during Cleanup):
 
 1. **Score VP:** All players score VP for routes and Technologies.
 
@@ -1086,7 +1085,6 @@ When Catastrophic Explosion occurs during a Luxury Launch in Age III using Hydro
 - Contribute to Research when you Reveal (+1 each)
 - May spend reactively after seeing Hazard Card
 - Engineers spent on Hazard Checks do not contribute Research when you Reveal
-- Upkeep paid based on Barracks count at Income & Cleanup start
 
 ---
 
@@ -1135,7 +1133,7 @@ When Catastrophic Explosion occurs during a Luxury Launch in Age III using Hydro
 | **Reliability** | Ship stat that reduces hazard check difficulty | §4.2, §8.2 |
 | **Research** | Resource for acquiring Technologies (Research Level + Engineers + cards) | §9.1 |
 | **Research Level** | Track showing base Research when you Reveal | §4.6 |
-| **Round** | A complete cycle where all players take turns until everyone has revealed; ends with Income & Cleanup | §5 |
+| **Round** | A complete cycle where all players take turns until everyone has revealed; ends with Cleanup | §5 |
 | **Route** | Connection between cities on the map | §10, Appendix E |
 | **Slot** | Empty space for Tech Tile installation | §4.2 |
 | **Speed** | Ship stat for velocity | §4.2 |
@@ -1154,7 +1152,7 @@ When Catastrophic Explosion occurs during a Luxury Launch in Age III using Hydro
 1. **Agent Turns:** On your turn, either:
    - Place an Agent (play matching card, execute action), OR
    - Reveal (show hand, gain resources, acquire Technologies, purchase cards, replenish markets)
-2. **Income & Cleanup:** Collect income (Income Track − Engineers), collect crew, refresh agents, draw cards
+2. **Cleanup:** Check age transition, refresh agents, draw cards
 
 ## Key Formulas
 

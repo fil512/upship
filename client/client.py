@@ -747,3 +747,18 @@ class UpshipClient:
             Response dict with success status and diagnostics.
         """
         return self._api_post(username, f'/api/state/{game_id}/poke')
+
+    def save_flow_log(self, username: str, game_id: str) -> dict:
+        """Save the resource flow log for analysis.
+
+        This is a superuser-only endpoint for saving flow data when a game
+        gets stuck and doesn't reach natural end.
+
+        Args:
+            username: The authenticated superuser username.
+            game_id: The ID of the game.
+
+        Returns:
+            Response dict with success status and log path.
+        """
+        return self._api_post(username, f'/api/state/{game_id}/save-flow-log')

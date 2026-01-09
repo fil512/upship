@@ -49,7 +49,7 @@ function createsCommitPoint(actionType: string, actionData: ActionData = {}, _st
 
   // Phase transitions create commit points - prevents undoing across phases
   // REVEAL transitions from worker_placement to reveal phase
-  // END_TURN during reveal transitions to income_cleanup (now auto-advances)
+  // END_TURN during reveal transitions to cleanup (now auto-advances)
   if (actionType === 'REVEAL' || actionType === 'END_TURN') {
     return true;
   }

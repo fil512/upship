@@ -675,3 +675,40 @@ def show_blueprints(game_id: str = None) -> None:
 
     except Exception as e:
         print(f"Error: {e}")
+
+
+def save_flow_log(game_id: str = None) -> str | None:
+    """Save the resource flow log for analysis.
+
+    This calls the server endpoint to save the flow log to a JSON file.
+    Requires superuser access.
+
+    Args:
+        game_id: The game ID (uses current game if None).
+
+    Returns:
+        The path to the saved log file, or None if no data was saved.
+    """
+    if game_id is None:
+        game_id = get_game_id()
+    if not game_id:
+        print("No current game. Run 'setup' first.")
+        return None
+
+    # Login as superuser
+    login_superuser()
+    client = get_client()
+
+    try:
+        result = client.save_flow_log(SUPERUSER, game_id)
+        if result.get('success'):
+            log_path = result.get('logPath')
+            print(f"✓ Flow log saved: {log_path}")
+            return log_path
+        else:
+            message = result.get('message', 'Unknown error')
+            print(f"✗ No flow data saved: {message}")
+            return None
+    except Exception as e:
+        print(f"✗ Error saving flow log: {e}")
+        return None

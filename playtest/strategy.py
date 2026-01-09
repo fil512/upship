@@ -1047,7 +1047,9 @@ def find_strategic_placement(
 
     # Fallback
     vprint("No priority location matched - trying fallback...")
-    card, loc = find_playable_card(hand, locations)
+    # Filter out repair if no ships to repair (would fail)
+    fallback_locations = [loc for loc in locations if loc['id'] != 'repair' or repair_count > 0]
+    card, loc = find_playable_card(hand, fallback_locations)
     decision_info['chosen_location'] = loc['id'] if loc else None
     decision_info['fallback'] = True
     if card and loc:

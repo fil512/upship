@@ -7,7 +7,7 @@ export type Faction = 'germany' | 'britain' | 'usa' | 'italy';
 export type GamePhase =
 	| 'worker_placement'
 	| 'reveal'
-	| 'income_cleanup'
+	| 'cleanup'
 	| 'age_transition_blueprint_design'
 	| 'game_complete';
 

@@ -21,7 +21,7 @@ const {
   advanceToNextPlacer,
   allPlayersPassed,
   transitionToRevealPhase,
-  transitionToIncomeCleanup,
+  transitionToCleanup,
   startNewRound,
   advanceHeliumMarket,
   processCardEffect,
@@ -329,12 +329,12 @@ function processEndTurn(state: GameState, playerId: string): ActionResult {
       );
 
       if (allDone) {
-        transitionToIncomeCleanup(state);
+        transitionToCleanup(state);
       }
       break;
     }
 
-    case 'income_cleanup':
+    case 'cleanup':
       // During income/cleanup, END_TURN advances to next player
       // When all players done, start new round
       state.currentPlayerIndex = (state.currentPlayerIndex + 1) % state.playerOrder.length;

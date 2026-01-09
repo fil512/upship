@@ -68,7 +68,7 @@ async function executeOneBotMoveIfNeeded(
     } else if (state.phase === 'reveal') {
       // Reveal phase: check all bots and execute their actions
       return await executeBotRevealPhase(io, gameId, state, gameStateWrapper.version);
-    } else if (state.phase === 'income_cleanup') {
+    } else if (state.phase === 'cleanup') {
       currentPlayerId = state.playerOrder[state.currentPlayerIndex];
     } else if (state.phase === 'age_transition_blueprint_design') {
       const idx = (state as GameState & { ageTransitionBlueprintDesign?: { currentPlayerIndex?: number } })
@@ -131,7 +131,7 @@ async function executeBotMove(
     case 'worker_placement':
       return await executeBotWorkerPlacement(io, gameId, state, botId, version);
 
-    case 'income_cleanup':
+    case 'cleanup':
       return await executeBotEndTurn(io, gameId, botId, version);
 
     case 'age_transition_blueprint_design':

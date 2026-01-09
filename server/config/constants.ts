@@ -40,7 +40,7 @@ export const PROGRESS_THRESHOLDS = { age2: 8, age3: 16, end: 22 };
 export const PHASES: Record<string, GamePhase> = {
   WORKER_PLACEMENT: 'worker_placement',
   REVEAL: 'reveal',
-  INCOME_CLEANUP: 'income_cleanup'
+  CLEANUP: 'cleanup'
 };
 
 // Valid factions

@@ -155,7 +155,7 @@ function isPlayersTurn(state: GameState, playerId: string): boolean {
     return true;
   }
 
-  if (state.phase === 'income_cleanup') {
+  if (state.phase === 'cleanup') {
     return state.playerOrder[state.currentPlayerIndex] === playerId;
   }
 

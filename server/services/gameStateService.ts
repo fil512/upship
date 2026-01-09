@@ -750,7 +750,7 @@ async function initializeGameState(
       age: 1,
       round: 1,        // Increments each time all players complete a cycle
       turnInRound: 1,  // Resets to 1 at start of each round
-      phase: 'worker_placement', // worker_placement, reveal, income_cleanup
+      phase: 'worker_placement', // worker_placement, reveal, cleanup
       currentPlayerIndex: 0,
       playerOrder,
       playerCount,

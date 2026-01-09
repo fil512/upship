@@ -20,7 +20,7 @@ const {
 const {
   transitionToRevealPhase,
   collectRevealResources,
-  transitionToIncomeCleanup,
+  transitionToCleanup,
   startNewRound
 } = require('../actions/helpers/phaseTransition');
 
@@ -314,7 +314,7 @@ function hasPlayableCards(state: GameState, playerId: string): boolean {
 }
 
 // Phase transition functions are imported from ../actions/helpers/phaseTransition.js
-// (transitionToRevealPhase, collectRevealResources, transitionToIncomeCleanup, startNewRound)
+// (transitionToRevealPhase, collectRevealResources, transitionToCleanup, startNewRound)
 
 // Process card effects when used for agent placement (Section 8.1)
 function processCardEffect(
@@ -684,7 +684,7 @@ module.exports = {
   // Phase transitions
   transitionToRevealPhase,
   collectRevealResources,
-  transitionToIncomeCleanup,
+  transitionToCleanup,
   startNewRound,
 
   // Card and location effects

@@ -450,6 +450,39 @@ router.get('/:gameId/players-debug', requireAuth, async (req: Request, res: Resp
   }
 });
 
+/**
+ * POST /api/state/:gameId/save-flow-log
+ * Debug endpoint to manually save the resource flow log for analysis.
+ * Used when a game gets stuck and doesn't reach natural end.
+ */
+router.post('/:gameId/save-flow-log', requireAuth, async (req: Request, res: Response, next: NextFunction) => {
+  const authReq = req as AuthenticatedRequest;
+  try {
+    const gameId = req.params.gameId;
+    const userId = authReq.session.userId;
+
+    // Check if user is superuser
+    const isAdmin = await isUserAdmin(userId);
+    if (!isAdmin) {
+      res.status(403).json({ error: 'Superuser access required' });
+      return;
+    }
+
+    // Import and call the flow logger
+    const { resourceFlowLogger } = require('../services/resourceFlowLogger');
+    const logPath = resourceFlowLogger.saveLog();
+
+    if (logPath) {
+      res.json({ success: true, logPath, message: `Flow log saved to ${logPath}` });
+    } else {
+      res.json({ success: false, message: 'No flow data to save (game may not have started or already saved)' });
+    }
+  } catch (error) {
+    console.error('[SAVE-FLOW-LOG] Error:', error);
+    next(error);
+  }
+});
+
 export default router;
 
 // CommonJS compatibility

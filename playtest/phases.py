@@ -951,8 +951,8 @@ def _execute_placement(player: str, game_id: str, card: dict, location: dict, lo
             action_desc = f"placed at {loc_id} and updated blueprint"
         else:
             # Debug: log why no blueprint changes (only when verbose)
-            from .config import is_verbose
-            if is_verbose() and pre_player_data and pre_player_data.blueprint:
+            from .config import VERBOSE_STRATEGY
+            if VERBOSE_STRATEGY and pre_player_data and pre_player_data.blueprint:
                 bp = pre_player_data.blueprint
                 empty_slots = []
                 for key, slots in [('frame', bp.frame_slots), ('fabric', bp.fabric_slots),
