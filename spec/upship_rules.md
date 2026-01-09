@@ -434,9 +434,9 @@ The Ground Board has 15 action spaces. Each requires a matching card symbol.
 
 > **Example:** Anna visits the Blueprint Design and replaces her old Basic Engine with a Maybach Engine. The new Tech Tile is taken from supply and the old tile returned to supply.
 
-**Hull Tech Tile Rule:** If you change Frame or Fabric Tech Tiles while ships are in your Launch Hangar, pay the Hull Cost difference for each ship.
+**Retrofit Cost:** If your Blueprint modifications increase the total Hull Cost, pay the Hull Cost increase multiplied by the number of ships in your Launch Hangar and Repair Hangar combined.
 
-**Duplicates Allowed:** You may install the same Tech Tile in multiple slots of the same type. If you only own one Frame technology, you can fill both Frame slots with that Tech Tile.
+> **Example:** Hans has 2 ships in his Launch Hangar and 1 in Repair. His current Hull Cost is £4. He upgrades to a better Frame that increases Hull Cost to £6. He pays (£6 − £4) × 3 ships = £6 Retrofit Cost.
 
 ## 6.3 Construction Hall (Wrench)
 
@@ -447,13 +447,13 @@ The Ground Board has 15 action spaces. Each requires a matching card symbol.
 **Limit:** Build up to 3 ships per action.
 
 **Hull Cost Formula:**
-> £2 base + Frame tile cost + Fabric tile cost. The Frame tile cost and Fabric tile costs are printed on the tiles.
+> Sum of Hull Cost values from all installed Tech Tiles. Hull Cost is printed on each tile.
 
 **Result:** Place built ships in your Launch Hangar.
 
 **Limit:** You may never have more than 6 ships total (Launch Hangar + Repair Hangar combined).
 
-**Hull Tech Tile Rule:** If you change Frame or Fabric Tech Tiles while ships are in your Launch Hangar, pay the Hull Cost difference for each ship.
+**Retrofit Rule:** If you change any Tech Tiles while ships are in your Launch Hangar, pay the Hull Cost difference for each ship (see Section 6.2).
 
 ## 6.4 Launchpad / Launchpad 2 (Propeller)
 
@@ -575,7 +575,7 @@ Ships are constructed at the Construction Hall and stored in your Launch Hangar 
 
 ## 7.1 The Build Procedure
 
-1. **Calculate Hull Cost:** £2 base + Frame tile cost + Fabric tile cost.
+1. **Calculate Hull Cost:** Sum of Hull Cost values from all installed Tech Tiles.
 2. **Pay Hull Cost:** Spend £ for each ship built.
 3. **Place in Launch Hangar:** Built ships wait here for launch.
 
@@ -583,7 +583,7 @@ Ships are constructed at the Construction Hall and stored in your Launch Hangar 
 
 **Key Point:** The Physics Check is NOT required to build—only to launch. Build ships now, add Lift capacity later.
 
-> **Example:** Maria's Blueprint has a Duralumin Frame (+£2) and Doped Covering (+£1). Hull Cost is £2 + £2 + £1 = £5 per ship. She pays £10 to build 2 ships.
+> **Example:** Maria's Blueprint has a Duralumin Frame (£2), Doped Covering (£1), and a Basic Engine (£1). Hull Cost is £2 + £1 + £1 = £4 per ship. She pays £8 to build 2 ships.
 
 ---
 
@@ -947,9 +947,9 @@ Each nation has unique advantages and constraints.
 - *Maybach Engine* (Drive)
 - *Blaugas Fuel System* (Gas) — Pay £2 when launching to keep gas cubes after mission
 
-**Pre-installed Tech Tiles:** Zeppelin Frame, Premium Envelope, Maybach HL Engine
+**Pre-installed Tech Tiles:** Zeppelin Frame, Premium Envelope, Basic Engine, Maybach CX Engine
 
-**Starting Stats:** Speed 2, Range 2, Ceiling 0, Reliability 1
+**Starting Stats:** Speed 2, Range 2, Ceiling 1, Reliability 1
 
 **The Flaw — Helium Embargo:** Germany cannot acquire Helium Handling. Every Luxury Launch in Age III risks the Hindenburg Disaster.
 
@@ -968,7 +968,7 @@ Each nation has unique advantages and constraints.
 
 **Pre-installed Tech Tiles:** Tensioned Frame, Doped Covering, Standard Engine, Passenger Cabin
 
-**Starting Stats:** Speed 2, Range 1, Ceiling 1, Reliability 0
+**Starting Stats:** Speed 1, Range 1, Ceiling 1, Reliability 0
 
 **Starting Advantage:** Pre-installed Passenger Cabin provides early Income bonus (+£1 per route).
 
@@ -987,9 +987,9 @@ Each nation has unique advantages and constraints.
 - *Trapeze Fighter System* (Special) — Ignore one route requirement per launch
 - *Helium Handling* (Gas)
 
-**Pre-installed Tech Tiles:** Duralumin Frame, Latex Envelope, Reliable Engine
+**Pre-installed Tech Tiles:** Duralumin Frame, Latex Envelope, Reliable Engine, Helium Gas Cell
 
-**Starting Stats:** Speed 1, Range 1, Ceiling 1, Reliability 3
+**Starting Stats:** Speed 1, Range 1, Ceiling 1, Reliability 1
 
 **Starting Advantage — Helium Monopoly:** Starts with Helium Handling and 2 Helium cubes. USA purchases do not advance the Helium market track.
 
@@ -1012,9 +1012,9 @@ Each nation has unique advantages and constraints.
 - *Expedition Propeller* (Drive)
 - *Articulated Keel Design* (Frame) — Semi-rigid: +1 Ceiling, but -1 to Reliability checks during Weather hazards
 
-**Pre-installed Tech Tiles:** Flexible Frame, Cotton Envelope, Expedition Engine
+**Pre-installed Tech Tiles:** Semi-Rigid Keel, Cotton Envelope, Basic Engine, Expedition Engine
 
-**Starting Stats:** Speed 1, Range 2, Ceiling 1, Reliability 0
+**Starting Stats:** Speed 1, Range 2, Ceiling 1, Reliability 1
 
 **Starting Advantage:** Best starting Range (2) enables longer routes early.
 
@@ -1026,10 +1026,10 @@ Each nation has unique advantages and constraints.
 
 | Faction | Speed | Range | Ceiling | Reliability | Age I Routes |
 |---------|-------|-------|---------|-------------|--------------|
-| Germany | 2 | 2 | 0 | 1 | 10 of 17 |
-| Britain | 2 | 1 | 1 | 0 | 7 of 17 |
-| USA | 1 | 1 | 1 | 3 | 5 of 17 |
-| Italy | 1 | 2 | 1 | 0 | 5 of 17 |
+| Germany | 2 | 2 | 1 | 1 | 10 of 17 |
+| Britain | 1 | 1 | 1 | 0 | 5 of 17 |
+| USA | 1 | 1 | 1 | 1 | 5 of 17 |
+| Italy | 1 | 2 | 1 | 1 | 5 of 17 |
 
 ## 13.6 Faction Blueprint Slots
 
@@ -1160,7 +1160,7 @@ When Catastrophic Explosion occurs during a Luxury Launch in Age III using Hydro
 |---------|-------------|
 | Physics Check | Lift ≥ Weight |
 | Lift | Gas Cubes × 5 |
-| Hull Cost | £2 + Frame cost + Fabric cost |
+| Hull Cost | Sum of all installed tile Hull Costs |
 | Hazard Check | Ship Stat + Engineers ≥ Net Difficulty |
 | Net Difficulty | Hazard Difficulty + Route Difficulty − Ship Reliability (min 0) |
 | Research | Research Level + Engineers + card bonuses (unspent lost) |
@@ -1218,17 +1218,18 @@ Each player has an identical 27-card Personal Hazard Deck:
 Auto-pass. No hazard.
 
 ## Minor Hazards (8 cards)
-Difficulty **3–4** against Speed, Reliability, Ceiling, or Range.
+Difficulty **1–3** against Speed, Reliability, Ceiling, or Range.
 
 ## Major Hazards (8 cards)
-Difficulty **5–6** against Speed, Reliability, Ceiling, or Range. Includes:
+Difficulty **2–4** against Speed, Reliability, Ceiling, or Range. Includes:
 - **Squall Line:** Ships with 3+ Payload slots suffer +1 Difficulty.
 - **Icing Conditions:** On failure, also lose 1 gas cube.
+- **Severe Icing:** On failure, lose 2 gas cubes.
 
 ## Fire Hazards (6 cards) — Hydrogen Only
 - **Engine Fire (×2):** Spend 1 Engineer → Damaged. Fail → Crash.
 - **Gas Cell Rupture (×2):** Spend 2 Engineers → Damaged. Fail → Crash.
-- **Static Discharge (×1):** Difficulty **5** Reliability check. Fail → Crash.
+- **Static Discharge (×1):** Difficulty **2** Reliability check. Spend Engineers to pass. Fail → Crash.
 - **Catastrophic Explosion (×1):** No save. Crash. Age III Luxury = Hindenburg.
 
 ## Mechanical Hazards (1 card)
