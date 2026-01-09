@@ -143,6 +143,7 @@
 <style>
 	.tech-row {
 		display: flex;
+		align-items: stretch;
 		gap: 0.5rem;
 		padding: 0.5rem;
 	}

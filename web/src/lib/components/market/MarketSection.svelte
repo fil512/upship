@@ -180,6 +180,11 @@
 		color: var(--color-text-primary, #333);
 	}
 
+	/* Add spacing above Tech Cards header */
+	.market-cards-row + .section-header {
+		margin-top: 1rem;
+	}
+
 	.hint {
 		font-size: 0.7rem;
 		color: var(--color-text-secondary, #666);
@@ -188,7 +193,7 @@
 
 	.market-cards-row {
 		display: flex;
-		align-items: flex-start;
+		align-items: stretch;
 		gap: 0.5rem;
 		flex-wrap: nowrap;
 	}
@@ -215,7 +220,7 @@
 
 	.tech-cards-row {
 		display: flex;
-		align-items: flex-start;
+		align-items: stretch;
 		gap: 0.5rem;
 		flex-wrap: nowrap;
 	}
