@@ -97,52 +97,83 @@ Minimum £0. Technologies cushion the transition; routes cost £1 each when wipe
 
 ## Design Goals
 
-All factions begin with a standardized baseline plus one unique bonus:
+All factions start with identical baseline performance plus one unique faction bonus.
 
-**Base Requirements (All Factions):**
-- At least 1 Frame tile, 1 Fabric tile, 1 Drive tile (3 base tiles)
-- Minimum net lift: 0 (Weight ≤ Lift from gas)
-- Minimum stats from starting tech tiles: Speed 1, Range 1, Ceiling 0, Reliability 0, Luxury 0
-- 1 bonus tile (can be any slot type)
+**Baseline Stats (All Factions):**
+| Stat | Value | Source |
+|------|-------|--------|
+| Speed | 1 | Drive tile |
+| Range | 1 | Drive tile |
+| Ceiling | 0 | — |
+| Reliability | 0 | — |
+| Luxury | 0 | — |
+| Lift | 0 | (from tiles; gas provides additional lift) |
+
+**Starting Tiles (All Factions):**
+- 1 Frame tile (provides 1 gas socket for lift)
+- 1 Fabric tile (basic covering, no stats)
+- 1 Drive tile (provides Speed 1, Range 1)
+- 1 Bonus tile (provides faction's unique advantage)
 
 **Faction Bonuses:**
 
-| Faction | Bonus | Historical Rationale | Extra Tech Card |
-|---------|-------|---------------------|-----------------|
-| Germany | +1 Speed | Powerful Maybach engines, fastest rigid airships | Maybach Engine → Maybach CX |
-| Britain | +1 Income | Imperial Airship Scheme focused on passenger service | Passenger Accommodation → Passenger Cabin |
-| USA | Fire Immunity | Helium monopoly enabled safe non-flammable operations | Helium Handling → Helium Gas Cell |
-| Italy | +1 Range | Nobile's polar expeditions required long range | Expedition Propeller → Expedition Engine |
+| Faction | Bonus | Total Stats | Historical Rationale |
+|---------|-------|-------------|---------------------|
+| Germany | +1 Speed | Speed 2, Range 1 | Powerful Maybach engines made Zeppelins the fastest rigid airships |
+| Britain | +1 Income | Speed 1, Range 1, Income 1 | Imperial Airship Scheme prioritized profitable passenger service |
+| USA | Fire Immunity | Speed 1, Range 1 + safe | Domestic helium monopoly enabled non-flammable operations |
+| Italy | +1 Range | Speed 1, Range 2 | Nobile's polar expeditions demanded maximum range |
+
+**Weight Budget:**
+All factions have total starting weight of **5**, requiring 1 gas cube (5 lift) to launch.
 
 ## Starting Configurations
 
-### Germany (4 tiles, +1 Speed)
-- **Frame:** Zeppelin Frame (from Zeppelin Girders)
-- **Fabric:** Premium Envelope (from Goldbeater's Skin)
-- **Drive:** Basic Engine (from Daimler Engine) — Speed 1
-- **Bonus Drive:** Maybach CX (from Maybach Engine) — Speed +1, Range +1
-- **Starting Cards:** Zeppelin Girders, Goldbeater's Skin, Daimler Engine, Maybach Engine
+### Germany — Speed 2, Range 1
+| Slot | Tile | Stats | Weight |
+|------|------|-------|--------|
+| Frame | Zeppelin Frame | gas_socket: 1 | 2 |
+| Fabric | Premium Envelope | Reliability +1, Range +1 | 1 |
+| Drive | Basic Engine | Speed 1, Range 1 | 1 |
+| **Bonus** | **Maybach CX** | **Speed +1** | 1 |
+| **Total** | | **Speed 2, Range 2, Reliability 1** | **5** |
 
-### Britain (4 tiles, +1 Income)
-- **Frame:** Tensioned Frame (from Wire Bracing) — Ceiling +1
-- **Fabric:** Doped Covering (from Doped Canvas) — Speed +1
-- **Drive:** Standard Engine (from Standard Propeller) — Speed 1, Range 1
-- **Bonus Component:** Passenger Cabin (from Passenger Accommodation) — Income +1
-- **Starting Cards:** Wire Bracing, Doped Canvas, Standard Propeller, Passenger Accommodation
+**Starting Tech Cards:** Zeppelin Girders, Goldbeater's Skin, Daimler Engine, Maybach Engine
 
-### USA (4 tiles, Fire Immunity)
-- **Frame:** Duralumin Frame (from Duralumin Girders) — Reliability +2, Ceiling +1
-- **Fabric:** Latex Envelope (from Gelatinized Latex) — Reliability +1
-- **Drive:** Reliable Engine (from Basic Powerplant) — Speed 1, Range 1
-- **Bonus Component:** Helium Gas Cell (from Helium Handling) — Fire immunity, enables helium
-- **Starting Cards:** Duralumin Girders, Gelatinized Latex, Basic Powerplant, Helium Handling
+### Britain — Speed 1, Range 1, Income 1
+| Slot | Tile | Stats | Weight |
+|------|------|-------|--------|
+| Frame | Tensioned Frame | gas_socket: 1 | 2 |
+| Fabric | Doped Covering | — | 1 |
+| Drive | Standard Engine | Speed 1, Range 1 | 1 |
+| **Bonus** | **Passenger Cabin** | **Income +1** | 1 |
+| **Total** | | **Speed 1, Range 1, Income 1** | **5** |
 
-### Italy (4 tiles, +1 Range)
-- **Frame:** Flexible Frame (from Articulated Keel Design) — Ceiling +1
-- **Fabric:** Cotton Envelope (from Rubberized Cotton)
-- **Drive:** Basic Engine (from Daimler Engine) — Speed 1
-- **Bonus Drive:** Expedition Engine (from Expedition Propeller) — Range +2
-- **Starting Cards:** Articulated Keel Design, Rubberized Cotton, Daimler Engine, Expedition Propeller
+**Starting Tech Cards:** Wire Bracing, Doped Canvas, Standard Propeller, Passenger Accommodation
+
+### USA — Speed 1, Range 1, Fire Immunity
+| Slot | Tile | Stats | Weight |
+|------|------|-------|--------|
+| Frame | Duralumin Frame | gas_socket: 1 | 2 |
+| Fabric | Latex Envelope | — | 1 |
+| Drive | Reliable Engine | Speed 1, Range 1 | 1 |
+| **Bonus** | **Helium Gas Cell** | **Fire Immunity** | 1 |
+| **Total** | | **Speed 1, Range 1, Fire Immune** | **5** |
+
+**Starting Tech Cards:** Duralumin Girders, Latex Covering, Basic Powerplant, Helium Handling
+
+### Italy — Speed 1, Range 2
+| Slot | Tile | Stats | Weight |
+|------|------|-------|--------|
+| Frame | Semi-Rigid Keel | gas_socket: 1, Reliability +1 | 2 |
+| Fabric | Cotton Envelope | — | 1 |
+| Drive | Basic Engine | Speed 1, Range 1 | 1 |
+| **Bonus** | **Expedition Engine** | **Range +1** | 1 |
+| **Total** | | **Speed 1, Range 2, Reliability 1** | **5** |
+
+**Starting Tech Cards:** Internal Keel, Rubberized Cotton, Daimler Engine, Expedition Propeller
+
+*Note: All factions require exactly 1 gas cube to launch their starting ship (5 lift = 5 weight).*
 
 ---
 
@@ -306,17 +337,17 @@ Frame tiles go in Frame slots. Each Frame slot shows a gas cube icon—this indi
 
 | Name | Required Tech | Weight | Hull Cost | Stats | Special |
 |------|---------------|--------|-----------|-------|---------|
-| Zeppelin Frame | Zeppelin Girders | 1 | +£1 | — | Germany starting tech |
-| Wooden Frame | Wooden Framework | 2 | +£1 | Reliability +1 | — |
-| Tensioned Frame | Wire Bracing | 1 | +£1 | Ceiling +1 | — |
-| Duralumin Frame | Duralumin Framework | 2 | +£2 | Reliability +2, Ceiling +1 | — |
-| Steel Frame | Steel Framework | 3 | +£1 | Reliability +2 | Heavier but cheap |
-| Semi-Rigid Keel | Internal Keel | 2 | +£1 | Reliability +1 | Italy's specialty |
-| Geodetic Frame | Geodetic Structure | 1 | +£3 | Reliability +2, Ceiling +1 | Lightest, most expensive |
-| Modular Frame | Modular Construction | 1 | +£2 | — | — |
-| Flexible Frame | Articulated Keel Design | 0 | +£1 | Ceiling +1 | Semi-rigid: -1 to Reliability checks during Weather hazards (Italy starting tech) |
-| Streamlined Hull | Aerodynamic Hull Design | 1 | +£2 | Lift +2 | Provides lift without gas |
-| Aerodynamic Lift System | Dynamic Lift Surfaces | 2 | +£3 | Lift +4 | Provides lift without gas |
+| Zeppelin Frame | Zeppelin Girders | 2 | +£1 | gas_socket: 1 | Germany starting tech |
+| Wooden Frame | Wooden Framework | 2 | +£1 | gas_socket: 1, Reliability +1 | — |
+| Tensioned Frame | Wire Bracing | 2 | +£1 | gas_socket: 1 | Britain starting tech |
+| Duralumin Frame | Duralumin Framework | 2 | +£1 | gas_socket: 1 | USA starting tech |
+| Steel Frame | Steel Framework | 3 | +£1 | gas_socket: 1, Reliability +2 | Heavier but cheap |
+| Semi-Rigid Keel | Internal Keel | 2 | +£1 | gas_socket: 1, Reliability +1 | Italy starting tech |
+| Geodetic Frame | Geodetic Structure | 1 | +£3 | gas_socket: 1, Reliability +2, Ceiling +1 | Lightest, most expensive |
+| Modular Frame | Modular Construction | 1 | +£2 | gas_socket: 1 | — |
+| Flexible Frame | Articulated Keel Design | 0 | +£1 | gas_socket: 1, Lift +1 | Lightest frame option |
+| Streamlined Hull | Aerodynamic Hull Design | 1 | +£2 | gas_socket: 1, Lift +2 | Provides lift without gas |
+| Aerodynamic Lift System | Dynamic Lift Surfaces | 2 | +£3 | gas_socket: 1, Lift +4 | Provides lift without gas |
 
 ## Fabric Tech Tiles
 
@@ -324,13 +355,13 @@ Fabric tiles go in Fabric slots. The **Hull Cost** column shows how much this ti
 
 | Name | Required Tech | Weight | Hull Cost | Stats | Special |
 |------|---------------|--------|-----------|-------|---------|
-| Latex Envelope | Gelatinized Latex | 0 | +£1 | Reliability +1 | USA starting tech |
-| Cotton Envelope | Rubberized Cotton | 0 | +£0 | — | Basic default |
-| Doped Covering | Doped Canvas | 0 | +£1 | Speed +1 | Improved aerodynamics |
-| Premium Envelope | Goldbeater's Skin | 0 | +£3 | Reliability +1, Range +1 | Best gas-tightness |
+| Latex Envelope | Latex Covering | 1 | +£1 | — | USA starting tech |
+| Cotton Envelope | Rubberized Cotton | 1 | +£1 | — | Italy starting tech |
+| Doped Covering | Doped Canvas | 1 | +£1 | — | Britain starting tech |
+| Premium Envelope | Goldbeater's Skin | 1 | +£3 | Reliability +1, Range +1 | Germany starting tech |
 | Fire-Resistant Fabric | Fireproof Coating | 1 | +£2 | Reliability +1 | Once per Age, treat one Fire hazard as auto-pass |
 | Reflective Covering | Aluminum Doping | 0 | +£1 | Reliability +1 | Protects gas from heat |
-| Conductive Covering | Grounding Systems | 0 | +£1 | Reliability +1 | Immune to Static Discharge hazard (grounds electrical charge) |
+| Conductive Covering | Grounding Systems | 0 | +£1 | Reliability +1 | Immune to Static Discharge hazard |
 | Synthetic Envelope | Gelatinized Latex | 0 | +£2 | Reliability +1, Range +1 | Modern replacement for goldbeater's |
 | Advanced Fabric | Composite Covering | 0 | +£2 | Reliability +2 | Multi-layer protection |
 
@@ -356,7 +387,7 @@ Fabric tiles go in Fabric slots. The **Hull Cost** column shows how much this ti
 
 | Name | Required Tech | Weight | Stats | Special |
 |------|---------------|--------|-------|---------|
-| Passenger Cabin | Passenger Accommodation | 1 | Income +1 | Britain starting tech |
+| Passenger Cabin | Passenger Accommodation | 1 | Income +1 | Britain starting tech (bonus tile) |
 | Spotter Gondola | Observation Platform | 1 | Income +1 | — |
 | Postal Service | Mail Compartment | 1 | Income +2 | — |
 | External Cargo | Cargo Nets | 2 | Income +2 | — |

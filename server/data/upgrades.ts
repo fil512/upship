@@ -120,8 +120,8 @@ export const TECH_TILES: Record<string, TechTile> = {
     slotType: 'driveSlots',
     requiredCard: 'daimler_engine',
     weight: 1,
-    hullCost: 1,  // Simple proven engine design
-    stats: { speed: 1 },
+    hullCost: 1,
+    stats: { speed: 1, range: 1 },
     special: null,
     age: 1
   },
@@ -155,9 +155,9 @@ export const TECH_TILES: Record<string, TechTile> = {
     type: 'drive',
     slotType: 'driveSlots',
     requiredCard: 'maybach_engine',
-    weight: 2,
-    hullCost: 2,  // Premium German engineering
-    stats: { speed: 2, range: 1 },
+    weight: 1,
+    hullCost: 1,
+    stats: { speed: 1 },
     special: null,
     age: 1
   },
@@ -247,18 +247,17 @@ export const TECH_TILES: Record<string, TechTile> = {
   },
 
   // === FACTION STARTING DRIVE TILES ===
-  // All starting drives provide base speed 1, range 1
-  // Faction advantages add to these base stats
-  // Starting equipment has £0 hull cost (included in base ship price)
+  // All starting drives provide base speed 1, range 1 (except bonus tiles)
+  // Faction advantages come from bonus tiles
   expedition_engine: {
     id: 'expedition_engine',
     name: 'Expedition Engine',
     type: 'drive',
     slotType: 'driveSlots',
     requiredCard: 'expedition_propeller',
-    weight: 2,
+    weight: 1,
     hullCost: 1,
-    stats: { speed: 1, range: 2 },  // Italy: range advantage
+    stats: { range: 1 },  // Italy bonus: +1 range only
     special: null,
     age: 1
   },
@@ -280,9 +279,9 @@ export const TECH_TILES: Record<string, TechTile> = {
     type: 'drive',
     slotType: 'driveSlots',
     requiredCard: 'standard_propeller',
-    weight: 2,
+    weight: 1,
     hullCost: 1,
-    stats: { speed: 1, range: 1 },  // Britain: balanced
+    stats: { speed: 1, range: 1 },  // Britain baseline drive
     special: null,
     age: 1
   },
@@ -361,9 +360,9 @@ export const TECH_TILES: Record<string, TechTile> = {
     type: 'frame',
     slotType: 'frameSlots',
     requiredCard: 'wire_bracing',
-    weight: 1,
+    weight: 2,
     hullCost: 1,
-    stats: { ceiling: 1, gas_socket: 1 },
+    stats: { gas_socket: 1 },
     special: null,
     age: 1
   },
@@ -374,8 +373,8 @@ export const TECH_TILES: Record<string, TechTile> = {
     slotType: 'frameSlots',
     requiredCard: 'duralumin_girders',
     weight: 2,
-    hullCost: 2,
-    stats: { reliability: 2, ceiling: 1, gas_socket: 1 },
+    hullCost: 1,
+    stats: { gas_socket: 1 },
     special: null,
     age: 1
   },
@@ -433,11 +432,11 @@ export const TECH_TILES: Record<string, TechTile> = {
     type: 'frame',
     slotType: 'frameSlots',
     requiredCard: 'articulated_keel',
-    weight: 0,  // Per Appendix D: weight is 0, not -1
+    weight: 0,
     hullCost: 1,
-    stats: { ceiling: 1, gas_socket: 1 },  // Per Section 13.4: +1 Ceiling (not reliability)
-    special: 'weather_penalty',  // Per Section 13.4: -1 to Reliability checks during Weather hazards
-    age: 1  // Italy starting tech, available from Age 1
+    stats: { lift: 1, gas_socket: 1 },  // Italy gets +1 lift as a slight bonus
+    special: null,
+    age: 1
   },
   streamlined_hull: {
     id: 'streamlined_hull',
@@ -471,7 +470,7 @@ export const TECH_TILES: Record<string, TechTile> = {
     type: 'frame',
     slotType: 'frameSlots',
     requiredCard: 'zeppelin_girders',
-    weight: 3,
+    weight: 2,
     hullCost: 1,
     stats: { gas_socket: 1 },
     special: null,
@@ -485,7 +484,7 @@ export const TECH_TILES: Record<string, TechTile> = {
     type: 'fabric',
     slotType: 'fabricSlots',
     requiredCard: 'rubberized_cotton',
-    weight: 0,
+    weight: 1,
     hullCost: 1,
     stats: {},
     special: null,
@@ -497,10 +496,10 @@ export const TECH_TILES: Record<string, TechTile> = {
     type: 'fabric',
     slotType: 'fabricSlots',
     requiredCard: 'doped_canvas',
-    weight: 0,
+    weight: 1,
     hullCost: 1,
-    stats: { speed: 1 },
-    special: 'improved_aerodynamics',
+    stats: {},
+    special: null,
     age: 1
   },
   premium_envelope: {
@@ -509,7 +508,7 @@ export const TECH_TILES: Record<string, TechTile> = {
     type: 'fabric',
     slotType: 'fabricSlots',
     requiredCard: 'goldbeater_skin',
-    weight: 0,
+    weight: 1,
     hullCost: 3,
     stats: { reliability: 1, range: 1 },
     special: 'best_gas_tightness',
@@ -582,10 +581,10 @@ export const TECH_TILES: Record<string, TechTile> = {
     name: 'Latex Envelope',
     type: 'fabric',
     slotType: 'fabricSlots',
-    requiredCard: 'usa_latex_covering',  // USA faction-specific starting tech
+    requiredCard: 'usa_latex_covering',
     weight: 1,
     hullCost: 1,
-    stats: { reliability: 1 },
+    stats: {},
     special: null,
     age: 1
   },
@@ -771,8 +770,8 @@ export const TECH_TILES: Record<string, TechTile> = {
     type: 'component',
     slotType: 'componentSlots',
     requiredCard: 'passenger_accommodation',
-    weight: 0,
-    hullCost: 1,  // Basic passenger seating
+    weight: 1,
+    hullCost: 1,
     stats: { income: 1 },
     special: null,
     age: 1
@@ -1225,7 +1224,7 @@ export function calculateShipStats(blueprint: Blueprint, factionBonuses: Faction
     luxury: factionBonuses.luxury || 0,
     income: 0,
     weight: 0,
-    hullCost: 2, // Base hull cost
+    hullCost: 0, // Hull cost is sum of all installed tile costs
     lift: 0
   };
 
