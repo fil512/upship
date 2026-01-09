@@ -157,6 +157,59 @@ function calculateTechScore(tile: TechTile): number {
 }
 
 /**
+ * Calculate a weighted stat score for tile comparison, with configurable priority stats.
+ * Used for blueprint tile replacement decisions.
+ * [BOT-BLUEPRINT-01] SYNC: Keep in sync with _calculate_stat_score() in playtest/strategy.py
+ *
+ * @param stats - Tile stats object
+ * @param priorityStats - Stats to prioritize with 10x weight (default: range, ceiling for Age 2 missions)
+ * @returns Weighted score (higher = better)
+ */
+function calculateStatScore(
+  stats: Record<string, number>,
+  priorityStats: string[] = ['range', 'ceiling']
+): number {
+  // Priority stats get 10x weight each
+  let priorityValue = 0;
+  for (const stat of priorityStats) {
+    priorityValue += (stats[stat] || 0) * 10;
+  }
+
+  // Secondary stats get normal weight
+  let secondaryValue = 0;
+  for (const [key, value] of Object.entries(stats)) {
+    if (!priorityStats.includes(key) && typeof value === 'number') {
+      secondaryValue += value;
+    }
+  }
+
+  return priorityValue + secondaryValue;
+}
+
+/**
+ * Get stats from a tile for comparison purposes.
+ * [BOT-BLUEPRINT-01] SYNC: Keep in sync with _get_tile_stats() in playtest/strategy.py
+ */
+function getTileStats(tileId: string | null): Record<string, number> {
+  if (!tileId) {
+    return { range: 0, speed: 0, ceiling: 0, reliability: 0, luxury: 0, income: 0 };
+  }
+  const tile = UPGRADES[tileId] as TechTile | undefined;
+  if (!tile) {
+    return { range: 0, speed: 0, ceiling: 0, reliability: 0, luxury: 0, income: 0 };
+  }
+  const stats = tile.stats || {};
+  return {
+    range: stats.range || 0,
+    speed: stats.speed || 0,
+    ceiling: stats.ceiling || 0,
+    reliability: stats.reliability || 0,
+    luxury: stats.luxury || 0,
+    income: stats.income || 0,
+  };
+}
+
+/**
  * Check if a new tech tile is superior to what's currently in the slot
  * Returns true if the new tech is better than existing, or slot is empty
  */
@@ -428,6 +481,118 @@ export function getBlueprintDesignBlueprint(
     if (affordableUpgrade) {
       newBlueprint.driveSlots![idx] = affordableUpgrade;
       addTile(affordableUpgrade);
+    }
+  }
+
+  // === REPLACEMENT LOGIC ===
+  // [BOT-BLUEPRINT-01] SYNC: Keep in sync with replacement logic in playtest/strategy.py
+  // Consider replacing existing tiles with better ones (especially for Range in Age 2)
+  // Only do this if not during age transition (free retrofits make this moot)
+  // and if we have cash to afford potential retrofit costs
+
+  // Find filled slot indices
+  const filledFrameIndices = newBlueprint.frameSlots!
+    .map((s, i) => s !== null ? i : -1)
+    .filter(i => i !== -1);
+  const filledFabricIndices = newBlueprint.fabricSlots!
+    .map((s, i) => s !== null ? i : -1)
+    .filter(i => i !== -1);
+  const filledDriveIndices = newBlueprint.driveSlots!
+    .map((s, i) => s !== null ? i : -1)
+    .filter(i => i !== -1);
+
+  // Determine priority stats based on age
+  // Age 2+ missions require BOTH range AND ceiling, so prioritize both
+  const priorityStats = _currentAge >= 2 ? ['range', 'ceiling'] : ['speed', 'range'];
+
+  // Helper to check if we can afford to replace a tile
+  const canAffordReplacement = (oldTileId: string, newTileId: string): boolean => {
+    if (isAgeTransition) return true; // Free during age transition
+    if (shipsToRetrofit === 0) return true; // No retrofit cost if no ships
+
+    const oldHull = getTileHullCost(oldTileId);
+    const newHull = getTileHullCost(newTileId);
+    const hullDelta = newHull - oldHull;
+    if (hullDelta <= 0) return true; // Cheaper or same cost, always affordable
+
+    const retrofitCost = hullDelta * shipsToRetrofit;
+    return playerCash >= retrofitCost;
+  };
+
+  // Helper to find best replacement for a current tile
+  const findBestReplacement = (
+    currentTileId: string,
+    availableUpgrades: string[]
+  ): string | null => {
+    if (!currentTileId) return null;
+
+    const currentStats = getTileStats(currentTileId);
+    const currentScore = calculateStatScore(currentStats, priorityStats);
+
+    let bestReplacement: string | null = null;
+    let bestScore = currentScore;
+
+    for (const upgradeId of availableUpgrades) {
+      if (installedTiles.has(upgradeId)) continue; // Can't use a tile that's already installed elsewhere
+      if (!canAffordReplacement(currentTileId, upgradeId)) continue; // Can't afford the retrofit
+
+      const upgradeStats = getTileStats(upgradeId);
+      const upgradeScore = calculateStatScore(upgradeStats, priorityStats);
+
+      // Only replace if the new tile is significantly better (score > current + 5)
+      // This prevents unnecessary churn for marginal improvements
+      if (upgradeScore > bestScore + 5) {
+        bestReplacement = upgradeId;
+        bestScore = upgradeScore;
+      }
+    }
+
+    return bestReplacement;
+  };
+
+  // Helper to execute a tile replacement
+  const doReplacement = (
+    slotKey: 'frameSlots' | 'fabricSlots' | 'driveSlots',
+    idx: number,
+    oldTileId: string,
+    newTileId: string
+  ): void => {
+    const oldHull = getTileHullCost(oldTileId);
+    const newHull = getTileHullCost(newTileId);
+    currentHullCost = currentHullCost - oldHull + newHull;
+    installedTiles.delete(oldTileId);
+    installedTiles.add(newTileId);
+    newBlueprint[slotKey]![idx] = newTileId;
+    changesMade = true;
+  };
+
+  // Try to replace drive tiles first (most important for Range/Speed stats)
+  for (const idx of filledDriveIndices) {
+    const currentTile = newBlueprint.driveSlots![idx];
+    if (!currentTile) continue;
+    const replacement = findBestReplacement(currentTile, driveUpgrades);
+    if (replacement) {
+      doReplacement('driveSlots', idx, currentTile, replacement);
+    }
+  }
+
+  // Also consider replacing frame tiles if they provide stats
+  for (const idx of filledFrameIndices) {
+    const currentTile = newBlueprint.frameSlots![idx];
+    if (!currentTile) continue;
+    const replacement = findBestReplacement(currentTile, frameUpgrades);
+    if (replacement) {
+      doReplacement('frameSlots', idx, currentTile, replacement);
+    }
+  }
+
+  // Also consider replacing fabric tiles if they provide stats
+  for (const idx of filledFabricIndices) {
+    const currentTile = newBlueprint.fabricSlots![idx];
+    if (!currentTile) continue;
+    const replacement = findBestReplacement(currentTile, fabricUpgrades);
+    if (replacement) {
+      doReplacement('fabricSlots', idx, currentTile, replacement);
     }
   }
 
