@@ -131,45 +131,38 @@ function filterStateForPlayer(state: GameState, playerId: string): GameState & {
   return filtered;
 }
 
-// Player info for turn order calculation
-interface PlayerTurnInfo {
-  playerId: string;
-  income: number;
-  cash: number;
-  originalIndex: number;
-}
-
 // Calculate turn order for worker placement phase
-// Rules: Lowest income goes first, ties broken by lowest cash, then original player order
-// Ministry visitors from last round get priority (go first)
+// Rules per Section 3.3 and 5.1:
+// 1. playerOrder represents fixed seating around the table (randomized at game start)
+// 2. The player with the First Player token goes first
+// 3. Play proceeds clockwise (in playerOrder) from the First Player
+// Ministry visitors this round claim the First Player token for next round.
 function calculateTurnOrder(state: GameState): string[] {
-  const players: PlayerTurnInfo[] = Object.entries(state.players).map(([playerId, playerState]) => ({
-    playerId,
-    income: playerState.income,
-    cash: playerState.cash,
-    originalIndex: state.playerOrder.indexOf(playerId)
-  }));
-
-  // Get ministry visitors from last round (they go first)
+  // Get ministry visitors from this round (they claim First Player token)
   const ministryVisitors = state.workerPlacement?.ministryVisitors || [];
 
-  // Sort non-ministry players by income (lowest first), then cash, then original order
-  const nonMinistryPlayers = players.filter(p => !ministryVisitors.includes(p.playerId));
-  nonMinistryPlayers.sort((a, b) => {
-    // Lowest income first
-    if (a.income !== b.income) return a.income - b.income;
-    // Tiebreaker 1: Lowest cash first
-    if (a.cash !== b.cash) return a.cash - b.cash;
-    // Tiebreaker 2: Original player order
-    return a.originalIndex - b.originalIndex;
-  });
+  // Determine who has the First Player token
+  // If someone visited Ministry this round, they get the token
+  // Otherwise, the persistent firstPlayer holder has it
+  const firstPlayerHolder = ministryVisitors.length > 0
+    ? ministryVisitors[ministryVisitors.length - 1] // Most recent Ministry visitor gets token
+    : state.firstPlayer;
 
-  // Ministry visitors go first (in the order they visited), then sorted players
-  const ministryPlayersSorted = ministryVisitors.filter((pid: string) =>
-    players.some(p => p.playerId === pid)
-  );
+  // playerOrder is the fixed seating order (clockwise around the table)
+  const seatingOrder = state.playerOrder;
 
-  return [...ministryPlayersSorted, ...nonMinistryPlayers.map(p => p.playerId)];
+  // If there's a First Player token holder, rotate seating to start with them
+  if (firstPlayerHolder && seatingOrder.includes(firstPlayerHolder)) {
+    const firstPlayerIndex = seatingOrder.indexOf(firstPlayerHolder);
+    // Rotate array to start with First Player, maintaining clockwise order
+    return [
+      ...seatingOrder.slice(firstPlayerIndex),
+      ...seatingOrder.slice(0, firstPlayerIndex)
+    ];
+  }
+
+  // No First Player token - use original seating order
+  return [...seatingOrder];
 }
 
 // Get the current player who should place an agent (during worker_placement phase)

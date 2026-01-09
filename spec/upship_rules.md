@@ -209,9 +209,9 @@ Each player receives:
 
 Draw an opening hand of 5 cards.
 
-## 3.3 First Player
+## 3.3 Seating and First Player
 
-Determine first player randomly.
+Players are randomly seated around the table. This seating order is fixed for the entire game. Determine first player randomly and give them the First Player token.
 
 ---
 
@@ -380,7 +380,7 @@ After revealing, you take no more turns this phase. Other players continue takin
 
 ### Turn Order
 
-The player with the **First Player** pawn goes first.
+The player with the **First Player** token goes first, then play proceeds clockwise around the table.
 
 ### Card Symbols
 

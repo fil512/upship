@@ -434,6 +434,20 @@ def _attempt_route_launches(
 def _no_more_launches(player: str, game_id: str, reason: str, logger: PlaytestLogger) -> None:
     """Signal no more launches with logging."""
     client = get_client()
+
+    # Debug: Check server state before sending NO_MORE_LAUNCHES
+    from .state import get_current_placer
+    current = get_current_placer(game_id)
+    if current != player:
+        print(f"    [DEBUG] NO_MORE_LAUNCHES mismatch: sending as {player}, but server says current placer is {current}")
+        # Fetch raw state for more details
+        raw_state = client._api_get(player, f"/api/state/{game_id}")
+        game_state = raw_state.get('gameState', raw_state)
+        state_data = game_state.get('state', {})
+        wp = state_data.get('workerPlacement', {})
+        print(f"    [DEBUG] workerPlacement: index={wp.get('currentPlacerIndex')}, order={wp.get('placementOrder', [])[:4]}")
+        print(f"    [DEBUG] phase={state_data.get('phase')}")
+
     client.no_more_launches(player, game_id)
     print(f"    {player}: no launches ({reason})")
     logger.log_action(player, f"no launches ({reason})", "worker_placement")

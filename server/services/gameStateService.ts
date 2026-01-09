@@ -217,23 +217,25 @@ interface StarterCard {
 
 // Create starter deck of 10 cards (Section 11.3)
 // Distribution: 3 Wrench, 3 Coin, 3 Propeller, 1 Any
-// Total 14 Influence (avg 1.4/card): balanced for ~1.1 market cards/player/round purchasing power
+// Total 8 Influence: Financial roles have full influence, operations have modest influence.
+// Technical workers have no influence.
+// Target: 1.1 cards/player/round (PRIMARY), 30% overflow (secondary)
 function createStarterDeck(): Card[] {
   return [
-    // 1 Any card
-    { id: 'starter_1', name: 'Apprentice', symbol: 'any', reveal: { influence: 2 }, effect: null },
-    // 3 Wrench cards
-    { id: 'starter_2', name: 'Mechanic', symbol: 'wrench', reveal: { cash: 1, influence: 1 }, effect: null },
-    { id: 'starter_3', name: 'Draftsman', symbol: 'wrench', reveal: { influence: 1, research: 1 }, effect: 'Draw 1 card' },
-    { id: 'starter_4', name: 'Rigger', symbol: 'wrench', reveal: { research: 1, influence: 1 }, effect: '-£2 ship build cost' },
-    // 3 Coin cards
+    // 1 Any card (apprentice - no connections)
+    { id: 'starter_1', name: 'Apprentice', symbol: 'any', reveal: {}, effect: null },
+    // 3 Wrench cards (technical - no influence)
+    { id: 'starter_2', name: 'Mechanic', symbol: 'wrench', reveal: { cash: 1 }, effect: null },
+    { id: 'starter_3', name: 'Draftsman', symbol: 'wrench', reveal: { research: 1 }, effect: 'Draw 1 card' },
+    { id: 'starter_4', name: 'Rigger', symbol: 'wrench', reveal: { research: 1 }, effect: '-£2 ship build cost' },
+    // 3 Coin cards (financial - full influence)
     { id: 'starter_5', name: 'Purser', symbol: 'coin', reveal: { influence: 2 }, effect: 'Gain £2' },
     { id: 'starter_6', name: 'Clerk', symbol: 'coin', reveal: { cash: 1, influence: 1 }, effect: 'Gain £1' },
     { id: 'starter_7', name: 'Investor', symbol: 'coin', reveal: { influence: 2 }, effect: null },
-    // 3 Propeller cards
+    // 3 Propeller cards (operations - modest influence for public-facing roles)
     { id: 'starter_8', name: 'Researcher', symbol: 'propeller', reveal: { research: 2, influence: 1 }, effect: '-£1 per Research' },
     { id: 'starter_9', name: 'Helmsman', symbol: 'propeller', reveal: { officers: 1, influence: 1 }, effect: '+1 Speed for this launch' },
-    { id: 'starter_10', name: 'Navigator', symbol: 'propeller', reveal: { influence: 2 }, effect: 'Look at top Hazard' }
+    { id: 'starter_10', name: 'Navigator', symbol: 'propeller', reveal: { influence: 1 }, effect: 'Look at top Hazard' }
   ] as Card[];
 }
 

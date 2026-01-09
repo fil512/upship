@@ -5,28 +5,16 @@
 
 import type { GameState, PlayerState } from '@upship/api';
 
-interface PlayerOrderInfo {
-  playerId: string;
-  income: number;
-  cash: number;
-  originalIndex: number;
-}
-
 /**
  * Calculate turn order for worker placement phase
- * Rules per Section 5.1:
- * 1. The player with the First Player pawn goes first
- * 2. Ministry visitors this round claim the First Player token (for next turn order calculation)
- * 3. Remaining players go in lowest income order (ties broken by lowest cash, then original order)
+ * Rules per Section 3.3 and 5.1:
+ * 1. playerOrder represents fixed seating around the table (randomized at game start)
+ * 2. The player with the First Player token goes first
+ * 3. Play proceeds clockwise (in playerOrder) from the First Player
+ *
+ * Ministry visitors this round claim the First Player token for next round.
  */
 function calculateTurnOrder(state: GameState): string[] {
-  const players: PlayerOrderInfo[] = Object.entries(state.players).map(([playerId, playerState]) => ({
-    playerId,
-    income: playerState.income,
-    cash: playerState.cash,
-    originalIndex: state.playerOrder.indexOf(playerId)
-  }));
-
   // Get ministry visitors from this round (they claim First Player token)
   const ministryVisitors = state.workerPlacement?.ministryVisitors || [];
 
@@ -37,26 +25,21 @@ function calculateTurnOrder(state: GameState): string[] {
     ? ministryVisitors[ministryVisitors.length - 1] // Most recent Ministry visitor gets token
     : state.firstPlayer;
 
-  // Sort all players by income (lowest first), then cash, then original order
-  const sortedPlayers = [...players];
-  sortedPlayers.sort((a, b) => {
-    // Lowest income first
-    if (a.income !== b.income) return a.income - b.income;
-    // Tiebreaker 1: Lowest cash first
-    if (a.cash !== b.cash) return a.cash - b.cash;
-    // Tiebreaker 2: Original player order
-    return a.originalIndex - b.originalIndex;
-  });
+  // playerOrder is the fixed seating order (clockwise around the table)
+  const seatingOrder = state.playerOrder;
 
-  // If there's a First Player token holder, they go first
-  if (firstPlayerHolder && players.some(p => p.playerId === firstPlayerHolder)) {
-    // Remove First Player from sorted list and prepend them
-    const otherPlayers = sortedPlayers.filter(p => p.playerId !== firstPlayerHolder);
-    return [firstPlayerHolder, ...otherPlayers.map(p => p.playerId)];
+  // If there's a First Player token holder, rotate seating to start with them
+  if (firstPlayerHolder && seatingOrder.includes(firstPlayerHolder)) {
+    const firstPlayerIndex = seatingOrder.indexOf(firstPlayerHolder);
+    // Rotate array to start with First Player, maintaining clockwise order
+    return [
+      ...seatingOrder.slice(firstPlayerIndex),
+      ...seatingOrder.slice(0, firstPlayerIndex)
+    ];
   }
 
-  // No First Player token - pure income-based order
-  return sortedPlayers.map(p => p.playerId);
+  // No First Player token - use original seating order
+  return [...seatingOrder];
 }
 
 /**

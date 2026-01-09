@@ -54,18 +54,21 @@ def analyze_purchases(data: list) -> dict:
     """Count tech and card purchases per player per round."""
     tech_buys = defaultdict(lambda: defaultdict(int))
     card_buys = defaultdict(lambda: defaultdict(int))
+    round_ages = {}  # Map round -> age
 
     for e in data:
         action = e.get('action', '')
         faction = e['faction']
         round_key = f"R{e['round']}"
+        age = e.get('age', 1)
+        round_ages[round_key] = age
 
         if 'Acquire tech' in action:
             tech_buys[round_key][faction] += 1
         elif 'Buy market card' in action:
             card_buys[round_key][faction] += 1
 
-    return {'techs': dict(tech_buys), 'cards': dict(card_buys)}
+    return {'techs': dict(tech_buys), 'cards': dict(card_buys), 'round_ages': round_ages}
 
 
 def analyze_costs(data: list) -> dict:
@@ -96,6 +99,7 @@ def analyze_generation(data: list) -> dict:
     """Calculate resource generation per player per round."""
     research_gen = defaultdict(lambda: defaultdict(int))
     influence_gen = defaultdict(lambda: defaultdict(int))
+    round_ages = {}
 
     for e in data:
         faction = e['faction']
@@ -103,6 +107,8 @@ def analyze_generation(data: list) -> dict:
         res = e['resourceType']
         flow = e['flowType']
         amt = abs(e['amount'])
+        age = e.get('age', 1)
+        round_ages[r] = age
 
         if flow == 'fountain':
             if res == 'research':
@@ -110,7 +116,7 @@ def analyze_generation(data: list) -> dict:
             elif res == 'influence':
                 influence_gen[r][faction] += amt
 
-    return {'research': dict(research_gen), 'influence': dict(influence_gen)}
+    return {'research': dict(research_gen), 'influence': dict(influence_gen), 'round_ages': round_ages}
 
 
 def analyze_resource_flows(data: list) -> dict:
@@ -128,6 +134,42 @@ def analyze_resource_flows(data: list) -> dict:
             flows[res]['sink'] += amt
 
     return dict(flows)
+
+
+def analyze_influence_by_age(data: list) -> dict:
+    """Analyze influence generation and spending by age."""
+    by_age = defaultdict(lambda: {'generated': 0, 'spent': 0, 'rounds': set(), 'cards_bought': 0})
+
+    for e in data:
+        age = e.get('age', 1)
+        res = e['resourceType']
+        flow = e['flowType']
+        amt = abs(e['amount'])
+        action = e.get('action', '')
+        round_num = e['round']
+
+        by_age[age]['rounds'].add(round_num)
+
+        if res == 'influence':
+            if flow == 'fountain':
+                by_age[age]['generated'] += amt
+            else:
+                by_age[age]['spent'] += amt
+
+        if 'Buy market card' in action:
+            by_age[age]['cards_bought'] += 1
+
+    # Convert sets to counts
+    result = {}
+    for age, stats in by_age.items():
+        result[age] = {
+            'generated': stats['generated'],
+            'spent': stats['spent'],
+            'rounds': len(stats['rounds']),
+            'cards_bought': stats['cards_bought']
+        }
+
+    return result
 
 
 def get_rounds_and_factions(data: list) -> tuple:
@@ -304,6 +346,84 @@ def print_currency_analysis(costs: dict, generation: dict, rounds: list, faction
         print(f"  DIAGNOSIS: ⚠️  Above target - too much influence")
     else:
         print(f"  DIAGNOSIS: ✓ On target")
+    print()
+
+
+def print_influence_by_age_report(influence_by_age: dict, num_players: int):
+    """Print influence analysis by age."""
+    print("=" * 60)
+    print("INFLUENCE ECONOMY BY AGE")
+    print("=" * 60)
+    print()
+    print("TARGET: 30% overflow, 1.1 cards/player/round")
+    print()
+    print(f"{'Age':<6} | {'Rounds':>6} | {'Generated':>10} | {'Spent':>10} | {'Overflow%':>9} | {'Cards/P/R':>9} | Status")
+    print("-" * 75)
+
+    total_gen = 0
+    total_spent = 0
+    total_rounds = 0
+    total_cards = 0
+
+    for age in sorted(influence_by_age.keys()):
+        stats = influence_by_age[age]
+        gen = stats['generated']
+        spent = stats['spent']
+        rounds = stats['rounds']
+        cards = stats['cards_bought']
+
+        total_gen += gen
+        total_spent += spent
+        total_rounds += rounds
+        total_cards += cards
+
+        overflow_pct = ((gen - spent) / gen * 100) if gen > 0 else 0
+        cards_per_player_round = cards / (rounds * num_players) if rounds > 0 else 0
+
+        # Status based on targets
+        overflow_ok = overflow_pct <= 35  # Allow 5% tolerance
+        cards_ok = cards_per_player_round >= 0.9  # Allow some tolerance
+
+        if overflow_ok and cards_ok:
+            status = "✓ GOOD"
+        elif overflow_pct > 50:
+            status = "❌ TOO LOOSE"
+        elif cards_per_player_round < 0.7:
+            status = "❌ TOO TIGHT"
+        else:
+            status = "⚠️  REVIEW"
+
+        print(f"Age {age:<2} | {rounds:>6} | {gen:>10} | {spent:>10} | {overflow_pct:>8.0f}% | {cards_per_player_round:>9.2f} | {status}")
+
+    print("-" * 75)
+
+    # Totals
+    total_overflow = ((total_gen - total_spent) / total_gen * 100) if total_gen > 0 else 0
+    total_cards_ppr = total_cards / (total_rounds * num_players) if total_rounds > 0 else 0
+
+    overflow_ok = total_overflow <= 35
+    cards_ok = total_cards_ppr >= 0.9
+
+    if overflow_ok and cards_ok:
+        status = "✓ GOOD"
+    elif total_overflow > 50:
+        status = "❌ TOO LOOSE"
+    elif total_cards_ppr < 0.7:
+        status = "❌ TOO TIGHT"
+    else:
+        status = "⚠️  REVIEW"
+
+    print(f"{'TOTAL':<6} | {total_rounds:>6} | {total_gen:>10} | {total_spent:>10} | {total_overflow:>8.0f}% | {total_cards_ppr:>9.2f} | {status}")
+    print()
+
+    # Diagnosis
+    if total_overflow > 35:
+        reduction_needed = (total_overflow - 30) / total_overflow * 100
+        print(f"DIAGNOSIS: Reduce influence generation by ~{reduction_needed:.0f}% to reach 30% overflow target")
+    elif total_cards_ppr < 0.9:
+        print(f"DIAGNOSIS: Card purchases below target - consider making cards more attractive or reducing costs")
+    else:
+        print("DIAGNOSIS: Influence economy is well balanced")
     print()
 
 
@@ -490,10 +610,12 @@ def main():
     generation = analyze_generation(resource_flows)
     flows = analyze_resource_flows(resource_flows)
     launch_data = analyze_launch_outcomes(launch_outcomes)
+    influence_by_age = analyze_influence_by_age(resource_flows)
 
     # Print reports
     print_purchasing_power_report(purchases, rounds, factions)
     print_currency_analysis(costs, generation, rounds, factions)
+    print_influence_by_age_report(influence_by_age, len(factions))
     print_launch_outcomes_report(launch_data)
     print_resource_flow_report(flows)
     print_per_round_detail(purchases, generation, rounds, factions)
