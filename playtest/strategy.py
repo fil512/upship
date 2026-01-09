@@ -1200,4 +1200,11 @@ def get_reveal_acquisitions(player: str, game_id: str) -> tuple[list[str], list[
         # in order and stop when influence runs out or all cards are attempted
         card_ids = [card['id'] for card in market_cards]
 
+        # Add reserve card multiple times - it can be purchased repeatedly
+        # Bots should always buy as many cards as possible
+        reserve_id = next((c['id'] for c in market_cards if c.get('is_reserve')), None)
+        if reserve_id:
+            # Add 4 more copies for aggressive card buying
+            card_ids.extend([reserve_id] * 4)
+
     return tech_ids, card_ids

@@ -154,7 +154,7 @@ export const MARKET_CARDS: MarketCard[] = [
     cost: 5,
     symbol: 'coin',
     effect: 'Gain 5',
-    reveal: { influence: 3 },
+    reveal: { influence: 2 },
     flavor: 'Old money with connections in high places'
   },
   {
@@ -164,7 +164,7 @@ export const MARKET_CARDS: MarketCard[] = [
     cost: 6,
     symbol: 'any',
     effect: 'Gain 3',
-    reveal: { influence: 4 },
+    reveal: { influence: 3 },
     flavor: 'A titan of commerce and manufacturing'
   },
   {
@@ -184,7 +184,7 @@ export const MARKET_CARDS: MarketCard[] = [
     cost: 4,
     symbol: 'propeller',
     effect: '+2 Income from this route',
-    reveal: { influence: 3 },
+    reveal: { influence: 2 },
     flavor: 'Controls lucrative trade routes across continents'
   },
   {
@@ -204,7 +204,7 @@ export const MARKET_CARDS: MarketCard[] = [
     cost: 3,
     symbol: 'coin',
     effect: 'Treasury gives +3',
-    reveal: { influence: 3 },
+    reveal: { influence: 2 },
     flavor: 'Capital from abroad, no questions asked'
   },
   {
@@ -214,7 +214,7 @@ export const MARKET_CARDS: MarketCard[] = [
     cost: 3,
     symbol: 'coin',
     effect: 'Gain 1 Insurance policy',
-    reveal: { influence: 3 },
+    reveal: { influence: 2 },
     flavor: 'Underwriter from the famous London exchange'
   },
   {
@@ -224,7 +224,7 @@ export const MARKET_CARDS: MarketCard[] = [
     cost: 2,
     symbol: 'propeller',
     effect: 'Go first in turn order next round',
-    reveal: { influence: 3 },
+    reveal: { influence: 2 },
     flavor: 'Knows which forms to file and when'
   },
   {
@@ -244,7 +244,7 @@ export const MARKET_CARDS: MarketCard[] = [
     cost: 3,
     symbol: 'propeller',
     effect: null,
-    reveal: { influence: 3 },
+    reveal: { influence: 2 },
     flavor: "His Majesty's collector of duties and tariffs"
   },
 
@@ -328,7 +328,7 @@ export const MARKET_CARDS: MarketCard[] = [
     cost: 5,
     symbol: 'propeller',
     effect: '+1 Luxury stat for this launch',
-    reveal: { influence: 3 },
+    reveal: { influence: 2 },
     flavor: 'Agent of Thomas Cook & Son, travel pioneers'
   },
   {
@@ -338,7 +338,7 @@ export const MARKET_CARDS: MarketCard[] = [
     cost: 4,
     symbol: 'coin',
     effect: 'Recruit 1 Officer free',
-    reveal: { influence: 3, officers: 1 },
+    reveal: { influence: 2, officers: 1 },
     flavor: 'Gentlemen aviators and aerial enthusiasts'
   },
   {
@@ -365,7 +365,7 @@ export const RESERVE_CARD: MarketCard = {
   cost: 2,
   symbol: 'any',
   effect: null,
-  reveal: { influence: 3 },
+  reveal: { influence: 1 },
   flavor: 'Veteran balloonist and lighter-than-air pioneer'
 };
 

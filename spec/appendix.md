@@ -676,9 +676,9 @@ The Reserve Card is always available for purchase, separate from the Market Row.
 
 | Name | Cost | Symbol | Agent Effect | Reveal | Flavor |
 |------|------|--------|--------------|--------|--------|
-| The Aeronaut | 2 | Any | None | 3 Influence | *Veteran balloonist and lighter-than-air pioneer* |
+| The Aeronaut | 2 | Any | None | 1 Influence | *Veteran balloonist and lighter-than-air pioneer* |
 
-**Design Note:** The Reserve Card prevents market stagnation by ensuring players always have an affordable purchase option. At cost 2, it's accessible early game; at reveal 3, it builds purchasing power for later rounds.
+**Design Note:** The Reserve Card prevents market stagnation by ensuring players always have an affordable purchase option. At cost 2, it's accessible early game. The modest reveal bonus (1 Influence) keeps it a fallback option rather than an optimal purchase.
 
 ## Technical Personnel (10 Agent Cards)
 
@@ -699,16 +699,16 @@ The Reserve Card is always available for purchase, separate from the Market Row.
 
 | Name | Cost | Symbol | Agent Effect | Reveal | Flavor |
 |------|------|--------|--------------|--------|--------|
-| The Nob | 5 | Coin | Gain £5 | 3 Influence | *Old money with connections in high places* |
-| Captain of Industry | 6 | Any | Gain £3 | 4 Influence | *A titan of commerce and manufacturing* |
+| The Nob | 5 | Coin | Gain £5 | 2 Influence | *Old money with connections in high places* |
+| Captain of Industry | 6 | Any | Gain £3 | 3 Influence | *A titan of commerce and manufacturing* |
 | The Mandarin | 5 | Propeller | Take 2 Ministry actions | 2 Influence, 1 £ | *Senior civil servant with considerable influence* |
-| Merchant Prince | 4 | Propeller | +£2 Income from this route | 3 Influence | *Controls lucrative trade routes across continents* |
+| Merchant Prince | 4 | Propeller | +£2 Income from this route | 2 Influence | *Controls lucrative trade routes across continents* |
 | Fleet Street Baron | 4 | Any | No action effect | 2 Influence, 2 £ | *The newspapers dance to his tune* |
-| The Moneybags | 3 | Coin | Treasury gives +£3 | 3 Influence | *Capital from abroad, no questions asked* |
-| Lloyd's Man | 3 | Coin | Gain 1 Insurance policy | 3 Influence | *Underwriter from the famous London exchange* |
-| The Pen-Pusher | 2 | Propeller | Go first in turn order next round | 3 Influence | *Knows which forms to file and when* |
+| The Moneybags | 3 | Coin | Treasury gives +£3 | 2 Influence | *Capital from abroad, no questions asked* |
+| Lloyd's Man | 3 | Coin | Gain 1 Insurance policy | 2 Influence | *Underwriter from the famous London exchange* |
+| The Pen-Pusher | 2 | Propeller | Go first in turn order next round | 2 Influence | *Knows which forms to file and when* |
 | Shop Steward | 2 | Coin | -£1 per crew recruited this action | 2 Influence, 1 Officer | *Voice of the working men on the factory floor* |
-| The Exciseman | 3 | Propeller | Claim route even if tied | 3 Influence | *His Majesty's collector of duties and tariffs* |
+| The Exciseman | 3 | Propeller | Claim route even if tied | 2 Influence | *His Majesty's collector of duties and tariffs* |
 
 ## Research Personnel (5 Agent Cards)
 
@@ -724,10 +724,10 @@ The Reserve Card is always available for purchase, separate from the Market Row.
 
 | Name | Cost | Symbol | Agent Effect | Reveal | Flavor |
 |------|------|--------|--------------|--------|--------|
-| Royal Geographic Society | 6 | Wrench | Install 1 Tech Tile ignoring Tech requirement | 1 Engineer, 3 Influence, 1 Research | *Patrons of exploration and scientific discovery* |
+| Royal Geographic Society | 6 | Wrench | Install 1 Tech Tile ignoring Tech requirement | 1 Engineer, 2 Influence, 1 Research | *Patrons of exploration and scientific discovery* |
 | Old Contemptible | 5 | Propeller | Gain £8; Combat missions: +£2 Income | 1 Officer, 1 £, 1 Influence | *Survivor of the Kaiser's 'contemptible little army'* |
-| Cook's Man | 5 | Propeller | +1 Luxury stat for this launch | 3 Influence | *Agent of Thomas Cook & Son, travel pioneers* |
-| Aero Club | 4 | Coin | Recruit 1 Officer free | 3 Influence, 1 Officer | *Gentlemen aviators and aerial enthusiasts* |
+| Cook's Man | 5 | Propeller | +1 Luxury stat for this launch | 2 Influence | *Agent of Thomas Cook & Son, travel pioneers* |
+| Aero Club | 4 | Coin | Recruit 1 Officer free | 2 Influence, 1 Officer | *Gentlemen aviators and aerial enthusiasts* |
 | Engineering Guild | 4 | Coin | Recruit 1 Engineer at -£1 | 2 Influence, 1 Engineer | *Brotherhood of skilled craftsmen and artificers* |
 
 **Market Row Mechanics:** Agent Cards are added to the right side of the row. When Agent Cards are purchased, remaining cards slide left (oldest on left, newest on right). The Academy action can purge the leftmost Agent Card. Refill to 5 Agent Cards at end of each round.
