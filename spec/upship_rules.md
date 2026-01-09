@@ -16,11 +16,11 @@
 
 > *Static crackles... a distant wireless signal grows stronger...*
 >
-> GOOD EVENING, LADIES AND GENTLEMEN! This is your announcer speaking to you LIVE from the magnificent grounds of the International Aeronautical Exhibition! What a STUPENDOUS occasion this is! The year is 1900, and we stand at the very precipice of a NEW AGE OF WONDER!
+> LADIES AND GENTLEMEN! Turn your eyes to the heavens! The twentieth century has arrived, and with it, the dream of ages! Man is no longer earthbound!
 >
-> All around me, the great powers of the world have assembled their finest engineers and boldest aviators! Germany's Count von Zeppelin promises to REVOLUTIONIZE transportation! Britain's Royal Airship Works speaks of connecting an Empire upon which the sun NEVER sets! The Americans talk of CONQUERING the very skies themselves! And the Italians—oh, those daring Italians—they say they shall fly where NO MAN has flown before!
+> From the workshops of the Old World to the factories of the New, the great industrial powers are racing to conquer the skies! We stand on the precipice of a new era—an era where vast silver ships shall sail the ocean of air!
 >
-> The race is ON, dear listeners! Who among these industrial titans shall DOMINATE the heavens? Will YOU be the one to build an empire among the clouds? The engines are warming, the gas cells are filling, and the mooring cables strain against the wind!
+> The mooring cables are slipping! The crowds are roaring! The future is rising before our very eyes!
 >
 > *UP SHIP!*
 
@@ -28,29 +28,23 @@
 
 > *The wireless crackles with urgency... distant artillery rumbles in the background...*
 >
-> ATTENTION! ATTENTION ALL STATIONS! This is an EMERGENCY broadcast! War has ENGULFED the continent of Europe!
+> WE INTERRUPT THIS BROADCAST FOR A SPECIAL BULLETIN! War! War has been declared! The fragile peace of Europe has been shattered! The telegraph wires are burning with the news—armies are mobilizing, borders are closing!
 >
-> The skies that once carried passengers and mail now DARKEN with the silhouettes of military airships! Your peaceful vessels must answer the call of DUTY! Reconnaissance over enemy lines! Bombing runs against fortified positions! Resupply missions to our brave boys in the trenches!
+> And look up! The skies are darkening! Our majestic passenger ships are being repainted in war greys! The era of exploration is over; the era of conflict has begun! These peaceful giants must now become the eyes of the army and the fist of the empire!
 >
-> But BE WARNED, brave aviators—the enemy has prepared a DEADLY reception! Anti-aircraft batteries line every approach! The infamous FLAK GUNS of the Central Powers have already claimed dozens of our finest ships! Each mission could be your LAST!
+> May God have mercy on the world!
 >
-> This is NO LONGER a gentleman's competition! This is WAR! Armor your vessels! Train your crews! The nation that COMMANDS the skies shall command the FUTURE!
->
-> *May fortune favor the bold! Over and out!*
+> *This is your announcer... signing off for the duration.*
 
 ## Start of Age III — The Golden Age
 
 > *Triumphant orchestral music swells... champagne glasses clink...*
 >
-> MAGNIFICENT NEWS from the world of aviation! The war to end all wars is OVER, and a GLORIOUS new era has begun!
+> GLORIOUS NEWS, LISTENERS! The Armistice is signed! The nightmare is over! The guns are silent! And now... let the GOLDEN AGE begin!
 >
-> Ladies and gentlemen, we stand at the dawn of the GOLDEN AGE OF AIRSHIPS! No longer mere weapons of war, these MAJESTIC LEVIATHANS of the sky now carry passengers in UNPARALLELED LUXURY across the very OCEANS themselves!
+> Our silver giants are shedding their armor and donning the trappings of luxury! Imagine—cocktails over the Atlantic! Sleeping berths softer than clouds! We are knitting the world back together, one voyage at a time!
 >
-> Picture it, dear listeners! Dining rooms with crystal chandeliers! Observation decks with grand pianos! Sleeping berths more comfortable than the finest hotels! The Atlantic crossing that once took a WEEK by steamship now accomplished in mere DAYS—floating serenely above the waves!
->
-> New York to London! Rio de Janeiro to Seville! The whole WORLD is connected as never before! But remember—some still choose the DANGEROUS path of hydrogen to save their precious pennies. Will THEY tempt fate one time too many?
->
-> The future is LIMITLESS! The sky is NOT the limit—it is merely the BEGINNING!
+> Faster than a steamship, smoother than a train—the airship is the only way to travel! The world is open for business, and the sky is the limit!
 >
 > *ALL ABOARD for the adventure of a LIFETIME!*
 
@@ -58,35 +52,25 @@
 
 > *Frantic static... a reporter's voice breaking with emotion...*
 >
-> Oh... oh, the HUMANITY! Ladies and gentlemen, I... I hardly know how to describe what we have just witnessed at Lakehurst Naval Air Station!
+> OH, THE HUMANITY! We are live at Lakehurst and... it's burst into flames! I can't believe what I'm seeing!
 >
-> The mighty airship—that PROUD symbol of human achievement—has burst into FLAME! In mere SECONDS, decades of progress, of DREAMS, of countless hours of engineering brilliance have been consumed by an INFERNO the likes of which...
+> The great ship is falling! The fire... it's consuming everything! The passengers! The crew! In mere seconds... gone! A tragedy of unspeakable proportions!
 >
-> *voice steadies*
+> This is the end... surely this is the end of the rigid airship. The dream has turned to a nightmare before our eyes.
 >
-> This... this is the moment that historians shall mark as the END of an era. The airship—that gentle giant of the skies—has claimed its final victims. The age of the rigid airship is OVER.
->
-> But let us remember what was accomplished! Continents were CONNECTED! The impossible was made ROUTINE! For one brief, shining moment, humanity SOARED among the clouds in vessels that seemed to defy the very laws of nature!
->
-> To those who dared to dream of conquering the sky... we salute you. The future now belongs to the AEROPLANE.
->
-> *This has been a special broadcast. Good night... and farewell to the airship age.*
+> *A sad, sad day for aviation. Good night... and goodbye.*
 
 ## Game End — The Rise of Fixed-Wing Aircraft
 
 > *The sound of propeller engines roaring overhead... growing louder and faster...*
 >
-> EXTRA! EXTRA! Ladies and gentlemen, the FUTURE has arrived, and it flies on FIXED WINGS!
+> ATTENTION! ATTENTION! A new speed record has been shattered! The age of the aeroplane is undeniably upon us!
 >
-> The magnificent airships that once ruled our skies must now yield to a NEW champion! The AEROPLANE—faster, cheaper, more maneuverable—has proven its superiority in trial after trial! What took an airship DAYS, these sleek metal birds accomplish in mere HOURS!
+> These new metal birds—Pan Am Clippers, Douglas transports—they are crossing oceans in hours, not days! The great dirigibles, magnificent as they are, look like dinosaurs against these speeding bullets of aluminum!
 >
-> It was a GLORIOUS competition while it lasted, dear listeners! The great airship companies pushed the boundaries of what humanity thought POSSIBLE! Luxury travel across oceans! Cargo routes spanning continents! A GOLDEN AGE of aerial achievement!
+> Efficiency! Speed! Reliability! The public has spoken, and they demand the aeroplane! The gentle giants of the sky are fading into history.
 >
-> But progress WAITS for no one! The very innovations our airship pioneers developed—lightweight alloys, navigation systems, weather forecasting—now power a new generation of aircraft that shall carry humanity into an even MORE remarkable future!
->
-> Let us raise a glass to the dirigible captains, the bold engineers, and the visionary industrialists who dared to build CITIES in the sky! Their legacy shall NEVER be forgotten!
->
-> *This is your announcer, signing off from the end of one era... and the beginning of another!*
+> *The future... flies on fixed wings!*
 
 ---
 

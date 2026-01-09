@@ -458,7 +458,6 @@ router.get('/:gameId/players-debug', requireAuth, async (req: Request, res: Resp
 router.post('/:gameId/save-flow-log', requireAuth, async (req: Request, res: Response, next: NextFunction) => {
   const authReq = req as AuthenticatedRequest;
   try {
-    const gameId = req.params.gameId;
     const userId = authReq.session.userId;
 
     // Check if user is superuser
