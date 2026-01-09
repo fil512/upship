@@ -197,14 +197,18 @@ def _attempt_combat_missions(
                 # Handle various validation errors gracefully
                 if any(phrase in error_str for phrase in [
                     "not found", "already", "not enough", "insufficient",
-                    "cannot", "no hazard cards", "does not meet"
+                    "cannot", "no hazard cards", "does not meet", "not your turn"
                 ]):
                     print(f"    {player}: mission blocked ({str(e)[:50]}...)")
                     logger.log_action(player, f"MISSION BLOCKED: {str(e)[:60]}", "worker_placement")
-                    # For gas/resource issues, break out - no point trying more missions with same ship
+                    # For turn issues, return immediately - it's no longer our turn
+                    if "not your turn" in error_str:
+                        return launched
+                    # For resource issues, break out - no point trying more missions with same ship
                     if "not enough" in error_str or "insufficient" in error_str:
                         break
-                    continue
+                    # For "not found" and other errors, break and try next ship with fresh evaluations
+                    break
                 else:
                     # Re-raise unexpected errors
                     raise
@@ -263,12 +267,17 @@ def _attempt_combat_missions(
                         post_officers = fresh_player_data.officers or 0
                         if post_officers < officers_needed:
                             return launched
+
+                # Always break after a launch attempt - state has changed, need fresh evaluations
+                # This handles both SUCCESS and ABORTED outcomes
                 break
             else:
                 error_msg = result.error or "unknown error"
                 print(f"    {player}: combat mission failed for {ship.id} to {mission.id}")
                 logger.log_action(player, f"COMBAT MISSION FAILED {ship.id} → {mission.id}", "worker_placement")
                 logger.log_action(None, f"  └─ Error: {error_msg[:100]}", "worker_placement")
+                # Break after any launch attempt - state has changed, need fresh evaluations
+                break
 
     return launched
 
@@ -434,20 +443,6 @@ def _attempt_route_launches(
 def _no_more_launches(player: str, game_id: str, reason: str, logger: PlaytestLogger) -> None:
     """Signal no more launches with logging."""
     client = get_client()
-
-    # Debug: Check server state before sending NO_MORE_LAUNCHES
-    from .state import get_current_placer
-    current = get_current_placer(game_id)
-    if current != player:
-        print(f"    [DEBUG] NO_MORE_LAUNCHES mismatch: sending as {player}, but server says current placer is {current}")
-        # Fetch raw state for more details
-        raw_state = client._api_get(player, f"/api/state/{game_id}")
-        game_state = raw_state.get('gameState', raw_state)
-        state_data = game_state.get('state', {})
-        wp = state_data.get('workerPlacement', {})
-        print(f"    [DEBUG] workerPlacement: index={wp.get('currentPlacerIndex')}, order={wp.get('placementOrder', [])[:4]}")
-        print(f"    [DEBUG] phase={state_data.get('phase')}")
-
     client.no_more_launches(player, game_id)
     print(f"    {player}: no launches ({reason})")
     logger.log_action(player, f"no launches ({reason})", "worker_placement")
@@ -542,7 +537,10 @@ def _check_and_handle_hazard(client, player: str, game_id: str, ship_id: str, pl
         return 'unknown'
 
     # Extract routeId from pendingLaunch so we can check if THIS route was claimed
+    # For combat missions (Age 2), use missionId instead of routeId
     route_id = pending_launch.get('routeId')
+    if not route_id:
+        route_id = pending_launch.get('missionId')  # Age 2 combat missions use missionId
 
     # Handle the hazard response - use fresh engineer count from raw_player
     fresh_engineers = raw_player.get('engineers', 0)
@@ -640,12 +638,22 @@ def _handle_hazard_response(player: str, game_id: str, ship_id: str, pending_haz
 
     # Check if THIS SPECIFIC route was claimed by this player
     # Routes are tracked on map.routes[].claimed, not on player.routes
+    current_age = state_data.get('age', 1)
     if player_id_for_route and route_id:
-        map_data = state_data.get('map', {})
-        map_routes = map_data.get('routes', [])
-        target_route = next((r for r in map_routes if r.get('id') == route_id), None)
-        if target_route and target_route.get('claimed') == player_id_for_route:
-            return 'on_route'
+        # For Age II combat missions, check completedMissions instead of map.routes
+        if current_age == 2:
+            raw_player = players_data.get(player_id_for_route, {})
+            completed_missions = raw_player.get('completedMissions', [])
+            completed_ids = [m.get('id') for m in completed_missions]
+            if route_id in completed_ids:
+                return 'on_route'  # Mission completed successfully
+        else:
+            # Age I/III: check map.routes
+            map_data = state_data.get('map', {})
+            map_routes = map_data.get('routes', [])
+            target_route = next((r for r in map_routes if r.get('id') == route_id), None)
+            if target_route and target_route.get('claimed') == player_id_for_route:
+                return 'on_route'
 
     # Otherwise ship returned to hangar (abort or other)
     return 'hangar'
