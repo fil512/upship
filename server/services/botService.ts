@@ -87,22 +87,31 @@ function findPlayableCard(
 }
 
 /**
- * Get upgrade info for a technology ID
- * Tech card IDs (e.g., 'internal_keel') map to upgrade tile IDs (e.g., 'semi_rigid_keel')
- * via the 'requiredCard' field on upgrade tiles
+ * Get ALL upgrade tiles for a technology ID
+ * Tech card IDs (e.g., 'daimler_engine') can map to MULTIPLE upgrade tiles
+ * (e.g., 'basic_engine' AND 'daimler_drive') via the 'requiredCard' field
  */
-function getUpgradeForTech(techId: string): { id: string; slotType: string; tile: TechTile } | null {
-  // Search for the upgrade tile that requires this tech card
+function getUpgradesForTech(techId: string): Array<{ id: string; slotType: string; tile: TechTile }> {
+  const results: Array<{ id: string; slotType: string; tile: TechTile }> = [];
   for (const [upgradeId, upgrade] of Object.entries(UPGRADES)) {
     if (upgrade.requiredCard === techId) {
-      return {
+      results.push({
         id: upgradeId,
         slotType: upgrade.slotType,
         tile: upgrade
-      };
+      });
     }
   }
-  return null;
+  return results;
+}
+
+/**
+ * Get first upgrade info for a technology ID (legacy compatibility)
+ * @deprecated Use getUpgradesForTech for complete results
+ */
+function getUpgradeForTech(techId: string): { id: string; slotType: string; tile: TechTile } | null {
+  const upgrades = getUpgradesForTech(techId);
+  return upgrades.length > 0 ? upgrades[0] : null;
 }
 
 /**
@@ -271,13 +280,15 @@ export function getBlueprintDesignBlueprint(
   }
 
   // Collect available upgrades from technologies (excluding already installed)
+  // Note: A single tech card can enable MULTIPLE upgrade tiles (e.g., daimler_engine -> basic_engine OR daimler_drive)
   const frameUpgrades: string[] = [];
   const fabricUpgrades: string[] = [];
   const driveUpgrades: string[] = [];
 
   for (const techId of technologies) {
-    const upgradeInfo = getUpgradeForTech(techId);
-    if (upgradeInfo) {
+    // Get ALL upgrades this tech card can install (not just the first one)
+    const allUpgrades = getUpgradesForTech(techId);
+    for (const upgradeInfo of allUpgrades) {
       // Only include if not already installed anywhere in blueprint
       if (!installedTiles.has(upgradeInfo.id)) {
         const slotType = upgradeInfo.slotType;
@@ -564,13 +575,11 @@ export function findStrategicPlacement(
     priorityLocations.push('gas_depot');
   }
 
-  // Need blueprint slots filled
+  // Need blueprint slots filled - but only if we can actually install something
+  // getBlueprintDesignBlueprint returns null if tech cards don't map to installable tiles
   if (player.blueprint) {
-    const frameSlots = player.blueprint.frameSlots || [];
-    const fabricSlots = player.blueprint.fabricSlots || [];
-    const frameEmpty = frameSlots.filter(s => s === null).length;
-    const fabricEmpty = fabricSlots.filter(s => s === null).length;
-    if (frameEmpty > 0 || fabricEmpty > 0) {
+    const blueprintChanges = getBlueprintDesignBlueprint(player, state.age || 1);
+    if (blueprintChanges !== null) {
       priorityLocations.push('blueprint_design');
     }
   }
