@@ -19,6 +19,8 @@ const { UPGRADES } = require('../data/upgrades') as { UPGRADES: Record<string, T
 const { GROUND_BOARD_LOCATIONS } = require('../data/groundBoard');
 // Import calculateBlueprintStats from launch.ts for ship stat calculations
 const { calculateBlueprintStats } = require('../actions/launch');
+// Import calculateHullCost for retrofit cost calculations
+const { calculateHullCost } = require('../actions/blueprint');
 
 // Types for bot decisions
 export interface PlacementDecision {
@@ -215,11 +217,20 @@ function _isTechSuperiorToInstalled(
 // Ship stats come from calculateBlueprintStats(player.blueprint, age) in launch.ts
 
 /**
+ * Get hull cost of a single tech tile
+ */
+function getTileHullCost(tileId: string | null): number {
+  if (!tileId) return 0;
+  const tile = UPGRADES[tileId] as TechTile | undefined;
+  return tile?.hullCost || 0;
+}
+
+/**
  * Determine the desired blueprint configuration for Blueprint Design action.
  * Returns the complete blueprint with all slots filled, or null if no changes needed.
  *
- * For age transitions, all empty frame/fabric slots MUST be filled.
- * For normal play, bot will fill empty slots opportunistically.
+ * For age transitions, all empty frame/fabric slots MUST be filled (retrofit is free).
+ * For normal play, bot will fill empty slots opportunistically, considering retrofit costs.
  * [BOT-BLUEPRINT-01] SYNC: Keep in sync with get_blueprint_design_blueprint() in playtest/strategy.py
  */
 export function getBlueprintDesignBlueprint(
@@ -306,39 +317,63 @@ export function getBlueprintDesignBlueprint(
   // Track changes made
   let changesMade = false;
 
+  // Calculate retrofit cost constraints (only for normal play, not age transition)
+  // Retrofit cost = (new hull cost - old hull cost) × (hangarShips + repairShips)
+  const shipsToRetrofit = (player.hangarShips || 0) + (player.repairShips || 0);
+  const playerCash = player.cash || 0;
+  const oldHullCost = calculateHullCost(blueprint);
+  let currentHullCost = oldHullCost; // Track cumulative hull cost as we add tiles
+
+  // Sort upgrades by hull cost (prefer cheaper tiles first to maximize what we can afford)
+  const sortByHullCost = (a: string, b: string) => getTileHullCost(a) - getTileHullCost(b);
+  frameUpgrades.sort(sortByHullCost);
+  fabricUpgrades.sort(sortByHullCost);
+  driveUpgrades.sort(sortByHullCost);
+
+  // Helper to check if we can afford to add a tile
+  const canAffordTile = (tileId: string): boolean => {
+    if (isAgeTransition) return true; // Free during age transition
+    if (shipsToRetrofit === 0) return true; // No retrofit cost if no ships
+
+    const tileHullCost = getTileHullCost(tileId);
+    const newTotalHullCost = currentHullCost + tileHullCost;
+    const retrofitCost = Math.max(0, newTotalHullCost - oldHullCost) * shipsToRetrofit;
+    return playerCash >= retrofitCost;
+  };
+
+  // Helper to add a tile and update cost tracking
+  const addTile = (tileId: string) => {
+    const tileHullCost = getTileHullCost(tileId);
+    currentHullCost += tileHullCost;
+    installedTiles.add(tileId);
+    changesMade = true;
+  };
+
   // Fill empty frame slots (no duplicates - each tile can only be used once)
-  let frameIdx = 0;
   for (const idx of emptyFrameIndices) {
-    if (frameIdx < frameUpgrades.length) {
-      const upgradeId = frameUpgrades[frameIdx];
-      newBlueprint.frameSlots![idx] = upgradeId;
-      installedTiles.add(upgradeId);
-      changesMade = true;
-      frameIdx++;
+    // Find first affordable upgrade not yet installed
+    const affordableUpgrade = frameUpgrades.find(id => !installedTiles.has(id) && canAffordTile(id));
+    if (affordableUpgrade) {
+      newBlueprint.frameSlots![idx] = affordableUpgrade;
+      addTile(affordableUpgrade);
     }
   }
 
   // Fill empty fabric slots (no duplicates - each tile can only be used once)
-  let fabricIdx = 0;
   for (const idx of emptyFabricIndices) {
-    if (fabricIdx < fabricUpgrades.length) {
-      const upgradeId = fabricUpgrades[fabricIdx];
-      newBlueprint.fabricSlots![idx] = upgradeId;
-      installedTiles.add(upgradeId);
-      changesMade = true;
-      fabricIdx++;
+    const affordableUpgrade = fabricUpgrades.find(id => !installedTiles.has(id) && canAffordTile(id));
+    if (affordableUpgrade) {
+      newBlueprint.fabricSlots![idx] = affordableUpgrade;
+      addTile(affordableUpgrade);
     }
   }
 
   // Fill empty drive slots (no duplicates)
-  let driveIdx = 0;
   for (const idx of emptyDriveIndices) {
-    if (driveIdx < driveUpgrades.length) {
-      const upgradeId = driveUpgrades[driveIdx];
-      newBlueprint.driveSlots![idx] = upgradeId;
-      installedTiles.add(upgradeId);
-      changesMade = true;
-      driveIdx++;
+    const affordableUpgrade = driveUpgrades.find(id => !installedTiles.has(id) && canAffordTile(id));
+    if (affordableUpgrade) {
+      newBlueprint.driveSlots![idx] = affordableUpgrade;
+      addTile(affordableUpgrade);
     }
   }
 
