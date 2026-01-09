@@ -183,9 +183,11 @@ def _attempt_combat_missions(
             stats_str = (f"Ship: Lift={ship_stats['lift']} Weight={ship_stats['weight']} "
                         f"Gas={ship_stats['required_gas']} Range={ship_stats['range']} "
                         f"Speed={ship_stats['speed']} Rel={ship_stats.get('reliability', 0)}")
+            # Difficulty modifies hazard checks (offset by ship reliability)
+            mission_diff = getattr(mission, 'difficulty', 0) or 0
             mission_str = (f"Mission: {mission.name} ({mission.mission_type}) "
                           f"Range≥{mission.range} Speed≥{mission.speed} Ceil≥{mission.ceiling} "
-                          f"Rel≥{mission.reliability} → +{mission.income}£, {mission.vp}VP")
+                          f"Diff={mission_diff} → +{mission.income}£, {mission.vp}VP")
 
             # Launch the ship on the mission - wrap in try/except for validation errors
             try:

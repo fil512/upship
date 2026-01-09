@@ -424,8 +424,24 @@ function processHazardCheck(state: GameState, playerId: string, data: HazardChec
     relevantStat = Math.max(0, relevantStat - 1);
   }
 
-  // Apply Squall Line-style payload slot modifier (ships with 3+ payload slots suffer +1 difficulty)
+  // Calculate Net Difficulty per Section 8.2:
+  // Net Difficulty = Hazard Difficulty + Route/Mission Difficulty - Ship Reliability (min 0)
   let adjustedDifficulty = hazard.difficulty;
+
+  // Add mission difficulty for Age II combat missions
+  const missionId = pendingLaunch.missionId;
+  if (missionId && state.age === 2) {
+    const mission = hazardState.missionRow?.find(m => m.id === missionId);
+    if (mission && (mission as { difficulty?: number }).difficulty) {
+      adjustedDifficulty += (mission as { difficulty?: number }).difficulty!;
+    }
+  }
+
+  // Subtract ship reliability (per Section 8.2)
+  const shipReliability = shipStats.reliability || 0;
+  adjustedDifficulty = Math.max(0, adjustedDifficulty - shipReliability);
+
+  // Apply Squall Line-style payload slot modifier (ships with 3+ payload slots suffer +1 difficulty)
   if (extendedHazard.payloadSlotModifier) {
     const payloadSlotCount = countFilledSlots(playerBlueprint, 'componentSlots');
     if (payloadSlotCount >= extendedHazard.payloadSlotModifier.threshold) {
@@ -541,6 +557,18 @@ function resolveFireHazard(state: GameState, playerId: string, hazard: HazardCar
     const engineerBonus = Math.min(engineersToSpend, playerState.engineers || 0);
     const totalCheck = reliabilityStat + engineerBonus;
 
+    // Calculate net difficulty: Hazard Difficulty + Mission Difficulty - Ship Reliability (min 0)
+    const hazardState = state as HazardState;
+    const missionId = pendingLaunch?.missionId;
+    let netDifficulty = hazard.difficulty;
+    if (missionId && state.age === 2) {
+      const mission = hazardState.missionRow?.find(m => m.id === missionId);
+      if (mission && (mission as { difficulty?: number }).difficulty) {
+        netDifficulty += (mission as { difficulty?: number }).difficulty!;
+      }
+    }
+    netDifficulty = Math.max(0, netDifficulty - reliabilityStat);
+
     if (engineerBonus > 0) {
       playerState.engineers -= engineerBonus;
       // Log engineer consumption for static discharge
@@ -549,23 +577,23 @@ function resolveFireHazard(state: GameState, playerId: string, hazard: HazardCar
       resourceFlowLogger.logSink(flowContext, playerId, faction, 'engineers', engineerBonus, 'hazard', 'Static discharge', playerState.engineers);
     }
 
-    if (totalCheck >= hazard.difficulty) {
+    if (totalCheck >= netDifficulty) {
       return resolveHazardSuccess(state, playerId, route, hazard,
-        `Static Discharge Reliability check passed: ${totalCheck} >= ${hazard.difficulty}`);
+        `Static Discharge Reliability check passed: ${totalCheck} >= ${netDifficulty}`);
     } else {
       if (applyInsuranceRecovery(state, playerId, 'STATIC DISCHARGE')) {
-        logOutcome(state, playerId, 'destroyed', hazard, gasType, `Static Discharge failed (${totalCheck} < ${hazard.difficulty}), recovered by insurance`, routeId);
+        logOutcome(state, playerId, 'destroyed', hazard, gasType, `Static Discharge failed (${totalCheck} < ${netDifficulty}), recovered by insurance`, routeId);
         return { newState: state };
       }
 
       // Log before clearing pendingLaunch
-      logOutcome(state, playerId, 'destroyed', hazard, gasType, `Static Discharge Reliability check failed: ${totalCheck} < ${hazard.difficulty}`, routeId);
+      logOutcome(state, playerId, 'destroyed', hazard, gasType, `Static Discharge Reliability check failed: ${totalCheck} < ${netDifficulty}`, routeId);
       // Ship destroyed - clear pendingLaunch
       delete playerState.pendingLaunch;
 
       state.log.push({
         timestamp: new Date().toISOString(),
-        message: `STATIC DISCHARGE! Reliability check failed (${totalCheck} < ${hazard.difficulty}). Ship destroyed!`,
+        message: `STATIC DISCHARGE! Reliability check failed (${totalCheck} < ${netDifficulty}). Ship destroyed!`,
         playerId,
         type: 'hazard'
       } as LogEntry);

@@ -274,7 +274,7 @@ Ships have **no baseline stats**—all stats come entirely from installed Tech T
 | **Speed** | Drive tiles | Meet route speed requirements |
 | **Range** | Drive tiles, some Fabric/Gas tiles | Meet route distance requirements |
 | **Ceiling** | Frame tiles, Gas tiles | Meet route altitude requirements |
-| **Reliability** | Frame tiles, Fabric tiles | Pass hazard checks |
+| **Reliability** | Frame tiles, Fabric tiles, Components | Reduces hazard check difficulty |
 | **Lift** | Frame tiles (Gas Sockets) | Each Gas Socket provides +5 Lift per gas cube |
 | **Weight** | All tiles | Must not exceed Lift |
 | **Luxury** | Payload tiles | Required for Age III luxury routes |
@@ -631,12 +631,17 @@ Each Hazard Card shows a **Challenge Type** and **Difficulty Rating**.
 
 **Resolution:**
 1. Check if auto-pass (Clear Weather or Helium vs Fire).
-2. Compare your Blueprint's relevant stat to the Difficulty.
-3. If stat ≥ Difficulty, you pass.
-4. If stat < Difficulty, you may spend Engineers (+1 each) to boost your check.
-5. If still failing, the launch is Aborted.
+2. Calculate **Net Difficulty** = Hazard Difficulty + Route Difficulty − Ship Reliability (minimum 0).
+3. Compare your Blueprint's relevant stat to the Net Difficulty.
+4. If stat ≥ Net Difficulty, you pass.
+5. If stat < Net Difficulty, you may spend Engineers (+1 each) to boost your check.
+6. If still failing, the launch is Aborted.
 
-> **Example:** Anna draws "Strong Headwind — Speed 4." Her ship has Speed 3. She spends 1 Engineer for +1, reaching Speed 4, and passes.
+**Route Difficulty:** Combat missions (Age II) have a Difficulty rating that adds to hazard checks. Regular routes (Age I and III) have Difficulty 0.
+
+**Reliability as Defense:** Your ship's Reliability stat reduces the effective difficulty of all hazard checks, making launches safer.
+
+> **Example:** Anna draws "Strong Headwind — Speed 4" while attempting a combat mission with Difficulty 2. Her ship has Speed 3 and Reliability 1. Net Difficulty = 4 + 2 − 1 = 5. She spends 2 Engineers for +2, reaching Speed 5, and passes.
 
 ## 8.3 Fire Hazards
 
@@ -1127,7 +1132,7 @@ When Catastrophic Explosion occurs during a Luxury Launch in Age III using Hydro
 | **Player Board** | Personal board (The Factory Interface) | §4 |
 | **Progress Track** | Track advancing toward game end | §1.3 |
 | **Range** | Ship stat for flight distance | §4.2 |
-| **Reliability** | Ship stat for mechanical soundness | §4.2 |
+| **Reliability** | Ship stat that reduces hazard check difficulty | §4.2, §8.2 |
 | **Research** | Resource for acquiring Technologies (Research Level + Engineers + cards) | §9.1 |
 | **Research Level** | Track showing base Research when you Reveal | §4.6 |
 | **Round** | A complete cycle where all players take turns until everyone has revealed; ends with Income & Cleanup | §5 |
@@ -1158,7 +1163,8 @@ When Catastrophic Explosion occurs during a Luxury Launch in Age III using Hydro
 | Physics Check | Lift ≥ Weight |
 | Lift | Gas Cubes × 5 |
 | Hull Cost | £2 + Frame cost + Fabric cost |
-| Hazard Check | Ship Stat + Engineers ≥ Difficulty |
+| Hazard Check | Ship Stat + Engineers ≥ Net Difficulty |
+| Net Difficulty | Hazard Difficulty + Route Difficulty − Ship Reliability (min 0) |
 | Research | Research Level + Engineers + card bonuses (unspent lost) |
 | Tech Cost | Listed cost − specialization discount |
 | Transition Income | Tech £ values − (£1 × routes lost) |

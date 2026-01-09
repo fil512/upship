@@ -357,16 +357,17 @@ def evaluate_launch_readiness(
         if stats_ready:
             if current_age == 2 and missions:
                 # Age II: Check combat missions
+                # Note: Mission difficulty is NOT a prerequisite - only range/speed/ceiling
+                # Mission difficulty modifies hazard checks, offset by ship reliability
                 for mission in missions:
                     if (ship_range >= (mission.range or 0) and
                         ship_speed >= (mission.speed or 0) and
-                        ship_ceiling >= (mission.ceiling or 0) and
-                        ship_reliability >= (mission.reliability or 0)):
+                        ship_ceiling >= (mission.ceiling or 0)):
                         has_achievable_target = True
                         break
 
                 if not has_achievable_target:
-                    missing.append(f'no achievable missions (range={ship_range}, speed={ship_speed}, ceil={ship_ceiling}, rel={ship_reliability})')
+                    missing.append(f'no achievable missions (range={ship_range}, speed={ship_speed}, ceil={ship_ceiling})')
                     # Need better stats from drive upgrades
                     priorities.insert(0, 'research_institute')  # Get more tech
                     priorities.insert(1, 'blueprint_design')  # Install drive upgrades
@@ -439,15 +440,14 @@ def evaluate_combat_mission_readiness(
     for mission in missions:
         failures = []
 
-        # Check stat requirements
+        # Check stat requirements (only range, speed, ceiling are prerequisites)
+        # Note: mission.difficulty is NOT a prerequisite - it modifies hazard checks
         if mission.range > 0 and ship_stats.get('range', 0) < mission.range:
             failures.append(f"Range {ship_stats.get('range', 0)} < required {mission.range}")
         if mission.speed > 0 and ship_stats.get('speed', 0) < mission.speed:
             failures.append(f"Speed {ship_stats.get('speed', 0)} < required {mission.speed}")
         if mission.ceiling > 0 and ship_stats.get('ceiling', 0) < mission.ceiling:
             failures.append(f"Ceiling {ship_stats.get('ceiling', 0)} < required {mission.ceiling}")
-        if mission.reliability > 0 and ship_stats.get('reliability', 0) < mission.reliability:
-            failures.append(f"Reliability {ship_stats.get('reliability', 0)} < required {mission.reliability}")
 
         results.append({
             'mission': mission,

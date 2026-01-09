@@ -36,7 +36,7 @@ interface Mission {
   range?: number;
   speed?: number;
   ceiling?: number;
-  reliability?: number;
+  difficulty?: number;  // Adds to hazard check difficulty (formerly 'reliability')
   special?: string;
   specialBonus?: { income?: number };
 }
@@ -120,6 +120,8 @@ function resolveFlakCheck(ship: CombatShip, hazardCard: HazardCard): FlakResult 
 
 /**
  * Check if ship meets mission requirements
+ * Note: Mission difficulty is NOT a prerequisite - it's added to hazard checks.
+ * Only Range, Speed, and Ceiling are prerequisites.
  */
 function validateMissionRequirements(shipStats: ShipStats, mission: Mission): ValidationResult {
   const failures: string[] = [];
@@ -133,9 +135,8 @@ function validateMissionRequirements(shipStats: ShipStats, mission: Mission): Va
   if (mission.ceiling && (shipStats.ceiling || 0) < mission.ceiling) {
     failures.push(`Ceiling ${shipStats.ceiling || 0} < required ${mission.ceiling}`);
   }
-  if (mission.reliability && (shipStats.reliability || 0) < mission.reliability) {
-    failures.push(`Reliability ${shipStats.reliability || 0} < required ${mission.reliability}`);
-  }
+  // Note: mission.difficulty (formerly reliability) is NOT checked here
+  // It's used to modify hazard check difficulty during the mission
 
   return {
     valid: failures.length === 0,

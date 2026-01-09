@@ -32,14 +32,15 @@ On your turn, either:
 5. ✓ Pay for Lifting Gas (Gas Reserve first, then market price for deficit)
 6. ✓ Assign to valid route (must meet stat requirements)
 7. ✓ Draw Hazard Card from your personal Hazard Deck
-8. ✓ Compare Ship Stat to Hazard Difficulty (optional: spend Engineers for +1 each)
-9. ✓ If Fire hazard and using Hydrogen: Spend required Engineers or crash
-10. ✓ If Catastrophic Explosion on Luxury Launch in Age III: Hindenburg Disaster triggered
-11. ✓ **Success:** Place ship on route, increase Income, gain city bonus
-12. ✓ **Aborted:** Ship returns to Launch Hangar (Officers kept, gas spent)
-13. ✓ **Damaged:** Ship goes to Repair Hangar (Officers and gas spent)
-14. ✓ **Crash:** Ship destroyed (token to supply, Officers and gas spent)
-15. ✓ Continue launching more ships or stop
+8. ✓ Calculate Net Difficulty = Hazard Difficulty + Route Difficulty − Ship Reliability (min 0)
+9. ✓ Compare Ship Stat to Net Difficulty (optional: spend Engineers for +1 each)
+10. ✓ If Fire hazard and using Hydrogen: Spend required Engineers or crash
+11. ✓ If Catastrophic Explosion on Luxury Launch in Age III: Hindenburg Disaster triggered
+12. ✓ **Success:** Place ship on route, increase Income, gain city bonus
+13. ✓ **Aborted:** Ship returns to Launch Hangar (Officers kept, gas spent)
+14. ✓ **Damaged:** Ship goes to Repair Hangar (Officers and gas spent)
+15. ✓ **Crash:** Ship destroyed (token to supply, Officers and gas spent)
+16. ✓ Continue launching more ships or stop
 
 ## Key Formulas
 
@@ -47,7 +48,8 @@ On your turn, either:
 - **Physics Check:** Total Lift ≥ Total Weight
 - **Lift Calculation:** Number of gas cubes × 5 (all gas types provide +5 Lift)
 - **Gas Rule:** Choose Hydrogen or Helium per launch—no mixing within a single launch
-- **Hazard Check:** Ship Stat + Engineers spent ≥ Hazard Difficulty
+- **Hazard Check:** Ship Stat + Engineers spent ≥ Net Difficulty
+- **Net Difficulty:** Hazard Difficulty + Route Difficulty − Ship Reliability (minimum 0)
 - **Research per Round:** Research Level + Engineers in Barracks + Research icons from revealed cards (unspent lost)
 - **Net Income:** Income Track − Engineers in Barracks
 - **Tech Cost:** Listed cost − Specialization Discount
@@ -592,8 +594,8 @@ During Age II (The Great War), routes are replaced by Combat Missions. Draw miss
 
 ### Bombing Runs (6 cards)
 
-| Name | Range | Ceiling | Reliability | Income | VP | Special |
-|------|-------|---------|-------------|--------|-----|---------|
+| Name | Range | Ceiling | Difficulty | Income | VP | Special |
+|------|-------|---------|------------|--------|-----|---------|
 | Railway Bombardment | 2 | 1 | 2 | £6 | 1 | — |
 | Factory Strike | 3 | 2 | 2 | £8 | 2 | — |
 | Port Assault | 3 | 1 | 3 | £8 | 2 | — |
@@ -613,8 +615,8 @@ During Age II (The Great War), routes are replaced by Combat Missions. Draw miss
 
 ### Resupply Missions (5 cards)
 
-| Name | Range | Speed | Reliability | Income | VP | Special |
-|------|-------|-------|-------------|--------|-----|---------|
+| Name | Range | Speed | Difficulty | Income | VP | Special |
+|------|-------|-------|------------|--------|-----|---------|
 | Field Hospital Supply | 2 | 1 | 2 | £5 | 1 | — |
 | Ammunition Delivery | 3 | 2 | 2 | £7 | 2 | — |
 | Forward Base Resupply | 3 | 1 | 3 | £7 | 2 | — |
@@ -623,15 +625,15 @@ During Age II (The Great War), routes are replaced by Combat Missions. Draw miss
 
 ### Naval Patrols (2 cards)
 
-| Name | Range | Speed | Reliability | Income | VP | Special |
-|------|-------|-------|-------------|--------|-----|---------|
+| Name | Range | Speed | Difficulty | Income | VP | Special |
+|------|-------|-------|------------|--------|-----|---------|
 | Coastal Patrol | 3 | 2 | 2 | £6 | 1 | Ignore 1 Weather hazard |
 | Submarine Hunter | 4 | 2 | 3 | £9 | 3 | +£2 with Communications Suite |
 
 ### Artillery Observation (2 cards)
 
-| Name | Range | Ceiling | Reliability | Income | VP | Special |
-|------|-------|---------|-------------|--------|-----|---------|
+| Name | Range | Ceiling | Difficulty | Income | VP | Special |
+|------|-------|---------|------------|--------|-----|---------|
 | Battery Direction | 2 | 2 | 2 | £6 | 1 | — |
 | Long-Range Observation | 3 | 3 | 2 | £8 | 2 | +1 Range with Spotter Gondola |
 
@@ -642,11 +644,12 @@ At the start of Age II, shuffle the 20-card Combat Mission deck and deal 6 missi
 
 **Selecting Missions:**
 1. When you take a Launch action in Age II, choose one visible mission from the Mission Row.
-2. Verify your Blueprint meets all listed stat requirements.
-3. If you cannot meet requirements, you may choose a different mission or pass.
+2. Verify your Blueprint meets the Range, Speed, and Ceiling requirements (if any).
+3. **Note:** Mission Difficulty is NOT a prerequisite—it adds to hazard check difficulty during the mission.
+4. If you cannot meet requirements, you may choose a different mission or pass.
 
 **Completing Missions:**
-1. **Hazard Check:** Draw a Hazard card and resolve it normally (same as Age I and III).
+1. **Hazard Check:** Draw a Hazard card. Net Difficulty = Hazard Difficulty + Mission Difficulty − Ship Reliability. Compare your relevant stat + engineers to Net Difficulty.
 2. **If Aborted:** Mission remains in the row (like an unclaimed route). Ship returns to Hangar. Officers kept, gas spent.
 3. **If Successful:** Take the mission card and place it in front of you. Gain the listed Income (increase Income Track) and any special bonuses. Spend Officers and gas to supply.
 4. **Flak Check:** Compare the Hazard card's Flak value to your ship's Armor. If Flak > Armor, ship is destroyed (return to supply). Otherwise, place ship on your mission card.

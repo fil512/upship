@@ -23,10 +23,10 @@ export interface CombatMission {
   id: string;
   name: string;
   type: CombatMissionType;
-  range: number;
-  speed?: number;
-  ceiling?: number;
-  reliability?: number;
+  range: number;       // Prerequisite: ship Range must meet or exceed
+  speed?: number;      // Prerequisite: ship Speed must meet or exceed (if specified)
+  ceiling?: number;    // Prerequisite: ship Ceiling must meet or exceed (if specified)
+  difficulty?: number; // Added to hazard check difficulty; offset by ship Reliability
   income: number;
   vp: number;
   bonusVp?: number;
@@ -47,7 +47,7 @@ export const COMBAT_MISSIONS: CombatMission[] = [
     type: 'bombing_run',
     range: 2,
     ceiling: 1,
-    reliability: 2,
+    difficulty: 2,
     income: 6,
     vp: 1,
     special: null
@@ -58,7 +58,7 @@ export const COMBAT_MISSIONS: CombatMission[] = [
     type: 'bombing_run',
     range: 3,
     ceiling: 2,
-    reliability: 2,
+    difficulty: 2,
     income: 8,
     vp: 2,
     special: null
@@ -69,7 +69,7 @@ export const COMBAT_MISSIONS: CombatMission[] = [
     type: 'bombing_run',
     range: 3,
     ceiling: 1,
-    reliability: 3,
+    difficulty: 3,
     income: 8,
     vp: 2,
     special: null
@@ -80,7 +80,7 @@ export const COMBAT_MISSIONS: CombatMission[] = [
     type: 'bombing_run',
     range: 4,
     ceiling: 2,
-    reliability: 2,
+    difficulty: 2,
     income: 10,
     vp: 3,
     special: 'bombing_equipment_bonus',
@@ -92,7 +92,7 @@ export const COMBAT_MISSIONS: CombatMission[] = [
     type: 'bombing_run',
     range: 4,
     ceiling: 2,
-    reliability: 3,
+    difficulty: 3,
     income: 11,
     vp: 4,
     special: 'bombing_equipment_bonus',
@@ -104,7 +104,7 @@ export const COMBAT_MISSIONS: CombatMission[] = [
     type: 'bombing_run',
     range: 5,
     ceiling: 3,
-    reliability: 3,
+    difficulty: 3,
     income: 14,
     vp: 5,
     bonusVp: 1,
@@ -178,7 +178,7 @@ export const COMBAT_MISSIONS: CombatMission[] = [
     type: 'resupply',
     range: 2,
     speed: 1,
-    reliability: 2,
+    difficulty: 2,
     income: 5,
     vp: 1,
     special: null
@@ -189,7 +189,7 @@ export const COMBAT_MISSIONS: CombatMission[] = [
     type: 'resupply',
     range: 3,
     speed: 2,
-    reliability: 2,
+    difficulty: 2,
     income: 7,
     vp: 2,
     special: null
@@ -200,7 +200,7 @@ export const COMBAT_MISSIONS: CombatMission[] = [
     type: 'resupply',
     range: 3,
     speed: 1,
-    reliability: 3,
+    difficulty: 3,
     income: 7,
     vp: 2,
     special: null
@@ -211,7 +211,7 @@ export const COMBAT_MISSIONS: CombatMission[] = [
     type: 'resupply',
     range: 4,
     speed: 3,
-    reliability: 2,
+    difficulty: 2,
     income: 9,
     vp: 3,
     special: null
@@ -222,7 +222,7 @@ export const COMBAT_MISSIONS: CombatMission[] = [
     type: 'resupply',
     range: 4,
     speed: 2,
-    reliability: 3,
+    difficulty: 3,
     income: 10,
     vp: 3,
     bonusVp: 1,
@@ -236,7 +236,7 @@ export const COMBAT_MISSIONS: CombatMission[] = [
     type: 'naval_patrol',
     range: 3,
     speed: 2,
-    reliability: 2,
+    difficulty: 2,
     income: 6,
     vp: 1,
     special: 'ignore_weather',
@@ -248,7 +248,7 @@ export const COMBAT_MISSIONS: CombatMission[] = [
     type: 'naval_patrol',
     range: 4,
     speed: 2,
-    reliability: 3,
+    difficulty: 3,
     income: 9,
     vp: 3,
     special: 'communications_bonus',
@@ -262,7 +262,7 @@ export const COMBAT_MISSIONS: CombatMission[] = [
     type: 'artillery_observation',
     range: 2,
     ceiling: 2,
-    reliability: 2,
+    difficulty: 2,
     income: 6,
     vp: 1,
     special: null
@@ -273,7 +273,7 @@ export const COMBAT_MISSIONS: CombatMission[] = [
     type: 'artillery_observation',
     range: 3,
     ceiling: 3,
-    reliability: 2,
+    difficulty: 2,
     income: 8,
     vp: 2,
     special: 'spotter_gondola_bonus',

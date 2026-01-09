@@ -265,7 +265,7 @@ class CombatMission:
     range: int = 0
     speed: int = 0
     ceiling: int = 0
-    reliability: int = 0
+    difficulty: int = 0  # Adds to hazard check difficulty (offset by ship reliability)
     income: int = 0
     vp: int = 0
     special: str | None = None
@@ -273,6 +273,8 @@ class CombatMission:
     @classmethod
     def from_dict(cls, data: dict) -> 'CombatMission':
         """Create CombatMission from API response dict."""
+        # Support both 'difficulty' (new) and 'reliability' (legacy) field names
+        difficulty = data.get('difficulty', data.get('reliability', 0))
         return cls(
             id=data.get('id', ''),
             name=data.get('name', ''),
@@ -280,7 +282,7 @@ class CombatMission:
             range=data.get('range', 0),
             speed=data.get('speed', 0),
             ceiling=data.get('ceiling', 0),
-            reliability=data.get('reliability', 0),
+            difficulty=difficulty,
             income=data.get('income', 0),
             vp=data.get('vp', 0),
             special=data.get('special'),

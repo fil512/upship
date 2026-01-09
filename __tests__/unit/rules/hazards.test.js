@@ -986,11 +986,14 @@ describe('Rules Compliance - Hazards', () => {
         difficulty: 4
       };
 
-      // Ship with Reliability 4 - enough to pass Difficulty 4 normally
+      // Ship with Reliability 1 - just enough to fail with -1 penalty
+      // With new rules: Net Difficulty = Hazard(4) + Route(0) - Reliability(1) = 3
+      // Italy penalty: stat reduced to 0
+      // Check: 0 >= 3? NO → FAIL
       setupPendingLaunch(state.players['1'], {
         pendingRouteId: 'route_1',
         gasType: 'hydrogen',
-        stats: { speed: 1, reliability: 4, ceiling: 0, range: 3 }
+        stats: { speed: 1, reliability: 1, ceiling: 0, range: 3 }
       }, hazardCard);
       state.players['1'].engineers = 0; // No engineers to boost
 
@@ -1007,7 +1010,7 @@ describe('Rules Compliance - Hazards', () => {
 
       const result = processHazardCheck(state, '1', {});
 
-      // Should FAIL due to -1 penalty (4 - 1 = 3 < 4)
+      // Should FAIL due to -1 penalty (1 - 1 = 0 < Net Difficulty 3)
       // Ship returns to hangar (aborted)
       expect(result.newState.players['1'].pendingLaunch).toBeUndefined();
       expect(result.newState.players['1'].hangarShips).toBe(1);
@@ -1349,12 +1352,14 @@ describe('Rules Compliance - Hazards', () => {
         payloadSlotModifier: { threshold: 3, difficultyIncrease: 1 }
       };
 
-      // Ship with reliability 4 would normally pass (4 >= 4)
-      // But with 3+ payload slots, difficulty becomes 5, so ship fails (4 < 5)
+      // Ship with reliability 1
+      // With new rules: Net Difficulty = Hazard(4) + Route(0) - Reliability(1) + Payload(1) = 4
+      // (Payload modifier applied after reliability reduction)
+      // Check: 1 >= 4? NO → FAIL
       setupPendingLaunch(state.players['1'], {
         pendingRouteId: 'route_1',
         gasType: 'hydrogen',
-        stats: { speed: 1, reliability: 4, ceiling: 0, range: 3 }
+        stats: { speed: 1, reliability: 1, ceiling: 0, range: 3 }
       }, hazardCard);
 
       // Set up 3 payload slots (componentSlots)
@@ -1370,7 +1375,7 @@ describe('Rules Compliance - Hazards', () => {
 
       const result = processHazardCheck(state, '1', {});
 
-      // Should FAIL - reliability 4 < modified difficulty 5
+      // Should FAIL - reliability 1 < net difficulty 4
       expect(result.newState.players['1'].pendingLaunch).toBeUndefined();
       expect(result.newState.players['1'].hangarShips).toBe(1); // Ship aborted
       expect(result.newState.map.routes[0].claimed).toBeNull();

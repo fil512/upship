@@ -891,7 +891,8 @@ export function evaluateCombatMissionReadiness(
   for (const mission of missions) {
     const failures: string[] = [];
 
-    // Check stat requirements
+    // Check stat requirements (only range, speed, ceiling are prerequisites)
+    // Note: mission.difficulty is NOT a prerequisite - it modifies hazard checks
     if (mission.range > 0 && shipStats.range < mission.range) {
       failures.push(`Range ${shipStats.range} < required ${mission.range}`);
     }
@@ -900,9 +901,6 @@ export function evaluateCombatMissionReadiness(
     }
     if ((mission.ceiling || 0) > 0 && shipStats.ceiling < (mission.ceiling || 0)) {
       failures.push(`Ceiling ${shipStats.ceiling} < required ${mission.ceiling}`);
-    }
-    if ((mission.reliability || 0) > 0 && shipStats.reliability < (mission.reliability || 0)) {
-      failures.push(`Reliability ${shipStats.reliability} < required ${mission.reliability}`);
     }
 
     results.push({
