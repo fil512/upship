@@ -742,32 +742,20 @@ def submit_reveal(player: str, game_id: str, logger: PlaytestLogger, reason: str
                 logger.log_action(None, f"  └─ Tech {tech_id} acquisition error: {str(e)[:50]}", "reveal")
 
     # Step 2b: Make tentative market card purchases (uses influence)
-    # card_ids contains ALL market cards sorted by priority - we try them in order
-    # Don't break early on "not enough influence" since cheaper cards may still be affordable
+    # card_ids contains ALL market cards sorted by priority (expensive first)
+    # We try ALL cards since the market only has 6 (5 row + 1 reserve)
+    # This ensures players with low influence still try the cheap reserve card
     acquired_cards = []
-    consecutive_influence_failures = 0
     if card_ids:
         for card_id in card_ids:
             try:
                 card_result = client.buy_market_card_tentative(player, game_id, card_id)
                 if card_result.success:
                     acquired_cards.append(card_id)
-                    consecutive_influence_failures = 0  # Reset on success
-                else:
-                    error_msg = (card_result.error or '').lower()
-                    if 'not enough influence' in error_msg or 'insufficient influence' in error_msg:
-                        consecutive_influence_failures += 1
-                        # Only break after 3+ consecutive influence failures (tried enough options)
-                        if consecutive_influence_failures >= 3:
-                            break
-                    # Card already claimed or other error - try next card
-            except Exception as e:
-                error_str = str(e).lower()
-                if 'not enough influence' in error_str or 'insufficient influence' in error_str:
-                    consecutive_influence_failures += 1
-                    if consecutive_influence_failures >= 3:
-                        break
-                # Other errors - continue to next card
+                # Continue to next card on any failure (claimed, not enough influence, etc.)
+            except Exception:
+                # Continue to next card on any error
+                pass
 
     # Step 3: Send END_TURN to finalize acquisitions and advance to next placer
     end_result = client.end_turn(player, game_id)

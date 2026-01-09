@@ -1193,8 +1193,8 @@ def get_reveal_acquisitions(player: str, game_id: str) -> tuple[list[str], list[
                 return (3, 0)  # Business - useful for gas depot, insurance
             return (4, 0)  # Any/wild or unknown
 
-        # Sort by priority, then by cost (prefer cheaper)
-        market_cards.sort(key=lambda c: (get_card_priority(c), c.get('cost', 3)))
+        # Sort by priority, then by cost descending (prefer more expensive for better value)
+        market_cards.sort(key=lambda c: (get_card_priority(c), -c.get('cost', 3)))
 
         # Return ALL cards sorted by priority - the purchase phase will try each
         # in order and stop when influence runs out or all cards are attempted
