@@ -217,6 +217,60 @@ function _isTechSuperiorToInstalled(
 // Ship stats come from calculateBlueprintStats(player.blueprint, age) in launch.ts
 
 /**
+ * Calculate expected engineers needed for a safe launch.
+ * Uses the hazard check formula (Section 8.2):
+ *   Net Difficulty = Hazard Difficulty + Route/Mission Difficulty - Ship Reliability (min 0)
+ *   Ship Stat + Engineers >= Net Difficulty to pass
+ *
+ * [BOT-LAUNCH-READY-01] SYNC: Keep in sync with calculate_expected_engineers_for_launch() in playtest/strategy.py
+ *
+ * @param shipReliability - Ship's reliability stat
+ * @param currentAge - Current game age (1, 2, or 3)
+ * @param missions - List of combat missions (for Age II)
+ * @returns Object with engineersNeeded and reason string
+ */
+function calculateExpectedEngineersForLaunch(
+  shipReliability: number,
+  currentAge: number,
+  missions?: CombatMission[]
+): { engineersNeeded: number; reason: string } {
+  // Average hazard difficulty in the deck is about 3-4
+  // Using 4 as a conservative estimate for safety
+  const AVG_HAZARD_DIFFICULTY = 4;
+
+  // Mission/route difficulty
+  // Age I/III routes have difficulty 0
+  // Age II missions have difficulty 2-3
+  let missionDifficulty = 0;
+  if (currentAge === 2 && missions && missions.length > 0) {
+    // Find the lowest difficulty mission that's achievable (prefer easier ones)
+    const difficulties = missions.map(m => (m as { difficulty?: number }).difficulty || 0);
+    missionDifficulty = Math.min(...difficulties);
+  }
+
+  // Net difficulty formula: Hazard + Mission - Reliability (min 0)
+  const netDifficulty = Math.max(0, AVG_HAZARD_DIFFICULTY + missionDifficulty - shipReliability);
+
+  // Engineers needed to pass: max(0, net_difficulty - avg_ship_stat)
+  // Assuming average ship stat of 2-3, we need net_difficulty - 2 engineers
+  const AVG_SHIP_STAT = 2;
+  const engineersNeeded = Math.max(0, netDifficulty - AVG_SHIP_STAT);
+
+  // Build explanation
+  let reason: string;
+  if (currentAge === 2) {
+    reason = `hazard(~${AVG_HAZARD_DIFFICULTY}) + mission(${missionDifficulty}) ` +
+             `- reliability(${shipReliability}) = net(${netDifficulty}), ` +
+             `need ~${engineersNeeded} engineers`;
+  } else {
+    reason = `hazard(~${AVG_HAZARD_DIFFICULTY}) - reliability(${shipReliability}) ` +
+             `= net(${netDifficulty}), need ~${engineersNeeded} engineers`;
+  }
+
+  return { engineersNeeded, reason };
+}
+
+/**
  * Get hull cost of a single tech tile
  */
 function getTileHullCost(tileId: string | null): number {
@@ -519,42 +573,92 @@ export function evaluateLaunchReadiness(
       statsReady = false;
     }
 
-    // Check 6: Do we have achievable routes?
-    if (hangarShipCount > 0 && routes.length > 0 && statsReady) {
-      for (const route of routes) {
-        const routeRange = route.distance || route.range || 1;
-        const routeSpeed = route.speedRequirement || route.speed || 0;
-        const routeCeiling = route.ceilingRequirement || route.ceiling || 0;
+    // Check 6: Do we have achievable routes/missions?
+    // Get missions for Age II
+    const missions = currentAge === 2
+      ? (state as { missionRow?: CombatMission[] }).missionRow || []
+      : [];
 
-        if (shipStats.range >= routeRange &&
-            shipStats.speed >= routeSpeed &&
-            shipStats.ceiling >= routeCeiling) {
-          hasAchievableTarget = true;
-          break;
+    if (hangarShipCount > 0 && statsReady) {
+      if (currentAge === 2 && missions.length > 0) {
+        // Age II: Check combat missions (only range, speed, ceiling are prerequisites)
+        for (const mission of missions) {
+          if (shipStats.range >= mission.range &&
+              shipStats.speed >= (mission.speed || 0) &&
+              shipStats.ceiling >= (mission.ceiling || 0)) {
+            hasAchievableTarget = true;
+            break;
+          }
+        }
+        if (!hasAchievableTarget) {
+          missing.push(`no achievable missions (range=${shipStats.range}, speed=${shipStats.speed}, ceil=${shipStats.ceiling})`);
+          priorities.unshift('research_institute');
+          priorities.splice(1, 0, 'blueprint_design');
+        }
+      } else if (routes.length > 0) {
+        // Age I/III: Check routes
+        for (const route of routes) {
+          const routeRange = route.distance || route.range || 1;
+          const routeSpeed = route.speedRequirement || route.speed || 0;
+          const routeCeiling = route.ceilingRequirement || route.ceiling || 0;
+
+          if (shipStats.range >= routeRange &&
+              shipStats.speed >= routeSpeed &&
+              shipStats.ceiling >= routeCeiling) {
+            hasAchievableTarget = true;
+            break;
+          }
+        }
+
+        if (!hasAchievableTarget) {
+          missing.push(`no reachable routes (range=${shipStats.range}, speed=${shipStats.speed})`);
+          priorities.unshift('research_institute');
+          priorities.splice(1, 0, 'blueprint_design');
         }
       }
-
-      if (!hasAchievableTarget) {
-        missing.push(`no reachable routes (range=${shipStats.range}, speed=${shipStats.speed})`);
-        priorities.unshift('research_institute');
-        priorities.splice(1, 0, 'blueprint_design');
-      }
     }
+
+    // Check 7: Do we have engineers for hazard mitigation?
+    // [BOT-LAUNCH-READY-01] SYNC: Use dynamic calculation based on ship reliability and mission difficulty
+    // Uses the hazard formula (Section 8.2):
+    //   Net Difficulty = Hazard Difficulty + Route/Mission Difficulty - Ship Reliability (min 0)
+    //   Ship Stat + Engineers >= Net Difficulty to pass
+    const shipReliability = shipStats.reliability || 0;
+    const { engineersNeeded: minEngineersForSafeLaunch, reason: engineerReason } =
+      calculateExpectedEngineersForLaunch(shipReliability, currentAge, missions);
+
+    if (engineers < minEngineersForSafeLaunch) {
+      missing.push(`need ${minEngineersForSafeLaunch - engineers} more engineer(s) (${engineerReason})`);
+      priorities.push('engineering_depot');   // Collect engineers from income track
+      priorities.push('technical_institute'); // Build engineer income
+    }
+
+    const canLaunch = hangarShipCount > 0 && slotsReady && statsReady &&
+                      officers >= officersNeeded && totalGas >= 1 &&
+                      hasAchievableTarget && engineers >= minEngineersForSafeLaunch;
+
+    return {
+      canLaunch,
+      hasAchievableTarget,
+      missing,
+      priorities,
+      hangarShipCount,
+      totalGas,
+      engineers
+    };
   }
 
-  // Check 7: Do we have engineers for hazard mitigation?
-  // [BOT-LAUNCH-READY-01] SYNC: Match playtest - require 2+ engineers for safe launch (blocks canLaunch)
-  // Most hazards need 2-4 engineers to pass, so launching with 0-1 is risky
+  // Fallback if no blueprint - use default engineer requirement
   const minEngineersForSafeLaunch = 2;
   if (engineers < minEngineersForSafeLaunch) {
     missing.push(`need ${minEngineersForSafeLaunch - engineers} more engineer(s) for safe launch`);
-    priorities.push('engineering_depot');   // Collect engineers from income track
-    priorities.push('technical_institute'); // Build engineer income
+    priorities.push('engineering_depot');
+    priorities.push('technical_institute');
   }
 
-  const canLaunch = hangarShipCount > 0 && slotsReady && statsReady &&
+  const canLaunch = hangarShipCount > 0 && slotsReady &&
                     officers >= officersNeeded && totalGas >= 1 &&
-                    hasAchievableTarget && engineers >= minEngineersForSafeLaunch;
+                    engineers >= minEngineersForSafeLaunch;
 
   return {
     canLaunch,
@@ -967,22 +1071,56 @@ export function findBestCombatMission(
   }
 
   // Evaluate all missions
+  const shipReliability = shipStats.reliability || 0;
+  const engineers = player.engineers || 0;
+
   const evaluations = evaluateCombatMissionReadiness(missionRow, {
     range: shipStats.range,
     speed: shipStats.speed,
     ceiling: shipStats.ceiling,
-    reliability: shipStats.reliability || 0
+    reliability: shipReliability
   });
 
-  // Find first achievable mission (already sorted by value)
-  const bestEval = evaluations.find(e => e.canAttempt);
-  if (!bestEval) return null;
+  // [BOT-COMBAT-02] SYNC: Find best mission using risk-adjusted value calculation
+  // Value = VP * 10 + income - (risk_factor * 5)
+  // Risk factor accounts for mission difficulty vs ship reliability and available engineers
+  let bestMission: CombatMission | null = null;
+  let bestValue = -Infinity;
+
+  const AVG_HAZARD_DIFFICULTY = 4;
+
+  for (const evaluation of evaluations) {
+    if (!evaluation.canAttempt) continue;
+
+    const mission = evaluation.mission;
+    const missionDifficulty = (mission as { difficulty?: number }).difficulty || 0;
+
+    // Calculate net difficulty using formula (Section 8.2):
+    // Net Difficulty = Hazard Difficulty + Mission Difficulty - Ship Reliability (min 0)
+    const netDifficulty = Math.max(0, AVG_HAZARD_DIFFICULTY + missionDifficulty - shipReliability);
+
+    // Estimate hazard pass chance based on engineers available
+    // Higher engineers = better chance = we can take harder missions
+    // If net_difficulty - engineers <= 2, we have good odds with average ship stats
+    const riskFactor = Math.max(0, netDifficulty - engineers - 2);
+
+    // Value = VP * 10 + income - risk penalty
+    // Risk penalty: each point of unfavorable difficulty costs 5 value points
+    const value = mission.vp * 10 + mission.income - (riskFactor * 5);
+
+    if (value > bestValue) {
+      bestValue = value;
+      bestMission = mission;
+    }
+  }
+
+  if (!bestMission) return null;
 
   // Use helium for USA, hydrogen for others
   const gasType = player.faction === 'usa' ? 'helium' : 'hydrogen';
 
   return {
-    missionId: bestEval.mission.id,
+    missionId: bestMission.id,
     gasType
   };
 }
