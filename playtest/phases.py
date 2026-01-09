@@ -13,7 +13,7 @@ from typing import Any
 from client import ActionResult, GameState, Player
 
 from .config import PLAYERS, EARLY_REVEAL_MODE, is_ai_player
-from .client import get_client, get_faction_from_player
+from .client import get_client, get_faction_from_player, get_manifest
 from .logging import get_logger, PlaytestLogger
 from .state import (
     get_state, get_phase, get_player_agents, get_player_hand, get_available_locations,
@@ -24,7 +24,7 @@ from .state import (
 from .shared_state import get_shared_state
 from .strategy import (
     find_strategic_placement, get_blueprint_design_blueprint, get_reveal_acquisitions,
-    evaluate_combat_mission_readiness, find_best_combat_mission
+    evaluate_combat_mission_readiness, find_best_combat_mission, _calculate_hull_cost
 )
 
 
@@ -917,7 +917,9 @@ def _execute_placement(player: str, game_id: str, card: dict, location: dict, lo
             kwargs['blueprint'] = blueprint
             action_desc = f"placed at {loc_id} and updated blueprint"
     elif loc_id == 'gas_depot':
-        gas_type = "helium" if player == "playtest_usa" else "hydrogen"
+        # USA faction uses helium (per Section 10.2.4 faction ability)
+        faction = get_faction_from_player(player)
+        gas_type = "helium" if faction == "usa" else "hydrogen"
         kwargs['gasType'] = gas_type
         kwargs['gasAmount'] = 3
         action_desc = f"placed at {loc_id} and bought 3 {gas_type}"
@@ -936,6 +938,38 @@ def _execute_placement(player: str, game_id: str, card: dict, location: dict, lo
     elif loc_id == 'research_institute':
         kwargs['levels'] = 1
         action_desc = f"placed at {loc_id} and upgraded research level"
+    elif loc_id == 'repair':
+        # Repair as many ships as we can afford
+        # Cost per ship: floor(Hull Cost / 2) + 1 Engineer
+        if pre_player_data:
+            repair_ship_count = sum(1 for s in (pre_player_data.ships or []) if s.status == 'repair')
+            if repair_ship_count > 0:
+                manifest = get_manifest()
+                blueprint_dict = {
+                    'frameSlots': list(pre_player_data.blueprint.frame_slots or []) if pre_player_data.blueprint else [],
+                    'fabricSlots': list(pre_player_data.blueprint.fabric_slots or []) if pre_player_data.blueprint else [],
+                    'driveSlots': list(pre_player_data.blueprint.drive_slots or []) if pre_player_data.blueprint else [],
+                    'componentSlots': list(pre_player_data.blueprint.component_slots or []) if pre_player_data.blueprint else [],
+                }
+                hull_cost = _calculate_hull_cost(manifest, blueprint_dict)
+                cash_cost_per_ship = hull_cost // 2
+                cash_available = pre_player_data.cash or 0
+                engineers_available = pre_player_data.engineers or 0
+
+                # Calculate how many we can afford
+                affordable_by_cash = cash_available // cash_cost_per_ship if cash_cost_per_ship > 0 else repair_ship_count
+                affordable_by_engineers = engineers_available
+                can_repair = min(repair_ship_count, affordable_by_cash, affordable_by_engineers)
+
+                if can_repair > 0:
+                    kwargs['repairCount'] = can_repair
+                    action_desc = f"placed at {loc_id} and repaired {can_repair} ship(s)"
+                else:
+                    action_desc = f"placed at {loc_id} (cannot afford repair)"
+            else:
+                action_desc = f"placed at {loc_id} (no ships to repair)"
+        else:
+            action_desc = f"placed at {loc_id}"
     elif loc_id in ('launchpad', 'launchpad_2'):
         action_desc = f"placed at {loc_id} (launching ships next)"
 

@@ -152,8 +152,9 @@ def get_blueprint_design_blueprint(player_data: Player, current_age: int = 1, is
 
     # Calculate retrofit cost constraints (only for normal play, not age transition)
     # Retrofit cost = (new hull cost - old hull cost) × (hangarShips + repairShips)
-    hangar_ships = player_data.hangar_ships or 0
-    repair_ships = player_data.repair_ships or 0
+    # Count ships by status from the ships list
+    hangar_ships = sum(1 for s in (player_data.ships or []) if s.status == 'hangar')
+    repair_ships = sum(1 for s in (player_data.ships or []) if s.status == 'repair')
     ships_to_retrofit = hangar_ships + repair_ships
     player_cash = player_data.cash or 0
 
@@ -639,12 +640,35 @@ def find_strategic_placement(
             priority_locations.append('treasury')  # Get cash first
             priority_locations.append('construction_hall')
 
+    # REPAIR: If we have damaged ships, repair them to get ships back in hangar
+    # Repair cost per ship: floor(Hull Cost / 2) + 1 Engineer
+    repair_ships = sum(1 for s in ships if s.status == 'repair')
+    blueprint = player_data.blueprint
+    if repair_ships > 0:
+        manifest = get_manifest()
+        blueprint_dict = {
+            'frameSlots': list(blueprint.frame_slots or []) if blueprint else [],
+            'fabricSlots': list(blueprint.fabric_slots or []) if blueprint else [],
+            'driveSlots': list(blueprint.drive_slots or []) if blueprint else [],
+            'componentSlots': list(blueprint.component_slots or []) if blueprint else [],
+        }
+        hull_cost = _calculate_hull_cost(manifest, blueprint_dict)
+        repair_cash_cost = hull_cost // 2
+        # Can we afford at least one repair?
+        if cash >= repair_cash_cost and engineers >= 1:
+            priority_locations.append('repair')
+        elif engineers < 1:
+            # Need engineers first to repair
+            priority_locations.append('engineering_depot')
+        else:
+            # Need cash first to repair
+            priority_locations.append('treasury')
+
     # Need gas to launch
     if total_gas < 1:
         priority_locations.append('gas_depot')
 
     # Need minimum components installed (at least one Frame, one Fabric, one Drive)
-    blueprint = player_data.blueprint
     if blueprint:
         has_frame = any(s is not None for s in (blueprint.frame_slots or []))
         has_fabric = any(s is not None for s in (blueprint.fabric_slots or []))
@@ -706,7 +730,7 @@ def find_strategic_placement(
     # Note: launchpad and launchpad_2 are at the END - only use if no better option
     # because going to launchpad without ships/gas/officers is wasteful
     fallback_priorities = [
-        'construction_hall', 'gas_depot', 'blueprint_design',
+        'construction_hall', 'gas_depot', 'blueprint_design', 'repair',
         'personnel_office', 'engineering_depot', 'treasury',
         'ministry', 'weather_bureau', 'research_institute',
         'technical_institute', 'flight_school', 'government_liaison',

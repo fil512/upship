@@ -639,6 +639,24 @@ export function findStrategicPlacement(
     }
   }
 
+  // REPAIR: If we have damaged ships, repair them to get ships back in hangar
+  // Repair cost per ship: floor(Hull Cost / 2) + 1 Engineer
+  const repairShipCount = player.repairShips || 0;
+  if (repairShipCount > 0) {
+    const hullCost = calculateHullCost(player);
+    const repairCashCost = Math.floor(hullCost / 2);
+    // Can we afford at least one repair?
+    if (cash >= repairCashCost && engineers >= 1) {
+      priorityLocations.push('repair');
+    } else if (engineers < 1) {
+      // Need engineers first to repair
+      priorityLocations.push('engineering_depot');
+    } else {
+      // Need cash first to repair
+      priorityLocations.push('treasury');
+    }
+  }
+
   // Need gas to launch
   if (totalGas < 1) {
     priorityLocations.push('gas_depot');
@@ -701,7 +719,7 @@ export function findStrategicPlacement(
   // Phase 7: Fallback priorities (match playtest order)
   // Note: launchpad at END - only use if no better option (wasteful without resources)
   const fallbackPriorities = [
-    'construction_hall', 'gas_depot', 'blueprint_design',
+    'construction_hall', 'gas_depot', 'blueprint_design', 'repair',
     'personnel_office', 'engineering_depot', 'treasury',
     'ministry', 'weather_bureau', 'research_institute',
     'technical_institute', 'flight_school', 'government_liaison',
@@ -783,6 +801,25 @@ function buildLocationAction(
 
     case 'insurance_bureau':
       return { policyCount: 1 };
+
+    case 'repair': {
+      // Repair as many ships as we can afford
+      // Cost per ship: floor(Hull Cost / 2) + 1 Engineer
+      const repairShipCount = player.repairShips || 0;
+      if (repairShipCount === 0) return undefined;
+
+      const hullCost = calculateHullCost(player);
+      const cashCostPerShip = Math.floor(hullCost / 2);
+      const cash = player.cash || 0;
+      const engineers = player.engineers || 0;
+
+      // Calculate how many we can afford
+      const affordableByCash = cashCostPerShip > 0 ? Math.floor(cash / cashCostPerShip) : repairShipCount;
+      const affordableByEngineers = engineers;
+      const canRepair = Math.min(repairShipCount, affordableByCash, affordableByEngineers);
+
+      return canRepair > 0 ? { repairCount: canRepair } : undefined;
+    }
 
     default:
       return undefined;
