@@ -456,6 +456,15 @@ function processLaunchShip(state: GameState, playerId: string, data: LaunchShipD
     if (launchBonuses.speed) stats.speed += launchBonuses.speed;
   }
 
+  // Validate minimum ship stats required to launch
+  // Ships must have Range >= 1 and Speed >= 1 to reach any destination
+  if (stats.range < 1) {
+    throw new GameRuleError('Cannot launch: Ship Range must be at least 1. Install drive or component tiles that provide Range.');
+  }
+  if (stats.speed < 1) {
+    throw new GameRuleError('Cannot launch: Ship Speed must be at least 1. Install drive tiles that provide Speed.');
+  }
+
   // GAP-048/GAP-079: Check if player has Sparrowhawk Hangar UPGRADE installed for bypassing one requirement
   const canBypassRequirement = hasSparrowhawkHangar(playerState);
   const validBypassTypes = ['range', 'speed', 'ceiling', 'luxury'];

@@ -9,7 +9,20 @@
 		reliability: number;
 		luxury: number;
 		canLaunch: boolean;
+		frameFilled?: boolean;
+		fabricFilled?: boolean;
 	};
+
+	// Compute failure reasons
+	$: failureReasons = (() => {
+		const reasons: string[] = [];
+		if (stats.netLift < 0) reasons.push('Insufficient Lift');
+		if (stats.frameFilled === false) reasons.push('Fill Frame Slots');
+		if (stats.fabricFilled === false) reasons.push('Fill Fabric Slots');
+		if (stats.range < 1) reasons.push('Need Range >= 1');
+		if (stats.speed < 1) reasons.push('Need Speed >= 1');
+		return reasons;
+	})();
 </script>
 
 <div class="ship-stats">
@@ -35,13 +48,15 @@
 
 	<!-- Other stats in single column -->
 	<div class="stats-list">
-		<div class="stat-row">
+		<div class="stat-row" class:warning={stats.range < 1}>
 			<span class="stat-label">RANGE</span>
 			<span class="stat-value">{stats.range}</span>
+			{#if stats.range < 1}<span class="min-req">(min 1)</span>{/if}
 		</div>
-		<div class="stat-row">
+		<div class="stat-row" class:warning={stats.speed < 1}>
 			<span class="stat-label">SPEED</span>
 			<span class="stat-value">{stats.speed}</span>
+			{#if stats.speed < 1}<span class="min-req">(min 1)</span>{/if}
 		</div>
 		<div class="stat-row">
 			<span class="stat-label">CEILING</span>
@@ -60,8 +75,10 @@
 	<div class="launch-status" class:can-launch={stats.canLaunch}>
 		{#if stats.canLaunch}
 			Ready to Launch
+		{:else if failureReasons.length > 0}
+			{failureReasons.join(' / ')}
 		{:else}
-			Insufficient Lift
+			Not Ready
 		{/if}
 	</div>
 </div>
@@ -147,6 +164,22 @@
 		font-size: 0.85rem;
 		font-weight: 600;
 		color: var(--color-text-primary);
+	}
+
+	.stat-row.warning {
+		background: rgba(239, 68, 68, 0.15);
+		border: 1px solid var(--color-error);
+	}
+
+	.stat-row.warning .stat-value {
+		color: var(--color-error);
+	}
+
+	.min-req {
+		font-size: 0.6rem;
+		color: var(--color-error);
+		font-weight: 500;
+		margin-left: var(--spacing-xs);
 	}
 
 	.launch-status {
