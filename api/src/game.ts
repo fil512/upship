@@ -63,6 +63,7 @@ export interface PendingLaunch {
 	hazard?: HazardCard;  // The actual hazard card (for API compatibility)
 	hazardInfo?: PendingHazardInfo;  // Processed hazard info for UI
 	launchedAge?: number;  // Age when ship was launched
+	armor?: number;  // Ship armor for Age II flak checks
 }
 
 // Gas types

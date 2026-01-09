@@ -8,11 +8,13 @@
 		ceiling: number;
 		reliability: number;
 		luxury: number;
+		armor?: number;
 		canLaunch: boolean;
 		hasFrame?: boolean;
 		hasFabric?: boolean;
 		hasDrive?: boolean;
 	};
+	export let age: number = 1;
 
 	// Compute failure reasons
 	$: failureReasons = (() => {
@@ -68,6 +70,13 @@
 			<span class="stat-label">RELIABILITY</span>
 			<span class="stat-value">{stats.reliability}</span>
 		</div>
+		{#if age === 2}
+			<div class="stat-row armor-row" class:has-armor={(stats.armor || 0) > 0}>
+				<span class="stat-label">ARMOR</span>
+				<span class="stat-value">{stats.armor || 0}</span>
+				<span class="armor-hint">(vs Flak)</span>
+			</div>
+		{/if}
 		<div class="stat-row">
 			<span class="stat-label">LUXURY</span>
 			<span class="stat-value">{stats.luxury}</span>
@@ -199,5 +208,26 @@
 
 	.launch-status.can-launch {
 		background: var(--color-success);
+	}
+
+	/* Armor row (Age II only) */
+	.armor-row {
+		border: 1px solid rgba(139, 0, 0, 0.3);
+	}
+
+	.armor-row.has-armor {
+		background: rgba(139, 0, 0, 0.15);
+		border-color: #8b0000;
+	}
+
+	.armor-row.has-armor .stat-value {
+		color: #ff6b6b;
+	}
+
+	.armor-hint {
+		font-size: 0.55rem;
+		color: var(--color-text-muted);
+		margin-left: auto;
+		opacity: 0.7;
 	}
 </style>

@@ -8,6 +8,8 @@
 	export let difficulty: number = 0;
 	export let challengeType: string = '';
 	export let engineerCost: number | undefined = undefined;
+	export let flak: number = 0;
+	export let showFlak: boolean = false;
 	export let compact: boolean = false;
 
 	const CATEGORY_COLORS: Record<string, string> = {
@@ -86,6 +88,12 @@
 				<div class="engineer-cost" title="Spend {engineerCost} Engineers to auto-pass">
 					<Icon name="engineers" size={14} />
 					<span>{engineerCost}</span>
+				</div>
+			{/if}
+			{#if showFlak && flak > 0}
+				<div class="flak-indicator" title="Flak: {flak} (Age II anti-aircraft fire)">
+					<span class="flak-label">Flak</span>
+					<span class="flak-value">{flak}</span>
 				</div>
 			{/if}
 		{/if}
@@ -242,5 +250,30 @@
 		color: #d4a574;
 		font-size: 0.7rem;
 		font-weight: 600;
+	}
+
+	.flak-indicator {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 6px;
+		padding: 3px 8px;
+		background: rgba(139, 0, 0, 0.3);
+		border: 1px solid #8b0000;
+		border-radius: 3px;
+		color: #ff6b6b;
+		font-size: 0.7rem;
+		font-weight: 600;
+	}
+
+	.flak-label {
+		text-transform: uppercase;
+		font-size: 0.6rem;
+		opacity: 0.9;
+	}
+
+	.flak-value {
+		font-size: 0.85rem;
+		font-weight: 700;
 	}
 </style>

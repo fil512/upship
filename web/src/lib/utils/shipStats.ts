@@ -36,6 +36,7 @@ export interface ShipStatsData {
 	reliability: number;
 	luxury: number;
 	income: number;
+	armor: number;
 	canLaunch: boolean;
 	hasFrame: boolean;
 	hasFabric: boolean;
@@ -78,6 +79,7 @@ export function calculateShipStats(blueprint: Blueprint | null | undefined, age 
 		reliability: 0,
 		luxury: 0,
 		income: 0,
+		armor: 0,
 		canLaunch: false,
 		hasFrame: false,
 		hasFabric: false,
@@ -105,6 +107,7 @@ export function calculateShipStats(blueprint: Blueprint | null | undefined, age 
 				stats.reliability += tile.stats.reliability || 0;
 				stats.luxury += tile.stats.luxury || 0;
 				stats.income += tile.stats.income || 0;
+				stats.armor += tile.stats.armor || 0;
 				stats.lift += tile.stats.lift || 0; // Some tiles provide bonus lift
 				// Gas sockets on frame tiles provide +5 lift each
 				stats.lift += (tile.stats.gas_socket || 0) * 5;
@@ -117,6 +120,9 @@ export function calculateShipStats(blueprint: Blueprint | null | undefined, age 
 
 	// Calculate net lift
 	stats.netLift = stats.lift - stats.weight;
+
+	// Cap armor at 4 (per Section 10.5: "Max Armor is 4; 5 Flak always destroys")
+	stats.armor = Math.min(stats.armor, 4);
 
 	// Check if minimum components are installed (at least one of each required type)
 	stats.hasFrame = (blueprint.frameSlots || []).some(s => s !== null);

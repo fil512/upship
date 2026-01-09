@@ -1207,7 +1207,7 @@
 				{#if shipStats}
 					<div class="panel ship-stats-panel">
 						<h3>Ship Stats</h3>
-						<ShipStats stats={shipStats} />
+						<ShipStats stats={shipStats} age={$gameState?.age || 1} />
 					</div>
 				{/if}
 			</aside>
@@ -1446,7 +1446,7 @@
 						{/if}
 						{#if previewShipStats}
 							<div class="blueprint-design-stats">
-								<ShipStats stats={previewShipStats} />
+								<ShipStats stats={previewShipStats} age={$gameState?.age || 1} />
 							</div>
 						{/if}
 						<div class="blueprint-design-buttons">
@@ -1539,6 +1539,8 @@
 									difficulty={peekedHazard.difficulty || 0}
 									challengeType={peekedHazard.challengeType || ''}
 									engineerCost={peekedHazard.engineerCost}
+									flak={peekedHazard.flak || 0}
+									showFlak={$gameState?.age === 2}
 									compact={true}
 								/>
 							</div>
@@ -1568,9 +1570,24 @@
 										difficulty={pendingHazard.difficulty || 0}
 										challengeType={pendingHazard.challengeType || pendingHazard.statName || ''}
 										engineerCost={pendingHazard.engineersNeeded}
+										flak={pendingHazard.flak || 0}
+										showFlak={$gameState?.age === 2}
 										compact={true}
 									/>
 								</div>
+								{#if $gameState?.age === 2 && pendingLaunch?.missionId}
+									{@const armor = pendingLaunch.armor || 0}
+									{@const flak = pendingHazard.flak || 0}
+									<div class="flak-warning" class:will-survive={armor >= flak} class:will-die={flak > armor}>
+										{#if flak === 0}
+											<span class="flak-safe">No anti-aircraft fire</span>
+										{:else if flak > armor}
+											<span class="flak-danger">⚠ Flak {flak} > Armor {armor} — Ship will be destroyed!</span>
+										{:else}
+											<span class="flak-ok">Armor {armor} ≥ Flak {flak} — Ship will survive</span>
+										{/if}
+									</div>
+								{/if}
 								<div class="hazard-actions">
 									{#if pendingHazard.autoPassReason}
 										<p class="hazard-auto-pass">Auto-pass: {pendingHazard.autoPassReason}</p>
@@ -2653,6 +2670,38 @@
 		font-size: 0.8rem;
 		color: var(--color-text-secondary);
 		margin: 0;
+	}
+
+	/* Flak warning for Age II missions */
+	.flak-warning {
+		font-size: 0.8rem;
+		padding: var(--spacing-sm);
+		border-radius: var(--radius-sm);
+		margin: var(--spacing-sm) 0;
+		text-align: center;
+		font-weight: 600;
+	}
+
+	.flak-warning.will-survive {
+		background: rgba(76, 175, 80, 0.15);
+		border: 1px solid var(--color-success);
+	}
+
+	.flak-warning.will-die {
+		background: rgba(244, 67, 54, 0.15);
+		border: 1px solid var(--color-error);
+	}
+
+	.flak-safe {
+		color: var(--color-success);
+	}
+
+	.flak-ok {
+		color: var(--color-success);
+	}
+
+	.flak-danger {
+		color: var(--color-error);
 	}
 
 	.hazard-catastrophic {
