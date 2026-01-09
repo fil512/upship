@@ -40,6 +40,7 @@
 	import PlayersList from '$lib/components/sidebar/PlayersList.svelte';
 	import GameLog from '$lib/components/sidebar/GameLog.svelte';
 	import BudgetDisplay from '$lib/components/sidebar/BudgetDisplay.svelte';
+	import RetrofitReceipt from '$lib/components/sidebar/RetrofitReceipt.svelte';
 
 	// Market Components
 	import MarketSection from '$lib/components/market/MarketSection.svelte';
@@ -639,14 +640,91 @@
 		? calculateShipStats(pendingBlueprint)
 		: null;
 
+	// Retrofit cost calculation for blueprint design mode
+	interface RetrofitCostInfo {
+		startingCash: number;
+		oldHullCost: number;
+		newHullCost: number;
+		costIncrease: number;
+		shipsToRetrofit: number;
+		retrofitCost: number;
+		remainingCash: number;
+		isAgeTransition: boolean;
+	}
+
+	function calculateRetrofitCostInfo(
+		oldBlueprint: BlueprintType | undefined,
+		newBlueprint: BlueprintType,
+		hangarShips: number,
+		repairShips: number,
+		currentCash: number,
+		isAgeTransition: boolean
+	): RetrofitCostInfo {
+		const oldCost = calculateHullCost(oldBlueprint);
+		const newCost = calculateHullCost(newBlueprint);
+		const costIncrease = Math.max(0, newCost - oldCost);
+		const shipsToRetrofit = hangarShips + repairShips;
+		const retrofitCost = isAgeTransition ? 0 : costIncrease * shipsToRetrofit;
+
+		return {
+			startingCash: currentCash,
+			oldHullCost: oldCost,
+			newHullCost: newCost,
+			costIncrease,
+			shipsToRetrofit,
+			retrofitCost,
+			remainingCash: currentCash - retrofitCost,
+			isAgeTransition
+		};
+	}
+
+	$: retrofitCostInfo = blueprintDesignMode && pendingBlueprint && $myState?.blueprint
+		? calculateRetrofitCostInfo(
+			$myState.blueprint,
+			pendingBlueprint,
+			$myState.hangarShips || 0,
+			$myState.repairShips || 0,
+			$myState.cash || 0,
+			isAgeTransitionBlueprintDesignPhase
+		)
+		: null;
+
+	$: canAffordRetrofit = retrofitCostInfo ? retrofitCostInfo.remainingCash >= 0 : true;
+
 	function handleTechTileSelect(event: CustomEvent<{ tileId: string }>) {
 		selectedTechTileId = event.detail.tileId;
 	}
 
 	function handlePlaceTile(event: CustomEvent<{ slotType: string; index: number; tileId: string }>) {
-		if (!pendingBlueprint) return;
+		if (!pendingBlueprint || !$myState?.blueprint) return;
 		const { slotType, index, tileId } = event.detail;
 		const slotKey = `${slotType}Slots` as keyof BlueprintType;
+
+		// Create test blueprint to check cost before applying
+		const testBlueprint = structuredClone(pendingBlueprint);
+		const testSlots = testBlueprint[slotKey] as (string | null)[];
+		if (testSlots && index < testSlots.length) {
+			testSlots[index] = tileId;
+		}
+
+		// Check if this would exceed available cash (skip for age transition - free changes)
+		if (!isAgeTransitionBlueprintDesignPhase) {
+			const testCostInfo = calculateRetrofitCostInfo(
+				$myState.blueprint,
+				testBlueprint,
+				$myState.hangarShips || 0,
+				$myState.repairShips || 0,
+				$myState.cash || 0,
+				false
+			);
+
+			if (testCostInfo.remainingCash < 0) {
+				showToast('Insufficient funds for this upgrade', 'error');
+				return;
+			}
+		}
+
+		// Apply the change
 		const slots = pendingBlueprint[slotKey] as (string | null)[];
 		if (slots && index < slots.length) {
 			slots[index] = tileId;
@@ -1326,13 +1404,30 @@
 								Select a tech tile on the right, then click a blueprint slot
 							{/if}
 						</p>
+						<!-- Retrofit Cost Receipt -->
+						{#if retrofitCostInfo}
+							<RetrofitReceipt
+								startingCash={retrofitCostInfo.startingCash}
+								oldHullCost={retrofitCostInfo.oldHullCost}
+								newHullCost={retrofitCostInfo.newHullCost}
+								costIncrease={retrofitCostInfo.costIncrease}
+								shipsToRetrofit={retrofitCostInfo.shipsToRetrofit}
+								retrofitCost={retrofitCostInfo.retrofitCost}
+								remainingCash={retrofitCostInfo.remainingCash}
+								isAgeTransition={retrofitCostInfo.isAgeTransition}
+							/>
+						{/if}
 						{#if previewShipStats}
 							<div class="blueprint-design-stats">
 								<ShipStats stats={previewShipStats} />
 							</div>
 						{/if}
 						<div class="blueprint-design-buttons">
-							<button class="btn primary w-full" on:click={handleBlueprintDesignDone}>
+							<button
+								class="btn primary w-full"
+								on:click={handleBlueprintDesignDone}
+								disabled={!canAffordRetrofit}
+							>
 								{isAgeTransitionBlueprintDesignPhase ? 'Continue to Next Age' : 'Done'}
 							</button>
 							{#if !isAgeTransitionBlueprintDesignPhase}

@@ -8,8 +8,8 @@ const { processInstallUpgrade, processRemoveUpgrade, calculateHullCost } = requi
 
 describe('Rules Compliance - Blueprint System', () => {
 
-  describe('GAP-032: Hull Upgrade Rule', () => {
-    it('should charge hull cost difference when upgrading Frame with ships in hangar', () => {
+  describe('Retrofit Cost (formerly Hull Upgrade Rule)', () => {
+    it('should charge retrofit cost when upgrading Frame with ships in hangar', () => {
       const state = createTestGameState();
       state.age = 1;
 
@@ -18,24 +18,23 @@ describe('Rules Compliance - Blueprint System', () => {
       state.players['1'].cash = 100;
 
       // Old frame has hull cost 0 (null slot)
-      // New frame has hull cost 2 (duralumin_frame)
+      // New frame duralumin_frame has hullCost: 1
       state.players['1'].blueprint.frameSlots = [null];
-      state.players['1'].blueprint.fabricSlots = ['premium_envelope']; // cost 1
-      state.players['1'].ships = [
-        { id: 'ship1', status: 'hangar' },
-        { id: 'ship2', status: 'hangar' }
-      ];
+      state.players['1'].blueprint.fabricSlots = ['premium_envelope']; // cost 3
+      // Use new ship tracking: hangarShips and repairShips counters
+      state.players['1'].hangarShips = 2;
+      state.players['1'].repairShips = 0;
 
-      // Install a frame upgrade that costs £2
+      // Install a frame upgrade
       processInstallUpgrade(state, '1', { slotType: 'frame', slotIndex: 0, upgradeId: 'duralumin_frame', _internal: true });
 
-      // Hull cost increase is 2 (new frame cost) - 0 (old frame cost) = 2
-      // With 2 ships in hangar: 2 * 2 = 4
-      // Cash should be 100 - 4 = 96
-      expect(state.players['1'].cash).toBe(96);
+      // Hull cost increase is 1 (duralumin_frame hullCost) - 0 (null slot) = 1
+      // With 2 ships in hangar: 1 * 2 = 2
+      // Cash should be 100 - 2 = 98
+      expect(state.players['1'].cash).toBe(98);
     });
 
-    it('should NOT charge when upgrading Frame with no ships in hangar', () => {
+    it('should NOT charge when upgrading Frame with no ships in hangar or repair', () => {
       const state = createTestGameState();
       state.age = 1;
 
@@ -43,11 +42,10 @@ describe('Rules Compliance - Blueprint System', () => {
       state.players['1'].techCards = ['duralumin_girders'];
       state.players['1'].cash = 100;
 
-      // Clear frame slot, NO ships in hangar
+      // Clear frame slot, NO ships in hangar or repair
       state.players['1'].blueprint.frameSlots = [null];
-      state.players['1'].ships = [
-        { id: 'ship1', status: 'on_route' }  // On route, not hangar
-      ];
+      state.players['1'].hangarShips = 0;
+      state.players['1'].repairShips = 0;
 
       processInstallUpgrade(state, '1', { slotType: 'frame', slotIndex: 0, upgradeId: 'duralumin_frame', _internal: true });
 
@@ -55,7 +53,7 @@ describe('Rules Compliance - Blueprint System', () => {
       expect(state.players['1'].cash).toBe(100);
     });
 
-    it('should NOT charge when upgrading non-structural slots', () => {
+    it('should charge retrofit cost for ALL slot types including drive', () => {
       const state = createTestGameState();
       state.age = 1;
 
@@ -63,17 +61,16 @@ describe('Rules Compliance - Blueprint System', () => {
       state.players['1'].techCards = ['daimler_engine'];
       state.players['1'].cash = 100;
 
-      // Ships in hangar
+      // Ships in hangar - retrofit cost applies to ALL slot types
       state.players['1'].blueprint.driveSlots = [null];
-      state.players['1'].ships = [
-        { id: 'ship1', status: 'hangar' }
-      ];
+      state.players['1'].hangarShips = 1;
+      state.players['1'].repairShips = 0;
 
-      // Drive slot upgrade - should NOT trigger hull cost charge
+      // Drive slot upgrade - basic_engine has hullCost 1
       processInstallUpgrade(state, '1', { slotType: 'drive', slotIndex: 0, upgradeId: 'basic_engine', _internal: true });
 
-      // No hull cost charge for drive upgrades
-      expect(state.players['1'].cash).toBe(100);
+      // Retrofit cost: 1 (new cost) - 0 (old cost) = 1, with 1 ship = £1
+      expect(state.players['1'].cash).toBe(99);
     });
 
     it('should charge when upgrading Fabric with ships in hangar', () => {
@@ -89,9 +86,8 @@ describe('Rules Compliance - Blueprint System', () => {
       // New fabric (premium_envelope) has hull cost 3 per the UPGRADES data
       state.players['1'].blueprint.frameSlots = [null]; // No frame installed
       state.players['1'].blueprint.fabricSlots = [null];
-      state.players['1'].ships = [
-        { id: 'ship1', status: 'hangar' }
-      ];
+      state.players['1'].hangarShips = 1;
+      state.players['1'].repairShips = 0;
 
       // Install fabric upgrade
       processInstallUpgrade(state, '1', { slotType: 'fabric', slotIndex: 0, upgradeId: 'premium_envelope', _internal: true });
@@ -101,24 +97,45 @@ describe('Rules Compliance - Blueprint System', () => {
       expect(state.players['1'].cash).toBe(97);
     });
 
-    it('should reject upgrade if player cannot afford hull cost difference', () => {
+    it('should include damaged ships (repairShips) in retrofit cost calculation', () => {
+      const state = createTestGameState();
+      state.age = 1;
+
+      // Give player required tech and cash
+      state.players['1'].techCards = ['duralumin_girders'];
+      state.players['1'].cash = 100;
+
+      // 1 ship in hangar, 1 in repair bay = 2 total ships to retrofit
+      state.players['1'].blueprint.frameSlots = [null];
+      state.players['1'].hangarShips = 1;
+      state.players['1'].repairShips = 1;
+
+      // duralumin_frame has hullCost: 1
+      processInstallUpgrade(state, '1', { slotType: 'frame', slotIndex: 0, upgradeId: 'duralumin_frame', _internal: true });
+
+      // Hull cost increase is 1 (duralumin_frame hullCost) - 0 (null slot) = 1
+      // With 2 total ships (1 hangar + 1 repair): 1 * 2 = 2
+      expect(state.players['1'].cash).toBe(98);
+    });
+
+    it('should reject upgrade if player cannot afford retrofit cost', () => {
       const state = createTestGameState();
       state.age = 1;
 
       // Give player required tech but not enough cash
-      state.players['1'].techCards = ['duralumin_girders'];
-      state.players['1'].cash = 3;  // Not enough for 2 ships * 2 cost = 4
+      // premium_envelope has hullCost: 3
+      // With 2 ships: 3 * 2 = 6, need at least £6
+      state.players['1'].techCards = ['goldbeater_skin'];
+      state.players['1'].cash = 5;  // Not enough for 2 ships * 3 cost = 6
 
       state.players['1'].blueprint.frameSlots = [null];
       state.players['1'].blueprint.fabricSlots = [null];
-      state.players['1'].ships = [
-        { id: 'ship1', status: 'hangar' },
-        { id: 'ship2', status: 'hangar' }
-      ];
+      state.players['1'].hangarShips = 2;
+      state.players['1'].repairShips = 0;
 
       // The InsufficientFundsError includes "Not enough" which matches our pattern
       expect(() => {
-        processInstallUpgrade(state, '1', { slotType: 'frame', slotIndex: 0, upgradeId: 'duralumin_frame', _internal: true });
+        processInstallUpgrade(state, '1', { slotType: 'fabric', slotIndex: 0, upgradeId: 'premium_envelope', _internal: true });
       }).toThrow(/Not enough|insufficient|afford|cash/i);
     });
   });

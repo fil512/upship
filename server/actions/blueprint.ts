@@ -260,29 +260,30 @@ function processInstallTechTile(state: GameState, playerId: string, data: Instal
     throw new GameRuleError(`${tile.name} is already installed in your blueprint. Each Tech Tile must be unique.`);
   }
 
-  // GAP-032: Hull Upgrade Rule - charge hull cost difference for ships in hangar
-  // Only applies to Frame and Fabric slots per Section 6.2
-  const isStructuralSlot = slotKey === 'frameSlots' || slotKey === 'fabricSlots';
-  const shipsInHangar = (playerState.ships || []).filter(s => s.status === 'hangar').length;
+  // Retrofit Cost: charge hull cost difference for ALL ships in hangar (including repair bay)
+  // Applies to ALL slot types (Frame, Fabric, Drive, Component)
+  const hangarShips = playerState.hangarShips || 0;
+  const repairShips = playerState.repairShips || 0;
+  const shipsToRetrofit = hangarShips + repairShips;
 
-  if (isStructuralSlot && shipsInHangar > 0) {
+  if (shipsToRetrofit > 0) {
     const oldHullCost = getTechTileHullCost(blueprintAny[slotKey][slotIndex]);
     const newHullCost = getTechTileHullCost(targetId!);
     const hullCostIncrease = Math.max(0, newHullCost - oldHullCost);
 
     if (hullCostIncrease > 0) {
-      const totalCharge = hullCostIncrease * shipsInHangar;
+      const totalCharge = hullCostIncrease * shipsToRetrofit;
 
       if (playerState.cash < totalCharge) {
         throw new InsufficientFundsError(totalCharge, playerState.cash,
-          `Hull Upgrade Rule: £${hullCostIncrease} per ship × ${shipsInHangar} ships in hangar`);
+          `Retrofit Cost: £${hullCostIncrease} increase × ${shipsToRetrofit} ships (${hangarShips} hangar + ${repairShips} repair)`);
       }
 
       playerState.cash -= totalCharge;
 
       state.log.push({
         timestamp: new Date().toISOString(),
-        message: `Hull Upgrade Rule: Paid £${totalCharge} (£${hullCostIncrease} × ${shipsInHangar} ships)`,
+        message: `Retrofit Cost: Paid £${totalCharge} (£${hullCostIncrease} × ${shipsToRetrofit} ships)`,
         playerId,
         type: 'action'
       } as LogEntry);
@@ -504,26 +505,28 @@ function processUpdateBlueprint(state: GameState, playerId: string, data: Update
     throw new GameRuleError(errorMessage);
   }
 
-  // Calculate Hull Upgrade Rule charges (unless skipped for age transitions)
+  // Calculate Retrofit Cost charges (unless skipped for age transitions)
   if (!skipHullRule) {
     const oldHullCost = calculateHullCost(oldBlueprint);
     const newHullCost = calculateHullCost(mergedBlueprint);
     const hullCostIncrease = Math.max(0, newHullCost - oldHullCost);
-    const shipsInHangar = (playerState.ships || []).filter(s => s.status === 'hangar').length;
+    const hangarShips = playerState.hangarShips || 0;
+    const repairShips = playerState.repairShips || 0;
+    const shipsToRetrofit = hangarShips + repairShips;
 
-    if (hullCostIncrease > 0 && shipsInHangar > 0) {
-      const totalCharge = hullCostIncrease * shipsInHangar;
+    if (hullCostIncrease > 0 && shipsToRetrofit > 0) {
+      const totalCharge = hullCostIncrease * shipsToRetrofit;
 
       if (playerState.cash < totalCharge) {
         throw new InsufficientFundsError(totalCharge, playerState.cash,
-          `Hull Upgrade Rule: £${hullCostIncrease} increase × ${shipsInHangar} ships in hangar`);
+          `Retrofit Cost: £${hullCostIncrease} increase × ${shipsToRetrofit} ships (${hangarShips} hangar + ${repairShips} repair)`);
       }
 
       playerState.cash -= totalCharge;
 
       state.log.push({
         timestamp: new Date().toISOString(),
-        message: `Hull Upgrade Rule: Paid £${totalCharge} (£${hullCostIncrease} × ${shipsInHangar} ships)`,
+        message: `Retrofit Cost: Paid £${totalCharge} (£${hullCostIncrease} × ${shipsToRetrofit} ships)`,
         playerId,
         type: 'action'
       } as LogEntry);
