@@ -11,6 +11,7 @@ from typing import Any
 
 from client import Player, Ship, Blueprint, Route, Card, CombatMission
 
+from .config import VERBOSE_STRATEGY
 from .state import get_state, get_available_routes, get_available_routes_for_player, get_mission_row, get_player_id, get_rd_board, get_market_cards, get_ship_details
 from .client import get_player_user_id, get_manifest
 
@@ -530,7 +531,8 @@ def find_strategic_placement(
     hand: list[dict],
     locations: list[dict],
     game_id: str,
-    return_decision_info: bool = False
+    return_decision_info: bool = False,
+    verbose: bool | None = None
 ) -> tuple[dict | None, dict | None] | tuple[dict | None, dict | None, dict]:
     """Find a strategic card/location combination using intelligent evaluation.
 
@@ -548,13 +550,24 @@ def find_strategic_placement(
         locations: List of available location dicts.
         game_id: The game ID.
         return_decision_info: If True, return a third element with decision details.
+        verbose: If True, print analysis incrementally for debugging.
 
     Returns:
         Tuple of (card, location) or (None, None) if no match found.
         If return_decision_info=True, returns (card, location, decision_info).
     """
+    # Use config default if verbose not explicitly set
+    is_verbose = verbose if verbose is not None else VERBOSE_STRATEGY
+    faction = player.replace('playtest_', '').upper()
+
+    def vprint(msg: str) -> None:
+        """Print if verbose mode is enabled."""
+        if is_verbose:
+            print(f"    [{faction}] {msg}")
+
     state = get_state(game_id, player)
     if not state:
+        vprint("WARNING: No game state available")
         if return_decision_info:
             return find_playable_card(hand, locations) + ({'reason': 'no state'},)
         return find_playable_card(hand, locations)
@@ -563,6 +576,7 @@ def find_strategic_placement(
     player_data = state.get_player(player_id) if player_id else None
 
     if not player_data:
+        vprint("WARNING: No player data available")
         if return_decision_info:
             return find_playable_card(hand, locations) + ({'reason': 'no player data'},)
         return find_playable_card(hand, locations)
@@ -579,6 +593,7 @@ def find_strategic_placement(
     ships = player_data.ships or []
     hangar_count = sum(1 for s in ships if s.status == 'hangar')
     on_route_count = sum(1 for s in ships if s.status == 'on_route')
+    repair_count = sum(1 for s in ships if s.status == 'repair')
 
     # Use player-specific route filtering to exclude double-track routes
     # where this player already owns the other track
@@ -588,7 +603,21 @@ def find_strategic_placement(
     # Get missions for Age II
     missions = get_mission_row(game_id) if current_age == 2 else None
 
+    # Print player status
+    vprint(f"Status: £{cash}, {officers} officers, {engineers} eng, {hydrogen}H2+{helium}He gas")
+    vprint(f"Ships: {hangar_count} hangar, {on_route_count} on_route, {repair_count} repair")
+    vprint(f"Hand: {len(hand)} cards, Available locations: {len(locations)}")
+
     launch_eval = evaluate_launch_readiness(player_data, routes, current_age, missions)
+
+    # Print launch readiness analysis
+    if launch_eval['can_launch']:
+        vprint(f"LAUNCH READY! Routes available: {len(routes) if routes else 0}")
+    else:
+        missing = launch_eval.get('missing', [])
+        vprint(f"Not launch ready: {'; '.join(missing[:3])}")  # First 3 reasons
+        if len(missing) > 3:
+            vprint(f"  ... and {len(missing) - 3} more issues")
 
     # Build decision info for logging
     decision_info = {
@@ -622,6 +651,7 @@ def find_strategic_placement(
         priority_locations.append('launchpad')
         priority_locations.append('launchpad_2')  # Second launchpad space
         decision_info['priority_reason'] = 'VP STRATEGY: launch ready - going to launchpad!'
+        vprint("Priority: LAUNCH (can launch and have targets)")
     else:
         decision_info['priority_reason'] = f"not launch ready: {'; '.join(launch_eval.get('missing', []))}"
 
@@ -631,20 +661,22 @@ def find_strategic_placement(
     if officers < officers_needed:
         if 'personnel_office' not in priority_locations:
             priority_locations.append('personnel_office')  # Collect officers from track
+            vprint(f"  +personnel_office (need {officers_needed} officers, have {officers})")
 
     # Need a ship to launch
     if hangar_count == 0:
         if cash >= 5:
             priority_locations.append('construction_hall')
+            vprint(f"  +construction_hall (no ships, have £{cash})")
         else:
             priority_locations.append('treasury')  # Get cash first
             priority_locations.append('construction_hall')
+            vprint(f"  +treasury, +construction_hall (no ships, need cash)")
 
     # REPAIR: If we have damaged ships, repair them to get ships back in hangar
     # Repair cost per ship: floor(Hull Cost / 2) + 1 Engineer
-    repair_ships = sum(1 for s in ships if s.status == 'repair')
     blueprint = player_data.blueprint
-    if repair_ships > 0:
+    if repair_count > 0:
         manifest = get_manifest()
         blueprint_dict = {
             'frameSlots': list(blueprint.frame_slots or []) if blueprint else [],
@@ -657,16 +689,20 @@ def find_strategic_placement(
         # Can we afford at least one repair?
         if cash >= repair_cash_cost and engineers >= 1:
             priority_locations.append('repair')
+            vprint(f"  +repair ({repair_count} damaged ships, cost £{repair_cash_cost}+1eng)")
         elif engineers < 1:
             # Need engineers first to repair
             priority_locations.append('engineering_depot')
+            vprint(f"  +engineering_depot (need engineers to repair)")
         else:
             # Need cash first to repair
             priority_locations.append('treasury')
+            vprint(f"  +treasury (need £{repair_cash_cost} to repair)")
 
     # Need gas to launch
     if total_gas < 1:
         priority_locations.append('gas_depot')
+        vprint(f"  +gas_depot (no gas)")
 
     # Need minimum components installed (at least one Frame, one Fabric, one Drive)
     if blueprint:
@@ -676,17 +712,28 @@ def find_strategic_placement(
 
         if not has_frame or not has_fabric or not has_drive:
             # Missing minimum required components
+            missing_slots = []
+            if not has_frame:
+                missing_slots.append('Frame')
+            if not has_fabric:
+                missing_slots.append('Fabric')
+            if not has_drive:
+                missing_slots.append('Drive')
             if 'blueprint_design' not in priority_locations:
                 priority_locations.append('blueprint_design')
+                vprint(f"  +blueprint_design (missing: {', '.join(missing_slots)})")
 
     # CRITICAL: If no routes are achievable, prioritize getting drive upgrades
     # This is how ships get speed/range to reach routes
     if not launch_eval.get('has_achievable_target') and hangar_count > 0:
         # Ship exists but can't reach any routes - need better stats
+        vprint(f"  WARNING: Have ship but no achievable routes!")
         if 'blueprint_design' not in priority_locations:
             priority_locations.insert(0, 'blueprint_design')
+            vprint(f"  +blueprint_design (priority 1 - need better stats)")
         if 'research_institute' not in priority_locations:
             priority_locations.insert(0, 'research_institute')
+            vprint(f"  +research_institute (priority 1 - need tech for drives)")
 
     # PRIORITY 3: Build up for NEXT launch (secondary)
     # Build more ships if we have cash and hangar is low
@@ -729,8 +776,9 @@ def find_strategic_placement(
     # General fallbacks (low priority)
     # Note: launchpad and launchpad_2 are at the END - only use if no better option
     # because going to launchpad without ships/gas/officers is wasteful
+    # Note: 'repair' is NOT included - only add it if repair_ships > 0 (handled above)
     fallback_priorities = [
-        'construction_hall', 'gas_depot', 'blueprint_design', 'repair',
+        'construction_hall', 'gas_depot', 'blueprint_design',
         'personnel_office', 'engineering_depot', 'treasury',
         'ministry', 'weather_bureau', 'research_institute',
         'technical_institute', 'flight_school', 'government_liaison',
@@ -746,6 +794,13 @@ def find_strategic_placement(
     decision_info['available_locations'] = list(available_loc_ids)
     decision_info['priority_order'] = priority_locations[:10]  # Top 10
 
+    vprint(f"Priorities: {' -> '.join(priority_locations[:5])}")
+    vprint(f"Available: {', '.join(sorted(available_loc_ids))}")
+
+    # Show hand symbols for debugging
+    hand_symbols = [f"{c.get('name', '?')[:8]}({c.get('symbol', '?')})" for c in hand[:5]]
+    vprint(f"Hand cards: {', '.join(hand_symbols)}")
+
     for loc_id in priority_locations:
         if loc_id not in available_loc_ids:
             continue
@@ -754,19 +809,29 @@ def find_strategic_placement(
         if not loc:
             continue
 
+        loc_symbol = loc.get('symbol', 'any')
         for card in hand:
             card_symbol = card.get('symbol', 'any')
-            if card_symbol == loc['symbol'] or card_symbol == 'any':
+            if card_symbol == loc_symbol or card_symbol == 'any':
                 decision_info['chosen_location'] = loc_id
                 decision_info['chosen_priority_rank'] = priority_locations.index(loc_id) + 1
+                vprint(f"CHOSEN: {loc_id} (priority #{decision_info['chosen_priority_rank']}) with {card.get('name', '?')}")
                 if return_decision_info:
                     return card, loc, decision_info
                 return card, loc
 
+        # Location available but no matching card
+        vprint(f"  Skipping {loc_id}: no card with symbol '{loc_symbol}'")
+
     # Fallback
+    vprint("No priority location matched - trying fallback...")
     card, loc = find_playable_card(hand, locations)
     decision_info['chosen_location'] = loc['id'] if loc else None
     decision_info['fallback'] = True
+    if card and loc:
+        vprint(f"FALLBACK: {loc['id']} with {card.get('name', '?')}")
+    else:
+        vprint("NO VALID PLACEMENT FOUND - will reveal")
     if return_decision_info:
         return card, loc, decision_info
     return card, loc

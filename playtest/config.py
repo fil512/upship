@@ -140,5 +140,20 @@ EARLY_REVEAL_MODE = os.environ.get("UPSHIP_EARLY_REVEAL") == "1" or "--early-rev
 if "--early-reveal" in sys.argv:
     sys.argv = [a for a in sys.argv if a != "--early-reveal"]
 
+# Verbose strategy mode: show incremental analysis during bot decision-making
+# Enable with UPSHIP_VERBOSE=1 env var, .upship-config, or --verbose flag
+# Default: True (enabled) for debugging stuck games
+VERBOSE_STRATEGY = (
+    _file_config.get("UPSHIP_VERBOSE", "1") == "1" and
+    os.environ.get("UPSHIP_VERBOSE", "1") == "1" and
+    "--quiet" not in sys.argv
+)
+
+if "--quiet" in sys.argv:
+    sys.argv = [a for a in sys.argv if a != "--quiet"]
+if "--verbose" in sys.argv:
+    VERBOSE_STRATEGY = True
+    sys.argv = [a for a in sys.argv if a != "--verbose"]
+
 # Default autoplay configuration
 DEFAULT_MAX_TURNS = 20

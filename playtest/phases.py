@@ -58,21 +58,27 @@ def handle_launchpad_launches(player: str, game_id: str, logger: PlaytestLogger)
         _no_more_launches(player, game_id, "no ships in hangar", logger)
         return
 
-    # Check blueprint slot requirements
+    # Check blueprint slot requirements - need at least one Frame, one Fabric, one Drive
+    # Empty slots are allowed as long as at least one tile of each type is installed
     blueprint = player_data.blueprint
     if blueprint:
         frame_slots = blueprint.frame_slots or []
         fabric_slots = blueprint.fabric_slots or []
-        empty_frame = sum(1 for s in frame_slots if s is None)
-        empty_fabric = sum(1 for s in fabric_slots if s is None)
+        drive_slots = blueprint.drive_slots or []
 
-        if empty_frame > 0 or empty_fabric > 0:
-            slot_msg = []
-            if empty_frame > 0:
-                slot_msg.append(f"{empty_frame} Frame")
-            if empty_fabric > 0:
-                slot_msg.append(f"{empty_fabric} Fabric")
-            _no_more_launches(player, game_id, f"{' and '.join(slot_msg)} slot(s) empty", logger)
+        has_frame = any(s is not None for s in frame_slots)
+        has_fabric = any(s is not None for s in fabric_slots)
+        has_drive = any(s is not None for s in drive_slots)
+
+        if not has_frame or not has_fabric or not has_drive:
+            missing = []
+            if not has_frame:
+                missing.append("Frame")
+            if not has_fabric:
+                missing.append("Fabric")
+            if not has_drive:
+                missing.append("Drive")
+            _no_more_launches(player, game_id, f"need at least one {' and '.join(missing)} tile", logger)
             return
 
     # Check officer requirements
