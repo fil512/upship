@@ -362,7 +362,7 @@ export const TECH_TILES: Record<string, TechTile> = {
     requiredCard: 'wire_bracing',
     weight: 2,
     hullCost: 1,
-    stats: { gas_socket: 1 },
+    stats: { gas_socket: 1, ceiling: 1 },
     special: null,
     age: 1
   },
@@ -374,7 +374,7 @@ export const TECH_TILES: Record<string, TechTile> = {
     requiredCard: 'duralumin_girders',
     weight: 2,
     hullCost: 1,
-    stats: { gas_socket: 1 },
+    stats: { gas_socket: 1, ceiling: 1, reliability: 1 },
     special: null,
     age: 1
   },
@@ -398,9 +398,9 @@ export const TECH_TILES: Record<string, TechTile> = {
     requiredCard: 'internal_keel',
     weight: 2,
     hullCost: 1,
-    stats: { reliability: 1, gas_socket: 1 },
+    stats: { reliability: 1, gas_socket: 1, ceiling: 1 },
     special: 'italy_specialty',
-    age: 2
+    age: 1
   },
   geodetic_frame: {
     id: 'geodetic_frame',
@@ -472,7 +472,7 @@ export const TECH_TILES: Record<string, TechTile> = {
     requiredCard: 'zeppelin_girders',
     weight: 2,
     hullCost: 1,
-    stats: { gas_socket: 1 },
+    stats: { gas_socket: 1, ceiling: 1 },
     special: null,
     age: 1
   },
@@ -722,6 +722,58 @@ export const TECH_TILES: Record<string, TechTile> = {
     stats: {},
     special: 'helium_cost_reduction',  // -£3 Helium cost (USA specialty)
     age: 3
+  },
+
+  // === NEW CEILING/RELIABILITY UPGRADES (Balance Fix) ===
+  // Age I - Basic ceiling and reliability improvement options
+  altitude_compensator: {
+    id: 'altitude_compensator',
+    name: 'Altitude Compensator',
+    type: 'gas',
+    slotType: 'componentSlots',
+    requiredCard: 'altitude_compensator',
+    weight: 1,
+    hullCost: 1,
+    stats: { ceiling: 1 },
+    special: null,
+    age: 1
+  },
+  safety_valves: {
+    id: 'safety_valves',
+    name: 'Safety Valves',
+    type: 'gas',
+    slotType: 'componentSlots',
+    requiredCard: 'safety_valves',
+    weight: 1,
+    hullCost: 1,
+    stats: { reliability: 1 },
+    special: null,
+    age: 1
+  },
+  // Age II - Higher value ceiling and reliability upgrades
+  pressurized_cabin_upgrade: {
+    id: 'pressurized_cabin_upgrade',
+    name: 'Pressurized Cabin',
+    type: 'component',
+    slotType: 'componentSlots',
+    requiredCard: 'pressurized_cabin_tech',
+    weight: 2,
+    hullCost: 2,
+    stats: { ceiling: 2 },
+    special: null,
+    age: 2
+  },
+  redundant_systems: {
+    id: 'redundant_systems',
+    name: 'Redundant Systems',
+    type: 'component',
+    slotType: 'componentSlots',
+    requiredCard: 'redundant_systems',
+    weight: 1,
+    hullCost: 1,
+    stats: { reliability: 2 },
+    special: null,
+    age: 2
   },
 
   // === COMPONENT/PAYLOAD UPGRADES ===
@@ -1107,6 +1159,12 @@ export const TECH_CARDS: Record<string, TechCard> = {
   emergency_venting: { id: 'emergency_venting', name: 'Emergency Venting', type: 'gas', cost: 5, age: 3 },
   gas_recovery: { id: 'gas_recovery', name: 'Gas Recovery', type: 'gas', cost: 6, age: 3 },
   water_recovery_system: { id: 'water_recovery_system', name: 'Water Recovery System', type: 'gas', cost: 6, age: 3 },
+
+  // New ceiling/reliability tech cards (Balance Fix)
+  altitude_compensator: { id: 'altitude_compensator', name: 'Altitude Compensator', type: 'gas', cost: 3, age: 1 },
+  safety_valves: { id: 'safety_valves', name: 'Safety Valves', type: 'gas', cost: 3, age: 1 },
+  pressurized_cabin_tech: { id: 'pressurized_cabin_tech', name: 'Pressurized Cabin', type: 'component', cost: 5, age: 2 },
+  redundant_systems: { id: 'redundant_systems', name: 'Redundant Systems', type: 'component', cost: 5, age: 2 },
 
   // Payload techs per Appendix C
   observation_platform: { id: 'observation_platform', name: 'Observation Platform', type: 'component', cost: 3, age: 1 },

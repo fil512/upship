@@ -101,7 +101,10 @@ export const TECH_CARD_BAG: Record<number, TechCard[]> = {
     // Payload (3 tiles)
     { id: 'observation_platform', name: 'Observation Platform', type: 'component', cost: 3, vp: 0, income: 1 },
     { id: 'mail_compartment', name: 'Mail Compartment', type: 'component', cost: 3, vp: 0, income: 1 },
-    { id: 'cargo_nets', name: 'Cargo Nets', type: 'component', cost: 5, vp: 1, income: 1 }
+    { id: 'cargo_nets', name: 'Cargo Nets', type: 'component', cost: 5, vp: 1, income: 1 },
+    // New ceiling/reliability upgrade paths (balance fix)
+    { id: 'altitude_compensator', name: 'Altitude Compensator', type: 'gas', cost: 3, vp: 0, income: 1 },
+    { id: 'safety_valves', name: 'Safety Valves', type: 'gas', cost: 3, vp: 0, income: 1 }
   ],
   2: [ // Age II Technologies (22 tiles) - Cost range: 4-6 Research
     // Note: Helium Handling is NOT in the bag - it's the Reserve Tech Card (always available)
@@ -131,7 +134,10 @@ export const TECH_CARD_BAG: Record<number, TechCard[]> = {
     { id: 'trapeze_system', name: 'Trapeze System', type: 'component', cost: 6, vp: 2, income: 2 },
     { id: 'radio_equipment', name: 'Radio Equipment', type: 'component', cost: 5, vp: 1, income: 1 },
     { id: 'armored_gondola', name: 'Armored Gondola', type: 'component', cost: 4, vp: 1, income: 1 },
-    { id: 'reinforced_hull', name: 'Reinforced Hull', type: 'component', cost: 6, vp: 2, income: 2 }
+    { id: 'reinforced_hull', name: 'Reinforced Hull', type: 'component', cost: 6, vp: 2, income: 2 },
+    // New ceiling/reliability upgrade paths (balance fix)
+    { id: 'pressurized_cabin_tech', name: 'Pressurized Cabin', type: 'component', cost: 5, vp: 1, income: 2 },
+    { id: 'redundant_systems', name: 'Redundant Systems', type: 'component', cost: 5, vp: 1, income: 1 }
   ],
   3: [ // Age III Technologies (19 tiles) - Cost range: 5-7 Research
     // Propulsion (4 tiles)

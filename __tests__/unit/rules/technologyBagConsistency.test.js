@@ -39,20 +39,24 @@ describe('TECHNOLOGY_BAG Consistency', () => {
   });
 
   describe('Technology Counts', () => {
-    // 53 tiles in bag + 1 Reserve Tech Card (Helium Handling) = 54 unique tiles
-    // But the TECH_CARD_BAG only contains the 53 tiles that go in the bag
-    it('should have 53 total technologies in the bag', () => {
+    // 57 tiles in bag + 1 Reserve Tech Card (Helium Handling) = 58 unique tiles
+    // But the TECH_CARD_BAG only contains the 57 tiles that go in the bag
+    // Balance fix added 4 new tiles: altitude_compensator, safety_valves (Age I gas),
+    //   pressurized_cabin_tech, redundant_systems (Age II component)
+    it('should have 57 total technologies in the bag', () => {
       const total = constantsBag[1].length + constantsBag[2].length + constantsBag[3].length;
-      expect(total).toBe(53);
+      expect(total).toBe(57);
     });
 
-    it('should have 12 Age I technologies', () => {
-      expect(constantsBag[1].length).toBe(12);
+    // Balance fix added 2 gas tiles to Age I: altitude_compensator, safety_valves
+    it('should have 14 Age I technologies', () => {
+      expect(constantsBag[1].length).toBe(14);
     });
 
-    // 22 tiles in Age II bag (Helium Handling is the Reserve Tech Card, always available)
-    it('should have 22 Age II technologies', () => {
-      expect(constantsBag[2].length).toBe(22);
+    // 24 tiles in Age II bag (Helium Handling is the Reserve Tech Card, always available)
+    // Balance fix added 2 component tiles: pressurized_cabin_tech, redundant_systems
+    it('should have 24 Age II technologies', () => {
+      expect(constantsBag[2].length).toBe(24);
     });
 
     it('should have 19 Age III technologies', () => {

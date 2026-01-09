@@ -327,14 +327,14 @@ function createHazardDeck(): HazardCard[] {
     { name: 'Icing Conditions', difficulty: 3, challengeType: 'ceiling', hazardType: 'weather', flak: 2,
       special: 'On failure, also lose 1 gas cube. If no gas remains, ship Destroyed.',
       gasLossOnFailure: 1 },
-    { name: 'Engine Failure', difficulty: 4, challengeType: 'reliability', hazardType: 'mechanical', flak: 3 },
+    { name: 'Engine Failure', difficulty: 3, challengeType: 'reliability', hazardType: 'mechanical', flak: 3 },
     { name: 'Storm System', difficulty: 4, challengeType: 'speed', hazardType: 'weather', flak: 3 },
     { name: 'Structural Damage', difficulty: 3, challengeType: 'reliability', hazardType: 'mechanical', flak: 4 },
-    { name: 'Navigation Error', difficulty: 4, challengeType: 'range', hazardType: 'supply', flak: 3 },
+    { name: 'Navigation Error', difficulty: 3, challengeType: 'range', hazardType: 'supply', flak: 3 },
     { name: 'Squall Line', difficulty: 4, challengeType: 'reliability', hazardType: 'weather', flak: 3,
       special: 'Ships with 3+ Payload slots suffer +1 Difficulty.',
       payloadSlotModifier: { threshold: 3, difficultyIncrease: 1 } },
-    { name: 'Severe Icing', difficulty: 3, challengeType: 'ceiling', hazardType: 'weather', flak: 2,
+    { name: 'Severe Icing', difficulty: 2, challengeType: 'ceiling', hazardType: 'weather', flak: 2,
       special: 'On failure, lose 2 gas cubes. If gas remains < ship\'s minimum, ship Destroyed.',
       gasLossOnFailure: 2 }
   ];
@@ -400,6 +400,7 @@ function createHazardDeck(): HazardCard[] {
   });
 
   // 1x Catastrophic Explosion - No save, Crash. Age III Luxury = Hindenburg - 5 Flak
+  // Changed from difficulty 99 to 3 - still deadly (noSave) but theoretically requires Reliability 3 ship
   hazards.push({
     id: 'catastrophic_explosion_0',
     type: 'catastrophic_explosion',
@@ -407,7 +408,7 @@ function createHazardDeck(): HazardCard[] {
     name: 'Catastrophic Explosion',
     hydrogenOnly: true,
     noSave: true,
-    difficulty: 99,
+    difficulty: 3,
     flak: 5
   });
 

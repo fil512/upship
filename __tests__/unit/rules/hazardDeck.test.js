@@ -53,15 +53,16 @@ describe('Rules Compliance - Hazard Deck', () => {
       });
     });
 
-    it('should contain exactly 8 Major Hazard cards (difficulty 3-4)', () => {
+    it('should contain exactly 8 Major Hazard cards (difficulty 2-4)', () => {
       const deck = createHazardDeck();
       const majorHazards = deck.filter(card => card.category === 'major');
       expect(majorHazards.length).toBe(8);
 
-      // All major hazards should have difficulty 3-4
-      // Challenging but passable with upgrades (stat=2 + 2eng or stat=0 + 3eng)
+      // All major hazards should have difficulty 2-4
+      // Balance fix: Severe Icing reduced to 2, Engine Failure and Navigation Error reduced to 3
+      // Challenging but passable with starting ceiling (1) + engineer
       majorHazards.forEach(card => {
-        expect(card.difficulty).toBeGreaterThanOrEqual(3);
+        expect(card.difficulty).toBeGreaterThanOrEqual(2);
         expect(card.difficulty).toBeLessThanOrEqual(4);
       });
 

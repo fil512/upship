@@ -19,11 +19,13 @@ describe('Rules Compliance - Technology Tiles', () => {
       return all;
     };
 
-    // 53 tiles in bag + 1 Reserve Tech Card (Helium Handling) = 54 unique tiles
-    // But the bag itself only contains 53 tiles
-    it('should have 53 technology tiles in the bag per Appendix C', () => {
+    // 57 tiles in bag + 1 Reserve Tech Card (Helium Handling) = 58 unique tiles
+    // But the bag itself only contains 57 tiles
+    // Balance fix added 4 new tiles: altitude_compensator, safety_valves (Age I gas),
+    //   pressurized_cabin_tech, redundant_systems (Age II component)
+    it('should have 57 technology tiles in the bag per Appendix C', () => {
       const all = getAllTechnologies();
-      expect(all.length).toBe(53);
+      expect(all.length).toBe(57);
     });
 
     it('should have 11 Propulsion/Drive track tiles', () => {
@@ -44,31 +46,35 @@ describe('Rules Compliance - Technology Tiles', () => {
       expect(fabric.length).toBe(8);
     });
 
-    // 10 Gas Systems tiles in bag (Helium Handling is the Reserve Tech Card, not in bag)
-    it('should have 10 Gas Systems track tiles in bag', () => {
+    // 12 Gas Systems tiles in bag (Helium Handling is the Reserve Tech Card, not in bag)
+    // Balance fix added 2 new gas tiles: altitude_compensator, safety_valves
+    it('should have 12 Gas Systems track tiles in bag', () => {
       const all = getAllTechnologies();
       const gas = all.filter(t => t.type === 'gas');
-      expect(gas.length).toBe(10);
+      expect(gas.length).toBe(12);
     });
 
-    it('should have 14 Payload/Component track tiles', () => {
+    // Balance fix added 2 new component tiles: pressurized_cabin_tech, redundant_systems
+    it('should have 16 Payload/Component track tiles', () => {
       const all = getAllTechnologies();
       const payload = all.filter(t => t.type === 'component' || t.type === 'payload');
-      expect(payload.length).toBe(14);
+      expect(payload.length).toBe(16);
     });
 
     // Verify Age I distribution
     // Note: Appendix C table shows Dual Engine Mount as Age I, making it 12 tiles
     // (3 Propulsion, 2 Frame, 2 Fabric, 2 Gas, 3 Payload)
-    it('should have 12 Age I tiles', () => {
-      expect(TECHNOLOGY_BAG[1].length).toBe(12);
+    // Balance fix added 2 gas tiles: altitude_compensator, safety_valves (+2 = 14)
+    it('should have 14 Age I tiles', () => {
+      expect(TECHNOLOGY_BAG[1].length).toBe(14);
     });
 
-    // Verify Age II distribution (22 tiles)
+    // Verify Age II distribution (24 tiles)
     // Per Appendix C table: (4 Propulsion, 5 Frame, 4 Fabric, 3 Gas, 6 Payload)
     // Note: Helium Handling is the Reserve Tech Card, not in the Age II bag
-    it('should have 22 Age II tiles', () => {
-      expect(TECHNOLOGY_BAG[2].length).toBe(22);
+    // Balance fix added 2 component tiles: pressurized_cabin_tech, redundant_systems (+2 = 24)
+    it('should have 24 Age II tiles', () => {
+      expect(TECHNOLOGY_BAG[2].length).toBe(24);
     });
 
     // Verify Age III distribution (19 tiles)
