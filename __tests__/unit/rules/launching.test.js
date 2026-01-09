@@ -687,8 +687,10 @@ describe('Rules Compliance - Launching and Repair', () => {
         flak: 2
       }];
 
-      // Use the default test blueprint which has reliability 1 from duralumin_frame
+      // Use the default test blueprint which has reliability 1 from premium_envelope
       // (frameSlots: ['duralumin_frame'], fabricSlots: ['premium_envelope'], driveSlots: ['standard_engine'])
+      // duralumin_frame provides gas_socket:1, premium_envelope provides reliability:1, range:1
+      // standard_engine provides speed:1, range:1
       // We need a route with distance=1 and speed=1 to match the blueprint's stats
 
       state.map.routes = [{
@@ -709,8 +711,8 @@ describe('Rules Compliance - Launching and Repair', () => {
         _internal: true
       });
 
-      // engineersNeeded = difficulty (6) - reliability stat (3 from duralumin_frame:2 + premium_envelope:1) = 3
-      expect(result.newState.players['1'].pendingLaunch.hazardInfo.engineersNeeded).toBe(3);
+      // engineersNeeded = difficulty (6) - reliability stat (1 from premium_envelope) = 5
+      expect(result.newState.players['1'].pendingLaunch.hazardInfo.engineersNeeded).toBe(5);
     });
   });
 

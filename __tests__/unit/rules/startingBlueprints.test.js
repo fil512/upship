@@ -162,12 +162,12 @@ describe('Rules Compliance - Starting Blueprints', () => {
       expect(config.startingTechTiles.frame[0]).toBe('duralumin_frame');
     });
 
-    it('Italy should use flexible_frame first for ceiling bonus and low weight', () => {
+    it('Italy should use semi_rigid_keel for Nobile semi-rigid expedition design', () => {
       const config = FACTION_CONFIG['italy'];
 
-      // flexible_frame: weight 0, ceiling +1, gas_socket 1 (requires articulated_keel)
+      // Italy uses semi_rigid_keel (from internal_keel tech card) for Nobile semi-rigid design
       // semi_rigid_keel: weight 2, gas_socket 1 (requires internal_keel)
-      expect(config.startingTechTiles.frame[0]).toBe('flexible_frame');
+      expect(config.startingTechTiles.frame[0]).toBe('semi_rigid_keel');
     });
   });
 });

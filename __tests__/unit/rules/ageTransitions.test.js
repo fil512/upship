@@ -340,12 +340,12 @@ describe('Rules Compliance - Age Transitions', () => {
       state.playerOrder = ['1', '2'];
 
       // Set up player with two frame technologies and one empty frame slot
-      // First frame slot and fabric slots already filled to pass completeness check
-      state.players['1'].techCards = ['duralumin_girders', 'zeppelin_girders'];
+      // First frame slot, fabric slots, and drive slots already filled to pass completeness check
+      state.players['1'].techCards = ['duralumin_girders', 'zeppelin_girders', 'daimler_engine'];
       state.players['1'].blueprint = {
         frameSlots: ['duralumin_frame', null],     // First filled, second empty
         fabricSlots: ['cotton_envelope', 'premium_envelope'],  // Both filled
-        driveSlots: [null, null],
+        driveSlots: ['basic_engine', null],  // At least one drive required
         componentSlots: [null, null]
       };
       state.players['1'].ships = [{ id: 'ship1', status: 'hangar' }];
@@ -355,8 +355,14 @@ describe('Rules Compliance - Age Transitions', () => {
       performAgeTransition(state, 2);
 
       // Player 1 installs a different upgrade - filling the second frame slot
+      // After performAgeTransition to Age 2, blueprint has 2/2/3/3 slots
       const result = processAgeTransitionBlueprintDesign(state, '1', {
-        blueprint: { frameSlots: ['duralumin_frame', 'zeppelin_frame'] }
+        blueprint: {
+          frameSlots: ['duralumin_frame', 'zeppelin_frame'],
+          fabricSlots: ['cotton_envelope', 'premium_envelope'],
+          driveSlots: ['basic_engine', null, null],  // Age 2 has 3 drive slots
+          componentSlots: [null, null, null]  // Age 2 has 3 component slots
+        }
       });
 
       expect(result.newState.players['1'].blueprint.frameSlots[1]).toBe('zeppelin_frame');
@@ -397,28 +403,34 @@ describe('Rules Compliance - Age Transitions', () => {
       state.age = 1;
       state.playerOrder = ['1', '2'];
 
-      // Set up complete blueprints with 2/2/2/2 slots (Age I)
+      // Set up complete blueprints with 2/2/2/2 slots (Age I) - must have at least one drive
       state.players['1'].blueprint = {
         frameSlots: ['duralumin_frame', 'zeppelin_frame'],
         fabricSlots: ['cotton_envelope', 'premium_envelope'],
-        driveSlots: [null, null],
+        driveSlots: ['basic_engine', null],  // At least one drive required
         componentSlots: [null, null]
       };
+      state.players['1'].techCards = ['daimler_engine'];  // Tech card for the drive tile
       state.players['2'].blueprint = {
         frameSlots: ['duralumin_frame', 'zeppelin_frame'],
         fabricSlots: ['cotton_envelope', 'premium_envelope'],
-        driveSlots: [null, null],
+        driveSlots: ['basic_engine', null],  // At least one drive required
         componentSlots: [null, null]
       };
+      state.players['2'].techCards = ['daimler_engine'];  // Tech card for the drive tile
 
       performAgeTransition(state, 2);
 
-      // Player 1 submits (no changes)
-      processAgeTransitionBlueprintDesign(state, '1', {});
+      // Player 1 submits with the same valid blueprint
+      processAgeTransitionBlueprintDesign(state, '1', {
+        blueprint: state.players['1'].blueprint
+      });
       expect(state.phase).toBe('age_transition_blueprint_design');  // Still in phase
 
-      // Player 2 submits (no changes)
-      const result = processAgeTransitionBlueprintDesign(state, '2', {});
+      // Player 2 submits with the same valid blueprint
+      const result = processAgeTransitionBlueprintDesign(state, '2', {
+        blueprint: state.players['2'].blueprint
+      });
 
       // Transition should now be complete
       expect(result.newState.phase).toBe('worker_placement');

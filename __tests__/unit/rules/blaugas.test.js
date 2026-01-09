@@ -24,9 +24,9 @@ describe('Rules Compliance - Blaugas Fuel System', () => {
               hangarShips: 1,  // Ships are tokens, use counter
               repairShips: 0,
               blueprint: {
-                frameSlots: ['basic_frame'],
-                fabricSlots: ['basic_fabric'],
-                driveSlots: ['maybach_hl'],  // Germany's starting drive (speed 2, range 1)
+                frameSlots: ['duralumin_frame'],
+                fabricSlots: ['premium_envelope'],
+                driveSlots: ['basic_engine'],  // basic drive (speed 1, range 1)
                 componentSlots: []
               },
               hazardDeck: [{
@@ -82,9 +82,9 @@ describe('Rules Compliance - Blaugas Fuel System', () => {
               hangarShips: 1,  // Ships are tokens, use counter
               repairShips: 0,
               blueprint: {
-                frameSlots: ['basic_frame'],
-                fabricSlots: ['basic_fabric'],
-                driveSlots: ['maybach_hl'],  // Germany's starting drive (speed 2, range 1)
+                frameSlots: ['duralumin_frame'],
+                fabricSlots: ['premium_envelope'],
+                driveSlots: ['basic_engine'],  // basic drive (speed 1, range 1)
                 componentSlots: []
               },
               hazardDeck: [{
@@ -140,9 +140,9 @@ describe('Rules Compliance - Blaugas Fuel System', () => {
               hangarShips: 1,  // Ships are tokens, use counter
               repairShips: 0,
               blueprint: {
-                frameSlots: ['basic_frame'],
-                fabricSlots: ['basic_fabric'],
-                driveSlots: ['maybach_hl'],  // Germany's starting drive (speed 2, range 1)
+                frameSlots: ['duralumin_frame'],
+                fabricSlots: ['premium_envelope'],
+                driveSlots: ['basic_engine'],  // basic drive (speed 1, range 1)
                 componentSlots: []
               },
               hazardDeck: [{ type: 'clear_weather', autoPass: true }],
@@ -179,9 +179,9 @@ describe('Rules Compliance - Blaugas Fuel System', () => {
               hangarShips: 1,  // Ships are tokens, use counter
               repairShips: 0,
               blueprint: {
-                frameSlots: ['basic_frame'],
-                fabricSlots: ['basic_fabric'],
-                driveSlots: ['maybach_hl'],  // Germany's starting drive (speed 2, range 1)
+                frameSlots: ['duralumin_frame'],
+                fabricSlots: ['premium_envelope'],
+                driveSlots: ['basic_engine'],  // basic drive (speed 1, range 1)
                 componentSlots: []
               },
               hazardDeck: [{ type: 'clear_weather', autoPass: true }],
@@ -223,9 +223,9 @@ describe('Rules Compliance - Blaugas Fuel System', () => {
         const playerState = {
           techCards: ['blaugas_storage'],  // Owns the tech card
           blueprint: {
-            frameSlots: ['basic_frame'],
-            fabricSlots: ['basic_fabric'],
-            driveSlots: ['maybach_hl'],  // Germany's starting drive (speed 2, range 1)
+            frameSlots: ['duralumin_frame'],
+            fabricSlots: ['premium_envelope'],
+            driveSlots: ['basic_engine'],  // basic drive (speed 1, range 1)
             componentSlots: ['blaugas_tank']  // +1 Range from Blaugas tile
           }
         };

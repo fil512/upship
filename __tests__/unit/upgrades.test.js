@@ -167,7 +167,8 @@ describe('Upgrades Module', () => {
         fabricSlots: ['premium_envelope']
       };
       const stats = calculateShipStats(blueprint, {}, 1);
-      const expectedHullCost = 2 + TECH_TILES.duralumin_frame.hullCost + TECH_TILES.premium_envelope.hullCost;
+      // Hull cost is sum of installed tile costs (no base cost)
+      const expectedHullCost = TECH_TILES.duralumin_frame.hullCost + TECH_TILES.premium_envelope.hullCost;
       expect(stats.hullCost).toBe(expectedHullCost);
     });
 
