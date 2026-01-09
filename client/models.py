@@ -61,14 +61,29 @@ class Manifest:
         # Server uses 'requiredCard' for the tech card ID
         return upgrade.get('requiredCard', upgrade.get('requiredTech')) if upgrade else None
 
-    def get_upgrade_for_tech(self, tech_id: str) -> dict | None:
-        """Get the upgrade (tech tile) that a technology (tech card) unlocks."""
+    def get_upgrades_for_tech(self, tech_id: str) -> list[dict]:
+        """Get ALL upgrade tiles that a technology (tech card) can unlock.
+
+        A single tech card can enable multiple different tiles (e.g., daimler_engine
+        can install either basic_engine OR daimler_drive).
+
+        [BOT-BLUEPRINT-01] SYNC: Keep in sync with getUpgradesForTech() in server/services/botService.ts
+        """
+        results = []
         for upgrade_id, upgrade in self.upgrades.items():
             # Server uses 'requiredCard' for the tech card ID
             required = upgrade.get('requiredCard', upgrade.get('requiredTech'))
             if required == tech_id:
-                return {'id': upgrade_id, 'slotType': upgrade.get('slotType')}
-        return None
+                results.append({'id': upgrade_id, 'slotType': upgrade.get('slotType')})
+        return results
+
+    def get_upgrade_for_tech(self, tech_id: str) -> dict | None:
+        """Get the first upgrade (tech tile) that a technology (tech card) unlocks.
+
+        @deprecated: Use get_upgrades_for_tech() for complete results.
+        """
+        upgrades = self.get_upgrades_for_tech(tech_id)
+        return upgrades[0] if upgrades else None
 
     @property
     def progress_thresholds(self) -> dict:

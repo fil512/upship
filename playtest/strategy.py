@@ -100,13 +100,16 @@ def get_blueprint_design_blueprint(player_data: Player, current_age: int = 1, is
 
     manifest = get_manifest()
     # Collect available upgrades from technologies (excluding already installed)
+    # Note: A single tech card can enable MULTIPLE upgrade tiles (e.g., daimler_engine -> basic_engine OR daimler_drive)
+    # [BOT-BLUEPRINT-01] SYNC: Keep in sync with getBlueprintDesignBlueprint() in server/services/botService.ts
     frame_upgrades = []
     fabric_upgrades = []
     drive_upgrades = []
 
     for tech_id in technologies:
-        upgrade_info = manifest.get_upgrade_for_tech(tech_id)
-        if upgrade_info:
+        # Get ALL upgrades this tech card can install (not just the first one)
+        all_upgrades = manifest.get_upgrades_for_tech(tech_id)
+        for upgrade_info in all_upgrades:
             upgrade_id = upgrade_info['id']
             slot_type = upgrade_info['slotType']
             # Only include if not already installed anywhere in blueprint
