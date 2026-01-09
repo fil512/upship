@@ -12,7 +12,7 @@ const { GROUND_BOARD_LOCATIONS, canPlaceAtLocation } = require('../data/groundBo
 const { getCurrentPlacer, advanceToNextPlacer } = require('./helpers/turnOrder');
 const { reduceHeliumMarket } = require('./helpers/marketHelpers');
 const { WEATHER_BUREAU_COST } = require('../config/constants');
-const { processBuildShip } = require('./building');
+const { processBuildShip, processRepairShip } = require('./building');
 const { processBuyGas } = require('./gas');
 const { processUpgradeOfficerIncome, processUpgradeEngineerIncome, processGovernmentLiaison } = require('./crew');
 const { processBuyInsurance } = require('./economy');
@@ -74,6 +74,7 @@ interface PlaceAgentData {
   locationId: string;
   cardIndex: number;
   buildCount?: number;
+  repairCount?: number;
   gasType?: 'hydrogen' | 'helium';
   gasAmount?: number;
   crewType?: 'officer' | 'engineer';
@@ -86,6 +87,7 @@ interface PlaceAgentData {
 
 interface LocationActionOptions {
   buildCount?: number;
+  repairCount?: number;
   gasType?: 'hydrogen' | 'helium';
   gasAmount?: number;
   crewType?: 'officer' | 'engineer';
@@ -673,6 +675,14 @@ function executeLocationAction(
       return { success: true, message: `Collected £${totalGain}${bonusMsg}` };
     }
 
+    case 'repair': {
+      // Per Section 6.15: Repair damaged ships
+      // Cost per ship: floor(Hull Cost / 2) + 1 Engineer
+      const repairCountVal = options.repairCount || 1;
+      processRepairShip(state, playerId, { count: repairCountVal, _internal: true });
+      return { success: true, message: `Repaired ${repairCountVal} ship(s)` };
+    }
+
     default:
       state.log.push({
         timestamp: new Date().toISOString(),
@@ -714,7 +724,7 @@ function hasPlayableCards(state: GameState, playerId: string): boolean {
  * Place an agent on a Ground Board location
  */
 function processPlaceAgent(state: GameState, playerId: string, data: PlaceAgentData): ActionResult {
-  const { locationId, cardIndex, buildCount, gasType, gasAmount, crewType, crewCount, levels, policyCount, officerCount, blueprint } = data;
+  const { locationId, cardIndex, buildCount, repairCount, gasType, gasAmount, crewType, crewCount, levels, policyCount, officerCount, blueprint } = data;
   const playerState = state.players[playerId];
 
   // Validate phase
@@ -807,7 +817,7 @@ function processPlaceAgent(state: GameState, playerId: string, data: PlaceAgentD
     playerId,
     type: 'debug'
   } as LogEntry);
-  const actionResult = executeLocationAction(state, playerId, locationId, discardedCard, { buildCount, gasType, gasAmount, crewType, crewCount, levels, policyCount, officerCount, blueprint });
+  const actionResult = executeLocationAction(state, playerId, locationId, discardedCard, { buildCount, repairCount, gasType, gasAmount, crewType, crewCount, levels, policyCount, officerCount, blueprint });
   state.log.push({
     timestamp: new Date().toISOString(),
     message: `[DEBUG-AFTER] executeLocationAction returned: ${JSON.stringify(actionResult)}`,

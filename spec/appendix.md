@@ -52,7 +52,7 @@ On your turn, either:
 - **Net Income:** Income Track − Engineers in Barracks
 - **Tech Cost:** Listed cost − Specialization Discount
 - **Transition Income:** (£ from Tech tiles) − (£1 × routes lost), minimum £0
-- **Repair Cost:** £3 per ship to move from Repair Hangar to Launch Hangar
+- **Repair Cost:** (Hull Cost ÷ 2, rounded down) + 1 Engineer per ship (Repair action space only)
 - **Victory:** Most Victory Points wins (tiebreakers: Income, Cash, Ships on map)
 
 ## Gas Pricing (Gas Depot Action)

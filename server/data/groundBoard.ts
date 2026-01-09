@@ -1,5 +1,5 @@
 /**
- * Ground Board Data - 15 Worker Placement Action Spaces
+ * Ground Board Data - 16 Worker Placement Action Spaces
  *
  * Symbols:
  * - wrench: Technical (engineering/construction)
@@ -229,6 +229,19 @@ export const GROUND_BOARD_LOCATIONS: Record<string, GroundBoardLocation> = {
       type: 'COLLECT_MONEY',
       cost: 0,
       effect: 'Gain cash equal to Income Track'
+    }
+  },
+
+  repair: {
+    id: 'repair',
+    name: 'Repair',
+    symbol: 'wrench',
+    position: 16,
+    description: 'Repair damaged ships',
+    action: {
+      type: 'REPAIR_SHIPS',
+      cost: 'Hull Cost ÷ 2 + 1 Engineer per ship',
+      effect: 'Move ships from Repair Hangar to Launch Hangar'
     }
   }
 };

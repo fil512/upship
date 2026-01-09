@@ -301,16 +301,16 @@ Store crew tokens earned from the shared supply:
 
 ## 4.4 The Hangar Bay (Adjacent to Barracks)
 
+Your fleet is limited to **6 ships total** shared between the Launch Hangar and Repair Hangar.
+
 ### Launch Hangar
 Ships ready to fly:
-- **Capacity:** Up to 3 ships
 - Built ships go here; launch ships from here
 
 ### Repair Hangar
 Ships requiring maintenance:
-- **Capacity:** Unlimited
 - Damaged ships go here
-- **Repair Cost:** £3 + 1 Engineer per ship to move to Launch Hangar
+- Repair ships at the Repair action space (see Section 6.15)
 
 ## 4.5 Gas Reserve (Adjacent to Hangar Bay)
 
@@ -386,7 +386,7 @@ The player with the **First Player** pawn goes first.
 
 | Symbol | Locations |
 |--------|-----------|
-| **Wrench** | Blueprint Design, Construction Hall, Gas Depot, Technical Institute, Engineering Depot |
+| **Wrench** | Blueprint Design, Construction Hall, Gas Depot, Technical Institute, Engineering Depot, Repair |
 | **Coin** | Treasury, Research Institute, Flight School, Government Liaison, Insurance Bureau |
 | **Propeller** | Launchpad, Launchpad 2, Ministry, Weather Bureau, Personnel Office |
 | **Any** | Can visit any location |
@@ -452,7 +452,7 @@ The Ground Board has 15 action spaces. Each requires a matching card symbol.
 
 **Result:** Place built ships in your Launch Hangar.
 
-**Limit:** You may never have more than 3 ships in your Hangar at any time.
+**Limit:** You may never have more than 6 ships total (Launch Hangar + Repair Hangar combined).
 
 **Hull Tech Tile Rule:** If you change Frame or Fabric Tech Tiles while ships are in your Launch Hangar, pay the Hull Cost difference for each ship.
 
@@ -558,6 +558,16 @@ See **Section 8: Launching Ships** for the complete procedure.
 
 > **Example:** Wilhelm has Income Track 7 and visits The Treasury. He gains £7.
 
+## 6.15 Repair (Wrench)
+
+**Action:** Repair damaged ships.
+
+**Cost:** Per ship: £ equal to half your Hull Cost (rounded down) + 1 Engineer.
+
+**Effect:** Move any number of your ships from Repair Hangar to Launch Hangar.
+
+> **Example:** Otto has Hull Cost £6 and 2 damaged ships. He visits Repair, paying £3 + 1 Engineer per ship (£6 + 2 Engineers total) to move both ships to his Launch Hangar.
+
 ---
 
 # 7. BUILDING SHIPS
@@ -648,9 +658,9 @@ When you control a fire by spending Engineers:
 - Gas cubes are spent
 - No Income or city bonus gained
 
-**Repairing Damaged Ships:** To repair a damaged ship (move it from Repair Hangar to Launch Hangar), you must:
-- Spend **£3** (repair materials)
-- Spend **1 Engineer** (labor)
+**Repairing Damaged Ships:** To repair a damaged ship, you must visit the **Repair** action space (see Section 6.15). Repair cost per ship is:
+- **£** equal to half your current Hull Cost (rounded down)
+- **1 Engineer** (labor)
 
 ## 8.5 Luxury Launches
 
@@ -884,7 +894,7 @@ When the Progress Track reaches the Age threshold (checked during Income & Clean
 
 1. **Score VP:** All players score VP for routes and Technologies.
 
-2. **Recover Ships and Officers:** Remove current Map. All ships return to player supplies. As you return ships, add officers to supply for those ships (1 officer per age 1 ship, 2 officers per age 2 ship.) Note a maximum of 3 ships and their corresponding officers can be returned in this way due to hanger capacity.
+2. **Recover Ships and Officers:** Remove current Map. All ships return to player supplies. As you return ships, add officers to supply for those ships (1 officer per age 1 ship, 2 officers per age 2 ship.) Note a maximum of 6 ships and their corresponding officers can be returned in this way due to hangar capacity.
 
 3. **Calculate Transition Income:**
    > New Income = (£ from Technology tiles) − (£1 × routes lost)
@@ -1172,7 +1182,7 @@ When Catastrophic Explosion occurs during a Luxury Launch in Age III using Hydro
 
 | Symbol | Locations |
 |--------|-----------|
-| Wrench | Blueprint Design, Construction Hall, Gas Depot, Technical Institute, Engineering Depot |
+| Wrench | Blueprint Design, Construction Hall, Gas Depot, Technical Institute, Engineering Depot, Repair |
 | Coin | Treasury, Research Institute, Flight School, Government Liaison, Insurance Bureau |
 | Propeller | Launchpad, Launchpad 2, Ministry, Weather Bureau, Personnel Office |
 

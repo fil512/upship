@@ -7,8 +7,8 @@ const { createTestGameState } = require('../../fixtures/testData');
 
 describe('Rules Compliance - Launching and Repair', () => {
 
-  describe('GAP-027: Ship repair cost', () => {
-    it('should allow repairing damaged ships for £3 per Section 4.4', () => {
+  describe('GAP-027: Ship repair cost (updated per Section 6.15)', () => {
+    it('should allow repairing damaged ships for floor(hullCost/2) + 1 engineer', () => {
       const state = createTestGameState();
       const playerState = state.players['1'];
 
@@ -16,27 +16,36 @@ describe('Rules Compliance - Launching and Repair', () => {
       playerState.hangarShips = 1;
       playerState.repairShips = 1;
       playerState.cash = 15;
+      playerState.engineers = 2;
+      // Hull cost from blueprint is typically ~4-6 based on starting setup
+      // So repair cost = floor(hullCost/2) = ~2-3 per ship
+
+      // Set up the Repair action space placement (repairs require worker placement)
+      state.groundBoard.placements.repair = { playerId: '1' };
 
       const { processRepairShip } = require('../../../server/actions/building');
-      const result = processRepairShip(state, '1', {});
+      const result = processRepairShip(state, '1', { count: 1, _internal: true });
 
-      // Ship should be moved from repair to hangar, cost £3
+      // Ship should be moved from repair to hangar
       expect(result.newState.players['1'].repairShips).toBe(0);
       expect(result.newState.players['1'].hangarShips).toBe(2);
-      expect(result.newState.players['1'].cash).toBe(12);
+      // Cost = floor(hullCost/2) + 1 engineer
+      expect(result.newState.players['1'].engineers).toBe(1); // -1 engineer
     });
 
-    it('should reject repair if player lacks £3', () => {
+    it('should reject repair if player lacks required cash', () => {
       const state = createTestGameState();
       const playerState = state.players['1'];
 
       playerState.repairShips = 1;
-      playerState.cash = 2;
+      playerState.cash = 0; // No cash
+      playerState.engineers = 2;
+      state.groundBoard.placements.repair = { playerId: '1' };
 
       const { processRepairShip } = require('../../../server/actions/building');
 
       expect(() => {
-        processRepairShip(state, '1', {});
+        processRepairShip(state, '1', { count: 1, _internal: true });
       }).toThrow(/not enough cash|insufficient funds/i);
     });
 
@@ -47,12 +56,66 @@ describe('Rules Compliance - Launching and Repair', () => {
       playerState.hangarShips = 1;
       playerState.repairShips = 0;  // No ships in repair bay
       playerState.cash = 15;
+      playerState.engineers = 2;
+      state.groundBoard.placements.repair = { playerId: '1' };
 
       const { processRepairShip } = require('../../../server/actions/building');
 
       expect(() => {
-        processRepairShip(state, '1', {});
+        processRepairShip(state, '1', { count: 1, _internal: true });
       }).toThrow(/no.*repair|repair.*bay/i);
+    });
+
+    it('should reject repair if player lacks engineers', () => {
+      const state = createTestGameState();
+      const playerState = state.players['1'];
+
+      playerState.repairShips = 1;
+      playerState.cash = 15;
+      playerState.engineers = 0; // No engineers
+      state.groundBoard.placements.repair = { playerId: '1' };
+
+      const { processRepairShip } = require('../../../server/actions/building');
+
+      expect(() => {
+        processRepairShip(state, '1', { count: 1, _internal: true });
+      }).toThrow(/not enough engineers/i);
+    });
+
+    it('should allow repairing multiple ships at once', () => {
+      const state = createTestGameState();
+      const playerState = state.players['1'];
+
+      playerState.hangarShips = 0;
+      playerState.repairShips = 2; // Two damaged ships
+      playerState.cash = 15;
+      playerState.engineers = 3;
+      state.groundBoard.placements.repair = { playerId: '1' };
+
+      const { processRepairShip } = require('../../../server/actions/building');
+      const result = processRepairShip(state, '1', { count: 2, _internal: true });
+
+      // Both ships should be moved from repair to hangar
+      expect(result.newState.players['1'].repairShips).toBe(0);
+      expect(result.newState.players['1'].hangarShips).toBe(2);
+      // Cost = 2 * (floor(hullCost/2) + 1 engineer) = 2 engineers
+      expect(result.newState.players['1'].engineers).toBe(1); // -2 engineers
+    });
+
+    it('should only allow repairs at Repair action space (not direct call)', () => {
+      const state = createTestGameState();
+      const playerState = state.players['1'];
+
+      playerState.repairShips = 1;
+      playerState.cash = 15;
+      playerState.engineers = 2;
+      // No placement at Repair action space
+
+      const { processRepairShip } = require('../../../server/actions/building');
+
+      expect(() => {
+        processRepairShip(state, '1', { count: 1 }); // No _internal flag
+      }).toThrow(/repair.*action space|place.*agent/i);
     });
   });
 
