@@ -79,8 +79,8 @@ function processBuildShip(state: GameState, playerId: string, data: BuildShipDat
   }
 
   // Calculate hull cost from ALL installed tech tiles
-  // Formula: £4 base + hullCost from every installed tile
-  let hullCost = 4; // Base cost
+  // Formula: sum of hullCost from every installed tile
+  let hullCost = 0;
 
   // Add Frame hull costs (unless Duralumin Man ignoreFrameCost is active)
   if (!playerState.ignoreFrameCost) {

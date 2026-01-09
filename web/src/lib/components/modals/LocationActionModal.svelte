@@ -60,8 +60,7 @@
 
 	// Ship building costs and constraints
 	const HANGAR_CAPACITY = 3;
-	$: hullCostData = calculateHullCost($myState?.blueprint);
-	$: hullCostPerShip = hullCostData.total;
+	$: hullCostPerShip = calculateHullCost($myState?.blueprint);
 	$: buildCost = hullCostPerShip * buildCount;
 	$: canAffordBuild = playerCash >= buildCost;
 	$: currentHangarShips = $myState?.hangarShips || 0;
@@ -336,7 +335,7 @@
 								+
 							</button>
 						</div>
-						<p class="form-hint">Hull cost: £{hullCostPerShip}/ship (£2 base + £{hullCostData.frameCost} frame + £{hullCostData.fabricCost} fabric)</p>
+						<p class="form-hint">Hull cost: £{hullCostPerShip}/ship</p>
 					{/if}
 				</div>
 
