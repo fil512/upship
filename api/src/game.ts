@@ -36,7 +36,8 @@ export interface PendingHazardInfo {
 	hydrogenOnly?: boolean;
 	// Special effects
 	special?: string;
-	gasLossOnFailure?: boolean;
+	gasLossOnFailure?: number;
+	payloadSlotModifier?: { threshold: number; difficultyIncrease: number };
 	// Ship stats for comparison
 	relevantStat?: number;
 	statName?: string;

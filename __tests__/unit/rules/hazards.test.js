@@ -1214,4 +1214,371 @@ describe('Rules Compliance - Hazards', () => {
       expect(result.newState.players['1'].pendingLaunch).toBeUndefined();
     });
   });
+
+  describe('Critical Structural Stress (Mechanical Hazard)', () => {
+    it('should allow spending 2 Engineers to save ship (Damaged outcome)', () => {
+      const state = createTestGameState();
+      state.age = 1;
+      state.players['1'].engineers = 3;
+      state.players['1'].hangarShips = 1;
+
+      const hazardCard = {
+        id: 'critical_structural_stress_0',
+        type: 'critical_structural_stress',
+        category: 'mechanical',
+        name: 'Critical Structural Stress',
+        engineerCost: 2,
+        flak: 4
+      };
+
+      // Hydrogen ship (mechanical hazards affect all ships, not just hydrogen)
+      setupPendingLaunch(state.players['1'], {
+        pendingRouteId: 'route_1',
+        gasType: 'hydrogen',
+        stats: { speed: 1, reliability: 1, ceiling: 0, range: 3 }
+      }, hazardCard);
+
+      state.map.routes = [{
+        id: 'route_1',
+        from: 'A',
+        to: 'B',
+        income: 2,
+        claimed: null
+      }];
+
+      // Spend 2 engineers to control structural damage
+      const result = processHazardCheck(state, '1', { engineersToSpend: 2 });
+
+      // Should be Damaged (ship in repair bay)
+      expect(result.newState.players['1'].pendingLaunch).toBeUndefined();
+      expect(result.newState.players['1'].repairShips).toBe(1);
+      // Should have spent 2 engineers
+      expect(result.newState.players['1'].engineers).toBe(1);
+    });
+
+    it('should Crash if insufficient Engineers for Critical Structural Stress', () => {
+      const state = createTestGameState();
+      state.age = 1;
+      state.players['1'].engineers = 1; // Only 1 engineer, need 2
+      state.players['1'].insurance = 0;
+
+      const hazardCard = {
+        id: 'critical_structural_stress_0',
+        type: 'critical_structural_stress',
+        category: 'mechanical',
+        name: 'Critical Structural Stress',
+        engineerCost: 2,
+        flak: 4
+      };
+
+      setupPendingLaunch(state.players['1'], {
+        pendingRouteId: 'route_1',
+        gasType: 'hydrogen',
+        stats: { speed: 1, reliability: 1, ceiling: 0, range: 3 }
+      }, hazardCard);
+
+      state.map.routes = [{
+        id: 'route_1',
+        from: 'A',
+        to: 'B',
+        income: 2,
+        claimed: null
+      }];
+
+      // Try to spend 1 engineer but need 2
+      const result = processHazardCheck(state, '1', { engineersToSpend: 1 });
+
+      // Should Crash - insufficient engineers
+      expect(result.newState.players['1'].pendingLaunch).toBeUndefined();
+      // Ship destroyed, not in repair bay
+      expect(result.newState.players['1'].repairShips).toBe(0);
+    });
+
+    it('should affect Helium ships (mechanical hazards are not hydrogen-only)', () => {
+      const state = createTestGameState();
+      state.age = 1;
+      state.players['1'].engineers = 0;
+      state.players['1'].insurance = 0;
+
+      const hazardCard = {
+        id: 'critical_structural_stress_0',
+        type: 'critical_structural_stress',
+        category: 'mechanical',
+        name: 'Critical Structural Stress',
+        engineerCost: 2,
+        flak: 4
+      };
+
+      // Helium ship - mechanical hazards still apply
+      setupPendingLaunch(state.players['1'], {
+        pendingRouteId: 'route_1',
+        gasType: 'helium',
+        stats: { speed: 1, reliability: 1, ceiling: 0, range: 3 }
+      }, hazardCard);
+
+      state.map.routes = [{
+        id: 'route_1',
+        from: 'A',
+        to: 'B',
+        income: 2,
+        claimed: null
+      }];
+
+      const result = processHazardCheck(state, '1', { engineersToSpend: 0 });
+
+      // Helium ships are NOT immune to mechanical hazards (unlike fire)
+      // Should Crash - no engineers to spend
+      expect(result.newState.players['1'].pendingLaunch).toBeUndefined();
+    });
+  });
+
+  describe('Squall Line Payload Slot Modifier', () => {
+    it('should apply +1 Difficulty for ships with 3+ Payload slots', () => {
+      const state = createTestGameState();
+      state.age = 3; // Age III has 4 payload slots
+      state.players['1'].engineers = 0;
+
+      const hazardCard = {
+        id: 'squall_line_0',
+        type: 'major_reliability',
+        category: 'major',
+        name: 'Squall Line',
+        challengeType: 'reliability',
+        hazardType: 'weather',
+        difficulty: 4,
+        payloadSlotModifier: { threshold: 3, difficultyIncrease: 1 }
+      };
+
+      // Ship with reliability 4 would normally pass (4 >= 4)
+      // But with 3+ payload slots, difficulty becomes 5, so ship fails (4 < 5)
+      setupPendingLaunch(state.players['1'], {
+        pendingRouteId: 'route_1',
+        gasType: 'hydrogen',
+        stats: { speed: 1, reliability: 4, ceiling: 0, range: 3 }
+      }, hazardCard);
+
+      // Set up 3 payload slots (componentSlots)
+      state.players['1'].blueprint.componentSlots = ['cargo_nets', 'passenger_gondola', 'mail_compartment'];
+
+      state.map.routes = [{
+        id: 'route_1',
+        from: 'A',
+        to: 'B',
+        income: 2,
+        claimed: null
+      }];
+
+      const result = processHazardCheck(state, '1', {});
+
+      // Should FAIL - reliability 4 < modified difficulty 5
+      expect(result.newState.players['1'].pendingLaunch).toBeUndefined();
+      expect(result.newState.players['1'].hangarShips).toBe(1); // Ship aborted
+      expect(result.newState.map.routes[0].claimed).toBeNull();
+    });
+
+    it('should NOT apply +1 Difficulty for ships with fewer than 3 Payload slots', () => {
+      const state = createTestGameState();
+      state.age = 1;
+      state.players['1'].engineers = 0;
+
+      const hazardCard = {
+        id: 'squall_line_0',
+        type: 'major_reliability',
+        category: 'major',
+        name: 'Squall Line',
+        challengeType: 'reliability',
+        hazardType: 'weather',
+        difficulty: 4,
+        payloadSlotModifier: { threshold: 3, difficultyIncrease: 1 }
+      };
+
+      // Ship with reliability 4 passes normal difficulty (4 >= 4)
+      setupPendingLaunch(state.players['1'], {
+        pendingRouteId: 'route_1',
+        gasType: 'hydrogen',
+        stats: { speed: 1, reliability: 4, ceiling: 0, range: 3 }
+      }, hazardCard);
+
+      // Only 2 payload slots
+      state.players['1'].blueprint.componentSlots = ['cargo_nets', 'passenger_gondola'];
+
+      state.map.routes = [{
+        id: 'route_1',
+        from: 'A',
+        to: 'B',
+        income: 2,
+        claimed: null
+      }];
+
+      const result = processHazardCheck(state, '1', {});
+
+      // Should PASS - reliability 4 >= difficulty 4 (no modifier)
+      expect(result.newState.players['1'].pendingLaunch).toBeUndefined();
+      expect(result.newState.map.routes[0].claimed).toBe('1');
+    });
+  });
+
+  describe('Icing Conditions Gas Loss on Failure', () => {
+    it('should lose 1 gas cube on failure from Icing Conditions', () => {
+      const state = createTestGameState();
+      state.age = 1;
+      state.players['1'].engineers = 0;
+      state.players['1'].gasCubes = { hydrogen: 2, helium: 0 };
+
+      const hazardCard = {
+        id: 'icing_conditions_0',
+        type: 'major_ceiling',
+        category: 'major',
+        name: 'Icing Conditions',
+        challengeType: 'ceiling',
+        hazardType: 'weather',
+        difficulty: 3,
+        gasLossOnFailure: 1
+      };
+
+      // Ship with ceiling 2 fails (2 < 3)
+      setupPendingLaunch(state.players['1'], {
+        pendingRouteId: 'route_1',
+        gasType: 'hydrogen',
+        stats: { speed: 1, reliability: 0, ceiling: 2, range: 3 }
+      }, hazardCard);
+
+      state.map.routes = [{
+        id: 'route_1',
+        from: 'A',
+        to: 'B',
+        income: 2,
+        claimed: null
+      }];
+
+      const result = processHazardCheck(state, '1', {});
+
+      // Should fail and lose 1 gas cube
+      expect(result.newState.players['1'].pendingLaunch).toBeUndefined();
+      expect(result.newState.players['1'].hangarShips).toBe(1); // Ship aborted
+      expect(result.newState.players['1'].gasCubes.hydrogen).toBe(1); // Lost 1 cube
+    });
+
+    it('should lose 2 gas cubes on failure from Severe Icing', () => {
+      const state = createTestGameState();
+      state.age = 1;
+      state.players['1'].engineers = 0;
+      state.players['1'].gasCubes = { hydrogen: 3, helium: 0 };
+
+      const hazardCard = {
+        id: 'severe_icing_0',
+        type: 'major_ceiling',
+        category: 'major',
+        name: 'Severe Icing',
+        challengeType: 'ceiling',
+        hazardType: 'weather',
+        difficulty: 2,
+        gasLossOnFailure: 2
+      };
+
+      // Ship with ceiling 1 fails (1 < 2)
+      setupPendingLaunch(state.players['1'], {
+        pendingRouteId: 'route_1',
+        gasType: 'hydrogen',
+        stats: { speed: 1, reliability: 0, ceiling: 1, range: 3 }
+      }, hazardCard);
+
+      state.map.routes = [{
+        id: 'route_1',
+        from: 'A',
+        to: 'B',
+        income: 2,
+        claimed: null
+      }];
+
+      const result = processHazardCheck(state, '1', {});
+
+      // Should fail and lose 2 gas cubes
+      expect(result.newState.players['1'].pendingLaunch).toBeUndefined();
+      expect(result.newState.players['1'].hangarShips).toBe(1); // Ship aborted
+      expect(result.newState.players['1'].gasCubes.hydrogen).toBe(1); // Lost 2 cubes
+    });
+
+    it('should destroy ship if gas loss leaves no gas remaining', () => {
+      const state = createTestGameState();
+      state.age = 1;
+      state.players['1'].engineers = 0;
+      state.players['1'].insurance = 0;
+      state.players['1'].gasCubes = { hydrogen: 1, helium: 0 };
+
+      const hazardCard = {
+        id: 'severe_icing_0',
+        type: 'major_ceiling',
+        category: 'major',
+        name: 'Severe Icing',
+        challengeType: 'ceiling',
+        hazardType: 'weather',
+        difficulty: 2,
+        gasLossOnFailure: 2
+      };
+
+      // Ship with ceiling 1 fails (1 < 2)
+      setupPendingLaunch(state.players['1'], {
+        pendingRouteId: 'route_1',
+        gasType: 'hydrogen',
+        stats: { speed: 1, reliability: 0, ceiling: 1, range: 3 }
+      }, hazardCard);
+
+      state.map.routes = [{
+        id: 'route_1',
+        from: 'A',
+        to: 'B',
+        income: 2,
+        claimed: null
+      }];
+
+      const result = processHazardCheck(state, '1', {});
+
+      // Should destroy ship - only had 1 gas, needed to lose 2
+      expect(result.newState.players['1'].pendingLaunch).toBeUndefined();
+      // Ship destroyed (not in hangar or repair)
+      expect(result.newState.players['1'].hangarShips).toBe(0);
+      expect(result.newState.players['1'].repairShips).toBe(0);
+    });
+
+    it('should NOT lose gas on successful hazard check', () => {
+      const state = createTestGameState();
+      state.age = 1;
+      state.players['1'].engineers = 0;
+      state.players['1'].gasCubes = { hydrogen: 2, helium: 0 };
+
+      const hazardCard = {
+        id: 'icing_conditions_0',
+        type: 'major_ceiling',
+        category: 'major',
+        name: 'Icing Conditions',
+        challengeType: 'ceiling',
+        hazardType: 'weather',
+        difficulty: 3,
+        gasLossOnFailure: 1
+      };
+
+      // Ship with ceiling 3 passes (3 >= 3)
+      setupPendingLaunch(state.players['1'], {
+        pendingRouteId: 'route_1',
+        gasType: 'hydrogen',
+        stats: { speed: 1, reliability: 0, ceiling: 3, range: 3 }
+      }, hazardCard);
+
+      state.map.routes = [{
+        id: 'route_1',
+        from: 'A',
+        to: 'B',
+        income: 2,
+        claimed: null
+      }];
+
+      const result = processHazardCheck(state, '1', {});
+
+      // Should pass - no gas loss
+      expect(result.newState.players['1'].pendingLaunch).toBeUndefined();
+      expect(result.newState.map.routes[0].claimed).toBe('1');
+      expect(result.newState.players['1'].gasCubes.hydrogen).toBe(2); // No loss
+    });
+  });
 });
