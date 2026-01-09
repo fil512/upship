@@ -442,21 +442,31 @@ export function evaluateLaunchReadiness(
     };
   }
 
-  // Check 2: Are all frame and fabric slots filled?
+  // Check 2: Do we have minimum required components? (at least one Frame, one Fabric, one Drive)
   let slotsReady = true;
   if (player.blueprint) {
     const frameSlots = player.blueprint.frameSlots || [];
     const fabricSlots = player.blueprint.fabricSlots || [];
-    const emptyFrame = frameSlots.filter(s => s === null).length;
-    const emptyFabric = fabricSlots.filter(s => s === null).length;
+    const driveSlots = player.blueprint.driveSlots || [];
 
-    if (emptyFrame > 0) {
-      missing.push(`${emptyFrame} empty Frame slot(s)`);
+    const hasFrame = frameSlots.some(s => s !== null);
+    const hasFabric = fabricSlots.some(s => s !== null);
+    const hasDrive = driveSlots.some(s => s !== null);
+
+    if (!hasFrame) {
+      missing.push('need at least one Frame tile');
       priorities.push('blueprint_design');
       slotsReady = false;
     }
-    if (emptyFabric > 0) {
-      missing.push(`${emptyFabric} empty Fabric slot(s)`);
+    if (!hasFabric) {
+      missing.push('need at least one Fabric tile');
+      if (!priorities.includes('blueprint_design')) {
+        priorities.push('blueprint_design');
+      }
+      slotsReady = false;
+    }
+    if (!hasDrive) {
+      missing.push('need at least one Drive tile');
       if (!priorities.includes('blueprint_design')) {
         priorities.push('blueprint_design');
       }
@@ -479,36 +489,60 @@ export function evaluateLaunchReadiness(
     priorities.push('gas_depot');
   }
 
-  // Check 5: Do we have achievable routes?
+  // Check 5: Do we have minimum Range and Speed? (must be >= 1 to launch)
   // Ship stats now come from blueprint, not from ship objects
+  let statsReady = true;
   let hasAchievableTarget = false;
   const routes = (state.map?.routes || []).filter(r => !r.claimed);
 
-  if (hangarShipCount > 0 && routes.length > 0 && player.blueprint) {
+  if (player.blueprint) {
     // Calculate ship stats from blueprint (this is how launch.ts does it)
     const shipStats = calculateBlueprintStats(player.blueprint, currentAge);
 
-    for (const route of routes) {
-      const routeRange = route.distance || route.range || 1;
-      const routeSpeed = route.speedRequirement || route.speed || 0;
-      const routeCeiling = route.ceilingRequirement || route.ceiling || 0;
-
-      if (shipStats.range >= routeRange &&
-          shipStats.speed >= routeSpeed &&
-          shipStats.ceiling >= routeCeiling) {
-        hasAchievableTarget = true;
-        break;
+    // Check minimum stats required to launch (Range >= 1 and Speed >= 1)
+    if (shipStats.range < 1) {
+      missing.push('need Range >= 1 (install Drive tiles)');
+      if (!priorities.includes('blueprint_design')) {
+        priorities.push('blueprint_design');
       }
+      priorities.push('research_institute');
+      statsReady = false;
+    }
+    if (shipStats.speed < 1) {
+      missing.push('need Speed >= 1 (install Drive tiles)');
+      if (!priorities.includes('blueprint_design')) {
+        priorities.push('blueprint_design');
+      }
+      if (!priorities.includes('research_institute')) {
+        priorities.push('research_institute');
+      }
+      statsReady = false;
     }
 
-    if (!hasAchievableTarget) {
-      missing.push(`no reachable routes (range=${shipStats.range}, speed=${shipStats.speed})`);
-      priorities.unshift('research_institute');
-      priorities.splice(1, 0, 'blueprint_design');
+    // Check 6: Do we have achievable routes?
+    if (hangarShipCount > 0 && routes.length > 0 && statsReady) {
+      for (const route of routes) {
+        const routeRange = route.distance || route.range || 1;
+        const routeSpeed = route.speedRequirement || route.speed || 0;
+        const routeCeiling = route.ceilingRequirement || route.ceiling || 0;
+
+        if (shipStats.range >= routeRange &&
+            shipStats.speed >= routeSpeed &&
+            shipStats.ceiling >= routeCeiling) {
+          hasAchievableTarget = true;
+          break;
+        }
+      }
+
+      if (!hasAchievableTarget) {
+        missing.push(`no reachable routes (range=${shipStats.range}, speed=${shipStats.speed})`);
+        priorities.unshift('research_institute');
+        priorities.splice(1, 0, 'blueprint_design');
+      }
     }
   }
 
-  // Check 6: Do we have engineers for hazard mitigation?
+  // Check 7: Do we have engineers for hazard mitigation?
   // [BOT-LAUNCH-READY-01] SYNC: Match playtest - require 2+ engineers for safe launch (blocks canLaunch)
   // Most hazards need 2-4 engineers to pass, so launching with 0-1 is risky
   const minEngineersForSafeLaunch = 2;
@@ -518,7 +552,7 @@ export function evaluateLaunchReadiness(
     priorities.push('technical_institute'); // Build engineer income
   }
 
-  const canLaunch = hangarShipCount > 0 && slotsReady &&
+  const canLaunch = hangarShipCount > 0 && slotsReady && statsReady &&
                     officers >= officersNeeded && totalGas >= 1 &&
                     hasAchievableTarget && engineers >= minEngineersForSafeLaunch;
 
