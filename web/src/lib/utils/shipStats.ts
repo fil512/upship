@@ -112,10 +112,15 @@ export function calculateShipStats(blueprint: Blueprint | null | undefined, age 
 	// Calculate net lift
 	stats.netLift = stats.lift - stats.weight;
 
-	// Can launch if lift >= weight and required slots are filled
+	// Can launch if:
+	// - lift >= weight (net lift >= 0)
+	// - all frame and fabric slots filled
+	// - range >= 1 and speed >= 1 (minimum required to reach any destination)
 	const frameCount = (blueprint.frameSlots || []).filter(s => s).length;
 	const fabricCount = (blueprint.fabricSlots || []).filter(s => s).length;
-	stats.canLaunch = stats.lift >= stats.weight && frameCount >= 1 && fabricCount >= 1;
+	const frameFilled = frameCount === (blueprint.frameSlots || []).length;
+	const fabricFilled = fabricCount === (blueprint.fabricSlots || []).length;
+	stats.canLaunch = stats.lift >= stats.weight && frameFilled && fabricFilled && stats.range >= 1 && stats.speed >= 1;
 
 	return stats;
 }

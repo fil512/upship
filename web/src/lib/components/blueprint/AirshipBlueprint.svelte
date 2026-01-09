@@ -14,6 +14,7 @@
 	const dispatch = createEventDispatcher<{
 		slotClick: { slotType: string; index: number; upgrade: string | null };
 		placeTile: { slotType: string; index: number; tileId: string };
+		removeTile: { slotType: string; index: number; tileId: string };
 	}>();
 
 	// Determine which slot type the selected tile can go into
@@ -23,13 +24,21 @@
 	$: hullCost = calculateHullCost(blueprint);
 
 	function handleSlotClick(slotType: string, index: number, upgrade: string | null) {
-		if (editMode && selectedTileId && selectedTileSlotType) {
-			// In edit mode with a tile selected - try to place it
-			const slotKey = `${slotType}Slots`;
-			if (slotKey === selectedTileSlotType) {
-				dispatch('placeTile', { slotType, index, tileId: selectedTileId });
+		if (editMode) {
+			// In edit mode - check if we're placing or removing
+			if (upgrade) {
+				// Slot has a tile - remove it
+				dispatch('removeTile', { slotType, index, tileId: upgrade });
+				return;
 			}
-			return;
+			if (selectedTileId && selectedTileSlotType) {
+				// Empty slot with a tile selected - try to place it
+				const slotKey = `${slotType}Slots`;
+				if (slotKey === selectedTileSlotType) {
+					dispatch('placeTile', { slotType, index, tileId: selectedTileId });
+				}
+				return;
+			}
 		}
 		dispatch('slotClick', { slotType, index, upgrade });
 	}

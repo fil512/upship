@@ -733,6 +733,19 @@
 		selectedTechTileId = null; // Clear selection after placement
 	}
 
+	function handleRemoveTile(event: CustomEvent<{ slotType: string; index: number; tileId: string }>) {
+		if (!pendingBlueprint) return;
+		const { slotType, index } = event.detail;
+		const slotKey = `${slotType}Slots` as keyof BlueprintType;
+
+		// Remove the tile from the slot
+		const slots = pendingBlueprint[slotKey] as (string | null)[];
+		if (slots && index < slots.length) {
+			slots[index] = null;
+			pendingBlueprint = pendingBlueprint; // Trigger reactivity
+		}
+	}
+
 	async function handleBlueprintDesignDone() {
 		if (!pendingBlueprint) return;
 
@@ -1297,6 +1310,7 @@
 									selectedTileId={selectedTechTileId}
 									on:slotClick={handleBlueprintSlotClick}
 									on:placeTile={handlePlaceTile}
+									on:removeTile={handleRemoveTile}
 								/>
 								<!-- Tech card rows below blueprint -->
 								<TechList
