@@ -41,15 +41,16 @@ describe('Rules Compliance - Hazard Deck', () => {
       expect(minorHazards.length).toBe(8);
 
       // All minor hazards should have difficulty 1-3
-      // Balanced for stat + 2 engineers (check value 2-3) to achieve ~60% pass rate
+      // Simplified model: Total Difficulty = Hazard Difficulty - Ship Reliability
+      // With reliability 0-2 and engineers 0-3, these should be passable
       minorHazards.forEach(card => {
         expect(card.difficulty).toBeGreaterThanOrEqual(1);
         expect(card.difficulty).toBeLessThanOrEqual(3);
       });
 
-      // Minor hazards should have challenge types
+      // Minor hazards should have hazardType (weather, mechanical, or supply)
       minorHazards.forEach(card => {
-        expect(['speed', 'reliability', 'ceiling', 'range']).toContain(card.challengeType);
+        expect(['weather', 'mechanical', 'supply']).toContain(card.hazardType);
       });
     });
 
@@ -59,16 +60,16 @@ describe('Rules Compliance - Hazard Deck', () => {
       expect(majorHazards.length).toBe(8);
 
       // All major hazards should have difficulty 2-4
-      // Balance fix: Severe Icing reduced to 2, Engine Failure and Navigation Error reduced to 3
-      // Challenging but passable with starting ceiling (1) + engineer
+      // Simplified model: Total Difficulty = Hazard Difficulty - Ship Reliability
+      // With reliability 2-3 and engineers 2-4, these should be challenging but passable
       majorHazards.forEach(card => {
         expect(card.difficulty).toBeGreaterThanOrEqual(2);
         expect(card.difficulty).toBeLessThanOrEqual(4);
       });
 
-      // Major hazards should have challenge types
+      // Major hazards should have hazardType (weather, mechanical, or supply)
       majorHazards.forEach(card => {
-        expect(['speed', 'reliability', 'ceiling', 'range']).toContain(card.challengeType);
+        expect(['weather', 'mechanical', 'supply']).toContain(card.hazardType);
       });
     });
 
@@ -109,14 +110,13 @@ describe('Rules Compliance - Hazard Deck', () => {
       });
     });
 
-    it('should have Static Discharge with difficulty 2 Reliability check', () => {
+    it('should have Static Discharge with difficulty 2', () => {
       const deck = createHazardDeck();
       const staticDischarge = deck.find(card => card.type === 'static_discharge');
 
       expect(staticDischarge).toBeDefined();
-      // Difficulty 2: passable with stat=0 + 2 engineers (check value 2)
+      // Simplified: Total Difficulty = 2 - Ship Reliability. If > 0, spend engineers.
       expect(staticDischarge.difficulty).toBe(2);
-      expect(staticDischarge.challengeType).toBe('reliability');
       expect(staticDischarge.hydrogenOnly).toBe(true);
     });
 

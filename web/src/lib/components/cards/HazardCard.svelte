@@ -1,12 +1,10 @@
 <script lang="ts">
 	import Icon from '$lib/components/ui/Icon.svelte';
-	import type { IconName } from '$lib/icons/types';
 	import { getHazardImageFilename } from '$lib/utils/cardImages';
 
 	export let name: string;
 	export let category: 'clear' | 'minor' | 'major' | 'fire' | 'mechanical' = 'minor';
 	export let difficulty: number = 0;
-	export let challengeType: string = '';
 	export let engineerCost: number | undefined = undefined;
 	export let flak: number = 0;
 	export let showFlak: boolean = false;
@@ -28,16 +26,8 @@
 		mechanical: 'Mechanical'
 	};
 
-	const CHALLENGE_ICONS: Record<string, IconName> = {
-		speed: 'speed',
-		range: 'range',
-		ceiling: 'ceiling',
-		reliability: 'reliability'
-	};
-
 	$: categoryColor = CATEGORY_COLORS[category] || CATEGORY_COLORS.minor;
 	$: categoryLabel = CATEGORY_LABELS[category] || category;
-	$: challengeIcon = (CHALLENGE_ICONS[challengeType] || 'hazard') as IconName;
 	$: imageFilename = getHazardImageFilename(name);
 	$: isAutoPass = category === 'clear';
 </script>
@@ -64,7 +54,7 @@
 		/>
 	</div>
 
-	<!-- Bottom: Challenge info -->
+	<!-- Bottom: Difficulty info -->
 	<div class="card-footer">
 		{#if isAutoPass}
 			<div class="auto-pass-text">
@@ -73,19 +63,14 @@
 			</div>
 		{:else}
 			<div class="challenge-info">
-				{#if challengeType}
-					<div class="challenge-type" title="Challenge: {challengeType}">
-						<Icon name={challengeIcon} size={16} />
-						<span class="challenge-label">{challengeType}</span>
-					</div>
-				{/if}
-				<div class="difficulty" title="Difficulty: {difficulty}">
+				<div class="difficulty" title="Difficulty: {difficulty}. Total Difficulty = {difficulty} - Ship Reliability. Spend Engineers equal to Total Difficulty to pass.">
+					<Icon name="hazard" size={16} />
 					<span class="difficulty-label">Diff</span>
 					<span class="difficulty-value">{difficulty}</span>
 				</div>
 			</div>
 			{#if engineerCost}
-				<div class="engineer-cost" title="Spend {engineerCost} Engineers to auto-pass">
+				<div class="engineer-cost" title="Spend {engineerCost} Engineers to control fire">
 					<Icon name="engineers" size={14} />
 					<span>{engineerCost}</span>
 				</div>
@@ -201,27 +186,15 @@
 	.challenge-info {
 		display: flex;
 		align-items: center;
-		justify-content: space-between;
+		justify-content: center;
 		gap: 8px;
-	}
-
-	.challenge-type {
-		display: flex;
-		align-items: center;
-		gap: 4px;
-		color: #c4b8a0;
-	}
-
-	.challenge-label {
-		font-size: 0.6rem;
-		text-transform: uppercase;
-		opacity: 0.8;
 	}
 
 	.difficulty {
 		display: flex;
 		align-items: center;
 		gap: 4px;
+		color: #c4b8a0;
 	}
 
 	.difficulty-label {

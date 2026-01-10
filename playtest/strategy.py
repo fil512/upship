@@ -7,21 +7,21 @@ SYNC: Keep in sync with server/services/botService.ts
 Run `/bot-logic` command to analyze sync status between server and playtest bots.
 
 HAZARD CHECK FORMULA (Section 8.2):
-    When a ship is launched, it faces hazard checks. The success formula is:
+    When a ship is launched, it faces hazard checks. The simplified formula is:
 
-    Net Difficulty = Hazard Difficulty + Route/Mission Difficulty - Ship Reliability (min 0)
-    Ship Stat + Engineers >= Net Difficulty → Pass
+    Total Difficulty = Hazard Difficulty + Mission Difficulty - Ship Reliability (min 0)
+    If Total Difficulty = 0: Auto-pass (reliability overcomes hazard)
+    If Total Difficulty > 0: Spend that many Engineers to pass
 
     Key points:
-    - Hazard difficulty comes from the drawn hazard card (typically 2-6)
-    - Route/Mission difficulty adds to hazard difficulty (Age II combat missions have this)
-    - Ship reliability REDUCES net difficulty (higher reliability = easier hazards)
-    - Engineers can be spent to increase the Ship Stat side of the check
-    - Only Range, Speed, and Ceiling are prerequisites; reliability/difficulty are modifiers
+    - Hazard difficulty comes from the drawn hazard card (typically 1-4)
+    - Mission difficulty adds to hazard difficulty (Age II combat missions only)
+    - Ship reliability REDUCES total difficulty (higher reliability = fewer engineers needed)
+    - Range, Speed, Ceiling are only prerequisites for routes; not used in hazard checks
 
-    Example: Hazard difficulty=4, Mission difficulty=2, Ship reliability=3
-             Net Difficulty = max(0, 4 + 2 - 3) = 3
-             If ship has Speed=2 and player spends 1 engineer: 2 + 1 = 3 >= 3 → Pass
+    Example: Hazard difficulty=4, Mission difficulty=2, Ship reliability=2
+             Total Difficulty = max(0, 4 + 2 - 2) = 4
+             Player must spend 4 Engineers to pass, or abort the launch
 """
 
 from typing import Any
@@ -373,9 +373,10 @@ def calculate_expected_engineers_for_launch(
 ) -> tuple[int, str]:
     """Calculate expected engineers needed for a safe launch.
 
-    Uses the new hazard check formula (Section 8.2):
-        Net Difficulty = Hazard Difficulty + Route/Mission Difficulty - Ship Reliability (min 0)
-        Ship Stat + Engineers >= Net Difficulty to pass
+    Uses the simplified hazard check formula (Section 8.2):
+        Total Difficulty = Hazard Difficulty + Mission Difficulty - Ship Reliability (min 0)
+        If Total Difficulty = 0: Auto-pass
+        If Total Difficulty > 0: Spend that many Engineers to pass
 
     Args:
         ship_reliability: Ship's reliability stat.
@@ -385,13 +386,13 @@ def calculate_expected_engineers_for_launch(
     Returns:
         Tuple of (engineers_needed, reason_string)
     """
-    # Average hazard difficulty in the deck is about 3-4
-    # Using 4 as a conservative estimate for safety
-    AVG_HAZARD_DIFFICULTY = 4
+    # Average hazard difficulty in the deck is about 2-3
+    # Using 3 as a conservative estimate for safety
+    AVG_HAZARD_DIFFICULTY = 3
 
     # Mission/route difficulty
     # Age I/III routes have difficulty 0
-    # Age II missions have difficulty 2-3
+    # Age II missions have difficulty 2-4
     if current_age == 2 and missions:
         # Find the lowest difficulty mission that's achievable (prefer easier ones)
         mission_difficulties = [getattr(m, 'difficulty', 0) or 0 for m in missions]
@@ -403,25 +404,19 @@ def calculate_expected_engineers_for_launch(
     else:
         mission_difficulty = 0  # Routes in Age I/III have no difficulty
 
-    # Net difficulty formula: Hazard + Mission - Reliability (min 0)
-    net_difficulty = max(0, AVG_HAZARD_DIFFICULTY + mission_difficulty - ship_reliability)
+    # Total difficulty formula: Hazard + Mission - Reliability (min 0)
+    total_difficulty = max(0, AVG_HAZARD_DIFFICULTY + mission_difficulty - ship_reliability)
 
-    # Engineers needed to pass: max(0, net_difficulty - avg_ship_stat)
-    # But we can't predict which stat hazard will check, so we assume
-    # we need engineers equal to net_difficulty for safety
-    # A ship with matching stat ~3-4 would need 0-1 engineers
-    # Assuming average ship stat of 2-3, we need net_difficulty - 2 engineers
-    AVG_SHIP_STAT = 2
-    engineers_needed = max(0, net_difficulty - AVG_SHIP_STAT)
+    # In the simplified model, engineers_needed = total_difficulty directly
+    engineers_needed = total_difficulty
 
     # Build explanation
     if current_age == 2:
         reason = (f"hazard(~{AVG_HAZARD_DIFFICULTY}) + mission({mission_difficulty}) "
-                  f"- reliability({ship_reliability}) = net({net_difficulty}), "
-                  f"need ~{engineers_needed} engineers")
+                  f"- reliability({ship_reliability}) = {total_difficulty} engineers needed")
     else:
         reason = (f"hazard(~{AVG_HAZARD_DIFFICULTY}) - reliability({ship_reliability}) "
-                  f"= net({net_difficulty}), need ~{engineers_needed} engineers")
+                  f"= {total_difficulty} engineers needed")
 
     return engineers_needed, reason
 

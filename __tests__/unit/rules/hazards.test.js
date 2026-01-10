@@ -49,26 +49,65 @@ function setupPendingLaunch(playerState, ship, hazardCard) {
 
 describe('Rules Compliance - Hazards', () => {
 
-  describe('GAP-031: Hazard check should use challenge type stat', () => {
-    it('should compare Speed stat when challenge type is speed', () => {
+  describe('GAP-031: Simplified hazard check formula', () => {
+    it('should auto-pass when reliability >= difficulty', () => {
       const state = createTestGameState();
       state.age = 1;
 
       const hazardCard = {
-        id: 'major_speed_0',
-        type: 'major_speed',
+        id: 'minor_hazard_0',
+        type: 'minor_hazard',
+        category: 'minor',
+        name: 'Light Turbulence',
+        hazardType: 'weather',
+        difficulty: 2
+      };
+
+      // Ship with high reliability - should auto-pass (reliability 3 >= difficulty 2)
+      setupPendingLaunch(state.players['1'], {
+        pendingRouteId: 'route_1',
+        gasType: 'hydrogen',
+        stats: { speed: 1, reliability: 3, ceiling: 0, range: 3 }
+      }, hazardCard);
+
+      state.map.routes = [{
+        id: 'route_1',
+        from: 'A',
+        to: 'B',
+        income: 2,
+        claimed: null
+      }];
+
+      const result = processHazardCheck(state, '1', {});
+
+      // Should auto-pass because reliability (3) >= difficulty (2)
+      // Total Difficulty = max(0, 2 - 3) = 0, so auto-pass
+      expect(result.newState.players['1'].pendingLaunch).toBeUndefined();
+      expect(result.newState.map.routes[0].claimed).toBe('1');
+    });
+
+    it('should pass when engineers spent >= total difficulty', () => {
+      const state = createTestGameState();
+      state.age = 1;
+
+      const hazardCard = {
+        id: 'major_hazard_0',
+        type: 'major_hazard',
         category: 'major',
         name: 'Strong Headwind',
-        challengeType: 'speed',
+        hazardType: 'weather',
         difficulty: 4
       };
 
-      // Ship with high speed but low reliability
+      // Ship with low reliability (1) facing difficulty 4
+      // Total Difficulty = max(0, 4 - 1) = 3
+      // Need 3 engineers to pass
       setupPendingLaunch(state.players['1'], {
         pendingRouteId: 'route_1',
         gasType: 'hydrogen',
-        stats: { speed: 5, reliability: 0, ceiling: 0, range: 3 }
+        stats: { speed: 1, reliability: 1, ceiling: 1, range: 3 }
       }, hazardCard);
+      state.players['1'].engineers = 5;
 
       state.map.routes = [{
         id: 'route_1',
@@ -78,64 +117,30 @@ describe('Rules Compliance - Hazards', () => {
         claimed: null
       }];
 
-      const result = processHazardCheck(state, '1', {});
+      const result = processHazardCheck(state, '1', { engineersToSpend: 3 });
 
-      // Should pass because ship speed (5) >= difficulty (4)
-      // Success: route claimed, pendingLaunch cleared
+      // Should pass because we spent 3 engineers (3 >= total difficulty 3)
       expect(result.newState.players['1'].pendingLaunch).toBeUndefined();
       expect(result.newState.map.routes[0].claimed).toBe('1');
     });
 
-    it('should compare Ceiling stat when challenge type is ceiling', () => {
-      const state = createTestGameState();
-      state.age = 1;
-
-      const hazardCard = {
-        id: 'minor_ceiling_0',
-        type: 'minor_ceiling',
-        category: 'minor',
-        name: 'Low Clouds',
-        challengeType: 'ceiling',
-        difficulty: 3
-      };
-
-      // Ship with high ceiling
-      setupPendingLaunch(state.players['1'], {
-        pendingRouteId: 'route_1',
-        gasType: 'hydrogen',
-        stats: { speed: 1, reliability: 0, ceiling: 5, range: 3 }
-      }, hazardCard);
-
-      state.map.routes = [{
-        id: 'route_1',
-        from: 'A',
-        to: 'B',
-        income: 2,
-        claimed: null
-      }];
-
-      const result = processHazardCheck(state, '1', {});
-
-      // Should pass because ship ceiling (5) >= difficulty (3)
-      expect(result.newState.players['1'].pendingLaunch).toBeUndefined();
-      expect(result.newState.map.routes[0].claimed).toBe('1');
-    });
-
-    it('should fail when ship stat is lower than challenge difficulty', () => {
+    it('should abort when no engineers and total difficulty > 0', () => {
       const state = createTestGameState();
       state.age = 1;
       state.players['1'].engineers = 0; // No engineers to spend
 
       const hazardCard = {
-        id: 'major_range_0',
-        type: 'major_range',
+        id: 'major_hazard_5',
+        type: 'major_hazard',
         category: 'major',
         name: 'Navigation Error',
-        challengeType: 'range',
-        difficulty: 4
+        hazardType: 'supply',
+        difficulty: 3
       };
 
-      // Ship with low range
+      // Ship with low reliability (0) facing difficulty 3
+      // Total Difficulty = max(0, 3 - 0) = 3
+      // Need 3 engineers but have 0 - should abort
       setupPendingLaunch(state.players['1'], {
         pendingRouteId: 'route_1',
         gasType: 'hydrogen',
@@ -152,30 +157,32 @@ describe('Rules Compliance - Hazards', () => {
 
       const result = processHazardCheck(state, '1', {});
 
-      // Should fail - ship aborted, returns to hangar
+      // Should abort - ship returns to hangar (since no engineers to spend)
       expect(result.newState.players['1'].pendingLaunch).toBeUndefined();
       expect(result.newState.players['1'].hangarShips).toBe(1);
     });
 
-    it('should allow engineers to boost check (+1 per Engineer)', () => {
+    it('should spend exactly total difficulty engineers to pass', () => {
       const state = createTestGameState();
       state.age = 1;
-      state.players['1'].engineers = 3; // 3 engineers available
+      state.players['1'].engineers = 5; // 5 engineers available
 
       const hazardCard = {
-        id: 'major_speed_0',
-        type: 'major_speed',
+        id: 'major_hazard_0',
+        type: 'major_hazard',
         category: 'major',
         name: 'Strong Headwind',
-        challengeType: 'speed',
+        hazardType: 'weather',
         difficulty: 4
       };
 
-      // Ship with speed 2
+      // Ship with reliability 1 facing difficulty 4
+      // Total Difficulty = max(0, 4 - 1) = 3
+      // Need 3 engineers to pass
       setupPendingLaunch(state.players['1'], {
         pendingRouteId: 'route_1',
         gasType: 'hydrogen',
-        stats: { speed: 2, reliability: 0, ceiling: 0, range: 3 }
+        stats: { speed: 2, reliability: 1, ceiling: 0, range: 3 }
       }, hazardCard);
 
       state.map.routes = [{
@@ -186,14 +193,14 @@ describe('Rules Compliance - Hazards', () => {
         claimed: null
       }];
 
-      // Spend 2 engineers to pass (speed 2 + 2 engineers = 4 >= difficulty 4)
-      const result = processHazardCheck(state, '1', { engineersToSpend: 2 });
+      // Spend 3 engineers to pass (Total Difficulty = 4 - 1 = 3)
+      const result = processHazardCheck(state, '1', { engineersToSpend: 3 });
 
-      // Should pass with engineer help
+      // Should pass because we spent 3 engineers (3 >= total difficulty 3)
       expect(result.newState.players['1'].pendingLaunch).toBeUndefined();
       expect(result.newState.map.routes[0].claimed).toBe('1');
-      // Should have spent 2 engineers
-      expect(result.newState.players['1'].engineers).toBe(1);
+      // Should have spent 3 engineers, leaving 2
+      expect(result.newState.players['1'].engineers).toBe(2);
     });
   });
 
@@ -1554,20 +1561,19 @@ describe('Rules Compliance - Hazards', () => {
 
       const hazardCard = {
         id: 'icing_conditions_0',
-        type: 'major_ceiling',
+        type: 'major_hazard',
         category: 'major',
         name: 'Icing Conditions',
-        challengeType: 'ceiling',
         hazardType: 'weather',
         difficulty: 3,
         gasLossOnFailure: 1
       };
 
-      // Ship with ceiling 3 passes (3 >= 3)
+      // Ship with reliability 3 auto-passes (Total Difficulty = 3 - 3 = 0)
       setupPendingLaunch(state.players['1'], {
         pendingRouteId: 'route_1',
         gasType: 'hydrogen',
-        stats: { speed: 1, reliability: 0, ceiling: 3, range: 3 }
+        stats: { speed: 1, reliability: 3, ceiling: 3, range: 3 }
       }, hazardCard);
 
       state.map.routes = [{
@@ -1580,7 +1586,7 @@ describe('Rules Compliance - Hazards', () => {
 
       const result = processHazardCheck(state, '1', {});
 
-      // Should pass - no gas loss
+      // Should auto-pass (reliability 3 >= difficulty 3) - no gas loss
       expect(result.newState.players['1'].pendingLaunch).toBeUndefined();
       expect(result.newState.map.routes[0].claimed).toBe('1');
       expect(result.newState.players['1'].gasCubes.hydrogen).toBe(2); // No loss

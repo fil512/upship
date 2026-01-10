@@ -106,23 +106,23 @@ export interface Card {
 }
 
 // Hazard card
+// Simplified hazard model: Total Difficulty = Hazard Difficulty - Ship Reliability (min 0)
+// If Total Difficulty > 0, spend that many engineers to pass
 export interface HazardCard {
 	id: string;
 	type: string;
 	category: 'clear' | 'minor' | 'major' | 'fire' | 'mechanical';
 	name: string;
 	difficulty: number;
-	challengeType?: string;
 	flak: number;
+	hazardType?: string;  // 'weather', 'mechanical', 'supply' - used for auto-pass conditions
 	autoPass?: boolean;
 	hydrogenOnly?: boolean;
 	engineerCost?: number;
 	noSave?: boolean;
 	// Extended fields added during hazard resolution
 	autoPassReason?: string | null;
-	engineersNeeded?: number;
-	relevantStat?: number;
-	statName?: string;
+	engineersNeeded?: number;  // Computed: max(0, difficulty - reliability)
 	heliumFireImmunity?: boolean;
 	conductiveCoveringImmunity?: boolean;
 	fireResistantFabricAvailable?: boolean;

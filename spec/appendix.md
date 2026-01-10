@@ -32,8 +32,8 @@ On your turn, either:
 5. ✓ Pay for Lifting Gas (Gas Reserve first, then market price for deficit)
 6. ✓ Assign to valid route (must meet stat requirements)
 7. ✓ Draw Hazard Card from your personal Hazard Deck
-8. ✓ Calculate Net Difficulty = Hazard Difficulty + Route Difficulty − Ship Reliability (min 0)
-9. ✓ Compare Ship Stat to Net Difficulty (optional: spend Engineers for +1 each)
+8. ✓ Calculate Total Difficulty = Hazard Difficulty + Mission Difficulty − Ship Reliability (min 0)
+9. ✓ If Total Difficulty = 0: Auto-pass. If > 0: Spend that many Engineers to pass.
 10. ✓ If Fire hazard and using Hydrogen: Spend required Engineers or crash
 11. ✓ If Catastrophic Explosion on Luxury Launch in Age III: Hindenburg Disaster triggered
 12. ✓ **Success:** Place ship on route, increase Income, gain city bonus
@@ -48,8 +48,8 @@ On your turn, either:
 - **Physics Check:** Total Lift ≥ Total Weight
 - **Lift Calculation:** Number of gas cubes × 5 (all gas types provide +5 Lift)
 - **Gas Rule:** Choose Hydrogen or Helium per launch—no mixing within a single launch
-- **Hazard Check:** Ship Stat + Engineers spent ≥ Net Difficulty
-- **Net Difficulty:** Hazard Difficulty + Route Difficulty − Ship Reliability (minimum 0)
+- **Total Difficulty:** Hazard Difficulty + Mission Difficulty − Ship Reliability (minimum 0)
+- **Hazard Check:** If Total Difficulty = 0, auto-pass. If > 0, spend that many Engineers to pass.
 - **Research per Round:** Research Level + Engineers in Barracks + Research icons from revealed cards (unspent lost)
 - **Net Income:** Income Track − Engineers in Barracks
 - **Tech Cost:** Listed cost − Specialization Discount
@@ -427,40 +427,40 @@ Each player has an identical Personal Hazard Deck of 27 cards. When launching a 
 
 ## Minor Hazards (8 cards)
 
-| Name | Difficulty | Stat | Type | Flak |
-|------|------------|------|------|------|
-| Light Turbulence | 2 | Speed | Weather | 0 |
-| Minor Engine Trouble | 2 | Reliability | Mechanical | 1 |
-| Crosswind | 3 | Speed | Weather | 0 |
-| Gas Leak | 3 | Reliability | Mechanical | 1 |
-| Low Visibility | 2 | Ceiling | Weather | 1 |
-| Fuel Concern | 3 | Range | Supply | 0 |
-| Headwind | 3 | Speed | Weather | 1 |
-| Structural Stress | 2 | Reliability | Mechanical | 2 |
+| Name | Difficulty | Type | Flak |
+|------|------------|------|------|
+| Light Turbulence | 2 | Weather | 0 |
+| Minor Engine Trouble | 1 | Mechanical | 1 |
+| Crosswind | 3 | Weather | 0 |
+| Gas Leak | 2 | Mechanical | 1 |
+| Low Visibility | 2 | Weather | 1 |
+| Fuel Concern | 2 | Supply | 0 |
+| Headwind | 3 | Weather | 1 |
+| Structural Stress | 2 | Mechanical | 2 |
 
 ## Major Hazards (8 cards)
 
-| Name | Difficulty | Stat | Type | Flak | Special |
-|------|------------|------|------|------|---------|
-| Strong Headwind | 4 | Speed | Weather | 2 | — |
-| Icing Conditions | 4 | Ceiling | Weather | 2 | On failure, also lose 1 gas cube. If no gas remains, ship Destroyed. |
-| Engine Failure | 5 | Reliability | Mechanical | 3 | — |
-| Storm System | 5 | Speed | Weather | 3 | — |
-| Structural Damage | 4 | Reliability | Mechanical | 4 | — |
-| Navigation Error | 4 | Range | Supply | 3 | — |
-| Squall Line | 5 | Reliability | Weather | 3 | Ships with 3+ Payload slots suffer +1 Difficulty. Historical: USS Shenandoah was torn apart by shear forces. |
-| Severe Icing | 5 | Ceiling | Weather | 2 | On failure, lose 2 gas cubes. If gas remains < ship's minimum, ship Destroyed. |
+| Name | Difficulty | Type | Flak | Special |
+|------|------------|------|------|---------|
+| Strong Headwind | 4 | Weather | 2 | — |
+| Icing Conditions | 3 | Weather | 2 | On failure, also lose 1 gas cube. If no gas remains, ship Destroyed. |
+| Engine Failure | 3 | Mechanical | 3 | — |
+| Storm System | 4 | Weather | 3 | — |
+| Structural Damage | 3 | Mechanical | 4 | — |
+| Navigation Error | 3 | Supply | 3 | — |
+| Squall Line | 4 | Weather | 3 | Ships with 3+ Payload slots suffer +1 Difficulty. Historical: USS Shenandoah was torn apart by shear forces. |
+| Severe Icing | 2 | Weather | 2 | On failure, lose 2 gas cubes. If gas remains < ship's minimum, ship Destroyed. |
 
 ## Fire Hazards (6 cards) — Hydrogen Ships Only
 
 Helium ships automatically pass all Fire-type hazards.
 
-| Name | Qty | Flak | Effect |
-|------|-----|------|--------|
-| **Engine Fire** | 2 | 2 | Spend 1 Engineer to control → Ship Damaged (Repair Hangar). Fail → Ship crashes. |
-| **Gas Cell Rupture** | 2 | 3 | Spend 2 Engineers to control → Ship Damaged (Repair Hangar). Fail → Ship crashes. |
-| **Static Discharge** | 1 | 4 | Difficulty 4 Reliability check. Fail → Ship crashes. Historical: Models the Hindenburg's static discharge ignition. |
-| **Catastrophic Explosion** | 1 | 5 | No save possible. Ship crashes. If Luxury Launch in Age III: Hindenburg Disaster triggered. |
+| Name | Qty | Difficulty | Flak | Effect |
+|------|-----|------------|------|--------|
+| **Engine Fire** | 2 | — | 2 | Spend 1 Engineer to control → Ship Damaged (Repair Hangar). Fail → Ship crashes. |
+| **Gas Cell Rupture** | 2 | — | 3 | Spend 2 Engineers to control → Ship Damaged (Repair Hangar). Fail → Ship crashes. |
+| **Static Discharge** | 1 | 2 | 4 | Standard hazard check. Fail → Ship crashes. Historical: Models the Hindenburg's static discharge ignition. |
+| **Catastrophic Explosion** | 1 | — | 5 | No save possible. Ship crashes. If Luxury Launch in Age III: Hindenburg Disaster triggered. |
 
 ## Mechanical Hazards (1 card)
 
@@ -471,13 +471,15 @@ Helium ships automatically pass all Fire-type hazards.
 **Resolving Hazards:**
 1. Draw card from your Personal Hazard Deck
 2. Check if auto-pass (Clear Weather cards, or Helium ship vs Fire hazards)
-3. For standard hazards: Compare Ship's relevant stat vs Difficulty. Spend Engineers (+1 each) to boost if needed.
-4. For Fire/Structural hazards: Spend required Engineers or face consequences.
-5. **Pass:** Ship reaches route/completes mission successfully
-6. **Fail (standard):** Ship returns to Launch Hangar (Officers kept, gas lost)
-7. **Damaged:** Ship goes to Repair Hangar (Officers and gas lost)
-8. **Crash:** Ship destroyed (token to supply, Officers and gas lost)
-9. **Age II Flak Check:** After resolving the hazard (pass or fail), check Flak vs Armor. If mission succeeded and Flak > Armor, ship is destroyed but rewards are still earned.
+3. **Calculate Total Difficulty:** Hazard Difficulty + Mission Difficulty − Ship Reliability (minimum 0)
+4. **If Total Difficulty = 0:** Auto-pass (Reliability overcomes the hazard)
+5. **If Total Difficulty > 0:** Spend that many Engineers to pass, or abort/crash
+6. For Fire hazards (Engine Fire, Gas Cell Rupture): Spend fixed Engineers or crash
+7. **Pass:** Ship reaches route/completes mission successfully
+8. **Abort (standard hazards):** Ship returns to Launch Hangar (Officers kept, gas lost)
+9. **Damaged:** Ship goes to Repair Hangar (Officers and gas lost)
+10. **Crash:** Ship destroyed (token to supply, Officers and gas lost)
+11. **Age II Flak Check:** After resolving the hazard (pass or fail), check Flak vs Armor. If mission succeeded and Flak > Armor, ship is destroyed but rewards are still earned.
 
 **Flak Distribution (27 cards):**
 - 0 Flak: 7 cards (safe passage) - Clear Weather (4) + Light Turbulence + Crosswind + Fuel Concern

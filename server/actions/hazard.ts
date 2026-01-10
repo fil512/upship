@@ -279,21 +279,19 @@ function checkHindenburgDisaster(conditions: HazardConditions): boolean {
 }
 
 /**
- * Get the relevant ship stat for a hazard's challenge type
+ * Calculate total difficulty for a hazard check
+ * Formula: Total Difficulty = Hazard Difficulty + Route/Mission Difficulty - Ship Reliability (min 0)
+ * If Total Difficulty <= 0: Auto-pass
+ * If Total Difficulty > 0: Must spend that many engineers to pass
  */
-function getRelevantStat(shipStats: Record<string, number>, challengeType: string): number {
-  switch (challengeType) {
-    case 'speed':
-      return shipStats.speed || 0;
-    case 'reliability':
-      return shipStats.reliability || 0;
-    case 'ceiling':
-      return shipStats.ceiling || 0;
-    case 'range':
-      return shipStats.range || 0;
-    default:
-      return shipStats.reliability || 0;
-  }
+function calculateTotalDifficulty(
+  hazardDifficulty: number,
+  missionDifficulty: number,
+  shipReliability: number,
+  reliabilityBonus: number
+): number {
+  const totalReliability = shipReliability + reliabilityBonus;
+  return Math.max(0, hazardDifficulty + missionDifficulty - totalReliability);
 }
 
 interface HazardCheckData {
@@ -399,74 +397,74 @@ function processHazardCheck(state: GameState, playerId: string, data: HazardChec
     return resolveMechanicalHazard(state, playerId, hazard, engineersToSpend, route);
   }
 
-  // Stat check hazard resolution
+  // Simplified hazard resolution:
+  // Total Difficulty = Hazard Difficulty + Mission Difficulty - Ship Reliability (min 0)
+  // If Total Difficulty <= 0: Auto-pass
+  // If Total Difficulty > 0: Must spend that many engineers to pass
+
   const playerBlueprint = playerState.blueprint as BlueprintSlots;
   const extendedHazard = hazard as HazardCard & { hazardType?: string; payloadSlotModifier?: { threshold: number; difficultyIncrease: number } };
 
-  const challengeType = hazard.challengeType || 'reliability';
-  let relevantStat = getRelevantStat(shipStats, challengeType);
-  const engineerBonus = Math.min(engineersToSpend, playerState.engineers || 0);
-
-  // Apply card bonuses from Kite Jockey/Scrutineer (+2 Reliability)
-  if (challengeType === 'reliability' && playerState.launchBonuses?.reliability) {
-    relevantStat += playerState.launchBonuses.reliability;
-  }
-  // Apply Helmsman speed bonus (+1 Speed)
-  if (challengeType === 'speed' && playerState.launchBonuses?.speed) {
-    relevantStat += playerState.launchBonuses.speed;
-  }
+  // Get ship reliability and any bonuses
+  const shipReliability = shipStats.reliability || 0;
+  const reliabilityBonus = playerState.launchBonuses?.reliability || 0;
 
   // Apply Italy Articulated Keel -1 Reliability penalty for weather hazards
   const hasFlexibleFrame = hasUpgrade(playerBlueprint, 'frameSlots', 'flexible_frame');
   const isWeatherHazard = extendedHazard.hazardType === 'weather';
+  const flexibleFramePenalty = (hasFlexibleFrame && isWeatherHazard) ? 1 : 0;
 
-  if (hasFlexibleFrame && isWeatherHazard && challengeType === 'reliability') {
-    relevantStat = Math.max(0, relevantStat - 1);
-  }
-
-  // Calculate Net Difficulty per Section 8.2:
-  // Net Difficulty = Hazard Difficulty + Route/Mission Difficulty - Ship Reliability (min 0)
-  let adjustedDifficulty = hazard.difficulty;
-
-  // Add mission difficulty for Age II combat missions
+  // Get mission difficulty (Age II combat missions only; routes have no difficulty)
+  let missionDifficulty = 0;
   const missionId = pendingLaunch.missionId;
   if (missionId && state.age === 2) {
     const mission = hazardState.missionRow?.find(m => m.id === missionId);
     if (mission && (mission as { difficulty?: number }).difficulty) {
-      adjustedDifficulty += (mission as { difficulty?: number }).difficulty!;
+      missionDifficulty = (mission as { difficulty?: number }).difficulty!;
     }
   }
 
-  // Subtract ship reliability (per Section 8.2)
-  const shipReliability = shipStats.reliability || 0;
-  adjustedDifficulty = Math.max(0, adjustedDifficulty - shipReliability);
-
   // Apply Squall Line-style payload slot modifier (ships with 3+ payload slots suffer +1 difficulty)
+  let hazardDifficulty = hazard.difficulty;
   if (extendedHazard.payloadSlotModifier) {
     const payloadSlotCount = countFilledSlots(playerBlueprint, 'componentSlots');
     if (payloadSlotCount >= extendedHazard.payloadSlotModifier.threshold) {
-      adjustedDifficulty += extendedHazard.payloadSlotModifier.difficultyIncrease;
+      hazardDifficulty += extendedHazard.payloadSlotModifier.difficultyIncrease;
     }
   }
 
-  const totalCheck = relevantStat + engineerBonus;
-  const success = totalCheck >= adjustedDifficulty;
+  // Calculate total difficulty
+  const totalDifficulty = calculateTotalDifficulty(
+    hazardDifficulty,
+    missionDifficulty,
+    shipReliability - flexibleFramePenalty,
+    reliabilityBonus
+  );
 
-  if (engineerBonus > 0) {
-    playerState.engineers -= engineerBonus;
+  // If total difficulty is 0 or less, auto-pass (reliability overcomes the hazard)
+  if (totalDifficulty === 0) {
+    return resolveHazardSuccess(state, playerId, route, hazard,
+      `Reliability overcomes hazard (${shipReliability + reliabilityBonus - flexibleFramePenalty} reliability >= ${hazardDifficulty + missionDifficulty} difficulty)`);
+  }
+
+  // Player must spend engineers equal to total difficulty to pass
+  const engineersAvailable = playerState.engineers || 0;
+  const engineersToActuallySpend = Math.min(engineersToSpend, engineersAvailable);
+  const success = engineersToActuallySpend >= totalDifficulty;
+
+  if (engineersToActuallySpend > 0) {
+    playerState.engineers = engineersAvailable - engineersToActuallySpend;
     // Log engineer consumption for hazard check
     const flowContext = createFlowContext(state, (state as { gameId?: string }).gameId || 'unknown');
     const faction = playerState.faction || 'unknown';
-    resourceFlowLogger.logSink(flowContext, playerId, faction, 'engineers', engineerBonus, 'hazard', `Hazard check: ${hazard.name}`, playerState.engineers);
+    resourceFlowLogger.logSink(flowContext, playerId, faction, 'engineers', engineersToActuallySpend, 'hazard', `Hazard check: ${hazard.name}`, playerState.engineers);
   }
 
   const checkDetails = {
     hazardType: hazard.type,
-    challengeType,
-    difficulty: adjustedDifficulty,
-    statValue: relevantStat,
-    engineersSpent: engineerBonus,
-    totalCheck,
+    difficulty: totalDifficulty,
+    reliabilityUsed: shipReliability + reliabilityBonus - flexibleFramePenalty,
+    engineersSpent: engineersToActuallySpend,
     success
   };
 
@@ -474,10 +472,10 @@ function processHazardCheck(state: GameState, playerId: string, data: HazardChec
 
   if (success) {
     return resolveHazardSuccess(state, playerId, route, hazard,
-      `${challengeType.toUpperCase()} check passed: ${totalCheck} >= ${adjustedDifficulty}`);
+      `Hazard overcome: spent ${engineersToActuallySpend} engineer(s) to pass difficulty ${totalDifficulty}`);
   } else {
     return resolveHazardAbort(state, playerId, hazard,
-      `${challengeType.toUpperCase()} check failed: ${totalCheck} < ${adjustedDifficulty}`);
+      `Hazard failed: needed ${totalDifficulty} engineer(s), spent ${engineersToActuallySpend}`);
   }
 }
 
@@ -553,47 +551,42 @@ function resolveFireHazard(state: GameState, playerId: string, hazard: HazardCar
   }
 
   if (hazard.type === 'static_discharge') {
+    // Static discharge uses simplified formula: Total Difficulty = Hazard Difficulty - Ship Reliability (min 0)
+    // If Total Difficulty > 0, must spend that many engineers to pass, else ship crashes
     const reliabilityStat = shipStats.reliability || 0;
-    const engineerBonus = Math.min(engineersToSpend, playerState.engineers || 0);
-    const totalCheck = reliabilityStat + engineerBonus;
+    const totalDifficulty = Math.max(0, hazard.difficulty - reliabilityStat);
 
-    // Calculate net difficulty: Hazard Difficulty + Mission Difficulty - Ship Reliability (min 0)
-    const hazardState = state as HazardState;
-    const missionId = pendingLaunch?.missionId;
-    let netDifficulty = hazard.difficulty;
-    if (missionId && state.age === 2) {
-      const mission = hazardState.missionRow?.find(m => m.id === missionId);
-      if (mission && (mission as { difficulty?: number }).difficulty) {
-        netDifficulty += (mission as { difficulty?: number }).difficulty!;
-      }
+    // If reliability overcomes difficulty, auto-pass
+    if (totalDifficulty === 0) {
+      return resolveHazardSuccess(state, playerId, route, hazard,
+        `Static Discharge overcome by reliability (${reliabilityStat} >= ${hazard.difficulty})`);
     }
-    netDifficulty = Math.max(0, netDifficulty - reliabilityStat);
 
-    if (engineerBonus > 0) {
-      playerState.engineers -= engineerBonus;
+    // Must spend engineers equal to total difficulty
+    const engineersAvailable = playerState.engineers || 0;
+    const engineersToActuallySpend = Math.min(engineersToSpend, engineersAvailable);
+
+    if (engineersToActuallySpend >= totalDifficulty) {
+      playerState.engineers = engineersAvailable - engineersToActuallySpend;
       // Log engineer consumption for static discharge
       const flowContext = createFlowContext(state, (state as { gameId?: string }).gameId || 'unknown');
       const faction = playerState.faction || 'unknown';
-      resourceFlowLogger.logSink(flowContext, playerId, faction, 'engineers', engineerBonus, 'hazard', 'Static discharge', playerState.engineers);
-    }
-
-    if (totalCheck >= netDifficulty) {
+      resourceFlowLogger.logSink(flowContext, playerId, faction, 'engineers', engineersToActuallySpend, 'hazard', 'Static discharge', playerState.engineers);
       return resolveHazardSuccess(state, playerId, route, hazard,
-        `Static Discharge Reliability check passed: ${totalCheck} >= ${netDifficulty}`);
+        `Static Discharge overcome: spent ${engineersToActuallySpend} engineer(s) for difficulty ${totalDifficulty}`);
     } else {
+      // Insufficient engineers - ship crashes
       if (applyInsuranceRecovery(state, playerId, 'STATIC DISCHARGE')) {
-        logOutcome(state, playerId, 'destroyed', hazard, gasType, `Static Discharge failed (${totalCheck} < ${netDifficulty}), recovered by insurance`, routeId);
+        logOutcome(state, playerId, 'destroyed', hazard, gasType, `Static Discharge failed (needed ${totalDifficulty} engineers), recovered by insurance`, routeId);
         return { newState: state };
       }
 
-      // Log before clearing pendingLaunch
-      logOutcome(state, playerId, 'destroyed', hazard, gasType, `Static Discharge Reliability check failed: ${totalCheck} < ${netDifficulty}`, routeId);
-      // Ship destroyed - clear pendingLaunch
+      logOutcome(state, playerId, 'destroyed', hazard, gasType, `Static Discharge failed: needed ${totalDifficulty} engineer(s), had ${engineersAvailable}`, routeId);
       delete playerState.pendingLaunch;
 
       state.log.push({
         timestamp: new Date().toISOString(),
-        message: `STATIC DISCHARGE! Reliability check failed (${totalCheck} < ${netDifficulty}). Ship destroyed!`,
+        message: `STATIC DISCHARGE! Needed ${totalDifficulty} engineer(s) to overcome, had ${engineersAvailable}. Ship destroyed!`,
         playerId,
         type: 'hazard'
       } as LogEntry);
@@ -1067,44 +1060,48 @@ function processRespondToHazard(state: GameState, playerId: string, data: Respon
     }
   }
 
-  if (hazard.type === 'static_discharge') {
-    const reliabilityStat = shipStats.reliability || 0;
-    const engineersNeeded = hazard.engineersNeeded || Math.max(0, hazard.difficulty - reliabilityStat);
-    const availableEngineers = playerState.engineers || 0;
+  // Simplified hazard response: Total Difficulty = Hazard Difficulty - Ship Reliability (min 0)
+  // If Total Difficulty > 0, must spend that many engineers to pass
+  const reliabilityStat = shipStats.reliability || 0;
+  const totalDifficulty = Math.max(0, hazard.difficulty - reliabilityStat);
 
-    if (spendEngineers && availableEngineers >= engineersNeeded) {
-      playerState.engineers -= engineersNeeded;
-      // Log engineer consumption for static discharge response
+  // Handle static discharge (fire hazard with reliability check)
+  if (hazard.type === 'static_discharge') {
+    if (totalDifficulty === 0) {
+      return resolveHazardSuccess(state, playerId, route, hazard as HazardCard,
+        `Static Discharge overcome by reliability (${reliabilityStat} >= ${hazard.difficulty})`, cityChoice);
+    }
+
+    const availableEngineers = playerState.engineers || 0;
+    if (spendEngineers && availableEngineers >= totalDifficulty) {
+      playerState.engineers -= totalDifficulty;
       const flowContext = createFlowContext(state, (state as { gameId?: string }).gameId || 'unknown');
       const faction = playerState.faction || 'unknown';
-      resourceFlowLogger.logSink(flowContext, playerId, faction, 'engineers', engineersNeeded, 'hazard', 'Static discharge response', playerState.engineers);
+      resourceFlowLogger.logSink(flowContext, playerId, faction, 'engineers', totalDifficulty, 'hazard', 'Static discharge response', playerState.engineers);
       return resolveHazardSuccess(state, playerId, route, hazard as HazardCard,
-        `Static Discharge Reliability check passed: ${reliabilityStat + engineersNeeded} >= ${hazard.difficulty}`, cityChoice);
-    } else if (!spendEngineers || availableEngineers < engineersNeeded) {
+        `Static Discharge overcome: spent ${totalDifficulty} engineer(s)`, cityChoice);
+    } else {
       return resolveFireCrash(state, playerId, hazard as HazardCard);
     }
   }
 
-  const availableEngineers = playerState.engineers || 0;
-  const engineersNeeded = hazard.engineersNeeded || 0;
-  const relevantStat = hazard.relevantStat || 0;
-
-  if (engineersNeeded === 0) {
+  // Standard hazard response
+  if (totalDifficulty === 0) {
     return resolveHazardSuccess(state, playerId, route, hazard as HazardCard,
-      `${hazard.statName?.toUpperCase() || 'CHECK'} passed: ${relevantStat} >= ${hazard.difficulty}`, cityChoice);
+      `Hazard overcome by reliability (${reliabilityStat} >= ${hazard.difficulty})`, cityChoice);
   }
 
-  if (spendEngineers && availableEngineers >= engineersNeeded) {
-    playerState.engineers -= engineersNeeded;
-    // Log engineer consumption for hazard response
+  const availableEngineers = playerState.engineers || 0;
+  if (spendEngineers && availableEngineers >= totalDifficulty) {
+    playerState.engineers -= totalDifficulty;
     const flowContext = createFlowContext(state, (state as { gameId?: string }).gameId || 'unknown');
     const faction = playerState.faction || 'unknown';
-    resourceFlowLogger.logSink(flowContext, playerId, faction, 'engineers', engineersNeeded, 'hazard', `Hazard response: ${hazard.name}`, playerState.engineers);
+    resourceFlowLogger.logSink(flowContext, playerId, faction, 'engineers', totalDifficulty, 'hazard', `Hazard response: ${hazard.name}`, playerState.engineers);
     return resolveHazardSuccess(state, playerId, route, hazard as HazardCard,
-      `${hazard.statName?.toUpperCase() || 'CHECK'} passed: ${relevantStat} + ${engineersNeeded} engineers >= ${hazard.difficulty}`, cityChoice);
+      `Hazard overcome: spent ${totalDifficulty} engineer(s)`, cityChoice);
   } else {
     return resolveHazardAbort(state, playerId, hazard as HazardCard,
-      `${hazard.statName?.toUpperCase() || 'CHECK'} failed: chose to abort rather than spend ${engineersNeeded} engineers`);
+      `Hazard failed: needed ${totalDifficulty} engineer(s), chose to abort`);
   }
 }
 

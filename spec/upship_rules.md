@@ -281,7 +281,7 @@ Store crew tokens earned from the shared supply:
 
 **Engineers** — Multi-purpose specialists with two functions:
 1. **Research Contribution:** When you Reveal, each Engineer in your Barracks adds +1 to your available Research
-2. **Emergency Response:** Spend reactively during Hazard Checks to boost your check (+1 per Engineer)
+2. **Hazard Response:** Spend to overcome hazards—if Total Difficulty > 0, spend that many Engineers to pass
 
 ## 4.4 The Hangar Bay (Adjacent to Barracks)
 
@@ -610,21 +610,19 @@ Launch another ship to a different route, or stop.
 
 ## 8.2 Hazard Checks
 
-Each Hazard Card shows a **Challenge Type** and **Difficulty Rating**.
+Each Hazard Card shows a **Difficulty Rating**. Your ship's **Reliability** is your defense against hazards.
 
 **Resolution:**
 1. Check if auto-pass (Clear Weather or Helium vs Fire).
-2. Calculate **Net Difficulty** = Hazard Difficulty + Route Difficulty − Ship Reliability (minimum 0).
-3. Compare your Blueprint's relevant stat to the Net Difficulty.
-4. If stat ≥ Net Difficulty, you pass.
-5. If stat < Net Difficulty, you may spend Engineers (+1 each) to boost your check.
-6. If still failing, the launch is Aborted.
+2. Calculate **Total Difficulty** = Hazard Difficulty + Mission Difficulty − Ship Reliability (minimum 0).
+3. **If Total Difficulty = 0:** Auto-pass (your Reliability overcomes the hazard).
+4. **If Total Difficulty > 0:** You must spend that many Engineers to pass, or abort the launch.
 
-**Route Difficulty:** Combat missions (Age II) have a Difficulty rating that adds to hazard checks. Regular routes (Age I and III) have Difficulty 0.
+**Mission Difficulty:** Combat missions (Age II) have a Difficulty rating that adds to hazard checks. Regular routes (Age I and III) have Difficulty 0.
 
-**Reliability as Defense:** Your ship's Reliability stat reduces the effective difficulty of all hazard checks, making launches safer.
+**Reliability as Defense:** Your ship's Reliability stat reduces the effective difficulty of all hazard checks. High Reliability means fewer Engineers needed to pass hazards.
 
-> **Example:** Anna draws "Strong Headwind — Speed 4" while attempting a combat mission with Difficulty 2. Her ship has Speed 3 and Reliability 1. Net Difficulty = 4 + 2 − 1 = 5. She spends 2 Engineers for +2, reaching Speed 5, and passes.
+> **Example:** Anna draws "Strong Headwind — Difficulty 4" while attempting a combat mission with Difficulty 2. Her ship has Reliability 2. Total Difficulty = 4 + 2 − 2 = 4. She must spend 4 Engineers to pass, or abort the launch.
 
 ## 8.3 Fire Hazards
 
@@ -1145,8 +1143,8 @@ When Catastrophic Explosion occurs during a Luxury Launch in Age III using Hydro
 | Physics Check | Lift ≥ Weight |
 | Lift | Gas Cubes × 5 |
 | Hull Cost | Sum of all installed tile Hull Costs |
-| Hazard Check | Ship Stat + Engineers ≥ Net Difficulty |
-| Net Difficulty | Hazard Difficulty + Route Difficulty − Ship Reliability (min 0) |
+| Total Difficulty | Hazard Difficulty + Mission Difficulty − Ship Reliability (min 0) |
+| Hazard Check | If Total Difficulty = 0: auto-pass. If > 0: spend that many Engineers. |
 | Research | Research Level + Engineers + card bonuses (unspent lost) |
 | Tech Cost | Listed cost − specialization discount |
 | Transition Income | Tech £ values − (£1 × routes lost) |

@@ -271,9 +271,10 @@ function _isTechSuperiorToInstalled(
 
 /**
  * Calculate expected engineers needed for a safe launch.
- * Uses the hazard check formula (Section 8.2):
- *   Net Difficulty = Hazard Difficulty + Route/Mission Difficulty - Ship Reliability (min 0)
- *   Ship Stat + Engineers >= Net Difficulty to pass
+ * Uses the simplified hazard check formula (Section 8.2):
+ *   Total Difficulty = Hazard Difficulty + Mission Difficulty - Ship Reliability (min 0)
+ *   If Total Difficulty = 0: Auto-pass
+ *   If Total Difficulty > 0: Spend that many Engineers to pass
  *
  * [BOT-LAUNCH-READY-01] SYNC: Keep in sync with calculate_expected_engineers_for_launch() in playtest/strategy.py
  *
@@ -287,13 +288,13 @@ function calculateExpectedEngineersForLaunch(
   currentAge: number,
   missions?: CombatMission[]
 ): { engineersNeeded: number; reason: string } {
-  // Average hazard difficulty in the deck is about 3-4
-  // Using 4 as a conservative estimate for safety
-  const AVG_HAZARD_DIFFICULTY = 4;
+  // Average hazard difficulty in the deck is about 2-3
+  // Using 3 as a conservative estimate for safety
+  const AVG_HAZARD_DIFFICULTY = 3;
 
   // Mission/route difficulty
   // Age I/III routes have difficulty 0
-  // Age II missions have difficulty 2-3
+  // Age II missions have difficulty 2-4
   let missionDifficulty = 0;
   if (currentAge === 2 && missions && missions.length > 0) {
     // Find the lowest difficulty mission that's achievable (prefer easier ones)
@@ -301,23 +302,20 @@ function calculateExpectedEngineersForLaunch(
     missionDifficulty = Math.min(...difficulties);
   }
 
-  // Net difficulty formula: Hazard + Mission - Reliability (min 0)
-  const netDifficulty = Math.max(0, AVG_HAZARD_DIFFICULTY + missionDifficulty - shipReliability);
+  // Total difficulty formula: Hazard + Mission - Reliability (min 0)
+  const totalDifficulty = Math.max(0, AVG_HAZARD_DIFFICULTY + missionDifficulty - shipReliability);
 
-  // Engineers needed to pass: max(0, net_difficulty - avg_ship_stat)
-  // Assuming average ship stat of 2-3, we need net_difficulty - 2 engineers
-  const AVG_SHIP_STAT = 2;
-  const engineersNeeded = Math.max(0, netDifficulty - AVG_SHIP_STAT);
+  // In the simplified model, engineers_needed = total_difficulty directly
+  const engineersNeeded = totalDifficulty;
 
   // Build explanation
   let reason: string;
   if (currentAge === 2) {
     reason = `hazard(~${AVG_HAZARD_DIFFICULTY}) + mission(${missionDifficulty}) ` +
-             `- reliability(${shipReliability}) = net(${netDifficulty}), ` +
-             `need ~${engineersNeeded} engineers`;
+             `- reliability(${shipReliability}) = ${totalDifficulty} engineers needed`;
   } else {
     reason = `hazard(~${AVG_HAZARD_DIFFICULTY}) - reliability(${shipReliability}) ` +
-             `= net(${netDifficulty}), need ~${engineersNeeded} engineers`;
+             `= ${totalDifficulty} engineers needed`;
   }
 
   return { engineersNeeded, reason };
