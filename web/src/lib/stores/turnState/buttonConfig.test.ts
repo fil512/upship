@@ -8,8 +8,8 @@ import type { ActionContext } from './types';
 import type { HazardCard, Card, Ship } from '$lib/types/game';
 
 // Type assertion helper for partial mocks
-function mockHazard(partial: { id: string; name: string; difficulty?: number; engineerCost?: number }): HazardCard {
-	return { type: 'weather', category: 'minor', difficulty: 2, flak: 0, ...partial } as HazardCard;
+function mockHazard(partial: { id: string; name: string; difficulty?: number; engineersNeeded?: number; category?: string }): HazardCard {
+	return { type: 'weather', category: 'hazard', difficulty: 2, flak: 0, ...partial } as HazardCard;
 }
 
 function mockCard(partial: { id: string; name: string }): Card {
@@ -87,14 +87,32 @@ describe('mapActionsToButtons', () => {
 		expect(buttons[0].disabled).toBe(false);
 	});
 
-	it('creates RESPOND_TO_HAZARD buttons with context', () => {
+	it('creates RESPOND_TO_HAZARD buttons for standard hazard needing engineers', () => {
 		const context: ActionContext = {
-			pendingHazard: mockHazard({ id: 'h1', name: 'Engine Fire', engineerCost: 2 })
+			pendingHazard: { ...mockHazard({ id: 'h1', name: 'Thunderstorm' }), engineersNeeded: 2 }
 		};
 		const buttons = mapActionsToButtons(['RESPOND_TO_HAZARD'], context);
 		expect(buttons).toHaveLength(2);
-		expect(buttons[0].label).toBe('Accept Risk');
+		expect(buttons[0].label).toBe('Abort Launch');
 		expect(buttons[1].label).toBe('Spend 2 Engineer(s)');
+	});
+
+	it('creates Continue button for auto-pass hazards', () => {
+		const context: ActionContext = {
+			pendingHazard: { ...mockHazard({ id: 'h1', name: 'Clear Skies' }), autoPass: true }
+		};
+		const buttons = mapActionsToButtons(['RESPOND_TO_HAZARD'], context);
+		expect(buttons).toHaveLength(1);
+		expect(buttons[0].label).toBe('Continue');
+	});
+
+	it('creates Accept Fate button for fire hazards with hydrogen', () => {
+		const context: ActionContext = {
+			pendingHazard: { ...mockHazard({ id: 'h1', name: 'Gas Cell Rupture', category: 'fire' }), engineersNeeded: 2 }
+		};
+		const buttons = mapActionsToButtons(['RESPOND_TO_HAZARD'], context);
+		expect(buttons).toHaveLength(1);
+		expect(buttons[0].label).toBe('Accept Fate');
 	});
 });
 

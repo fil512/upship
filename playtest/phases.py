@@ -460,7 +460,7 @@ def _no_more_launches_quiet(player: str, game_id: str) -> None:
 def _check_and_handle_hazard(client, player: str, game_id: str, ship_id: str, player_id: str | None, player_data: Player, logger: PlaytestLogger, route_id: str | None = None) -> str:
     """Check if ship needs hazard response and handle it.
 
-    Ships are fungible tokens tracked as counters (hangarShips, repairShips).
+    Ships are fungible tokens tracked as counters (hangarShips).
     Pending hazards are stored at the player level via pendingLaunch, not on
     individual ship objects.
 

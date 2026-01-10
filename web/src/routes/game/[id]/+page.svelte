@@ -669,14 +669,13 @@
 		oldBlueprint: BlueprintType | undefined,
 		newBlueprint: BlueprintType,
 		hangarShips: number,
-		repairShips: number,
 		currentCash: number,
 		isAgeTransition: boolean
 	): RetrofitCostInfo {
 		const oldCost = calculateHullCost(oldBlueprint);
 		const newCost = calculateHullCost(newBlueprint);
 		const costIncrease = Math.max(0, newCost - oldCost);
-		const shipsToRetrofit = hangarShips + repairShips;
+		const shipsToRetrofit = hangarShips;
 		const retrofitCost = isAgeTransition ? 0 : costIncrease * shipsToRetrofit;
 
 		return {
@@ -696,7 +695,6 @@
 			$myState.blueprint,
 			pendingBlueprint,
 			$myState.hangarShips || 0,
-			$myState.repairShips || 0,
 			$myState.cash || 0,
 			isAgeTransitionBlueprintDesignPhase
 		)
@@ -726,7 +724,6 @@
 				$myState.blueprint,
 				testBlueprint,
 				$myState.hangarShips || 0,
-				$myState.repairShips || 0,
 				$myState.cash || 0,
 				false
 			);
@@ -817,9 +814,8 @@
 
 	// Launchpad state - when active, show launch UI
 	$: isLaunchpadActive = $gameState?.launchpadActive?.[$effectiveUserId] === true;
-	// Ships are tokens (counters) - no individual ship objects
+	// Ships are tokens (counters) - single hangar with 6 ship capacity
 	$: hangarShipsCount = $myState?.hangarShips || 0;
-	$: repairShipsCount = $myState?.repairShips || 0;
 	$: hasShipsToLaunch = hangarShipsCount > 0;
 	$: launchGasRequired = calculateGasRequired(viewedPlayerState?.blueprint || $myState?.blueprint);
 	$: canAffordHydrogen = ($myState?.gasCubes?.hydrogen || 0) >= launchGasRequired;
@@ -1535,10 +1531,8 @@
 							<div class="hazard-card-wrapper">
 								<HazardCard
 									name={peekedHazard.name || peekedHazard.type}
-									category={peekedHazard.category || 'minor'}
+									category={peekedHazard.category || 'hazard'}
 									difficulty={peekedHazard.difficulty || 0}
-									challengeType={peekedHazard.challengeType || ''}
-									engineerCost={peekedHazard.engineerCost}
 									flak={peekedHazard.flak || 0}
 									showFlak={$gameState?.age === 2}
 									compact={true}
@@ -1566,10 +1560,8 @@
 								<div class="hazard-card-wrapper">
 									<HazardCard
 										name={pendingHazard.name}
-										category={pendingHazard.category || 'minor'}
+										category={pendingHazard.category || 'hazard'}
 										difficulty={pendingHazard.difficulty || 0}
-										challengeType={pendingHazard.challengeType || pendingHazard.statName || ''}
-										engineerCost={pendingHazard.engineersNeeded}
 										flak={pendingHazard.flak || 0}
 										showFlak={$gameState?.age === 2}
 										compact={true}

@@ -76,8 +76,6 @@
 				name={uiState.actionContext.peekedHazard.name}
 				category={uiState.actionContext.peekedHazard.category}
 				difficulty={uiState.actionContext.peekedHazard.difficulty}
-				challengeType={uiState.actionContext.peekedHazard.challengeType}
-				engineerCost={uiState.actionContext.peekedHazard.engineerCost}
 				compact={true}
 			/>
 		</div>
@@ -106,8 +104,6 @@
 				name={uiState.actionContext.pendingHazard.name}
 				category={uiState.actionContext.pendingHazard.category}
 				difficulty={uiState.actionContext.pendingHazard.difficulty}
-				challengeType={uiState.actionContext.pendingHazard.challengeType}
-				engineerCost={uiState.actionContext.pendingHazard.engineerCost}
 				compact={true}
 			/>
 		</div>

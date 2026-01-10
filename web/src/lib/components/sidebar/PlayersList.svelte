@@ -48,10 +48,6 @@
 	function getHangarShipCount(player: PlayerState): number {
 		return player.hangarShips || 0;
 	}
-
-	function getDamagedShipCount(player: PlayerState): number {
-		return player.repairShips || 0;
-	}
 </script>
 
 <div class="players-panel">
@@ -151,12 +147,6 @@
 						<span class="value">{getHangarShipCount(player)}</span>
 						<Icon name="ship" size={14} />
 					</div>
-					{#if getDamagedShipCount(player) > 0}
-						<div class="resource damaged" title="Damaged Ships: {getDamagedShipCount(player)} (need repair)">
-							<span class="value">{getDamagedShipCount(player)}</span>
-							<Icon name="ship-damaged" size={14} />
-						</div>
-					{/if}
 					{#if (player.insurance ?? 0) > 0}
 						<div class="resource" title="Insurance Policies: {player.insurance}">
 							<span class="value">{player.insurance}</span>
@@ -338,14 +328,6 @@
 	}
 
 	.resource .income.negative {
-		color: var(--color-error);
-	}
-
-	.resource.damaged {
-		background: color-mix(in srgb, var(--color-error) 20%, var(--color-bg-hover));
-	}
-
-	.resource.damaged .value {
 		color: var(--color-error);
 	}
 </style>

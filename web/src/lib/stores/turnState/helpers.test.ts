@@ -8,7 +8,7 @@ import type { GameState, PlayerState, HazardCard, Card, Ship } from '$lib/types/
 
 // Type assertion helper for partial mocks
 function mockHazard(partial: { id: string; name: string; difficulty?: number }): HazardCard {
-	return { type: 'weather', category: 'minor', difficulty: 2, flak: 0, ...partial } as HazardCard;
+	return { type: 'weather', category: 'hazard', difficulty: 2, flak: 0, ...partial } as HazardCard;
 }
 
 function mockCard(partial: { id: string; name: string }): Card {

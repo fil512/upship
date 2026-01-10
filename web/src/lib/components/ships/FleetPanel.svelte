@@ -3,52 +3,30 @@
 
 	// Ships are fungible tokens - we just track counts, not individual objects
 	export let hangarShips: number = 0;
-	export let repairShips: number = 0;
-
-	// Total ships = hangar + repair
-	$: totalShips = hangarShips + repairShips;
 </script>
 
 <div class="fleet-panel">
 	<div class="fleet-header">
 		<h4>Fleet</h4>
-		<span class="ship-count">{totalShips} {totalShips === 1 ? 'ship' : 'ships'}</span>
+		<span class="ship-count">{hangarShips} {hangarShips === 1 ? 'ship' : 'ships'}</span>
 	</div>
 
-	{#if totalShips === 0}
+	{#if hangarShips === 0}
 		<div class="empty-fleet">No ships built yet</div>
 	{:else}
-		{#if hangarShips > 0}
-			<div class="ship-group">
-				<div class="group-label">
-					<Icon name="ship" size={14} />
-					In Hangar ({hangarShips})
-				</div>
-				<div class="ship-tokens">
-					{#each Array(hangarShips) as _, i}
-						<div class="ship-token">
-							<Icon name="ship" size={20} />
-						</div>
-					{/each}
-				</div>
+		<div class="ship-group">
+			<div class="group-label">
+				<Icon name="ship" size={14} />
+				In Hangar ({hangarShips})
 			</div>
-		{/if}
-
-		{#if repairShips > 0}
-			<div class="ship-group error">
-				<div class="group-label">
-					<Icon name="ship" size={14} />
-					In Repair ({repairShips})
-				</div>
-				<div class="ship-tokens">
-					{#each Array(repairShips) as _, i}
-						<div class="ship-token damaged">
-							<Icon name="ship" size={20} />
-						</div>
-					{/each}
-				</div>
+			<div class="ship-tokens">
+				{#each Array(hangarShips) as _, i}
+					<div class="ship-token">
+						<Icon name="ship" size={20} />
+					</div>
+				{/each}
 			</div>
-		{/if}
+		</div>
 	{/if}
 </div>
 
@@ -94,10 +72,6 @@
 		text-align: left;
 	}
 
-	.ship-group.error {
-		border-left: 3px solid var(--color-error);
-	}
-
 	.group-label {
 		display: flex;
 		align-items: center;
@@ -125,11 +99,5 @@
 		border: 2px solid var(--color-text-secondary);
 		border-radius: var(--radius-sm);
 		color: var(--color-text-primary);
-	}
-
-	.ship-token.damaged {
-		border-color: var(--color-error);
-		color: var(--color-error);
-		opacity: 0.7;
 	}
 </style>
