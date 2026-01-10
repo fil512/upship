@@ -44,7 +44,8 @@ The script automatically finds the most recent flow JSON and outputs:
 | **Tech tiles** | **1.1** per player per round (rarely 2) | Age progression should be gradual |
 | **Market cards** | **1.1** per player per round (rarely 2) | Deck building should be steady |
 | **Total purchases** | **2.2** baseline, **3** on exceptional rounds | Creates meaningful decisions |
-| **Launch success rate** | **80%** | Launches should usually succeed but feel risky |
+| **Launch success rate** | **75%** | Launches should usually succeed but feel risky |
+| **Age 2 flak survival** | **50%** | Flak in Age 2 should destroy half of affected ships |
 
 The script compares actual purchases against these targets and diagnoses:
 - Whether research generation is too high or tech costs too low
@@ -94,12 +95,18 @@ For each resource with issues, explain:
 
 | Outcome | Target % | Rationale |
 |---------|----------|-----------|
-| Success | **80%** | Launches should usually succeed |
+| Success | **75%** | Launches should usually succeed |
 | Aborted | 10-15% | Failed hazard checks return ship to hangar |
 | Damaged | 5-10% | Fire hazards controlled, ship to repair |
-| Destroyed | <5% | Rare catastrophic failures |
+| Destroyed | <10% | Catastrophic failures (more common in Age 2+ due to flak) |
 
-Launch success depends on hazard difficulty vs ship stats + engineers. If success rate is below 80%, consider lowering hazard difficulties or increasing starting ship stats.
+**AGE 2 FLAK TARGET:**
+
+| Metric | Target % | Rationale |
+|--------|----------|-----------|
+| Flak survival | **50%** | Age 2 flak encounters should destroy half of affected ships |
+
+Launch success depends on hazard difficulty vs ship stats + engineers. If success rate is below 75%, consider lowering hazard difficulties or increasing starting ship stats.
 
 #### 4.4 Specific Recommendations
 
@@ -159,12 +166,13 @@ PROBLEM RESOURCES:
 
 === LAUNCH OUTCOMES ===
 Total launches: 11
-  SUCCESS:   9 (82%) - Ship claimed route ✓
+  SUCCESS:   8 (73%) - Ship claimed route ✓
   ABORTED:   1 (9%) - Ship returned to hangar ✓
   DAMAGED:   1 (9%) - Ship to repair bay ✓
-  DESTROYED: 0 (0%) - Ship lost ✓
+  DESTROYED: 1 (9%) - Ship lost ✓
 
-Success Rate: 82% (target: 80%) ✓
+Success Rate: 73% (target: 75%) ⚠️  CLOSE
+Age 2 Flak Survival: 50% (target: 50%) ✓
 ```
 
 ## Reference: Resource Types

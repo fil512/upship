@@ -24,7 +24,8 @@ from pathlib import Path
 TECH_GOAL = 1.1  # techs per player per round
 CARD_GOAL = 1.1  # cards per player per round
 TOTAL_GOAL = 2.2  # total purchases per player per round
-LAUNCH_SUCCESS_GOAL = 0.80  # 80% launch success rate
+LAUNCH_SUCCESS_GOAL = 0.75  # 75% launch success rate
+AGE2_FLAK_SURVIVAL_GOAL = 0.50  # 50% survival rate for Age 2 flak encounters
 
 
 def load_flow_data(filepath: str = None) -> tuple:
@@ -187,11 +188,15 @@ def analyze_launch_outcomes(outcomes: list) -> dict:
     counts = {'success': 0, 'damaged': 0, 'aborted': 0, 'destroyed': 0}
     by_gas = {'hydrogen': {'total': 0, 'success': 0}, 'helium': {'total': 0, 'success': 0}}
     by_hazard = defaultdict(lambda: {'total': 0, 'success': 0, 'aborted': 0, 'destroyed': 0})
+    # Track Age 2 flak specifically
+    age2_flak = {'total': 0, 'survived': 0, 'destroyed': 0}
 
     for entry in outcomes:
         outcome = entry.get('outcome', 'unknown')
         gas = entry.get('gasType', 'hydrogen')
         hazard = entry.get('hazardName', 'Unknown')
+        age = entry.get('age', 1)
+        has_flak = entry.get('hasFlak', False) or entry.get('flak', 0) > 0
 
         if outcome in counts:
             counts[outcome] += 1
@@ -204,9 +209,18 @@ def analyze_launch_outcomes(outcomes: list) -> dict:
         if outcome in by_hazard[hazard]:
             by_hazard[hazard][outcome] += 1
 
+        # Track Age 2 flak encounters
+        if age == 2 and has_flak:
+            age2_flak['total'] += 1
+            if outcome == 'destroyed':
+                age2_flak['destroyed'] += 1
+            else:
+                age2_flak['survived'] += 1
+
     total = sum(counts.values())
     success_rate = counts['success'] / total if total > 0 else 0
     survival_rate = (counts['success'] + counts['damaged'] + counts['aborted']) / total if total > 0 else 0
+    age2_flak_survival = age2_flak['survived'] / age2_flak['total'] if age2_flak['total'] > 0 else None
 
     return {
         'total': total,
@@ -215,6 +229,8 @@ def analyze_launch_outcomes(outcomes: list) -> dict:
         'survival_rate': survival_rate,
         'by_gas': dict(by_gas),
         'by_hazard': dict(by_hazard),
+        'age2_flak': age2_flak,
+        'age2_flak_survival': age2_flak_survival,
         'outcomes': outcomes
     }
 
@@ -568,10 +584,32 @@ def print_launch_outcomes_report(launch_data: dict):
         sorted_hazards = sorted(by_hazard.items(), key=lambda x: x[1]['total'] - x[1]['success'], reverse=True)
         for hazard, stats in sorted_hazards[:5]:
             if stats['total'] > 0:
-                success_rate = stats['success'] / stats['total'] * 100
+                hazard_success_rate = stats['success'] / stats['total'] * 100
                 failures = stats['total'] - stats['success']
                 if failures > 0:
-                    print(f"  {hazard:<25}: {stats['total']} total, {failures} failures ({100-success_rate:.0f}% fail rate)")
+                    print(f"  {hazard:<25}: {stats['total']} total, {failures} failures ({100-hazard_success_rate:.0f}% fail rate)")
+        print()
+
+    # Age 2 Flak Analysis
+    age2_flak = launch_data.get('age2_flak', {})
+    age2_flak_survival = launch_data.get('age2_flak_survival')
+    if age2_flak.get('total', 0) > 0:
+        print("Age 2 Flak Analysis:")
+        print(f"  Encounters: {age2_flak['total']}")
+        print(f"  Survived: {age2_flak['survived']} ({age2_flak_survival*100:.0f}%)")
+        print(f"  Destroyed: {age2_flak['destroyed']} ({(1-age2_flak_survival)*100:.0f}%)")
+
+        flak_goal_pct = AGE2_FLAK_SURVIVAL_GOAL * 100
+        flak_diff = age2_flak_survival * 100 - flak_goal_pct
+
+        if abs(flak_diff) <= 10:
+            flak_status = "✓ ON TARGET"
+        elif flak_diff > 10:
+            flak_status = "⚠️  TOO EASY"
+        else:
+            flak_status = "⚠️  TOO DEADLY"
+
+        print(f"  Survival Rate: {age2_flak_survival*100:.0f}% (goal: {flak_goal_pct:.0f}%) → {flak_diff:+.0f}% {flak_status}")
         print()
 
     # Diagnosis
@@ -582,7 +620,7 @@ def print_launch_outcomes_report(launch_data: dict):
             print("     → Lower minor hazard difficulties (target: 1-3)")
             print("     → Lower major hazard difficulties (target: 3-4)")
         else:
-            print("  ⚠️  Success rate below 80% target")
+            print(f"  ⚠️  Success rate below {LAUNCH_SUCCESS_GOAL*100:.0f}% target")
             print("     → Consider lowering hazard difficulties by 1")
             print("     → Or increase starting ship stats")
         print()
