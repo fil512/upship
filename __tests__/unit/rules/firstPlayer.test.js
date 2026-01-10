@@ -120,20 +120,22 @@ describe('Rules Compliance - First Player Token (GAP-081)', () => {
         currentPlacerIndex: 0
       };
 
-      // Set up incomes so player 3 wouldn't normally go first
-      state.players['1'].income = 1;  // Lowest - would go first without token
+      // Income values are set but don't affect turn order
+      // Turn order is clockwise seating, not income-based
+      state.players['1'].income = 1;
       state.players['2'].income = 5;
-      state.players['3'].income = 10; // Highest - would go last without token
+      state.players['3'].income = 10;
       state.players['4'].income = 8;
 
       const order = calculateTurnOrder(state);
 
       // Player 3 should go first due to First Player token
       expect(order[0]).toBe('3');
-      // Remaining players in income order (lowest first): 1(1), 2(5), 4(8)
-      expect(order[1]).toBe('1');
-      expect(order[2]).toBe('2');
-      expect(order[3]).toBe('4');
+      // Remaining players in clockwise seating order from player 3
+      // playerOrder is ['1', '2', '3', '4'], so clockwise from 3 is: 3 -> 4 -> 1 -> 2
+      expect(order[1]).toBe('4');
+      expect(order[2]).toBe('1');
+      expect(order[3]).toBe('2');
     });
   });
 });

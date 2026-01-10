@@ -6,7 +6,7 @@
 const { createTestGameState, createTestPlayerState } = require('../../fixtures/testData');
 
 // Import the phase transition helpers
-const { collectRevealResources, transitionToIncomeCleanup, startNewRound } = require('../../../server/actions/helpers/phaseTransition');
+const { collectRevealResources, transitionToCleanup, startNewRound } = require('../../../server/actions/helpers/phaseTransition');
 
 // Import crew actions
 const { processUpgradeOfficerIncome } = require('../../../server/actions/crew');
@@ -52,7 +52,10 @@ describe('Rules Compliance - Round Structure', () => {
   });
 
   describe('GAP-004: Income calculation', () => {
-    it('should calculate net income (income minus engineer upkeep) per Section 5.2', () => {
+    it('should NOT auto-collect income during cleanup - players must visit Treasury', () => {
+      // Per game design: Cash is NOT auto-collected during cleanup
+      // Players must visit Treasury location to collect income
+      // This test verifies cleanup doesn't auto-collect
       const state = createTestGameState();
       state.phase = 'reveal';
 
@@ -69,34 +72,10 @@ describe('Rules Compliance - Round Structure', () => {
         marketPurchasesComplete: {}
       };
 
-      transitionToIncomeCleanup(state);
+      transitionToCleanup(state);
 
-      // Per rules 5.2: "Gain £ equal to your Income Track minus Engineers in Barracks"
-      // Net income = 10 - 3 = 7
-      // Starting cash was 5, should now be 5 + 7 = 12
-      // The current implementation pays upkeep separately (wrong):
-      // - Pays 3 from cash (5 - 3 = 2)
-      // - Then adds income (2 + 10 = 12)
-      // But this is semantically different - if cash < upkeep, result differs
-
-      // Test with low cash to expose the bug
-      const state2 = createTestGameState();
-      state2.phase = 'reveal';
-      state2.players['1'].income = 10;
-      state2.players['1'].engineers = 5;
-      state2.players['1'].cash = 2; // Less than upkeep
-      state2.revealPhase = {
-        revealedHands: { '1': [], '2': [], '3': [], '4': [] },
-        resourcesCollected: { '1': true, '2': true, '3': true, '4': true },
-        techAcquisitionsComplete: {},
-        marketPurchasesComplete: {}
-      };
-
-      transitionToIncomeCleanup(state2);
-
-      // Per rules: Net income = 10 - 5 = 5
-      // Final cash should be: 2 + 5 = 7
-      expect(state2.players['1'].cash).toBe(7);
+      // Cash should NOT change during cleanup - income is collected manually via Treasury
+      expect(state.players['1'].cash).toBe(5);
     });
   });
 

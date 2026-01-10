@@ -113,8 +113,8 @@ describe('Turn State Deriver', () => {
       expect(isPlayersTurn(mockState, player2Id)).toBe(true);
     });
 
-    it('should return true for current player in income_cleanup', () => {
-      mockState.phase = 'income_cleanup';
+    it('should return true for current player in cleanup', () => {
+      mockState.phase = 'cleanup';
       mockState.currentPlayerIndex = 0;
       expect(isPlayersTurn(mockState, playerId)).toBe(true);
       expect(isPlayersTurn(mockState, player2Id)).toBe(false);

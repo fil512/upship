@@ -74,7 +74,7 @@ type CombatShip = Omit<Ship, 'pendingHazard'> & {
     noSave?: boolean;
     hydrogenOnly?: boolean;
     special?: string;
-    gasLossOnFailure?: boolean;
+    gasLossOnFailure?: number;
     relevantStat?: number;
     statName?: string;
     engineersNeeded?: number;
@@ -93,7 +93,7 @@ type CombatState = GameState & {
 // Extended hazard card type with optional properties not in base HazardCard
 type ExtendedHazardCard = HazardCard & {
   special?: string;
-  gasLossOnFailure?: boolean;
+  gasLossOnFailure?: number;
   hazardType?: string;
 };
 

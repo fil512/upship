@@ -40,7 +40,7 @@ interface PendingHazardInfo {
   noSave?: boolean;
   hydrogenOnly?: boolean;
   special?: string;
-  gasLossOnFailure?: boolean;
+  gasLossOnFailure?: number;
   relevantStat: number;
   statName: string;
   engineersNeeded: number;
@@ -705,7 +705,7 @@ function processLaunchShip(state: GameState, playerId: string, data: LaunchShipD
   const fireProtectionAvailable = isFireHazard && hasFireResistantFabric && !playerState.fireProtectionUsedThisAge;
 
   // Extended hazard properties that may exist on runtime hazard cards
-  const extendedHazard = hazard as HazardCard & { special?: string; gasLossOnFailure?: boolean };
+  const extendedHazard = hazard as HazardCard & { special?: string; gasLossOnFailure?: number };
 
   // Store pending hazard info for client to respond
   playerState.pendingLaunch!.hazardInfo = {
