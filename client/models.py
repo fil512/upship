@@ -554,7 +554,9 @@ class ActionResult:
         game_state = None
         state_data = data.get('gameState')
         if state_data:
-            game_state = GameState.from_dict(game_id, state_data)
+            # The server wraps the state: gameState.state contains the actual game data
+            actual_state = state_data.get('state', state_data)
+            game_state = GameState.from_dict(game_id, actual_state)
 
         return cls(
             success=success,
