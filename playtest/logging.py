@@ -23,8 +23,15 @@ class PlaytestLogger:
         """Initialize (truncate) the log file for this game.
 
         Always uses logs/playtest.log, truncating any existing content.
+        Also clears old resource flow data from logs/resource-flows/.
         """
         LOGS_DIR.mkdir(exist_ok=True)
+
+        # Clear old resource flow files
+        resource_flows_dir = LOGS_DIR / "resource-flows"
+        if resource_flows_dir.exists():
+            for f in resource_flows_dir.glob("*"):
+                f.unlink()
 
         self.log_file = LOGS_DIR / "playtest.log"
         self.current_age = 1

@@ -313,6 +313,7 @@ class Player:
     deck_size: int = 0
     discard_size: int = 0
     ships: list[Ship] = field(default_factory=list)
+    hangar_ships: int = 0  # Counter from server state
     technologies: list[str] = field(default_factory=list)
     routes: list[str] = field(default_factory=list)
     blueprint: Blueprint | None = None
@@ -322,19 +323,16 @@ class Player:
     @classmethod
     def from_dict(cls, user_id: str, data: dict, username: str = '') -> 'Player':
         """Create Player from API response dict."""
-        # Parse ships - server uses counters (hangarShips, repairShips) not individual objects
-        # Generate pseudo-Ship objects from counters for client compatibility
+        # Parse ships - server uses hangarShips counter
+        # Generate pseudo-Ship objects from counter for client compatibility
         ships = [Ship.from_dict(s) for s in data.get('ships', [])]
 
         # If no ship objects but hangarShips counter exists, generate pseudo-ships
         hangar_count = data.get('hangarShips', 0)
-        repair_count = data.get('repairShips', 0)
 
-        if not ships and (hangar_count > 0 or repair_count > 0):
+        if not ships and hangar_count > 0:
             for i in range(hangar_count):
                 ships.append(Ship(id=f'hangar_{i}', status='hangar'))
-            for i in range(repair_count):
-                ships.append(Ship(id=f'repair_{i}', status='repair'))
 
         # Parse hand (may be hidden for opponents)
         hand_data = data.get('hand', [])
@@ -376,6 +374,7 @@ class Player:
             deck_size=data.get('deckSize', 0) if 'deckSize' in data else (len(data.get('deck', [])) if isinstance(data.get('deck'), list) else 0),
             discard_size=data.get('discardSize', 0) if 'discardSize' in data else (len(data.get('discardPile', [])) if isinstance(data.get('discardPile'), list) else 0),
             ships=ships,
+            hangar_ships=hangar_count,
             technologies=data.get('techCards', data.get('technologies', [])),
             routes=data.get('routes', []),
             blueprint=blueprint,

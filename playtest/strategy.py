@@ -29,7 +29,7 @@ from typing import Any
 from client import Player, Ship, Blueprint, Route, Card, CombatMission
 
 from .config import VERBOSE_STRATEGY
-from .state import get_state, get_available_routes, get_available_routes_for_player, get_mission_row, get_player_id, get_rd_board, get_market_cards, get_ship_details
+from .state import get_state, get_available_routes, get_available_routes_for_player, get_mission_row, get_player_id, get_rd_board, get_market_cards, get_ship_details, get_blueprint_stats
 from .client import get_player_user_id, get_manifest
 
 
@@ -888,11 +888,24 @@ def find_strategic_placement(
             priority_locations.append('construction_hall')
             vprint(f"  +treasury, +construction_hall (no ships, need cash)")
 
-    # Need gas to launch
+    # Need gas to launch - check faction-specific gas type
     blueprint = player_data.blueprint
-    if total_gas < 1:
+    faction = player.replace('playtest_', '')
+    preferred_gas = 'helium' if faction == 'usa' else 'hydrogen'
+    preferred_gas_amount = helium if faction == 'usa' else hydrogen
+
+    # Calculate required gas based on ship weight (gas_needed = max(1, ceil(weight/5)))
+    # Default to 3 (typical requirement) if we can't calculate
+    gas_needed = 3  # Conservative estimate
+    if blueprint:
+        bp_stats = get_blueprint_stats(player_data)
+        if bp_stats:
+            weight = bp_stats.get('weight', 0)
+            gas_needed = max(1, (weight + 4) // 5) if weight > 0 else 1  # ceil without import
+
+    if preferred_gas_amount < gas_needed:
         priority_locations.append('gas_depot')
-        vprint(f"  +gas_depot (no gas)")
+        vprint(f"  +gas_depot (need {gas_needed} {preferred_gas}, have {preferred_gas_amount})")
 
     # Need minimum components installed (at least one Frame, one Fabric, one Drive)
     if blueprint:
@@ -930,9 +943,10 @@ def find_strategic_placement(
     if hangar_count < 2 and cash >= 5:
         priority_locations.append('construction_hall')
 
-    # Stock up on gas for next launch
-    if total_gas < 2:
-        priority_locations.append('gas_depot')
+    # Stock up on gas for next launch - check faction-specific gas
+    if preferred_gas_amount < gas_needed + 3:  # Buffer for next launch
+        if 'gas_depot' not in priority_locations:
+            priority_locations.append('gas_depot')
 
     # Get engineers for hazard mitigation (2 is a good safety buffer)
     if engineers < 2:
