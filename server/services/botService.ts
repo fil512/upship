@@ -133,10 +133,13 @@ function getMarketCardPriority(card: Card): number {
  * Calculate a utility score for a tech tile
  * Higher score = better tech. Accounts for stats and weight.
  * [BOT-TECH-SCORE-01] SYNC: Keep in sync with get_tech_priority() in playtest/strategy.py
+ *
+ * @param tile - The tech tile to evaluate
+ * @param currentAge - Current game age (1, 2, or 3). Age 2 prioritizes armor for flak survival.
  */
 // [BOT-TECH-SCORE-01] Calculate tech tile score for prioritization
 // Note: VP bonus is handled separately at the TechCard level in getRevealAcquisitions()
-function calculateTechScore(tile: TechTile): number {
+function calculateTechScore(tile: TechTile, currentAge: number = 1): number {
   const stats = tile.stats || {};
   let score = 0;
 
@@ -149,6 +152,11 @@ function calculateTechScore(tile: TechTile): number {
   score += (stats.luxury || 0) * 1;     // Luxury for passenger routes
   score += (stats.lift || 0) * 1;       // Direct lift is useful
   score += (stats.gas_socket || 0) * 5; // Gas socket = +5 lift each
+
+  // Age 2: Armor is critical for surviving flak
+  // Each point of armor significantly increases survival rate
+  const armorMultiplier = currentAge === 2 ? 15 : 2;  // Very high priority in Age 2
+  score += (stats.armor || 0) * armorMultiplier;
 
   // Weight is negative (heavier = worse)
   score -= (tile.weight || 0) * 1;
@@ -368,9 +376,13 @@ export function getBlueprintDesignBlueprint(
   const emptyDriveIndices = newBlueprint.driveSlots!
     .map((s, i) => s === null ? i : -1)
     .filter(i => i !== -1);
+  const emptyComponentIndices = newBlueprint.componentSlots!
+    .map((s, i) => s === null ? i : -1)
+    .filter(i => i !== -1);
 
   // No empty slots = no changes needed
-  if (emptyFrameIndices.length === 0 && emptyFabricIndices.length === 0 && emptyDriveIndices.length === 0) {
+  if (emptyFrameIndices.length === 0 && emptyFabricIndices.length === 0 &&
+      emptyDriveIndices.length === 0 && emptyComponentIndices.length === 0) {
     return null;
   }
 
@@ -400,6 +412,7 @@ export function getBlueprintDesignBlueprint(
   const frameUpgrades: string[] = [];
   const fabricUpgrades: string[] = [];
   const driveUpgrades: string[] = [];
+  const componentUpgrades: string[] = [];  // For armor, payload, and other component tiles
 
   for (const techId of technologies) {
     // Get ALL upgrades this tech card can install (not just the first one)
@@ -414,6 +427,8 @@ export function getBlueprintDesignBlueprint(
           fabricUpgrades.push(upgradeInfo.id);
         } else if (slotType === 'driveSlots') {
           driveUpgrades.push(upgradeInfo.id);
+        } else if (slotType === 'componentSlots') {
+          componentUpgrades.push(upgradeInfo.id);
         }
       }
     }
@@ -434,6 +449,23 @@ export function getBlueprintDesignBlueprint(
   frameUpgrades.sort(sortByHullCost);
   fabricUpgrades.sort(sortByHullCost);
   driveUpgrades.sort(sortByHullCost);
+
+  // Sort component upgrades: In Age 2, prioritize armor tiles for flak survival
+  // Armor tiles have 'armor' in their stats; sort by: has_armor (desc), then hull_cost (asc)
+  componentUpgrades.sort((a, b) => {
+    const tileA = UPGRADES[a] as TechTile | undefined;
+    const tileB = UPGRADES[b] as TechTile | undefined;
+    const armorA = tileA?.stats?.armor || 0;
+    const armorB = tileB?.stats?.armor || 0;
+    const costA = getTileHullCost(a);
+    const costB = getTileHullCost(b);
+
+    // In Age 2, prioritize armor (sort descending by armor, then ascending by cost)
+    if (_currentAge === 2) {
+      if (armorB !== armorA) return armorB - armorA;  // Higher armor first
+    }
+    return costA - costB;  // Then by cost
+  });
 
   // Helper to check if we can afford to add a tile
   const canAffordTile = (tileId: string): boolean => {
@@ -478,6 +510,16 @@ export function getBlueprintDesignBlueprint(
     const affordableUpgrade = driveUpgrades.find(id => !installedTiles.has(id) && canAffordTile(id));
     if (affordableUpgrade) {
       newBlueprint.driveSlots![idx] = affordableUpgrade;
+      addTile(affordableUpgrade);
+    }
+  }
+
+  // Fill empty component slots (no duplicates)
+  // In Age 2, armor tiles are sorted first for flak survival
+  for (const idx of emptyComponentIndices) {
+    const affordableUpgrade = componentUpgrades.find(id => !installedTiles.has(id) && canAffordTile(id));
+    if (affordableUpgrade) {
+      newBlueprint.componentSlots![idx] = affordableUpgrade;
       addTile(affordableUpgrade);
     }
   }
@@ -591,6 +633,105 @@ export function getBlueprintDesignBlueprint(
     const replacement = findBestReplacement(currentTile, fabricUpgrades);
     if (replacement) {
       doReplacement('fabricSlots', idx, currentTile, replacement);
+    }
+  }
+
+  // === AGE-SPECIFIC COMPONENT REPLACEMENT ===
+  // Age 2: Replace non-armor components with armor tiles for flak survival
+  // Age 3: Replace components with luxury tiles for route requirements
+  // [BOT-COMPONENT-REPLACE-01] SYNC: Keep in sync with component replacement in playtest/strategy.py
+  if (_currentAge >= 2 && componentUpgrades.length > 0) {
+    // Find filled component slot indices
+    const filledComponentIndices = newBlueprint.componentSlots!
+      .map((s, i) => s !== null ? i : -1)
+      .filter(i => i !== -1);
+
+    // Score component tiles by age-specific priority (lower = better)
+    const getComponentPriority = (tileId: string | null): [number, number] => {
+      if (!tileId) return [999, 0];
+
+      const tile = UPGRADES[tileId] as TechTile | undefined;
+      const stats = tile?.stats || {};
+      const armor = stats.armor || 0;
+      const luxury = stats.luxury || 0;
+      const income = stats.income || 0;
+
+      if (_currentAge === 2) {
+        // Age 2: Armor is critical for flak survival
+        if (armor > 0) return [0, -armor];  // Best - keep armor tiles
+        return [1, -income];  // Non-armor can be replaced
+      } else {
+        // Age 3: Luxury is critical for Atlantic routes
+        if (luxury > 0) return [0, -luxury];  // Best - keep luxury tiles
+        if (armor > 0) return [1, -armor];  // Armor still useful
+        return [2, -income];  // Other components can be replaced
+      }
+    };
+
+    // Find the best armor/luxury upgrade available
+    let bestUpgrade: string | null = null;
+    let bestUpgradeScore: [number, number] = [999, 0];
+
+    for (const upgradeId of componentUpgrades) {
+      if (installedTiles.has(upgradeId)) continue;
+
+      const tile = UPGRADES[upgradeId] as TechTile | undefined;
+      const stats = tile?.stats || {};
+      const armor = stats.armor || 0;
+      const luxury = stats.luxury || 0;
+
+      // In Age 2, prioritize armor; in Age 3, prioritize luxury
+      if (_currentAge === 2 && armor > 0) {
+        const score: [number, number] = [0, -armor];
+        if (score[0] < bestUpgradeScore[0] || (score[0] === bestUpgradeScore[0] && score[1] < bestUpgradeScore[1])) {
+          bestUpgrade = upgradeId;
+          bestUpgradeScore = score;
+        }
+      } else if (_currentAge === 3 && luxury > 0) {
+        const score: [number, number] = [0, -luxury];
+        if (score[0] < bestUpgradeScore[0] || (score[0] === bestUpgradeScore[0] && score[1] < bestUpgradeScore[1])) {
+          bestUpgrade = upgradeId;
+          bestUpgradeScore = score;
+        }
+      }
+    }
+
+    // Try to replace the lowest-priority component with the best upgrade
+    if (bestUpgrade) {
+      let worstIdx: number | null = null;
+      let worstScore: [number, number] = [-1, 0];
+
+      for (const idx of filledComponentIndices) {
+        const currentTile = newBlueprint.componentSlots![idx];
+        if (!currentTile) continue;
+
+        const currentScore = getComponentPriority(currentTile);
+
+        // Only replace if current tile is lower priority than upgrade
+        const currentWorse = currentScore[0] > bestUpgradeScore[0] ||
+          (currentScore[0] === bestUpgradeScore[0] && currentScore[1] > bestUpgradeScore[1]);
+        const worseThanBest = currentScore[0] > worstScore[0] ||
+          (currentScore[0] === worstScore[0] && currentScore[1] > worstScore[1]);
+
+        if (currentWorse && worseThanBest) {
+          if (canAffordReplacement(currentTile, bestUpgrade)) {
+            worstIdx = idx;
+            worstScore = currentScore;
+          }
+        }
+      }
+
+      if (worstIdx !== null) {
+        const oldTile = newBlueprint.componentSlots![worstIdx]!;
+        // Execute component replacement
+        const oldHull = getTileHullCost(oldTile);
+        const newHull = getTileHullCost(bestUpgrade);
+        currentHullCost = currentHullCost - oldHull + newHull;
+        installedTiles.delete(oldTile);
+        installedTiles.add(bestUpgrade);
+        newBlueprint.componentSlots![worstIdx] = bestUpgrade;
+        changesMade = true;
+      }
     }
   }
 
@@ -794,6 +935,43 @@ export function evaluateLaunchReadiness(
       missing.push(`need ${minEngineersForSafeLaunch - engineers} more engineer(s) (${engineerReason})`);
       priorities.push('engineering_depot');   // Collect engineers from income track
       priorities.push('technical_institute'); // Build engineer income
+    }
+
+    // Check 8: Do we have armor/luxury tech but not installed?
+    // [BOT-LAUNCH-READY-01] SYNC: Match playtest - prioritize blueprint_design when upgrades available
+    // Age 2: Armor is critical for surviving flak (50% target survival rate)
+    // Age 3: Luxury is critical for Atlantic routes
+    const componentSlots = player.blueprint?.componentSlots || [];
+    const techCards = player.techCards || [];
+
+    // Check for armor (Age 2+)
+    if (currentAge >= 2) {
+      const hasArmorTech = techCards.some(t => t === 'armored_gondola' || t === 'reinforced_hull');
+      const hasArmorInstalled = componentSlots.some(s => {
+        if (!s) return false;
+        const tile = UPGRADES[s] as TechTile | undefined;
+        return (tile?.stats?.armor || 0) > 0;
+      });
+
+      if (hasArmorTech && !hasArmorInstalled && !priorities.includes('blueprint_design')) {
+        missing.push('have armor tech but no armor installed (critical for flak survival)');
+        priorities.unshift('blueprint_design');  // High priority - add to front
+      }
+    }
+
+    // Check for luxury (Age 3)
+    if (currentAge === 3) {
+      const hasLuxuryTech = techCards.some(t => t === 'luxury_accommodation' || t === 'luxury_fittings');
+      const hasLuxuryInstalled = componentSlots.some(s => {
+        if (!s) return false;
+        const tile = UPGRADES[s] as TechTile | undefined;
+        return (tile?.stats?.luxury || 0) > 0;
+      });
+
+      if (hasLuxuryTech && !hasLuxuryInstalled && !priorities.includes('blueprint_design')) {
+        missing.push('have luxury tech but no luxury installed (critical for Atlantic routes)');
+        priorities.unshift('blueprint_design');  // High priority - add to front
+      }
     }
 
     const canLaunch = hangarShipCount > 0 && slotsReady && statsReady &&
@@ -1277,13 +1455,16 @@ export function getRevealAcquisitions(
   const availableTechs = rdBoard.filter(t => !ownedTechs.has(t.id));
   console.log(`[BOT REVEAL] Available (not owned): ${availableTechs.length} techs: ${availableTechs.map(t => t.id).join(', ')}`);
 
+  // Get current age for age-specific tech prioritization (e.g., armor in Age 2)
+  const currentAge = state.age || 1;
+
   if (availableTechs.length > 0) {
     // Calculate tech value: direct card benefits (VP, income) + upgrade tile score
     const techsWithValue = availableTechs.map(techCard => {
       const cardVp = (techCard as { vp?: number }).vp || 0;
       const cardIncome = (techCard as { income?: number }).income || 0;
       const upgradeInfo = getUpgradeForTech(techCard.id);
-      const upgradeScore = upgradeInfo ? calculateTechScore(upgradeInfo.tile) : 0;
+      const upgradeScore = upgradeInfo ? calculateTechScore(upgradeInfo.tile, currentAge) : 0;
       // VP worth ~3 points, income worth ~2 points, upgrade score as-is
       const totalValue = cardVp * 3 + cardIncome * 2 + upgradeScore;
       return { tech: techCard, value: totalValue };

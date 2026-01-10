@@ -407,7 +407,11 @@ async function executeBotAgeTransition(
   if (!player) return false;
 
   // Get desired blueprint configuration (mandatory during age transition)
-  const blueprint = botService.getBlueprintDesignBlueprint(player, state.age, true);
+  // IMPORTANT: Use the NEW age from ageTransitionBlueprintDesign, not state.age (which is still the old age)
+  // This ensures Age 2-specific logic (armor prioritization) runs during Age 1→2 transition
+  const extendedState = state as GameState & { ageTransitionBlueprintDesign?: { newAge?: number } };
+  const newAge = extendedState.ageTransitionBlueprintDesign?.newAge || (state.age + 1);
+  const blueprint = botService.getBlueprintDesignBlueprint(player, newAge, true);
 
   return await executeBotAction(io, gameId, botId, 'AGE_TRANSITION_BLUEPRINT_DESIGN', { blueprint }, version);
 }

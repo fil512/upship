@@ -35,6 +35,10 @@ Browser UI playtesting uses Chrome DevTools MCP:
 
 See `.claude/commands/playtest-ui.md` for detailed instructions.
 
+## Starting the Local Server
+
+**Critical** always use `scripts/restart_server.sh` to start or restert the local server.
+
 ## Troubleshooting Deployments
 
 **Using the Railway CLI script (preferred):**
