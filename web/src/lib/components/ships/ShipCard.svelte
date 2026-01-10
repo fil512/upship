@@ -186,7 +186,7 @@
 	}
 
 	.gas-type.helium {
-		background: #fff3e0;
-		color: #e65100;
+		background: #f5f5f5;
+		color: #666666;
 	}
 </style>

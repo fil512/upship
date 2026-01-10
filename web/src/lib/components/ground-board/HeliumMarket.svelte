@@ -81,7 +81,7 @@
 		background: var(--color-bg-card);
 		border-radius: var(--radius-md);
 		padding: var(--spacing-sm);
-		border: 2px solid #e65100;
+		border: 2px solid #9ca3af;
 		min-width: 140px;
 	}
 
@@ -100,9 +100,10 @@
 		justify-content: center;
 		width: 24px;
 		height: 24px;
-		background: #e65100;
-		color: white;
+		background: #ffffff;
+		color: #666666;
 		border-radius: var(--radius-sm);
+		border: 1px solid #666666;
 		font-weight: 700;
 		font-size: 0.75rem;
 	}
@@ -110,7 +111,7 @@
 	.market-title {
 		font-size: 0.85rem;
 		font-weight: 600;
-		color: #e65100;
+		color: var(--color-text-primary);
 	}
 
 	.price-track {
@@ -129,8 +130,8 @@
 	}
 
 	.price-row.current-price {
-		background: rgba(230, 81, 0, 0.15);
-		border: 1px solid rgba(230, 81, 0, 0.4);
+		background: rgba(255, 255, 255, 0.15);
+		border: 1px solid rgba(255, 255, 255, 0.4);
 	}
 
 	.price-label {
@@ -149,7 +150,7 @@
 	.cube-slot {
 		width: 16px;
 		height: 16px;
-		border-radius: 50%;
+		border-radius: 2px;
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -169,14 +170,15 @@
 	.cube {
 		width: 14px;
 		height: 14px;
-		background: linear-gradient(135deg, #ff8a50, #e65100);
-		border-radius: 50%;
-		box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), inset 0 1px 1px rgba(255, 255, 255, 0.3);
+		background: linear-gradient(135deg, #ffffff, #e0e0e0);
+		border-radius: 2px;
+		border: 1px solid #999999;
+		box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), inset 0 1px 1px rgba(255, 255, 255, 0.5);
 	}
 
 	.current-indicator {
 		font-size: 0.7rem;
-		color: #e65100;
+		color: var(--color-text-primary);
 		font-weight: bold;
 	}
 
@@ -201,6 +203,6 @@
 
 	.stat-value {
 		font-weight: 600;
-		color: #e65100;
+		color: var(--color-text-primary);
 	}
 </style>

@@ -52,7 +52,7 @@
 		</div>
 
 		<div class="resource helium">
-			<Icon name="helium" size={24} color="#e65100" />
+			<Icon name="helium" size={24} color="#ffffff" />
 			<span class="value">{helium}</span>
 			<span class="label">Helium</span>
 		</div>
