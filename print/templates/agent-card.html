@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agent Card</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    body {
+      width: 750px;
+      height: 1050px;
+      margin: 0;
+      padding: 0;
+    }
+  </style>
+</head>
+<body>
+  <div id="card" class="agent-card"></div>
+
+  <script>
+    // SVG Icons embedded inline
+    const ICONS = {
+      wrench: `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M22.7 19l-9.1-9.1c.9-2.3.4-5-1.5-6.9-2-2-5-2.4-7.4-1.3L9 6 6 9 1.6 4.7C.4 7.1.9 10.1 2.9 12.1c1.9 1.9 4.6 2.4 6.9 1.5l9.1 9.1c.4.4 1 .4 1.4 0l2.3-2.3c.5-.4.5-1.1.1-1.4z" fill="#4a9eff"/>
+      </svg>`,
+      coin: `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="12" cy="12" r="10" fill="#ffc107" stroke="#c9a000" stroke-width="1.5"/>
+        <text x="12" y="17" text-anchor="middle" font-size="14" font-weight="bold" fill="#8b6914" font-family="serif">£</text>
+      </svg>`,
+      propeller: `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="12" cy="12" r="2.5" fill="#2e7d32"/>
+        <ellipse cx="12" cy="5" rx="3" ry="6" fill="#4caf50" transform="rotate(0, 12, 12)"/>
+        <ellipse cx="12" cy="5" rx="3" ry="6" fill="#4caf50" transform="rotate(120, 12, 12)"/>
+        <ellipse cx="12" cy="5" rx="3" ry="6" fill="#4caf50" transform="rotate(240, 12, 12)"/>
+      </svg>`,
+      any: `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <polygon points="12,2 22,8.5 22,15.5 12,22 2,15.5 2,8.5" fill="#c4a35a" stroke="#8b7355" stroke-width="1"/>
+        <text x="12" y="16" text-anchor="middle" font-size="12" font-weight="bold" fill="white">*</text>
+      </svg>`,
+      officers: `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M4 24v-4c0-3 4-5 8-5s8 2 8 5v4H4z" fill="#e0e0e0" stroke="#333" stroke-width="0.75"/>
+        <circle cx="12" cy="10" r="4.5" fill="#e0e0e0" stroke="#333" stroke-width="0.75"/>
+        <path d="M5 9c0-1 2-2 7-2s7 1 7 2" fill="none" stroke="#333" stroke-width="1.5"/>
+        <path d="M6 7c0-3 2.5-5 6-5s6 2 6 5H6z" fill="#e0e0e0" stroke="#333" stroke-width="0.75"/>
+        <rect x="6" y="7" width="12" height="1.5" fill="#f1c40f"/>
+        <rect x="5" y="16" width="4" height="2" fill="#f1c40f"/>
+        <rect x="15" y="16" width="4" height="2" fill="#f1c40f"/>
+      </svg>`,
+      engineers: `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M2 14c0-5.5 4.5-10 10-10s10 4.5 10 10v2H2v-2z" fill="#ffa726"/>
+        <path d="M1 16h22v2H1z" fill="#f57c00"/>
+        <path d="M12 4v10" fill="none" stroke="#fb8c00" stroke-width="1.5"/>
+        <path d="M6.5 6.5c1.5 3 1.5 7.5 1.5 9.5" fill="none" stroke="#fb8c00" stroke-width="1.5"/>
+        <path d="M17.5 6.5c-1.5 3-1.5 7.5-1.5 9.5" fill="none" stroke="#fb8c00" stroke-width="1.5"/>
+      </svg>`,
+      cash: `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="12" cy="12" r="10" fill="#4caf50" stroke="#2e7d32" stroke-width="1.5"/>
+        <text x="12" y="17" text-anchor="middle" font-size="14" font-weight="bold" fill="white" font-family="serif">£</text>
+      </svg>`,
+      influence: `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <polygon points="12 2 22 12 12 22 2 12" fill="#7b68ee" stroke="#5a4fcf" stroke-width="1"/>
+        <circle cx="12" cy="12" r="4" fill="white" opacity="0.3"/>
+      </svg>`,
+      research: `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <rect x="3" y="3" width="18" height="18" rx="2" fill="#2196f3" stroke="#1565c0" stroke-width="1"/>
+        <circle cx="10" cy="10" r="4" fill="none" stroke="white" stroke-width="2"/>
+        <line x1="13" y1="13" x2="18" y2="18" stroke="white" stroke-width="2" stroke-linecap="round"/>
+      </svg>`,
+      gas: `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <ellipse cx="12" cy="12" rx="8" ry="10" fill="#90caf9" stroke="#42a5f5" stroke-width="1.5"/>
+        <text x="12" y="16" text-anchor="middle" font-size="10" font-weight="bold" fill="#1565c0">H₂</text>
+      </svg>`
+    };
+
+    function renderCard(card, assetsPath) {
+      const symbolClass = `symbol-${card.symbol || 'any'}`;
+      const symbolIcon = ICONS[card.symbol] || ICONS.any;
+
+      // Build reveal items HTML
+      let revealHtml = '';
+      if (card.reveal) {
+        if (card.reveal.cash) {
+          revealHtml += `<span class="badge-shape cash"><span class="badge-value">${card.reveal.cash}</span></span>`;
+        }
+        if (card.reveal.influence) {
+          revealHtml += `<span class="badge-shape influence"><span class="badge-value">${card.reveal.influence}</span></span>`;
+        }
+        if (card.reveal.research) {
+          revealHtml += `<span class="badge-shape research"><span class="badge-value">${card.reveal.research}</span></span>`;
+        }
+        if (card.reveal.officers) {
+          revealHtml += `<span class="icon-repeat">${ICONS.officers.repeat(Math.min(card.reveal.officers, 3))}</span>`;
+        }
+        if (card.reveal.engineers) {
+          revealHtml += `<span class="icon-repeat">${ICONS.engineers.repeat(Math.min(card.reveal.engineers, 3))}</span>`;
+        }
+        if (card.reveal.gas) {
+          revealHtml += `<span class="icon-repeat">${ICONS.gas.repeat(Math.min(card.reveal.gas, 3))}</span>`;
+        }
+      }
+
+      // Build effect HTML
+      const effectHtml = card.effect
+        ? `<div class="card-effect">${card.effect}</div>`
+        : '';
+
+      // Build cost badge (diamond shape for influence)
+      const costHtml = card.cost
+        ? `<div class="card-cost">
+            <svg class="cost-badge" viewBox="0 0 24 24" width="104" height="104">
+              <polygon points="12 1 23 12 12 23 1 12" fill="#888888"/>
+              <text x="12" y="16" text-anchor="middle" font-size="${card.cost >= 10 ? 10 : 12}" font-weight="bold" fill="white">${card.cost}</text>
+            </svg>
+          </div>`
+        : '';
+
+      // Image filename conversion (same logic as web)
+      const imageFilename = card.name
+        .toLowerCase()
+        .replace(/['']/g, '')
+        .replace(/[^a-z0-9]+/g, '_')
+        .replace(/^_|_$/g, '');
+
+      document.getElementById('card').className = `agent-card ${symbolClass}`;
+      document.getElementById('card').innerHTML = `
+        <div class="card-header">
+          <div class="card-symbol">${symbolIcon}</div>
+          <span class="card-name">${card.name}</span>
+          ${costHtml}
+        </div>
+        <div class="card-image-area">
+          <img src="${assetsPath}/cards/agent/${imageFilename}.png"
+               alt=""
+               class="card-image"
+               onerror="this.style.display='none'">
+        </div>
+        ${effectHtml}
+        <div class="card-reveal">
+          <span class="reveal-label">Reveal:</span>
+          <div class="reveal-items">${revealHtml}</div>
+        </div>
+      `;
+    }
+
+    // Card data will be injected by Playwright
+    window.renderCard = renderCard;
+  </script>
+</body>
+</html>

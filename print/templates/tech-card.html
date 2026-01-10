@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tech Card</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      width: 750px;
+      height: 1050px;
+      margin: 0;
+      padding: 0;
+      background: white;
+    }
+
+    .tech-card {
+      display: flex;
+      flex-direction: column;
+      width: 750px;
+      height: 1050px;
+      background: #e8e4d9;
+      border: 8px solid #9a8c70;
+      border-radius: 32px;
+      overflow: hidden;
+    }
+
+    /* Header section */
+    .tech-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 24px;
+      background: rgba(0, 0, 0, 0.08);
+      border-bottom: 4px solid #c4b8a0;
+    }
+
+    .tech-name {
+      font-size: 2.6rem;
+      font-weight: 700;
+      color: #333;
+      text-transform: uppercase;
+      line-height: 1.1;
+      flex: 1;
+    }
+
+    .tech-cost {
+      display: flex;
+      align-items: center;
+      flex-shrink: 0;
+    }
+
+    /* Research cost badge (square) */
+    .cost-badge {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 104px;
+      height: 104px;
+      background: #888888;
+      border-radius: 16px;
+    }
+
+    .cost-value {
+      font-size: 3.2rem;
+      font-weight: 700;
+      color: white;
+    }
+
+    /* Age badge */
+    .age-badge {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: white;
+      padding: 12px 24px;
+      border-radius: 16px;
+      margin-left: 16px;
+    }
+
+    .age-badge.age-1 { background: #8B4513; }
+    .age-badge.age-2 { background: #2E7D32; }
+    .age-badge.age-3 { background: #1565C0; }
+
+    /* Type badge */
+    .type-badge {
+      font-size: 1.6rem;
+      font-weight: 600;
+      color: #666;
+      text-transform: uppercase;
+      padding: 8px 16px;
+      background: rgba(0, 0, 0, 0.1);
+      border-radius: 12px;
+      margin-left: 16px;
+    }
+
+    /* Image area */
+    .tech-image-area {
+      flex: 1;
+      min-height: 400px;
+      background: rgba(154, 140, 112, 0.15);
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .tech-image {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    /* Effect section */
+    .tech-effect {
+      padding: 16px 24px;
+      font-size: 2.2rem;
+      color: #555;
+      line-height: 1.3;
+      background: rgba(255, 255, 255, 0.5);
+      border-top: 4px solid #c4b8a0;
+    }
+
+    /* Tech info footer */
+    .tech-footer {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 32px;
+      padding: 24px 32px;
+      background: rgba(0, 0, 0, 0.08);
+      border-top: 4px solid #c4b8a0;
+    }
+
+    .tech-type-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 2rem;
+      font-weight: 600;
+      color: #555;
+      text-transform: uppercase;
+    }
+
+    .type-icon {
+      width: 56px;
+      height: 56px;
+    }
+  </style>
+</head>
+<body>
+  <div id="card" class="tech-card"></div>
+
+  <script>
+    // Tech card to image filename mapping (same as web)
+    const TECH_CARD_TO_IMAGE = {
+      'Daimler Engine': 'basic_engine',
+      'Daimler Petrol Engine': 'basic_engine',
+      'Improved Propeller': 'improved_propeller',
+      'Dual Engine Mount': 'twin_engine',
+      'Maybach Engine': 'maybach_cx_engine',
+      'Maybach Engine Design': 'maybach_cx_engine',
+      'Diesel Powerplant': 'diesel_engine',
+      'Swiveling Propeller': 'vectored_thrust',
+      'Contra-Rotating Props': 'balanced_propulsion',
+      'Streamlined Nacelle': 'aerodynamic_engine',
+      'Supercharged Engine': 'high_altitude_engine',
+      'Diesel-Electric Drive': 'hybrid_powerplant',
+      'Variable-Pitch Propeller': 'adaptive_propeller',
+      'Wooden Framework': 'wooden_frame',
+      'Wire Bracing': 'tensioned_frame',
+      'Duralumin Framework': 'duralumin_frame',
+      'Steel Framework': 'steel_frame',
+      'Internal Keel': 'semi_rigid_keel',
+      'Geodetic Structure': 'geodetic_frame',
+      'Modular Construction': 'modular_frame',
+      'Articulated Keel Design': 'flexible_frame',
+      'Aerodynamic Hull Design': 'streamlined_hull',
+      'Dynamic Lift Surfaces': 'aerodynamic_lift_system',
+      'Rubberized Cotton': 'cotton_envelope',
+      'Doped Canvas': 'doped_covering',
+      "Goldbeater's Skin": 'goldbeaters_skin',
+      'Fireproof Coating': 'fire_resistant_fabric',
+      'Aluminum Doping': 'reflective_covering',
+      'Grounding Systems': 'conductive_covering',
+      'Gelatinized Latex': 'synthetic_envelope',
+      'Composite Covering': 'advanced_fabric',
+      'Improved Valving': 'pressure_control',
+      'Manual Ballonets': 'altitude_ballonets',
+      'Multiple Gas Cells': 'compartmented_gas',
+      'Helium Handling': 'helium_gas_cell',
+      'Blaugas Fuel System': 'blaugas_tank',
+      'Automatic Valves': 'automatic_valves',
+      'Pressure Altitude System': 'high_ceiling_gas',
+      'Triple Gas Cell': 'redundant_cells',
+      'Emergency Venting': 'rapid_descent_system',
+      'Gas Recovery': 'reclamation_system',
+      'Water Recovery System': 'exhaust_condensers',
+      'Observation Platform': 'spotter_gondola',
+      'Mail Compartment': 'postal_service',
+      'Cargo Nets': 'external_cargo',
+      'Passenger Gondola': 'basic_cabin',
+      'Passenger Accommodation': 'passenger_cabin',
+      'Bomb Bay Design': 'bombing_equipment',
+      'Trapeze System': 'sparrowhawk_hangar',
+      'Radio Equipment': 'communications_suite',
+      'Armored Gondola': 'light_armor_plating',
+      'Reinforced Hull': 'heavy_armor_plating',
+      'Luxury Accommodation': 'luxury_cabin',
+      'Dining Saloon': 'dining_saloon',
+      'Promenade Deck': 'observation_lounge',
+      'Sleeping Quarters': 'private_berths',
+      'Smoking Room': 'pressurized_lounge',
+      'Imperial Mooring System': 'imperial_mast'
+    };
+
+    const TYPE_LABELS = {
+      structure: 'Frame',
+      fabric: 'Fabric',
+      gas: 'Gas System',
+      drive: 'Propulsion',
+      component: 'Component',
+      special: 'Special'
+    };
+
+    function getImageFilename(name) {
+      const mapped = TECH_CARD_TO_IMAGE[name];
+      if (mapped) return mapped;
+      return name
+        .toLowerCase()
+        .replace(/['']/g, '')
+        .replace(/[^a-z0-9]+/g, '_')
+        .replace(/^_|_$/g, '');
+    }
+
+    function renderCard(tech, assetsPath) {
+      const imageFilename = getImageFilename(tech.name);
+
+      // Cost badge (research cost - square shape)
+      const costHtml = tech.cost
+        ? `<div class="tech-cost">
+            <div class="cost-badge">
+              <span class="cost-value">${tech.cost}</span>
+            </div>
+          </div>`
+        : '';
+
+      // Age badge
+      const ageHtml = tech.age
+        ? `<span class="age-badge age-${tech.age}">Age ${tech.age}</span>`
+        : '';
+
+      // Type badge
+      const typeLabel = TYPE_LABELS[tech.type] || tech.type;
+      const typeHtml = tech.type
+        ? `<span class="type-badge">${typeLabel}</span>`
+        : '';
+
+      // Effect
+      const effectHtml = tech.effect
+        ? `<div class="tech-effect">${tech.effect}</div>`
+        : '';
+
+      // Footer with type and age
+      let footerHtml = '';
+      if (tech.type || tech.age) {
+        footerHtml = `
+          <div class="tech-footer">
+            <div class="tech-type-info">
+              ${tech.type ? `<span>${typeLabel}</span>` : ''}
+              ${tech.age ? `<span class="age-badge age-${tech.age}">Age ${tech.age}</span>` : ''}
+            </div>
+          </div>
+        `;
+      }
+
+      document.getElementById('card').innerHTML = `
+        <div class="tech-header">
+          <span class="tech-name">${tech.name}</span>
+          ${costHtml}
+        </div>
+        <div class="tech-image-area">
+          <img src="${assetsPath}/cards/tech/${imageFilename}.png"
+               alt=""
+               class="tech-image"
+               onerror="this.style.display='none'">
+        </div>
+        ${effectHtml}
+        ${footerHtml}
+      `;
+    }
+
+    window.renderCard = renderCard;
+  </script>
+</body>
+</html>

@@ -1,0 +1,379 @@
+/**
+ * Print Card Styles
+ * Matches the web game card appearance for print output
+ * Card size: 2.5" x 3.5" (750px x 1050px at 300 DPI)
+ */
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: white;
+  margin: 0;
+  padding: 0;
+}
+
+/* === AGENT CARD === */
+.agent-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 750px;
+  height: 1050px;
+  background: #e8e4d9;
+  border: 8px solid #c4b8a0;
+  border-radius: 32px;
+  overflow: hidden;
+}
+
+/* Header section - Symbol + Name + Cost */
+.card-header {
+  display: flex;
+  align-items: center;
+  padding: 16px 24px;
+  gap: 12px;
+  background: rgba(0, 0, 0, 0.08);
+  border-bottom: 4px solid #c4b8a0;
+}
+
+.card-symbol {
+  flex-shrink: 0;
+  width: 72px;
+  height: 72px;
+}
+
+.card-symbol svg {
+  width: 100%;
+  height: 100%;
+}
+
+.card-name {
+  flex: 1;
+  font-size: 2.6rem;
+  font-weight: 700;
+  color: #333;
+  text-transform: uppercase;
+  line-height: 1.1;
+}
+
+.card-cost {
+  flex-shrink: 0;
+}
+
+/* Cost badge - diamond shape for influence */
+.cost-badge {
+  display: block;
+}
+
+/* Center section - Image area */
+.card-image-area {
+  flex: 1;
+  min-height: 400px;
+  background: var(--card-color-light, rgba(200, 200, 200, 0.2));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.card-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Effect description - above reveal */
+.card-effect {
+  font-size: 2.2rem;
+  color: #555;
+  text-align: left;
+  line-height: 1.3;
+  padding: 16px 24px;
+  background: rgba(255, 255, 255, 0.5);
+  border-top: 4px solid #c4b8a0;
+}
+
+/* Bottom section - Reveal */
+.card-reveal {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 24px;
+  background: rgba(0, 0, 0, 0.08);
+  border-top: 4px solid #c4b8a0;
+}
+
+.reveal-label {
+  font-size: 1.8rem;
+  color: #777;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
+.reveal-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+
+/* Resource badges */
+.resource-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.icon-repeat {
+  display: inline-flex;
+  align-items: center;
+}
+
+.icon-repeat svg {
+  margin-left: -12px;
+}
+
+.icon-repeat svg:first-child {
+  margin-left: 0;
+}
+
+/* Badge shapes for cash/influence/research */
+.badge-shape {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 72px;
+  height: 72px;
+  position: relative;
+}
+
+.badge-value {
+  font-size: 2.4rem;
+  font-weight: 700;
+  color: white;
+  z-index: 1;
+  line-height: 1;
+}
+
+.badge-shape.cash {
+  background: #888888;
+  border-radius: 50%;
+}
+
+.badge-shape.influence {
+  width: 51px;
+  height: 51px;
+  background: #888888;
+  transform: rotate(45deg);
+  border-radius: 8px;
+}
+
+.badge-shape.influence .badge-value {
+  transform: rotate(-45deg);
+  font-size: 2rem;
+}
+
+.badge-shape.research {
+  background: #888888;
+  border-radius: 8px;
+}
+
+/* === HAZARD CARD === */
+.hazard-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 750px;
+  height: 1050px;
+  background: #e8e4d9;
+  border: 8px solid #c4b8a0;
+  border-radius: 32px;
+  overflow: hidden;
+}
+
+.hazard-card .card-header {
+  background: var(--hazard-color, #888);
+  border-bottom: 4px solid rgba(0, 0, 0, 0.2);
+}
+
+.hazard-card .card-name {
+  color: #e8e4d9;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.category-badge {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: white;
+  text-transform: uppercase;
+  padding: 8px 16px;
+  border-radius: 16px;
+  background: rgba(0, 0, 0, 0.3);
+}
+
+/* Hazard footer */
+.hazard-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 24px;
+  background: rgba(0, 0, 0, 0.08);
+  border-top: 4px solid #c4b8a0;
+}
+
+.challenge-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 2rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.challenge-icon {
+  width: 64px;
+  height: 64px;
+}
+
+.safe-passage {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 32px;
+  background: #4caf50;
+  color: white;
+  border-radius: 16px;
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+/* === TECH CARD === */
+.tech-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 750px;
+  height: 1050px;
+  background: #e8e4d9;
+  border: 8px solid #c4b8a0;
+  border-radius: 32px;
+  overflow: hidden;
+}
+
+.tech-card .card-header {
+  background: rgba(0, 0, 0, 0.08);
+  border-bottom: 4px solid #c4b8a0;
+}
+
+.age-badge {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 16px;
+  background: #666;
+}
+
+.age-badge.age-1 { background: #8B4513; }
+.age-badge.age-2 { background: #2E7D32; }
+.age-badge.age-3 { background: #1565C0; }
+
+.tech-type-badge {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #666;
+  text-transform: uppercase;
+  padding: 8px 16px;
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+}
+
+/* === MISSION CARD === */
+.mission-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 750px;
+  height: 1050px;
+  background: #e8e4d9;
+  border: 8px solid #c4b8a0;
+  border-radius: 32px;
+  overflow: hidden;
+}
+
+.mission-card .card-header {
+  background: #5d4037;
+  border-bottom: 4px solid rgba(0, 0, 0, 0.2);
+}
+
+.mission-card .card-name {
+  color: #e8e4d9;
+}
+
+.mission-type-badge {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: white;
+  text-transform: uppercase;
+  padding: 8px 16px;
+  border-radius: 16px;
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.mission-requirements {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding: 16px 24px;
+  background: rgba(0, 0, 0, 0.05);
+  border-top: 4px solid #c4b8a0;
+}
+
+.requirement {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1.6rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.requirement-icon {
+  width: 48px;
+  height: 48px;
+}
+
+.mission-rewards {
+  display: flex;
+  justify-content: center;
+  gap: 32px;
+  padding: 24px;
+  background: rgba(0, 0, 0, 0.08);
+  border-top: 4px solid #c4b8a0;
+}
+
+.reward {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 2.4rem;
+  font-weight: 700;
+}
+
+/* Symbol colors */
+.symbol-wrench { --card-color: #4a9eff; --card-color-light: rgba(74, 158, 255, 0.1); }
+.symbol-coin { --card-color: #ffc107; --card-color-light: rgba(255, 193, 7, 0.1); }
+.symbol-propeller { --card-color: #4caf50; --card-color-light: rgba(76, 175, 80, 0.1); }
+.symbol-any { --card-color: #c4a35a; --card-color-light: rgba(196, 163, 90, 0.1); }
+
+/* Hazard colors */
+.hazard-clear { --hazard-color: #4caf50; }
+.hazard-minor { --hazard-color: #ffc107; }
+.hazard-major { --hazard-color: #ff9800; }
+.hazard-fire { --hazard-color: #f44336; }
+.hazard-mechanical { --hazard-color: #9e9e9e; }

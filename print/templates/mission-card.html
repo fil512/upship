@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mission Card</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      width: 750px;
+      height: 1050px;
+      margin: 0;
+      padding: 0;
+      background: white;
+    }
+
+    .mission-card {
+      display: flex;
+      flex-direction: column;
+      width: 750px;
+      height: 1050px;
+      background: #e8e4d9;
+      border: 8px solid #5d4037;
+      border-radius: 32px;
+      overflow: hidden;
+    }
+
+    /* Header section */
+    .card-header {
+      display: flex;
+      align-items: center;
+      padding: 20px 24px;
+      gap: 16px;
+      background: #5d4037;
+      border-bottom: 4px solid rgba(0, 0, 0, 0.2);
+    }
+
+    .mission-type-badge {
+      font-size: 1.4rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 8px 16px;
+      border-radius: 12px;
+      background: rgba(0, 0, 0, 0.3);
+      color: white;
+      flex-shrink: 0;
+    }
+
+    .card-name {
+      flex: 1;
+      font-size: 2.4rem;
+      font-weight: 700;
+      color: #e8e4d9;
+      text-transform: uppercase;
+      line-height: 1.1;
+    }
+
+    /* Image area */
+    .card-image-area {
+      flex: 1;
+      min-height: 350px;
+      background: rgba(93, 64, 55, 0.1);
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .card-image {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    /* Requirements section */
+    .requirements {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 24px;
+      padding: 20px 24px;
+      background: rgba(0, 0, 0, 0.05);
+      border-top: 4px solid #c4b8a0;
+      justify-content: center;
+    }
+
+    .requirement {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 2rem;
+      font-weight: 600;
+      color: #333;
+    }
+
+    .requirement svg {
+      width: 48px;
+      height: 48px;
+    }
+
+    .requirement-value {
+      font-size: 2.4rem;
+      font-weight: 700;
+      color: #5d4037;
+    }
+
+    /* Difficulty section */
+    .difficulty-section {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 16px;
+      padding: 16px 24px;
+      background: rgba(139, 0, 0, 0.1);
+      border-top: 4px solid #c4b8a0;
+    }
+
+    .difficulty-label {
+      font-size: 1.8rem;
+      text-transform: uppercase;
+      color: #666;
+    }
+
+    .difficulty-value {
+      font-size: 2.8rem;
+      font-weight: 700;
+      color: #8b0000;
+    }
+
+    /* Special text */
+    .special-text {
+      padding: 16px 24px;
+      font-size: 1.8rem;
+      font-style: italic;
+      color: #555;
+      text-align: center;
+      background: rgba(255, 255, 255, 0.5);
+      border-top: 4px solid #c4b8a0;
+    }
+
+    /* Rewards section */
+    .rewards {
+      display: flex;
+      justify-content: center;
+      gap: 48px;
+      padding: 24px 32px;
+      background: rgba(0, 0, 0, 0.08);
+      border-top: 4px solid #c4b8a0;
+    }
+
+    .reward {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .reward svg {
+      width: 56px;
+      height: 56px;
+    }
+
+    .reward-value {
+      font-size: 3rem;
+      font-weight: 700;
+    }
+
+    .reward-income {
+      color: #4caf50;
+    }
+
+    .reward-vp {
+      color: #ff9800;
+    }
+
+    /* Mission type colors */
+    .type-bombing_run { --type-color: #c62828; }
+    .type-reconnaissance { --type-color: #1565c0; }
+    .type-resupply { --type-color: #2e7d32; }
+    .type-naval_patrol { --type-color: #0277bd; }
+    .type-artillery_observation { --type-color: #6a1b9a; }
+  </style>
+</head>
+<body>
+  <div id="card" class="mission-card"></div>
+
+  <script>
+    // SVG Icons
+    const ICONS = {
+      range: `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 2C8.14 2 5 5.14 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.86-3.14-7-7-7zm0 9.5a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5z" fill="#1565c0"/>
+      </svg>`,
+      speed: `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 16a3 3 0 1 0 0-6 3 3 0 0 0 0 6z" fill="#ff9800"/>
+        <path d="M12 4C6.48 4 2 8.48 2 14h2c0-4.42 3.58-8 8-8s8 3.58 8 8h2c0-5.52-4.48-10-10-10z" fill="#ff9800"/>
+        <path d="M12 8l-1.5 6h3L12 8z" fill="#ff9800"/>
+      </svg>`,
+      ceiling: `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M7 18h2V6H7v12zm4-12v12h2V6h-2zm4 3v9h2V9h-2z" fill="#9c27b0"/>
+        <path d="M3 21h18v2H3v-2z" fill="#9c27b0"/>
+      </svg>`,
+      income: `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="12" cy="12" r="10" fill="#4caf50" stroke="#2e7d32" stroke-width="1.5"/>
+        <text x="12" y="17" text-anchor="middle" font-size="14" font-weight="bold" fill="white" font-family="serif">£</text>
+      </svg>`,
+      vp: `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <polygon points="12,2 15,9 22,9 17,14 19,22 12,17 5,22 7,14 2,9 9,9" fill="#ff9800" stroke="#e65100" stroke-width="1"/>
+      </svg>`
+    };
+
+    const TYPE_LABELS = {
+      bombing_run: 'Bombing',
+      reconnaissance: 'Recon',
+      resupply: 'Resupply',
+      naval_patrol: 'Naval',
+      artillery_observation: 'Artillery'
+    };
+
+    // Mission image mapping
+    const MISSION_TO_IMAGE = {
+      'Railway Bombardment': 'mission_bombing_railway',
+      'Factory Strike': 'mission_bombing_factory',
+      'Port Assault': 'mission_bombing_port',
+      'Deep Strike Mission': 'mission_bombing_deep_strike',
+      'Strategic Bombardment': 'mission_bombing_strategic',
+      'Capital Raid': 'mission_bombing_capital',
+      'Front Line Survey': 'mission_recon_frontline',
+      'Artillery Spotting': 'mission_recon_artillery',
+      'Enemy Position Mapping': 'mission_recon_enemy_pos',
+      'Strategic Photography': 'mission_recon_strategic_photo',
+      'Deep Reconnaissance': 'mission_recon_deep',
+      'Field Hospital Supply': 'mission_resupply_hospital',
+      'Ammunition Delivery': 'mission_resupply_ammo',
+      'Forward Base Resupply': 'mission_resupply_base',
+      'Emergency Provisions': 'mission_resupply_emergency',
+      'Siege Relief': 'mission_resupply_siege',
+      'Coastal Patrol': 'mission_naval_coastal',
+      'Submarine Hunter': 'mission_naval_sub_hunter',
+      'Battery Direction': 'mission_artillery_battery',
+      'Long-Range Observation': 'mission_artillery_longrange'
+    };
+
+    function getImageFilename(name) {
+      const mapped = MISSION_TO_IMAGE[name];
+      if (mapped) return mapped;
+      return name
+        .toLowerCase()
+        .replace(/['']/g, '')
+        .replace(/[^a-z0-9]+/g, '_')
+        .replace(/^_|_$/g, '');
+    }
+
+    function renderCard(mission, assetsPath) {
+      const typeLabel = TYPE_LABELS[mission.type] || mission.type;
+      const imageFilename = getImageFilename(mission.name);
+
+      // Build requirements HTML
+      let reqHtml = '';
+      if (mission.range) {
+        reqHtml += `<div class="requirement">${ICONS.range}<span>Range</span><span class="requirement-value">${mission.range}+</span></div>`;
+      }
+      if (mission.speed) {
+        reqHtml += `<div class="requirement">${ICONS.speed}<span>Speed</span><span class="requirement-value">${mission.speed}+</span></div>`;
+      }
+      if (mission.ceiling) {
+        reqHtml += `<div class="requirement">${ICONS.ceiling}<span>Ceiling</span><span class="requirement-value">${mission.ceiling}+</span></div>`;
+      }
+
+      // Difficulty section
+      let difficultyHtml = '';
+      if (mission.difficulty) {
+        difficultyHtml = `
+          <div class="difficulty-section">
+            <span class="difficulty-label">Hazard Modifier:</span>
+            <span class="difficulty-value">+${mission.difficulty}</span>
+          </div>
+        `;
+      }
+
+      // Special text
+      let specialHtml = '';
+      if (mission.special && mission.specialBonus) {
+        specialHtml = `<div class="special-text">${mission.specialBonus.description}</div>`;
+      }
+
+      // Rewards
+      let rewardsHtml = `
+        <div class="rewards">
+          <div class="reward">
+            ${ICONS.income}
+            <span class="reward-value reward-income">£${mission.income}</span>
+          </div>
+          <div class="reward">
+            ${ICONS.vp}
+            <span class="reward-value reward-vp">${mission.vp} VP</span>
+          </div>
+        </div>
+      `;
+
+      document.getElementById('card').className = `mission-card type-${mission.type}`;
+      document.getElementById('card').innerHTML = `
+        <div class="card-header">
+          <span class="mission-type-badge">${typeLabel}</span>
+          <span class="card-name">${mission.name}</span>
+        </div>
+        <div class="card-image-area">
+          <img src="${assetsPath}/cards/mission/${imageFilename}.png"
+               alt="${mission.name}"
+               class="card-image"
+               onerror="this.style.display='none'">
+        </div>
+        <div class="requirements">${reqHtml}</div>
+        ${difficultyHtml}
+        ${specialHtml}
+        ${rewardsHtml}
+      `;
+    }
+
+    window.renderCard = renderCard;
+  </script>
+</body>
+</html>
