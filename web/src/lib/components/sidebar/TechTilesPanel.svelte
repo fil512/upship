@@ -158,12 +158,13 @@
 		width: 108px;
 		height: 59px;
 		padding: 4px;
-		background: color-mix(in srgb, var(--slot-color) 20%, rgba(30, 41, 59, 0.9));
+		background: color-mix(in srgb, var(--slot-color) 12%, #f5f3ee);
 		border: 2px solid var(--slot-color);
 		border-radius: 6px;
 		cursor: default;
 		transition: all var(--transition-fast);
 		position: relative;
+		box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.08);
 	}
 
 	.cost-badge {
@@ -189,14 +190,14 @@
 	}
 
 	.tile-box.selectable:hover {
-		background: color-mix(in srgb, var(--slot-color) 30%, rgba(30, 41, 59, 0.9));
-		box-shadow: 0 0 8px color-mix(in srgb, var(--slot-color) 40%, transparent);
+		background: color-mix(in srgb, var(--slot-color) 20%, #f5f3ee);
+		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 	}
 
 	.tile-box.selected {
-		background: color-mix(in srgb, var(--slot-color) 40%, rgba(30, 41, 59, 0.9));
-		box-shadow: 0 0 10px color-mix(in srgb, var(--slot-color) 60%, transparent);
-		border-width: 3px;
+		background: color-mix(in srgb, var(--slot-color) 25%, #f5f3ee);
+		box-shadow: 0 0 0 2px var(--slot-color), 0 2px 8px rgba(0, 0, 0, 0.15);
+		border-width: 2px;
 	}
 
 	/* Icons area - centered horizontally, takes up most of tile height */
@@ -210,11 +211,12 @@
 		flex: 1;
 	}
 
+
 	/* Name at bottom of tile */
 	.tile-name {
 		font-size: 9px;
-		font-weight: 600;
-		color: var(--slot-color);
+		font-weight: 700;
+		color: #333;
 		text-align: center;
 		white-space: nowrap;
 		overflow: hidden;

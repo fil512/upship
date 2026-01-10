@@ -1,5 +1,5 @@
 <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
   <!-- Upgrade: Plus Sign -->
-  <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" fill="#9ca3af"/>
-  <rect x="3" y="3" width="18" height="18" rx="2" fill="none" stroke="#9ca3af" stroke-width="2"/>
+  <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" fill="#4b5563"/>
+  <rect x="3" y="3" width="18" height="18" rx="2" fill="none" stroke="#4b5563" stroke-width="2"/>
 </svg>

@@ -10,7 +10,18 @@ Each SVG file must:
 - Have colors baked into the SVG (except player-colored icons which use `currentColor`)
 - Be a complete, standalone SVG file
 
-## Player Colors
+## Color Context
+
+Icons appear in different UI contexts:
+
+### Default Colors
+- **Ship stat icons** (lift, weight, speed, range, ceiling, reliability, luxury, armor) use `#4b5563` (dark grey) for good contrast on light backgrounds
+- **Colored icons** (income, hazard, hydrogen, helium, etc.) retain their semantic colors
+
+### Tech Tile Background
+Tech tiles use a light cream background (`#f5f3ee` with slot color tint). The dark grey stat icons provide good contrast without needing CSS overrides.
+
+### Player Colors
 
 Icons marked "Player color" use `currentColor` and are colored based on the owning player's faction:
 
@@ -61,17 +72,19 @@ National flags representing the four playable airship companies.
 
 ### Ship Statistics
 
-These represent airship capabilities shown on the Blueprint.
+These represent airship capabilities shown on the Blueprint and tech tiles.
 
 | File | Game Meaning | Current Shape | Color |
 |------|--------------|---------------|-------|
-| `lift.svg` | Buoyancy from gas cells—determines cargo capacity | Baloon | #9ca3af (Grey) |
-| `weight.svg` | Mass from installed upgrades—subtracts from lift | Anchor | #9ca3af (Grey) |
-| `speed.svg` | How fast the ship travels routes | TBD | #9ca3af (Grey) |
-| `range.svg` | Maximum flight distance in segments | Horizontal arrow with origin dot | #9ca3af (Grey) |
-| `ceiling.svg` | Maximum altitude—required for mountain routes | Cloud | #9ca3af (Grey) |
-| `reliability.svg` | Resistance to hazards during flight | Shield | #9ca3af (Grey) |
-| `luxury.svg` | Passenger comfort—bonus income on passenger routes | TBD | #9ca3af (Grey) |
+| `lift.svg` | Buoyancy from gas cells—determines cargo capacity | Balloon | #4b5563 (Dark grey) |
+| `weight.svg` | Mass from installed upgrades—subtracts from lift | Anchor/figure with arms | #4b5563 (Dark grey) |
+| `speed.svg` | How fast the ship travels routes | Speedometer gauge | #4b5563 (Dark grey) |
+| `range.svg` | Maximum flight distance in segments | Horizontal arrow with origin dot | #4b5563 (Dark grey) |
+| `ceiling.svg` | Maximum altitude—required for mountain routes | Cloud | #4b5563 (Dark grey) |
+| `reliability.svg` | Resistance to hazards during flight | Mechanical gear | #4b5563 (Dark grey) |
+| `luxury.svg` | Passenger comfort—bonus income on passenger routes | Crown | #4b5563 (Dark grey) |
+| `armor.svg` | Protection against combat damage (Age III) | Shield | #4b5563 (Dark grey) |
+| `gas_socket.svg` | Slot for gas cube—provides +5 lift when loaded | Dashed square with "5" | #1d4ed8 (Dark blue) |
 
 ### Game Mechanics
 
@@ -80,16 +93,17 @@ Icons representing various game actions and concepts.
 | File | Game Meaning | Current Shape | Color |
 |------|--------------|---------------|-------|
 | `ship.svg` | An airship in your fleet | Zeppelin with gondola and tail fins | Player color |
-| `launch.svg` | Action to send a ship on a route | Airship with diagonal motion lines | #9ca3af (Grey) |
-| `route.svg` | Flight path between cities | Two dots connected by dashed line | #9ca3af (Grey) |
-| `technology.svg` | Tech tiles that unlock upgrade types | Gear | #9ca3af (Grey) |
-| `upgrade.svg` | Components installed on the Blueprint | plus sign | #9ca3af (Grey) |
+| `launch.svg` | Action to send a ship on a route | Airship with diagonal motion lines | #4b5563 (Dark grey) |
+| `route.svg` | Flight path between cities | Two dots connected by dashed line | #4b5563 (Dark grey) |
+| `technology.svg` | Tech tiles that unlock upgrade types | Gear | #4b5563 (Dark grey) |
+| `upgrade.svg` | Components installed on the Blueprint | Plus sign | #4b5563 (Dark grey) |
 | `hazard.svg` | Danger events during flight (storms, mechanical failure) | Warning triangle with exclamation mark | #ef4444 (Red) |
-| `insurance.svg` | Protection against ship loss from crashes | Document/policy paper | #9ca3af (Grey) |
-| `blueprint.svg` | Your company's ship design template | Grid pattern | #9ca3af (Grey) |
-| `eye.svg` | Peek action—view hidden information | Eye | #9ca3af (Grey) |
-| `politics.svg` | Government influence and regulations | TBD | #9ca3af (Grey) |
-| `gas.svg` | Generic lifting gas (hydrogen or helium) | Gas canister | #9ca3af (Grey) |
+| `insurance.svg` | Protection against ship loss from crashes | Document/policy paper | #4b5563 (Dark grey) |
+| `blueprint.svg` | Your company's ship design template | Grid pattern | #4b5563 (Dark grey) |
+| `eye.svg` | Peek action—view hidden information | Eye | #4b5563 (Dark grey) |
+| `politics.svg` | Government influence and regulations | Building with columns | #4b5563 (Dark grey) |
+| `gas.svg` | Generic lifting gas (hydrogen or helium) | Gas canister | #4b5563 (Dark grey) |
+| `arrow_up.svg` | Generic upward indicator | Upward arrow | #4caf50 (Green) |
 
 ### Combat Missions (Age III)
 
@@ -101,6 +115,8 @@ Icons for WWI-era military operations during the Great War.
 | `binoculars.svg` | Reconnaissance—observation mission | Military field binoculars | #5c5040 (Olive brown) |
 | `supply_crate.svg` | Resupply/Transport—deliver supplies | Wooden crate with metal bands | #8b7355 (Wood brown) |
 | `patrol.svg` | Patrol—area surveillance | WWI searchlight | #6a6a6a (Grey) with #f0e68c (Light beam) |
+| `parachute.svg` | Emergency bailout/cargo drop | Parachute canopy with cargo | #ffffff (White) with #e0e0e0 accents |
+| `telescope.svg` | Long-range observation/spyglass | Brass spyglass | #d4af37 (Gold) with #5ba3d0 (Blue lens) |
 
 ## Design Notes
 
@@ -109,8 +125,13 @@ UP SHIP! is set during the Golden Age of Airships (1900-1937). Consider Art Deco
 
 ### Size Context
 Icons appear at various sizes throughout the UI:
-- **Small (10-14px)**: Inline with text, stat displays
+- **Small (10-14px)**: Inline with text, stat displays, tech tiles
 - **Medium (16-24px)**: Buttons, badges, card symbols
 - **Large (32px+)**: Feature highlights, empty states
 
 Design with the smallest size in mind—details should remain legible at 10px.
+
+### Icon Color Guidelines
+- **Stat icons** should use `#4b5563` (dark grey) for visibility on light backgrounds
+- **Semantic icons** (income=green, hazard=red) should retain their meaningful colors
+- Avoid light greys (`#9ca3af` or lighter) as they lack contrast on cream backgrounds

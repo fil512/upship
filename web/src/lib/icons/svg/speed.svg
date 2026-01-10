@@ -1,7 +1,7 @@
 <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
   <!-- Speed: Propeller -->
   <defs>
-    <path id="speed-blade" d="M12 12 C 11 12 10 9 10 5 C 10 3 11 2 12 2 C 13 2 14 3 14 5 C 14 9 13 12 12 12 Z" fill="#9ca3af" stroke="#6b7280" stroke-width="0.5"/>
+    <path id="speed-blade" d="M12 12 C 11 12 10 9 10 5 C 10 3 11 2 12 2 C 13 2 14 3 14 5 C 14 9 13 12 12 12 Z" fill="#4b5563" stroke="#6b7280" stroke-width="0.5"/>
   </defs>
 
   <!-- Three rotated blades -->

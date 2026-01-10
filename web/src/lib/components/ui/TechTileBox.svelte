@@ -67,10 +67,11 @@
 		width: 108px;
 		height: 68px;
 		padding: 4px;
-		background: color-mix(in srgb, var(--slot-color) 20%, rgba(30, 41, 59, 0.9));
+		background: color-mix(in srgb, var(--slot-color) 12%, #f5f3ee);
 		border: 2px solid var(--slot-color);
 		border-radius: 6px;
 		position: relative;
+		box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.08);
 	}
 
 	.tile-box.already-owned {
@@ -122,11 +123,12 @@
 		flex: 1;
 	}
 
+
 	/* Name at bottom of tile - allows wrapping to 2 lines */
 	.tile-name {
 		font-size: 9px;
-		font-weight: 600;
-		color: var(--slot-color);
+		font-weight: 700;
+		color: #333;
 		text-align: center;
 		max-width: 100%;
 		line-height: 1.2;
