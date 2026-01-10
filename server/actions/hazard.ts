@@ -56,11 +56,16 @@ function logOutcome(
   hazard: HazardCard | HazardCardDetails,
   gasType: 'hydrogen' | 'helium',
   reason: string,
-  routeId?: string
+  routeId?: string,
+  flakData?: { flak?: number; armor?: number; flakDestroyed?: boolean }
 ): void {
   const playerState = state.players[playerId];
   const flowContext = createFlowContext(state, (state as { gameId?: string }).gameId || 'unknown');
   const faction = playerState?.faction || 'unknown';
+
+  // Include flak value from hazard card if not already in flakData
+  const resolvedFlakData = flakData || (hazard.flak !== undefined ? { flak: hazard.flak } : undefined);
+
   resourceFlowLogger.logLaunchOutcome(
     flowContext,
     playerId,
@@ -70,7 +75,8 @@ function logOutcome(
     hazard.name || hazard.type,
     gasType,
     reason,
-    routeId
+    routeId,
+    resolvedFlakData
   );
 }
 
@@ -564,10 +570,7 @@ function resolveHazardSuccess(state: GameState, playerId: string, route: Extende
   const shipStats = pendingLaunch.stats || {};
   const gasType = pendingLaunch.gasType || 'hydrogen';
 
-  // Log success outcome
-  logOutcome(state, playerId, 'success', hazard, gasType, message, pendingLaunch.routeId);
-
-  // Handle Age 2 combat missions
+  // Handle Age 2 combat missions (log outcome AFTER flak check)
   if (pendingLaunch.missionId && state.age === 2) {
     const mission = hazardState.missionRow?.find(m => m.id === pendingLaunch.missionId);
     if (!mission) {
@@ -603,6 +606,8 @@ function resolveHazardSuccess(state: GameState, playerId: string, route: Extende
     } as LogEntry);
 
     const flakResult = resolveFlakCheck({ stats: shipStats }, hazard);
+    const shipArmor = shipStats.armor || 0;
+    const flakValue = hazard.flak || 0;
 
     if (flakResult.destroyed) {
       // Ship destroyed by flak - clear pendingLaunch
@@ -613,6 +618,12 @@ function resolveHazardSuccess(state: GameState, playerId: string, route: Extende
         playerId,
         type: 'hazard'
       } as LogEntry);
+      // Log as success (mission completed) but with flakDestroyed = true
+      logOutcome(state, playerId, 'success', hazard, gasType, message, pendingLaunch.routeId, {
+        flak: flakValue,
+        armor: shipArmor,
+        flakDestroyed: true
+      });
     } else {
       // Mission complete, ship survives - clear pendingLaunch (ship on route)
       delete playerState.pendingLaunch;
@@ -622,6 +633,12 @@ function resolveHazardSuccess(state: GameState, playerId: string, route: Extende
         playerId,
         type: 'action'
       } as LogEntry);
+      // Log as success with flak data (ship survived)
+      logOutcome(state, playerId, 'success', hazard, gasType, message, pendingLaunch.routeId, {
+        flak: flakValue,
+        armor: shipArmor,
+        flakDestroyed: false
+      });
     }
 
     // Advance progress track for successful launch (Section 1.3)
@@ -687,6 +704,9 @@ function resolveHazardSuccess(state: GameState, playerId: string, route: Extende
       type: 'hazard'
     } as LogEntry);
   }
+
+  // Log success outcome for non-Age-2 missions (Age 1 and Age 3 route claims)
+  logOutcome(state, playerId, 'success', hazard, gasType, message, pendingLaunch.routeId);
 
   // Advance progress track for successful launch (Section 1.3)
   const progressState = state as GameState & { progressTrack?: number };

@@ -96,6 +96,11 @@ export interface LaunchOutcomeEntry {
   routeId?: string;         // Route attempted (if applicable)
   gasType: 'hydrogen' | 'helium';
   reason: string;           // Why this outcome occurred
+
+  // Flak data (Age 2+ only)
+  flak?: number;            // Flak value from hazard card (0-5)
+  armor?: number;           // Ship's armor value
+  flakDestroyed?: boolean;  // True if ship was destroyed by flak after mission success
 }
 
 interface GameContext {
@@ -220,7 +225,8 @@ class ResourceFlowLogger {
     hazardName: string,
     gasType: 'hydrogen' | 'helium',
     reason: string,
-    routeId?: string
+    routeId?: string,
+    flakData?: { flak?: number; armor?: number; flakDestroyed?: boolean }
   ): void {
     if (!this.enabled) return;
 
@@ -237,7 +243,13 @@ class ResourceFlowLogger {
       hazardName,
       gasType,
       reason,
-      routeId
+      routeId,
+      // Include flak data if provided (Age 2+ combat missions)
+      ...(flakData && {
+        flak: flakData.flak,
+        armor: flakData.armor,
+        flakDestroyed: flakData.flakDestroyed
+      })
     };
 
     this.launchOutcomes.push(entry);

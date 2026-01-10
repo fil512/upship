@@ -196,7 +196,9 @@ def analyze_launch_outcomes(outcomes: list) -> dict:
         gas = entry.get('gasType', 'hydrogen')
         hazard = entry.get('hazardName', 'Unknown')
         age = entry.get('age', 1)
-        has_flak = entry.get('hasFlak', False) or entry.get('flak', 0) > 0
+        flak_value = entry.get('flak', 0)
+        flak_destroyed = entry.get('flakDestroyed', False)
+        has_flak = flak_value > 0
 
         if outcome in counts:
             counts[outcome] += 1
@@ -209,10 +211,10 @@ def analyze_launch_outcomes(outcomes: list) -> dict:
         if outcome in by_hazard[hazard]:
             by_hazard[hazard][outcome] += 1
 
-        # Track Age 2 flak encounters
+        # Track Age 2 flak encounters (uses flakDestroyed field for accuracy)
         if age == 2 and has_flak:
             age2_flak['total'] += 1
-            if outcome == 'destroyed':
+            if flak_destroyed:
                 age2_flak['destroyed'] += 1
             else:
                 age2_flak['survived'] += 1
@@ -593,6 +595,11 @@ def print_launch_outcomes_report(launch_data: dict):
     # Age 2 Flak Analysis
     age2_flak = launch_data.get('age2_flak', {})
     age2_flak_survival = launch_data.get('age2_flak_survival')
+    outcomes = launch_data.get('outcomes', [])
+
+    # Collect individual flak encounters for detailed analysis
+    flak_encounters = [e for e in outcomes if e.get('age') == 2 and e.get('flak', 0) > 0]
+
     if age2_flak.get('total', 0) > 0:
         print("Age 2 Flak Analysis:")
         print(f"  Encounters: {age2_flak['total']}")
@@ -610,7 +617,28 @@ def print_launch_outcomes_report(launch_data: dict):
             flak_status = "⚠️  TOO DEADLY"
 
         print(f"  Survival Rate: {age2_flak_survival*100:.0f}% (goal: {flak_goal_pct:.0f}%) → {flak_diff:+.0f}% {flak_status}")
+
+        # Show individual encounters if there are any
+        if flak_encounters:
+            print()
+            print("  Individual Flak Encounters:")
+            for e in flak_encounters:
+                flak = e.get('flak', 0)
+                armor = e.get('armor', 0)
+                destroyed = e.get('flakDestroyed', False)
+                hazard = e.get('hazardName', 'Unknown')
+                faction = e.get('faction', '?')
+                result = "DESTROYED" if destroyed else "SURVIVED"
+                print(f"    [{faction.upper()[:3]}] {hazard}: Flak {flak} vs Armor {armor} → {result}")
         print()
+    else:
+        # No flak encounters - check if any Age 2 launches happened at all
+        age2_launches = [e for e in outcomes if e.get('age') == 2]
+        if age2_launches:
+            print("Age 2 Flak Analysis:")
+            print(f"  No flak encounters recorded in {len(age2_launches)} Age 2 launches")
+            print(f"  (Flak field may not be logged - check server code)")
+            print()
 
     # Diagnosis
     if success_rate < LAUNCH_SUCCESS_GOAL:
