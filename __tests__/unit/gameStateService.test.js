@@ -230,8 +230,8 @@ describe('GameStateService', () => {
 
       const result = await initializeGameState(1, players);
 
-      // Per Section 1.3: Fixed thresholds based on successful launches (8, 8, 6 per age)
-      expect(result.progressThresholds).toEqual({ age2: 8, age3: 16, end: 22 });
+      // Per Section 1.3: Fixed thresholds based on successful launches (6, 6, 3 per age)
+      expect(result.progressThresholds).toEqual({ age2: 6, age3: 12, end: 15 });
     });
 
     it('should rollback on error', async () => {

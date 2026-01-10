@@ -1244,7 +1244,7 @@ describe('Rules Compliance - Hazards', () => {
         category: 'hazard',  // Standard hazard in simplified system
         name: 'Critical Structural Stress',
         difficulty: 3,  // Uses unified difficulty formula, not engineerCost
-        flak: 4
+        flak: 2  // Reduced for ~50% survival
       };
 
       // Ship with reliability 1: Total Difficulty = 3 - 1 = 2 engineers needed
@@ -1284,7 +1284,7 @@ describe('Rules Compliance - Hazards', () => {
         category: 'hazard',  // Standard hazard in simplified system
         name: 'Critical Structural Stress',
         difficulty: 3,  // Uses unified difficulty formula
-        flak: 4
+        flak: 2  // Reduced for ~50% survival
       };
 
       // Ship with reliability 1: Total Difficulty = 3 - 1 = 2 engineers needed
@@ -1324,7 +1324,7 @@ describe('Rules Compliance - Hazards', () => {
         category: 'hazard',  // Standard hazard in simplified system
         name: 'Critical Structural Stress',
         difficulty: 3,  // Uses unified difficulty formula
-        flak: 4
+        flak: 2  // Reduced for ~50% survival
       };
 
       // Helium ship with reliability 1: Total Difficulty = 3 - 1 = 2 engineers needed

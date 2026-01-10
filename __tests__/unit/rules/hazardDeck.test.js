@@ -161,19 +161,15 @@ describe('Rules Compliance - Hazard Deck', () => {
         flakCounts[card.flak] = (flakCounts[card.flak] || 0) + 1;
       });
 
-      // From Appendix E detailed tables:
-      // 0 Flak (7): Clear Weather x4, Light Turbulence, Crosswind, Fuel Concern
-      // 1 Flak (4): Minor Engine Trouble, Gas Leak, Low Visibility, Headwind
-      // 2 Flak (6): Structural Stress, Strong Headwind, Icing Conditions, Severe Icing, Engine Fire x2
-      // 3 Flak (6): Engine Failure, Storm System, Navigation Error, Squall Line, Gas Cell Rupture x2
-      // 4 Flak (3): Structural Damage, Static Discharge, Critical Structural Stress
-      // 5 Flak (1): Catastrophic Explosion
-      expect(flakCounts[0]).toBe(7);
-      expect(flakCounts[1]).toBe(4);
-      expect(flakCounts[2]).toBe(6);
-      expect(flakCounts[3]).toBe(6); // Appendix E summary says 5, but detailed table shows 6
-      expect(flakCounts[4]).toBe(3);
-      expect(flakCounts[5]).toBe(1);
+      // Flak values reduced for ~50% survival with typical armor (0-2)
+      // 0 Flak (10): Clear Weather x4, Light Turbulence, Minor Engine Trouble, Crosswind, Low Visibility, Fuel Concern, Headwind
+      // 1 Flak (8): Gas Leak, Structural Stress, Strong Headwind, Icing Conditions, Navigation Error, Severe Icing, Engine Fire x2
+      // 2 Flak (8): Engine Failure, Storm System, Structural Damage, Squall Line, Gas Cell Rupture x2, Static Discharge, Critical Structural Stress
+      // 3 Flak (1): Catastrophic Explosion
+      expect(flakCounts[0]).toBe(10);
+      expect(flakCounts[1]).toBe(8);
+      expect(flakCounts[2]).toBe(8);
+      expect(flakCounts[3]).toBe(1);
     });
 
     it('should have Clear Weather cards with 0 Flak', () => {
@@ -184,38 +180,38 @@ describe('Rules Compliance - Hazard Deck', () => {
       });
     });
 
-    it('should have Engine Fire cards with 2 Flak', () => {
+    it('should have Engine Fire cards with 1 Flak', () => {
       const deck = createHazardDeck();
       const engineFires = deck.filter(card => card.type === 'engine_fire');
       engineFires.forEach(card => {
+        expect(card.flak).toBe(1);
+      });
+    });
+
+    it('should have Gas Cell Rupture cards with 2 Flak', () => {
+      const deck = createHazardDeck();
+      const gasCellRuptures = deck.filter(card => card.type === 'gas_cell_rupture');
+      gasCellRuptures.forEach(card => {
         expect(card.flak).toBe(2);
       });
     });
 
-    it('should have Gas Cell Rupture cards with 3 Flak', () => {
-      const deck = createHazardDeck();
-      const gasCellRuptures = deck.filter(card => card.type === 'gas_cell_rupture');
-      gasCellRuptures.forEach(card => {
-        expect(card.flak).toBe(3);
-      });
-    });
-
-    it('should have Static Discharge with 4 Flak', () => {
+    it('should have Static Discharge with 2 Flak', () => {
       const deck = createHazardDeck();
       const staticDischarge = deck.find(card => card.type === 'static_discharge');
-      expect(staticDischarge.flak).toBe(4);
+      expect(staticDischarge.flak).toBe(2);
     });
 
-    it('should have Catastrophic Explosion with 5 Flak', () => {
+    it('should have Catastrophic Explosion with 3 Flak', () => {
       const deck = createHazardDeck();
       const catastrophic = deck.find(card => card.type === 'catastrophic_explosion');
-      expect(catastrophic.flak).toBe(5);
+      expect(catastrophic.flak).toBe(3);
     });
 
-    it('should have Critical Structural Stress with 4 Flak', () => {
+    it('should have Critical Structural Stress with 2 Flak', () => {
       const deck = createHazardDeck();
       const criticalStress = deck.find(card => card.type === 'critical_structural_stress');
-      expect(criticalStress.flak).toBe(4);
+      expect(criticalStress.flak).toBe(2);
     });
   });
 
@@ -287,8 +283,8 @@ describe('Rules Compliance - Hazard Deck', () => {
               category: 'fire',
               name: 'Static Discharge',
               hydrogenOnly: true,
-              difficulty: 2,  // Per Appendix E
-              flak: 4
+              difficulty: 2,
+              flak: 2  // Reduced for ~50% survival
             }],
             hazardDiscardPile: [],
             blueprint: {
