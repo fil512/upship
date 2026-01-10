@@ -842,9 +842,25 @@ export function evaluateLaunchReadiness(
   }
 
   // Check 4: Do we have gas?
-  if (totalGas < 1) {
-    missing.push('need gas');
-    priorities.push('gas_depot');
+  // [BOT-LAUNCH-READY-01] SYNC: Gas needed = filled Frame slots (min 1) per Appendix D
+  let gasNeeded = 1; // Minimum baseline
+  if (player.blueprint) {
+    const filledFrameSlots = (player.blueprint.frameSlots || []).filter(s => s !== null).length;
+    gasNeeded = Math.max(1, filledFrameSlots);
+  }
+
+  // Check faction-specific gas type (USA uses helium, others use hydrogen)
+  const faction = player.faction?.toLowerCase() || '';
+  if (faction === 'usa') {
+    if (helium < gasNeeded) {
+      missing.push(`need ${gasNeeded - helium} more helium`);
+      priorities.push('gas_depot');
+    }
+  } else {
+    if (hydrogen < gasNeeded) {
+      missing.push(`need ${gasNeeded - hydrogen} more hydrogen`);
+      priorities.push('gas_depot');
+    }
   }
 
   // Check 5: Do we have minimum Range and Speed? (must be >= 1 to launch)
@@ -974,8 +990,11 @@ export function evaluateLaunchReadiness(
       }
     }
 
+    // [BOT-LAUNCH-READY-01] SYNC: Check faction-specific gas type
+    const gasOk = faction === 'usa' ? helium >= gasNeeded : hydrogen >= gasNeeded;
+
     const canLaunch = hangarShipCount > 0 && slotsReady && statsReady &&
-                      officers >= officersNeeded && totalGas >= 1 &&
+                      officers >= officersNeeded && gasOk &&
                       hasAchievableTarget && engineers >= minEngineersForSafeLaunch;
 
     return {
@@ -997,8 +1016,12 @@ export function evaluateLaunchReadiness(
     priorities.push('technical_institute');
   }
 
+  // [BOT-LAUNCH-READY-01] SYNC: Check faction-specific gas type (fallback path)
+  const factionFallback = player.faction?.toLowerCase() || '';
+  const gasOkFallback = factionFallback === 'usa' ? helium >= gasNeeded : hydrogen >= gasNeeded;
+
   const canLaunch = hangarShipCount > 0 && slotsReady &&
-                    officers >= officersNeeded && totalGas >= 1 &&
+                    officers >= officersNeeded && gasOkFallback &&
                     engineers >= minEngineersForSafeLaunch;
 
   return {
@@ -1217,7 +1240,35 @@ function buildLocationAction(
 
     case 'gas_depot': {
       // USA uses helium, others use hydrogen
+      // [BOT-LOC-ACTION-01] SYNC: USA helium uses market price logic
       const gasType = player.faction === 'usa' ? 'helium' : 'hydrogen';
+
+      // USA faction: check helium market price to decide between market and domestic supply
+      if (player.faction === 'usa' && gasType === 'helium') {
+        const heliumMarket = state.gasMarket?.heliumMarket;
+        if (heliumMarket) {
+          // Find current market price (lowest row with cubes)
+          let marketPrice: number | null = null;
+          let availableCubes = 0;
+          for (let i = 0; i < heliumMarket.cubes.length; i++) {
+            if (heliumMarket.cubes[i] > 0) {
+              if (marketPrice === null) {
+                marketPrice = heliumMarket.prices[i];
+              }
+              availableCubes += heliumMarket.cubes[i];
+            }
+          }
+
+          // Use domestic supply (£2/cube) if: market empty OR market price >= £3 OR not enough cubes
+          // Use market supply if: market price <= £2 (cheaper or same as domestic)
+          if (marketPrice === null || marketPrice >= 3 || availableCubes < 3) {
+            return { gasType, gasAmount: 3, source: 'domestic' };
+          } else {
+            return { gasType, gasAmount: 3, source: 'market' };
+          }
+        }
+      }
+
       return { gasType, gasAmount: 3 };
     }
 
@@ -1258,14 +1309,17 @@ export function findLaunchDecision(
   const shipStats = calculateBlueprintStats(player.blueprint, state.age || 1);
 
   // Find achievable routes
+  // [BOT-LAUNCH-01] SYNC: Include luxury check for Age III routes
   const achievableRoutes = routes.filter(route => {
     const routeRange = route.distance || route.range || 1;
     const routeSpeed = route.speedRequirement || route.speed || 0;
     const routeCeiling = route.ceilingRequirement || route.ceiling || 0;
+    const routeLuxury = route.luxury || 0;
 
     return shipStats.range >= routeRange &&
            shipStats.speed >= routeSpeed &&
-           shipStats.ceiling >= routeCeiling;
+           shipStats.ceiling >= routeCeiling &&
+           (shipStats.luxury || 0) >= routeLuxury;
   });
 
   if (achievableRoutes.length === 0) return null;

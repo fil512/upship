@@ -310,11 +310,12 @@ def _attempt_route_launches(
     client = get_client()
     launched = 0
 
-    # Sort routes by VALUE first (higher income = more VP), then by achievability
-    # This maximizes VP by claiming the most valuable routes we can fly
+    # Sort routes by VP first (highest first), then by income, then by achievability
+    # [BOT-LAUNCH-01] SYNC: Match server sorting - VP is primary value indicator
     routes_list = sorted(routes, key=lambda r: (
-        -(r.income or 0),  # Higher income first (negative for descending)
-        r.distance or 1,    # Then easier routes (lower distance)
+        -(r.prestige or 0),  # Higher VP/prestige first (primary sort)
+        -(r.income or 0),    # Then higher income
+        r.distance or 1,     # Then easier routes (lower distance)
         r.speed_requirement or 0  # Then lower speed requirement
     ))
 

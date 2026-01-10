@@ -1264,55 +1264,65 @@ def get_reveal_acquisitions(player: str, game_id: str) -> tuple[list[str], list[
             available_techs = [t for t in techs if t.get('id') not in owned_techs]
 
             if available_techs:
-                # VP-MAXIMIZING TECH ACQUISITION STRATEGY
-                # Priority order:
-                # 1. Techs that give VP directly (highest value)
-                # 2. Drive techs (range/speed enable more route options = more VP)
-                # 3. Structure techs (lift enables larger ships)
-                # 4. Fabric techs (weight reduction)
-                # 5. Gas techs (efficiency)
-                # 6. Component techs (income/luxury)
-
-                drive_keywords = {'engine', 'propeller', 'diesel', 'supercharg', 'turbo', 'pitch'}
-                structure_keywords = {'frame', 'girder', 'bracing', 'keel', 'geodetic', 'modular', 'hull'}
-                fabric_keywords = {'fabric', 'skin', 'canvas', 'cotton', 'latex', 'coating', 'doping', 'covering'}
-                gas_keywords = {'gas', 'valv', 'ballonet', 'cell', 'vent', 'recovery', 'helium', 'blaugas'}
-                # Age 2 armor keywords - critical for surviving flak
-                armor_keywords = {'armor', 'armored', 'armour', 'plating', 'reinforced'}
+                # [BOT-TECH-SCORE-01] SYNC: Use numeric scoring matching server calculateTechScore()
+                # Tech value = card VP * 3 + card income * 2 + upgrade tile score
+                # This matches server/services/botService.ts getRevealAcquisitions()
 
                 # Get current age for age-specific prioritization
                 current_age = state.age if state else 1
+                manifest = get_manifest()
 
-                def get_tech_priority(tech: dict) -> tuple[int, int]:
-                    """Returns (priority, -vp) for sorting. Lower = better.
+                def calculate_tech_score(tile_stats: dict, tile_weight: int, age: int) -> float:
+                    """Calculate tech tile score (higher = better).
 
-                    [BOT-TECH-PRIORITY-01] SYNC: Keep in sync with calculateTechScore() in server/services/botService.ts
+                    [BOT-TECH-SCORE-01] SYNC: Match calculateTechScore() in server/services/botService.ts
                     """
-                    tech_id = tech.get('id', '').lower()
-                    tech_name = tech.get('name', '').lower()
-                    combined = tech_id + ' ' + tech_name
-                    tech_vp = tech.get('vp', 0) or 0
+                    score = 0.0
+                    score += (tile_stats.get('speed', 0) or 0) * 3      # Speed is very valuable
+                    score += (tile_stats.get('range', 0) or 0) * 3      # Range is very valuable
+                    score += (tile_stats.get('ceiling', 0) or 0) * 2   # Ceiling is moderately valuable
+                    score += (tile_stats.get('reliability', 0) or 0) * 2  # Reliability helps hazards
+                    score += (tile_stats.get('income', 0) or 0) * 2    # Income generates money
+                    score += (tile_stats.get('luxury', 0) or 0) * 1    # Luxury for passenger routes
+                    score += (tile_stats.get('lift', 0) or 0) * 1      # Direct lift is useful
+                    score += (tile_stats.get('gas_socket', 0) or 0) * 5  # Gas socket = +5 lift each
 
-                    # Techs with VP get highest priority (negative VP for descending sort)
-                    if tech_vp > 0:
-                        return (0, -tech_vp)
+                    # Age 2: Armor is critical for surviving flak
+                    armor_multiplier = 15 if age == 2 else 2
+                    score += (tile_stats.get('armor', 0) or 0) * armor_multiplier
 
-                    # Age 2: Armor is critical for surviving flak (priority 1)
-                    if current_age == 2 and any(kw in combined for kw in armor_keywords):
-                        return (1, 0)  # Top priority in Age 2 - survival!
+                    # Weight is negative (heavier = worse)
+                    score -= tile_weight * 1
 
-                    if any(kw in combined for kw in drive_keywords):
-                        return (2, 0)  # High priority - range/speed for routes
-                    if any(kw in combined for kw in structure_keywords):
-                        return (3, 0)  # Frame/lift
-                    if any(kw in combined for kw in fabric_keywords):
-                        return (4, 0)  # Fabric/weight
-                    if any(kw in combined for kw in gas_keywords):
-                        return (5, 0)  # Gas efficiency
-                    return (6, 0)  # Components and other
+                    return score
 
-                # Sort by priority first, then by cost (prefer cheaper within same priority)
-                available_techs.sort(key=lambda t: (get_tech_priority(t), t.get('cost', 0)))
+                def get_tech_value(tech: dict) -> float:
+                    """Calculate total tech value for prioritization (higher = better).
+
+                    [BOT-TECH-SCORE-01] SYNC: Match getRevealAcquisitions() in server/services/botService.ts
+                    """
+                    # Direct card benefits
+                    card_vp = tech.get('vp', 0) or 0
+                    card_income = tech.get('income', 0) or 0
+
+                    # Get upgrade tile stats
+                    upgrade_score = 0.0
+                    tech_id = tech.get('id', '')
+                    upgrades = manifest.get_upgrades_for_tech(tech_id)
+                    if upgrades:
+                        # Use first upgrade (primary tile)
+                        upgrade = upgrades[0]
+                        tile_data = manifest.upgrades.get(upgrade['id'], {})
+                        tile_stats = tile_data.get('stats', {})
+                        tile_weight = tile_data.get('weight', 0) or 0
+                        upgrade_score = calculate_tech_score(tile_stats, tile_weight, current_age)
+
+                    # VP worth ~3 points, income worth ~2 points, upgrade score as-is
+                    total_value = card_vp * 3 + card_income * 2 + upgrade_score
+                    return total_value
+
+                # Sort by value (highest first), then by cost (prefer cheaper within same value)
+                available_techs.sort(key=lambda t: (-get_tech_value(t), t.get('cost', 0)))
 
                 # Buy as many techs as we can afford
                 remaining_research = available_research
