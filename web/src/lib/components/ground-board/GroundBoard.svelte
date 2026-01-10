@@ -2,6 +2,7 @@
 	import { createEventDispatcher } from 'svelte';
 	import { gameState, myState } from '$lib/stores/gameState';
 	import Location from './Location.svelte';
+	import HeliumMarket from './HeliumMarket.svelte';
 	import type { GroundBoardPlacements, PlayerState } from '$lib/types/game';
 	import { calculateHullCost } from '$lib/utils/shipStats';
 	import { symbolIcons } from '$lib/icons/symbols';
@@ -12,6 +13,7 @@
 	export let isMyTurn: boolean = false;
 	export let isWorkerPlacementPhase: boolean = false;
 	export let heliumPrice: number = 2;
+	export let heliumMarket: { cubes: number[]; prices: number[] } | null = null;
 
 	const dispatch = createEventDispatcher<{
 		placeAgent: { locationId: string };
@@ -221,6 +223,16 @@
 				/>
 			{/each}
 		</div>
+
+		<!-- Column 4: Helium Market -->
+		{#if heliumMarket}
+			<div class="market-column">
+				<HeliumMarket
+					cubes={heliumMarket.cubes}
+					prices={heliumMarket.prices}
+				/>
+			</div>
+		{/if}
 	</div>
 </div>
 
@@ -249,7 +261,7 @@
 
 	.location-columns {
 		display: grid;
-		grid-template-columns: repeat(3, 1fr);
+		grid-template-columns: repeat(3, 1fr) auto;
 		gap: var(--spacing-md);
 	}
 
@@ -310,10 +322,19 @@
 		border-color: #ffc107;
 	}
 
+	.market-column {
+		display: flex;
+		align-items: flex-start;
+	}
+
 	/* Stack columns on narrow screens */
 	@media (max-width: 900px) {
 		.location-columns {
 			grid-template-columns: 1fr;
+		}
+
+		.market-column {
+			justify-content: center;
 		}
 	}
 </style>

@@ -593,6 +593,15 @@
 	// Derived values
 	$: isWorkerPlacementPhase = $gameState?.phase === 'worker_placement';
 	$: placements = $gameState?.groundBoard?.placements || {};
+	// Calculate current helium price from market (lowest row with cubes)
+	$: currentHeliumPrice = (() => {
+		const market = $gameState?.gasMarket?.heliumMarket;
+		if (!market) return 3; // Default starting price
+		for (let i = 0; i < market.cubes.length; i++) {
+			if (market.cubes[i] > 0) return market.prices[i];
+		}
+		return 0; // Market is empty
+	})();
 	$: routes = $gameState?.map?.routes || [];
 	$: claimedRouteIds = routes.filter((r) => r.claimed).map((r) => r.id);
 	$: cities = $gameState?.map?.cities || {};
@@ -1261,7 +1270,8 @@
 									{selectedCardSymbol}
 									isMyTurn={$isMyTurn}
 									{isWorkerPlacementPhase}
-									heliumPrice={$gameState.gasMarket?.helium || 2}
+									heliumPrice={currentHeliumPrice}
+									heliumMarket={$gameState.gasMarket?.heliumMarket || null}
 									on:placeAgent={handlePlaceAgent}
 								/>
 							</section>

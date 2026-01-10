@@ -205,7 +205,13 @@ const createTestGameState = (playerIds = [1, 2, 3, 4]) => ({
   marketCards: [],
   progressTrack: 0,
   progressThresholds: { age2: 4, age3: 8, end: 12 },
-  gasMarket: { hydrogen: 1, helium: 2 },
+  gasMarket: {
+    hydrogen: 1,
+    heliumMarket: {
+      cubes: [0, 0, 3, 3, 3, 3],  // £1-£2 empty, £3-£6 full (game start)
+      prices: [1, 2, 3, 4, 5, 6]
+    }
+  },
   map: {
     name: 'Western Europe',
     routes: [

@@ -10,6 +10,7 @@ const { setupMissionRow } = require('../../data/combatMissions');
 const { shuffleArray } = require('../../utils/random');
 const { calculateTurnOrder } = require('./turnOrder');
 const { refreshRnDBoard, refreshMarketRow, refillRDBoard } = require('./marketHelpers');
+const { ageResetHeliumMarket } = require('../../services/gameStateHelpers');
 
 // Internal tech card type with VP and income (from TECH_CARD_BAG constants)
 interface TechCardWithMeta {
@@ -487,8 +488,8 @@ function completeAgeTransition(state: AgeTransitionState): void {
     state.marketCards = [];
   }
 
-  // Reset gas market prices for new age (Section 4.4: Helium resets to £2 at Age Transitions)
-  state.gasMarket = { hydrogen: 1, helium: 2 };
+  // Reset helium market for new age (Section 9.4.5: Fill £3+ rows only, preserve £1-£2)
+  ageResetHeliumMarket(state);
 
   // Clean up transition state
   delete state.ageTransitionBlueprintDesign;

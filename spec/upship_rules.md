@@ -149,7 +149,7 @@ When the marker reaches an Age threshold (8, 16, or 22 cumulative launches), tha
 | — | Officer Tokens |
 | — | Engineer Tokens |
 | — | Gas Cubes (Hydrogen and Helium) |
-| 1 | Helium Market Track |
+| 1 | Helium Market Board (6 price rows × 3 cube slots) |
 
 ---
 
@@ -170,7 +170,7 @@ When the marker reaches an Age threshold (8, 16, or 22 cumulative launches), tha
 6. Set the **Progress Track** marker to 0.
 7. Set up **Officer** and **Engineer** token supplies.
 8. Shuffle the **Market Deck** and deal 5 cards face-up to form the Market Row. Place **The Aeronaut** beside the Market Row as the always-available Reserve Card.
-9. Set the **Helium Market Track** to £2.
+9. Set up the **Helium Market Board**: Place 3 cubes on each of the £3, £4, £5, and £6 rows (12 cubes total). Leave the £1 and £2 rows empty.
 
 ## 3.2 Player Setup
 
@@ -476,16 +476,20 @@ See **Section 8: Launching Ships** for the complete procedure.
 **Effects:**
 1. Draw 2 cards from your deck; discard 1.
 2. Take the **First Player Token.**
-3. Reduce Helium Market Track by 1 step (minimum £2).
+3. Add 3 helium cubes to the market (§9.4.4).
 
 ## 6.9 Gas Depot (Wrench)
 
 **Action:** Purchase lifting gas.
 
-| Gas Type | Price | Effect on Market |
-|----------|-------|------------------|
-| Hydrogen | £1/cube | None |
-| Helium | Market price (£2–£15) | Track advances +1 per cube purchased |
+| Gas Type | Price | Requirements |
+|----------|-------|--------------|
+| Hydrogen | £1/cube (fixed) | None |
+| Helium | Market price (£1–£6) | Helium Handling tech |
+
+**Helium Purchases:** Each cube is priced based on its row on the Helium Market Board. Cubes are removed from the lowest-price row first. See §9.4 for full details.
+
+**USA Exception:** USA may choose to buy helium from domestic supply at £2/cube instead of the market (§9.4.6).
 
 **Result:** Add cubes to your Gas Reserve.
 
@@ -676,18 +680,97 @@ Each **Gas Cube** provides **+5 Lift** regardless of type.
 | Gas Type | Price | Fire Risk |
 |----------|-------|-----------|
 | **Hydrogen** | £1/cube (fixed) | Vulnerable |
-| **Helium** | £2–£15/cube (market) | Immune |
+| **Helium** | £1–£6/cube (market) | Immune |
 
 **Helium Requirements:**
 - Requires **Helium Handling** Technology
-- Non-USA purchases advance Market Track (+1 per cube)
-- Market resets to £2 at each Age Transition
+- Purchase removes cubes from market (see §9.4)
+- USA may use domestic supply at £2/cube (see §9.4.6)
 
 **Gas Selection:** Choose one gas type per launch—no mixing.
 
 **Aerodynamic Lift:** Some Frame technologies (Aerodynamic Hull Design, Dynamic Lift Surfaces) provide Lift without requiring gas cubes, representing aerodynamic lift from hull design. This Lift is permanent and stacks with gas cube Lift.
 
 > **Example:** Marco needs 15 Lift (3 cubes). Hydrogen costs £3 total. Helium at £4/cube costs £12—safer but four times the price.
+
+## 9.4 Helium Market
+
+The Helium Market uses a supply-based pricing system inspired by commodity markets. Cubes are arranged on a price track; as cubes are purchased, prices rise.
+
+### 9.4.1 Market Structure
+
+The market has 6 price rows, each holding up to 3 cubes:
+
+| Row | Price | Game Start |
+|-----|-------|------------|
+| 1   | £1    | Empty      |
+| 2   | £2    | Empty      |
+| 3   | £3    | 3 cubes ◀ Starting price |
+| 4   | £4    | 3 cubes    |
+| 5   | £5    | 3 cubes    |
+| 6   | £6    | 3 cubes    |
+
+**Starting Supply:** 12 cubes (rows £3-£6 full)
+**Starting Price:** £3/cube
+
+### 9.4.2 Purchasing Helium
+
+When purchasing helium from the Gas Depot:
+
+1. **Remove cubes from the lowest-price row first**
+2. **Each cube costs its row price** (not a flat rate)
+3. **Buy as many cubes as you can afford**
+4. **Current price** = price of the lowest row with cubes remaining
+
+**Example:** Market has 1 cube at £3 and 3 cubes at £4. You buy 3 cubes:
+- 1st cube: £3 (depletes £3 row)
+- 2nd cube: £4
+- 3rd cube: £4
+- **Total: £11**
+
+Current price is now £4.
+
+### 9.4.3 Empty Market
+
+When the market has no cubes remaining:
+- **Non-USA players cannot purchase helium** — they must wait for Ministry replenishment
+- **USA players can still purchase** from domestic supply (see USA Faction)
+
+### 9.4.4 Ministry Replenishment
+
+When a player takes the Ministry action, add 3 cubes to the market:
+- Fill the **most expensive empty slots first** (top-down)
+- This builds supply buffer without immediately lowering the current price
+
+**Example:** If £5 and £6 rows are empty:
+- 3 cubes fill the £6 row
+- Current price unchanged; future supply secured
+
+### 9.4.5 Age Transition
+
+At Age Transition, the market partially resets:
+- **Rows £3-£6:** Fill any empty slots to 3 cubes each
+- **Rows £1-£2:** Preserved (Ministry-generated cubes remain)
+
+This means:
+- Age reset can only lower the price, never raise it
+- Strategic Ministry actions late in an Age carry cheap helium into the next Age
+
+### 9.4.6 USA Domestic Supply
+
+USA has domestic helium reserves and may choose between two options:
+
+| Option | Price | Effect on Market |
+|--------|-------|------------------|
+| Buy from Market | Row price per cube | Cubes removed (like other players) |
+| Buy from Domestic Supply | £2/cube (fixed) | No effect on market |
+
+**Strategic Choice:**
+- At £1-£2 market price: Buy from market (cheaper or equal)
+- At £3+ market price: Buy from domestic (£2 is cheaper)
+- When market is empty: Domestic supply is the only option
+
+USA's guaranteed access creates asymmetric tension—non-USA players compete for limited supply while USA always has access.
 
 ---
 
@@ -935,7 +1018,7 @@ Each nation has unique advantages and constraints.
 
 **Starting Stats:** Speed 1, Range 1, Ceiling 1, Reliability 1
 
-**Starting Advantage — Helium Monopoly:** Starts with Helium Handling and 2 Helium cubes. USA purchases do not advance the Helium market track.
+**Starting Advantage — Helium Monopoly:** Starts with Helium Handling and 2 Helium cubes. USA may purchase helium from domestic supply at £2/cube instead of the market. When the market is empty, only USA can acquire helium (see §9.4.6).
 
 **Synergy — Water Recovery:** The Age III *Water Recovery System* technology pairs well with USA's helium doctrine, reducing helium costs significantly.
 
@@ -1055,7 +1138,7 @@ When a Hydrogen ship is destroyed by a Fire or Catastrophic hazard during a Luxu
 | **Ground Board** | Shared board with 12 action spaces | §6 |
 | **Hangar** | Zone holding ships ready to launch (max 6) | §4.4 |
 | **Hazard Check** | Drawing and resolving a Hazard Card | §8.2 |
-| **Helium** | Safe, non-flammable gas (£2–£15/cube) | §9.3 |
+| **Helium** | Safe, non-flammable gas (£1–£6/cube, market-based) | §9.4 |
 | **Hindenburg Disaster** | Game end trigger from Hydrogen Luxury Launch | §1.2 |
 | **Hull Cost** | £ to build a ship | §7.1 |
 | **Hydrogen** | Standard gas (£1/cube), fire vulnerable | §9.3 |
@@ -1123,7 +1206,7 @@ When a Hydrogen ship is destroyed by a Fire or Catastrophic hazard during a Luxu
 | Type | Price | Lift | Fire Risk |
 |------|-------|------|-----------|
 | Hydrogen | £1/cube | +5 | Vulnerable |
-| Helium | £2–£15/cube | +5 | Immune |
+| Helium | £1–£6/cube (market) | +5 | Immune |
 
 ## Ground Board Summary
 

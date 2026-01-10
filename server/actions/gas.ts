@@ -6,7 +6,13 @@
 import type { GameState, LogEntry } from '@upship/api';
 
 const { GameRuleError, InsufficientFundsError } = require('../errors');
-const { advanceHeliumMarket } = require('./helpers/marketHelpers');
+const {
+  getCurrentHeliumPrice,
+  getAvailableHeliumCubes,
+  calculateHeliumCost,
+  purchaseHeliumFromMarket
+} = require('../services/gameStateHelpers');
+const { USA_DOMESTIC_HELIUM_PRICE } = require('../config/constants');
 
 // Type alias for component slot entries (can be string ID or object with id)
 type ComponentSlotEntry = string | { id: string } | null;
@@ -14,6 +20,7 @@ type ComponentSlotEntry = string | { id: string } | null;
 interface BuyGasData {
   gasType: 'hydrogen' | 'helium';
   amount: number;
+  source?: 'market' | 'domestic';  // USA only: 'domestic' for £2/cube fixed price
   _internal?: boolean;
 }
 
@@ -30,8 +37,9 @@ interface ActionResult {
  * 2. NOT directly during reveal phase or without proper agent placement
  */
 function processBuyGas(state: GameState, playerId: string, data: BuyGasData): ActionResult {
-  const { gasType, amount, _internal = false } = data;
+  const { gasType, amount, source = 'market', _internal = false } = data;
   const playerState = state.players[playerId];
+  const isUSA = playerState.faction === 'usa';
 
   // Per Section 5.1: Actions execute when placing agent, not separately
   // Only allow direct calls during worker_placement when player has agent at gas_depot
@@ -59,7 +67,7 @@ function processBuyGas(state: GameState, playerId: string, data: BuyGasData): Ac
     throw new GameRuleError('Invalid gas type');
   }
 
-  // Helium requires Helium Handling tech card (Section 9.3)
+  // Helium requires Helium Handling tech card (Section 9.4)
   if (gasType === 'helium') {
     // Tech card IDs are lowercase (e.g., 'helium_handling')
     // Tech cards array may contain strings (IDs) or objects with id property
@@ -71,43 +79,100 @@ function processBuyGas(state: GameState, playerId: string, data: BuyGasData): Ac
     }
   }
 
-  let price = state.gasMarket[gasType] * amount;
-
-  // GAP-076: Reclamation System provides -£2 Lifting Gas cost per Appendix D
+  // Component-based cost reductions
   const componentSlots = (playerState.blueprint as { componentSlots?: ComponentSlotEntry[] })?.componentSlots;
   const hasReclamationSystem = componentSlots?.some(
     (comp: ComponentSlotEntry) => comp === 'reclamation_system' || (comp && typeof comp === 'object' && comp.id === 'reclamation_system')
   );
-  if (hasReclamationSystem) {
-    price = Math.max(0, price - 2);
-  }
-
-  // GAP-077: Exhaust Condensers provides -£3 Helium cost per Appendix D (USA specialty)
   const hasExhaustCondensers = componentSlots?.some(
     (comp: ComponentSlotEntry) => comp === 'exhaust_condensers' || (comp && typeof comp === 'object' && comp.id === 'exhaust_condensers')
   );
-  if (hasExhaustCondensers && gasType === 'helium') {
-    price = Math.max(0, price - 3);
+
+  // HYDROGEN: Fixed price £1/cube
+  if (gasType === 'hydrogen') {
+    let price = state.gasMarket.hydrogen * amount;
+    // GAP-076: Reclamation System provides -£2 Lifting Gas cost per Appendix D
+    if (hasReclamationSystem) {
+      price = Math.max(0, price - 2);
+    }
+    if (playerState.cash < price) {
+      throw new InsufficientFundsError(price, playerState.cash);
+    }
+    playerState.cash -= price;
+    playerState.gasCubes.hydrogen += amount;
+
+    state.log.push({
+      timestamp: new Date().toISOString(),
+      message: `Bought ${amount} hydrogen for £${price}`,
+      playerId,
+      type: 'action'
+    } as LogEntry);
+    return { newState: state };
   }
+
+  // HELIUM: Brass-style supply market (Section 9.4)
+
+  // USA can choose domestic supply at £2/cube (Section 9.4.6)
+  if (source === 'domestic') {
+    if (!isUSA) {
+      throw new GameRuleError('Only USA can purchase from domestic helium supply');
+    }
+    let price = USA_DOMESTIC_HELIUM_PRICE * amount;
+    // Apply cost reductions
+    if (hasReclamationSystem) price = Math.max(0, price - 2);
+    if (hasExhaustCondensers) price = Math.max(0, price - 3);
+
+    if (playerState.cash < price) {
+      throw new InsufficientFundsError(price, playerState.cash);
+    }
+    playerState.cash -= price;
+    playerState.gasCubes.helium += amount;
+
+    state.log.push({
+      timestamp: new Date().toISOString(),
+      message: `USA bought ${amount} helium from domestic supply for £${price}`,
+      playerId,
+      type: 'action'
+    } as LogEntry);
+    return { newState: state };
+  }
+
+  // Market purchase
+  const available = getAvailableHeliumCubes(state);
+  if (available === 0) {
+    if (isUSA) {
+      throw new GameRuleError('Market is empty. USA can still buy from domestic supply (source: "domestic").');
+    }
+    throw new GameRuleError('Helium market is empty. Wait for Ministry replenishment.');
+  }
+
+  if (amount > available) {
+    throw new GameRuleError(`Only ${available} helium cubes available in market`);
+  }
+
+  let price = calculateHeliumCost(state, amount);
+  // Apply cost reductions
+  if (hasReclamationSystem) price = Math.max(0, price - 2);
+  if (hasExhaustCondensers) price = Math.max(0, price - 3);
 
   if (playerState.cash < price) {
     throw new InsufficientFundsError(price, playerState.cash);
   }
 
-  playerState.cash -= price;
-  playerState.gasCubes[gasType] += amount;
+  // Execute purchase (removes cubes from market)
+  const actualBaseCost = purchaseHeliumFromMarket(state, amount);
+  // Recalculate actual price with reductions
+  let actualPrice = actualBaseCost;
+  if (hasReclamationSystem) actualPrice = Math.max(0, actualPrice - 2);
+  if (hasExhaustCondensers) actualPrice = Math.max(0, actualPrice - 3);
 
-  // Advance market price (unless USA buying helium)
-  const isUSA = playerState.faction === 'usa';
-  if (gasType === 'helium' && !isUSA) {
-    // Helium uses stepped progression: advance 1 step per cube purchased
-    advanceHeliumMarket(state, amount);
-  }
-  // Note: Hydrogen price is fixed at £1 per Section 4.4
+  playerState.cash -= actualPrice;
+  playerState.gasCubes.helium += amount;
 
+  const newPrice = getCurrentHeliumPrice(state);
   state.log.push({
     timestamp: new Date().toISOString(),
-    message: `Bought ${amount} ${gasType} for £${price}`,
+    message: `Bought ${amount} helium from market for £${actualPrice} (new price: £${newPrice || 'empty'})`,
     playerId,
     type: 'action'
   } as LogEntry);

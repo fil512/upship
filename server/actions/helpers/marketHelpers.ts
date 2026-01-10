@@ -27,20 +27,20 @@ function getHeliumPriceIndex(price: number): number {
 
 /**
  * Advance helium market price by N steps
+ * @deprecated Use purchaseHeliumFromMarket from gameStateHelpers instead
  */
-function advanceHeliumMarket(state: MarketState, steps: number = 1): void {
-  const currentIdx = getHeliumPriceIndex(state.gasMarket.helium);
-  const newIdx = Math.min(currentIdx + steps, (HELIUM_PRICE_TRACK as number[]).length - 1);
-  state.gasMarket.helium = (HELIUM_PRICE_TRACK as number[])[newIdx];
+function advanceHeliumMarket(_state: MarketState, _steps: number = 1): void {
+  // Legacy: no longer used, helium now uses supply-based market
+  console.warn('advanceHeliumMarket is deprecated - use purchaseHeliumFromMarket from gameStateHelpers');
 }
 
 /**
  * Reduce helium market price by N steps
+ * @deprecated Use ministryReplenishHelium from gameStateHelpers instead
  */
-function reduceHeliumMarket(state: MarketState, steps: number = 1): void {
-  const currentIdx = getHeliumPriceIndex(state.gasMarket.helium);
-  const newIdx = Math.max(currentIdx - steps, 0);
-  state.gasMarket.helium = (HELIUM_PRICE_TRACK as number[])[newIdx];
+function reduceHeliumMarket(_state: MarketState, _steps: number = 1): void {
+  // Legacy: no longer used, now use ministryReplenishHelium
+  console.warn('reduceHeliumMarket is deprecated - use ministryReplenishHelium from gameStateHelpers');
 }
 
 /**

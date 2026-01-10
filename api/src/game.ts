@@ -372,7 +372,13 @@ export interface GameState {
 	techCardsClaimed?: Record<string, string>;
 	progressTrack: number;
 	progressThresholds: { age2: number; age3: number; end: number };
-	gasMarket: { hydrogen: number; helium: number };
+	gasMarket: {
+		hydrogen: number;  // Fixed price (always £1)
+		heliumMarket: {
+			cubes: number[];   // Cubes per price row [£1, £2, £3, £4, £5, £6]
+			prices: number[];  // Price per row (constant: [1, 2, 3, 4, 5, 6])
+		};
+	};
 	map: GameMap;
 	log: LogEntry[];      // Last 5 entries only (full log fetched on demand)
 	logCount?: number;    // Total log entry count

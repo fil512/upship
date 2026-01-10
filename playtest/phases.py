@@ -19,7 +19,7 @@ from .state import (
     get_state, get_phase, get_player_agents, get_player_hand, get_available_locations,
     get_current_placer, get_available_routes, get_available_routes_for_player, get_mission_row,
     get_player_id, get_ship_details, get_blueprint_stats, format_blueprint_log,
-    get_last_log_entries, get_gas_preference, get_player_data
+    get_last_log_entries, get_gas_preference, get_player_data, get_helium_market_info
 )
 from .shared_state import get_shared_state
 from .strategy import (
@@ -979,7 +979,22 @@ def _execute_placement(player: str, game_id: str, card: dict, location: dict, lo
         gas_type = "helium" if faction == "usa" else "hydrogen"
         kwargs['gasType'] = gas_type
         kwargs['gasAmount'] = 3
-        action_desc = f"placed at {loc_id} and bought 3 {gas_type}"
+
+        # USA helium: check market price to decide between market and domestic supply
+        if faction == "usa" and gas_type == "helium":
+            market_info = get_helium_market_info(game_id)
+            market_price = market_info.get('current_price')
+            available = market_info.get('available_cubes', 0)
+            # Use domestic supply (£2/cube) if: market empty OR market price >= £3
+            # Use market supply if: market price <= £2 (cheaper or same)
+            if market_price is None or market_price >= 3 or available < 3:
+                kwargs['source'] = 'domestic'
+                action_desc = f"placed at {loc_id} and bought 3 {gas_type} from domestic supply"
+            else:
+                kwargs['source'] = 'market'
+                action_desc = f"placed at {loc_id} and bought 3 {gas_type} from market at £{market_price}"
+        else:
+            action_desc = f"placed at {loc_id} and bought 3 {gas_type}"
     elif loc_id == 'flight_school':
         kwargs['levels'] = 1
         action_desc = f"placed at {loc_id} and upgraded officer income"

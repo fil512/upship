@@ -24,9 +24,9 @@ const {
   startNewRound
 } = require('../actions/helpers/phaseTransition');
 
-// Helium market track: stepped progression (Section 4.4)
-// £2 → £3 → £4 → £5 → £6 → £8 → £10 → £15
-const HELIUM_PRICE_TRACK = [2, 3, 4, 5, 6, 8, 10, 15];
+// Helium market track: linear progression (Section 9.4)
+// Price per row: £1 → £2 → £3 → £4 → £5 → £6
+const HELIUM_PRICE_TRACK = [1, 2, 3, 4, 5, 6];
 
 // Tech tile stat structure
 interface TechTileStats {
@@ -263,24 +263,114 @@ function refreshMarketRow(state: GameState): void {
   extState.marketRow = marketRow;
 }
 
-// Get current helium price step index
+// ============================================================================
+// HELIUM MARKET FUNCTIONS (Brass Lancashire-style supply market)
+// ============================================================================
+
+/**
+ * Get current helium price (price of lowest row with cubes available)
+ * Returns null if market is empty
+ */
+function getCurrentHeliumPrice(state: GameState): number | null {
+  const { cubes, prices } = state.gasMarket.heliumMarket;
+  for (let i = 0; i < cubes.length; i++) {
+    if (cubes[i] > 0) {
+      return prices[i];
+    }
+  }
+  return null; // Market is empty
+}
+
+/**
+ * Get total available helium cubes in market
+ */
+function getAvailableHeliumCubes(state: GameState): number {
+  return state.gasMarket.heliumMarket.cubes.reduce((sum, c) => sum + c, 0);
+}
+
+/**
+ * Calculate total cost for purchasing N helium cubes from market
+ * Each cube is priced based on its row
+ */
+function calculateHeliumCost(state: GameState, count: number): number {
+  const { cubes, prices } = state.gasMarket.heliumMarket;
+  let totalCost = 0;
+  let remaining = count;
+
+  for (let i = 0; i < cubes.length && remaining > 0; i++) {
+    const available = cubes[i];
+    const toTake = Math.min(available, remaining);
+    totalCost += toTake * prices[i];
+    remaining -= toTake;
+  }
+
+  return totalCost;
+}
+
+/**
+ * Purchase helium from market (removes cubes, returns cost)
+ * Does NOT check if player can afford - caller must verify
+ */
+function purchaseHeliumFromMarket(state: GameState, count: number): number {
+  const { cubes, prices } = state.gasMarket.heliumMarket;
+  let totalCost = 0;
+  let remaining = count;
+
+  for (let i = 0; i < cubes.length && remaining > 0; i++) {
+    const toTake = Math.min(cubes[i], remaining);
+    totalCost += toTake * prices[i];
+    cubes[i] -= toTake;
+    remaining -= toTake;
+  }
+
+  return totalCost;
+}
+
+/**
+ * Ministry action: Add 3 cubes to market (most expensive empty slots first)
+ * This is the Brass Lancashire "sell to market" mechanism
+ */
+function ministryReplenishHelium(state: GameState, cubesToAdd: number = 3): void {
+  const { cubes } = state.gasMarket.heliumMarket;
+  let remaining = cubesToAdd;
+
+  // Fill from most expensive (highest index) to least expensive (lowest index)
+  for (let i = cubes.length - 1; i >= 0 && remaining > 0; i--) {
+    const emptySlots = 3 - cubes[i]; // Max 3 cubes per row
+    const toAdd = Math.min(emptySlots, remaining);
+    cubes[i] += toAdd;
+    remaining -= toAdd;
+  }
+}
+
+/**
+ * Age transition: Fill empty slots at £3+ only (preserve £1-£2)
+ * This ensures age reset only lowers prices, never raises them
+ */
+function ageResetHeliumMarket(state: GameState): void {
+  const { cubes } = state.gasMarket.heliumMarket;
+  // Only fill rows at index 2+ (£3, £4, £5, £6)
+  for (let i = 2; i < cubes.length; i++) {
+    cubes[i] = 3; // Fill to max
+  }
+  // Rows 0-1 (£1-£2) are preserved as-is
+}
+
+// Legacy functions for backward compatibility (deprecated)
+
 function getHeliumPriceIndex(price: number): number {
   const idx = HELIUM_PRICE_TRACK.indexOf(price);
   return idx >= 0 ? idx : 0;
 }
 
-// Advance helium market by N steps
-function advanceHeliumMarket(state: GameState, steps: number = 1): void {
-  const currentIdx = getHeliumPriceIndex(state.gasMarket.helium);
-  const newIdx = Math.min(currentIdx + steps, HELIUM_PRICE_TRACK.length - 1);
-  state.gasMarket.helium = HELIUM_PRICE_TRACK[newIdx];
+function advanceHeliumMarket(state: GameState, _steps: number = 1): void {
+  // Legacy: no longer used, helium now uses supply-based market
+  console.warn('advanceHeliumMarket is deprecated - use purchaseHeliumFromMarket');
 }
 
-// Reduce helium market by N steps
-function reduceHeliumMarket(state: GameState, steps: number = 1): void {
-  const currentIdx = getHeliumPriceIndex(state.gasMarket.helium);
-  const newIdx = Math.max(currentIdx - steps, 0);
-  state.gasMarket.helium = HELIUM_PRICE_TRACK[newIdx];
+function reduceHeliumMarket(state: GameState, _steps: number = 1): void {
+  // Legacy: no longer used, now use ministryReplenishHelium
+  console.warn('reduceHeliumMarket is deprecated - use ministryReplenishHelium');
 }
 
 // Check if player has any cards that match available locations
@@ -443,16 +533,18 @@ function executeLocationAction(
         });
       }
 
-      // Reduce Helium Market Track by 1 step
-      reduceHeliumMarket(state, 1);
+      // Add 3 helium cubes to market (most expensive empty slots first)
+      ministryReplenishHelium(state, 3);
+      const newPrice = getCurrentHeliumPrice(state);
+      const available = getAvailableHeliumCubes(state);
       stateWithLog.log.push({
         timestamp: new Date().toISOString(),
-        message: `Ministry: Helium price reduced to £${state.gasMarket.helium}`,
+        message: `Ministry: Added 3 helium cubes to market (now ${available} available, current price £${newPrice || 'N/A'})`,
         playerId,
         type: 'action'
       });
 
-      return { success: true, message: 'Gained turn priority. Drew 2, discarded 1. Helium market reduced.' };
+      return { success: true, message: `Gained turn priority. Drew 2, discarded 1. Added 3 helium cubes to market.` };
     }
 
     case 'gas_depot':
@@ -663,7 +755,14 @@ module.exports = {
   refreshRnDBoard,
   refreshMarketRow,
 
-  // Gas market
+  // Gas market (Brass Lancashire-style helium market)
+  getCurrentHeliumPrice,
+  getAvailableHeliumCubes,
+  calculateHeliumCost,
+  purchaseHeliumFromMarket,
+  ministryReplenishHelium,
+  ageResetHeliumMarket,
+  // Legacy (deprecated)
   getHeliumPriceIndex,
   advanceHeliumMarket,
   reduceHeliumMarket,

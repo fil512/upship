@@ -214,12 +214,12 @@ describe('GameStateService', () => {
       // Faction starters reduce available copies in the tech bag
       // The exact count depends on which starting techs overlap with general techs
       // After the starting tech redesign (zeppelin_girders, expedition_propeller, etc.),
-      // the total tech count changed. Current expected: 37 total (5 on R&D + 32 in bag).
-      // Added 2 new Age I tech cards (altitude_compensator, safety_valves) × 3 copies = +6
+      // the total tech count changed. Current expected: 40 total (5 on R&D + 35 in bag).
+      // Added gondola_shielding (Age I armor) × 3 copies = +3
       const totalTechsInBag = result.rdBoard.length + result.techBag.length;
-      expect(totalTechsInBag).toBe(37);
+      expect(totalTechsInBag).toBe(40);
       expect(result.rdBoard.length).toBe(5);
-      expect(result.techBag.length).toBe(32);
+      expect(result.techBag.length).toBe(35);
     });
 
     it('should set fixed progress thresholds (launch-based)', async () => {

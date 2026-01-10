@@ -39,6 +39,10 @@ See `.claude/commands/playtest-ui.md` for detailed instructions.
 
 **Critical** always use `scripts/restart_server.sh` to start or restert the local server.
 
+## Troubleshooting playtest problems
+
+**Critical** if you need to troubleshoot a playtest problem use the tools described in `playtest/README.md`.
+
 ## Troubleshooting Deployments
 
 **Using the Railway CLI script (preferred):**

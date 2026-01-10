@@ -11,6 +11,7 @@ const { refillRDBoard } = require('./helpers/marketHelpers');
 const { TECH_CARD_BAG, RESEARCH_INSTITUTE_COST } = require('../config/constants');
 const { performAgeTransition } = require('./helpers/ageTransition');
 const { resourceFlowLogger, createFlowContext } = require('../services/resourceFlowLogger');
+const { ageResetHeliumMarket, getCurrentHeliumPrice } = require('../services/gameStateHelpers');
 
 interface ActionResult {
   newState: GameState;
@@ -96,12 +97,13 @@ function checkAgeTransition(state: GameState): void {
     addAgeTechCards(state, 2);
     refillRDBoard(state);
 
-    // Reset gas market prices for new age (Section 4.4: Helium resets to £2 at Age Transitions)
-    state.gasMarket = { hydrogen: 1, helium: 2 };
+    // Reset helium market for new age (Section 9.4.5: Fill £3+ rows only, preserve £1-£2)
+    ageResetHeliumMarket(state);
+    const newPrice = getCurrentHeliumPrice(state);
 
     state.log.push({
       timestamp: new Date().toISOString(),
-      message: `New tech cards available. Gas market reset.`,
+      message: `New tech cards available. Helium market restocked (price: £${newPrice || 'empty'}).`,
       type: 'system'
     } as LogEntry);
   } else if (state.age === 2 && progressTrack >= thresholds.age3) {
@@ -112,12 +114,13 @@ function checkAgeTransition(state: GameState): void {
     addAgeTechCards(state, 3);
     refillRDBoard(state);
 
-    // Reset gas market prices for new age (Section 4.4: Helium resets to £2 at Age Transitions)
-    state.gasMarket = { hydrogen: 1, helium: 2 };
+    // Reset helium market for new age (Section 9.4.5: Fill £3+ rows only, preserve £1-£2)
+    ageResetHeliumMarket(state);
+    const newPriceAge3 = getCurrentHeliumPrice(state);
 
     state.log.push({
       timestamp: new Date().toISOString(),
-      message: `Final era tech cards unlocked. Gas market reset.`,
+      message: `Final era tech cards unlocked. Helium market restocked (price: £${newPriceAge3 || 'empty'}).`,
       type: 'system'
     } as LogEntry);
   }

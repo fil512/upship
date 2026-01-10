@@ -17,7 +17,13 @@ describe('Rules Compliance - Gas Depot', () => {
       const state = createTestGameState();
       state.players['1'].cash = 10;
       state.players['1'].gasCubes = { hydrogen: 0, helium: 0 };
-      state.gasMarket = { hydrogen: 1, helium: 5 };
+      state.gasMarket = {
+        hydrogen: 1,
+        heliumMarket: {
+          cubes: [0, 0, 3, 3, 3, 3],
+          prices: [1, 2, 3, 4, 5, 6]
+        }
+      };
 
       const result = processBuyGas(state, '1', { gasType: 'hydrogen', amount: 3, _internal: true });
 
@@ -30,19 +36,32 @@ describe('Rules Compliance - Gas Depot', () => {
       state.players['1'].cash = 20;
       state.players['1'].gasCubes = { hydrogen: 0, helium: 0 };
       state.players['1'].techCards = ['helium_handling'];
-      state.gasMarket = { hydrogen: 1, helium: 5 };
+      state.gasMarket = {
+        hydrogen: 1,
+        heliumMarket: {
+          cubes: [0, 0, 3, 3, 3, 3],
+          prices: [1, 2, 3, 4, 5, 6]
+        }
+      };
 
       const result = processBuyGas(state, '1', { gasType: 'helium', amount: 2, _internal: true });
 
       expect(result.newState.players['1'].gasCubes.helium).toBe(2);
-      expect(result.newState.players['1'].cash).toBe(10); // 20 - (5*2)
+      // With Brass-style market: 2 cubes at £3 each = £6
+      expect(result.newState.players['1'].cash).toBe(14); // 20 - 6
     });
 
     it('should reject helium purchase without Helium Handling', () => {
       const state = createTestGameState();
       state.players['1'].cash = 20;
       state.players['1'].techCards = [];
-      state.gasMarket = { hydrogen: 1, helium: 5 };
+      state.gasMarket = {
+        hydrogen: 1,
+        heliumMarket: {
+          cubes: [0, 0, 3, 3, 3, 3],
+          prices: [1, 2, 3, 4, 5, 6]
+        }
+      };
 
       expect(() => {
         processBuyGas(state, '1', { gasType: 'helium', amount: 1, _internal: true });
@@ -69,7 +88,13 @@ describe('Rules Compliance - Gas Depot', () => {
         currentPlacerIndex: 0,
         passedPlayers: []
       };
-      state.gasMarket = { hydrogen: 1, helium: 5 };
+      state.gasMarket = {
+        hydrogen: 1,
+        heliumMarket: {
+          cubes: [0, 0, 3, 3, 3, 3],
+          prices: [1, 2, 3, 4, 5, 6]
+        }
+      };
 
       // Place agent at gas_depot - gas should be bought immediately
       const result = processPlaceAgent(state, playerId, {
@@ -100,7 +125,13 @@ describe('Rules Compliance - Gas Depot', () => {
         currentPlacerIndex: 0,
         passedPlayers: []
       };
-      state.gasMarket = { hydrogen: 1, helium: 5 };
+      state.gasMarket = {
+        hydrogen: 1,
+        heliumMarket: {
+          cubes: [0, 0, 3, 3, 3, 3],
+          prices: [1, 2, 3, 4, 5, 6]
+        }
+      };
 
       // Place agent at gas_depot with helium
       const result = processPlaceAgent(state, playerId, {
@@ -111,7 +142,8 @@ describe('Rules Compliance - Gas Depot', () => {
       });
 
       expect(result.newState.players[playerId].gasCubes.helium).toBe(2);
-      expect(result.newState.players[playerId].cash).toBe(10); // 20 - (5*2)
+      // With Brass-style market: 2 cubes at £3 each = £6
+      expect(result.newState.players[playerId].cash).toBe(14); // 20 - 6
     });
 
     it('should reject direct BUY_GAS action during reveal phase', () => {
@@ -119,7 +151,13 @@ describe('Rules Compliance - Gas Depot', () => {
       state.phase = 'reveal';
       state.players['1'].cash = 20;
       state.players['1'].gasCubes = { hydrogen: 0, helium: 0 };
-      state.gasMarket = { hydrogen: 1, helium: 5 };
+      state.gasMarket = {
+        hydrogen: 1,
+        heliumMarket: {
+          cubes: [0, 0, 3, 3, 3, 3],
+          prices: [1, 2, 3, 4, 5, 6]
+        }
+      };
       // Player has a placement at gas_depot from earlier
       state.groundBoard.placements['gas_depot'] = { playerId: '1' };
 
@@ -134,7 +172,13 @@ describe('Rules Compliance - Gas Depot', () => {
       state.phase = 'worker_placement';
       state.players['1'].cash = 20;
       state.players['1'].gasCubes = { hydrogen: 0, helium: 0 };
-      state.gasMarket = { hydrogen: 1, helium: 5 };
+      state.gasMarket = {
+        hydrogen: 1,
+        heliumMarket: {
+          cubes: [0, 0, 3, 3, 3, 3],
+          prices: [1, 2, 3, 4, 5, 6]
+        }
+      };
       // No agent at gas_depot
       state.groundBoard.placements = {};
 
@@ -149,7 +193,13 @@ describe('Rules Compliance - Gas Depot', () => {
       state.phase = 'worker_placement';
       state.players['1'].cash = 20;
       state.players['1'].gasCubes = { hydrogen: 0, helium: 0 };
-      state.gasMarket = { hydrogen: 1, helium: 5 };
+      state.gasMarket = {
+        hydrogen: 1,
+        heliumMarket: {
+          cubes: [0, 0, 3, 3, 3, 3],
+          prices: [1, 2, 3, 4, 5, 6]
+        }
+      };
       // Player 2 has agent at gas_depot, not player 1
       state.groundBoard.placements['gas_depot'] = { playerId: '2' };
 
@@ -165,7 +215,13 @@ describe('Rules Compliance - Gas Depot', () => {
       const state = createTestGameState();
       state.players['1'].cash = 10;
       state.players['1'].gasCubes = { hydrogen: 0, helium: 0 };
-      state.gasMarket = { hydrogen: 1, helium: 5 };
+      state.gasMarket = {
+        hydrogen: 1,
+        heliumMarket: {
+          cubes: [0, 0, 3, 3, 3, 3],
+          prices: [1, 2, 3, 4, 5, 6]
+        }
+      };
 
       // Reclamation System installed in componentSlots
       state.players['1'].blueprint.componentSlots = ['reclamation_system'];
@@ -183,23 +239,35 @@ describe('Rules Compliance - Gas Depot', () => {
       state.players['1'].cash = 20;
       state.players['1'].gasCubes = { hydrogen: 0, helium: 0 };
       state.players['1'].techCards = ['helium_handling'];
-      state.gasMarket = { hydrogen: 1, helium: 5 };
+      state.gasMarket = {
+        hydrogen: 1,
+        heliumMarket: {
+          cubes: [0, 0, 3, 3, 3, 3],
+          prices: [1, 2, 3, 4, 5, 6]
+        }
+      };
 
       // Reclamation System installed
       state.players['1'].blueprint.componentSlots = ['reclamation_system'];
 
-      // Buy 2 helium at £5 each = £10, but with -£2 discount = £8
+      // Buy 2 helium at £3 each = £6, with -£2 discount = £4
       const result = processBuyGas(state, '1', { gasType: 'helium', amount: 2, _internal: true });
 
       expect(result.newState.players['1'].gasCubes.helium).toBe(2);
-      expect(result.newState.players['1'].cash).toBe(12); // 20 - 8
+      expect(result.newState.players['1'].cash).toBe(16); // 20 - 4
     });
 
     it('should not reduce cost below £0 with reclamation_system', () => {
       const state = createTestGameState();
       state.players['1'].cash = 10;
       state.players['1'].gasCubes = { hydrogen: 0, helium: 0 };
-      state.gasMarket = { hydrogen: 1, helium: 5 };
+      state.gasMarket = {
+        hydrogen: 1,
+        heliumMarket: {
+          cubes: [0, 0, 3, 3, 3, 3],
+          prices: [1, 2, 3, 4, 5, 6]
+        }
+      };
 
       // Reclamation System installed
       state.players['1'].blueprint.componentSlots = ['reclamation_system'];
@@ -218,23 +286,35 @@ describe('Rules Compliance - Gas Depot', () => {
       state.players['1'].cash = 20;
       state.players['1'].gasCubes = { hydrogen: 0, helium: 0 };
       state.players['1'].techCards = ['helium_handling'];
-      state.gasMarket = { hydrogen: 1, helium: 5 };
+      state.gasMarket = {
+        hydrogen: 1,
+        heliumMarket: {
+          cubes: [0, 0, 3, 3, 3, 3],
+          prices: [1, 2, 3, 4, 5, 6]
+        }
+      };
 
       // Exhaust Condensers installed (USA specialty)
       state.players['1'].blueprint.componentSlots = ['exhaust_condensers'];
 
-      // Buy 2 helium at £5 each = £10, but with -£3 discount = £7
+      // Buy 2 helium at £3 each = £6, with -£3 discount = £3
       const result = processBuyGas(state, '1', { gasType: 'helium', amount: 2, _internal: true });
 
       expect(result.newState.players['1'].gasCubes.helium).toBe(2);
-      expect(result.newState.players['1'].cash).toBe(13); // 20 - 7
+      expect(result.newState.players['1'].cash).toBe(17); // 20 - 3
     });
 
     it('should NOT apply exhaust_condensers discount to hydrogen purchases', () => {
       const state = createTestGameState();
       state.players['1'].cash = 10;
       state.players['1'].gasCubes = { hydrogen: 0, helium: 0 };
-      state.gasMarket = { hydrogen: 1, helium: 5 };
+      state.gasMarket = {
+        hydrogen: 1,
+        heliumMarket: {
+          cubes: [0, 0, 3, 3, 3, 3],
+          prices: [1, 2, 3, 4, 5, 6]
+        }
+      };
 
       // Exhaust Condensers installed
       state.players['1'].blueprint.componentSlots = ['exhaust_condensers'];
@@ -251,16 +331,22 @@ describe('Rules Compliance - Gas Depot', () => {
       state.players['1'].cash = 20;
       state.players['1'].gasCubes = { hydrogen: 0, helium: 0 };
       state.players['1'].techCards = ['helium_handling'];
-      state.gasMarket = { hydrogen: 1, helium: 5 };
+      state.gasMarket = {
+        hydrogen: 1,
+        heliumMarket: {
+          cubes: [0, 0, 3, 3, 3, 3],
+          prices: [1, 2, 3, 4, 5, 6]
+        }
+      };
 
       // Both upgrades installed
       state.players['1'].blueprint.componentSlots = ['reclamation_system', 'exhaust_condensers'];
 
-      // Buy 2 helium at £5 each = £10, with -£2 and -£3 = £5
+      // Buy 2 helium at £3 each = £6, with -£2 and -£3 = £1
       const result = processBuyGas(state, '1', { gasType: 'helium', amount: 2, _internal: true });
 
       expect(result.newState.players['1'].gasCubes.helium).toBe(2);
-      expect(result.newState.players['1'].cash).toBe(15); // 20 - 5
+      expect(result.newState.players['1'].cash).toBe(19); // 20 - 1
     });
   });
 });

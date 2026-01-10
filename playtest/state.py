@@ -711,3 +711,49 @@ def get_state_fingerprint(game_id: str) -> tuple[str, GameState | None]:
     }
 
     return json.dumps(fingerprint, sort_keys=True), state
+
+
+def get_helium_market_info(game_id: str) -> dict:
+    """Get helium market information including price and availability.
+
+    Args:
+        game_id: The game ID.
+
+    Returns:
+        Dict with keys: current_price (int or None if empty),
+        available_cubes (int), cubes (list), prices (list)
+    """
+    state = get_state(game_id)
+    if not state:
+        return {'current_price': 3, 'available_cubes': 12, 'cubes': [0, 0, 3, 3, 3, 3], 'prices': [1, 2, 3, 4, 5, 6]}
+
+    # Get gas market from raw state
+    try:
+        client = get_client()
+        raw_state = client._api_get("playtest_germany", f"/api/state/{game_id}")
+        game_state_wrapper = raw_state.get('gameState', raw_state)
+        state_data = game_state_wrapper.get('state', {})
+        gas_market = state_data.get('gasMarket', {})
+        helium_market = gas_market.get('heliumMarket', {})
+
+        cubes = helium_market.get('cubes', [0, 0, 3, 3, 3, 3])
+        prices = helium_market.get('prices', [1, 2, 3, 4, 5, 6])
+
+        # Find current price (lowest row with cubes)
+        current_price = None
+        for i, cube_count in enumerate(cubes):
+            if cube_count > 0:
+                current_price = prices[i]
+                break
+
+        available = sum(cubes)
+
+        return {
+            'current_price': current_price,
+            'available_cubes': available,
+            'cubes': cubes,
+            'prices': prices
+        }
+    except Exception:
+        # Fallback to defaults
+        return {'current_price': 3, 'available_cubes': 12, 'cubes': [0, 0, 3, 3, 3, 3], 'prices': [1, 2, 3, 4, 5, 6]}

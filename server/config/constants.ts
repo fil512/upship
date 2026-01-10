@@ -7,7 +7,15 @@ import type { Faction, GamePhase } from '@upship/api';
 
 // Gas Market
 export const HYDROGEN_PRICE = 1;
-export const HELIUM_PRICE_TRACK = [2, 3, 4, 5, 6, 8, 10, 15] as const;
+
+// Helium Market (Brass Lancashire-style supply market)
+// Price track: £1, £2, £3, £4, £5, £6 per cube (index 0 = £1)
+export const HELIUM_PRICE_TRACK = [1, 2, 3, 4, 5, 6] as const;
+export const HELIUM_CUBES_PER_ROW = 3;
+// Game starts with rows £1-£2 empty, rows £3-£6 full (12 cubes)
+export const HELIUM_INITIAL_CUBES = [0, 0, 3, 3, 3, 3] as const;
+export const MINISTRY_REPLENISH_CUBES = 3;
+export const USA_DOMESTIC_HELIUM_PRICE = 2;
 
 // Income limits
 export const MIN_INCOME = -10;  // Minimum income track (for insurance validation)
@@ -176,6 +184,10 @@ module.exports = {
   // Gas Market
   HYDROGEN_PRICE,
   HELIUM_PRICE_TRACK,
+  HELIUM_CUBES_PER_ROW,
+  HELIUM_INITIAL_CUBES,
+  MINISTRY_REPLENISH_CUBES,
+  USA_DOMESTIC_HELIUM_PRICE,
 
   // Income limits
   MIN_INCOME,

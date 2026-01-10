@@ -536,6 +536,7 @@ class UpshipClient:
         game_id: str,
         gas_type: str,
         amount: int = 1,
+        source: str = 'market',
     ) -> ActionResult:
         """Buy gas from the market.
 
@@ -544,11 +545,12 @@ class UpshipClient:
             game_id: The ID of the game.
             gas_type: Type of gas ('hydrogen' or 'helium').
             amount: Number of cubes to buy.
+            source: 'market' or 'domestic' (USA only for helium at £2/cube).
 
         Returns:
             ActionResult with success status and updated game state.
         """
-        return self.action(username, game_id, 'BUY_GAS', gasType=gas_type, amount=amount)
+        return self.action(username, game_id, 'BUY_GAS', gasType=gas_type, amount=amount, source=source)
 
     def draw_cards(self, username: str, game_id: str, count: int = 1) -> ActionResult:
         """Draw cards from the deck."""

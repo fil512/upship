@@ -744,7 +744,13 @@ async function initializeGameState(
       reserveTechCard: RESERVE_TECH_CARD,  // Always-available tech card (Helium Handling)
       progressTrack: 0,
       progressThresholds: PROGRESS_THRESHOLDS,
-      gasMarket: { hydrogen: 1, helium: 2 }, // Prices per cube (Section 4.4: H₂ fixed at £1, He starts at £2)
+      gasMarket: {
+        hydrogen: 1,  // Fixed price (£1/cube)
+        heliumMarket: {
+          cubes: [0, 0, 3, 3, 3, 3],  // £1-£2 empty, £3-£6 full (12 cubes total)
+          prices: [1, 2, 3, 4, 5, 6]   // Price per row
+        }
+      },
       map: createAgeIMap(),
       log: [{
         timestamp: new Date().toISOString(),

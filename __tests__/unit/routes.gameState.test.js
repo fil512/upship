@@ -175,7 +175,13 @@ function createFullGameState() {
       }
     },
     groundBoard: { placements: {} },
-    gasMarket: { hydrogen: 10, helium: 8 },
+    gasMarket: {
+      hydrogen: 1,
+      heliumMarket: {
+        cubes: [0, 0, 3, 3, 3, 3],
+        prices: [1, 2, 3, 4, 5, 6]
+      }
+    },
     rdBoard: [
       { id: 'helium_handling', name: 'Helium Handling', cost: 5, type: 'frame' }
     ],

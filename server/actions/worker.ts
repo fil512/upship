@@ -10,7 +10,7 @@ const { GameRuleError } = require('../errors');
 const { shuffleArray } = require('../utils/random');
 const { GROUND_BOARD_LOCATIONS, canPlaceAtLocation } = require('../data/groundBoard');
 const { getCurrentPlacer, advanceToNextPlacer } = require('./helpers/turnOrder');
-const { reduceHeliumMarket } = require('./helpers/marketHelpers');
+const { ministryReplenishHelium, getCurrentHeliumPrice, getAvailableHeliumCubes } = require('../services/gameStateHelpers');
 const { WEATHER_BUREAU_COST } = require('../config/constants');
 const { processBuildShip, processRepairShip } = require('./building');
 const { processBuyGas } = require('./gas');
@@ -534,11 +534,13 @@ function executeLocationAction(
         type: 'action'
       } as LogEntry);
 
-      // Reduce Helium Market Track by 1 step
-      reduceHeliumMarket(state, 1);
+      // Add 3 helium cubes to market (most expensive empty slots first)
+      ministryReplenishHelium(state, 3);
+      const newPrice = getCurrentHeliumPrice(state);
+      const available = getAvailableHeliumCubes(state);
       state.log.push({
         timestamp: new Date().toISOString(),
-        message: `Ministry: Helium price reduced to £${state.gasMarket.helium}`,
+        message: `Ministry: Added 3 helium cubes to market (now ${available} available, price £${newPrice || 'N/A'})`,
         playerId,
         type: 'action'
       } as LogEntry);
@@ -546,7 +548,7 @@ function executeLocationAction(
       // Multi-step flow: player must call DISCARD_MINISTRY_CARD
       return {
         success: true,
-        message: `Gained turn priority. Drew ${drawnCards.length} cards. Choose DISCARD_MINISTRY_CARD(cardIndex: 0 or 1). Helium market reduced.`,
+        message: `Gained turn priority. Drew ${drawnCards.length} cards. Choose DISCARD_MINISTRY_CARD(cardIndex: 0 or 1). Added 3 helium to market.`,
         skipTurnAdvance: true  // Don't advance turn until discard is made
       };
     }

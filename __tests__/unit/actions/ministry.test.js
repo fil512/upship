@@ -50,8 +50,11 @@ describe('Ministry Multi-Step Flow', () => {
         currentPlacerIndex: 0
       },
       gasMarket: {
-        hydrogen: 5,
-        helium: 10
+        hydrogen: 1,
+        heliumMarket: {
+          cubes: [0, 0, 0, 3, 3, 3],  // £3 row empty to test replenishment
+          prices: [1, 2, 3, 4, 5, 6]
+        }
       },
       log: []
     };
@@ -90,14 +93,17 @@ describe('Ministry Multi-Step Flow', () => {
       expect(result.newState.workerPlacement.currentPlacerIndex).toBe(0);
     });
 
-    it('should reduce helium market price', () => {
-      const initialHeliumPrice = mockState.gasMarket.helium;
+    it('should add helium cubes to market (replenishment)', () => {
+      const initialCubes = [...mockState.gasMarket.heliumMarket.cubes];
+      const initialTotal = initialCubes.reduce((a, b) => a + b, 0);
       const result = processPlaceAgent(mockState, playerId, {
         locationId: 'ministry',
         cardIndex: 0
       });
 
-      expect(result.newState.gasMarket.helium).toBeLessThan(initialHeliumPrice);
+      const newTotal = result.newState.gasMarket.heliumMarket.cubes.reduce((a, b) => a + b, 0);
+      // Ministry adds 3 cubes to most expensive empty slots first
+      expect(newTotal).toBe(initialTotal + 3);
     });
 
     it('should set firstPlayer token', () => {

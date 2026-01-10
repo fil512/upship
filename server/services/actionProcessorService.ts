@@ -23,13 +23,19 @@ const {
   transitionToRevealPhase,
   transitionToCleanup,
   startNewRound,
-  advanceHeliumMarket,
+  // Helium market functions
+  getCurrentHeliumPrice,
+  getAvailableHeliumCubes,
+  calculateHeliumCost,
+  purchaseHeliumFromMarket,
   processCardEffect,
   executeLocationAction,
   calculateSpecializationDiscount,
   calculateBlueprintStats,
   calculateRequiredGasCubes
 } = require('./gameStateHelpers');
+
+const { USA_DOMESTIC_HELIUM_PRICE } = require('../config/constants');
 
 // Action result type
 interface ActionResult {
@@ -370,11 +376,12 @@ function processEndTurn(state: GameState, playerId: string): ActionResult {
 interface BuyGasData {
   gasType: 'hydrogen' | 'helium';
   amount: number;
+  source?: 'market' | 'domestic';  // USA only: 'domestic' for £2/cube fixed price
 }
 
-// Buy gas cubes
+// Buy gas cubes (Section 6.9 and 9.4)
 function processBuyGas(state: GameState, playerId: string, data: Record<string, unknown>): ActionResult {
-  const { gasType, amount } = data as BuyGasData;
+  const { gasType, amount, source = 'market' } = data as BuyGasData;
   const playerState = state.players[playerId];
   const stateWithLog = state as StateWithLog;
 
@@ -382,7 +389,9 @@ function processBuyGas(state: GameState, playerId: string, data: Record<string, 
     return { error: 'Invalid gas type' };
   }
 
-  // Helium requires Helium Handling tech card (Section 4.4)
+  const isUSA = playerState.faction === 'usa';
+
+  // Helium requires Helium Handling tech card (Section 9.4)
   if (gasType === 'helium') {
     const techCards = (playerState as PlayerState & { techCards?: { id: string }[] }).techCards;
     const hasHeliumHandling = techCards?.some((t: { id: string }) => t.id === 'HELIUM_HANDLING');
@@ -391,26 +400,74 @@ function processBuyGas(state: GameState, playerId: string, data: Record<string, 
     }
   }
 
-  const price = state.gasMarket[gasType] * amount;
+  // HYDROGEN: Fixed price £1/cube
+  if (gasType === 'hydrogen') {
+    const price = state.gasMarket.hydrogen * amount;
+    if (playerState.cash < price) {
+      return { error: 'Not enough cash' };
+    }
+    playerState.cash -= price;
+    playerState.gasCubes.hydrogen += amount;
 
+    stateWithLog.log.push({
+      timestamp: new Date().toISOString(),
+      message: `Bought ${amount} hydrogen for £${price}`,
+      playerId,
+      type: 'action'
+    });
+    return { newState: state };
+  }
+
+  // HELIUM: Brass-style supply market (Section 9.4)
+
+  // USA can choose domestic supply at £2/cube (Section 9.4.6)
+  if (source === 'domestic') {
+    if (!isUSA) {
+      return { error: 'Only USA can purchase from domestic helium supply' };
+    }
+    const price = USA_DOMESTIC_HELIUM_PRICE * amount;
+    if (playerState.cash < price) {
+      return { error: 'Not enough cash' };
+    }
+    playerState.cash -= price;
+    playerState.gasCubes.helium += amount;
+
+    stateWithLog.log.push({
+      timestamp: new Date().toISOString(),
+      message: `USA bought ${amount} helium from domestic supply for £${price}`,
+      playerId,
+      type: 'action'
+    });
+    return { newState: state };
+  }
+
+  // Market purchase
+  const available = getAvailableHeliumCubes(state);
+  if (available === 0) {
+    if (isUSA) {
+      return { error: 'Market is empty. USA can still buy from domestic supply (source: domestic).' };
+    }
+    return { error: 'Helium market is empty. Wait for Ministry replenishment.' };
+  }
+
+  if (amount > available) {
+    return { error: `Only ${available} helium cubes available in market` };
+  }
+
+  const price = calculateHeliumCost(state, amount);
   if (playerState.cash < price) {
-    return { error: 'Not enough cash' };
+    return { error: `Not enough cash. ${amount} helium cubes cost £${price}` };
   }
 
-  playerState.cash -= price;
-  playerState.gasCubes[gasType] += amount;
+  // Execute purchase (removes cubes from market)
+  const actualCost = purchaseHeliumFromMarket(state, amount);
+  playerState.cash -= actualCost;
+  playerState.gasCubes.helium += amount;
 
-  // Advance market price (unless USA buying helium)
-  const isUSA = playerState.faction === 'usa';
-  if (gasType === 'helium' && !isUSA) {
-    // Helium uses stepped progression: advance 1 step per cube purchased
-    advanceHeliumMarket(state, amount);
-  }
-  // Note: Hydrogen price is fixed at £1 per Section 4.4
-
+  const newPrice = getCurrentHeliumPrice(state);
   stateWithLog.log.push({
     timestamp: new Date().toISOString(),
-    message: `Bought ${amount} ${gasType} for £${price}`,
+    message: `Bought ${amount} helium from market for £${actualCost} (new price: £${newPrice || 'empty'})`,
     playerId,
     type: 'action'
   });
