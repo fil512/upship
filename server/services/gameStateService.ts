@@ -288,25 +288,26 @@ function createHazardDeck(): HazardCard[] {
   // 16 Standard Hazards (formerly Minor + Major)
   // Unified formula: Total Difficulty = Hazard Difficulty + Mission Difficulty - Ship Reliability
   // If Total Difficulty > 0, spend that many engineers to pass. Fail = Abort
+  // Flak values tuned for ~50% survival with typical armor (0-2)
   const standardHazards = [
-    // Former Minor Hazards (8)
+    // Former Minor Hazards (8) - mostly flak 0
     { name: 'Light Turbulence', difficulty: 2, hazardType: 'weather', flak: 0 },
-    { name: 'Minor Engine Trouble', difficulty: 1, hazardType: 'mechanical', flak: 1 },
+    { name: 'Minor Engine Trouble', difficulty: 1, hazardType: 'mechanical', flak: 0 },
     { name: 'Crosswind', difficulty: 3, hazardType: 'weather', flak: 0 },
     { name: 'Gas Leak', difficulty: 2, hazardType: 'mechanical', flak: 1 },
-    { name: 'Low Visibility', difficulty: 2, hazardType: 'weather', flak: 1 },
+    { name: 'Low Visibility', difficulty: 2, hazardType: 'weather', flak: 0 },
     { name: 'Fuel Concern', difficulty: 2, hazardType: 'supply', flak: 0 },
-    { name: 'Headwind', difficulty: 3, hazardType: 'weather', flak: 1 },
-    { name: 'Structural Stress', difficulty: 2, hazardType: 'mechanical', flak: 2 },
-    // Former Major Hazards (8) - no special effects
-    { name: 'Strong Headwind', difficulty: 4, hazardType: 'weather', flak: 2 },
-    { name: 'Icing Conditions', difficulty: 3, hazardType: 'weather', flak: 2 },
-    { name: 'Engine Failure', difficulty: 3, hazardType: 'mechanical', flak: 3 },
-    { name: 'Storm System', difficulty: 4, hazardType: 'weather', flak: 3 },
-    { name: 'Structural Damage', difficulty: 3, hazardType: 'mechanical', flak: 4 },
-    { name: 'Navigation Error', difficulty: 3, hazardType: 'supply', flak: 3 },
-    { name: 'Squall Line', difficulty: 4, hazardType: 'weather', flak: 3 },
-    { name: 'Severe Icing', difficulty: 2, hazardType: 'weather', flak: 2 }
+    { name: 'Headwind', difficulty: 3, hazardType: 'weather', flak: 0 },
+    { name: 'Structural Stress', difficulty: 2, hazardType: 'mechanical', flak: 1 },
+    // Former Major Hazards (8) - reduced flak values
+    { name: 'Strong Headwind', difficulty: 4, hazardType: 'weather', flak: 1 },
+    { name: 'Icing Conditions', difficulty: 3, hazardType: 'weather', flak: 1 },
+    { name: 'Engine Failure', difficulty: 3, hazardType: 'mechanical', flak: 2 },
+    { name: 'Storm System', difficulty: 4, hazardType: 'weather', flak: 2 },
+    { name: 'Structural Damage', difficulty: 3, hazardType: 'mechanical', flak: 2 },
+    { name: 'Navigation Error', difficulty: 3, hazardType: 'supply', flak: 1 },
+    { name: 'Squall Line', difficulty: 4, hazardType: 'weather', flak: 2 },
+    { name: 'Severe Icing', difficulty: 2, hazardType: 'weather', flak: 1 }
   ];
 
   standardHazards.forEach((h, i) => {
@@ -323,8 +324,9 @@ function createHazardDeck(): HazardCard[] {
 
   // 5 Fire Hazards (hydrogen only) - Helium auto-passes, Hydrogen fail = Destroyed
   // Uses unified formula: Total Difficulty = Hazard Difficulty + Mission Difficulty - Ship Reliability
+  // Flak reduced for ~50% survival
 
-  // 2x Engine Fire - Difficulty 2 - 2 Flak each
+  // 2x Engine Fire - Difficulty 2 - 1 Flak each (reduced from 2)
   for (let i = 0; i < 2; i++) {
     hazards.push({
       id: `engine_fire_${i}`,
@@ -333,11 +335,11 @@ function createHazardDeck(): HazardCard[] {
       name: 'Engine Fire',
       hydrogenOnly: true,
       difficulty: 2,
-      flak: 2
+      flak: 1
     });
   }
 
-  // 2x Gas Cell Rupture - Difficulty 3 - 3 Flak each
+  // 2x Gas Cell Rupture - Difficulty 3 - 2 Flak each (reduced from 3)
   for (let i = 0; i < 2; i++) {
     hazards.push({
       id: `gas_cell_rupture_${i}`,
@@ -346,11 +348,11 @@ function createHazardDeck(): HazardCard[] {
       name: 'Gas Cell Rupture',
       hydrogenOnly: true,
       difficulty: 3,
-      flak: 3
+      flak: 2
     });
   }
 
-  // 1x Static Discharge - Difficulty 2 - 4 Flak
+  // 1x Static Discharge - Difficulty 2 - 2 Flak (reduced from 4)
   hazards.push({
     id: 'static_discharge_0',
     type: 'static_discharge',
@@ -358,10 +360,10 @@ function createHazardDeck(): HazardCard[] {
     name: 'Static Discharge',
     hydrogenOnly: true,
     difficulty: 2,
-    flak: 4
+    flak: 2
   });
 
-  // 1x Catastrophic Explosion - No save possible, always Destroyed - 5 Flak
+  // 1x Catastrophic Explosion - No save possible, always Destroyed - 3 Flak (reduced from 5)
   // Hydrogen only. Age III Luxury = Hindenburg Disaster
   hazards.push({
     id: 'catastrophic_explosion_0',
@@ -371,10 +373,10 @@ function createHazardDeck(): HazardCard[] {
     hydrogenOnly: true,
     noSave: true,
     difficulty: 99,
-    flak: 5
+    flak: 3
   });
 
-  // 1x Critical Structural Stress - Standard hazard with difficulty 3 - 4 Flak
+  // 1x Critical Structural Stress - Standard hazard with difficulty 3 - 2 Flak (reduced from 4)
   hazards.push({
     id: 'critical_structural_stress_0',
     type: 'critical_structural_stress',
@@ -382,7 +384,7 @@ function createHazardDeck(): HazardCard[] {
     name: 'Critical Structural Stress',
     hazardType: 'mechanical',
     difficulty: 3,
-    flak: 4
+    flak: 2
   });
 
   return shuffleArray(hazards) as HazardCard[];
