@@ -116,22 +116,66 @@ export function mapActionsToButtons(
 
 			case 'RESPOND_TO_HAZARD':
 				if (actionContext.pendingHazard) {
-					buttons.push({
-						action: 'RESPOND_TO_HAZARD',
-						label: 'Accept Risk',
-						description: 'Attempt without spending engineers',
-						icon: 'dice',
-						primary: false,
-						requiresSelection: false,
-						actionData: { spendEngineers: false }
-					});
+					// Simplified hazard system: unified formula calculates engineersNeeded
+					const engineersNeeded = actionContext.pendingHazard.engineersNeeded || 0;
+					const isFireHazard = actionContext.pendingHazard.category === 'fire';
+					const isAutoPass = actionContext.pendingHazard.autoPass ||
+						actionContext.pendingHazard.heliumFireImmunity ||
+						actionContext.pendingHazard.conductiveCoveringImmunity ||
+						actionContext.pendingHazard.fireResistantFabricAvailable;
 
-					const engineerCost = actionContext.pendingHazard.engineerCost;
-					if (engineerCost) {
+					if (isAutoPass) {
+						// Auto-pass hazards just need confirmation
 						buttons.push({
 							action: 'RESPOND_TO_HAZARD',
-							label: `Spend ${engineerCost} Engineer(s)`,
-							description: 'Guarantee passing the check',
+							label: 'Continue',
+							description: 'Hazard auto-passed',
+							icon: 'check',
+							primary: true,
+							requiresSelection: false,
+							actionData: { spendEngineers: false },
+							variant: 'success'
+						});
+					} else if (isFireHazard) {
+						// Fire hazards with hydrogen: fail = destroyed (no engineer option)
+						buttons.push({
+							action: 'RESPOND_TO_HAZARD',
+							label: 'Accept Fate',
+							description: 'Hydrogen ships cannot overcome fire hazards',
+							icon: 'hazard',
+							primary: true,
+							requiresSelection: false,
+							actionData: { spendEngineers: false },
+							variant: 'danger'
+						});
+					} else if (engineersNeeded === 0) {
+						// Ship reliability overcomes hazard
+						buttons.push({
+							action: 'RESPOND_TO_HAZARD',
+							label: 'Continue',
+							description: 'Ship reliability overcomes hazard',
+							icon: 'check',
+							primary: true,
+							requiresSelection: false,
+							actionData: { spendEngineers: false },
+							variant: 'success'
+						});
+					} else {
+						// Standard hazard: spend engineers or abort
+						buttons.push({
+							action: 'RESPOND_TO_HAZARD',
+							label: 'Abort Launch',
+							description: 'Return ship to hangar (gas is lost)',
+							icon: 'back',
+							primary: false,
+							requiresSelection: false,
+							actionData: { spendEngineers: false }
+						});
+
+						buttons.push({
+							action: 'RESPOND_TO_HAZARD',
+							label: `Spend ${engineersNeeded} Engineer(s)`,
+							description: 'Overcome hazard and complete launch',
 							icon: 'engineer',
 							primary: true,
 							requiresSelection: false,

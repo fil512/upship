@@ -97,7 +97,7 @@ describe('Rules Compliance - Blueprint System', () => {
       expect(state.players['1'].cash).toBe(97);
     });
 
-    it('should include damaged ships (repairShips) in retrofit cost calculation', () => {
+    it('should charge retrofit cost for multiple hangar ships', () => {
       const state = createTestGameState();
       state.age = 1;
 
@@ -105,16 +105,15 @@ describe('Rules Compliance - Blueprint System', () => {
       state.players['1'].techCards = ['duralumin_girders'];
       state.players['1'].cash = 100;
 
-      // 1 ship in hangar, 1 in repair bay = 2 total ships to retrofit
+      // 2 ships in hangar to retrofit
       state.players['1'].blueprint.frameSlots = [null];
-      state.players['1'].hangarShips = 1;
-      state.players['1'].repairShips = 1;
+      state.players['1'].hangarShips = 2;
 
       // duralumin_frame has hullCost: 1
       processInstallUpgrade(state, '1', { slotType: 'frame', slotIndex: 0, upgradeId: 'duralumin_frame', _internal: true });
 
       // Hull cost increase is 1 (duralumin_frame hullCost) - 0 (null slot) = 1
-      // With 2 total ships (1 hangar + 1 repair): 1 * 2 = 2
+      // With 2 hangar ships: 1 * 2 = 2
       expect(state.players['1'].cash).toBe(98);
     });
 

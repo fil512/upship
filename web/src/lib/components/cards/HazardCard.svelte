@@ -3,30 +3,29 @@
 	import { getHazardImageFilename } from '$lib/utils/cardImages';
 
 	export let name: string;
-	export let category: 'clear' | 'minor' | 'major' | 'fire' | 'mechanical' = 'minor';
+	// Simplified hazard system: 4 categories only
+	export let category: 'clear' | 'hazard' | 'fire' | 'catastrophic' = 'hazard';
 	export let difficulty: number = 0;
-	export let engineerCost: number | undefined = undefined;
 	export let flak: number = 0;
 	export let showFlak: boolean = false;
 	export let compact: boolean = false;
 
+	// Simplified categories: clear (green), hazard (orange), fire (red), catastrophic (dark red)
 	const CATEGORY_COLORS: Record<string, string> = {
 		clear: '#4caf50',
-		minor: '#ffc107',
-		major: '#ff9800',
+		hazard: '#ff9800',
 		fire: '#f44336',
-		mechanical: '#9e9e9e'
+		catastrophic: '#8b0000'
 	};
 
 	const CATEGORY_LABELS: Record<string, string> = {
 		clear: 'Clear',
-		minor: 'Minor',
-		major: 'Major',
+		hazard: 'Hazard',
 		fire: 'Fire',
-		mechanical: 'Mechanical'
+		catastrophic: 'Catastrophic'
 	};
 
-	$: categoryColor = CATEGORY_COLORS[category] || CATEGORY_COLORS.minor;
+	$: categoryColor = CATEGORY_COLORS[category] || CATEGORY_COLORS.hazard;
 	$: categoryLabel = CATEGORY_LABELS[category] || category;
 	$: imageFilename = getHazardImageFilename(name);
 	$: isAutoPass = category === 'clear';
@@ -69,12 +68,6 @@
 					<span class="difficulty-value">{difficulty}</span>
 				</div>
 			</div>
-			{#if engineerCost}
-				<div class="engineer-cost" title="Spend {engineerCost} Engineers to control fire">
-					<Icon name="engineers" size={14} />
-					<span>{engineerCost}</span>
-				</div>
-			{/if}
 			{#if showFlak && flak > 0}
 				<div class="flak-indicator" title="Flak: {flak} (Age II anti-aircraft fire)">
 					<span class="flak-label">Flak</span>
@@ -209,20 +202,6 @@
 		color: var(--hazard-color);
 		min-width: 18px;
 		text-align: center;
-	}
-
-	.engineer-cost {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		gap: 4px;
-		padding: 3px 8px;
-		background: rgba(139, 90, 43, 0.3);
-		border: 1px solid #8b5a2b;
-		border-radius: 3px;
-		color: #d4a574;
-		font-size: 0.7rem;
-		font-weight: 600;
 	}
 
 	.flak-indicator {

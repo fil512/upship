@@ -423,8 +423,8 @@ export function getBlueprintDesignBlueprint(
   let changesMade = false;
 
   // Calculate retrofit cost constraints (only for normal play, not age transition)
-  // Retrofit cost = (new hull cost - old hull cost) × (hangarShips + repairShips)
-  const shipsToRetrofit = (player.hangarShips || 0) + (player.repairShips || 0);
+  // Retrofit cost = (new hull cost - old hull cost) × hangarShips
+  const shipsToRetrofit = player.hangarShips || 0;
   const playerCash = player.cash || 0;
   const oldHullCost = calculateHullCost(blueprint);
   let currentHullCost = oldHullCost; // Track cumulative hull cost as we add tiles
@@ -906,24 +906,6 @@ export function findStrategicPlacement(
     }
   }
 
-  // REPAIR: If we have damaged ships, repair them to get ships back in hangar
-  // Repair cost per ship: floor(Hull Cost / 2) + 1 Engineer
-  const repairShipCount = player.repairShips || 0;
-  if (repairShipCount > 0) {
-    const hullCost = calculateHullCost(player);
-    const repairCashCost = Math.floor(hullCost / 2);
-    // Can we afford at least one repair?
-    if (cash >= repairCashCost && engineers >= 1) {
-      priorityLocations.push('repair');
-    } else if (engineers < 1) {
-      // Need engineers first to repair
-      priorityLocations.push('engineering_depot');
-    } else {
-      // Need cash first to repair
-      priorityLocations.push('treasury');
-    }
-  }
-
   // Need gas to launch
   if (totalGas < 1) {
     priorityLocations.push('gas_depot');
@@ -1068,25 +1050,6 @@ function buildLocationAction(
 
     case 'insurance_bureau':
       return { policyCount: 1 };
-
-    case 'repair': {
-      // Repair as many ships as we can afford
-      // Cost per ship: floor(Hull Cost / 2) + 1 Engineer
-      const repairShipCount = player.repairShips || 0;
-      if (repairShipCount === 0) return undefined;
-
-      const hullCost = calculateHullCost(player);
-      const cashCostPerShip = Math.floor(hullCost / 2);
-      const cash = player.cash || 0;
-      const engineers = player.engineers || 0;
-
-      // Calculate how many we can afford
-      const affordableByCash = cashCostPerShip > 0 ? Math.floor(cash / cashCostPerShip) : repairShipCount;
-      const affordableByEngineers = engineers;
-      const canRepair = Math.min(repairShipCount, affordableByCash, affordableByEngineers);
-
-      return canRepair > 0 ? { repairCount: canRepair } : undefined;
-    }
 
     default:
       return undefined;

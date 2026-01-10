@@ -264,30 +264,29 @@ function processInstallTechTile(state: GameState, playerId: string, data: Instal
     throw new GameRuleError(`${tile.name} is already installed in your blueprint. Each Tech Tile must be unique.`);
   }
 
-  // Retrofit Cost: charge hull cost difference for ALL ships in hangar (including repair bay)
+  // Retrofit Cost: charge hull cost difference for ALL ships in hangar
+  // (no repair bay in simplified system)
   // Applies to ALL slot types (Frame, Fabric, Drive, Component)
   const hangarShips = playerState.hangarShips || 0;
-  const repairShips = playerState.repairShips || 0;
-  const shipsToRetrofit = hangarShips + repairShips;
 
-  if (shipsToRetrofit > 0) {
+  if (hangarShips > 0) {
     const oldHullCost = getTechTileHullCost(blueprintAny[slotKey][slotIndex]);
     const newHullCost = getTechTileHullCost(targetId!);
     const hullCostIncrease = Math.max(0, newHullCost - oldHullCost);
 
     if (hullCostIncrease > 0) {
-      const totalCharge = hullCostIncrease * shipsToRetrofit;
+      const totalCharge = hullCostIncrease * hangarShips;
 
       if (playerState.cash < totalCharge) {
         throw new InsufficientFundsError(totalCharge, playerState.cash,
-          `Retrofit Cost: £${hullCostIncrease} increase × ${shipsToRetrofit} ships (${hangarShips} hangar + ${repairShips} repair)`);
+          `Retrofit Cost: £${hullCostIncrease} increase × ${hangarShips} ships in hangar`);
       }
 
       playerState.cash -= totalCharge;
 
       state.log.push({
         timestamp: new Date().toISOString(),
-        message: `Retrofit Cost: Paid £${totalCharge} (£${hullCostIncrease} × ${shipsToRetrofit} ships)`,
+        message: `Retrofit Cost: Paid £${totalCharge} (£${hullCostIncrease} × ${hangarShips} ships)`,
         playerId,
         type: 'action'
       } as LogEntry);
@@ -513,27 +512,26 @@ function processUpdateBlueprint(state: GameState, playerId: string, data: Update
   }
 
   // Calculate Retrofit Cost charges (unless skipped for age transitions)
+  // No repair bay in simplified hazard system - just count hangar ships
   if (!skipHullRule) {
     const oldHullCost = calculateHullCost(oldBlueprint);
     const newHullCost = calculateHullCost(mergedBlueprint);
     const hullCostIncrease = Math.max(0, newHullCost - oldHullCost);
     const hangarShips = playerState.hangarShips || 0;
-    const repairShips = playerState.repairShips || 0;
-    const shipsToRetrofit = hangarShips + repairShips;
 
-    if (hullCostIncrease > 0 && shipsToRetrofit > 0) {
-      const totalCharge = hullCostIncrease * shipsToRetrofit;
+    if (hullCostIncrease > 0 && hangarShips > 0) {
+      const totalCharge = hullCostIncrease * hangarShips;
 
       if (playerState.cash < totalCharge) {
         throw new InsufficientFundsError(totalCharge, playerState.cash,
-          `Retrofit Cost: £${hullCostIncrease} increase × ${shipsToRetrofit} ships (${hangarShips} hangar + ${repairShips} repair)`);
+          `Retrofit Cost: £${hullCostIncrease} increase × ${hangarShips} ships in hangar`);
       }
 
       playerState.cash -= totalCharge;
 
       state.log.push({
         timestamp: new Date().toISOString(),
-        message: `Retrofit Cost: Paid £${totalCharge} (£${hullCostIncrease} × ${shipsToRetrofit} ships)`,
+        message: `Retrofit Cost: Paid £${totalCharge} (£${hullCostIncrease} × ${hangarShips} ships)`,
         playerId,
         type: 'action'
       } as LogEntry);

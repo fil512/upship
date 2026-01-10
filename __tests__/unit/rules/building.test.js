@@ -56,24 +56,11 @@ describe('Rules Compliance - Building Ships', () => {
       }).toThrow(/fleet capacity|exceed|limit/i);
     });
 
-    it('should reject building when combined hangar+repair would exceed 6', () => {
-      const state = createTestGameState();
-      state.players['1'].cash = 100;
-      state.players['1'].hangarShips = 3;
-      state.players['1'].repairShips = 2;  // 5 total
-
-      // Trying to build 2 ships when there are already 5 total
-      expect(() => {
-        processBuildShip(state, '1', { count: 2, _internal: true });
-      }).toThrow(/fleet capacity|exceed|limit/i);
-    });
-
     it('should not count ships on routes toward fleet capacity', () => {
       const state = createTestGameState();
       state.players['1'].cash = 100;
       // Ships on routes are tracked separately - hangar is empty
       state.players['1'].hangarShips = 0;
-      state.players['1'].repairShips = 0;
       // Note: With the new model, ships on routes don't have a separate counter
       // They're just gone from the hangar. Routes track claimed status.
 
@@ -83,30 +70,15 @@ describe('Rules Compliance - Building Ships', () => {
       expect(result.newState.players['1'].hangarShips).toBe(3);
     });
 
-    it('should count damaged ships toward combined fleet capacity', () => {
-      const state = createTestGameState();
-      state.players['1'].cash = 100;
-      // Damaged ships are in repair bay but count toward the 6-ship total
-      state.players['1'].hangarShips = 0;
-      state.players['1'].repairShips = 5;
-
-      // Building 2 ships with 5 already in repair would exceed 6 total
-      expect(() => {
-        processBuildShip(state, '1', { count: 2, _internal: true });
-      }).toThrow(/fleet capacity|exceed|limit/i);
-    });
-
     it('should allow building up to 6 total ships', () => {
       const state = createTestGameState();
       state.players['1'].cash = 100;
-      state.players['1'].hangarShips = 2;
-      state.players['1'].repairShips = 1;  // 3 total
+      state.players['1'].hangarShips = 3;
 
       // Building 3 more would hit exactly 6 total - should succeed
       const result = processBuildShip(state, '1', { count: 3, _internal: true });
 
-      expect(result.newState.players['1'].hangarShips).toBe(5);
-      expect(result.newState.players['1'].repairShips).toBe(1);
+      expect(result.newState.players['1'].hangarShips).toBe(6);
     });
   });
 

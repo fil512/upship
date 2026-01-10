@@ -136,9 +136,8 @@ function createPlayerState(faction: Faction): PlayerState {
     hasPassed: false, // Whether player has passed in worker placement this round
     techCards: config.startingTechCards || [],
     // Ship counters (ships are tokens, not individual entities with stats)
-    // Per rules Section 3.2: Start with 1 airship in hangar
+    // Per rules Section 4.4: Start with 1 airship in hangar (max 6)
     hangarShips: 1,
-    repairShips: 0,
     routes: [],
     blueprint: blueprint as unknown as PlayerState['blueprint'],
     hand: [],
@@ -242,38 +241,32 @@ function createStarterDeck(): Card[] {
 interface HazardCardDef {
   id: string;
   type: string;
-  category: string;
+  category: 'clear' | 'hazard' | 'fire' | 'catastrophic';  // Simplified: 4 types only
   name: string;
   difficulty: number;
   flak: number;
   autoPass?: boolean;
   hazardType?: string;  // 'weather', 'mechanical', 'supply' - used for auto-pass conditions
-  special?: string;
-  gasLossOnFailure?: number;
-  payloadSlotModifier?: { threshold: number; difficultyIncrease: number };
-  hydrogenOnly?: boolean;
-  engineerCost?: number;
-  noSave?: boolean;
+  hydrogenOnly?: boolean;  // Fire hazards only affect Hydrogen ships
+  noSave?: boolean;        // Catastrophic hazards cannot be overcome
 }
 
 /**
  * Create personal hazard deck of 27 cards per Appendix E
  *
- * Composition:
- * - 4 Clear Weather (auto-pass)
- * - 8 Minor Hazards (difficulty 2-3, challenge type varies)
- * - 8 Major Hazards (difficulty 4-5, challenge type varies, includes special effects)
- * - 6 Fire Hazards (hydrogen only): Engine Fire x2, Gas Cell Rupture x2, Static Discharge x1, Catastrophic Explosion x1
- * - 1 Mechanical Hazard: Critical Structural Stress
+ * Composition (simplified hazard system):
+ * - 4 Clear Weather (auto-pass, category: 'clear')
+ * - 16 Standard Hazards (category: 'hazard') - unified difficulty formula
+ * - 6 Fire Hazards (category: 'fire') - Hydrogen only, fail = Destroyed
+ *   - Engine Fire x2 (difficulty 2), Gas Cell Rupture x2 (difficulty 3)
+ *   - Static Discharge x1 (difficulty 2)
+ * - 1 Catastrophic Explosion (category: 'catastrophic', noSave = Destroyed)
  *
- * Each card includes a `flak` value (0-5) for Age II anti-aircraft checks.
- * Flak distribution per Appendix E:
- * - 0 Flak: 7 cards (safe passage)
- * - 1 Flak: 4 cards (Armor 1+ survives)
- * - 2 Flak: 6 cards (Armor 2+ survives)
- * - 3 Flak: 5 cards (Armor 3+ survives)
- * - 4 Flak: 3 cards (Armor 4 survives) - includes Critical Structural Stress
- * - 5 Flak: 2 cards (always destroys) - currently just 1 (Catastrophic Explosion)
+ * Resolution formula: Total Difficulty = Hazard Difficulty + Mission Difficulty - Ship Reliability
+ * If Total Difficulty > 0: spend exactly that many Engineers to succeed, or fail
+ * Fail outcomes: Standard/Weather → Abort, Fire/Catastrophic → Destroyed
+ *
+ * Flak values (0-5) for Age II anti-aircraft checks.
  */
 function createHazardDeck(): HazardCard[] {
   const hazards: HazardCardDef[] = [];
@@ -292,10 +285,11 @@ function createHazardDeck(): HazardCard[] {
     });
   }
 
-  // 8 Minor Hazards per Appendix E
-  // Simplified model: Total Difficulty = Hazard Difficulty - Ship Reliability (min 0)
-  // If Total Difficulty > 0, spend that many engineers to pass
-  const minorHazards = [
+  // 16 Standard Hazards (formerly Minor + Major)
+  // Unified formula: Total Difficulty = Hazard Difficulty + Mission Difficulty - Ship Reliability
+  // If Total Difficulty > 0, spend that many engineers to pass. Fail = Abort
+  const standardHazards = [
+    // Former Minor Hazards (8)
     { name: 'Light Turbulence', difficulty: 2, hazardType: 'weather', flak: 0 },
     { name: 'Minor Engine Trouble', difficulty: 1, hazardType: 'mechanical', flak: 1 },
     { name: 'Crosswind', difficulty: 3, hazardType: 'weather', flak: 0 },
@@ -303,14 +297,23 @@ function createHazardDeck(): HazardCard[] {
     { name: 'Low Visibility', difficulty: 2, hazardType: 'weather', flak: 1 },
     { name: 'Fuel Concern', difficulty: 2, hazardType: 'supply', flak: 0 },
     { name: 'Headwind', difficulty: 3, hazardType: 'weather', flak: 1 },
-    { name: 'Structural Stress', difficulty: 2, hazardType: 'mechanical', flak: 2 }
+    { name: 'Structural Stress', difficulty: 2, hazardType: 'mechanical', flak: 2 },
+    // Former Major Hazards (8) - no special effects
+    { name: 'Strong Headwind', difficulty: 4, hazardType: 'weather', flak: 2 },
+    { name: 'Icing Conditions', difficulty: 3, hazardType: 'weather', flak: 2 },
+    { name: 'Engine Failure', difficulty: 3, hazardType: 'mechanical', flak: 3 },
+    { name: 'Storm System', difficulty: 4, hazardType: 'weather', flak: 3 },
+    { name: 'Structural Damage', difficulty: 3, hazardType: 'mechanical', flak: 4 },
+    { name: 'Navigation Error', difficulty: 3, hazardType: 'supply', flak: 3 },
+    { name: 'Squall Line', difficulty: 4, hazardType: 'weather', flak: 3 },
+    { name: 'Severe Icing', difficulty: 2, hazardType: 'weather', flak: 2 }
   ];
 
-  minorHazards.forEach((h, i) => {
+  standardHazards.forEach((h, i) => {
     hazards.push({
-      id: `minor_hazard_${i}`,
-      type: 'minor_hazard',
-      category: 'minor',
+      id: `hazard_${i}`,
+      type: 'hazard',
+      category: 'hazard',
       name: h.name,
       hazardType: h.hazardType,
       difficulty: h.difficulty,
@@ -318,45 +321,10 @@ function createHazardDeck(): HazardCard[] {
     });
   });
 
-  // 8 Major Hazards per Appendix E
-  // Simplified model: Total Difficulty = Hazard Difficulty - Ship Reliability (min 0)
-  // If Total Difficulty > 0, spend that many engineers to pass
-  const majorHazards = [
-    { name: 'Strong Headwind', difficulty: 4, hazardType: 'weather', flak: 2 },
-    { name: 'Icing Conditions', difficulty: 3, hazardType: 'weather', flak: 2,
-      special: 'On failure, also lose 1 gas cube. If no gas remains, ship Destroyed.',
-      gasLossOnFailure: 1 },
-    { name: 'Engine Failure', difficulty: 3, hazardType: 'mechanical', flak: 3 },
-    { name: 'Storm System', difficulty: 4, hazardType: 'weather', flak: 3 },
-    { name: 'Structural Damage', difficulty: 3, hazardType: 'mechanical', flak: 4 },
-    { name: 'Navigation Error', difficulty: 3, hazardType: 'supply', flak: 3 },
-    { name: 'Squall Line', difficulty: 4, hazardType: 'weather', flak: 3,
-      special: 'Ships with 3+ Payload slots suffer +1 Difficulty.',
-      payloadSlotModifier: { threshold: 3, difficultyIncrease: 1 } },
-    { name: 'Severe Icing', difficulty: 2, hazardType: 'weather', flak: 2,
-      special: 'On failure, lose 2 gas cubes. If gas remains < ship\'s minimum, ship Destroyed.',
-      gasLossOnFailure: 2 }
-  ];
+  // 5 Fire Hazards (hydrogen only) - Helium auto-passes, Hydrogen fail = Destroyed
+  // Uses unified formula: Total Difficulty = Hazard Difficulty + Mission Difficulty - Ship Reliability
 
-  majorHazards.forEach((h, i) => {
-    const card: HazardCardDef = {
-      id: `major_hazard_${i}`,
-      type: 'major_hazard',
-      category: 'major',
-      name: h.name,
-      hazardType: h.hazardType,
-      difficulty: h.difficulty,
-      flak: h.flak
-    };
-    if (h.special) card.special = h.special;
-    if (h.gasLossOnFailure !== undefined) card.gasLossOnFailure = h.gasLossOnFailure;
-    if (h.payloadSlotModifier) card.payloadSlotModifier = h.payloadSlotModifier;
-    hazards.push(card);
-  });
-
-  // 6 Fire Hazards (hydrogen only)
-
-  // 2x Engine Fire - Spend 1 Engineer to save (Damaged), Fail = Crash - 2 Flak each
+  // 2x Engine Fire - Difficulty 2 - 2 Flak each
   for (let i = 0; i < 2; i++) {
     hazards.push({
       id: `engine_fire_${i}`,
@@ -364,13 +332,12 @@ function createHazardDeck(): HazardCard[] {
       category: 'fire',
       name: 'Engine Fire',
       hydrogenOnly: true,
-      engineerCost: 1,
-      difficulty: 0,
+      difficulty: 2,
       flak: 2
     });
   }
 
-  // 2x Gas Cell Rupture - Spend 2 Engineers to save (Damaged), Fail = Crash - 3 Flak each
+  // 2x Gas Cell Rupture - Difficulty 3 - 3 Flak each
   for (let i = 0; i < 2; i++) {
     hazards.push({
       id: `gas_cell_rupture_${i}`,
@@ -378,14 +345,12 @@ function createHazardDeck(): HazardCard[] {
       category: 'fire',
       name: 'Gas Cell Rupture',
       hydrogenOnly: true,
-      engineerCost: 2,
-      difficulty: 0,
+      difficulty: 3,
       flak: 3
     });
   }
 
-  // 1x Static Discharge - Difficulty 2, Fail = Crash - 4 Flak
-  // Simplified: Total Difficulty = 2 - Ship Reliability. If > 0, spend engineers or crash.
+  // 1x Static Discharge - Difficulty 2 - 4 Flak
   hazards.push({
     id: 'static_discharge_0',
     type: 'static_discharge',
@@ -396,12 +361,12 @@ function createHazardDeck(): HazardCard[] {
     flak: 4
   });
 
-  // 1x Catastrophic Explosion - No save, Crash. Age III Luxury = Hindenburg - 5 Flak
-  // Difficulty 99 ensures this is always fatal - there must always be risk of catastrophic failure
+  // 1x Catastrophic Explosion - No save possible, always Destroyed - 5 Flak
+  // Hydrogen only. Age III Luxury = Hindenburg Disaster
   hazards.push({
     id: 'catastrophic_explosion_0',
     type: 'catastrophic_explosion',
-    category: 'fire',
+    category: 'catastrophic',
     name: 'Catastrophic Explosion',
     hydrogenOnly: true,
     noSave: true,
@@ -409,14 +374,14 @@ function createHazardDeck(): HazardCard[] {
     flak: 5
   });
 
-  // 1 Mechanical Hazard: Critical Structural Stress - 4 Flak
+  // 1x Critical Structural Stress - Standard hazard with difficulty 3 - 4 Flak
   hazards.push({
     id: 'critical_structural_stress_0',
     type: 'critical_structural_stress',
-    category: 'mechanical',
+    category: 'hazard',
     name: 'Critical Structural Stress',
-    engineerCost: 2,
-    difficulty: 0,
+    hazardType: 'mechanical',
+    difficulty: 3,
     flak: 4
   });
 

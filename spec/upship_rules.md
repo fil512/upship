@@ -99,7 +99,7 @@ In **UP SHIP!**, you are the Director of an Airship Conglomerate representing on
 
 The game ends immediately when either condition occurs:
 
-1. **The Hindenburg Disaster:** A Catastrophic Explosion destroys a ship during a Luxury Launch in Age III while using Hydrogen. Complete the current round, then proceed to final scoring.
+1. **The Hindenburg Disaster:** A Hydrogen ship is destroyed by a Fire or Catastrophic hazard during a Luxury Launch in Age III. Complete the current round, then proceed to final scoring.
 
 2. **The Rise of Fixed-Wing Aircraft:** The Progress Track reaches its threshold. Complete the current round, then proceed to final scoring.
 
@@ -283,18 +283,14 @@ Store crew tokens earned from the shared supply:
 1. **Research Contribution:** When you Reveal, each Engineer in your Barracks adds +1 to your available Research
 2. **Hazard Response:** Spend to overcome hazards—if Total Difficulty > 0, spend that many Engineers to pass
 
-## 4.4 The Hangar Bay (Adjacent to Barracks)
+## 4.4 The Hangar (Adjacent to Barracks)
 
-Your fleet is limited to **6 ships total** shared between the Launch Hangar and Repair Hangar.
+Your fleet is limited to **6 ships** in your Hangar.
 
-### Launch Hangar
 Ships ready to fly:
-- Built ships go here; launch ships from here
-
-### Repair Hangar
-Ships requiring maintenance:
-- Damaged ships go here
-- Repair ships at the Repair action space (see Section 6.15)
+- Built ships go here
+- Launch ships from here
+- Aborted launches return here
 
 ## 4.5 Gas Reserve (Adjacent to Hangar Bay)
 
@@ -370,7 +366,7 @@ The player with the **First Player** token goes first, then play proceeds clockw
 
 | Symbol | Locations |
 |--------|-----------|
-| **Wrench** | Blueprint Design, Construction Hall, Gas Depot, Technical Institute, Engineering Depot, Repair |
+| **Wrench** | Blueprint Design, Construction Hall, Gas Depot, Technical Institute, Engineering Depot |
 | **Coin** | Treasury, Research Institute, Flight School, Government Liaison, Insurance Bureau |
 | **Propeller** | Launchpad, Launchpad 2, Ministry, Weather Bureau, Personnel Office |
 | **Any** | Can visit any location |
@@ -418,9 +414,9 @@ The Ground Board has 15 action spaces. Each requires a matching card symbol.
 
 > **Example:** Anna visits the Blueprint Design and replaces her old Basic Engine with a Maybach Engine. The new Tech Tile is taken from supply and the old tile returned to supply.
 
-**Retrofit Cost:** If your Blueprint modifications increase the total Hull Cost, pay the Hull Cost increase multiplied by the number of ships in your Launch Hangar and Repair Hangar combined.
+**Retrofit Cost:** If your Blueprint modifications increase the total Hull Cost, pay the Hull Cost increase multiplied by the number of ships in your Hangar.
 
-> **Example:** Hans has 2 ships in his Launch Hangar and 1 in Repair. His current Hull Cost is £4. He upgrades to a better Frame that increases Hull Cost to £6. He pays (£6 − £4) × 3 ships = £6 Retrofit Cost.
+> **Example:** Hans has 3 ships in his Hangar. His current Hull Cost is £4. He upgrades to a better Frame that increases Hull Cost to £6. He pays (£6 − £4) × 3 ships = £6 Retrofit Cost.
 
 ## 6.3 Construction Hall (Wrench)
 
@@ -433,11 +429,11 @@ The Ground Board has 15 action spaces. Each requires a matching card symbol.
 **Hull Cost Formula:**
 > Sum of Hull Cost values from all installed Tech Tiles. Hull Cost is printed on each tile.
 
-**Result:** Place built ships in your Launch Hangar.
+**Result:** Place built ships in your Hangar.
 
-**Limit:** You may never have more than 6 ships total (Launch Hangar + Repair Hangar combined).
+**Limit:** You may never have more than 6 ships in your Hangar.
 
-**Retrofit Rule:** If you change any Tech Tiles while ships are in your Launch Hangar, pay the Hull Cost difference for each ship (see Section 6.2).
+**Retrofit Rule:** If you change any Tech Tiles while ships are in your Hangar, pay the Hull Cost difference for each ship (see Section 6.2).
 
 ## 6.4 Launchpad / Launchpad 2 (Propeller)
 
@@ -541,16 +537,6 @@ See **Section 8: Launching Ships** for the complete procedure.
 
 > **Example:** Wilhelm has Income Track 7 and visits The Treasury. He gains £7.
 
-## 6.15 Repair (Wrench)
-
-**Action:** Repair damaged ships.
-
-**Cost:** Per ship: £ equal to half your Hull Cost (rounded down) + 1 Engineer.
-
-**Effect:** Move any number of your ships from Repair Hangar to Launch Hangar.
-
-> **Example:** Otto has Hull Cost £6 and 2 damaged ships. He visits Repair, paying £3 + 1 Engineer per ship (£6 + 2 Engineers total) to move both ships to his Launch Hangar.
-
 ---
 
 # 7. BUILDING SHIPS
@@ -592,65 +578,41 @@ Select an unclaimed route on the map. Your Blueprint stats must meet all route r
 - Use Gas Reserve first; buy any deficit at market price
 
 **Step 4: Resolve Hazard Check**
-Draw a Hazard Card from your Personal Hazard Deck and resolve it (see Section 8.2).
-
-**Step 5: Determine Outcome**
-
-| Outcome | When | Ship | Officers | Gas |
-|---------|------|------|----------|-----|
-| **Success** | Pass Hazard Check | On route / Mission | Spent | Spent |
-| **Aborted** | Fail non-fire hazard | Returns to Hangar | Kept | Spent |
-| **Damaged** | Control fire | Repair Hangar | Spent | Spent |
-| **Destroyed** | Crash | To supply | Spent | Spent |
-
-**Step 6: Continue or Stop**
-Launch another ship to a different route, or stop.
+Draw a Hazard Card and resolve it per Section 8.2. Continue launching or stop.
 
 > **Example:** In Age II, Hans launches a ship. He spends 2 Officers, 3 Hydrogen cubes (15 Lift for his 12 Weight), and draws a Hazard Card. He passes and claims the Berlin–Moscow route.
 
 ## 8.2 Hazard Checks
 
-Each Hazard Card shows a **Difficulty Rating**. Your ship's **Reliability** is your defense against hazards.
+Each Hazard Card shows a **Difficulty** and a **Type** (Standard, Weather, Fire, or Catastrophic).
 
 **Resolution:**
-1. Check if auto-pass (Clear Weather or Helium vs Fire).
-2. Calculate **Total Difficulty** = Hazard Difficulty + Mission Difficulty − Ship Reliability (minimum 0).
-3. **If Total Difficulty = 0:** Auto-pass (your Reliability overcomes the hazard).
-4. **If Total Difficulty > 0:** You must spend that many Engineers to pass, or abort the launch.
+1. Check auto-pass: Difficulty 0, or Helium ship vs Fire hazard → **Success**
+2. Catastrophic hazard → **Destroyed** (no save possible)
+3. Calculate **Total Difficulty** = Hazard Difficulty + Mission Difficulty − Ship Reliability (minimum 0)
+4. If Total Difficulty = 0 → **Success**
+5. If Total Difficulty > 0: Spend exactly that many Engineers → **Success**
+6. If you don't spend Engineers:
+   - Standard or Weather hazard → **Abort**
+   - Fire hazard (Hydrogen ship) → **Destroyed**
 
-**Mission Difficulty:** Combat missions (Age II) have a Difficulty rating that adds to hazard checks. Regular routes (Age I and III) have Difficulty 0.
+**Outcomes:**
 
-**Reliability as Defense:** Your ship's Reliability stat reduces the effective difficulty of all hazard checks. High Reliability means fewer Engineers needed to pass hazards.
+| Outcome | Ship | Officers | Gas | Rewards |
+|---------|------|----------|-----|---------|
+| **Success** | On route | Spent | Spent | Yes |
+| **Abort** | Returns to Hangar | Kept | Spent | No |
+| **Destroyed** | To supply | Lost | Lost | No |
 
-> **Example:** Anna draws "Strong Headwind — Difficulty 4" while attempting a combat mission with Difficulty 2. Her ship has Reliability 2. Total Difficulty = 4 + 2 − 2 = 4. She must spend 4 Engineers to pass, or abort the launch.
+**Mission Difficulty:** Combat missions (Age II) add their Difficulty to hazard checks. Routes (Age I and III) have Difficulty 0.
 
-## 8.3 Fire Hazards
+**Hindenburg Disaster:** If a Hydrogen ship is destroyed by any Fire or Catastrophic hazard during a Luxury Launch in Age III, the Hindenburg Disaster is triggered (see Section 1.2).
 
-Ships using **Hydrogen** are vulnerable to fire. Fire hazards only affect Hydrogen ships.
+> **Example:** Anna draws "Strong Headwind — Difficulty 4" on a Difficulty 2 combat mission. Her ship has Reliability 2. Total Difficulty = 4 + 2 − 2 = 4. She must spend 4 Engineers to succeed, or abort.
 
-| Card | Effect |
-|------|--------|
-| **Engine Fire** | Spend 1 Engineer → Damaged. Fail → Crash. |
-| **Gas Cell Rupture** | Spend 2 Engineers → Damaged. Fail → Crash. |
-| **Catastrophic Explosion** | No save. Crash. If Luxury Launch in Age III: Hindenburg Disaster. |
+## 8.3 Luxury Launches
 
-**Fire Immunity:** Ships using **Helium** automatically pass all Fire hazards.
-
-## 8.4 Damaged Ships
-
-When you control a fire by spending Engineers:
-- Ship goes to Repair Hangar (not on route)
-- Officers return to shared supply
-- Gas cubes are spent
-- No Income or city bonus gained
-
-**Repairing Damaged Ships:** To repair a damaged ship, you must visit the **Repair** action space (see Section 6.15). Repair cost per ship is:
-- **£** equal to half your current Hull Cost (rounded down)
-- **1 Engineer** (labor)
-
-## 8.5 Luxury Launches
-
-Routes marked **Luxury** require ships with the Luxury stat. In Age III, Luxury Launches using Hydrogen risk triggering the Hindenburg Disaster if you draw Catastrophic Explosion.
+Routes marked **Luxury** require ships with the Luxury stat. In Age III, Luxury Launches using Hydrogen risk triggering the Hindenburg Disaster if the ship is destroyed by any Fire or Catastrophic hazard.
 
 **Safe Alternative:** Use Helium to eliminate fire risk entirely.
 
@@ -1038,9 +1000,8 @@ Each nation has unique advantages and constraints.
 | Outcome | Ship | Officers | Gas |
 |---------|------|----------|-----|
 | Success | On route | Spent | Spent |
-| Aborted | Returns to Hangar | Kept | Spent |
-| Damaged | Repair Hangar | Spent | Spent |
-| Crash | To supply | Spent | Spent |
+| Abort | Returns to Hangar | Kept | Spent |
+| Destroyed | To supply | Lost | Lost |
 
 ## 14.3 Network Connectivity
 
@@ -1056,7 +1017,7 @@ A **network** is a group of your routes that share at least one city.
 
 ## 14.4 The Hindenburg Disaster
 
-When Catastrophic Explosion occurs during a Luxury Launch in Age III using Hydrogen:
+When a Hydrogen ship is destroyed by a Fire or Catastrophic hazard during a Luxury Launch in Age III:
 1. Game end triggered
 2. Complete current round
 3. Triggering player gains 3 VP (historical infamy)
@@ -1092,7 +1053,7 @@ When Catastrophic Explosion occurs during a Luxury Launch in Age III using Hydro
 | **Gas Cube** | Token providing +5 Lift each | §9.3 |
 | **Gas Reserve** | Zone storing purchased gas cubes | §4.5 |
 | **Ground Board** | Shared board with 12 action spaces | §6 |
-| **Hangar Bay** | Zone containing Launch and Repair Hangars | §4.4 |
+| **Hangar** | Zone holding ships ready to launch (max 6) | §4.4 |
 | **Hazard Check** | Drawing and resolving a Hazard Card | §8.2 |
 | **Helium** | Safe, non-flammable gas (£2–£15/cube) | §9.3 |
 | **Hindenburg Disaster** | Game end trigger from Hydrogen Luxury Launch | §1.2 |
@@ -1168,7 +1129,7 @@ When Catastrophic Explosion occurs during a Luxury Launch in Age III using Hydro
 
 | Symbol | Locations |
 |--------|-----------|
-| Wrench | Blueprint Design, Construction Hall, Gas Depot, Technical Institute, Engineering Depot, Repair |
+| Wrench | Blueprint Design, Construction Hall, Gas Depot, Technical Institute, Engineering Depot |
 | Coin | Treasury, Research Institute, Flight School, Government Liaison, Insurance Bureau |
 | Propeller | Launchpad, Launchpad 2, Ministry, Weather Bureau, Personnel Office |
 
@@ -1194,28 +1155,23 @@ See separate Appendix document for complete tile listings.
 
 # APPENDIX D: HAZARD DECK
 
-Each player has an identical 27-card Personal Hazard Deck:
+Each player has an identical 27-card Personal Hazard Deck. See Appendix E in the separate Appendix document for complete card listings.
 
-## Clear Weather (4 cards)
-Auto-pass. No hazard.
+## Hazard Types
+- **Standard (—):** Fail → Abort (ship returns to Hangar)
+- **Weather:** Fail → Abort. Affected by certain technologies.
+- **Fire:** Helium ships auto-pass. Hydrogen ships that fail → Destroyed.
+- **Catastrophic:** No save possible → Destroyed.
 
-## Minor Hazards (8 cards)
-Difficulty **1–3** against Speed, Reliability, Ceiling, or Range.
+## Resolution Formula
+**Total Difficulty** = Hazard Difficulty + Mission Difficulty − Ship Reliability (min 0)
+- If Total Difficulty = 0: Success
+- If Total Difficulty > 0: Spend that many Engineers to succeed, or fail
 
-## Major Hazards (8 cards)
-Difficulty **2–4** against Speed, Reliability, Ceiling, or Range. Includes:
-- **Squall Line:** Ships with 3+ Payload slots suffer +1 Difficulty.
-- **Icing Conditions:** On failure, also lose 1 gas cube.
-- **Severe Icing:** On failure, lose 2 gas cubes.
-
-## Fire Hazards (6 cards) — Hydrogen Only
-- **Engine Fire (×2):** Spend 1 Engineer → Damaged. Fail → Crash.
-- **Gas Cell Rupture (×2):** Spend 2 Engineers → Damaged. Fail → Crash.
-- **Static Discharge (×1):** Difficulty **2** Reliability check. Spend Engineers to pass. Fail → Crash.
-- **Catastrophic Explosion (×1):** No save. Crash. Age III Luxury = Hindenburg.
-
-## Mechanical Hazards (1 card)
-- **Critical Structural Stress:** Spend 2 Engineers → Damaged. Fail → Crash.
+## Outcomes
+- **Success:** Ship claims route/mission
+- **Abort:** Ship returns to Hangar (Standard/Weather hazards only)
+- **Destroyed:** Ship lost (Fire/Catastrophic hazards, or Hydrogen fails Fire)
 
 ---
 

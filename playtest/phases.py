@@ -569,29 +569,34 @@ def _handle_hazard_response(player: str, game_id: str, ship_id: str, pending_haz
 
     hazard_name = pending_hazard.get('name', 'Unknown')
     engineers_needed = pending_hazard.get('engineersNeeded', 0)
-    engineer_cost = pending_hazard.get('engineerCost')
     auto_pass_reason = pending_hazard.get('autoPassReason')
     no_save = pending_hazard.get('noSave', False)
+    category = pending_hazard.get('category', 'hazard')
+    helium_immunity = pending_hazard.get('heliumFireImmunity', False)
+    conductive_covering = pending_hazard.get('conductiveCoveringImmunity', False)
+    fire_resistant_fabric = pending_hazard.get('fireResistantFabricAvailable', False)
     # Use fresh engineers if provided, otherwise fall back to player_data
     available_engineers = fresh_engineers if fresh_engineers is not None else (player_data.engineers if player_data else 0)
 
+    # Simplified hazard system: unified formula with 3 outcomes
     spend_engineers = False
-    if auto_pass_reason:
-        spend_engineers = True
-        hazard_decision = f"AUTO-PASS ({auto_pass_reason})"
-    elif no_save:
+    is_auto_pass = auto_pass_reason or helium_immunity or conductive_covering or fire_resistant_fabric
+
+    if is_auto_pass:
+        spend_engineers = True  # Just confirm auto-pass
+        reason = auto_pass_reason or ('Helium Fire Immunity' if helium_immunity else
+                 'Conductive Covering' if conductive_covering else 'Fire-Resistant Fabric')
+        hazard_decision = f"AUTO-PASS ({reason})"
+    elif no_save or category == 'catastrophic':
         spend_engineers = False
-        hazard_decision = "NO SAVE POSSIBLE"
-    elif engineer_cost is not None:
-        if available_engineers >= engineer_cost:
-            spend_engineers = True
-            hazard_decision = f"CONTROL FIRE (spend {engineer_cost} engineers)"
-        else:
-            spend_engineers = False
-            hazard_decision = f"CRASH (need {engineer_cost} engineers, have {available_engineers})"
+        hazard_decision = "CATASTROPHIC - NO SAVE POSSIBLE"
+    elif category == 'fire':
+        # Fire hazards with hydrogen: no engineer option, just fail
+        spend_engineers = False
+        hazard_decision = "FIRE HAZARD - HYDROGEN SHIP DESTROYED"
     elif engineers_needed == 0:
         spend_engineers = True
-        hazard_decision = "PASS (stat sufficient)"
+        hazard_decision = "PASS (reliability sufficient)"
     elif available_engineers >= engineers_needed:
         spend_engineers = True
         hazard_decision = f"SPEND {engineers_needed} ENGINEERS"
@@ -600,9 +605,7 @@ def _handle_hazard_response(player: str, game_id: str, ship_id: str, pending_haz
         hazard_decision = f"ABORT (need {engineers_needed} engineers, have {available_engineers})"
 
     yn_decision = "Y" if spend_engineers else "N"
-    if engineer_cost is not None:
-        eng_info = f"cost={engineer_cost}, have={available_engineers}"
-    elif engineers_needed > 0:
+    if engineers_needed > 0:
         eng_info = f"need={engineers_needed}, have={available_engineers}"
     else:
         eng_info = "none needed"
@@ -630,10 +633,6 @@ def _handle_hazard_response(player: str, game_id: str, ship_id: str, pending_haz
     for pid, pdata in players_data.items():
         if pdata.get('faction') == faction:
             player_id_for_route = pid
-            repair_ships = pdata.get('repairShips', 0)
-            # If ship went to repair, it was damaged
-            if repair_ships > 0:
-                return 'repair'
             break
 
     # Check if THIS SPECIFIC route was claimed by this player
@@ -994,38 +993,6 @@ def _execute_placement(player: str, game_id: str, card: dict, location: dict, lo
     elif loc_id == 'research_institute':
         kwargs['levels'] = 1
         action_desc = f"placed at {loc_id} and upgraded research level"
-    elif loc_id == 'repair':
-        # Repair as many ships as we can afford
-        # Cost per ship: floor(Hull Cost / 2) + 1 Engineer
-        if pre_player_data:
-            repair_ship_count = sum(1 for s in (pre_player_data.ships or []) if s.status == 'repair')
-            if repair_ship_count > 0:
-                manifest = get_manifest()
-                blueprint_dict = {
-                    'frameSlots': list(pre_player_data.blueprint.frame_slots or []) if pre_player_data.blueprint else [],
-                    'fabricSlots': list(pre_player_data.blueprint.fabric_slots or []) if pre_player_data.blueprint else [],
-                    'driveSlots': list(pre_player_data.blueprint.drive_slots or []) if pre_player_data.blueprint else [],
-                    'componentSlots': list(pre_player_data.blueprint.component_slots or []) if pre_player_data.blueprint else [],
-                }
-                hull_cost = _calculate_hull_cost(manifest, blueprint_dict)
-                cash_cost_per_ship = hull_cost // 2
-                cash_available = pre_player_data.cash or 0
-                engineers_available = pre_player_data.engineers or 0
-
-                # Calculate how many we can afford
-                affordable_by_cash = cash_available // cash_cost_per_ship if cash_cost_per_ship > 0 else repair_ship_count
-                affordable_by_engineers = engineers_available
-                can_repair = min(repair_ship_count, affordable_by_cash, affordable_by_engineers)
-
-                if can_repair > 0:
-                    kwargs['repairCount'] = can_repair
-                    action_desc = f"placed at {loc_id} and repaired {can_repair} ship(s)"
-                else:
-                    action_desc = f"placed at {loc_id} (cannot afford repair)"
-            else:
-                action_desc = f"placed at {loc_id} (no ships to repair)"
-        else:
-            action_desc = f"placed at {loc_id}"
     elif loc_id in ('launchpad', 'launchpad_2'):
         action_desc = f"placed at {loc_id} (launching ships next)"
 

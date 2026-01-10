@@ -35,78 +35,62 @@ describe('Rules Compliance - Hazard Deck', () => {
       });
     });
 
-    it('should contain exactly 8 Minor Hazard cards (difficulty 1-3)', () => {
+    it('should contain 17 standard Hazard cards (category: hazard)', () => {
       const deck = createHazardDeck();
-      const minorHazards = deck.filter(card => card.category === 'minor');
-      expect(minorHazards.length).toBe(8);
+      // Standard hazards now include all former minor/major + Critical Structural Stress
+      const standardHazards = deck.filter(card => card.category === 'hazard');
+      expect(standardHazards.length).toBe(17);
 
-      // All minor hazards should have difficulty 1-3
-      // Simplified model: Total Difficulty = Hazard Difficulty - Ship Reliability
-      // With reliability 0-2 and engineers 0-3, these should be passable
-      minorHazards.forEach(card => {
+      // All standard hazards should have difficulty 1-4
+      standardHazards.forEach(card => {
         expect(card.difficulty).toBeGreaterThanOrEqual(1);
-        expect(card.difficulty).toBeLessThanOrEqual(3);
-      });
-
-      // Minor hazards should have hazardType (weather, mechanical, or supply)
-      minorHazards.forEach(card => {
-        expect(['weather', 'mechanical', 'supply']).toContain(card.hazardType);
-      });
-    });
-
-    it('should contain exactly 8 Major Hazard cards (difficulty 2-4)', () => {
-      const deck = createHazardDeck();
-      const majorHazards = deck.filter(card => card.category === 'major');
-      expect(majorHazards.length).toBe(8);
-
-      // All major hazards should have difficulty 2-4
-      // Simplified model: Total Difficulty = Hazard Difficulty - Ship Reliability
-      // With reliability 2-3 and engineers 2-4, these should be challenging but passable
-      majorHazards.forEach(card => {
-        expect(card.difficulty).toBeGreaterThanOrEqual(2);
         expect(card.difficulty).toBeLessThanOrEqual(4);
       });
-
-      // Major hazards should have hazardType (weather, mechanical, or supply)
-      majorHazards.forEach(card => {
-        expect(['weather', 'mechanical', 'supply']).toContain(card.hazardType);
-      });
     });
 
-    it('should contain exactly 6 Fire Hazard cards with correct distribution', () => {
+    it('should contain exactly 5 Fire Hazard cards with correct distribution', () => {
       const deck = createHazardDeck();
       const fireHazards = deck.filter(card => card.category === 'fire');
-      expect(fireHazards.length).toBe(6);
+      expect(fireHazards.length).toBe(5);
 
-      // Check exact distribution: 2x Engine Fire, 2x Gas Cell Rupture, 1x Static Discharge, 1x Catastrophic Explosion
+      // Check distribution: 2x Engine Fire, 2x Gas Cell Rupture, 1x Static Discharge
+      // Note: Catastrophic Explosion is now category: 'catastrophic'
       const engineFires = fireHazards.filter(card => card.type === 'engine_fire');
       const gasCellRuptures = fireHazards.filter(card => card.type === 'gas_cell_rupture');
       const staticDischarges = fireHazards.filter(card => card.type === 'static_discharge');
-      const catastrophicExplosions = fireHazards.filter(card => card.type === 'catastrophic_explosion');
 
       expect(engineFires.length).toBe(2);
       expect(gasCellRuptures.length).toBe(2);
       expect(staticDischarges.length).toBe(1);
-      expect(catastrophicExplosions.length).toBe(1);
     });
 
-    it('should have Engine Fire cards requiring 1 Engineer to save', () => {
+    it('should contain exactly 1 Catastrophic hazard (Catastrophic Explosion)', () => {
+      const deck = createHazardDeck();
+      const catastrophicHazards = deck.filter(card => card.category === 'catastrophic');
+      expect(catastrophicHazards.length).toBe(1);
+      expect(catastrophicHazards[0].type).toBe('catastrophic_explosion');
+      expect(catastrophicHazards[0].noSave).toBe(true);
+    });
+
+    it('should have Engine Fire cards with difficulty 2', () => {
       const deck = createHazardDeck();
       const engineFires = deck.filter(card => card.type === 'engine_fire');
 
       engineFires.forEach(card => {
-        expect(card.engineerCost).toBe(1);
+        expect(card.difficulty).toBe(2);
         expect(card.hydrogenOnly).toBe(true);
+        expect(card.engineerCost).toBeUndefined(); // No longer uses fixed cost
       });
     });
 
-    it('should have Gas Cell Rupture cards requiring 2 Engineers to save', () => {
+    it('should have Gas Cell Rupture cards with difficulty 3', () => {
       const deck = createHazardDeck();
       const gasCellRuptures = deck.filter(card => card.type === 'gas_cell_rupture');
 
       gasCellRuptures.forEach(card => {
-        expect(card.engineerCost).toBe(2);
+        expect(card.difficulty).toBe(3);
         expect(card.hydrogenOnly).toBe(true);
+        expect(card.engineerCost).toBeUndefined(); // No longer uses fixed cost
       });
     });
 
@@ -129,14 +113,12 @@ describe('Rules Compliance - Hazard Deck', () => {
       expect(catastrophic.hydrogenOnly).toBe(true);
     });
 
-    it('should contain exactly 1 Mechanical Hazard (Critical Structural Stress)', () => {
+    it('should contain exactly 1 Critical Structural Stress card', () => {
       const deck = createHazardDeck();
-      const mechanicalHazards = deck.filter(card => card.category === 'mechanical');
-      expect(mechanicalHazards.length).toBe(1);
-
-      const criticalStress = mechanicalHazards[0];
-      expect(criticalStress.type).toBe('critical_structural_stress');
-      expect(criticalStress.engineerCost).toBe(2);
+      const criticalStress = deck.find(card => card.type === 'critical_structural_stress');
+      expect(criticalStress).toBeDefined();
+      expect(criticalStress.difficulty).toBe(3); // Uses unified difficulty formula
+      expect(criticalStress.engineerCost).toBeUndefined(); // No longer uses fixed cost
     });
 
     it('should have all cards with unique IDs', () => {
@@ -237,7 +219,7 @@ describe('Rules Compliance - Hazard Deck', () => {
     });
   });
 
-  describe('GAP-039: Special hazard effects (Icing, Squall Line)', () => {
+  describe('Simplified hazard system (no special effects)', () => {
     let createHazardDeck;
 
     beforeAll(() => {
@@ -245,31 +227,34 @@ describe('Rules Compliance - Hazard Deck', () => {
       createHazardDeck = gameStateService.createHazardDeck;
     });
 
-    it('should have Icing Conditions with special gas loss effect', () => {
+    it('should NOT have special gas loss effects on Icing cards', () => {
       const deck = createHazardDeck();
       const icingConditions = deck.find(card => card.name === 'Icing Conditions');
       expect(icingConditions).toBeDefined();
-      expect(icingConditions.special).toBeDefined();
-      expect(icingConditions.special).toContain('gas');
-      expect(icingConditions.gasLossOnFailure).toBe(1);
+      expect(icingConditions.special).toBeUndefined();
+      expect(icingConditions.gasLossOnFailure).toBeUndefined();
+      // Should have standard difficulty
+      expect(icingConditions.difficulty).toBe(3);
     });
 
-    it('should have Severe Icing with special gas loss effect', () => {
+    it('should NOT have special gas loss effects on Severe Icing', () => {
       const deck = createHazardDeck();
       const severeIcing = deck.find(card => card.name === 'Severe Icing');
       expect(severeIcing).toBeDefined();
-      expect(severeIcing.special).toBeDefined();
-      expect(severeIcing.gasLossOnFailure).toBe(2);
+      expect(severeIcing.special).toBeUndefined();
+      expect(severeIcing.gasLossOnFailure).toBeUndefined();
+      // Should have standard difficulty
+      expect(severeIcing.difficulty).toBe(2);
     });
 
-    it('should have Squall Line with payload slot difficulty modifier', () => {
+    it('should NOT have payload slot modifier on Squall Line', () => {
       const deck = createHazardDeck();
       const squallLine = deck.find(card => card.name === 'Squall Line');
       expect(squallLine).toBeDefined();
-      expect(squallLine.special).toBeDefined();
-      expect(squallLine.payloadSlotModifier).toBeDefined();
-      expect(squallLine.payloadSlotModifier.threshold).toBe(3);
-      expect(squallLine.payloadSlotModifier.difficultyIncrease).toBe(1);
+      expect(squallLine.special).toBeUndefined();
+      expect(squallLine.payloadSlotModifier).toBeUndefined();
+      // Should have standard difficulty
+      expect(squallLine.difficulty).toBe(4);
     });
   });
 
@@ -291,7 +276,6 @@ describe('Rules Compliance - Hazard Deck', () => {
           player1: {
             engineers: 0,
             hangarShips: 0,  // Ship is mid-launch
-            repairShips: 0,
             pendingLaunch: {
               routeId: 'route1',
               gasType: 'hydrogen',
@@ -303,8 +287,7 @@ describe('Rules Compliance - Hazard Deck', () => {
               category: 'fire',
               name: 'Static Discharge',
               hydrogenOnly: true,
-              challengeType: 'reliability',
-              difficulty: 5,
+              difficulty: 2,  // Per Appendix E
               flak: 4
             }],
             hazardDiscardPile: [],

@@ -4,7 +4,7 @@
  */
 
 const { createTestGameState } = require('../../fixtures/testData');
-const { processHazardCheck, checkHindenburgDisaster } = require('../../../server/actions/hazard');
+const { processHazardCheck, isPotentialHindenburgSituation } = require('../../../server/actions/hazard');
 
 /**
  * Helper to set up pendingLaunch state for hazard tests.
@@ -19,11 +19,11 @@ const { processHazardCheck, checkHindenburgDisaster } = require('../../../server
  * 3. Hazard check determines outcome
  *
  * So this helper decrements hangarShips to simulate the launch step.
+ * NOTE: repairShips removed in simplified hazard system (no repair bay)
  */
 function setupPendingLaunch(playerState, ship, hazardCard) {
-  // Initialize counters
+  // Initialize counters (no repairShips in simplified system)
   playerState.hangarShips = playerState.hangarShips || 0;
-  playerState.repairShips = playerState.repairShips || 0;
 
   // Simulate launch: ship leaves hangar and becomes pendingLaunch
   // Decrement hangar if there are ships (simulates the launch process)
@@ -204,7 +204,7 @@ describe('Rules Compliance - Hazards', () => {
     });
   });
 
-  describe('GAP-037: Fire Hazard Engineer spend mechanic', () => {
+  describe('Fire Hazards - unified difficulty formula', () => {
     it('should auto-pass fire hazards for Helium ships', () => {
       const state = createTestGameState();
       state.age = 1;
@@ -215,7 +215,7 @@ describe('Rules Compliance - Hazards', () => {
         category: 'fire',
         name: 'Engine Fire',
         hydrogenOnly: true,
-        engineerCost: 1
+        difficulty: 2 // Now uses difficulty, not engineerCost
       };
 
       // Helium ship
@@ -240,10 +240,10 @@ describe('Rules Compliance - Hazards', () => {
       expect(result.newState.map.routes[0].claimed).toBe('1');
     });
 
-    it('should require 1 Engineer to save from Engine Fire (Damaged outcome)', () => {
+    it('should succeed when Hydrogen ship spends engineers equal to total difficulty', () => {
       const state = createTestGameState();
       state.age = 1;
-      state.players['1'].engineers = 2;
+      state.players['1'].engineers = 3;
 
       const hazardCard = {
         id: 'engine_fire_0',
@@ -251,14 +251,15 @@ describe('Rules Compliance - Hazards', () => {
         category: 'fire',
         name: 'Engine Fire',
         hydrogenOnly: true,
-        engineerCost: 1
+        difficulty: 2 // Difficulty 2
       };
 
-      // Hydrogen ship
+      // Hydrogen ship with reliability 0
+      // Total Difficulty = 2 + 0 - 0 = 2
       setupPendingLaunch(state.players['1'], {
         pendingRouteId: 'route_1',
         gasType: 'hydrogen',
-        stats: { speed: 1, reliability: 5, ceiling: 0, range: 3 }
+        stats: { speed: 1, reliability: 0, ceiling: 0, range: 3 }
       }, hazardCard);
 
       state.map.routes = [{
@@ -269,74 +270,35 @@ describe('Rules Compliance - Hazards', () => {
         claimed: null
       }];
 
-      // Spend 1 engineer to control fire
-      const result = processHazardCheck(state, '1', { engineersToSpend: 1 });
-
-      // Should be Damaged (ship in repair bay)
-      expect(result.newState.players['1'].pendingLaunch).toBeUndefined();
-      expect(result.newState.players['1'].repairShips).toBe(1);
-      // Should have spent 1 engineer
-      expect(result.newState.players['1'].engineers).toBe(1);
-    });
-
-    it('should require 2 Engineers to save from Gas Cell Rupture (Damaged outcome)', () => {
-      const state = createTestGameState();
-      state.age = 1;
-      state.players['1'].engineers = 3;
-
-      const hazardCard = {
-        id: 'gas_cell_rupture_0',
-        type: 'gas_cell_rupture',
-        category: 'fire',
-        name: 'Gas Cell Rupture',
-        hydrogenOnly: true,
-        engineerCost: 2
-      };
-
-      // Hydrogen ship
-      setupPendingLaunch(state.players['1'], {
-        pendingRouteId: 'route_1',
-        gasType: 'hydrogen',
-        stats: { speed: 1, reliability: 5, ceiling: 0, range: 3 }
-      }, hazardCard);
-
-      state.map.routes = [{
-        id: 'route_1',
-        from: 'A',
-        to: 'B',
-        income: 2,
-        claimed: null
-      }];
-
-      // Spend 2 engineers to control fire
+      // Spend 2 engineers to overcome difficulty
       const result = processHazardCheck(state, '1', { engineersToSpend: 2 });
 
-      // Should be Damaged (ship in repair bay)
+      // Should succeed - route claimed
       expect(result.newState.players['1'].pendingLaunch).toBeUndefined();
-      expect(result.newState.players['1'].repairShips).toBe(1);
-      // Should have spent 2 engineers
+      expect(result.newState.map.routes[0].claimed).toBe('1');
       expect(result.newState.players['1'].engineers).toBe(1);
     });
 
-    it('should Crash if insufficient Engineers for fire hazard', () => {
+    it('should auto-pass fire hazard when reliability >= difficulty', () => {
       const state = createTestGameState();
       state.age = 1;
-      state.players['1'].engineers = 1; // Only 1 engineer
+      state.players['1'].engineers = 0;
 
       const hazardCard = {
-        id: 'gas_cell_rupture_0',
-        type: 'gas_cell_rupture',
+        id: 'engine_fire_0',
+        type: 'engine_fire',
         category: 'fire',
-        name: 'Gas Cell Rupture',
+        name: 'Engine Fire',
         hydrogenOnly: true,
-        engineerCost: 2
+        difficulty: 2
       };
 
-      // Hydrogen ship
+      // Hydrogen ship with reliability 3 (>= difficulty 2)
+      // Total Difficulty = 2 + 0 - 3 = 0 (auto-pass)
       setupPendingLaunch(state.players['1'], {
         pendingRouteId: 'route_1',
         gasType: 'hydrogen',
-        stats: { speed: 1, reliability: 5, ceiling: 0, range: 3 }
+        stats: { speed: 1, reliability: 3, ceiling: 0, range: 3 }
       }, hazardCard);
 
       state.map.routes = [{
@@ -347,14 +309,53 @@ describe('Rules Compliance - Hazards', () => {
         claimed: null
       }];
 
-      // Cannot spend enough engineers - auto-decision to not spend
-      const result = processHazardCheck(state, '1', { engineersToSpend: 0 });
+      const result = processHazardCheck(state, '1', {});
 
-      // Should be destroyed
+      // Should auto-pass - reliability overcomes difficulty
       expect(result.newState.players['1'].pendingLaunch).toBeUndefined();
+      expect(result.newState.map.routes[0].claimed).toBe('1');
     });
 
-    it('should allow Catastrophic Explosion with no save - always crashes', () => {
+    it('should DESTROY Hydrogen ship when fire hazard not overcome (not abort)', () => {
+      const state = createTestGameState();
+      state.age = 1;
+      state.players['1'].engineers = 0;
+      state.players['1'].hangarShips = 0; // Ship is in pendingLaunch
+
+      const hazardCard = {
+        id: 'gas_cell_rupture_0',
+        type: 'gas_cell_rupture',
+        category: 'fire',
+        name: 'Gas Cell Rupture',
+        hydrogenOnly: true,
+        difficulty: 3
+      };
+
+      // Hydrogen ship with reliability 1
+      // Total Difficulty = 3 + 0 - 1 = 2, but no engineers to spend
+      setupPendingLaunch(state.players['1'], {
+        pendingRouteId: 'route_1',
+        gasType: 'hydrogen',
+        stats: { speed: 1, reliability: 1, ceiling: 0, range: 3 }
+      }, hazardCard);
+
+      state.map.routes = [{
+        id: 'route_1',
+        from: 'A',
+        to: 'B',
+        income: 2,
+        claimed: null
+      }];
+
+      const result = processHazardCheck(state, '1', { engineersToSpend: 0 });
+
+      // Should be DESTROYED (not aborted) - fire hazards destroy on failure
+      expect(result.newState.players['1'].pendingLaunch).toBeUndefined();
+      expect(result.newState.players['1'].hangarShips).toBe(0); // NOT returned to hangar
+      expect(result.newState.map.routes[0].claimed).toBeNull();
+    });
+
+    it('should always destroy on Catastrophic hazard - no save possible', () => {
       const state = createTestGameState();
       state.age = 1;
       state.players['1'].engineers = 10; // Even many engineers won't help
@@ -362,14 +363,13 @@ describe('Rules Compliance - Hazards', () => {
       const hazardCard = {
         id: 'catastrophic_explosion_0',
         type: 'catastrophic_explosion',
-        category: 'fire',
+        category: 'catastrophic', // New category type
         name: 'Catastrophic Explosion',
         hydrogenOnly: true,
-        noSave: true,
-        difficulty: 99
+        noSave: true
       };
 
-      // Hydrogen ship
+      // Hydrogen ship with high stats - doesn't matter, no save
       setupPendingLaunch(state.players['1'], {
         pendingRouteId: 'route_1',
         gasType: 'hydrogen',
@@ -387,8 +387,9 @@ describe('Rules Compliance - Hazards', () => {
 
       const result = processHazardCheck(state, '1', {});
 
-      // Should be destroyed - no save possible
+      // Should be destroyed - no save possible for Catastrophic
       expect(result.newState.players['1'].pendingLaunch).toBeUndefined();
+      expect(result.newState.map.routes[0].claimed).toBeNull();
     });
 
     it('should auto-pass Clear Weather cards', () => {
@@ -468,7 +469,8 @@ describe('Rules Compliance - Hazards', () => {
 
       const hazardCard = {
         type: 'catastrophic_explosion',
-        category: 'fire',
+        name: 'Catastrophic Explosion',
+        category: 'catastrophic',  // Use catastrophic category
         hydrogenOnly: true,
         noSave: true,
         difficulty: 99
@@ -496,12 +498,13 @@ describe('Rules Compliance - Hazards', () => {
       const state = createTestGameState();
       state.age = 3;
 
+      // Use a fire hazard for Helium test (Helium auto-passes fire hazards)
       const hazardCard = {
-        type: 'catastrophic_explosion',
+        type: 'engine_fire',
+        name: 'Engine Fire',
         category: 'fire',
         hydrogenOnly: true,
-        noSave: true,
-        difficulty: 99
+        difficulty: 2
       };
 
       setupPendingLaunch(state.players['1'], {
@@ -528,7 +531,8 @@ describe('Rules Compliance - Hazards', () => {
 
       const hazardCard = {
         type: 'catastrophic_explosion',
-        category: 'fire',
+        name: 'Catastrophic Explosion',
+        category: 'catastrophic',  // Use catastrophic category
         hydrogenOnly: true,
         noSave: true,
         difficulty: 99
@@ -557,16 +561,18 @@ describe('Rules Compliance - Hazards', () => {
       state.age = 3;
       state.players['1'].engineers = 0;
 
+      // Standard hazards (not fire/catastrophic) don't trigger Hindenburg even on fail
       const hazardCard = {
         type: 'strong_headwind',
-        challengeType: 'speed',
+        name: 'Strong Headwind',
+        category: 'hazard',  // Standard hazard, not fire/catastrophic
         difficulty: 10
       };
 
       setupPendingLaunch(state.players['1'], {
         pendingRouteId: 'luxury_route',
         gasType: 'hydrogen',
-        stats: { speed: 0, reliability: 0 }
+        stats: { reliability: 0 }
       }, hazardCard);
 
       state.map.routes = [{
@@ -577,27 +583,24 @@ describe('Rules Compliance - Hazards', () => {
 
       const result = processHazardCheck(state, '1', {});
 
-      // Regular hazard failure shouldn't trigger Hindenburg
+      // Regular hazard failure (abort) shouldn't trigger Hindenburg
       expect(result.newState.hindenburgDisaster).toBeFalsy();
     });
 
-    it('should check all conditions: Age III + Hydrogen + Luxury + Catastrophic Explosion', () => {
-      // This is a helper function test
-      const conditions = {
-        age: 3,
-        gasType: 'hydrogen',
-        isLuxuryRoute: true,
-        hazardType: 'catastrophic_explosion'
-      };
+    it('should check all conditions: Age III + Hydrogen + Luxury + Fire/Catastrophic category', () => {
+      // This is a helper function test - renamed from checkHindenburgDisaster to isPotentialHindenburgSituation
+      // New signature: isPotentialHindenburgSituation(age, gasType, isLuxuryRoute, hazardCategory)
 
-      const shouldTrigger = checkHindenburgDisaster(conditions);
-      expect(shouldTrigger).toBe(true);
+      // All conditions met with catastrophic category
+      expect(isPotentialHindenburgSituation(3, 'hydrogen', true, 'catastrophic')).toBe(true);
+      // All conditions met with fire category also triggers
+      expect(isPotentialHindenburgSituation(3, 'hydrogen', true, 'fire')).toBe(true);
 
       // Missing any condition should return false
-      expect(checkHindenburgDisaster({ ...conditions, age: 2 })).toBe(false);
-      expect(checkHindenburgDisaster({ ...conditions, gasType: 'helium' })).toBe(false);
-      expect(checkHindenburgDisaster({ ...conditions, isLuxuryRoute: false })).toBe(false);
-      expect(checkHindenburgDisaster({ ...conditions, hazardType: 'strong_wind' })).toBe(false);
+      expect(isPotentialHindenburgSituation(2, 'hydrogen', true, 'catastrophic')).toBe(false);  // Age II
+      expect(isPotentialHindenburgSituation(3, 'helium', true, 'catastrophic')).toBe(false);     // Helium
+      expect(isPotentialHindenburgSituation(3, 'hydrogen', false, 'catastrophic')).toBe(false);  // Non-luxury
+      expect(isPotentialHindenburgSituation(3, 'hydrogen', true, 'hazard')).toBe(false);         // Standard hazard
     });
   });
 
@@ -730,7 +733,7 @@ describe('Rules Compliance - Hazards', () => {
       const hazardCard = {
         id: 'catastrophic_explosion_0',
         type: 'catastrophic_explosion',
-        category: 'fire',
+        category: 'catastrophic',  // Use catastrophic category, not fire
         name: 'Catastrophic Explosion',
         hydrogenOnly: true,
         noSave: true
@@ -754,9 +757,9 @@ describe('Rules Compliance - Hazards', () => {
 
       const result = processHazardCheck(state, '1', {});
 
-      // Ship should be destroyed - insurance doesn't help with catastrophic explosion
+      // Ship should be destroyed - insurance doesn't help with catastrophic explosion (noSave)
       expect(result.newState.players['1'].pendingLaunch).toBeUndefined();
-      // Insurance should NOT be consumed
+      // Insurance should NOT be consumed for catastrophic hazards
       expect(result.newState.players['1'].insurance).toBe(3);
     });
 
@@ -1225,8 +1228,11 @@ describe('Rules Compliance - Hazards', () => {
     });
   });
 
-  describe('Critical Structural Stress (Mechanical Hazard)', () => {
-    it('should allow spending 2 Engineers to save ship (Damaged outcome)', () => {
+  describe('Critical Structural Stress (Standard Hazard)', () => {
+    // In simplified system: Critical Structural Stress is category: 'hazard', difficulty: 3
+    // Uses unified formula: Total Difficulty = Hazard Difficulty - Ship Reliability
+    // Success: spend engineers = route claimed; Fail: Abort (ship returns to hangar)
+    it('should allow spending Engineers to pass and claim route (Success outcome)', () => {
       const state = createTestGameState();
       state.age = 1;
       state.players['1'].engineers = 3;
@@ -1235,13 +1241,13 @@ describe('Rules Compliance - Hazards', () => {
       const hazardCard = {
         id: 'critical_structural_stress_0',
         type: 'critical_structural_stress',
-        category: 'mechanical',
+        category: 'hazard',  // Standard hazard in simplified system
         name: 'Critical Structural Stress',
-        engineerCost: 2,
+        difficulty: 3,  // Uses unified difficulty formula, not engineerCost
         flak: 4
       };
 
-      // Hydrogen ship (mechanical hazards affect all ships, not just hydrogen)
+      // Ship with reliability 1: Total Difficulty = 3 - 1 = 2 engineers needed
       setupPendingLaunch(state.players['1'], {
         pendingRouteId: 'route_1',
         gasType: 'hydrogen',
@@ -1256,17 +1262,17 @@ describe('Rules Compliance - Hazards', () => {
         claimed: null
       }];
 
-      // Spend 2 engineers to control structural damage
+      // Spend 2 engineers to overcome hazard
       const result = processHazardCheck(state, '1', { engineersToSpend: 2 });
 
-      // Should be Damaged (ship in repair bay)
+      // Should succeed and claim route
       expect(result.newState.players['1'].pendingLaunch).toBeUndefined();
-      expect(result.newState.players['1'].repairShips).toBe(1);
+      expect(result.newState.map.routes[0].claimed).toBe('1');
       // Should have spent 2 engineers
       expect(result.newState.players['1'].engineers).toBe(1);
     });
 
-    it('should Crash if insufficient Engineers for Critical Structural Stress', () => {
+    it('should Abort if insufficient Engineers for Critical Structural Stress', () => {
       const state = createTestGameState();
       state.age = 1;
       state.players['1'].engineers = 1; // Only 1 engineer, need 2
@@ -1275,12 +1281,13 @@ describe('Rules Compliance - Hazards', () => {
       const hazardCard = {
         id: 'critical_structural_stress_0',
         type: 'critical_structural_stress',
-        category: 'mechanical',
+        category: 'hazard',  // Standard hazard in simplified system
         name: 'Critical Structural Stress',
-        engineerCost: 2,
+        difficulty: 3,  // Uses unified difficulty formula
         flak: 4
       };
 
+      // Ship with reliability 1: Total Difficulty = 3 - 1 = 2 engineers needed
       setupPendingLaunch(state.players['1'], {
         pendingRouteId: 'route_1',
         gasType: 'hydrogen',
@@ -1295,31 +1302,32 @@ describe('Rules Compliance - Hazards', () => {
         claimed: null
       }];
 
-      // Try to spend 1 engineer but need 2
+      // Try to spend 1 engineer but need 2 - will abort instead
       const result = processHazardCheck(state, '1', { engineersToSpend: 1 });
 
-      // Should Crash - insufficient engineers
+      // Should Abort - insufficient engineers (standard hazard = abort, not destroyed)
       expect(result.newState.players['1'].pendingLaunch).toBeUndefined();
-      // Ship destroyed, not in repair bay
-      expect(result.newState.players['1'].repairShips).toBe(0);
+      // Ship returns to hangar on abort
+      expect(result.newState.players['1'].hangarShips).toBe(1);
     });
 
-    it('should affect Helium ships (mechanical hazards are not hydrogen-only)', () => {
+    it('should affect Helium ships (standard hazards are not hydrogen-only)', () => {
       const state = createTestGameState();
       state.age = 1;
       state.players['1'].engineers = 0;
       state.players['1'].insurance = 0;
+      state.players['1'].hangarShips = 1;
 
       const hazardCard = {
         id: 'critical_structural_stress_0',
         type: 'critical_structural_stress',
-        category: 'mechanical',
+        category: 'hazard',  // Standard hazard in simplified system
         name: 'Critical Structural Stress',
-        engineerCost: 2,
+        difficulty: 3,  // Uses unified difficulty formula
         flak: 4
       };
 
-      // Helium ship - mechanical hazards still apply
+      // Helium ship with reliability 1: Total Difficulty = 3 - 1 = 2 engineers needed
       setupPendingLaunch(state.players['1'], {
         pendingRouteId: 'route_1',
         gasType: 'helium',
@@ -1336,260 +1344,14 @@ describe('Rules Compliance - Hazards', () => {
 
       const result = processHazardCheck(state, '1', { engineersToSpend: 0 });
 
-      // Helium ships are NOT immune to mechanical hazards (unlike fire)
-      // Should Crash - no engineers to spend
+      // Helium ships are NOT immune to standard hazards (only immune to fire)
+      // Should Abort - no engineers to spend
       expect(result.newState.players['1'].pendingLaunch).toBeUndefined();
+      // Ship returns to hangar on abort
+      expect(result.newState.players['1'].hangarShips).toBe(1);
     });
   });
 
-  describe('Squall Line Payload Slot Modifier', () => {
-    it('should apply +1 Difficulty for ships with 3+ Payload slots', () => {
-      const state = createTestGameState();
-      state.age = 3; // Age III has 4 payload slots
-      state.players['1'].engineers = 0;
-
-      const hazardCard = {
-        id: 'squall_line_0',
-        type: 'major_reliability',
-        category: 'major',
-        name: 'Squall Line',
-        challengeType: 'reliability',
-        hazardType: 'weather',
-        difficulty: 4,
-        payloadSlotModifier: { threshold: 3, difficultyIncrease: 1 }
-      };
-
-      // Ship with reliability 1
-      // With new rules: Net Difficulty = Hazard(4) + Route(0) - Reliability(1) + Payload(1) = 4
-      // (Payload modifier applied after reliability reduction)
-      // Check: 1 >= 4? NO → FAIL
-      setupPendingLaunch(state.players['1'], {
-        pendingRouteId: 'route_1',
-        gasType: 'hydrogen',
-        stats: { speed: 1, reliability: 1, ceiling: 0, range: 3 }
-      }, hazardCard);
-
-      // Set up 3 payload slots (componentSlots)
-      state.players['1'].blueprint.componentSlots = ['cargo_nets', 'passenger_gondola', 'mail_compartment'];
-
-      state.map.routes = [{
-        id: 'route_1',
-        from: 'A',
-        to: 'B',
-        income: 2,
-        claimed: null
-      }];
-
-      const result = processHazardCheck(state, '1', {});
-
-      // Should FAIL - reliability 1 < net difficulty 4
-      expect(result.newState.players['1'].pendingLaunch).toBeUndefined();
-      expect(result.newState.players['1'].hangarShips).toBe(1); // Ship aborted
-      expect(result.newState.map.routes[0].claimed).toBeNull();
-    });
-
-    it('should NOT apply +1 Difficulty for ships with fewer than 3 Payload slots', () => {
-      const state = createTestGameState();
-      state.age = 1;
-      state.players['1'].engineers = 0;
-
-      const hazardCard = {
-        id: 'squall_line_0',
-        type: 'major_reliability',
-        category: 'major',
-        name: 'Squall Line',
-        challengeType: 'reliability',
-        hazardType: 'weather',
-        difficulty: 4,
-        payloadSlotModifier: { threshold: 3, difficultyIncrease: 1 }
-      };
-
-      // Ship with reliability 4 passes normal difficulty (4 >= 4)
-      setupPendingLaunch(state.players['1'], {
-        pendingRouteId: 'route_1',
-        gasType: 'hydrogen',
-        stats: { speed: 1, reliability: 4, ceiling: 0, range: 3 }
-      }, hazardCard);
-
-      // Only 2 payload slots
-      state.players['1'].blueprint.componentSlots = ['cargo_nets', 'passenger_gondola'];
-
-      state.map.routes = [{
-        id: 'route_1',
-        from: 'A',
-        to: 'B',
-        income: 2,
-        claimed: null
-      }];
-
-      const result = processHazardCheck(state, '1', {});
-
-      // Should PASS - reliability 4 >= difficulty 4 (no modifier)
-      expect(result.newState.players['1'].pendingLaunch).toBeUndefined();
-      expect(result.newState.map.routes[0].claimed).toBe('1');
-    });
-  });
-
-  describe('Icing Conditions Gas Loss on Failure', () => {
-    it('should lose 1 gas cube on failure from Icing Conditions', () => {
-      const state = createTestGameState();
-      state.age = 1;
-      state.players['1'].engineers = 0;
-      state.players['1'].gasCubes = { hydrogen: 2, helium: 0 };
-
-      const hazardCard = {
-        id: 'icing_conditions_0',
-        type: 'major_ceiling',
-        category: 'major',
-        name: 'Icing Conditions',
-        challengeType: 'ceiling',
-        hazardType: 'weather',
-        difficulty: 3,
-        gasLossOnFailure: 1
-      };
-
-      // Ship with ceiling 2 fails (2 < 3)
-      setupPendingLaunch(state.players['1'], {
-        pendingRouteId: 'route_1',
-        gasType: 'hydrogen',
-        stats: { speed: 1, reliability: 0, ceiling: 2, range: 3 }
-      }, hazardCard);
-
-      state.map.routes = [{
-        id: 'route_1',
-        from: 'A',
-        to: 'B',
-        income: 2,
-        claimed: null
-      }];
-
-      const result = processHazardCheck(state, '1', {});
-
-      // Should fail and lose 1 gas cube
-      expect(result.newState.players['1'].pendingLaunch).toBeUndefined();
-      expect(result.newState.players['1'].hangarShips).toBe(1); // Ship aborted
-      expect(result.newState.players['1'].gasCubes.hydrogen).toBe(1); // Lost 1 cube
-    });
-
-    it('should lose 2 gas cubes on failure from Severe Icing', () => {
-      const state = createTestGameState();
-      state.age = 1;
-      state.players['1'].engineers = 0;
-      state.players['1'].gasCubes = { hydrogen: 3, helium: 0 };
-
-      const hazardCard = {
-        id: 'severe_icing_0',
-        type: 'major_ceiling',
-        category: 'major',
-        name: 'Severe Icing',
-        challengeType: 'ceiling',
-        hazardType: 'weather',
-        difficulty: 2,
-        gasLossOnFailure: 2
-      };
-
-      // Ship with ceiling 1 fails (1 < 2)
-      setupPendingLaunch(state.players['1'], {
-        pendingRouteId: 'route_1',
-        gasType: 'hydrogen',
-        stats: { speed: 1, reliability: 0, ceiling: 1, range: 3 }
-      }, hazardCard);
-
-      state.map.routes = [{
-        id: 'route_1',
-        from: 'A',
-        to: 'B',
-        income: 2,
-        claimed: null
-      }];
-
-      const result = processHazardCheck(state, '1', {});
-
-      // Should fail and lose 2 gas cubes
-      expect(result.newState.players['1'].pendingLaunch).toBeUndefined();
-      expect(result.newState.players['1'].hangarShips).toBe(1); // Ship aborted
-      expect(result.newState.players['1'].gasCubes.hydrogen).toBe(1); // Lost 2 cubes
-    });
-
-    it('should destroy ship if gas loss leaves no gas remaining', () => {
-      const state = createTestGameState();
-      state.age = 1;
-      state.players['1'].engineers = 0;
-      state.players['1'].insurance = 0;
-      state.players['1'].gasCubes = { hydrogen: 1, helium: 0 };
-
-      const hazardCard = {
-        id: 'severe_icing_0',
-        type: 'major_ceiling',
-        category: 'major',
-        name: 'Severe Icing',
-        challengeType: 'ceiling',
-        hazardType: 'weather',
-        difficulty: 2,
-        gasLossOnFailure: 2
-      };
-
-      // Ship with ceiling 1 fails (1 < 2)
-      setupPendingLaunch(state.players['1'], {
-        pendingRouteId: 'route_1',
-        gasType: 'hydrogen',
-        stats: { speed: 1, reliability: 0, ceiling: 1, range: 3 }
-      }, hazardCard);
-
-      state.map.routes = [{
-        id: 'route_1',
-        from: 'A',
-        to: 'B',
-        income: 2,
-        claimed: null
-      }];
-
-      const result = processHazardCheck(state, '1', {});
-
-      // Should destroy ship - only had 1 gas, needed to lose 2
-      expect(result.newState.players['1'].pendingLaunch).toBeUndefined();
-      // Ship destroyed (not in hangar or repair)
-      expect(result.newState.players['1'].hangarShips).toBe(0);
-      expect(result.newState.players['1'].repairShips).toBe(0);
-    });
-
-    it('should NOT lose gas on successful hazard check', () => {
-      const state = createTestGameState();
-      state.age = 1;
-      state.players['1'].engineers = 0;
-      state.players['1'].gasCubes = { hydrogen: 2, helium: 0 };
-
-      const hazardCard = {
-        id: 'icing_conditions_0',
-        type: 'major_hazard',
-        category: 'major',
-        name: 'Icing Conditions',
-        hazardType: 'weather',
-        difficulty: 3,
-        gasLossOnFailure: 1
-      };
-
-      // Ship with reliability 3 auto-passes (Total Difficulty = 3 - 3 = 0)
-      setupPendingLaunch(state.players['1'], {
-        pendingRouteId: 'route_1',
-        gasType: 'hydrogen',
-        stats: { speed: 1, reliability: 3, ceiling: 3, range: 3 }
-      }, hazardCard);
-
-      state.map.routes = [{
-        id: 'route_1',
-        from: 'A',
-        to: 'B',
-        income: 2,
-        claimed: null
-      }];
-
-      const result = processHazardCheck(state, '1', {});
-
-      // Should auto-pass (reliability 3 >= difficulty 3) - no gas loss
-      expect(result.newState.players['1'].pendingLaunch).toBeUndefined();
-      expect(result.newState.map.routes[0].claimed).toBe('1');
-      expect(result.newState.players['1'].gasCubes.hydrogen).toBe(2); // No loss
-    });
-  });
+  // Note: Squall Line Payload Slot Modifier and Icing Conditions Gas Loss
+  // tests removed - these special effects were eliminated in the simplified hazard system
 });

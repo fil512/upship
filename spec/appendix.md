@@ -34,12 +34,12 @@ On your turn, either:
 7. ✓ Draw Hazard Card from your personal Hazard Deck
 8. ✓ Calculate Total Difficulty = Hazard Difficulty + Mission Difficulty − Ship Reliability (min 0)
 9. ✓ If Total Difficulty = 0: Auto-pass. If > 0: Spend that many Engineers to pass.
-10. ✓ If Fire hazard and using Hydrogen: Spend required Engineers or crash
-11. ✓ If Catastrophic Explosion on Luxury Launch in Age III: Hindenburg Disaster triggered
-12. ✓ **Success:** Place ship on route, increase Income, gain city bonus
-13. ✓ **Aborted:** Ship returns to Launch Hangar (Officers kept, gas spent)
-14. ✓ **Damaged:** Ship goes to Repair Hangar (Officers and gas spent)
-15. ✓ **Crash:** Ship destroyed (token to supply, Officers and gas spent)
+10. ✓ Fire hazards: Helium auto-passes; Hydrogen that fails → Destroyed
+11. ✓ Catastrophic hazards: No save possible → Destroyed
+12. ✓ If Hydrogen ship destroyed by Fire/Catastrophic on Luxury Launch in Age III: Hindenburg Disaster
+13. ✓ **Success:** Place ship on route, increase Income, gain city bonus
+14. ✓ **Abort:** Ship returns to Hangar (Standard/Weather only; Officers kept, gas spent)
+15. ✓ **Destroyed:** Ship lost (Fire/Catastrophic hazards; Officers and gas lost)
 16. ✓ Continue launching more ships or stop
 
 ## Key Formulas
@@ -54,7 +54,6 @@ On your turn, either:
 - **Net Income:** Income Track − Engineers in Barracks
 - **Tech Cost:** Listed cost − Specialization Discount
 - **Transition Income:** (£ from Tech tiles) − (£1 × routes lost), minimum £0
-- **Repair Cost:** (Hull Cost ÷ 2, rounded down) + 1 Engineer per ship (Repair action space only)
 - **Victory:** Most Victory Points wins (tiebreakers: Income, Cash, Ships on map)
 
 ## Gas Pricing (Gas Depot Action)
@@ -72,7 +71,7 @@ On your turn, either:
 
 ## Game End Conditions
 
-1. **Hindenburg Disaster:** Catastrophic Explosion during Luxury Launch in Age III (Hydrogen only)
+1. **Hindenburg Disaster:** Hydrogen ship destroyed by Fire/Catastrophic hazard during Luxury Launch in Age III
 2. **Fixed-Wing Rise:** Progress Track reaches threshold
 
 ## Scoring Summary (at end of each Age)
@@ -416,72 +415,71 @@ Each player has an identical Personal Hazard Deck of 27 cards. When launching a 
 
 **Age II Flak:** Each card shows 0–5 flak guns. In Age II only, if Flak > your ship's Armor, the ship is destroyed (5 Flak always destroys; max Armor is 4).
 
-## Clear Weather (4 cards)
+## Hazard Cards (27 total)
 
-| Name | Flak | Effect |
-|------|------|--------|
-| Clear Skies | 0 | Auto-pass. No hazard. |
-| Favorable Winds | 0 | Auto-pass. No hazard. |
-| Calm Conditions | 0 | Auto-pass. No hazard. |
-| Perfect Visibility | 0 | Auto-pass. No hazard. |
+| Name | Type | Difficulty | Flak |
+|------|------|------------|------|
+| Clear Skies | — | 0 | 0 |
+| Favorable Winds | — | 0 | 0 |
+| Calm Conditions | — | 0 | 0 |
+| Perfect Visibility | — | 0 | 0 |
+| Light Turbulence | Weather | 2 | 0 |
+| Minor Engine Trouble | — | 1 | 1 |
+| Crosswind | Weather | 3 | 0 |
+| Gas Leak | — | 2 | 1 |
+| Low Visibility | Weather | 2 | 1 |
+| Fuel Concern | — | 2 | 0 |
+| Headwind | Weather | 3 | 1 |
+| Structural Stress | — | 2 | 2 |
+| Strong Headwind | Weather | 4 | 2 |
+| Icing Conditions | Weather | 3 | 2 |
+| Engine Failure | — | 3 | 3 |
+| Storm System | Weather | 4 | 3 |
+| Structural Damage | — | 3 | 4 |
+| Navigation Error | — | 3 | 3 |
+| Squall Line | Weather | 4 | 3 |
+| Severe Icing | Weather | 2 | 2 |
+| Engine Fire (×2) | Fire | 2 | 2 |
+| Gas Cell Rupture (×2) | Fire | 3 | 3 |
+| Static Discharge | Fire | 2 | 4 |
+| Catastrophic Explosion | Catastrophic | — | 5 |
+| Critical Structural Stress | — | 3 | 4 |
 
-## Minor Hazards (8 cards)
+**Hazard Types:**
+- **Type "—"** — Standard hazard, no special rules
+- **Weather** — Can be affected by certain technologies and cards (e.g., Rapid Descent System, The Weatherman)
+- **Fire** — Automatically passed by Helium-powered ships; Hydrogen ships that fail are **destroyed**
+- **Catastrophic** — No save possible; ship is always **destroyed**
 
-| Name | Difficulty | Type | Flak |
-|------|------------|------|------|
-| Light Turbulence | 2 | Weather | 0 |
-| Minor Engine Trouble | 1 | Mechanical | 1 |
-| Crosswind | 3 | Weather | 0 |
-| Gas Leak | 2 | Mechanical | 1 |
-| Low Visibility | 2 | Weather | 1 |
-| Fuel Concern | 2 | Supply | 0 |
-| Headwind | 3 | Weather | 1 |
-| Structural Stress | 2 | Mechanical | 2 |
+## Resolving Hazards
 
-## Major Hazards (8 cards)
-
-| Name | Difficulty | Type | Flak | Special |
-|------|------------|------|------|---------|
-| Strong Headwind | 4 | Weather | 2 | — |
-| Icing Conditions | 3 | Weather | 2 | On failure, also lose 1 gas cube. If no gas remains, ship Destroyed. |
-| Engine Failure | 3 | Mechanical | 3 | — |
-| Storm System | 4 | Weather | 3 | — |
-| Structural Damage | 3 | Mechanical | 4 | — |
-| Navigation Error | 3 | Supply | 3 | — |
-| Squall Line | 4 | Weather | 3 | Ships with 3+ Payload slots suffer +1 Difficulty. Historical: USS Shenandoah was torn apart by shear forces. |
-| Severe Icing | 2 | Weather | 2 | On failure, lose 2 gas cubes. If gas remains < ship's minimum, ship Destroyed. |
-
-## Fire Hazards (6 cards) — Hydrogen Ships Only
-
-Helium ships automatically pass all Fire-type hazards.
-
-| Name | Qty | Difficulty | Flak | Effect |
-|------|-----|------------|------|--------|
-| **Engine Fire** | 2 | — | 2 | Spend 1 Engineer to control → Ship Damaged (Repair Hangar). Fail → Ship crashes. |
-| **Gas Cell Rupture** | 2 | — | 3 | Spend 2 Engineers to control → Ship Damaged (Repair Hangar). Fail → Ship crashes. |
-| **Static Discharge** | 1 | 2 | 4 | Standard hazard check. Fail → Ship crashes. Historical: Models the Hindenburg's static discharge ignition. |
-| **Catastrophic Explosion** | 1 | — | 5 | No save possible. Ship crashes. If Luxury Launch in Age III: Hindenburg Disaster triggered. |
-
-## Mechanical Hazards (1 card)
-
-| Name | Qty | Flak | Effect |
-|------|-----|------|--------|
-| **Critical Structural Stress** | 1 | 4 | Spend 2 Engineers to stabilize → Ship Damaged (Repair Hangar). Fail → Ship crashes. |
-
-**Resolving Hazards:**
-1. Draw card from your Personal Hazard Deck
-2. Check if auto-pass (Clear Weather cards, or Helium ship vs Fire hazards)
+1. **Draw** a card from your Personal Hazard Deck
+2. **Check auto-pass conditions:**
+   - Difficulty 0 → Auto-pass
+   - Helium ship vs Fire hazard → Auto-pass
+   - Catastrophic hazard → Skip to Destroyed outcome (no save possible)
 3. **Calculate Total Difficulty:** Hazard Difficulty + Mission Difficulty − Ship Reliability (minimum 0)
-4. **If Total Difficulty = 0:** Auto-pass (Reliability overcomes the hazard)
-5. **If Total Difficulty > 0:** Spend that many Engineers to pass, or abort/crash
-6. For Fire hazards (Engine Fire, Gas Cell Rupture): Spend fixed Engineers or crash
-7. **Pass:** Ship reaches route/completes mission successfully
-8. **Abort (standard hazards):** Ship returns to Launch Hangar (Officers kept, gas lost)
-9. **Damaged:** Ship goes to Repair Hangar (Officers and gas lost)
-10. **Crash:** Ship destroyed (token to supply, Officers and gas lost)
-11. **Age II Flak Check:** After resolving the hazard (pass or fail), check Flak vs Armor. If mission succeeded and Flak > Armor, ship is destroyed but rewards are still earned.
+4. **Determine outcome:**
 
-**Flak Distribution (27 cards):**
+| Total Difficulty | Player Choice | Hazard Type | Outcome |
+|------------------|---------------|-------------|---------|
+| 0 | — | Any | **Success** |
+| > 0 | Spend engineers | Any | **Success** |
+| > 0 | Don't spend | Standard (—) or Weather | **Abort** |
+| > 0 | Don't spend | Fire | **Destroyed** |
+| — | — | Catastrophic | **Destroyed** |
+
+*When spending engineers, you must spend exactly the Total Difficulty amount.*
+
+**Outcome Effects:**
+- **Success:** Ship claims route/completes mission. Earn Income and city bonus.
+- **Abort:** Ship returns to Hangar. Officers kept, gas spent. No rewards.
+- **Destroyed:** Ship token returned to supply. Officers and gas lost. No rewards.
+
+**Age II Flak Check:** After resolving the hazard (if ship survived), check Flak vs Armor. If Flak > Armor, ship is destroyed but rewards are still earned.
+
+## Flak Distribution (27 cards)
+
 - 0 Flak: 7 cards (safe passage) - Clear Weather (4) + Light Turbulence + Crosswind + Fuel Concern
 - 1 Flak: 4 cards (Armor 1+ survives) - Minor Engine Trouble + Gas Leak + Low Visibility + Headwind
 - 2 Flak: 6 cards (Armor 2+ survives) - Structural Stress + Strong Headwind + Icing Conditions + Severe Icing + Engine Fire (2)
@@ -574,7 +572,7 @@ The Atlantic Era features 21 hemispheric routes including luxury ocean crossings
 
 **Network Connectivity:** All 21 cities across 4 continents are connected. Key hubs are New York (5 connections), London (5 connections), and Rio de Janeiro (4 connections). The network enables travel from any city to any other city via connected routes.
 
-**Luxury Route Warning:** Launching a Hydrogen ship on a Luxury route in Age III risks triggering the **Hindenburg Disaster** if a Catastrophic Explosion hazard is drawn.
+**Luxury Route Warning:** Launching a Hydrogen ship on a Luxury route in Age III risks triggering the **Hindenburg Disaster** if the ship is destroyed by any Fire or Catastrophic hazard.
 
 ---
 

@@ -31,13 +31,7 @@ function hasUpgrade(blueprint: BlueprintSlots | undefined, slotType: SlotType, u
   );
 }
 
-/**
- * Count filled slots of a given type
- */
-function countFilledSlots(blueprint: BlueprintSlots | undefined, slotType: SlotType): number {
-  const slots = blueprint?.[slotType];
-  return slots?.filter(slot => slot !== null).length || 0;
-}
+// NOTE: countFilledSlots removed - no longer needed after removing payloadSlotModifier special effect
 
 /**
  * Check if hazard is a fire hazard (category fire OR hydrogenOnly)
@@ -54,11 +48,11 @@ const { resourceFlowLogger, createFlowContext } = require('../services/resourceF
 const { TOTAL_SHIP_CAPACITY } = require('./building');
 const { checkAgeTransition } = require('./technology');
 
-// Helper to log launch outcomes
+// Helper to log launch outcomes (3 outcomes only: success, aborted, destroyed)
 function logOutcome(
   state: GameState,
   playerId: string,
-  outcome: 'success' | 'damaged' | 'aborted' | 'destroyed',
+  outcome: 'success' | 'aborted' | 'destroyed',
   hazard: HazardCard | HazardCardDetails,
   gasType: 'hydrogen' | 'helium',
   reason: string,
@@ -102,9 +96,8 @@ type HazardPlayerState = PlayerState & {
   peekedHazard?: HazardCard;
   vp?: number;
   pendingLaunch?: ExtendedPendingLaunch;
-  // Ship counters (ships are tokens)
+  // Ship counters (ships are tokens) - single hangar, no repair bay
   hangarShips?: number;
-  repairShips?: number;
   // Launch bonuses from card effects
   launchBonuses?: {
     ignoreWeather?: boolean;
@@ -117,14 +110,10 @@ type HazardPlayerState = PlayerState & {
   };
 };
 
-interface HazardConditions {
-  age: number;
-  gasType?: 'hydrogen' | 'helium';
-  isLuxuryRoute: boolean;
-  hazardType: string;
-}
+// NOTE: HazardConditions interface removed - now using isPotentialHindenburgSituation function directly
 
 // Extended hazard card with additional fields used during hazard resolution
+// Simplified: 4 categories, unified difficulty formula, 3 outcomes
 interface HazardCardDetails {
   // From HazardCard
   id: string;
@@ -133,23 +122,16 @@ interface HazardCardDetails {
   difficulty: number;
   autoPass?: boolean;
   // Extended fields
-  category?: string;
-  challengeType?: string;
-  engineersNeeded?: number;
-  relevantStat?: number;
-  statName?: string;
+  category?: 'clear' | 'hazard' | 'fire' | 'catastrophic';
+  engineersNeeded?: number;  // Computed: max(0, totalDifficulty)
   autoPassReason?: string;
   heliumFireImmunity?: boolean;
   conductiveCoveringImmunity?: boolean;
   fireResistantFabricAvailable?: boolean;
-  noSave?: boolean;
-  engineerCost?: number;
-  hydrogenOnly?: boolean;
-  hazardType?: string;
+  noSave?: boolean;          // Catastrophic hazards cannot be overcome
+  hydrogenOnly?: boolean;    // Fire hazards only affect Hydrogen ships
+  hazardType?: string;       // 'weather', 'mechanical', 'supply' - for auto-pass conditions
   flak?: number;
-  special?: string;
-  gasLossOnFailure?: number;
-  payloadSlotModifier?: { threshold: number; difficultyIncrease: number };
 }
 
 type HazardState = GameState & {
@@ -260,21 +242,25 @@ function checkAutoPass(ctx: AutoPassContext): { passes: boolean; reason?: string
 }
 
 /**
- * Check if Hindenburg Disaster conditions are met per Section 1.2
- * All conditions must be true:
+ * Check if we're in a potential Hindenburg Disaster situation per Section 1.2
+ * The actual disaster triggers when a Fire or Catastrophic hazard DESTROYS a ship
+ * Conditions for potential trigger (ship destruction must also occur):
  * - Age III
  * - Hydrogen gas
  * - Luxury route
- * - Catastrophic Explosion hazard
+ * - Fire OR Catastrophic hazard (not just catastrophic_explosion)
  */
-function checkHindenburgDisaster(conditions: HazardConditions): boolean {
-  const { age, gasType, isLuxuryRoute, hazardType } = conditions;
-
+function isPotentialHindenburgSituation(
+  age: number,
+  gasType: 'hydrogen' | 'helium' | undefined,
+  isLuxuryRoute: boolean,
+  hazardCategory: string | undefined
+): boolean {
   return (
     age === 3 &&
     gasType === 'hydrogen' &&
     isLuxuryRoute === true &&
-    hazardType === 'catastrophic_explosion'
+    (hazardCategory === 'fire' || hazardCategory === 'catastrophic')
   );
 }
 
@@ -341,34 +327,13 @@ function processHazardCheck(state: GameState, playerId: string, data: HazardChec
   playerState.hazardDiscardPile.push(hazard);
   const isLuxuryRoute = !!route?.luxury;
 
-  const hindenburgConditions: HazardConditions = {
-    age: state.age,
+  // Check potential for Hindenburg Disaster (triggers when ship is destroyed)
+  const potentialHindenburg = isPotentialHindenburgSituation(
+    state.age,
     gasType,
     isLuxuryRoute,
-    hazardType: hazard.type
-  };
-
-  const isHindenburgDisaster = checkHindenburgDisaster(hindenburgConditions);
-
-  if (isHindenburgDisaster) {
-    // Ship destroyed - clear pendingLaunch (ship is lost)
-    delete playerState.pendingLaunch;
-    hazardState.hindenburgDisaster = true;
-    hazardState.gameEndReason = 'hindenburg_disaster';
-    hazardState.gameEndAfterRound = true;
-    playerState.vp = (playerState.vp || 0) + 3;
-
-    logOutcome(state, playerId, 'destroyed', hazard, gasType!, 'Hindenburg Disaster - catastrophic explosion on luxury hydrogen route', pendingRouteId);
-
-    state.log.push({
-      timestamp: new Date().toISOString(),
-      message: `THE HINDENBURG DISASTER! A Catastrophic Explosion has destroyed a luxury hydrogen airship. The era of airships has ended. Complete the current round, then final scoring. Triggering player gains 3 VP (historical infamy).`,
-      playerId,
-      type: 'game_end'
-    } as LogEntry);
-
-    return { newState: state };
-  }
+    hazard.category
+  );
 
   // Check all auto-pass conditions using unified system
   const autoPass = checkAutoPass({
@@ -385,25 +350,19 @@ function processHazardCheck(state: GameState, playerId: string, data: HazardChec
     return resolveHazardSuccess(state, playerId, route, hazard, autoPass.reason!);
   }
 
-  // Dispatch to specific resolution handlers based on hazard type
-  if (isFireHazard(hazard) && gasType === 'hydrogen') {
-    return resolveFireHazard(state, playerId, hazard, engineersToSpend, route);
+  // Handle Catastrophic hazards (noSave = true) - immediate destruction, no save possible
+  if (hazard.noSave || hazard.category === 'catastrophic') {
+    return resolveHazardDestroyed(state, playerId, hazard, 'Catastrophic - no save possible', potentialHindenburg);
   }
 
-  // Handle mechanical hazards with engineer costs (like Critical Structural Stress)
-  // These work like fire hazards: spend X engineers to save (Damaged) or crash
-  const isMechanicalWithEngineerCost = hazard.category === 'mechanical' && hazard.engineerCost;
-  if (isMechanicalWithEngineerCost) {
-    return resolveMechanicalHazard(state, playerId, hazard, engineersToSpend, route);
-  }
-
-  // Simplified hazard resolution:
+  // Unified hazard resolution for all other hazards:
   // Total Difficulty = Hazard Difficulty + Mission Difficulty - Ship Reliability (min 0)
   // If Total Difficulty <= 0: Auto-pass
-  // If Total Difficulty > 0: Must spend that many engineers to pass
+  // If Total Difficulty > 0: Must spend exactly that many engineers to pass
+  // Fail outcomes: Fire hazards = Destroyed, Standard hazards = Abort
 
   const playerBlueprint = playerState.blueprint as BlueprintSlots;
-  const extendedHazard = hazard as HazardCard & { hazardType?: string; payloadSlotModifier?: { threshold: number; difficultyIncrease: number } };
+  const extendedHazard = hazard as HazardCard & { hazardType?: string };
 
   // Get ship reliability and any bonuses
   const shipReliability = shipStats.reliability || 0;
@@ -424,16 +383,8 @@ function processHazardCheck(state: GameState, playerId: string, data: HazardChec
     }
   }
 
-  // Apply Squall Line-style payload slot modifier (ships with 3+ payload slots suffer +1 difficulty)
-  let hazardDifficulty = hazard.difficulty;
-  if (extendedHazard.payloadSlotModifier) {
-    const payloadSlotCount = countFilledSlots(playerBlueprint, 'componentSlots');
-    if (payloadSlotCount >= extendedHazard.payloadSlotModifier.threshold) {
-      hazardDifficulty += extendedHazard.payloadSlotModifier.difficultyIncrease;
-    }
-  }
-
-  // Calculate total difficulty
+  // Calculate total difficulty (simplified - no special effects like payloadSlotModifier)
+  const hazardDifficulty = hazard.difficulty;
   const totalDifficulty = calculateTotalDifficulty(
     hazardDifficulty,
     missionDifficulty,
@@ -447,12 +398,13 @@ function processHazardCheck(state: GameState, playerId: string, data: HazardChec
       `Reliability overcomes hazard (${shipReliability + reliabilityBonus - flexibleFramePenalty} reliability >= ${hazardDifficulty + missionDifficulty} difficulty)`);
   }
 
-  // Player must spend engineers equal to total difficulty to pass
+  // Player must spend engineers EXACTLY equal to total difficulty to pass
+  // Binary choice: spend all required engineers or spend none
   const engineersAvailable = playerState.engineers || 0;
-  const engineersToActuallySpend = Math.min(engineersToSpend, engineersAvailable);
-  const success = engineersToActuallySpend >= totalDifficulty;
+  const engineersToActuallySpend = engineersToSpend >= totalDifficulty ? totalDifficulty : 0;
+  const success = engineersToActuallySpend >= totalDifficulty && engineersAvailable >= engineersToActuallySpend;
 
-  if (engineersToActuallySpend > 0) {
+  if (success && engineersToActuallySpend > 0) {
     playerState.engineers = engineersAvailable - engineersToActuallySpend;
     // Log engineer consumption for hazard check
     const flowContext = createFlowContext(state, (state as { gameId?: string }).gameId || 'unknown');
@@ -474,31 +426,38 @@ function processHazardCheck(state: GameState, playerId: string, data: HazardChec
     return resolveHazardSuccess(state, playerId, route, hazard,
       `Hazard overcome: spent ${engineersToActuallySpend} engineer(s) to pass difficulty ${totalDifficulty}`);
   } else {
-    return resolveHazardAbort(state, playerId, hazard,
-      `Hazard failed: needed ${totalDifficulty} engineer(s), spent ${engineersToActuallySpend}`);
+    // Failure outcome depends on hazard type:
+    // - Fire hazards: Destroyed (hydrogen ships only reach this point)
+    // - Standard hazards: Abort (ship returns to hangar)
+    const isFireCategory = hazard.category === 'fire';
+    if (isFireCategory) {
+      return resolveHazardDestroyed(state, playerId, hazard,
+        `Fire hazard failed: needed ${totalDifficulty} engineer(s), had ${engineersAvailable}`,
+        potentialHindenburg);
+    } else {
+      return resolveHazardAbort(state, playerId, hazard,
+        `Hazard failed: needed ${totalDifficulty} engineer(s), spent ${engineersToActuallySpend}`);
+    }
   }
 }
 
 /**
- * Apply insurance policy to recover crashed ship per Section 6.11
+ * Apply insurance policy to recover destroyed ship per Section 6.11
  * Ships are tokens - recovery means incrementing hangarShips counter
- * Per Section 4.4: Total fleet limited to 6 ships (hangar + repair combined)
+ * Per Section 4.4: Total fleet limited to 6 ships in hangar
  */
 function applyInsuranceRecovery(state: GameState, playerId: string, hazardName: string): boolean {
   const playerState = state.players[playerId] as HazardPlayerState;
   const insurancePolicies = playerState.insurance || 0;
 
   if (insurancePolicies > 0) {
-    // Check combined fleet capacity
     const currentHangar = playerState.hangarShips || 0;
-    const currentRepair = playerState.repairShips || 0;
-    const totalFleet = currentHangar + currentRepair;
 
-    if (totalFleet >= TOTAL_SHIP_CAPACITY) {
-      // Fleet at capacity - insurance cannot recover
+    if (currentHangar >= TOTAL_SHIP_CAPACITY) {
+      // Hangar at capacity - insurance cannot recover
       state.log.push({
         timestamp: new Date().toISOString(),
-        message: `${hazardName}! Insurance claim failed: fleet at capacity (${totalFleet}/${TOTAL_SHIP_CAPACITY} ships)`,
+        message: `${hazardName}! Insurance claim failed: hangar at capacity (${currentHangar}/${TOTAL_SHIP_CAPACITY} ships)`,
         playerId,
         type: 'hazard'
       } as LogEntry);
@@ -513,7 +472,7 @@ function applyInsuranceRecovery(state: GameState, playerId: string, hazardName: 
 
     state.log.push({
       timestamp: new Date().toISOString(),
-      message: `${hazardName}! Insurance claim: ship recovered to Launch Hangar (${playerState.insurance} policies remaining)`,
+      message: `${hazardName}! Insurance claim: ship recovered to Hangar (${playerState.insurance} policies remaining)`,
       playerId,
       type: 'hazard'
     } as LogEntry);
@@ -524,187 +483,69 @@ function applyInsuranceRecovery(state: GameState, playerId: string, hazardName: 
 }
 
 /**
- * Handle fire hazard resolution per Section 8.3
- * Ships are tokens - damage moves to repair bay, destruction clears pendingLaunch
+ * Resolve a hazard that results in ship destruction
+ * Fire hazards that aren't overcome result in Destroyed
+ * Catastrophic hazards always result in Destroyed
+ * Checks for Hindenburg Disaster trigger (Age III + Hydrogen + Luxury + Fire/Catastrophic)
  */
-function resolveFireHazard(state: GameState, playerId: string, hazard: HazardCard, engineersToSpend: number, route: ExtendedRoute | undefined): ActionResult {
+function resolveHazardDestroyed(
+  state: GameState,
+  playerId: string,
+  hazard: HazardCard,
+  reason: string,
+  isHindenburgTrigger: boolean
+): ActionResult {
   const playerState = state.players[playerId] as HazardPlayerState;
-  const pendingLaunch = playerState.pendingLaunch;
-  const shipStats = pendingLaunch?.stats || {};
-  const gasType = pendingLaunch?.gasType || 'hydrogen';
-  const routeId = pendingLaunch?.routeId;
-
-  if (hazard.noSave || hazard.type === 'catastrophic_explosion') {
-    // Log before clearing pendingLaunch
-    logOutcome(state, playerId, 'destroyed', hazard, gasType, 'Catastrophic Explosion - no save possible', routeId);
-    // Ship destroyed - clear pendingLaunch (ship is lost)
-    delete playerState.pendingLaunch;
-
-    state.log.push({
-      timestamp: new Date().toISOString(),
-      message: `CATASTROPHIC EXPLOSION! Ship destroyed - no save possible.`,
-      playerId,
-      type: 'hazard'
-    } as LogEntry);
-
-    return { newState: state };
-  }
-
-  if (hazard.type === 'static_discharge') {
-    // Static discharge uses simplified formula: Total Difficulty = Hazard Difficulty - Ship Reliability (min 0)
-    // If Total Difficulty > 0, must spend that many engineers to pass, else ship crashes
-    const reliabilityStat = shipStats.reliability || 0;
-    const totalDifficulty = Math.max(0, hazard.difficulty - reliabilityStat);
-
-    // If reliability overcomes difficulty, auto-pass
-    if (totalDifficulty === 0) {
-      return resolveHazardSuccess(state, playerId, route, hazard,
-        `Static Discharge overcome by reliability (${reliabilityStat} >= ${hazard.difficulty})`);
-    }
-
-    // Must spend engineers equal to total difficulty
-    const engineersAvailable = playerState.engineers || 0;
-    const engineersToActuallySpend = Math.min(engineersToSpend, engineersAvailable);
-
-    if (engineersToActuallySpend >= totalDifficulty) {
-      playerState.engineers = engineersAvailable - engineersToActuallySpend;
-      // Log engineer consumption for static discharge
-      const flowContext = createFlowContext(state, (state as { gameId?: string }).gameId || 'unknown');
-      const faction = playerState.faction || 'unknown';
-      resourceFlowLogger.logSink(flowContext, playerId, faction, 'engineers', engineersToActuallySpend, 'hazard', 'Static discharge', playerState.engineers);
-      return resolveHazardSuccess(state, playerId, route, hazard,
-        `Static Discharge overcome: spent ${engineersToActuallySpend} engineer(s) for difficulty ${totalDifficulty}`);
-    } else {
-      // Insufficient engineers - ship crashes
-      if (applyInsuranceRecovery(state, playerId, 'STATIC DISCHARGE')) {
-        logOutcome(state, playerId, 'destroyed', hazard, gasType, `Static Discharge failed (needed ${totalDifficulty} engineers), recovered by insurance`, routeId);
-        return { newState: state };
-      }
-
-      logOutcome(state, playerId, 'destroyed', hazard, gasType, `Static Discharge failed: needed ${totalDifficulty} engineer(s), had ${engineersAvailable}`, routeId);
-      delete playerState.pendingLaunch;
-
-      state.log.push({
-        timestamp: new Date().toISOString(),
-        message: `STATIC DISCHARGE! Needed ${totalDifficulty} engineer(s) to overcome, had ${engineersAvailable}. Ship destroyed!`,
-        playerId,
-        type: 'hazard'
-      } as LogEntry);
-
-      return { newState: state };
-    }
-  }
-
-  const engineerCost = hazard.engineerCost || 1;
-  const availableEngineers = playerState.engineers || 0;
-  const actualSpend = Math.min(engineersToSpend, availableEngineers);
-
-  if (actualSpend >= engineerCost) {
-    // Log before clearing pendingLaunch
-    logOutcome(state, playerId, 'damaged', hazard, gasType, `Fire controlled with ${engineerCost} engineer(s), ship to repair bay`, routeId);
-    playerState.engineers -= engineerCost;
-    // Ship damaged - move to repair bay (combined capacity limit: 6 ships total)
-    const currentTotal = (playerState.hangarShips || 0) + (playerState.repairShips || 0);
-    if (currentTotal < TOTAL_SHIP_CAPACITY) {
-      playerState.repairShips = (playerState.repairShips || 0) + 1;
-    }
-    delete playerState.pendingLaunch;
-
-    // Log engineer consumption for fire hazard
-    const flowContext = createFlowContext(state, (state as { gameId?: string }).gameId || 'unknown');
-    const faction = playerState.faction || 'unknown';
-    resourceFlowLogger.logSink(flowContext, playerId, faction, 'engineers', engineerCost, 'hazard', `Fire hazard: ${hazard.name}`, playerState.engineers);
-
-    state.log.push({
-      timestamp: new Date().toISOString(),
-      message: `${hazard.name} controlled! Spent ${engineerCost} Engineer(s). Ship damaged - moved to Repair Bay.`,
-      playerId,
-      type: 'hazard'
-    } as LogEntry);
-
-    return { newState: state };
-  } else {
-    if (applyInsuranceRecovery(state, playerId, hazard.name || 'Fire Hazard')) {
-      logOutcome(state, playerId, 'destroyed', hazard, gasType, `Fire hazard, insufficient engineers (need ${engineerCost}, have ${availableEngineers}), recovered by insurance`, routeId);
-      return { newState: state };
-    }
-
-    // Log before clearing pendingLaunch
-    logOutcome(state, playerId, 'destroyed', hazard, gasType, `Insufficient engineers (need ${engineerCost}, have ${availableEngineers})`, routeId);
-    // Ship destroyed - clear pendingLaunch
-    delete playerState.pendingLaunch;
-
-    state.log.push({
-      timestamp: new Date().toISOString(),
-      message: `${hazard.name}! Insufficient Engineers (need ${engineerCost}, have ${availableEngineers}). Ship destroyed!`,
-      playerId,
-      type: 'hazard'
-    } as LogEntry);
-
-    return { newState: state };
-  }
-}
-
-/**
- * Handle mechanical hazard resolution per Appendix E (Critical Structural Stress)
- * Mechanical hazards work like fire hazards: spend X engineers → Damaged, else → Crash
- * Unlike fire hazards, mechanical hazards affect ALL ships (both hydrogen and helium)
- */
-function resolveMechanicalHazard(state: GameState, playerId: string, hazard: HazardCard, engineersToSpend: number, _route: ExtendedRoute | undefined): ActionResult {
-  const playerState = state.players[playerId] as HazardPlayerState;
+  const hazardState = state as HazardState;
   const pendingLaunch = playerState.pendingLaunch;
   const gasType = pendingLaunch?.gasType || 'hydrogen';
   const routeId = pendingLaunch?.routeId;
+  const hazardName = hazard.name || hazard.type || 'Unknown Hazard';
 
-  const engineerCost = hazard.engineerCost || 2;
-  const availableEngineers = playerState.engineers || 0;
-  const actualSpend = Math.min(engineersToSpend, availableEngineers);
-
-  if (actualSpend >= engineerCost) {
-    // Ship damaged but saved - move to repair bay
-    logOutcome(state, playerId, 'damaged', hazard, gasType, `Mechanical damage controlled with ${engineerCost} engineer(s), ship to repair bay`, routeId);
-    playerState.engineers -= engineerCost;
-
-    // Ship damaged - move to repair bay (combined capacity limit: 6 ships total)
-    const currentTotal = (playerState.hangarShips || 0) + (playerState.repairShips || 0);
-    if (currentTotal < TOTAL_SHIP_CAPACITY) {
-      playerState.repairShips = (playerState.repairShips || 0) + 1;
-    }
-    delete playerState.pendingLaunch;
-
-    // Log engineer consumption
-    const flowContext = createFlowContext(state, (state as { gameId?: string }).gameId || 'unknown');
-    const faction = playerState.faction || 'unknown';
-    resourceFlowLogger.logSink(flowContext, playerId, faction, 'engineers', engineerCost, 'hazard', `Mechanical hazard: ${hazard.name}`, playerState.engineers);
-
-    state.log.push({
-      timestamp: new Date().toISOString(),
-      message: `${hazard.name} controlled! Spent ${engineerCost} Engineer(s). Ship damaged - moved to Repair Bay.`,
-      playerId,
-      type: 'hazard'
-    } as LogEntry);
-
-    return { newState: state };
-  } else {
-    // Insufficient engineers - ship destroyed
-    if (applyInsuranceRecovery(state, playerId, hazard.name || 'Mechanical Hazard')) {
-      logOutcome(state, playerId, 'destroyed', hazard, gasType, `Mechanical hazard, insufficient engineers (need ${engineerCost}, have ${availableEngineers}), recovered by insurance`, routeId);
+  // Catastrophic hazards (noSave) do NOT allow insurance recovery
+  // Only try insurance recovery for non-catastrophic hazards
+  if (!hazard.noSave && hazard.category !== 'catastrophic') {
+    if (applyInsuranceRecovery(state, playerId, hazardName.toUpperCase())) {
+      logOutcome(state, playerId, 'destroyed', hazard, gasType, `${reason}, recovered by insurance`, routeId);
       return { newState: state };
     }
+  }
 
-    logOutcome(state, playerId, 'destroyed', hazard, gasType, `Insufficient engineers (need ${engineerCost}, have ${availableEngineers})`, routeId);
-    delete playerState.pendingLaunch;
+  // Log destruction
+  logOutcome(state, playerId, 'destroyed', hazard, gasType, reason, routeId);
+
+  // Ship destroyed - clear pendingLaunch (ship is lost)
+  delete playerState.pendingLaunch;
+
+  // Check for Hindenburg Disaster
+  if (isHindenburgTrigger) {
+    hazardState.hindenburgDisaster = true;
+    hazardState.gameEndReason = 'hindenburg_disaster';
+    hazardState.gameEndAfterRound = true;
+    playerState.vp = (playerState.vp || 0) + 3;
 
     state.log.push({
       timestamp: new Date().toISOString(),
-      message: `${hazard.name}! Insufficient Engineers (need ${engineerCost}, have ${availableEngineers}). Ship destroyed!`,
+      message: `THE HINDENBURG DISASTER! ${hazardName} has destroyed a luxury hydrogen airship. The era of airships has ended. Complete the current round, then final scoring. Triggering player gains 3 VP (historical infamy).`,
+      playerId,
+      type: 'game_end'
+    } as LogEntry);
+  } else {
+    state.log.push({
+      timestamp: new Date().toISOString(),
+      message: `${hazardName.toUpperCase()}! ${reason}. Ship destroyed!`,
       playerId,
       type: 'hazard'
     } as LogEntry);
-
-    return { newState: state };
   }
+
+  return { newState: state };
 }
+
+// NOTE: resolveFireHazard and resolveMechanicalHazard removed in simplified hazard system
+// All hazards now use unified difficulty formula in processHazardCheck
+// Fire hazard failures route to resolveHazardDestroyed
+// Standard hazard failures route to resolveHazardAbort
 
 /**
  * Resolve successful hazard check - ship claims route or completes mission
@@ -736,10 +577,10 @@ function resolveHazardSuccess(state: GameState, playerId: string, route: Extende
         playerId,
         type: 'error'
       } as LogEntry);
-      // Return ship to hangar (combined capacity limit: 6 ships total)
-      const currentTotal = (playerState.hangarShips || 0) + (playerState.repairShips || 0);
-      if (currentTotal < TOTAL_SHIP_CAPACITY) {
-        playerState.hangarShips = (playerState.hangarShips || 0) + 1;
+      // Return ship to hangar (capacity limit: 6 ships)
+      const currentHangar = playerState.hangarShips || 0;
+      if (currentHangar < TOTAL_SHIP_CAPACITY) {
+        playerState.hangarShips = currentHangar + 1;
       }
       delete playerState.pendingLaunch;
       return { newState: state };
@@ -914,10 +755,10 @@ function resolveHazardAbort(state: GameState, playerId: string, hazard: HazardCa
   // Log aborted outcome
   logOutcome(state, playerId, 'aborted', hazard, gasType, message, routeId);
 
-  // Ship returns to hangar (combined capacity limit: 6 ships total)
-  const currentTotal = (playerState.hangarShips || 0) + (playerState.repairShips || 0);
-  if (currentTotal < TOTAL_SHIP_CAPACITY) {
-    playerState.hangarShips = (playerState.hangarShips || 0) + 1;
+  // Ship returns to hangar (capacity limit: 6 ships)
+  const currentHangar = playerState.hangarShips || 0;
+  if (currentHangar < TOTAL_SHIP_CAPACITY) {
+    playerState.hangarShips = currentHangar + 1;
   }
   // Clear pending launch
   delete playerState.pendingLaunch;
@@ -949,7 +790,6 @@ function processRespondToHazard(state: GameState, playerId: string, data: Respon
   const { cityChoice } = data;
   const spendEngineers = data.spendEngineers === true;
   const playerState = state.players[playerId] as HazardPlayerState;
-  const hazardState = state as HazardState;
 
   // Ships are tokens - check pendingLaunch instead of finding ship by ID
   const pendingLaunch = playerState.pendingLaunch;
@@ -964,29 +804,14 @@ function processRespondToHazard(state: GameState, playerId: string, data: Respon
   const route = (state.map?.routes as ExtendedRoute[] | undefined)?.find(r => r.id === pendingRouteId);
 
   const isLuxuryRoute = !!route?.luxury;
-  if (checkHindenburgDisaster({
-    age: state.age,
+
+  // Check potential for Hindenburg Disaster (triggers when ship is destroyed by fire/catastrophic)
+  const potentialHindenburg = isPotentialHindenburgSituation(
+    state.age,
     gasType,
     isLuxuryRoute,
-    hazardType: hazard.type
-  })) {
-    // Ship destroyed - clear pendingLaunch
-    delete playerState.pendingLaunch;
-
-    hazardState.hindenburgDisaster = true;
-    hazardState.gameEndReason = 'hindenburg_disaster';
-    hazardState.gameEndAfterRound = true;
-    playerState.vp = (playerState.vp || 0) + 3;
-
-    state.log.push({
-      timestamp: new Date().toISOString(),
-      message: `THE HINDENBURG DISASTER! A Catastrophic Explosion has destroyed a luxury hydrogen airship. The era of airships has ended. Complete the current round, then final scoring. Triggering player gains 3 VP (historical infamy).`,
-      playerId,
-      type: 'game_end'
-    } as LogEntry);
-
-    return { newState: state };
-  }
+    hazard.category
+  );
 
   if (hazard.autoPass || hazard.autoPassReason === 'Clear Weather') {
     return resolveHazardSuccess(state, playerId, route, hazard as HazardCard, 'Clear Weather - Auto Pass', cityChoice);
@@ -1015,83 +840,26 @@ function processRespondToHazard(state: GameState, playerId: string, data: Respon
       'Fire Hazard - Auto Pass (Fire-Resistant Fabric, once per Age)', cityChoice);
   }
 
-  if (hazard.noSave || hazard.type === 'catastrophic_explosion') {
-    // Ship destroyed - clear pendingLaunch
-    delete playerState.pendingLaunch;
-
-    state.log.push({
-      timestamp: new Date().toISOString(),
-      message: `CATASTROPHIC EXPLOSION! Ship destroyed - no save possible.`,
-      playerId,
-      type: 'hazard'
-    } as LogEntry);
-
-    return { newState: state };
+  // Handle Catastrophic hazards (noSave = true) - immediate destruction
+  if (hazard.noSave || hazard.category === 'catastrophic') {
+    return resolveHazardDestroyed(state, playerId, hazard as HazardCard,
+      'Catastrophic - no save possible', potentialHindenburg);
   }
 
-  if (isFireHazard(hazard) && hazard.engineerCost !== undefined) {
-    const engineerCost = hazard.engineerCost;
-    const availableEngineers = playerState.engineers || 0;
-
-    if (spendEngineers && availableEngineers >= engineerCost) {
-      playerState.engineers -= engineerCost;
-      // Ship damaged - move to repair bay (combined capacity limit: 6 ships total)
-      const currentTotal = (playerState.hangarShips || 0) + (playerState.repairShips || 0);
-      if (currentTotal < TOTAL_SHIP_CAPACITY) {
-        playerState.repairShips = (playerState.repairShips || 0) + 1;
-      }
-      delete playerState.pendingLaunch;
-
-      // Log engineer consumption for fire hazard response
-      const flowContext = createFlowContext(state, (state as { gameId?: string }).gameId || 'unknown');
-      const faction = playerState.faction || 'unknown';
-      resourceFlowLogger.logSink(flowContext, playerId, faction, 'engineers', engineerCost, 'hazard', `Fire hazard: ${hazard.name}`, playerState.engineers);
-
-      state.log.push({
-        timestamp: new Date().toISOString(),
-        message: `${hazard.name} controlled! Spent ${engineerCost} Engineer(s). Ship damaged - moved to Repair Bay.`,
-        playerId,
-        type: 'hazard'
-      } as LogEntry);
-
-      return { newState: state };
-    } else {
-      return resolveFireCrash(state, playerId, hazard as HazardCard);
-    }
-  }
-
-  // Simplified hazard response: Total Difficulty = Hazard Difficulty - Ship Reliability (min 0)
-  // If Total Difficulty > 0, must spend that many engineers to pass
+  // Unified hazard response: Total Difficulty = Hazard Difficulty - Ship Reliability (min 0)
+  // Binary choice: spend exactly that many engineers or don't spend any
   const reliabilityStat = shipStats.reliability || 0;
   const totalDifficulty = Math.max(0, hazard.difficulty - reliabilityStat);
 
-  // Handle static discharge (fire hazard with reliability check)
-  if (hazard.type === 'static_discharge') {
-    if (totalDifficulty === 0) {
-      return resolveHazardSuccess(state, playerId, route, hazard as HazardCard,
-        `Static Discharge overcome by reliability (${reliabilityStat} >= ${hazard.difficulty})`, cityChoice);
-    }
-
-    const availableEngineers = playerState.engineers || 0;
-    if (spendEngineers && availableEngineers >= totalDifficulty) {
-      playerState.engineers -= totalDifficulty;
-      const flowContext = createFlowContext(state, (state as { gameId?: string }).gameId || 'unknown');
-      const faction = playerState.faction || 'unknown';
-      resourceFlowLogger.logSink(flowContext, playerId, faction, 'engineers', totalDifficulty, 'hazard', 'Static discharge response', playerState.engineers);
-      return resolveHazardSuccess(state, playerId, route, hazard as HazardCard,
-        `Static Discharge overcome: spent ${totalDifficulty} engineer(s)`, cityChoice);
-    } else {
-      return resolveFireCrash(state, playerId, hazard as HazardCard);
-    }
-  }
-
-  // Standard hazard response
+  // If reliability overcomes the hazard, auto-pass
   if (totalDifficulty === 0) {
     return resolveHazardSuccess(state, playerId, route, hazard as HazardCard,
       `Hazard overcome by reliability (${reliabilityStat} >= ${hazard.difficulty})`, cityChoice);
   }
 
   const availableEngineers = playerState.engineers || 0;
+
+  // Player chose to spend engineers AND has enough
   if (spendEngineers && availableEngineers >= totalDifficulty) {
     playerState.engineers -= totalDifficulty;
     const flowContext = createFlowContext(state, (state as { gameId?: string }).gameId || 'unknown');
@@ -1099,43 +867,25 @@ function processRespondToHazard(state: GameState, playerId: string, data: Respon
     resourceFlowLogger.logSink(flowContext, playerId, faction, 'engineers', totalDifficulty, 'hazard', `Hazard response: ${hazard.name}`, playerState.engineers);
     return resolveHazardSuccess(state, playerId, route, hazard as HazardCard,
       `Hazard overcome: spent ${totalDifficulty} engineer(s)`, cityChoice);
+  }
+
+  // Failure outcome depends on hazard type:
+  // - Fire hazards: Destroyed
+  // - Standard hazards: Abort (ship returns to hangar)
+  const isFireCategory = hazard.category === 'fire';
+  if (isFireCategory) {
+    return resolveHazardDestroyed(state, playerId, hazard as HazardCard,
+      `Fire hazard failed: needed ${totalDifficulty} engineer(s), had ${availableEngineers}`,
+      potentialHindenburg);
   } else {
     return resolveHazardAbort(state, playerId, hazard as HazardCard,
       `Hazard failed: needed ${totalDifficulty} engineer(s), chose to abort`);
   }
 }
 
-/**
- * Resolve fire crash - ship destroyed (with insurance check)
- * Ships are tokens - destruction clears pendingLaunch
- */
-function resolveFireCrash(state: GameState, playerId: string, hazard: HazardCard): ActionResult {
-  const playerState = state.players[playerId] as HazardPlayerState;
-  const pendingLaunch = playerState.pendingLaunch;
-  const gasType = pendingLaunch?.gasType || 'hydrogen';
-  const routeId = pendingLaunch?.routeId;
+// NOTE: resolveFireCrash removed - now using resolveHazardDestroyed for all fire/catastrophic failures
 
-  if (applyInsuranceRecovery(state, playerId, hazard.name || 'Fire Hazard')) {
-    logOutcome(state, playerId, 'destroyed', hazard, gasType, `${hazard.name} - recovered by insurance`, routeId);
-    return { newState: state };
-  }
-
-  // Log before clearing pendingLaunch
-  logOutcome(state, playerId, 'destroyed', hazard, gasType, `${hazard.name} - ship destroyed`, routeId);
-  // Ship destroyed - clear pendingLaunch
-  delete playerState.pendingLaunch;
-
-  state.log.push({
-    timestamp: new Date().toISOString(),
-    message: `${hazard.name}! Ship destroyed!`,
-    playerId,
-    type: 'hazard'
-  } as LogEntry);
-
-  return { newState: state };
-}
-
-export { processHazardCheck, processRespondToHazard, checkHindenburgDisaster };
+export { processHazardCheck, processRespondToHazard, isPotentialHindenburgSituation };
 
 // CommonJS compatibility
-module.exports = { processHazardCheck, processRespondToHazard, checkHindenburgDisaster };
+module.exports = { processHazardCheck, processRespondToHazard, isPotentialHindenburgSituation };

@@ -91,10 +91,9 @@ type CombatState = GameState & {
 };
 
 // Extended hazard card type with optional properties not in base HazardCard
+// Simplified hazard system: no special effects, just hazardType for auto-pass conditions
 type ExtendedHazardCard = HazardCard & {
-  special?: string;
-  gasLossOnFailure?: number;
-  hazardType?: string;
+  hazardType?: string;  // 'weather', 'mechanical', 'supply' - for auto-pass conditions
 };
 
 /**
@@ -358,15 +357,17 @@ function processLaunchCombatMission(state: GameState, playerId: string, data: La
   playerState.hazardDiscardPile = playerState.hazardDiscardPile || [];
   playerState.hazardDiscardPile.push(hazard);
 
-  // Determine relevant stat for this hazard
-  const challengeType = hazard.challengeType || 'reliability';
-  const relevantStat = stats[challengeType] || 0;
+  // Unified difficulty formula: all hazards use reliability stat
+  // Total Difficulty = Hazard Difficulty + Mission Difficulty - Ship Reliability (min 0)
+  const relevantStat = stats.reliability || 0;
   const difficulty = hazard.difficulty || 0;
+  const missionDifficulty = (mission as Mission & { difficulty?: number }).difficulty || 0;
 
   // Calculate engineers needed to pass (for non-fire, non-auto-pass hazards)
+  // Using unified formula from simplified hazard system
   let engineersNeeded = 0;
-  if (!hazard.autoPass && hazard.category !== 'fire') {
-    engineersNeeded = Math.max(0, difficulty - relevantStat);
+  if (!hazard.autoPass && hazard.category !== 'fire' && hazard.category !== 'catastrophic') {
+    engineersNeeded = Math.max(0, difficulty + missionDifficulty - relevantStat);
   }
 
   // Check for auto-pass conditions
@@ -396,20 +397,17 @@ function processLaunchCombatMission(state: GameState, playerId: string, data: La
   };
 
   // Store pending hazard info on pendingLaunch for client to respond
+  // Simplified hazard system: unified difficulty formula, 3 outcomes only
   playerState.pendingLaunch!.hazardInfo = {
     type: hazard.type,
     name: hazard.name,
     category: hazard.category,
-    challengeType,
     difficulty,
     flak: hazard.flak || 0,
-    engineerCost: hazard.engineerCost,
     noSave: hazard.noSave,
     hydrogenOnly: hazard.hydrogenOnly,
-    special: hazard.special,
-    gasLossOnFailure: hazard.gasLossOnFailure,
     relevantStat,
-    statName: challengeType,
+    statName: 'reliability',  // Simplified: all hazards use reliability
     engineersNeeded,
     autoPass: autoPassClearWeather,
     autoPassReason: getAutoPassReason(autoPassClearWeather, autoPassHeliumFire, autoPassCondictiveCovering || false, fireProtectionAvailable),
@@ -421,11 +419,11 @@ function processLaunchCombatMission(state: GameState, playerId: string, data: La
   // Also store the hazard card for API compatibility
   playerState.pendingLaunch!.hazard = hazard;
 
-  // Build log message
+  // Build log message (simplified: all hazards use reliability)
   const autoPassReason = getAutoPassReason(autoPassClearWeather, autoPassHeliumFire, autoPassCondictiveCovering || false, fireProtectionAvailable);
   const hazardDetails = autoPassReason
     ? ' (' + autoPassReason + ')'
-    : ' (' + challengeType + ' ' + difficulty + ' vs ' + relevantStat + ', Flak ' + hazard.flak + ')';
+    : ' (difficulty ' + difficulty + ' vs reliability ' + relevantStat + ', Flak ' + hazard.flak + ')';
 
   state.log.push({
     timestamp: new Date().toISOString(),

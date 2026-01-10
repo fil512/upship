@@ -22,23 +22,18 @@ export type ShipStatus =
 	| 'crashed';
 
 // Hazard info attached to pending launch (flat structure matching server)
+// Simplified hazard system: unified difficulty formula, 3 outcomes only
 export interface PendingHazardInfo {
 	// Core hazard info
 	type: string;
 	name: string;
-	category?: string;  // 'clear' | 'minor' | 'major' | 'fire' | 'mechanical'
-	challengeType?: string;
+	category?: string;  // 'clear' | 'hazard' | 'fire' | 'catastrophic'
 	difficulty: number;
 	flak?: number;
 	// Fire hazard specific
-	engineerCost?: number;
 	noSave?: boolean;
 	hydrogenOnly?: boolean;
-	// Special effects
-	special?: string;
-	gasLossOnFailure?: number;
-	payloadSlotModifier?: { threshold: number; difficultyIncrease: number };
-	// Ship stats for comparison
+	// Ship stats for comparison (all hazards use reliability)
 	relevantStat?: number;
 	statName?: string;
 	engineersNeeded?: number;
@@ -106,23 +101,23 @@ export interface Card {
 }
 
 // Hazard card
-// Simplified hazard model: Total Difficulty = Hazard Difficulty - Ship Reliability (min 0)
-// If Total Difficulty > 0, spend that many engineers to pass
+// Resolution formula: Total Difficulty = Hazard Difficulty + Mission Difficulty - Ship Reliability
+// If Total Difficulty > 0, spend exactly that many engineers to succeed, or fail
+// Fail outcomes: Standard/Weather → Abort, Fire/Catastrophic → Destroyed
 export interface HazardCard {
 	id: string;
 	type: string;
-	category: 'clear' | 'minor' | 'major' | 'fire' | 'mechanical';
+	category: 'clear' | 'hazard' | 'fire' | 'catastrophic';  // 4 types only
 	name: string;
 	difficulty: number;
 	flak: number;
 	hazardType?: string;  // 'weather', 'mechanical', 'supply' - used for auto-pass conditions
 	autoPass?: boolean;
-	hydrogenOnly?: boolean;
-	engineerCost?: number;
-	noSave?: boolean;
+	hydrogenOnly?: boolean;  // Fire hazards only affect Hydrogen ships
+	noSave?: boolean;        // Catastrophic hazards cannot be overcome
 	// Extended fields added during hazard resolution
 	autoPassReason?: string | null;
-	engineersNeeded?: number;  // Computed: max(0, difficulty - reliability)
+	engineersNeeded?: number;  // Computed: max(0, totalDifficulty)
 	heliumFireImmunity?: boolean;
 	conductiveCoveringImmunity?: boolean;
 	fireResistantFabricAvailable?: boolean;
@@ -289,8 +284,7 @@ export interface PlayerState {
 	hasPassed: boolean;
 	techCards: string[]; // Server sends tech card IDs, not Technology objects
 	// Ship counters (ships are tokens, not individual entities)
-	hangarShips: number;  // 0-3, ships ready to launch
-	repairShips: number;  // 0-3, ships being repaired
+	hangarShips: number;  // 0-6, ships in hangar ready to launch
 	pendingLaunch?: PendingLaunch;  // Set when a ship is mid-launch awaiting hazard
 	// Deprecated - kept for backwards compatibility during migration
 	ships?: Ship[];

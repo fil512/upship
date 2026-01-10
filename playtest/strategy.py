@@ -127,7 +127,7 @@ def get_blueprint_design_blueprint(player_data: Player, current_age: int = 1, is
     Retrofit costs are free during age transitions.
 
     For normal play, considers retrofit costs before adding tiles:
-    Retrofit cost = (new hull cost - old hull cost) × (hangar_ships + repair_ships)
+    Retrofit cost = (new hull cost - old hull cost) × hangar_ships
 
     [BOT-BLUEPRINT-01] SYNC: Keep in sync with getBlueprintDesignBlueprint() in server/services/botService.ts
 
@@ -214,11 +214,10 @@ def get_blueprint_design_blueprint(player_data: Player, current_age: int = 1, is
     changes_made = False
 
     # Calculate retrofit cost constraints (only for normal play, not age transition)
-    # Retrofit cost = (new hull cost - old hull cost) × (hangarShips + repairShips)
-    # Count ships by status from the ships list
-    hangar_ships = sum(1 for s in (player_data.ships or []) if s.status == 'hangar')
-    repair_ships = sum(1 for s in (player_data.ships or []) if s.status == 'repair')
-    ships_to_retrofit = hangar_ships + repair_ships
+    # Retrofit cost = (new hull cost - old hull cost) × hangarShips
+    # Use hangarShips counter (simplified system - no repair hangar)
+    hangar_ships = player_data.hangar_ships if hasattr(player_data, 'hangar_ships') else 0
+    ships_to_retrofit = hangar_ships
     player_cash = player_data.cash or 0
 
     # Calculate old hull cost from current blueprint
@@ -807,10 +806,9 @@ def find_strategic_placement(
     helium = gas_cubes.get('helium', 0)
     total_gas = hydrogen + helium
 
-    ships = player_data.ships or []
-    hangar_count = sum(1 for s in ships if s.status == 'hangar')
-    on_route_count = sum(1 for s in ships if s.status == 'on_route')
-    repair_count = sum(1 for s in ships if s.status == 'repair')
+    # Simplified ship system: use hangarShips counter (ships on routes are tracked via route.claimed)
+    hangar_count = player_data.hangar_ships if hasattr(player_data, 'hangar_ships') else 0
+    on_route_count = len(player_data.routes) if hasattr(player_data, 'routes') else 0
 
     # Use player-specific route filtering to exclude double-track routes
     # where this player already owns the other track
@@ -822,7 +820,7 @@ def find_strategic_placement(
 
     # Print player status
     vprint(f"Status: £{cash}, {officers} officers, {engineers} eng, {hydrogen}H2+{helium}He gas")
-    vprint(f"Ships: {hangar_count} hangar, {on_route_count} on_route, {repair_count} repair")
+    vprint(f"Ships: {hangar_count} hangar, {on_route_count} on_route")
     vprint(f"Hand: {len(hand)} cards, Available locations: {len(locations)}")
 
     launch_eval = evaluate_launch_readiness(player_data, routes, current_age, missions)
@@ -890,33 +888,8 @@ def find_strategic_placement(
             priority_locations.append('construction_hall')
             vprint(f"  +treasury, +construction_hall (no ships, need cash)")
 
-    # REPAIR: If we have damaged ships, repair them to get ships back in hangar
-    # Repair cost per ship: floor(Hull Cost / 2) + 1 Engineer
-    blueprint = player_data.blueprint
-    if repair_count > 0:
-        manifest = get_manifest()
-        blueprint_dict = {
-            'frameSlots': list(blueprint.frame_slots or []) if blueprint else [],
-            'fabricSlots': list(blueprint.fabric_slots or []) if blueprint else [],
-            'driveSlots': list(blueprint.drive_slots or []) if blueprint else [],
-            'componentSlots': list(blueprint.component_slots or []) if blueprint else [],
-        }
-        hull_cost = _calculate_hull_cost(manifest, blueprint_dict)
-        repair_cash_cost = hull_cost // 2
-        # Can we afford at least one repair?
-        if cash >= repair_cash_cost and engineers >= 1:
-            priority_locations.append('repair')
-            vprint(f"  +repair ({repair_count} damaged ships, cost £{repair_cash_cost}+1eng)")
-        elif engineers < 1:
-            # Need engineers first to repair
-            priority_locations.append('engineering_depot')
-            vprint(f"  +engineering_depot (need engineers to repair)")
-        else:
-            # Need cash first to repair
-            priority_locations.append('treasury')
-            vprint(f"  +treasury (need £{repair_cash_cost} to repair)")
-
     # Need gas to launch
+    blueprint = player_data.blueprint
     if total_gas < 1:
         priority_locations.append('gas_depot')
         vprint(f"  +gas_depot (no gas)")
@@ -993,7 +966,6 @@ def find_strategic_placement(
     # General fallbacks (low priority)
     # Note: launchpad and launchpad_2 are at the END - only use if no better option
     # because going to launchpad without ships/gas/officers is wasteful
-    # Note: 'repair' is NOT included - only add it if repair_ships > 0 (handled above)
     fallback_priorities = [
         'construction_hall', 'gas_depot', 'blueprint_design',
         'personnel_office', 'engineering_depot', 'treasury',
@@ -1042,9 +1014,7 @@ def find_strategic_placement(
 
     # Fallback
     vprint("No priority location matched - trying fallback...")
-    # Filter out repair if no ships to repair (would fail)
-    fallback_locations = [loc for loc in locations if loc['id'] != 'repair' or repair_count > 0]
-    card, loc = find_playable_card(hand, fallback_locations)
+    card, loc = find_playable_card(hand, locations)
     decision_info['chosen_location'] = loc['id'] if loc else None
     decision_info['fallback'] = True
     if card and loc:

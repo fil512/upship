@@ -29,20 +29,17 @@ interface ShipStats {
 }
 
 // Extended hazard info stored during pending launch
+// Simplified hazard system: unified difficulty formula, 3 outcomes only
 interface PendingHazardInfo {
   type: string;
   name: string;
   category: string;
-  challengeType: string;
   difficulty: number;
   flak: number;
-  engineerCost?: number;
   noSave?: boolean;
   hydrogenOnly?: boolean;
-  special?: string;
-  gasLossOnFailure?: number;
   relevantStat: number;
-  statName: string;
+  statName: string;  // Always 'reliability' in simplified system
   engineersNeeded: number;
   autoPass: boolean;
   autoPassReason: string | null;
@@ -668,67 +665,51 @@ function processLaunchShip(state: GameState, playerId: string, data: LaunchShipD
   playerState.hazardDiscardPile = playerState.hazardDiscardPile || [];
   playerState.hazardDiscardPile.push(hazard);
 
-  // Determine relevant stat for this hazard
-  const challengeType = hazard.challengeType || 'reliability';
-  const relevantStat = stats[challengeType] || 0;
+  // Unified difficulty formula: all hazards use reliability stat
+  // Total Difficulty = Hazard Difficulty - Ship Reliability (min 0)
+  const relevantStat = stats.reliability || 0;
   const difficulty = hazard.difficulty || 0;
 
-  // Calculate engineers needed to pass
+  // Calculate engineers needed to pass (unified formula)
   let engineersNeeded = 0;
-  if (!hazard.autoPass) {
-    if (hazard.category === 'fire' && hazard.engineerCost) {
-      // Fire hazards with fixed engineer cost (Engine Fire = 1, Gas Cell Rupture = 2)
-      // Spending engineers saves the ship but it goes to Repair Bay
-      engineersNeeded = hazard.engineerCost;
-    } else if (hazard.category !== 'fire' || hazard.type === 'static_discharge') {
-      // Non-fire hazards OR Static Discharge use stat checks
-      // Static Discharge is categorized as 'fire' (hydrogen-only) but uses a reliability check
-      engineersNeeded = Math.max(0, difficulty - relevantStat);
-    }
+  if (!hazard.autoPass && hazard.category !== 'catastrophic') {
+    engineersNeeded = Math.max(0, difficulty - relevantStat);
   }
 
   // Check for auto-pass conditions
-  const isFireHazard = hazard.category === 'fire' || hazard.hydrogenOnly;
+  const isFireHazard = hazard.category === 'fire' || hazard.hydrogenOnly === true;
   const autoPassHeliumFire = isFireHazard && gasType === 'helium';
-  const autoPassClearWeather = hazard.autoPass || hazard.type === 'clear_weather';
+  const autoPassClearWeather = hazard.autoPass === true || hazard.type === 'clear_weather';
 
   // Check for Conductive Covering (auto-pass static discharge)
   const hasCondictiveCovering = playerState.blueprint?.fabricSlots?.some(
     fabric => fabric === 'conductive_covering' || (fabric && typeof fabric === 'object' && (fabric as { id?: string }).id === 'conductive_covering')
-  );
+  ) || false;
   const autoPassCondictiveCovering = hazard.type === 'static_discharge' && hasCondictiveCovering;
 
   // Check for Fire-Resistant Fabric (once per age auto-pass fire)
   const hasFireResistantFabric = playerState.blueprint?.fabricSlots?.some(
     fabric => fabric === 'fire_resistant_fabric' || (fabric && typeof fabric === 'object' && (fabric as { id?: string }).id === 'fire_resistant_fabric')
-  );
-  const fireProtectionAvailable = isFireHazard && hasFireResistantFabric && !playerState.fireProtectionUsedThisAge;
-
-  // Extended hazard properties that may exist on runtime hazard cards
-  const extendedHazard = hazard as HazardCard & { special?: string; gasLossOnFailure?: number };
+  ) || false;
+  const fireProtectionAvailable = isFireHazard && hasFireResistantFabric && !(playerState as LaunchPlayerState).fireProtectionUsedThisAge;
 
   // Store pending hazard info for client to respond
+  // Simplified hazard system: unified difficulty formula, 3 outcomes only
   playerState.pendingLaunch!.hazardInfo = {
     // Core hazard info
     type: hazard.type,
     name: hazard.name,
     category: hazard.category,
-    challengeType,
     difficulty,
     flak: hazard.flak || 0,
 
     // Fire hazard specific
-    engineerCost: hazard.engineerCost,  // for Engine Fire, Gas Cell Rupture
     noSave: hazard.noSave,              // for Catastrophic Explosion
     hydrogenOnly: hazard.hydrogenOnly,
 
-    // Special effects
-    special: extendedHazard.special,
-    gasLossOnFailure: extendedHazard.gasLossOnFailure,
-
-    // Ship stats for comparison
+    // Ship stats for comparison (all hazards use reliability)
     relevantStat,
-    statName: challengeType,
+    statName: 'reliability',
     engineersNeeded,
 
     // Auto-pass flags (client uses these to show appropriate UI)
@@ -742,11 +723,11 @@ function processLaunchShip(state: GameState, playerId: string, data: LaunchShipD
   // Also store hazard on pendingLaunch for API compatibility
   playerState.pendingLaunch!.hazard = hazard;
 
-  // Build log message
+  // Build log message (simplified: all hazards use reliability)
   const autoPassReason = playerState.pendingLaunch!.hazardInfo!.autoPassReason;
   const hazardDetails = autoPassReason
     ? ' (' + autoPassReason + ')'
-    : ' (' + challengeType + ' ' + difficulty + ' vs ' + relevantStat + ')';
+    : ' (difficulty ' + difficulty + ' vs reliability ' + relevantStat + ')';
 
   state.log.push({
     timestamp: new Date().toISOString(),

@@ -1,123 +1,11 @@
 /**
- * Rules Compliance Tests - Launching and Repair
+ * Rules Compliance Tests - Launching
  * Tests for correct implementation of Section 4.4, 7, 8 (Building, Launching, Hazards)
  */
 
 const { createTestGameState } = require('../../fixtures/testData');
 
-describe('Rules Compliance - Launching and Repair', () => {
-
-  describe('GAP-027: Ship repair cost (updated per Section 6.15)', () => {
-    it('should allow repairing damaged ships for floor(hullCost/2) + 1 engineer', () => {
-      const state = createTestGameState();
-      const playerState = state.players['1'];
-
-      // Player has a damaged ship in repair bay
-      playerState.hangarShips = 1;
-      playerState.repairShips = 1;
-      playerState.cash = 15;
-      playerState.engineers = 2;
-      // Hull cost from blueprint is typically ~4-6 based on starting setup
-      // So repair cost = floor(hullCost/2) = ~2-3 per ship
-
-      // Set up the Repair action space placement (repairs require worker placement)
-      state.groundBoard.placements.repair = { playerId: '1' };
-
-      const { processRepairShip } = require('../../../server/actions/building');
-      const result = processRepairShip(state, '1', { count: 1, _internal: true });
-
-      // Ship should be moved from repair to hangar
-      expect(result.newState.players['1'].repairShips).toBe(0);
-      expect(result.newState.players['1'].hangarShips).toBe(2);
-      // Cost = floor(hullCost/2) + 1 engineer
-      expect(result.newState.players['1'].engineers).toBe(1); // -1 engineer
-    });
-
-    it('should reject repair if player lacks required cash', () => {
-      const state = createTestGameState();
-      const playerState = state.players['1'];
-
-      playerState.repairShips = 1;
-      playerState.cash = 0; // No cash
-      playerState.engineers = 2;
-      state.groundBoard.placements.repair = { playerId: '1' };
-
-      const { processRepairShip } = require('../../../server/actions/building');
-
-      expect(() => {
-        processRepairShip(state, '1', { count: 1, _internal: true });
-      }).toThrow(/not enough cash|insufficient funds/i);
-    });
-
-    it('should reject repair if no ships in repair bay', () => {
-      const state = createTestGameState();
-      const playerState = state.players['1'];
-
-      playerState.hangarShips = 1;
-      playerState.repairShips = 0;  // No ships in repair bay
-      playerState.cash = 15;
-      playerState.engineers = 2;
-      state.groundBoard.placements.repair = { playerId: '1' };
-
-      const { processRepairShip } = require('../../../server/actions/building');
-
-      expect(() => {
-        processRepairShip(state, '1', { count: 1, _internal: true });
-      }).toThrow(/no.*repair|repair.*bay/i);
-    });
-
-    it('should reject repair if player lacks engineers', () => {
-      const state = createTestGameState();
-      const playerState = state.players['1'];
-
-      playerState.repairShips = 1;
-      playerState.cash = 15;
-      playerState.engineers = 0; // No engineers
-      state.groundBoard.placements.repair = { playerId: '1' };
-
-      const { processRepairShip } = require('../../../server/actions/building');
-
-      expect(() => {
-        processRepairShip(state, '1', { count: 1, _internal: true });
-      }).toThrow(/not enough engineers/i);
-    });
-
-    it('should allow repairing multiple ships at once', () => {
-      const state = createTestGameState();
-      const playerState = state.players['1'];
-
-      playerState.hangarShips = 0;
-      playerState.repairShips = 2; // Two damaged ships
-      playerState.cash = 15;
-      playerState.engineers = 3;
-      state.groundBoard.placements.repair = { playerId: '1' };
-
-      const { processRepairShip } = require('../../../server/actions/building');
-      const result = processRepairShip(state, '1', { count: 2, _internal: true });
-
-      // Both ships should be moved from repair to hangar
-      expect(result.newState.players['1'].repairShips).toBe(0);
-      expect(result.newState.players['1'].hangarShips).toBe(2);
-      // Cost = 2 * (floor(hullCost/2) + 1 engineer) = 2 engineers
-      expect(result.newState.players['1'].engineers).toBe(1); // -2 engineers
-    });
-
-    it('should only allow repairs at Repair action space (not direct call)', () => {
-      const state = createTestGameState();
-      const playerState = state.players['1'];
-
-      playerState.repairShips = 1;
-      playerState.cash = 15;
-      playerState.engineers = 2;
-      // No placement at Repair action space
-
-      const { processRepairShip } = require('../../../server/actions/building');
-
-      expect(() => {
-        processRepairShip(state, '1', { count: 1 }); // No _internal flag
-      }).toThrow(/repair.*action space|place.*agent/i);
-    });
-  });
+describe('Rules Compliance - Launching', () => {
 
   describe('GAP-020: Launch procedure with two-step Hazard Check', () => {
     it('should set ship to awaiting_hazard after LAUNCH_SHIP', () => {
@@ -600,8 +488,13 @@ describe('Rules Compliance - Launching and Repair', () => {
     });
   });
 
-  describe('Fire hazard engineersNeeded calculation', () => {
-    it('should set engineersNeeded to engineerCost for Engine Fire (hydrogen ship)', () => {
+  describe('Unified hazard formula with fire hazard immunity', () => {
+    // Simplified hazard system: unified difficulty formula
+    // Fire hazards: helium auto-passes (heliumFireImmunity = true)
+    // All hazards use: engineersNeeded = max(0, difficulty - reliability)
+    // Fire hazards with hydrogen: cannot spend engineers to overcome, will be destroyed
+
+    it('should set engineersNeeded to 0 for fire hazards (no engineer spending for fire)', () => {
       const state = createTestGameState();
       const playerState = state.players['1'];
 
@@ -610,15 +503,14 @@ describe('Rules Compliance - Launching and Repair', () => {
       playerState.hangarShips = 1;
       playerState.engineers = 5;
 
-      // Put Engine Fire at top of hazard deck
+      // Put Engine Fire at top of hazard deck (simplified: uses difficulty, not engineerCost)
       playerState.hazardDeck = [{
         id: 'engine_fire_0',
         type: 'engine_fire',
         category: 'fire',
         name: 'Engine Fire',
         hydrogenOnly: true,
-        engineerCost: 1,
-        difficulty: 0,
+        difficulty: 2,  // Fire hazards use unified difficulty formula
         flak: 2
       }];
 
@@ -639,53 +531,13 @@ describe('Rules Compliance - Launching and Repair', () => {
         _internal: true
       });
 
-      // hazardInfo.engineersNeeded should be 1 (from engineerCost)
-      expect(result.newState.players['1'].pendingLaunch.hazardInfo.engineersNeeded).toBe(1);
+      // Fire hazards don't allow engineer spending - hydrogen ships fail, helium auto-passes
+      // engineersNeeded = 0 for fire category (calculated differently)
+      expect(result.newState.players['1'].pendingLaunch.hazardInfo.engineersNeeded).toBe(0);
+      expect(result.newState.players['1'].pendingLaunch.hazardInfo.heliumFireImmunity).toBe(false);
     });
 
-    it('should set engineersNeeded to engineerCost for Gas Cell Rupture (hydrogen ship)', () => {
-      const state = createTestGameState();
-      const playerState = state.players['1'];
-
-      playerState.gasCubes = { hydrogen: 3, helium: 0 };
-      playerState.officers = 1;
-      playerState.hangarShips = 1;
-      playerState.engineers = 5;
-
-      // Put Gas Cell Rupture at top of hazard deck
-      playerState.hazardDeck = [{
-        id: 'gas_cell_rupture_0',
-        type: 'gas_cell_rupture',
-        category: 'fire',
-        name: 'Gas Cell Rupture',
-        hydrogenOnly: true,
-        engineerCost: 2,
-        difficulty: 0,
-        flak: 3
-      }];
-
-      state.map.routes = [{
-        id: 'route_1',
-        from: 'A',
-        to: 'B',
-        distance: 1,
-        income: 2,
-        claimed: null
-      }];
-
-      const { processLaunchShip } = require('../../../server/actions/launch');
-
-      const result = processLaunchShip(state, '1', {
-        routeId: 'route_1',
-        gasType: 'hydrogen',
-        _internal: true
-      });
-
-      // hazardInfo.engineersNeeded should be 2 (from engineerCost)
-      expect(result.newState.players['1'].pendingLaunch.hazardInfo.engineersNeeded).toBe(2);
-    });
-
-    it('should set engineersNeeded to 0 for fire hazards with helium ship (auto-pass)', () => {
+    it('should set heliumFireImmunity to true for fire hazards with helium ship', () => {
       const state = createTestGameState();
       const playerState = state.players['1'];
 
@@ -703,8 +555,7 @@ describe('Rules Compliance - Launching and Repair', () => {
         category: 'fire',
         name: 'Engine Fire',
         hydrogenOnly: true,
-        engineerCost: 1,
-        difficulty: 0,
+        difficulty: 2,
         flak: 2
       }];
 
@@ -725,12 +576,11 @@ describe('Rules Compliance - Launching and Repair', () => {
         _internal: true
       });
 
-      // Helium ships auto-pass fire hazards, so engineersNeeded is still 1
-      // but heliumFireImmunity should be true (meaning player doesn't need to spend)
+      // Helium ships auto-pass fire hazards
       expect(result.newState.players['1'].pendingLaunch.hazardInfo.heliumFireImmunity).toBe(true);
     });
 
-    it('should calculate engineersNeeded based on difficulty-stat gap for non-fire hazards', () => {
+    it('should calculate engineersNeeded based on unified difficulty formula for standard hazards', () => {
       const state = createTestGameState();
       const playerState = state.players['1'];
 
@@ -739,13 +589,12 @@ describe('Rules Compliance - Launching and Repair', () => {
       playerState.hangarShips = 1;
       playerState.engineers = 5;
 
-      // Put a non-fire hazard at top of deck (reliability check with difficulty 6)
+      // Put a standard hazard at top of deck (unified formula: difficulty - reliability)
       playerState.hazardDeck = [{
         id: 'structural_stress_0',
-        type: 'major_reliability',
-        category: 'major',
-        name: 'Structural Stress',
-        challengeType: 'reliability',
+        type: 'critical_structural_stress',
+        category: 'hazard',  // Simplified: 4 categories only
+        name: 'Critical Structural Stress',
         difficulty: 6,
         flak: 2
       }];
