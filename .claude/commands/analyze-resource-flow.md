@@ -4,7 +4,12 @@ Analyze the game's economic balance by running a playtest and examining resource
 
 ## Steps
 
-### Step 1: Run a playtest to generate resource flow data
+### Step 1: Restart the server
+```bash
+./scripts/restart_server.sh
+```
+
+### Step 2: Run a playtest to generate resource flow data
 
 ```bash
 ./scripts/restart_server.sh
@@ -14,11 +19,11 @@ timeout 120 python -m playtest autoplay 100 | tail -80
 
 Note: The playtest is capped at 100 turns. If it hits this limit, the game likely has a bug causing an infinite loop.
 
-### Step 2a: If the game hung, timed out or reached 100 turns
+### Step 1.1: If the game hangs, times out or reached 100 turns:
 
 Use the tools in playtest/README.md to troubleshoot why the game failed and recommend remedies.  Once fixed, return to Step 1.
 
-### Step 2b: If the game successfully completed in fewer than 100 turns. Run the analysis script
+### Step 2: If the game successfully completed in fewer than 100 turns. Run the analysis script
 
 ```bash
 python scripts/analyze_flow.py
