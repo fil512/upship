@@ -80,7 +80,7 @@ Verify these cross-references exist and are accurate:
 - [ ] Blueprint (§3.2) references Technology (§4) and Launch (§7)
 - [ ] Physics Check references Gas Cubes (§4.4) and Weight calculation
 - [ ] Hazard Check (§7.3) references Ship Stats (§3.7) and Appendix E
-- [ ] Technology acquisition references Progress Track (§1.3)
+- [ ] Successful launches reference Progress Track advancement (§1.3)
 - [ ] Age Transitions (§9) references all systems that change
 - [ ] Each appendix tile/card has stats matching in-section descriptions
 

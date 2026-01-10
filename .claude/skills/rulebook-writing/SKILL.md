@@ -117,7 +117,7 @@ These interconnected systems require consistent cross-referencing:
 | Physics Check (§3.2, §7.2) | Gas Cubes (§4.4), Weight (§3.7), Lift (§4.4) |
 | Hazard Checks (§7.3) | Ship Stats (§3.7), Appendix E |
 | Age Transitions (§9) | Blueprint (§3.2), Technology (§4), Routes (§5) |
-| Progress Track (§1.3) | Technology (§4.1), Game End (§1) |
+| Progress Track (§1.3) | Launch (§7), Game End (§1) |
 
 ## Writing Style Guide
 

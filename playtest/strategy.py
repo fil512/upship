@@ -157,11 +157,13 @@ def get_blueprint_design_blueprint(player_data: Player, current_age: int = 1, is
     empty_frame_indices = [i for i, s in enumerate(new_blueprint['frameSlots']) if s is None]
     empty_fabric_indices = [i for i, s in enumerate(new_blueprint['fabricSlots']) if s is None]
     empty_drive_indices = [i for i, s in enumerate(new_blueprint['driveSlots']) if s is None]
+    empty_component_indices = [i for i, s in enumerate(new_blueprint['componentSlots']) if s is None]
 
     # Find filled slot indices (for potential replacement)
     filled_frame_indices = [i for i, s in enumerate(new_blueprint['frameSlots']) if s is not None]
     filled_fabric_indices = [i for i, s in enumerate(new_blueprint['fabricSlots']) if s is not None]
     filled_drive_indices = [i for i, s in enumerate(new_blueprint['driveSlots']) if s is not None]
+    filled_component_indices = [i for i, s in enumerate(new_blueprint['componentSlots']) if s is not None]
 
     # Determine priority stats based on age
     # Age 2+ missions require BOTH range AND ceiling, so prioritize both
@@ -195,6 +197,7 @@ def get_blueprint_design_blueprint(player_data: Player, current_age: int = 1, is
     frame_upgrades = []
     fabric_upgrades = []
     drive_upgrades = []
+    component_upgrades = []  # For armor, payload, and other component tiles
 
     for tech_id in technologies:
         # Get ALL upgrades this tech card can install (not just the first one)
@@ -210,6 +213,8 @@ def get_blueprint_design_blueprint(player_data: Player, current_age: int = 1, is
                     fabric_upgrades.append(upgrade_id)
                 elif slot_type == 'driveSlots':
                     drive_upgrades.append(upgrade_id)
+                elif slot_type == 'componentSlots':
+                    component_upgrades.append(upgrade_id)
 
     changes_made = False
 
@@ -234,6 +239,20 @@ def get_blueprint_design_blueprint(player_data: Player, current_age: int = 1, is
     frame_upgrades.sort(key=lambda tid: _get_tile_hull_cost(manifest, tid))
     fabric_upgrades.sort(key=lambda tid: _get_tile_hull_cost(manifest, tid))
     drive_upgrades.sort(key=lambda tid: _get_tile_hull_cost(manifest, tid))
+
+    # Sort component upgrades: In Age 2, prioritize armor tiles for flak survival
+    # Armor tiles have 'armor' in their stats; sort by: has_armor (desc), then hull_cost (asc)
+    def component_sort_key(tid: str) -> tuple:
+        tile = manifest.upgrades.get(tid, {})
+        stats = tile.get('stats', {})
+        has_armor = 1 if stats.get('armor', 0) > 0 else 0
+        hull_cost = _get_tile_hull_cost(manifest, tid)
+        # In Age 2, prioritize armor (negative for descending sort); otherwise just by cost
+        if current_age == 2:
+            return (-has_armor, hull_cost)  # Armor first, then cheaper
+        return (0, hull_cost)  # Just by cost
+
+    component_upgrades.sort(key=component_sort_key)
 
     def can_afford_tile(tile_id: str) -> bool:
         """Check if we can afford to add a tile considering retrofit cost."""
@@ -275,6 +294,14 @@ def get_blueprint_design_blueprint(player_data: Player, current_age: int = 1, is
         affordable = next((uid for uid in drive_upgrades if uid not in installed_tiles and can_afford_tile(uid)), None)
         if affordable:
             new_blueprint['driveSlots'][idx] = affordable
+            add_tile(affordable)
+
+    # Fill empty component slots (no duplicates)
+    # In Age 2, armor tiles are sorted first for flak survival
+    for idx in empty_component_indices:
+        affordable = next((uid for uid in component_upgrades if uid not in installed_tiles and can_afford_tile(uid)), None)
+        if affordable:
+            new_blueprint['componentSlots'][idx] = affordable
             add_tile(affordable)
 
     # === REPLACEMENT LOGIC ===
@@ -356,6 +383,84 @@ def get_blueprint_design_blueprint(player_data: Player, current_age: int = 1, is
         replacement = find_best_replacement(current_tile, fabric_upgrades, 'fabricSlots')
         if replacement:
             do_replacement('fabricSlots', idx, current_tile, replacement)
+
+    # === AGE-SPECIFIC COMPONENT REPLACEMENT ===
+    # Age 2: Replace non-armor components with armor tiles for flak survival
+    # Age 3: Replace components with luxury tiles for route requirements
+    if current_age >= 2 and component_upgrades:
+        def get_component_priority_score(tile_id: str) -> tuple[int, int]:
+            """Score component tiles by age-specific priority.
+            Returns (priority, secondary_score) - lower priority = better.
+            """
+            if not tile_id:
+                return (999, 0)  # Empty slot, lowest priority for replacement
+
+            tile = manifest.upgrades.get(tile_id, {})
+            stats = tile.get('stats', {})
+            armor = stats.get('armor', 0)
+            luxury = stats.get('luxury', 0)
+            income = stats.get('income', 0)
+
+            if current_age == 2:
+                # Age 2: Armor is critical for flak survival
+                if armor > 0:
+                    return (0, -armor)  # Best - keep armor tiles
+                return (1, -income)  # Non-armor can be replaced
+            else:  # Age 3
+                # Age 3: Luxury is critical for Atlantic routes
+                if luxury > 0:
+                    return (0, -luxury)  # Best - keep luxury tiles
+                if armor > 0:
+                    return (1, -armor)  # Armor still useful but less critical
+                return (2, -income)  # Other components can be replaced
+
+        # Find the best armor/luxury upgrade available
+        best_upgrade = None
+        best_upgrade_score = (999, 0)
+
+        for upgrade_id in component_upgrades:
+            if upgrade_id in installed_tiles:
+                continue
+
+            tile = manifest.upgrades.get(upgrade_id, {})
+            stats = tile.get('stats', {})
+            armor = stats.get('armor', 0)
+            luxury = stats.get('luxury', 0)
+
+            # In Age 2, prioritize armor; in Age 3, prioritize luxury
+            if current_age == 2 and armor > 0:
+                score = (0, -armor)  # Lower is better
+                if score < best_upgrade_score:
+                    best_upgrade = upgrade_id
+                    best_upgrade_score = score
+            elif current_age == 3 and luxury > 0:
+                score = (0, -luxury)
+                if score < best_upgrade_score:
+                    best_upgrade = upgrade_id
+                    best_upgrade_score = score
+
+        # Try to replace the lowest-priority component with the best upgrade
+        if best_upgrade:
+            # Find the worst component slot to replace
+            worst_idx = None
+            worst_score = (-1, 0)
+
+            for idx in filled_component_indices:
+                current_tile = new_blueprint['componentSlots'][idx]
+                if not current_tile:
+                    continue
+
+                current_score = get_component_priority_score(current_tile)
+
+                # Only consider replacing if current tile is lower priority than what we want to install
+                if current_score > best_upgrade_score and current_score > worst_score:
+                    if can_afford_replacement(current_tile, best_upgrade):
+                        worst_idx = idx
+                        worst_score = current_score
+
+            if worst_idx is not None:
+                old_tile = new_blueprint['componentSlots'][worst_idx]
+                do_replacement('componentSlots', worst_idx, old_tile, best_upgrade)
 
     # For age transition, always return the blueprint (even if incomplete - server validates)
     # For normal play, only return if we made changes
@@ -516,8 +621,39 @@ def evaluate_launch_readiness(
         priorities.append('flight_school')  # Increase officer income track
 
     # Check 4: Do we have gas?
-    gas_needed = 1
-    if total_gas < gas_needed:
+    # In Age II, missions require gas based on their range
+    # Calculate minimum gas needed for any achievable mission/route
+    gas_needed = 1  # Minimum baseline
+    if current_age == 2 and missions:
+        # Get gas requirement for cheapest achievable mission
+        ship_stats = None
+        if hangar_ships and player_data.blueprint:
+            ship_stats = get_ship_details(hangar_ships[0], player_data)
+        if ship_stats:
+            ship_range = ship_stats.get('range', 0)
+            ship_speed = ship_stats.get('speed', 0)
+            ship_ceiling = ship_stats.get('ceiling', 0)
+            achievable_missions = [
+                m for m in missions
+                if (ship_range >= (m.range or 0) and
+                    ship_speed >= (m.speed or 0) and
+                    ship_ceiling >= (m.ceiling or 0))
+            ]
+            if achievable_missions:
+                # Gas needed = mission range (hydrogen) or mission range (helium for USA)
+                faction = player_data.faction.lower() if player_data.faction else ''
+                min_gas = min(m.range or 1 for m in achievable_missions)
+                gas_needed = max(gas_needed, min_gas)
+                # Check if we have the RIGHT type of gas
+                if faction == 'usa':
+                    if helium < gas_needed:
+                        missing.append(f'need {gas_needed - helium} more helium')
+                        priorities.append('gas_depot')
+                else:
+                    if hydrogen < gas_needed:
+                        missing.append(f'need {gas_needed - hydrogen} more hydrogen')
+                        priorities.append('gas_depot')
+    elif total_gas < gas_needed:
         missing.append(f'need {gas_needed - total_gas} more gas')
         priorities.append('gas_depot')
 
@@ -597,8 +733,56 @@ def evaluate_launch_readiness(
         priorities.append('engineering_depot')  # Collect engineers from income track
         priorities.append('technical_institute')  # Increase engineer income track
 
+    # Check if we have enough of the RIGHT gas type
+    gas_ok = False
+    if current_age == 2 and missions and hangar_ships:
+        faction = player_data.faction.lower() if player_data.faction else ''
+        if faction == 'usa':
+            gas_ok = helium >= gas_needed
+        else:
+            gas_ok = hydrogen >= gas_needed
+    else:
+        gas_ok = total_gas >= gas_needed
+
+    # Check 8: Do we have armor/luxury tech but not installed?
+    # [BOT-LAUNCH-READY-01] SYNC: Match server - prioritize blueprint_design when upgrades available
+    # Age 2: Armor is critical for surviving flak (50% target survival rate)
+    # Age 3: Luxury is critical for Atlantic routes
+    component_slots = blueprint.component_slots if blueprint else []
+    technologies = player_data.technologies or []
+
+    # Check for armor (Age 2+)
+    if current_age >= 2:
+        armor_tech_cards = {'armored_gondola', 'reinforced_hull'}
+        has_armor_tech = any(t in armor_tech_cards for t in technologies)
+
+        # Check if any component slot has armor (armor stat > 0)
+        armor_tile_ids = {'light_armor_plating', 'heavy_armor_plating'}
+        has_armor_installed = any(s in armor_tile_ids for s in component_slots if s)
+
+        if has_armor_tech and not has_armor_installed and 'blueprint_design' not in priorities:
+            missing.append('have armor tech but no armor installed (critical for flak survival)')
+            priorities.insert(0, 'blueprint_design')  # High priority - add to front
+
+    # Check for luxury (Age 3)
+    if current_age == 3:
+        luxury_tech_cards = {'luxury_accommodation', 'luxury_fittings'}
+        has_luxury_tech = any(t in luxury_tech_cards for t in technologies)
+
+        # Check if any component slot has luxury
+        # These tiles have luxury stats: luxury_cabin, restaurant, observation_deck, etc.
+        luxury_tile_ids = {
+            'luxury_cabin', 'restaurant', 'observation_deck',
+            'promenade_deck', 'cocktail_bar', 'writing_room', 'luxury_lounge'
+        }
+        has_luxury_installed = any(s in luxury_tile_ids for s in component_slots if s)
+
+        if has_luxury_tech and not has_luxury_installed and 'blueprint_design' not in priorities:
+            missing.append('have luxury tech but no luxury installed (critical for Atlantic routes)')
+            priorities.insert(0, 'blueprint_design')  # High priority - add to front
+
     can_launch = (len(hangar_ships) > 0 and slots_ready and stats_ready and
-                  officers >= officers_needed and total_gas >= gas_needed and
+                  officers >= officers_needed and gas_ok and
                   has_achievable_target and engineers >= min_engineers_for_safe_launch)
 
     return {
@@ -1100,9 +1284,17 @@ def get_reveal_acquisitions(player: str, game_id: str) -> tuple[list[str], list[
                 structure_keywords = {'frame', 'girder', 'bracing', 'keel', 'geodetic', 'modular', 'hull'}
                 fabric_keywords = {'fabric', 'skin', 'canvas', 'cotton', 'latex', 'coating', 'doping', 'covering'}
                 gas_keywords = {'gas', 'valv', 'ballonet', 'cell', 'vent', 'recovery', 'helium', 'blaugas'}
+                # Age 2 armor keywords - critical for surviving flak
+                armor_keywords = {'armor', 'armored', 'armour', 'plating', 'reinforced'}
+
+                # Get current age for age-specific prioritization
+                current_age = state.age if state else 1
 
                 def get_tech_priority(tech: dict) -> tuple[int, int]:
-                    """Returns (priority, -vp) for sorting. Lower = better."""
+                    """Returns (priority, -vp) for sorting. Lower = better.
+
+                    [BOT-TECH-PRIORITY-01] SYNC: Keep in sync with calculateTechScore() in server/services/botService.ts
+                    """
                     tech_id = tech.get('id', '').lower()
                     tech_name = tech.get('name', '').lower()
                     combined = tech_id + ' ' + tech_name
@@ -1112,15 +1304,19 @@ def get_reveal_acquisitions(player: str, game_id: str) -> tuple[list[str], list[
                     if tech_vp > 0:
                         return (0, -tech_vp)
 
+                    # Age 2: Armor is critical for surviving flak (priority 1)
+                    if current_age == 2 and any(kw in combined for kw in armor_keywords):
+                        return (1, 0)  # Top priority in Age 2 - survival!
+
                     if any(kw in combined for kw in drive_keywords):
-                        return (1, 0)  # High priority - range/speed for routes
+                        return (2, 0)  # High priority - range/speed for routes
                     if any(kw in combined for kw in structure_keywords):
-                        return (2, 0)  # Frame/lift
+                        return (3, 0)  # Frame/lift
                     if any(kw in combined for kw in fabric_keywords):
-                        return (3, 0)  # Fabric/weight
+                        return (4, 0)  # Fabric/weight
                     if any(kw in combined for kw in gas_keywords):
-                        return (4, 0)  # Gas efficiency
-                    return (5, 0)  # Components and other
+                        return (5, 0)  # Gas efficiency
+                    return (6, 0)  # Components and other
 
                 # Sort by priority first, then by cost (prefer cheaper within same priority)
                 available_techs.sort(key=lambda t: (get_tech_priority(t), t.get('cost', 0)))

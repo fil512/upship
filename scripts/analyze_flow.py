@@ -26,6 +26,7 @@ CARD_GOAL = 1.1  # cards per player per round
 TOTAL_GOAL = 2.2  # total purchases per player per round
 LAUNCH_SUCCESS_GOAL = 0.75  # 75% launch success rate
 AGE2_FLAK_SURVIVAL_GOAL = 0.50  # 50% survival rate for Age 2 flak encounters
+TARGET_TOTAL_ROUNDS = 16  # target total game rounds
 
 
 def load_flow_data(filepath: str = None) -> tuple:
@@ -654,6 +655,51 @@ def print_launch_outcomes_report(launch_data: dict):
         print()
 
 
+def print_game_length_report(actual_rounds: int):
+    """Print game length vs target analysis."""
+    print("=" * 60)
+    print("GAME LENGTH ANALYSIS")
+    print("=" * 60)
+    print()
+    print(f"DESIGN GOAL: {TARGET_TOTAL_ROUNDS} total rounds")
+    print()
+
+    diff = actual_rounds - TARGET_TOTAL_ROUNDS
+    pct_diff = (diff / TARGET_TOTAL_ROUNDS) * 100
+
+    if abs(pct_diff) <= 15:
+        status = "✓ ON TARGET"
+    elif actual_rounds < TARGET_TOTAL_ROUNDS:
+        status = "❌ TOO SHORT"
+    else:
+        status = "⚠️  TOO LONG"
+
+    print(f"Actual rounds: {actual_rounds}")
+    print(f"Target rounds: {TARGET_TOTAL_ROUNDS}")
+    print(f"Difference: {diff:+d} rounds ({pct_diff:+.0f}%) {status}")
+    print()
+
+    if actual_rounds < TARGET_TOTAL_ROUNDS * 0.5:
+        print("DIAGNOSIS:")
+        print("  ❌ Critical: Game ending far too quickly")
+        print("     → Age progression is too fast")
+        print("     → Successful launches advance the Progress Track (not tech acquisition)")
+        print("     → Consider increasing progress thresholds or making launches harder")
+        print()
+    elif actual_rounds < TARGET_TOTAL_ROUNDS * 0.85:
+        print("DIAGNOSIS:")
+        print("  ⚠️  Game ending too quickly")
+        print("     → Review launch frequency and progress thresholds")
+        print()
+    elif actual_rounds > TARGET_TOTAL_ROUNDS * 1.25:
+        print("DIAGNOSIS:")
+        print("  ⚠️  Game running too long")
+        print("     → Age progression may be too slow")
+        print("     → Successful launches advance the Progress Track")
+        print("     → Consider reducing progress thresholds or making launches easier")
+        print()
+
+
 def main():
     # Load data
     filepath = sys.argv[1] if len(sys.argv) > 1 else None
@@ -669,6 +715,9 @@ def main():
     print(f"Game: {resource_flows[0].get('gameId', 'unknown')}")
     print(f"Rounds: {len(rounds)}, Players: {len(factions)}")
     print()
+
+    # Print game length analysis
+    print_game_length_report(len(rounds))
 
     # Analyze
     purchases = analyze_purchases(resource_flows)

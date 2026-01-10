@@ -30,6 +30,7 @@ python scripts/analyze_flow.py
 ```
 
 The script automatically finds the most recent flow JSON and outputs:
+- **Game Length Analysis** - actual rounds vs target (16 rounds)
 - **Purchasing Power Analysis** - techs/cards per player per round vs goals
 - **Currency Analysis** - research/influence generation vs costs
 - **Resource Flow Analysis** - overflow/deficit for all resources
@@ -41,7 +42,8 @@ The script automatically finds the most recent flow JSON and outputs:
 
 | Metric | Target | Rationale |
 |--------|--------|-----------|
-| **Tech tiles** | **1.1** per player per round (rarely 2) | Age progression should be gradual |
+| **Total game rounds** | **16** rounds | Full game experience across all 3 ages (launches advance Progress Track) |
+| **Tech tiles** | **1.1** per player per round (rarely 2) | Engine building should be steady |
 | **Market cards** | **1.1** per player per round (rarely 2) | Deck building should be steady |
 | **Total purchases** | **2.2** baseline, **3** on exceptional rounds | Creates meaningful decisions |
 | **Launch success rate** | **75%** | Launches should usually succeed but feel risky |
@@ -128,7 +130,21 @@ For each recommendation, suggest concrete code changes:
 EXECUTIVE SUMMARY:
 The economy has a critical pacing problem. Players buy 2.8 techs/round
 (goal: 1.1), causing ages to progress 2.5x too fast. The game ends in 3 rounds
-instead of the target 8-10 rounds.
+instead of the target 16 rounds.
+
+=== GAME LENGTH ANALYSIS ===
+
+DESIGN GOAL: 16 total rounds
+
+Actual rounds: 3
+Target rounds: 16
+Difference: -13 rounds (-81%) ❌ TOO SHORT
+
+DIAGNOSIS:
+  ❌ Critical: Game ending far too quickly
+     → Age progression is too fast
+     → Successful launches advance the Progress Track (not tech acquisition)
+     → Consider increasing progress thresholds or making launches harder
 
 === PURCHASING POWER (PRIMARY METRIC) ===
 
@@ -150,9 +166,10 @@ CURRENCY ANALYSIS:
             → Purchasing power: 1.1 cards (goal: 1.1) ✓
 
 CRITICAL FIX NEEDED:
-  Option A: Triple tech costs (from avg 1.4 to avg 4.0)
-  Option B: Reduce research generation by 66%
-  Option C: Only count Drive techs for age progression
+  Note: Game length is controlled by successful launches, not tech acquisition.
+  Option A: Increase progress thresholds (8/16/22 → higher values)
+  Option B: Make hazard checks harder to reduce launch success rate
+  Option C: Increase ship build costs to slow down launch frequency
 
 === SECONDARY METRICS ===
 

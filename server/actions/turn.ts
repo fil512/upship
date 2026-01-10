@@ -53,7 +53,7 @@ function processEndTurn(state: GameState, playerId: string): ActionResult {
         // Player has revealed and is now finishing their purchase selection
         // Finalize their purchases immediately
 
-        // 1. Finalize tech card acquisitions (add to techCards, increment progressTrack)
+        // 1. Finalize tech card acquisitions (add to techCards)
         const pendingTech = playerState.pendingTechAcquisitions || [];
         for (const acquisition of pendingTech) {
           const cardIndex = turnState.rdBoard.findIndex(c => c.id === acquisition.cardId);

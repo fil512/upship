@@ -153,7 +153,7 @@ These items require playtesting validation. Rules are complete but balance may n
 
 1. **Engineer Economy Test:** Verify the tension between Research generation and emergency spending feels meaningful
 
-2. **Progress Track Pacing:** Does the fixed-wing threshold create appropriate tension? Assess whether players avoid acquiring Technologies to extend the game, causing Analysis Paralysis. Verify tech acquisition pace feels balanced.
+2. **Progress Track Pacing:** Does the fixed-wing threshold create appropriate tension? Assess whether players avoid launching ships to extend the game. Verify launch frequency feels balanced (successful launches advance the Progress Track).
 
 3. **Technology/Tech Tile Flow:** Is the two-step system (acquire tech → install tech tile) intuitive?
 

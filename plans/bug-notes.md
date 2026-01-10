@@ -11,6 +11,8 @@ Different functions operate on different property names that should refer to the
 
 **Symptom**: Game never advanced past Age I despite 50 turns of play. Progress track stuck at 5/12.
 
+**Note**: This bug was from when tech acquisition advanced the Progress Track. The rule has since changed: now **successful launches** advance the Progress Track (see Section 1.3).
+
 **Root Cause**: Two functions used different property names for the R&D board:
 - `refreshRnDBoard()` wrote to `state.rnDBoard.available`
 - All tech acquisition code read from `state.rdBoard`
@@ -159,11 +161,13 @@ State is initialized with one shape but runtime code expects a different shape.
 
 **Symptom**: Game cannot progress to Age II because threshold is unreachable.
 
-**Root Cause**:
+**Note**: This bug was from when tech acquisition advanced the Progress Track. The rule has since changed: now **successful launches** advance the Progress Track (see Section 1.3).
+
+**Root Cause** (under old rule):
 - Age 1 TECHNOLOGY_BAG has 12 techs
 - 3 are faction starting techs which were completely excluded
 - Only 9 techs remained for acquisition
-- Progress threshold for 4 players to reach Age II is 12 techs
+- Progress threshold for 4 players to reach Age II was 12 techs
 
 **Fix Applied**: Tech tile scaling per player count (Section 3.1)
 - Each tech tile now has (N-1) copies where N = player count
