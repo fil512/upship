@@ -236,6 +236,16 @@
 		</defs>
 		<rect width="100%" height="100%" fill="url(#skyGradient)" rx="8" />
 
+		<!-- Age-specific background image -->
+		<image
+			href="/age{age}_blueprint.png"
+			width="100%"
+			height="100%"
+			preserveAspectRatio="xMidYMid slice"
+			opacity="0.5"
+			style="pointer-events: none; filter: brightness(1.3) saturate(0.8);"
+		/>
+
 		<!-- Airship envelope (main body) - larger ellipse -->
 		<ellipse
 			cx="340"
