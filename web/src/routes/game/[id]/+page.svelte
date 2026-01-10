@@ -934,7 +934,7 @@
 		const isNoSave = pendingHazard?.noSave || pendingHazard?.type === 'catastrophic_explosion';
 		const isFireHazard = pendingHazard?.category === 'fire';
 
-		// For fire hazards (hydrogen), spending engineers → Damaged (ship to repair, no route)
+		// For fire hazards (hydrogen), spending engineers → Aborted (ship returns to hangar, no route)
 		// For non-fire hazards, spending engineers → Success (route claimed)
 		// Auto-pass always claims route (including helium fire immunity)
 		const willClaimRoute = !isNoSave && (
@@ -953,7 +953,7 @@
 			pendingHazardResponse = { spendEngineers };
 			showCityModal = true;
 		} else {
-			// Fire hazard (damaged/destroyed), mission, or abort
+			// Fire hazard (aborted/destroyed), mission, or abort
 			const result = await sendAction({
 				actionType: 'RESPOND_TO_HAZARD',
 				actionData: {
@@ -966,7 +966,7 @@
 				} else if (isMission) {
 					showToast('Mission completed!', 'success');
 				} else if (isFireHazard && spendEngineers) {
-					showToast('Fire controlled - ship damaged, moved to repair bay', 'warning');
+					showToast('Fire controlled - ship returns to hangar', 'warning');
 				} else if (isFireHazard) {
 					showToast('Ship destroyed by fire!', 'error');
 				} else {
@@ -1603,8 +1603,11 @@
 											Acknowledge
 										</button>
 									{:else if pendingHazard.engineersNeeded > 0}
+										<p class="hazard-calculation">
+											Difficulty ({pendingHazard.difficulty}) − Reliability ({pendingHazard.relevantStat}) = {pendingHazard.engineersNeeded} Engineer{pendingHazard.engineersNeeded > 1 ? 's' : ''} needed
+										</p>
 										<p class="hazard-available">
-											You have: {$myState?.engineers || 0} Engineers
+											You have: {$myState?.engineers || 0} Engineer{($myState?.engineers || 0) === 1 ? '' : 's'}
 										</p>
 										{@const isFireHazard = pendingHazard.category === 'fire'}
 										{#if !canAffordEngineers}
@@ -1619,7 +1622,7 @@
 										<div class="hazard-buttons">
 											{#if canAffordEngineers}
 												<button class="btn primary w-full" on:click={() => handleRespondToHazard(true)}>
-													Spend {pendingHazard.engineersNeeded} Engineer{pendingHazard.engineersNeeded > 1 ? 's' : ''} → {isFireHazard ? 'Damaged' : 'Success'}
+													Spend {pendingHazard.engineersNeeded} Engineer{pendingHazard.engineersNeeded > 1 ? 's' : ''} → {isFireHazard ? 'Aborted' : 'Success'}
 												</button>
 											{/if}
 											<button class="btn {canAffordEngineers ? 'secondary' : 'danger'} w-full" on:click={() => handleRespondToHazard(false)}>
@@ -2650,6 +2653,13 @@
 		font-size: 0.85rem;
 		color: var(--color-warning);
 		margin: 0;
+	}
+
+	.hazard-calculation {
+		font-size: 0.75rem;
+		color: var(--color-text-secondary);
+		margin: 0 0 0.25rem 0;
+		font-family: monospace;
 	}
 
 	.hazard-available {
