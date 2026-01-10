@@ -9,6 +9,7 @@
     "generate:tech": "node generate.js --type=tech",
     "generate:hazard": "node generate.js --type=hazard",
     "generate:mission": "node generate.js --type=mission",
+    "generate:tiles": "node generate.js --tiles-only",
     "generate:sheets": "node generate.js --sheets-only"
   },
   "dependencies": {

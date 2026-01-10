@@ -35,11 +35,16 @@ const PATHS = {
 const CARD_WIDTH = 750;
 const CARD_HEIGHT = 1050;
 
+// Tile dimensions (1.5" x 0.95" at 300 DPI)
+const TILE_WIDTH = 450;
+const TILE_HEIGHT = 285;
+
 // Parse command line arguments
 const args = process.argv.slice(2);
 const typeArg = args.find(a => a.startsWith('--type='));
 const cardType = typeArg ? typeArg.split('=')[1] : null;
 const sheetsOnly = args.includes('--sheets-only');
+const tilesOnly = args.includes('--tiles-only');
 
 /**
  * Load card data from server files
@@ -248,6 +253,104 @@ async function loadCardData() {
 }
 
 /**
+ * Load all tech tiles for printing
+ */
+function loadTileData() {
+  const tiles = [
+    // === FACTION STARTER TILES ===
+    // Germany starters
+    { id: 'zeppelin_frame', name: 'Zeppelin Frame', slotType: 'frameSlots', weight: 2, hullCost: 1, stats: { gas_socket: 1 } },
+    { id: 'maybach_cx', name: 'Maybach CX Engine', slotType: 'driveSlots', weight: 1, hullCost: 1, stats: { speed: 1 } },
+    { id: 'premium_envelope', name: 'Premium Envelope', slotType: 'fabricSlots', weight: 1, hullCost: 3, stats: { reliability: 1, range: 1 } },
+    { id: 'blaugas_tank', name: 'Blaugas Tank', slotType: 'componentSlots', weight: 0, hullCost: 1, stats: { range: 1 } },
+
+    // Britain starters
+    { id: 'tensioned_frame', name: 'Tensioned Frame', slotType: 'frameSlots', weight: 2, hullCost: 1, stats: { gas_socket: 1 } },
+    { id: 'standard_engine', name: 'Standard Engine', slotType: 'driveSlots', weight: 1, hullCost: 1, stats: { speed: 1, range: 1 } },
+    { id: 'doped_covering', name: 'Doped Covering', slotType: 'fabricSlots', weight: 1, hullCost: 1, stats: {} },
+    { id: 'passenger_cabin', name: 'Passenger Cabin', slotType: 'componentSlots', weight: 1, hullCost: 1, stats: { income: 1 } },
+    { id: 'imperial_mast', name: 'Imperial Mast', slotType: 'componentSlots', weight: 1, hullCost: 1, stats: {} },
+
+    // USA starters
+    { id: 'duralumin_frame', name: 'Duralumin Frame', slotType: 'frameSlots', weight: 2, hullCost: 1, stats: { gas_socket: 1 } },
+    { id: 'reliable_engine', name: 'Reliable Engine', slotType: 'driveSlots', weight: 1, hullCost: 1, stats: { speed: 1, range: 1 } },
+    { id: 'latex_envelope', name: 'Latex Envelope', slotType: 'fabricSlots', weight: 1, hullCost: 1, stats: {} },
+    { id: 'helium_gas_cell', name: 'Helium Gas Cell', slotType: 'componentSlots', weight: 1, hullCost: 2, stats: {} },
+    { id: 'sparrowhawk_hangar', name: 'Sparrowhawk Hangar', slotType: 'componentSlots', weight: 3, hullCost: 3, stats: {} },
+
+    // Italy starters
+    { id: 'semi_rigid_keel', name: 'Semi-Rigid Keel', slotType: 'frameSlots', weight: 2, hullCost: 1, stats: { reliability: 1, gas_socket: 1 } },
+    { id: 'flexible_frame', name: 'Flexible Frame', slotType: 'frameSlots', weight: 0, hullCost: 1, stats: { lift: 1, gas_socket: 1 } },
+    { id: 'expedition_engine', name: 'Expedition Engine', slotType: 'driveSlots', weight: 1, hullCost: 1, stats: { range: 1 } },
+    { id: 'cotton_envelope', name: 'Cotton Envelope', slotType: 'fabricSlots', weight: 1, hullCost: 1, stats: {} },
+
+    // === DRIVE TILES ===
+    { id: 'basic_engine', name: 'Basic Engine', slotType: 'driveSlots', weight: 1, hullCost: 1, stats: { speed: 1, range: 1 } },
+    { id: 'efficient_propeller', name: 'Efficient Propeller', slotType: 'driveSlots', weight: 1, hullCost: 2, stats: { speed: 1, range: 1 } },
+    { id: 'twin_engine', name: 'Twin Engine', slotType: 'driveSlots', weight: 3, hullCost: 3, stats: { speed: 2, reliability: 1 } },
+    { id: 'diesel_engine', name: 'Diesel Engine', slotType: 'driveSlots', weight: 2, hullCost: 3, stats: { range: 2, reliability: 1 } },
+    { id: 'vectored_thrust', name: 'Vectored Thrust', slotType: 'driveSlots', weight: 2, hullCost: 2, stats: { speed: 1, ceiling: 1 } },
+    { id: 'balanced_propulsion', name: 'Balanced Propulsion', slotType: 'driveSlots', weight: 2, hullCost: 3, stats: { speed: 2, reliability: 1 } },
+    { id: 'aerodynamic_engine', name: 'Aerodynamic Engine', slotType: 'driveSlots', weight: 2, hullCost: 3, stats: { speed: 3 } },
+    { id: 'high_altitude_engine', name: 'High-Altitude Engine', slotType: 'driveSlots', weight: 3, hullCost: 4, stats: { speed: 2, ceiling: 2 } },
+    { id: 'hybrid_powerplant', name: 'Hybrid Powerplant', slotType: 'driveSlots', weight: 3, hullCost: 4, stats: { range: 3, reliability: 1 } },
+    { id: 'adaptive_propeller', name: 'Adaptive Propeller', slotType: 'driveSlots', weight: 2, hullCost: 3, stats: { speed: 1, range: 2 } },
+
+    // === FRAME TILES ===
+    { id: 'wooden_frame', name: 'Wooden Frame', slotType: 'frameSlots', weight: 2, hullCost: 1, stats: { reliability: 1, gas_socket: 1 } },
+    { id: 'steel_frame', name: 'Steel Frame', slotType: 'frameSlots', weight: 3, hullCost: 1, stats: { reliability: 2, gas_socket: 1 } },
+    { id: 'geodetic_frame', name: 'Geodetic Frame', slotType: 'frameSlots', weight: 1, hullCost: 3, stats: { reliability: 2, ceiling: 1, gas_socket: 1 } },
+    { id: 'modular_frame', name: 'Modular Frame', slotType: 'frameSlots', weight: 1, hullCost: 2, stats: { gas_socket: 1 } },
+    { id: 'streamlined_hull', name: 'Streamlined Hull', slotType: 'frameSlots', weight: 1, hullCost: 2, stats: { lift: 2, gas_socket: 1 } },
+    { id: 'aerodynamic_lift_system', name: 'Aerodynamic Lift System', slotType: 'frameSlots', weight: 2, hullCost: 3, stats: { lift: 4, gas_socket: 1 } },
+
+    // === FABRIC TILES ===
+    { id: 'fire_resistant_fabric', name: 'Fire-Resistant Fabric', slotType: 'fabricSlots', weight: 1, hullCost: 2, stats: { reliability: 1 } },
+    { id: 'reflective_covering', name: 'Reflective Covering', slotType: 'fabricSlots', weight: 0, hullCost: 1, stats: { reliability: 1 } },
+    { id: 'conductive_covering', name: 'Conductive Covering', slotType: 'fabricSlots', weight: 0, hullCost: 1, stats: { reliability: 1 } },
+    { id: 'synthetic_envelope', name: 'Synthetic Envelope', slotType: 'fabricSlots', weight: 0, hullCost: 2, stats: { reliability: 1, range: 1 } },
+    { id: 'advanced_fabric', name: 'Advanced Fabric', slotType: 'fabricSlots', weight: 0, hullCost: 2, stats: { reliability: 2 } },
+
+    // === COMPONENT TILES (Gas Systems) ===
+    { id: 'pressure_control', name: 'Pressure Control', slotType: 'componentSlots', weight: 1, hullCost: 1, stats: { ceiling: 1 } },
+    { id: 'altitude_ballonets', name: 'Altitude Ballonets', slotType: 'componentSlots', weight: 1, hullCost: 1, stats: { ceiling: 1 } },
+    { id: 'compartmented_gas', name: 'Compartmented Gas', slotType: 'componentSlots', weight: 1, hullCost: 2, stats: { lift: 2, reliability: 1 } },
+    { id: 'smart_valving', name: 'Smart Valving', slotType: 'componentSlots', weight: 1, hullCost: 2, stats: { reliability: 1, ceiling: 1 } },
+    { id: 'high_ceiling_gas', name: 'High-Ceiling Gas', slotType: 'componentSlots', weight: 2, hullCost: 3, stats: { lift: 3, ceiling: 2 } },
+    { id: 'redundant_cells', name: 'Redundant Cells', slotType: 'componentSlots', weight: 2, hullCost: 3, stats: { lift: 4, reliability: 2 } },
+    { id: 'rapid_descent_system', name: 'Rapid Descent System', slotType: 'componentSlots', weight: 1, hullCost: 2, stats: { reliability: 2 } },
+    { id: 'reclamation_system', name: 'Reclamation System', slotType: 'componentSlots', weight: 1, hullCost: 3, stats: { range: 2 } },
+    { id: 'exhaust_condensers', name: 'Exhaust Condensers', slotType: 'componentSlots', weight: 2, hullCost: 3, stats: {} },
+
+    // === COMPONENT TILES (Payload) ===
+    { id: 'spotter_gondola', name: 'Spotter Gondola', slotType: 'componentSlots', weight: 1, hullCost: 1, stats: { income: 1 } },
+    { id: 'postal_service', name: 'Postal Service', slotType: 'componentSlots', weight: 1, hullCost: 1, stats: { income: 2 } },
+    { id: 'external_cargo', name: 'External Cargo', slotType: 'componentSlots', weight: 2, hullCost: 1, stats: { income: 2 } },
+    { id: 'passenger_gondola', name: 'Basic Cabin', slotType: 'componentSlots', weight: 2, hullCost: 2, stats: { income: 2, luxury: 1 } },
+    { id: 'bombing_equipment', name: 'Bombing Equipment', slotType: 'componentSlots', weight: 3, hullCost: 2, stats: {} },
+    { id: 'communications_suite', name: 'Communications Suite', slotType: 'componentSlots', weight: 1, hullCost: 2, stats: { reliability: 1 } },
+    { id: 'light_armor_plating', name: 'Light Armor Plating', slotType: 'componentSlots', weight: 2, hullCost: 2, stats: { armor: 1 } },
+    { id: 'heavy_armor_plating', name: 'Heavy Armor Plating', slotType: 'componentSlots', weight: 3, hullCost: 3, stats: { armor: 2 } },
+    { id: 'luxury_cabin', name: 'Luxury Cabin', slotType: 'componentSlots', weight: 3, hullCost: 3, stats: { income: 3, luxury: 2 } },
+    { id: 'restaurant', name: 'Restaurant', slotType: 'componentSlots', weight: 2, hullCost: 2, stats: { income: 2, luxury: 2 } },
+    { id: 'observation_lounge', name: 'Observation Lounge', slotType: 'componentSlots', weight: 2, hullCost: 3, stats: { income: 1, luxury: 3 } },
+    { id: 'sleeping_quarters', name: 'Private Berths', slotType: 'componentSlots', weight: 2, hullCost: 2, stats: { income: 2, luxury: 1 } },
+    { id: 'pressurized_lounge', name: 'Pressurized Lounge', slotType: 'componentSlots', weight: 2, hullCost: 3, stats: { income: 1, luxury: 2 } },
+    { id: 'navigation_suite', name: 'Navigation Suite', slotType: 'componentSlots', weight: 1, hullCost: 3, stats: { reliability: 2, range: 1 } },
+  ];
+
+  // Organize by slot type
+  const tilesBySlot = {
+    frameSlots: tiles.filter(t => t.slotType === 'frameSlots'),
+    fabricSlots: tiles.filter(t => t.slotType === 'fabricSlots'),
+    driveSlots: tiles.filter(t => t.slotType === 'driveSlots'),
+    componentSlots: tiles.filter(t => t.slotType === 'componentSlots'),
+  };
+
+  return { tiles, tilesBySlot };
+}
+
+/**
  * Ensure output directories exist
  */
 function ensureOutputDirs() {
@@ -256,6 +359,10 @@ function ensureOutputDirs() {
     join(PATHS.output, 'cards', 'hazard'),
     join(PATHS.output, 'cards', 'tech'),
     join(PATHS.output, 'cards', 'mission'),
+    join(PATHS.output, 'tiles', 'frame'),
+    join(PATHS.output, 'tiles', 'fabric'),
+    join(PATHS.output, 'tiles', 'drive'),
+    join(PATHS.output, 'tiles', 'component'),
     join(PATHS.output, 'sheets'),
   ];
 
@@ -388,11 +495,145 @@ async function generateSheets(browser) {
 }
 
 /**
+ * Generate tech tiles
+ */
+async function generateTiles(browser, tilesBySlot) {
+  console.log('\nGenerating tech tiles...');
+
+  const slotTypeToDir = {
+    frameSlots: 'frame',
+    fabricSlots: 'fabric',
+    driveSlots: 'drive',
+    componentSlots: 'component',
+  };
+
+  const page = await browser.newPage();
+  await page.setViewportSize({ width: TILE_WIDTH, height: TILE_HEIGHT });
+
+  const templatePath = `file://${join(PATHS.templates, 'tech-tile.html')}`;
+  await page.goto(templatePath);
+
+  let totalCount = 0;
+  for (const [slotType, tiles] of Object.entries(tilesBySlot)) {
+    const dirName = slotTypeToDir[slotType];
+    const outputDir = join(PATHS.output, 'tiles', dirName);
+
+    console.log(`  Generating ${tiles.length} ${dirName} tiles...`);
+
+    for (const tile of tiles) {
+      const filename = tile.id + '.png';
+      const outputPath = join(outputDir, filename);
+
+      await page.evaluate((tileData) => {
+        window.renderTile(tileData);
+      }, tile);
+
+      await page.waitForTimeout(50);
+
+      await page.screenshot({
+        path: outputPath,
+        type: 'png',
+      });
+
+      totalCount++;
+    }
+  }
+
+  await page.close();
+  console.log(`Completed ${totalCount} tech tiles.`);
+}
+
+/**
+ * Generate tile print sheets (5x10 grid on letter paper)
+ */
+async function generateTileSheets(browser) {
+  console.log('\nGenerating tile sheets...');
+
+  const TILES_PER_ROW = 5;
+  const TILES_PER_COL = 10;
+  const TILES_PER_PAGE = TILES_PER_ROW * TILES_PER_COL;
+  const PAGE_WIDTH = 2550;  // 8.5" at 300 DPI
+  const PAGE_HEIGHT = 3300; // 11" at 300 DPI
+  const MARGIN_X = 75;      // Left margin
+  const MARGIN_TOP = 37;    // Top margin
+  const GAP_X = 0;          // Horizontal gap
+  const GAP_Y = 3;          // Vertical gap
+
+  // Collect all tile files
+  const tileTypes = ['frame', 'fabric', 'drive', 'component'];
+  const allTileFiles = [];
+
+  for (const tileType of tileTypes) {
+    const tileDir = join(PATHS.output, 'tiles', tileType);
+    if (!existsSync(tileDir)) continue;
+
+    const files = readdirSync(tileDir).filter(f => f.endsWith('.png'));
+    for (const file of files) {
+      allTileFiles.push({ type: tileType, file, path: join(tileDir, file) });
+    }
+  }
+
+  if (allTileFiles.length === 0) {
+    console.log('  No tile files found. Generate tiles first.');
+    return;
+  }
+
+  const numPages = Math.ceil(allTileFiles.length / TILES_PER_PAGE);
+  console.log(`  Creating ${numPages} sheet(s) for ${allTileFiles.length} tiles...`);
+
+  const page = await browser.newPage();
+  await page.setViewportSize({ width: PAGE_WIDTH, height: PAGE_HEIGHT });
+
+  for (let pageNum = 0; pageNum < numPages; pageNum++) {
+    const startIdx = pageNum * TILES_PER_PAGE;
+    const pageTiles = allTileFiles.slice(startIdx, startIdx + TILES_PER_PAGE);
+
+    let tilesHtml = '';
+    for (let i = 0; i < pageTiles.length; i++) {
+      const tileInfo = pageTiles[i];
+      const imageBuffer = readFileSync(tileInfo.path);
+      const base64Image = imageBuffer.toString('base64');
+      const dataUrl = `data:image/png;base64,${base64Image}`;
+
+      const row = Math.floor(i / TILES_PER_ROW);
+      const col = i % TILES_PER_ROW;
+      const x = MARGIN_X + col * (TILE_WIDTH + GAP_X);
+      const y = MARGIN_TOP + row * (TILE_HEIGHT + GAP_Y);
+
+      tilesHtml += `<img src="${dataUrl}" style="position:absolute;left:${x}px;top:${y}px;width:${TILE_WIDTH}px;height:${TILE_HEIGHT}px;">`;
+    }
+
+    const sheetHtml = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <style>
+          body { margin: 0; padding: 0; background: white; }
+        </style>
+      </head>
+      <body>${tilesHtml}</body>
+      </html>
+    `;
+
+    await page.setContent(sheetHtml);
+    await page.waitForTimeout(200);
+
+    const sheetPath = join(PATHS.output, 'sheets', `tile-sheet-${pageNum + 1}.png`);
+    await page.screenshot({ path: sheetPath, type: 'png' });
+    console.log(`    tile-sheet-${pageNum + 1}.png (${pageTiles.length} tiles)`);
+  }
+
+  await page.close();
+  console.log('Completed tile sheets.');
+}
+
+/**
  * Main entry point
  */
 async function main() {
   console.log('UP SHIP! Print Card Generator\n');
   console.log('Card size: 750x1050px (2.5" x 3.5" at 300 DPI)');
+  console.log('Tile size: 450x285px (1.5" x 0.95" at 300 DPI)');
   console.log('Output: ' + PATHS.output);
 
   ensureOutputDirs();
@@ -402,6 +643,12 @@ async function main() {
   try {
     if (sheetsOnly) {
       await generateSheets(browser);
+      await generateTileSheets(browser);
+    } else if (tilesOnly) {
+      // Generate tiles only
+      const { tilesBySlot } = loadTileData();
+      await generateTiles(browser, tilesBySlot);
+      await generateTileSheets(browser);
     } else {
       const { agentCards, hazardCards, techCards, missionCards } = await loadCardData();
 
@@ -445,8 +692,15 @@ async function main() {
         );
       }
 
-      // Generate sheets after cards
+      // Generate tiles
+      if (!cardType || cardType === 'tile') {
+        const { tilesBySlot } = loadTileData();
+        await generateTiles(browser, tilesBySlot);
+      }
+
+      // Generate sheets after cards and tiles
       await generateSheets(browser);
+      await generateTileSheets(browser);
     }
   } finally {
     await browser.close();
@@ -454,6 +708,7 @@ async function main() {
 
   console.log('\nGeneration complete!');
   console.log(`Individual cards: ${PATHS.output}/cards/`);
+  console.log(`Individual tiles: ${PATHS.output}/tiles/`);
   console.log(`Print sheets: ${PATHS.output}/sheets/`);
 }
 
