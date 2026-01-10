@@ -5,7 +5,7 @@
 
 const { createTestGameState } = require('../../fixtures/testData');
 const { startNewRound } = require('../../../server/actions/helpers/phaseTransition');
-const { performAgeTransition, completeAgeTransition, scoreAgeVP, calculateTechnologyVP } = require('../../../server/actions/helpers/ageTransition');
+const { performAgeTransition, completeAgeTransition, scoreAgeVP, calculateTechnologyVP, calculateMissionVP } = require('../../../server/actions/helpers/ageTransition');
 
 describe('Rules Compliance - Age Transitions', () => {
 
@@ -126,6 +126,86 @@ describe('Rules Compliance - Age Transitions', () => {
 
       // Player 1 should get 4 VP from routes (1 + 3)
       expect(player1VP.routes).toBe(4);
+    });
+
+    it('should calculate mission VP from completed combat missions per Section 12.2', () => {
+      // Per rules: Age II Combat Missions: 1-5 VP based on difficulty
+      const playerState = {
+        completedMissions: [
+          { id: 'recon_patrol', name: 'Reconnaissance Patrol', vp: 1, income: 1 },
+          { id: 'bombardment', name: 'Bombardment Mission', vp: 3, income: 2 },
+          { id: 'naval_strike', name: 'Naval Strike', vp: 2, income: 2 }
+        ]
+      };
+
+      const missionVP = calculateMissionVP(playerState);
+
+      // Total: 1 + 3 + 2 = 6 VP
+      expect(missionVP).toBe(6);
+    });
+
+    it('should return 0 mission VP when no missions completed', () => {
+      const playerState = {
+        completedMissions: []
+      };
+
+      const missionVP = calculateMissionVP(playerState);
+      expect(missionVP).toBe(0);
+    });
+
+    it('should return 0 mission VP when completedMissions is undefined', () => {
+      const playerState = {};
+
+      const missionVP = calculateMissionVP(playerState);
+      expect(missionVP).toBe(0);
+    });
+
+    it('should include mission VP in total age scoring per Section 12.2', () => {
+      const state = createTestGameState();
+      state.age = 2; // Age II uses combat missions
+
+      // Player 1 has completed missions
+      state.players['1'].completedMissions = [
+        { id: 'mission_1', name: 'Test Mission', vp: 3, income: 1 },
+        { id: 'mission_2', name: 'Test Mission 2', vp: 2, income: 1 }
+      ];
+
+      // Player 1 also has tech cards worth VP
+      // wire_bracing has vp: 1 in constants.ts
+      state.players['1'].techCards = ['wire_bracing'];
+
+      // No routes in Age II (uses missions instead)
+      state.map.routes = [];
+
+      state.players['1'].vp = 0;
+
+      const vpBreakdown = scoreAgeVP(state, '1');
+
+      // Missions: 3 + 2 = 5 VP
+      // Tech: 1 VP (wire_bracing)
+      // Routes: 0 VP (Age II)
+      expect(vpBreakdown.missions).toBe(5);
+      expect(vpBreakdown.techCards).toBe(1);
+      expect(vpBreakdown.routes).toBe(0);
+      expect(vpBreakdown.total).toBe(6);
+    });
+
+    it('should score VP for completed missions even when ship was destroyed by flak', () => {
+      const state = createTestGameState();
+      state.age = 2;
+
+      // Player completed missions - some ships may have been destroyed by flak
+      // but mission completion happens BEFORE flak check per game rules
+      state.players['1'].completedMissions = [
+        { id: 'mission_1', name: 'Bombing Run', vp: 4, income: 2 }
+      ];
+      state.players['1'].techCards = [];
+
+      const vpBreakdown = scoreAgeVP(state, '1');
+
+      // Mission VP should be counted regardless of ship fate
+      expect(vpBreakdown.missions).toBe(4);
+      expect(vpBreakdown.total).toBe(4);
     });
   });
 

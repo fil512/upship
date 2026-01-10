@@ -128,8 +128,24 @@ function calculateRouteVP(state: AgeTransitionState, playerId: string): number {
   return totalVP;
 }
 
+/**
+ * Calculate VP from completed combat missions per Section 12.2
+ * Age II Combat Missions: 1-5 VP based on difficulty (see Appendix G)
+ */
+function calculateMissionVP(playerState: PlayerState): number {
+  const completedMissions = (playerState as PlayerState & { completedMissions?: Mission[] }).completedMissions || [];
+  let totalVP = 0;
+
+  for (const mission of completedMissions) {
+    totalVP += mission.vp || 0;
+  }
+
+  return totalVP;
+}
+
 interface VPBreakdown {
   routes: number;
+  missions: number;
   techCards: number;
   total: number;
 }
@@ -141,12 +157,14 @@ function scoreAgeVP(state: AgeTransitionState, playerId: string): VPBreakdown {
   const playerState = state.players[playerId];
 
   const routeVP = calculateRouteVP(state, playerId);
+  const missionVP = calculateMissionVP(playerState);
   const techVP = calculateTechCardVP(playerState.techCards || []);
 
   return {
     routes: routeVP,
+    missions: missionVP,
     techCards: techVP,
-    total: routeVP + techVP
+    total: routeVP + missionVP + techVP
   };
 }
 
@@ -158,9 +176,17 @@ function scoreAllPlayersVP(state: AgeTransitionState): void {
     const vpScored = scoreAgeVP(state, playerId);
     state.players[playerId].vp = (state.players[playerId].vp || 0) + vpScored.total;
 
+    // Build scoring message based on what was scored
+    const parts: string[] = [];
+    if (vpScored.routes > 0) parts.push(`${vpScored.routes} VP from routes`);
+    if (vpScored.missions > 0) parts.push(`${vpScored.missions} VP from missions`);
+    if (vpScored.techCards > 0) parts.push(`${vpScored.techCards} VP from tech cards`);
+
+    const scoringDetails = parts.length > 0 ? parts.join(', ') : 'no VP scored';
+
     state.log.push({
       timestamp: new Date().toISOString(),
-      message: `Age ${state.age} scoring: ${vpScored.routes} VP from routes, ${vpScored.techCards} VP from tech cards`,
+      message: `Age ${state.age} scoring: ${scoringDetails} (total: ${vpScored.total} VP)`,
       playerId,
       type: 'scoring'
     } as LogEntry);
@@ -550,6 +576,7 @@ function performAgeTransition(state: AgeTransitionState, newAge: number): void {
 export {
   calculateTechCardVP,
   calculateRouteVP,
+  calculateMissionVP,
   scoreAgeVP,
   scoreAllPlayersVP,
   recoverShipsAndOfficers,
@@ -572,6 +599,7 @@ export const addAgeTechnologies = addAgeTechCards;
 module.exports = {
   calculateTechCardVP,
   calculateRouteVP,
+  calculateMissionVP,
   scoreAgeVP,
   scoreAllPlayersVP,
   recoverShipsAndOfficers,
