@@ -779,6 +779,8 @@ def submit_reveal(player: str, game_id: str, logger: PlaytestLogger, reason: str
             resources_collected = msg
             break
 
+    # Sync round/age from server state before logging
+    logger.sync_from_state(post_state)
     logger.log_player_turn()
     action_desc = f"REVEAL {reason}".strip()
     print(f"  {player}: {action_desc}")
@@ -1000,6 +1002,8 @@ def _execute_placement(player: str, game_id: str, card: dict, location: dict, lo
     result = client.place_agent(player, game_id, loc_id, card['index'], **kwargs)
 
     if result.success:
+        # Sync round/age from server state before logging
+        logger.sync_from_state(result.game_state)
         logger.log_player_turn()
         print(f"  {player}: {action_desc}")
         logger.log_action(player, action_desc, "worker_placement")

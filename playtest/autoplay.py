@@ -162,7 +162,7 @@ def autoplay(num_turns: int | None = None, game_id: str | None = None) -> None:
     init_shared_state(game_id)
 
     stuck_detector = StuckDetector(threshold=10)
-    turn_count = 0
+    turn_count = 1
     max_iterations = 1000
     iteration = 0
     last_phase = None

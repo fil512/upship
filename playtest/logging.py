@@ -12,7 +12,7 @@ class PlaytestLogger:
     def __init__(self):
         self.log_file = None
         self.current_age = 1
-        self.current_round = 0
+        self.current_round = 1
         self.current_player_turn = 0
         self.routes_claimed_this_round = []
         self.missions_claimed_this_round = []
@@ -28,7 +28,7 @@ class PlaytestLogger:
 
         self.log_file = LOGS_DIR / "playtest.log"
         self.current_age = 1
-        self.current_round = 0
+        self.current_round = 1
         self.current_player_turn = 0
 
         # Truncate and write header
@@ -36,9 +36,9 @@ class PlaytestLogger:
             f.write(f"# UP SHIP! Playtest Log\n")
             f.write(f"# Game ID: {game_id}\n")
             f.write(f"# Started: {datetime.now().isoformat()}\n")
-            f.write(f"# Format: age round-turn (e.g., I 1-3 = Age 1, round 1, player turn 3)\n")
+            f.write(f"# Format: age/round-turn (e.g., I/1-3 = Age 1, round 1, player turn 3)\n")
             f.write(f"#\n")
-            f.write(f"{'a r-t':<10} {'phase':<20} {'player':<18} {'action'}\n")
+            f.write(f"{'a/r-t':<10} {'phase':<20} {'player':<18} {'action'}\n")
             f.write(f"{'-'*10} {'-'*20} {'-'*18} {'-'*40}\n")
 
         # Save log file path for persistence across invocations
@@ -73,11 +73,11 @@ class PlaytestLogger:
         # Convert age to Roman numeral
         age_roman = ['I', 'II', 'III'][self.current_age - 1] if 1 <= self.current_age <= 3 else str(self.current_age)
 
-        # Format the age round-turn column
+        # Format the age/round-turn column
         if is_phase_transition or self.current_player_turn == 0:
-            art_str = f"{age_roman} {self.current_round}"
+            art_str = f"{age_roman}/{self.current_round}"
         else:
-            art_str = f"{age_roman} {self.current_round}-{self.current_player_turn}"
+            art_str = f"{age_roman}/{self.current_round}-{self.current_player_turn}"
 
         with open(self.log_file, 'a') as f:
             f.write(f"{art_str:<10} {phase_str:<20} {faction:<18} {action}\n")
@@ -90,6 +90,25 @@ class PlaytestLogger:
     def log_age_change(self, new_age):
         """Record that the age has changed."""
         self.current_age = new_age
+
+    def sync_from_state(self, state):
+        """Sync age and round from game state.
+
+        Call this before logging to ensure correct round/age values.
+
+        Args:
+            state: GameState object with age and round properties.
+        """
+        if state:
+            new_round = getattr(state, 'round', self.current_round)
+            new_age = getattr(state, 'age', self.current_age)
+
+            # Reset player turn counter when round changes
+            if new_round != self.current_round:
+                self.current_player_turn = 0
+
+            self.current_round = new_round
+            self.current_age = new_age
 
     def log_player_turn(self):
         """Increment the player turn counter within the current round."""
