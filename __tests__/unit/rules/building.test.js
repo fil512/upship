@@ -220,7 +220,7 @@ describe('Rules Compliance - Building Ships', () => {
       state.players[playerId].hand = [
         { id: 'rigger', name: 'Rigger', symbol: 'wrench', effect: '-£2 ship build cost' }
       ];
-      // Empty blueprint = £2 base cost
+      // Empty blueprint = £0 (no base cost, just tile costs)
       state.players[playerId].blueprint = {
         frameSlots: [null],
         fabricSlots: [null],
@@ -242,7 +242,7 @@ describe('Rules Compliance - Building Ships', () => {
         buildCount: 1
       });
 
-      // Base cost £2 - £2 Rigger discount = £0
+      // Empty blueprint £0 - Rigger discount irrelevant = £0
       // Ship should be built for free
       expect(result.newState.players[playerId].hangarShips).toBe(1);
       expect(result.newState.players[playerId].cash).toBe(initialCash); // No cost deducted

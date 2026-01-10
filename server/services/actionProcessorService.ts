@@ -927,8 +927,8 @@ function processBuildShip(state: GameState, playerId: string, data: Record<strin
     return { error: `Cannot build ${count} ship(s): would exceed hangar capacity of ${HANGAR_CAPACITY}. Current hangar: ${currentHangarCount} ships.` };
   }
 
-  // Calculate hull cost from installed tech tiles
-  let hullCost = 2; // Base cost
+  // Calculate hull cost from installed tech tiles (no base cost)
+  let hullCost = 0;
 
   // Add Frame hull costs
   for (const tileId of playerState.blueprint.frameSlots || []) {

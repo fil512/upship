@@ -65,10 +65,10 @@ function getTechTileHullCost(tileId: string | null): number {
 
 /**
  * Calculate total hull cost for a blueprint
- * Formula: £4 base + hullCost from every installed tile
+ * Formula: sum of hullCost from every installed tile (no base cost)
  */
 function calculateHullCost(blueprint: Blueprint): number {
-  let cost = 4; // Base cost
+  let cost = 0;
 
   // Add Frame hull costs
   for (const tileId of blueprint.frameSlots || []) {

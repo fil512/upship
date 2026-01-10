@@ -196,11 +196,15 @@ function processCardEffect(state: GameState, playerId: string, card: Card, locat
       return { success: true, message: 'Gained 1 Hydrogen' };
 
     case 'Install Propulsion upgrade: -1 Weight':
+      // Weight reduction when installing propulsion upgrade
+      return { success: true, message: '-1 Weight for this ship' };
+
     case 'If used to build: ignore base cost':
-      // Engine Room Mechanic: If used to build, ignore base cost (£3)
+      // OBSOLETE: There is no base hull cost anymore. Card needs redesign.
+      // For now, treat as a minor discount
       if (!playerState.buildDiscount) playerState.buildDiscount = 0;
-      playerState.buildDiscount += 3; // Base hull cost is £3
-      return { success: true, message: 'Build cost: base hull cost waived' };
+      playerState.buildDiscount += 2;
+      return { success: true, message: '-£2 build discount (card needs redesign)' };
 
     case '-2 Hull Cost':
       // Ground Crew Chief: -2 Hull Cost

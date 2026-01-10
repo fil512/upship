@@ -144,9 +144,8 @@ describe('Rules Compliance - Worker Placement', () => {
       playerState.cash = 10;
       playerState.hangarShips = 0;  // Ships are now counters
 
-      // Base hull cost is 2 (base) + frame cost + fabric cost
-      // With testBlueprint, it would be higher
-      // Let's simplify by using empty blueprint
+      // Hull cost is sum of installed tile costs (no base cost)
+      // Empty blueprint = £0
       playerState.blueprint = {
         frameSlots: [null],
         fabricSlots: [null],
@@ -156,12 +155,11 @@ describe('Rules Compliance - Worker Placement', () => {
 
       const { processBuildShip } = require('../../../server/actions/building');
 
-      // Base hull cost = 2, with discount = 0 (minimum)
+      // Empty blueprint = £0, discount irrelevant
       // Use _internal: true since builds now go through PLACE_AGENT
       const result = processBuildShip(state, '1', { count: 1, _internal: true });
 
-      // Hull cost 2 - 2 discount = 0 (minimum 1), so cost 1
-      // Actually, let's check what the code does with discount
+      // Hull cost £0 with discount = £0
       expect(result.newState.players['1'].hangarShips).toBe(1);
     });
   });

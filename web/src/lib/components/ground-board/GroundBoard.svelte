@@ -51,6 +51,12 @@
 			symbol: 'wrench' as const,
 			description: 'Free. Gain Engineers equal to your Engineer Income track.'
 		},
+		{
+			id: 'repair',
+			name: 'Repair',
+			symbol: 'wrench' as const,
+			description: 'Repair damaged ships. Cost: Hull Cost ÷ 2 + 1 Engineer per ship.'
+		},
 
 		// Propeller locations (operations) - Column 2
 		{
@@ -144,8 +150,8 @@
 		return map;
 	})();
 
-	// Calculate hull cost for construction_hall display
-	$: playerHullCost = $myState?.blueprint ? calculateHullCost($myState.blueprint).total : 2;
+	// Calculate hull cost for construction_hall display (sum of tile costs)
+	$: playerHullCost = $myState?.blueprint ? calculateHullCost($myState.blueprint) : 0;
 
 	// Get current age for dynamic launchpad costs
 	$: currentAge = $gameState?.age ?? 1;
@@ -172,7 +178,7 @@
 					{placements}
 					{players}
 					canPlace={canPlaceMap[loc.id]}
-					hullCost={loc.id === 'construction_hall' ? playerHullCost : undefined}
+					hullCost={loc.id === 'construction_hall' || loc.id === 'repair' ? playerHullCost : undefined}
 					heliumPrice={loc.id === 'gas_depot' ? heliumPrice : undefined}
 					age={currentAge}
 					{engineerIncome}
