@@ -109,11 +109,11 @@ A shared track represents the advancement of heavier-than-air aviation. Each tim
 
 | Age | Launches to End Age |
 |-----|---------------------|
-| Age I | 8 |
-| Age II | 8 |
-| Age III | 6 |
+| Age I | 6 |
+| Age II | 6 |
+| Age III | 3 |
 
-When the marker reaches an Age threshold (8, 16, or 22 cumulative launches), that Age ends after the current round. When it reaches the Game End threshold (22), the game ends after the current round.
+When the marker reaches an Age threshold (6, 12, or 15 cumulative launches), that Age ends after the current round. When it reaches the Game End threshold (15), the game ends after the current round.
 
 ---
 

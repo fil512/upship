@@ -108,7 +108,7 @@ These items are physical component specifications for manufacturing. Rules are c
    - Combat Missions: £5-£14 based on mission type
 
 4. **Progress Track Thresholds:** **RESOLVED** - See Section 1.3 for complete table including Age transitions:
-   - Age transitions at 8/16/20 (2P), 10/20/25 (3P), 12/24/30 (4P)
+   - Age transitions at 6/12/15 cumulative launches (fixed for all player counts)
 
 5. **Lifting Gas Market:** **RESOLVED** - See Sections 6.8 and 9.3:
    - Hydrogen: £1/cube (unlimited supply)
