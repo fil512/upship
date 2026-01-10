@@ -1514,7 +1514,6 @@ function processHazardCheck(state: GameState, playerId: string, data: Record<str
         playerState.insurance = insurancePolicies - 1;
         // Recover ship to hangar instead of destroying it
         ships[shipIndex].status = 'hangar';
-        (ships[shipIndex] as ExtendedShip & { damaged?: boolean }).damaged = false;
         stateWithLog.log.push({
           timestamp: new Date().toISOString(),
           message: `Insurance claim: ship recovered to Launch Hangar (${playerState.insurance} policies remaining)`,
@@ -1530,12 +1529,12 @@ function processHazardCheck(state: GameState, playerId: string, data: Record<str
         type: 'hazard'
       });
     } else {
-      // Ship damaged but survives
-      (ships[shipIndex] as ExtendedShip & { damaged?: boolean }).damaged = true;
+      // Ship aborts launch and returns to hangar
+      ships[shipIndex].status = 'hangar';
 
       stateWithLog.log.push({
         timestamp: new Date().toISOString(),
-        message: `Hazard check FAILED: ${hazard.type} (${hazard.difficulty}) vs Safety ${safetyRating}. Ship damaged.`,
+        message: `Hazard check FAILED: ${hazard.type} (${hazard.difficulty}) vs Safety ${safetyRating}. Launch aborted, ship returns to hangar.`,
         playerId,
         type: 'hazard'
       });

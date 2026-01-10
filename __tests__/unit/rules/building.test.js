@@ -48,7 +48,6 @@ describe('Rules Compliance - Building Ships', () => {
       const state = createTestGameState();
       state.players['1'].cash = 100;
       state.players['1'].hangarShips = 5;
-      state.players['1'].repairShips = 0;
 
       // Trying to build 2 ships when there are already 5 total (would make 7)
       expect(() => {

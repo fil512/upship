@@ -30,7 +30,7 @@ Icons marked "Player color" use `currentColor` and are colored based on the owni
 | `cash.svg` | Currency spent on upgrades, gas, and crew | Circle with "£" symbol | #888888 (Grey) |
 | `income.svg` | Increase to an income track | Upward arrow (↑) | #4caf50 (Green) |
 | `officers.svg` | Personnel required to launch ships | Captain silhouette with peaked cap, epaulettes, and uniform | #e0e0e0 (Light grey) with #f1c40f (Gold) accents |
-| `engineers.svg` | Personnel who aid research and handle hazard repairs | Hard hat | #ffa726 (Orange) |
+| `engineers.svg` | Personnel who aid research and handle hazards | Hard hat | #ffa726 (Orange) |
 | `hydrogen.svg` | Cheap but flammable lifting gas | Square with "H" | #f1c40f (Yellow) background |
 | `helium.svg` | Safe but expensive lifting gas (USA monopoly) | Square with "He" | White background, #666 border |
 | `vp.svg` | Victory Points—the win condition | Star | #4caf50 (Green) |

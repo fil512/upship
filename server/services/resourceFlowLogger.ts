@@ -79,7 +79,7 @@ export interface ResourceFlowEntry {
 }
 
 // Launch outcome types for tracking hazard results
-export type LaunchOutcome = 'success' | 'damaged' | 'aborted' | 'destroyed';
+export type LaunchOutcome = 'success' | 'aborted' | 'destroyed';
 
 export interface LaunchOutcomeEntry {
   timestamp: string;
@@ -534,18 +534,17 @@ class ResourceFlowLogger {
       analysis.push('');
 
       // Count by outcome
-      const outcomeCounts = { success: 0, damaged: 0, aborted: 0, destroyed: 0 };
+      const outcomeCounts = { success: 0, aborted: 0, destroyed: 0 };
       for (const entry of this.launchOutcomes) {
         outcomeCounts[entry.outcome]++;
       }
 
       const total = this.launchOutcomes.length;
       const successRate = total > 0 ? Math.round((outcomeCounts.success / total) * 100) : 0;
-      const survivalRate = total > 0 ? Math.round(((outcomeCounts.success + outcomeCounts.damaged + outcomeCounts.aborted) / total) * 100) : 0;
+      const survivalRate = total > 0 ? Math.round(((outcomeCounts.success + outcomeCounts.aborted) / total) * 100) : 0;
 
       analysis.push('Outcome Summary:');
       analysis.push(`  SUCCESS:   ${outcomeCounts.success} (${Math.round((outcomeCounts.success / total) * 100)}%) - Ship claimed route`);
-      analysis.push(`  DAMAGED:   ${outcomeCounts.damaged} (${Math.round((outcomeCounts.damaged / total) * 100)}%) - Ship to repair bay`);
       analysis.push(`  ABORTED:   ${outcomeCounts.aborted} (${Math.round((outcomeCounts.aborted / total) * 100)}%) - Ship returned to hangar`);
       analysis.push(`  DESTROYED: ${outcomeCounts.destroyed} (${Math.round((outcomeCounts.destroyed / total) * 100)}%) - Ship lost`);
       analysis.push('');

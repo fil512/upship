@@ -186,7 +186,7 @@ def analyze_launch_outcomes(outcomes: list) -> dict:
     if not outcomes:
         return None
 
-    counts = {'success': 0, 'damaged': 0, 'aborted': 0, 'destroyed': 0}
+    counts = {'success': 0, 'aborted': 0, 'destroyed': 0}
     by_gas = {'hydrogen': {'total': 0, 'success': 0}, 'helium': {'total': 0, 'success': 0}}
     by_hazard = defaultdict(lambda: {'total': 0, 'success': 0, 'aborted': 0, 'destroyed': 0})
     # Track Age 2 flak specifically
@@ -222,7 +222,7 @@ def analyze_launch_outcomes(outcomes: list) -> dict:
 
     total = sum(counts.values())
     success_rate = counts['success'] / total if total > 0 else 0
-    survival_rate = (counts['success'] + counts['damaged'] + counts['aborted']) / total if total > 0 else 0
+    survival_rate = (counts['success'] + counts['aborted']) / total if total > 0 else 0
     age2_flak_survival = age2_flak['survived'] / age2_flak['total'] if age2_flak['total'] > 0 else None
 
     return {
@@ -542,12 +542,11 @@ def print_launch_outcomes_report(launch_data: dict):
     print()
 
     print("Outcome Summary:")
-    for outcome in ['success', 'damaged', 'aborted', 'destroyed']:
+    for outcome in ['success', 'aborted', 'destroyed']:
         count = counts[outcome]
         pct = (count / total * 100) if total > 0 else 0
         desc = {
             'success': 'Ship claimed route',
-            'damaged': 'Ship to repair bay',
             'aborted': 'Ship returned to hangar',
             'destroyed': 'Ship lost'
         }[outcome]

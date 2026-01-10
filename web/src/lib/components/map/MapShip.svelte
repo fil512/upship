@@ -8,14 +8,12 @@
 
   $: fillColor = FACTION_COLORS[faction] || '#666';
   $: isHazard = ship.status === 'awaiting_hazard';
-  $: isDamaged = ship.status === 'damaged';
   $: isDestroyed = ship.status === 'destroyed' || ship.status === 'crashed';
 </script>
 
 <g
   class="map-ship"
   class:hazard={isHazard}
-  class:damaged={isDamaged}
   class:destroyed={isDestroyed}
   transform="translate({position.x}, {position.y})"
 >
@@ -63,21 +61,6 @@
         fill="black"
       >
         !
-      </text>
-    </g>
-  {/if}
-
-  {#if isDamaged}
-    <g transform="translate({SHIP_SIZE.width / 2 + 2}, {-SHIP_SIZE.height / 2 - 2})">
-      <circle r="6" fill="var(--color-error)" />
-      <text
-        text-anchor="middle"
-        y="3"
-        font-size="8"
-        font-weight="bold"
-        fill="white"
-      >
-        X
       </text>
     </g>
   {/if}

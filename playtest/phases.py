@@ -687,8 +687,6 @@ def _determine_launch_outcome(log_entries: list[dict], ship_id: str, ship_status
         return "DESTROYED"
     elif ship_status in ('hangar', 'in_hangar'):
         return "ABORTED"
-    elif ship_status == 'damaged':
-        return "DAMAGED"
     elif ship_status == 'awaiting_hazard':
         return "AWAITING_HAZARD"
     return "unknown"

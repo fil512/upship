@@ -98,8 +98,7 @@ For each resource with issues, explain:
 | Outcome | Target % | Rationale |
 |---------|----------|-----------|
 | Success | **75%** | Launches should usually succeed |
-| Aborted | 10-15% | Failed hazard checks return ship to hangar |
-| Damaged | 5-10% | Fire hazards controlled, ship to repair |
+| Aborted | 15-20% | Failed hazard checks return ship to hangar |
 | Destroyed | <10% | Catastrophic failures (more common in Age 2+ due to flak) |
 
 **AGE 2 FLAK TARGET:**
@@ -184,8 +183,7 @@ PROBLEM RESOURCES:
 === LAUNCH OUTCOMES ===
 Total launches: 11
   SUCCESS:   8 (73%) - Ship claimed route ✓
-  ABORTED:   1 (9%) - Ship returned to hangar ✓
-  DAMAGED:   1 (9%) - Ship to repair bay ✓
+  ABORTED:   2 (18%) - Ship returned to hangar ✓
   DESTROYED: 1 (9%) - Ship lost ✓
 
 Success Rate: 73% (target: 75%) ⚠️  CLOSE
@@ -198,7 +196,7 @@ Age 2 Flak Survival: 50% (target: 50%) ✓
 |----------|-------------------|---------------|
 | cash | income phase, routes | purchases, builds, recruits |
 | officers | academy, flight school, income | launches |
-| engineers | technical institute, income | hazard checks, repairs |
+| engineers | technical institute, income | hazard checks |
 | hydrogen | gas depot | launches |
 | helium | gas depot | launches |
 | income | routes, tech | N/A (track) |

@@ -22,7 +22,6 @@ describe('Rules Compliance - Blaugas Fuel System', () => {
               gasCubes: { hydrogen: 2, helium: 0 },
               techCards: ['blaugas_storage'],
               hangarShips: 1,  // Ships are tokens, use counter
-              repairShips: 0,
               blueprint: {
                 frameSlots: ['duralumin_frame'],
                 fabricSlots: ['premium_envelope'],
@@ -80,7 +79,6 @@ describe('Rules Compliance - Blaugas Fuel System', () => {
               gasCubes: { hydrogen: 2, helium: 0 },
               techCards: ['blaugas_storage'],
               hangarShips: 1,  // Ships are tokens, use counter
-              repairShips: 0,
               blueprint: {
                 frameSlots: ['duralumin_frame'],
                 fabricSlots: ['premium_envelope'],
@@ -138,7 +136,6 @@ describe('Rules Compliance - Blaugas Fuel System', () => {
               gasCubes: { hydrogen: 2, helium: 0 },
               techCards: [], // No Blaugas
               hangarShips: 1,  // Ships are tokens, use counter
-              repairShips: 0,
               blueprint: {
                 frameSlots: ['duralumin_frame'],
                 fabricSlots: ['premium_envelope'],
@@ -177,7 +174,6 @@ describe('Rules Compliance - Blaugas Fuel System', () => {
               gasCubes: { hydrogen: 2, helium: 0 },
               techCards: ['blaugas_storage'],
               hangarShips: 1,  // Ships are tokens, use counter
-              repairShips: 0,
               blueprint: {
                 frameSlots: ['duralumin_frame'],
                 fabricSlots: ['premium_envelope'],

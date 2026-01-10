@@ -48,7 +48,6 @@ export type StatIconName =
 
 export type GameIconName =
   | 'ship'
-  | 'ship-damaged'
   | 'launch'
   | 'route'
   | 'technology'

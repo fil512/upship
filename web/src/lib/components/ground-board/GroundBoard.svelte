@@ -53,12 +53,6 @@
 			symbol: 'wrench' as const,
 			description: 'Free. Gain Engineers equal to your Engineer Income track.'
 		},
-		{
-			id: 'repair',
-			name: 'Repair',
-			symbol: 'wrench' as const,
-			description: 'Repair damaged ships. Cost: Hull Cost ÷ 2 + 1 Engineer per ship.'
-		},
 
 		// Propeller locations (operations) - Column 2
 		{
@@ -180,7 +174,7 @@
 					{placements}
 					{players}
 					canPlace={canPlaceMap[loc.id]}
-					hullCost={loc.id === 'construction_hall' || loc.id === 'repair' ? playerHullCost : undefined}
+					hullCost={loc.id === 'construction_hall' ? playerHullCost : undefined}
 					heliumPrice={loc.id === 'gas_depot' ? heliumPrice : undefined}
 					age={currentAge}
 					{engineerIncome}

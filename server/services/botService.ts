@@ -1169,7 +1169,7 @@ export function findStrategicPlacement(
   // Phase 7: Fallback priorities (match playtest order)
   // Note: launchpad at END - only use if no better option (wasteful without resources)
   const fallbackPriorities = [
-    'construction_hall', 'gas_depot', 'blueprint_design', 'repair',
+    'construction_hall', 'gas_depot', 'blueprint_design',
     'personnel_office', 'engineering_depot', 'treasury',
     'ministry', 'weather_bureau', 'research_institute',
     'technical_institute', 'flight_school', 'government_liaison',

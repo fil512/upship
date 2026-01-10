@@ -35,8 +35,7 @@
 		personnel_office: 'Free. Gain Officers equal to your Officer Income Track.',
 		engineering_depot: 'Free. Gain Engineers equal to your Engineer Income Track.',
 		treasury: 'Free. Gain Cash equal to your Income Track.',
-		academy: 'Pay £2/£4 to recruit 1 Officer or 1 Engineer.',
-		repair: 'Repair damaged ships. Cost: Half Hull Cost (rounded down) + 1 Engineer per ship.'
+		academy: 'Pay £2/£4 to recruit 1 Officer or 1 Engineer.'
 	};
 
 	// Cost and benefit data for each location
@@ -115,10 +114,6 @@
 		treasury: {
 			costs: [],
 			benefits: [{ icon: 'cash' }]
-		},
-		repair: {
-			costs: [{ icon: 'ship-damaged' }, { icon: 'cash' }, { icon: 'engineers' }],
-			benefits: [{ icon: 'ship' }]
 		}
 	};
 
@@ -205,11 +200,6 @@
 					<!-- Dynamic hull cost display for Construction Hall -->
 					<div class="cost-item resource-cost">
 						<ResourceBadge type="cash" value={hullCost} size={14} />
-					</div>
-				{:else if id === 'repair' && cost.icon === 'cash' && hullCost !== undefined}
-					<!-- Dynamic repair cost display (half hull cost, rounded down) -->
-					<div class="cost-item resource-cost">
-						<ResourceBadge type="cash" value={Math.floor(hullCost / 2)} size={14} />
 					</div>
 				{:else}
 					<div class="cost-item icon-cost" title={cost.icon}>

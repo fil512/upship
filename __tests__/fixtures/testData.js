@@ -140,7 +140,6 @@ const createTestPlayerState = (faction = 'germany') => ({
   techCards: getFactionStartingTech(faction),
   // Ships are tokens (counters), not individual entities
   hangarShips: 1,  // Start with 1 ship per Section 3.2
-  repairShips: 0,
   ships: [],  // Deprecated - kept for backwards compatibility
   routes: [],
   // Deep copy testBlueprint to avoid shared reference mutation

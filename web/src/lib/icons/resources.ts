@@ -33,7 +33,7 @@ export const resourceIcons: Record<ResourceIconName, IconDefinition> = {
   engineers: {
     svg: engineersSvg,
     category: 'resource',
-    tooltip: 'Engineers - aid research and repairs'
+    tooltip: 'Engineers - aid research and handle hazards'
   },
 
   hydrogen: {

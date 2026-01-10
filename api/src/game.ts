@@ -18,7 +18,6 @@ export type ShipStatus =
 	| 'on_route'
 	| 'awaiting_hazard'
 	| 'destroyed'
-	| 'damaged'
 	| 'crashed';
 
 // Hazard info attached to pending launch (flat structure matching server)

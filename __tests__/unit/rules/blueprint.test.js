@@ -21,9 +21,8 @@ describe('Rules Compliance - Blueprint System', () => {
       // New frame duralumin_frame has hullCost: 1
       state.players['1'].blueprint.frameSlots = [null];
       state.players['1'].blueprint.fabricSlots = ['premium_envelope']; // cost 3
-      // Use new ship tracking: hangarShips and repairShips counters
+      // Use ship tracking: hangarShips counter
       state.players['1'].hangarShips = 2;
-      state.players['1'].repairShips = 0;
 
       // Install a frame upgrade
       processInstallUpgrade(state, '1', { slotType: 'frame', slotIndex: 0, upgradeId: 'duralumin_frame', _internal: true });
@@ -34,7 +33,7 @@ describe('Rules Compliance - Blueprint System', () => {
       expect(state.players['1'].cash).toBe(98);
     });
 
-    it('should NOT charge when upgrading Frame with no ships in hangar or repair', () => {
+    it('should NOT charge when upgrading Frame with no ships in hangar', () => {
       const state = createTestGameState();
       state.age = 1;
 
@@ -42,10 +41,9 @@ describe('Rules Compliance - Blueprint System', () => {
       state.players['1'].techCards = ['duralumin_girders'];
       state.players['1'].cash = 100;
 
-      // Clear frame slot, NO ships in hangar or repair
+      // Clear frame slot, NO ships in hangar
       state.players['1'].blueprint.frameSlots = [null];
       state.players['1'].hangarShips = 0;
-      state.players['1'].repairShips = 0;
 
       processInstallUpgrade(state, '1', { slotType: 'frame', slotIndex: 0, upgradeId: 'duralumin_frame', _internal: true });
 
@@ -64,7 +62,6 @@ describe('Rules Compliance - Blueprint System', () => {
       // Ships in hangar - retrofit cost applies to ALL slot types
       state.players['1'].blueprint.driveSlots = [null];
       state.players['1'].hangarShips = 1;
-      state.players['1'].repairShips = 0;
 
       // Drive slot upgrade - basic_engine has hullCost 1
       processInstallUpgrade(state, '1', { slotType: 'drive', slotIndex: 0, upgradeId: 'basic_engine', _internal: true });
@@ -87,7 +84,6 @@ describe('Rules Compliance - Blueprint System', () => {
       state.players['1'].blueprint.frameSlots = [null]; // No frame installed
       state.players['1'].blueprint.fabricSlots = [null];
       state.players['1'].hangarShips = 1;
-      state.players['1'].repairShips = 0;
 
       // Install fabric upgrade
       processInstallUpgrade(state, '1', { slotType: 'fabric', slotIndex: 0, upgradeId: 'premium_envelope', _internal: true });
@@ -130,7 +126,6 @@ describe('Rules Compliance - Blueprint System', () => {
       state.players['1'].blueprint.frameSlots = [null];
       state.players['1'].blueprint.fabricSlots = [null];
       state.players['1'].hangarShips = 2;
-      state.players['1'].repairShips = 0;
 
       // The InsufficientFundsError includes "Not enough" which matches our pattern
       expect(() => {
