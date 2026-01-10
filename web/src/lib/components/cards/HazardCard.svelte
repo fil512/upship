@@ -64,7 +64,7 @@
 			<div class="challenge-info">
 				<div class="difficulty" title="Difficulty: {difficulty}. Total Difficulty = {difficulty} - Ship Reliability. Spend Engineers equal to Total Difficulty to pass.">
 					<Icon name="hazard" size={16} />
-					<span class="difficulty-label">Diff</span>
+					<span class="difficulty-label">Difficulty</span>
 					<span class="difficulty-value">{difficulty}</span>
 				</div>
 			</div>

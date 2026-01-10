@@ -413,7 +413,7 @@ Fabric tiles go in Fabric slots. The **Hull Cost** column shows how much this ti
 
 Each player has an identical Personal Hazard Deck of 27 cards. When launching a ship, draw one card and resolve it.
 
-**Age II Flak:** Each card shows 0–5 flak guns. In Age II only, if Flak > your ship's Armor, the ship is destroyed (5 Flak always destroys; max Armor is 4).
+**Age II Flak:** Each card shows 0–3 flak guns. In Age II only, if Flak > your ship's Armor, the ship is destroyed (max Armor is 2 without Heavy Armor Plating).
 
 ## Hazard Cards (27 total)
 
@@ -424,26 +424,26 @@ Each player has an identical Personal Hazard Deck of 27 cards. When launching a 
 | Calm Conditions | — | 0 | 0 |
 | Perfect Visibility | — | 0 | 0 |
 | Light Turbulence | Weather | 2 | 0 |
-| Minor Engine Trouble | — | 1 | 1 |
+| Minor Engine Trouble | — | 1 | 0 |
 | Crosswind | Weather | 3 | 0 |
 | Gas Leak | — | 2 | 1 |
-| Low Visibility | Weather | 2 | 1 |
+| Low Visibility | Weather | 2 | 0 |
 | Fuel Concern | — | 2 | 0 |
-| Headwind | Weather | 3 | 1 |
-| Structural Stress | — | 2 | 2 |
-| Strong Headwind | Weather | 4 | 2 |
-| Icing Conditions | Weather | 3 | 2 |
-| Engine Failure | — | 3 | 3 |
-| Storm System | Weather | 4 | 3 |
-| Structural Damage | — | 3 | 4 |
-| Navigation Error | — | 3 | 3 |
-| Squall Line | Weather | 4 | 3 |
-| Severe Icing | Weather | 2 | 2 |
-| Engine Fire (×2) | Fire | 2 | 2 |
-| Gas Cell Rupture (×2) | Fire | 3 | 3 |
-| Static Discharge | Fire | 2 | 4 |
-| Catastrophic Explosion | Catastrophic | — | 5 |
-| Critical Structural Stress | — | 3 | 4 |
+| Headwind | Weather | 3 | 0 |
+| Structural Stress | — | 2 | 1 |
+| Strong Headwind | Weather | 4 | 1 |
+| Icing Conditions | Weather | 3 | 1 |
+| Engine Failure | — | 3 | 2 |
+| Storm System | Weather | 4 | 2 |
+| Structural Damage | — | 3 | 2 |
+| Navigation Error | — | 3 | 1 |
+| Squall Line | Weather | 4 | 2 |
+| Severe Icing | Weather | 2 | 1 |
+| Engine Fire (×2) | Fire | 2 | 1 |
+| Gas Cell Rupture (×2) | Fire | 3 | 2 |
+| Static Discharge | Fire | 2 | 2 |
+| Catastrophic Explosion | Catastrophic | — | 3 |
+| Critical Structural Stress | — | 3 | 2 |
 
 **Hazard Types:**
 - **Type "—"** — Standard hazard, no special rules
@@ -480,12 +480,10 @@ Each player has an identical Personal Hazard Deck of 27 cards. When launching a 
 
 ## Flak Distribution (27 cards)
 
-- 0 Flak: 7 cards (safe passage) - Clear Weather (4) + Light Turbulence + Crosswind + Fuel Concern
-- 1 Flak: 4 cards (Armor 1+ survives) - Minor Engine Trouble + Gas Leak + Low Visibility + Headwind
-- 2 Flak: 6 cards (Armor 2+ survives) - Structural Stress + Strong Headwind + Icing Conditions + Severe Icing + Engine Fire (2)
-- 3 Flak: 6 cards (Armor 3+ survives) - Engine Failure + Storm System + Navigation Error + Squall Line + Gas Cell Rupture (2)
-- 4 Flak: 3 cards (Armor 4 survives) - Structural Damage + Static Discharge + Critical Structural Stress
-- 5 Flak: 1 card (always destroys) - Catastrophic Explosion
+- 0 Flak: 9 cards (safe passage) - Clear Weather (4) + Light Turbulence + Minor Engine Trouble + Crosswind + Low Visibility + Fuel Concern + Headwind
+- 1 Flak: 8 cards (Armor 1+ survives) - Gas Leak + Structural Stress + Strong Headwind + Icing Conditions + Navigation Error + Severe Icing + Engine Fire (2)
+- 2 Flak: 9 cards (Armor 2+ survives) - Engine Failure + Storm System + Structural Damage + Squall Line + Gas Cell Rupture (2) + Static Discharge + Critical Structural Stress
+- 3 Flak: 1 card (Armor 3+ survives) - Catastrophic Explosion
 
 **Deck Management:** Shuffle your discard pile back into your Hazard Deck when the deck is empty.
 

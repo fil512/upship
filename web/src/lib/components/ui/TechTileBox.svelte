@@ -17,7 +17,7 @@
 	// Build array of icons to display (matching blueprint logic)
 	function getIconsList(stats: Record<string, number>, weight: number): { type: string }[] {
 		const icons: { type: string }[] = [];
-		const order = ['gas_socket', 'lift', 'reliability', 'ceiling', 'range', 'speed', 'income', 'luxury'];
+		const order = ['gas_socket', 'lift', 'reliability', 'ceiling', 'range', 'speed', 'income', 'luxury', 'armor'];
 
 		// Collect all stat icons
 		for (const stat of order) {
