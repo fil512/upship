@@ -727,11 +727,12 @@ function calculateBlueprintWeight(blueprint: Blueprint): number {
   return weight;
 }
 
-// Calculate required gas cubes based on weight (Lift must >= Weight, each cube = +5 Lift)
+// Calculate required gas cubes based on filled Frame slots
+// Per Appendix D: "Each Frame slot on the Blueprint shows a gas cube icon indicating the launch cost."
 function calculateRequiredGasCubes(blueprint: Blueprint): number {
-  const weight = calculateBlueprintWeight(blueprint);
-  // Minimum 1 gas cube, otherwise ceil(weight / 5)
-  return Math.max(1, Math.ceil(weight / 5));
+  const filledFrameSlots = ((blueprint as { frameSlots?: (string | null)[] }).frameSlots || []).filter(slot => slot !== null).length;
+  // Minimum 1 gas cube, otherwise 1 per filled Frame slot
+  return Math.max(1, filledFrameSlots);
 }
 
 module.exports = {

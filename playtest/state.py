@@ -481,7 +481,7 @@ def get_ship_details(ship: Ship, player_data: Player) -> dict:
     """Extract detailed ship stats for logging.
 
     Weight = sum of upgrade weights from all slots
-    Required gas cubes = max(1, ceil(weight/5))
+    Required gas cubes = number of filled Frame slots (min 1)
     Lift = required gas cubes * 5
 
     Stats (range, speed, ceiling, reliability) are calculated from blueprint
@@ -502,8 +502,12 @@ def get_ship_details(ship: Ship, player_data: Player) -> dict:
     # All stats start at 0 - stats come entirely from installed tech tiles (per server constants)
     weight = 0
     stats = {'range': 0, 'speed': 0, 'ceiling': 0, 'reliability': 0, 'luxury': 0, 'income': 0}
+    filled_frame_slots = 0
 
     if blueprint:
+        # Count filled Frame slots for gas requirement
+        filled_frame_slots = sum(1 for slot in (blueprint.frame_slots or []) if slot is not None)
+
         all_slots = (
             blueprint.drive_slots +
             blueprint.frame_slots +
@@ -519,7 +523,8 @@ def get_ship_details(ship: Ship, player_data: Player) -> dict:
                     for stat, value in upgrade.get('stats', {}).items():
                         stats[stat] = stats.get(stat, 0) + value
 
-    required_cubes = max(1, math.ceil(weight / 5)) if weight > 0 else 1
+    # Gas cubes required = number of filled Frame slots (min 1) per Appendix D
+    required_cubes = max(1, filled_frame_slots)
     lift = required_cubes * 5
 
     return {
@@ -532,6 +537,7 @@ def get_ship_details(ship: Ship, player_data: Player) -> dict:
         'speed': stats['speed'],
         'ceiling': stats['ceiling'],
         'reliability': stats['reliability'],
+        'luxury': stats['luxury'],
         'net_lift': lift - weight
     }
 
@@ -563,6 +569,9 @@ def get_blueprint_stats(player_data: Player) -> dict:
     weight = 0
     stats = {'range': 0, 'speed': 0, 'ceiling': 0, 'reliability': 0, 'luxury': 0, 'income': 0}
 
+    # Count filled Frame slots for gas requirement
+    filled_frame_slots = sum(1 for slot in (bp.frame_slots or []) if slot is not None)
+
     all_slots = bp.drive_slots + bp.frame_slots + bp.fabric_slots + bp.component_slots
     for upgrade_id in all_slots:
         if upgrade_id:
@@ -573,7 +582,8 @@ def get_blueprint_stats(player_data: Player) -> dict:
                 for stat, value in upgrade.get('stats', {}).items():
                     stats[stat] = stats.get(stat, 0) + value
 
-    required_cubes = max(1, math.ceil(weight / 5)) if weight > 0 else 1
+    # Gas cubes required = number of filled Frame slots (min 1) per Appendix D
+    required_cubes = max(1, filled_frame_slots)
     lift = required_cubes * 5
 
     return {

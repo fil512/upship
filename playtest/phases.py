@@ -331,12 +331,14 @@ def _attempt_route_launches(
         ship_range = ship_stats.get('range', 0)
         ship_speed = ship_stats.get('speed', 0)
         ship_ceiling = ship_stats.get('ceiling', 0)
+        ship_luxury = ship_stats.get('luxury', 0)
 
         flyable_routes = [
             r for r in routes_list
             if r.distance <= ship_range
             and r.speed_requirement <= ship_speed
             and r.ceiling_requirement <= ship_ceiling
+            and r.luxury_requirement <= ship_luxury
         ]
 
         if not flyable_routes:

@@ -180,6 +180,7 @@ class Route:
     distance: int = 0
     speed_requirement: int = 0
     ceiling_requirement: int = 0
+    luxury_requirement: int = 0  # Age III routes may require luxury
     gas_type: str = 'hydrogen'
     income: int = 0
     prestige: int = 0
@@ -216,12 +217,16 @@ class Route:
         # Server uses 'ceiling', extract for route requirements
         ceiling_req = data.get('ceilingRequirement', data.get('ceiling', 0))
 
+        # Server uses 'luxury' for Age III route requirements
+        luxury_req = data.get('luxuryRequirement', data.get('luxury', 0))
+
         return cls(
             id=data.get('id', ''),
             name=data.get('name', ''),
             distance=distance,
             speed_requirement=speed_req,
             ceiling_requirement=ceiling_req,
+            luxury_requirement=luxury_req,
             gas_type=data.get('gasType', 'hydrogen'),
             income=data.get('income', 0),
             prestige=data.get('prestige', data.get('vp', 0)),

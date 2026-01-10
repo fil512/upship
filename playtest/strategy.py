@@ -621,41 +621,24 @@ def evaluate_launch_readiness(
         priorities.append('flight_school')  # Increase officer income track
 
     # Check 4: Do we have gas?
-    # In Age II, missions require gas based on their range
-    # Calculate minimum gas needed for any achievable mission/route
+    # Gas needed = number of filled Frame slots (min 1) per Appendix D
     gas_needed = 1  # Minimum baseline
-    if current_age == 2 and missions:
-        # Get gas requirement for cheapest achievable mission
-        ship_stats = None
-        if hangar_ships and player_data.blueprint:
-            ship_stats = get_ship_details(hangar_ships[0], player_data)
-        if ship_stats:
-            ship_range = ship_stats.get('range', 0)
-            ship_speed = ship_stats.get('speed', 0)
-            ship_ceiling = ship_stats.get('ceiling', 0)
-            achievable_missions = [
-                m for m in missions
-                if (ship_range >= (m.range or 0) and
-                    ship_speed >= (m.speed or 0) and
-                    ship_ceiling >= (m.ceiling or 0))
-            ]
-            if achievable_missions:
-                # Gas needed = mission range (hydrogen) or mission range (helium for USA)
-                faction = player_data.faction.lower() if player_data.faction else ''
-                min_gas = min(m.range or 1 for m in achievable_missions)
-                gas_needed = max(gas_needed, min_gas)
-                # Check if we have the RIGHT type of gas
-                if faction == 'usa':
-                    if helium < gas_needed:
-                        missing.append(f'need {gas_needed - helium} more helium')
-                        priorities.append('gas_depot')
-                else:
-                    if hydrogen < gas_needed:
-                        missing.append(f'need {gas_needed - hydrogen} more hydrogen')
-                        priorities.append('gas_depot')
-    elif total_gas < gas_needed:
-        missing.append(f'need {gas_needed - total_gas} more gas')
-        priorities.append('gas_depot')
+    if blueprint:
+        filled_frame_slots = sum(1 for s in (blueprint.frame_slots or []) if s is not None)
+        gas_needed = max(1, filled_frame_slots)
+
+    # Check if we have enough of the right type of gas
+    faction = player_data.faction.lower() if player_data.faction else ''
+    if faction == 'usa':
+        # USA uses helium
+        if helium < gas_needed:
+            missing.append(f'need {gas_needed - helium} more helium')
+            priorities.append('gas_depot')
+    else:
+        # Other factions use hydrogen
+        if hydrogen < gas_needed:
+            missing.append(f'need {gas_needed - hydrogen} more hydrogen')
+            priorities.append('gas_depot')
 
     # Check 5: Do we have minimum Range and Speed? (must be >= 1 to launch)
     stats_ready = True
@@ -669,6 +652,7 @@ def evaluate_launch_readiness(
         ship_speed = ship_stats.get('speed', 0)
         ship_ceiling = ship_stats.get('ceiling', 0)
         ship_reliability = ship_stats.get('reliability', 0)
+        ship_luxury = ship_stats.get('luxury', 0)
 
         # Check minimum stats required to launch (Range >= 1 and Speed >= 1)
         if ship_range < 1:
@@ -704,21 +688,33 @@ def evaluate_launch_readiness(
                     priorities.insert(0, 'research_institute')  # Get more tech
                     priorities.insert(1, 'blueprint_design')  # Install drive upgrades
             elif routes:
-                # Age I/III: Check routes
+                # Age I/III: Check routes (including luxury requirement for Age III)
                 for route in routes:
                     route_dist = route.distance or 1
                     route_speed = route.speed_requirement or 0
                     route_ceiling = route.ceiling_requirement or 0
+                    route_luxury = route.luxury_requirement or 0
                     if (ship_range >= route_dist and
                         ship_speed >= route_speed and
-                        ship_ceiling >= route_ceiling):
+                        ship_ceiling >= route_ceiling and
+                        ship_luxury >= route_luxury):
                         has_achievable_target = True
                         break
 
                 if not has_achievable_target:
-                    missing.append(f'no reachable routes (range={ship_range}, speed={ship_speed})')
-                    priorities.insert(0, 'research_institute')  # Get more tech
-                    priorities.insert(1, 'blueprint_design')  # Install drive upgrades
+                    # Check if it's a luxury problem specifically
+                    luxury_blocked_routes = [r for r in routes if
+                        ship_range >= (r.distance or 1) and
+                        ship_speed >= (r.speed_requirement or 0) and
+                        ship_ceiling >= (r.ceiling_requirement or 0) and
+                        ship_luxury < (r.luxury_requirement or 0)]
+                    if luxury_blocked_routes:
+                        missing.append(f'no routes achievable (luxury={ship_luxury}, need luxury tiles)')
+                        priorities.insert(0, 'blueprint_design')  # Install luxury components
+                    else:
+                        missing.append(f'no reachable routes (range={ship_range}, speed={ship_speed})')
+                        priorities.insert(0, 'research_institute')  # Get more tech
+                        priorities.insert(1, 'blueprint_design')  # Install drive upgrades
 
     # Check 7: Do we have engineers for hazard mitigation?
     # Use the new hazard formula (Section 8.2):
@@ -733,16 +729,12 @@ def evaluate_launch_readiness(
         priorities.append('engineering_depot')  # Collect engineers from income track
         priorities.append('technical_institute')  # Increase engineer income track
 
-    # Check if we have enough of the RIGHT gas type
-    gas_ok = False
-    if current_age == 2 and missions and hangar_ships:
-        faction = player_data.faction.lower() if player_data.faction else ''
-        if faction == 'usa':
-            gas_ok = helium >= gas_needed
-        else:
-            gas_ok = hydrogen >= gas_needed
+    # Check if we have enough of the RIGHT gas type (USA uses helium, others use hydrogen)
+    faction = player_data.faction.lower() if player_data.faction else ''
+    if faction == 'usa':
+        gas_ok = helium >= gas_needed
     else:
-        gas_ok = total_gas >= gas_needed
+        gas_ok = hydrogen >= gas_needed
 
     # Check 8: Do we have armor/luxury tech but not installed?
     # [BOT-LAUNCH-READY-01] SYNC: Match server - prioritize blueprint_design when upgrades available
@@ -1078,14 +1070,15 @@ def find_strategic_placement(
     preferred_gas = 'helium' if faction == 'usa' else 'hydrogen'
     preferred_gas_amount = helium if faction == 'usa' else hydrogen
 
-    # Calculate required gas based on ship weight (gas_needed = max(1, ceil(weight/5)))
+    # Calculate required gas based on filled Frame slots (per Appendix D)
     # Default to 3 (typical requirement) if we can't calculate
     gas_needed = 3  # Conservative estimate
     if blueprint:
         bp_stats = get_blueprint_stats(player_data)
         if bp_stats:
-            weight = bp_stats.get('weight', 0)
-            gas_needed = max(1, (weight + 4) // 5) if weight > 0 else 1  # ceil without import
+            # Gas cubes = filled Frame slots (min 1)
+            filled_frame_slots = bp_stats.get('frame_slots', 0)
+            gas_needed = max(1, filled_frame_slots)
 
     if preferred_gas_amount < gas_needed:
         priority_locations.append('gas_depot')

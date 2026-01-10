@@ -10,7 +10,7 @@ const { setupMissionRow } = require('../../data/combatMissions');
 const { shuffleArray } = require('../../utils/random');
 const { calculateTurnOrder } = require('./turnOrder');
 const { refreshRnDBoard, refreshMarketRow, refillRDBoard } = require('./marketHelpers');
-const { ageResetHeliumMarket } = require('../../services/gameStateHelpers');
+// Note: ageResetHeliumMarket is imported lazily in completeAgeTransition() to avoid circular dependency
 
 // Internal tech card type with VP and income (from TECH_CARD_BAG constants)
 interface TechCardWithMeta {
@@ -489,6 +489,8 @@ function completeAgeTransition(state: AgeTransitionState): void {
   }
 
   // Reset helium market for new age (Section 9.4.5: Fill £3+ rows only, preserve £1-£2)
+  // Lazy import to avoid circular dependency: ageTransition -> gameStateHelpers -> phaseTransition -> ageTransition
+  const { ageResetHeliumMarket } = require('../../services/gameStateHelpers');
   ageResetHeliumMarket(state);
 
   // Clean up transition state
