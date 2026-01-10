@@ -878,6 +878,18 @@ export const TECH_TILES: Record<string, TechTile> = {
     special: 'navigation_bonus',  // +1 to Navigation hazards
     age: 2
   },
+  basic_armor_plating: {
+    id: 'basic_armor_plating',
+    name: 'Basic Armor Plating',
+    type: 'component',
+    slotType: 'componentSlots',
+    requiredCard: 'gondola_shielding',
+    weight: 2,
+    hullCost: 1,  // Basic protective panels for gondola
+    stats: { armor: 1 },
+    special: null,
+    age: 1
+  },
   light_armor_plating: {
     id: 'light_armor_plating',
     name: 'Light Armor Plating',
@@ -1167,6 +1179,7 @@ export const TECH_CARDS: Record<string, TechCard> = {
   redundant_systems: { id: 'redundant_systems', name: 'Redundant Systems', type: 'component', cost: 5, age: 2 },
 
   // Payload techs per Appendix C
+  gondola_shielding: { id: 'gondola_shielding', name: 'Gondola Shielding', type: 'component', cost: 3, age: 1 },
   observation_platform: { id: 'observation_platform', name: 'Observation Platform', type: 'component', cost: 3, age: 1 },
   mail_compartment: { id: 'mail_compartment', name: 'Mail Compartment', type: 'component', cost: 3, age: 1 },
   cargo_nets: { id: 'cargo_nets', name: 'Cargo Nets', type: 'component', cost: 3, age: 1 },

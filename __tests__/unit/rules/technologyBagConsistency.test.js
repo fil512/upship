@@ -43,14 +43,16 @@ describe('TECHNOLOGY_BAG Consistency', () => {
     // But the TECH_CARD_BAG only contains the 57 tiles that go in the bag
     // Balance fix added 4 new tiles: altitude_compensator, safety_valves (Age I gas),
     //   pressurized_cabin_tech, redundant_systems (Age II component)
-    it('should have 57 total technologies in the bag', () => {
+    // Armor balance fix added gondola_shielding (Age I component) for early armor preparation
+    it('should have 58 total technologies in the bag', () => {
       const total = constantsBag[1].length + constantsBag[2].length + constantsBag[3].length;
-      expect(total).toBe(57);
+      expect(total).toBe(58);
     });
 
     // Balance fix added 2 gas tiles to Age I: altitude_compensator, safety_valves
-    it('should have 14 Age I technologies', () => {
-      expect(constantsBag[1].length).toBe(14);
+    // Armor balance fix added gondola_shielding (Age I component)
+    it('should have 15 Age I technologies', () => {
+      expect(constantsBag[1].length).toBe(15);
     });
 
     // 24 tiles in Age II bag (Helium Handling is the Reserve Tech Card, always available)

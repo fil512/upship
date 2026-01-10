@@ -84,7 +84,7 @@ export interface TechCard {
 // IMPORTANT: This is the single source of truth for all tech card definitions
 // All other files should import from here, not define their own versions
 export const TECH_CARD_BAG: Record<number, TechCard[]> = {
-  1: [ // Age I Technologies (12 tiles) - Cost range: 3-5 Research
+  1: [ // Age I Technologies (15 tiles) - Cost range: 3-5 Research
     // Propulsion (3 tiles)
     { id: 'daimler_engine', name: 'Daimler Petrol Engine', type: 'drive', cost: 3, vp: 0, income: 1 },
     { id: 'improved_propeller', name: 'Improved Propeller', type: 'drive', cost: 3, vp: 0, income: 1 },
@@ -98,7 +98,8 @@ export const TECH_CARD_BAG: Record<number, TechCard[]> = {
     // Gas Systems (2 tiles)
     { id: 'improved_valving', name: 'Improved Valving', type: 'gas', cost: 3, vp: 0, income: 1 },
     { id: 'manual_ballonets', name: 'Manual Ballonets', type: 'gas', cost: 3, vp: 0, income: 1 },
-    // Payload (3 tiles)
+    // Payload (4 tiles)
+    { id: 'gondola_shielding', name: 'Gondola Shielding', type: 'component', cost: 3, vp: 0, income: 1 },
     { id: 'observation_platform', name: 'Observation Platform', type: 'component', cost: 3, vp: 0, income: 1 },
     { id: 'mail_compartment', name: 'Mail Compartment', type: 'component', cost: 3, vp: 0, income: 1 },
     { id: 'cargo_nets', name: 'Cargo Nets', type: 'component', cost: 5, vp: 1, income: 1 },

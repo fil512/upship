@@ -946,7 +946,7 @@ export function evaluateLaunchReadiness(
 
     // Check for armor (Age 2+)
     if (currentAge >= 2) {
-      const hasArmorTech = techCards.some(t => t === 'armored_gondola' || t === 'reinforced_hull');
+      const hasArmorTech = techCards.some(t => t === 'gondola_shielding' || t === 'armored_gondola' || t === 'reinforced_hull');
       const hasArmorInstalled = componentSlots.some(s => {
         if (!s) return false;
         const tile = UPGRADES[s] as TechTile | undefined;

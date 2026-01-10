@@ -753,11 +753,11 @@ def evaluate_launch_readiness(
 
     # Check for armor (Age 2+)
     if current_age >= 2:
-        armor_tech_cards = {'armored_gondola', 'reinforced_hull'}
+        armor_tech_cards = {'gondola_shielding', 'armored_gondola', 'reinforced_hull'}
         has_armor_tech = any(t in armor_tech_cards for t in technologies)
 
         # Check if any component slot has armor (armor stat > 0)
-        armor_tile_ids = {'light_armor_plating', 'heavy_armor_plating'}
+        armor_tile_ids = {'basic_armor_plating', 'light_armor_plating', 'heavy_armor_plating'}
         has_armor_installed = any(s in armor_tile_ids for s in component_slots if s)
 
         if has_armor_tech and not has_armor_installed and 'blueprint_design' not in priorities:
