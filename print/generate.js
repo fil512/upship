@@ -476,8 +476,10 @@ async function generateSheets(browser) {
   const GAP_Y = 25;         // Vertical gap between cards (minimal to fit 3 rows)
 
   // Filler cards for incomplete sheets (fill remaining slots with these cards)
+  // Use { file, count } to limit how many fillers to add, or just filename to fill all blanks
   const fillerCards = {
     agent: 'the_aeronaut.png',  // Fill agent sheets with aeronaut cards
+    starter: { file: 'rigger.png', count: 4 },  // Add 4 rigger cards to starter sheets
   };
 
   for (const cardType of cardTypes) {
@@ -495,8 +497,15 @@ async function generateSheets(browser) {
 
     // Pre-load filler card if available for this type
     let fillerDataUrl = null;
+    let fillerMaxCount = Infinity;  // Default: fill all blanks
+    let fillerName = null;
     if (fillerCards[cardType]) {
-      const fillerPath = join(cardDir, fillerCards[cardType]);
+      const fillerConfig = fillerCards[cardType];
+      // Support both string format and { file, count } format
+      const fillerFile = typeof fillerConfig === 'string' ? fillerConfig : fillerConfig.file;
+      fillerMaxCount = typeof fillerConfig === 'object' && fillerConfig.count ? fillerConfig.count : Infinity;
+      fillerName = fillerFile.replace('.png', '');
+      const fillerPath = join(cardDir, fillerFile);
       if (existsSync(fillerPath)) {
         const fillerBuffer = readFileSync(fillerPath);
         const fillerBase64 = fillerBuffer.toString('base64');
@@ -508,7 +517,8 @@ async function generateSheets(browser) {
       const startIdx = pageNum * CARDS_PER_PAGE;
       const pageCards = cardFiles.slice(startIdx, startIdx + CARDS_PER_PAGE);
       const isLastPage = pageNum === numPages - 1;
-      const blanksToFill = isLastPage && fillerDataUrl ? (CARDS_PER_PAGE - pageCards.length) : 0;
+      const availableBlanks = CARDS_PER_PAGE - pageCards.length;
+      const blanksToFill = isLastPage && fillerDataUrl ? Math.min(availableBlanks, fillerMaxCount) : 0;
 
       // Create sheet HTML with embedded base64 images
       let cardsHtml = '';
@@ -554,7 +564,7 @@ async function generateSheets(browser) {
       await page.screenshot({ path: sheetPath, type: 'png' });
 
       if (blanksToFill > 0) {
-        console.log(`    ${cardType}-sheet-${pageNum + 1}.png (${pageCards.length} cards + ${blanksToFill} aeronaut fillers)`);
+        console.log(`    ${cardType}-sheet-${pageNum + 1}.png (${pageCards.length} cards + ${blanksToFill} ${fillerName} fillers)`);
       } else {
         console.log(`    ${cardType}-sheet-${pageNum + 1}.png (${pageCards.length} cards)`);
       }
