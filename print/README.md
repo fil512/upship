@@ -7,11 +7,15 @@ Generate print-ready playing cards for the UP SHIP! board game. Cards are render
 ```bash
 cd print
 npm install
-npm run generate
+npm run generate          # Generate everything
+npm run generate cards    # Generate all cards
+npm run generate boards   # Generate all boards
 ```
 
 Output files will be in `output/`:
 - `output/cards/` - Individual card PNGs (750×1050px)
+- `output/tiles/` - Tech tile PNGs (450×285px)
+- `output/boards/` - Action board and player boards
 - `output/sheets/` - Print sheets (9 cards per letter page)
 
 ## Prerequisites
@@ -28,35 +32,41 @@ npm install
 
 This installs Playwright which is used to render the HTML card templates.
 
-## Generating Cards
+## Generating Print Assets
 
-### Generate All Cards
+### Generate Everything
 
 ```bash
 npm run generate
 ```
 
-This generates all card types and assembles them into print sheets:
-- **Agent Cards** (31) - Market deck personnel and organizations
-- **Hazard Cards** (27) - Weather, fire, and mechanical hazards
-- **Tech Cards** (41) - Technology research cards
-- **Mission Cards** (20) - Age II combat missions
+This generates all card types, tiles, boards, and assembles them into print sheets.
 
-### Generate Specific Card Types
+### Generate by Category
 
 ```bash
-npm run generate:agent     # Agent cards only
-npm run generate:hazard    # Hazard cards only
-npm run generate:tech      # Tech cards only
-npm run generate:mission   # Mission cards only
+npm run generate cards    # All card types + card sheets
+npm run generate boards   # Action board + player boards
+npm run generate tiles    # Tech tiles + tile sheets
+npm run generate sheets   # Rebuild sheets from existing PNGs
 ```
 
-### Regenerate Print Sheets Only
-
-If you already have individual card PNGs and just want to rebuild the sheets:
+### Generate Specific Types
 
 ```bash
-npm run generate:sheets
+npm run generate agent       # Agent cards only
+npm run generate hazard      # Hazard cards only
+npm run generate tech        # Tech cards only
+npm run generate mission     # Mission cards only
+npm run generate playerboard # Player boards only
+```
+
+You can also run the generator directly:
+
+```bash
+node generate.js cards       # Same as npm run generate cards
+node generate.js boards
+node generate.js agent
 ```
 
 ## Output Files
@@ -188,6 +198,41 @@ web/static/cards/
 ├── tech/       # Tech card artwork
 └── mission/    # Mission card artwork
 ```
+
+## Physical Component Standards
+
+When designing print boards, use these industry-standard sizes for wooden board game components:
+
+### Wooden Cubes (resource markers)
+
+| Size | Use Case | At 300 DPI | With 2mm Clearance |
+|------|----------|------------|-------------------|
+| 8mm | Small cubes (common for resources) | 94px | 118px slot |
+| 10mm | Standard cubes (most Euro games) | 118px | 142px slot |
+| 12mm | Large cubes | 142px | 165px slot |
+
+### Wooden Meeples
+
+| Size | Use Case | At 300 DPI |
+|------|----------|------------|
+| 16mm | Small meeples | 189px |
+| 19mm | Standard meeples (worker placement) | 224px |
+| 25mm | Large meeples | 295px |
+
+### UP SHIP! Component Sizes
+
+This game uses:
+- **10mm cubes** for all resource tracking (stats, gas, income)
+- **Standard meeples (19mm)** for ship tokens
+- **Cube slots**: 12mm with clearance = 142px at 300 DPI
+- **Ship storage slots**: 3cm × 2cm = 354px × 236px at 300 DPI
+
+### Conversion Reference
+
+At 300 DPI:
+- 1 inch = 300px
+- 1 cm = 118px
+- 1 mm = 11.8px
 
 ## Troubleshooting
 

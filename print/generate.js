@@ -6,12 +6,19 @@
  * using Playwright to render HTML templates.
  *
  * Usage:
- *   npm run generate           # Generate all cards
- *   npm run generate:agent     # Generate only agent cards
- *   npm run generate:hazard    # Generate only hazard cards
- *   npm run generate:tech      # Generate only tech cards
- *   npm run generate:mission   # Generate only mission cards
- *   npm run generate:sheets    # Generate print sheets from existing cards
+ *   node generate.js [target]
+ *
+ * Targets:
+ *   (none)      - Generate everything (cards, tiles, boards, sheets)
+ *   cards       - All card types (agent, hazard, tech, mission) + sheets
+ *   boards      - Action board and player boards
+ *   tiles       - Tech tiles + tile sheets
+ *   sheets      - Print sheets only (requires existing cards/tiles)
+ *   agent       - Agent cards only
+ *   hazard      - Hazard cards only
+ *   tech        - Tech cards only
+ *   mission     - Mission cards only
+ *   playerboard - Player boards only
  */
 
 import { chromium } from 'playwright';
@@ -39,12 +46,30 @@ const CARD_HEIGHT = 1050;
 const TILE_WIDTH = 450;
 const TILE_HEIGHT = 285;
 
+// Board dimensions (11" x 8.5" at 300 DPI = Letter, landscape)
+const BOARD_WIDTH = 3300;
+const BOARD_HEIGHT = 2550;
+
+// Player board dimensions (11" x 8.5" at 300 DPI = Letter, landscape)
+const PLAYER_BOARD_WIDTH = 3300;
+const PLAYER_BOARD_HEIGHT = 2550;
+
 // Parse command line arguments
 const args = process.argv.slice(2);
+
+// Support both positional argument and legacy --type= flag
+const positionalArg = args.find(a => !a.startsWith('--'));
 const typeArg = args.find(a => a.startsWith('--type='));
-const cardType = typeArg ? typeArg.split('=')[1] : null;
-const sheetsOnly = args.includes('--sheets-only');
-const tilesOnly = args.includes('--tiles-only');
+const target = positionalArg || (typeArg ? typeArg.split('=')[1] : null);
+
+// Legacy flags (still supported for backwards compatibility)
+const sheetsOnly = target === 'sheets' || args.includes('--sheets-only');
+const tilesOnly = target === 'tiles' || args.includes('--tiles-only');
+const cardsOnly = target === 'cards';
+const boardsOnly = target === 'boards';
+
+// Specific card/component types
+const cardType = ['agent', 'hazard', 'tech', 'mission', 'tile', 'board', 'playerboard'].includes(target) ? target : null;
 
 /**
  * Load card data from server files
@@ -364,6 +389,7 @@ function ensureOutputDirs() {
     join(PATHS.output, 'tiles', 'drive'),
     join(PATHS.output, 'tiles', 'component'),
     join(PATHS.output, 'sheets'),
+    join(PATHS.output, 'boards'),
   ];
 
   for (const dir of dirs) {
@@ -628,12 +654,75 @@ async function generateTileSheets(browser) {
 }
 
 /**
+ * Generate the Action Board
+ */
+async function generateBoard(browser) {
+  console.log('\nGenerating Action Board (8.5" x 11" at 300 DPI)...');
+
+  const page = await browser.newPage();
+  await page.setViewportSize({ width: BOARD_WIDTH, height: BOARD_HEIGHT });
+
+  const templatePath = `file://${join(PATHS.templates, 'action-board.html')}`;
+  await page.goto(templatePath);
+
+  // Wait for content to render
+  await page.waitForTimeout(500);
+
+  const outputPath = join(PATHS.output, 'boards', 'action-board.png');
+  await page.screenshot({
+    path: outputPath,
+    type: 'png',
+  });
+
+  await page.close();
+  console.log(`  Saved to: ${outputPath}`);
+  console.log('Completed Action Board.');
+}
+
+/**
+ * Generate player boards for all factions
+ */
+async function generatePlayerBoards(browser) {
+  console.log('\nGenerating Player Boards (11" x 8.5" at 300 DPI)...');
+
+  const factions = ['germany', 'britain', 'usa', 'italy'];
+
+  const page = await browser.newPage();
+  await page.setViewportSize({ width: PLAYER_BOARD_WIDTH, height: PLAYER_BOARD_HEIGHT });
+
+  const templatePath = `file://${join(PATHS.templates, 'player-board.html')}`;
+  await page.goto(templatePath);
+
+  for (const faction of factions) {
+    // Render the board for this faction
+    await page.evaluate((f) => {
+      window.renderBoard(f);
+    }, faction);
+
+    // Wait for content to render
+    await page.waitForTimeout(200);
+
+    const outputPath = join(PATHS.output, 'boards', `player-board-${faction}.png`);
+    await page.screenshot({
+      path: outputPath,
+      type: 'png',
+    });
+
+    console.log(`  ${faction} -> player-board-${faction}.png`);
+  }
+
+  await page.close();
+  console.log('Completed Player Boards.');
+}
+
+/**
  * Main entry point
  */
 async function main() {
   console.log('UP SHIP! Print Card Generator\n');
   console.log('Card size: 750x1050px (2.5" x 3.5" at 300 DPI)');
   console.log('Tile size: 450x285px (1.5" x 0.95" at 300 DPI)');
+  console.log('Board size: 2550x3300px (8.5" x 11" at 300 DPI)');
   console.log('Output: ' + PATHS.output);
 
   ensureOutputDirs();
@@ -642,14 +731,28 @@ async function main() {
 
   try {
     if (sheetsOnly) {
+      // Sheets only - regenerate from existing card/tile PNGs
       await generateSheets(browser);
       await generateTileSheets(browser);
     } else if (tilesOnly) {
-      // Generate tiles only
+      // Tiles only
       const { tilesBySlot } = loadTileData();
       await generateTiles(browser, tilesBySlot);
       await generateTileSheets(browser);
+    } else if (boardsOnly) {
+      // Boards only (action board + player boards)
+      await generateBoard(browser);
+      await generatePlayerBoards(browser);
+    } else if (cardsOnly) {
+      // Cards only (all card types + card sheets)
+      const { agentCards, hazardCards, techCards, missionCards } = await loadCardData();
+      await generateCards(browser, agentCards, 'agent-card.html', join(PATHS.output, 'cards', 'agent'), 'Agent');
+      await generateCards(browser, hazardCards, 'hazard-card.html', join(PATHS.output, 'cards', 'hazard'), 'Hazard');
+      await generateCards(browser, techCards, 'tech-card.html', join(PATHS.output, 'cards', 'tech'), 'Tech');
+      await generateCards(browser, missionCards, 'mission-card.html', join(PATHS.output, 'cards', 'mission'), 'Mission');
+      await generateSheets(browser);
     } else {
+      // Specific type or everything
       const { agentCards, hazardCards, techCards, missionCards } = await loadCardData();
 
       if (!cardType || cardType === 'agent') {
@@ -698,9 +801,21 @@ async function main() {
         await generateTiles(browser, tilesBySlot);
       }
 
-      // Generate sheets after cards and tiles
-      await generateSheets(browser);
-      await generateTileSheets(browser);
+      // Generate board
+      if (!cardType || cardType === 'board') {
+        await generateBoard(browser);
+      }
+
+      // Generate player boards
+      if (!cardType || cardType === 'playerboard') {
+        await generatePlayerBoards(browser);
+      }
+
+      // Generate sheets after cards and tiles (only when generating everything)
+      if (!cardType) {
+        await generateSheets(browser);
+        await generateTileSheets(browser);
+      }
     }
   } finally {
     await browser.close();
@@ -709,6 +824,8 @@ async function main() {
   console.log('\nGeneration complete!');
   console.log(`Individual cards: ${PATHS.output}/cards/`);
   console.log(`Individual tiles: ${PATHS.output}/tiles/`);
+  console.log(`Boards: ${PATHS.output}/boards/`);
+  console.log(`Player boards: ${PATHS.output}/boards/player-board-*.png`);
   console.log(`Print sheets: ${PATHS.output}/sheets/`);
 }
 
