@@ -328,6 +328,46 @@ python scripts/railway.py health              # Check health endpoint
 ./scripts/fix-encoding.sh [file.md]
 ```
 
+### Print Asset Generator
+
+Generate print-ready cards, tiles, and boards for the physical game:
+
+```bash
+cd print && npm install                # First time setup
+node generate.js                       # Generate everything
+node generate.js cards                 # All cards + card sheets
+node generate.js boards                # Action board + player boards
+node generate.js tiles                 # Tech tiles + tile sheets
+node generate.js sheets                # Rebuild sheets from existing PNGs
+node generate.js agent                 # Specific type (agent/hazard/tech/mission/playerboard)
+```
+
+Output is in `print/output/` (cards, tiles, boards, sheets subdirectories).
+
+### Physical Component Standards
+
+When designing print boards, use these industry-standard sizes for wooden board game components:
+
+**Wooden Cubes (resource markers):**
+| Size | Use Case | At 300 DPI |
+|------|----------|------------|
+| 8mm | Small cubes (common for resources) | 94px |
+
+**Wooden Meeples:**
+| Size | Use Case | At 300 DPI |
+|------|----------|------------|
+| 16mmx10mm | meeples | 189x118pxx |
+
+**Slot Sizing:** Add 2mm clearance around components for easy placement:
+- 8mm cube slot = 10mm = 118px
+- Ship token (3cm × 2cm) = 354px × 236px
+
+**UP SHIP! uses:**
+- 10mm cubes for resources (stats, gas, income tracks)
+- Standard meeples (19mm) for ships
+- Cube slots: 12mm (142px at 300 DPI)
+- Ship storage: 3cm × 2cm (354px × 236px at 300 DPI)
+
 ### Python Playtest Tool (REQUIRED - Never Use CLI)
 
 The Python playtest tool provides autonomous playtesting with 4 strategic bot players.

@@ -6,23 +6,23 @@
 	export let tile: TechTile;
 	export let alreadyOwned: boolean = false;
 
-	// Slot type colors - professional boardgame palette
-	const slotColors: Record<string, { color: string; gradient: string }> = {
+	// Slot type colors - professional boardgame palette (flat colors)
+	const slotColors: Record<string, { color: string; bg: string }> = {
 		frameSlots: {
 			color: '#1d4ed8',
-			gradient: 'linear-gradient(135deg, #dbeafe 0%, #bfdbfe 50%, #93c5fd 100%)'
+			bg: '#bfdbfe'
 		},
 		fabricSlots: {
 			color: '#7c3aed',
-			gradient: 'linear-gradient(135deg, #ede9fe 0%, #ddd6fe 50%, #c4b5fd 100%)'
+			bg: '#ddd6fe'
 		},
 		driveSlots: {
 			color: '#d97706',
-			gradient: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 50%, #fcd34d 100%)'
+			bg: '#fde68a'
 		},
 		componentSlots: {
 			color: '#059669',
-			gradient: 'linear-gradient(135deg, #d1fae5 0%, #a7f3d0 50%, #6ee7b7 100%)'
+			bg: '#a7f3d0'
 		}
 	};
 
@@ -47,14 +47,14 @@
 		return icons;
 	}
 
-	$: slotStyle = slotColors[tile.slotType] || { color: '#666', gradient: '#f5f3ee' };
+	$: slotStyle = slotColors[tile.slotType] || { color: '#666', bg: '#f5f3ee' };
 	$: icons = getIconsList(tile.stats, tile.weight);
 </script>
 
 <div
 	class="tile-box"
 	class:already-owned={alreadyOwned}
-	style="--slot-color: {slotStyle.color}; --slot-gradient: {slotStyle.gradient}"
+	style="--slot-color: {slotStyle.color}; --slot-bg: {slotStyle.bg}"
 	title="{tile.name}"
 >
 	{#if alreadyOwned}
@@ -79,7 +79,7 @@
 		width: 108px;
 		height: 68px;
 		padding: 4px;
-		background: var(--slot-gradient, #f5f3ee);
+		background: var(--slot-bg, #f5f3ee);
 		border: 2px solid var(--slot-color);
 		border-radius: 6px;
 		position: relative;

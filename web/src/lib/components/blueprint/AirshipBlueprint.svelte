@@ -140,11 +140,11 @@
 		]
 	};
 
-	const slotColors = {
-		frame: '#3b82f6',
-		fabric: '#8b5cf6',
-		drive: '#f59e0b',
-		component: '#10b981'
+	const slotColors: Record<string, { border: string; bg: string; text: string }> = {
+		frame: { border: '#1d4ed8', bg: '#bfdbfe', text: '#1d4ed8' },
+		fabric: { border: '#7c3aed', bg: '#ddd6fe', text: '#7c3aed' },
+		drive: { border: '#d97706', bg: '#fde68a', text: '#d97706' },
+		component: { border: '#059669', bg: '#a7f3d0', text: '#059669' }
 	};
 
 	// Get list of stats to display as icons with positioning info
@@ -253,44 +253,44 @@
 			rx="300"
 			ry="95"
 			fill="none"
-			stroke="#475569"
+			stroke="#cbd5e1"
 			stroke-width="3"
 			class="envelope"
 		/>
 
 		<!-- Internal frame lines (structural) -->
-		<line x1="60" y1="120" x2="620" y2="120" stroke="#334155" stroke-width="1.5" stroke-dasharray="8 4" />
-		<line x1="180" y1="35" x2="180" y2="205" stroke="#334155" stroke-width="1" stroke-dasharray="6 3" />
-		<line x1="340" y1="28" x2="340" y2="212" stroke="#334155" stroke-width="1.5" stroke-dasharray="6 3" />
-		<line x1="500" y1="35" x2="500" y2="205" stroke="#334155" stroke-width="1" stroke-dasharray="6 3" />
+		<line x1="60" y1="120" x2="620" y2="120" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="8 4" />
+		<line x1="180" y1="35" x2="180" y2="205" stroke="#94a3b8" stroke-width="1" stroke-dasharray="6 3" />
+		<line x1="340" y1="28" x2="340" y2="212" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="6 3" />
+		<line x1="500" y1="35" x2="500" y2="205" stroke="#94a3b8" stroke-width="1" stroke-dasharray="6 3" />
 
 		<!-- Gondola (passenger/cargo cabin) - larger -->
 		<path
 			d="M 140 200 Q 140 265 200 265 L 420 265 Q 480 265 480 200"
 			fill="none"
-			stroke="#475569"
+			stroke="#cbd5e1"
 			stroke-width="3"
 			class="gondola"
 		/>
 
 		<!-- Gondola windows -->
-		<ellipse cx="220" cy="240" rx="15" ry="10" fill="none" stroke="#64748b" stroke-width="1.5" />
-		<ellipse cx="280" cy="240" rx="15" ry="10" fill="none" stroke="#64748b" stroke-width="1.5" />
-		<ellipse cx="340" cy="240" rx="15" ry="10" fill="none" stroke="#64748b" stroke-width="1.5" />
-		<ellipse cx="400" cy="240" rx="15" ry="10" fill="none" stroke="#64748b" stroke-width="1.5" />
+		<ellipse cx="220" cy="240" rx="15" ry="10" fill="none" stroke="#94a3b8" stroke-width="1.5" />
+		<ellipse cx="280" cy="240" rx="15" ry="10" fill="none" stroke="#94a3b8" stroke-width="1.5" />
+		<ellipse cx="340" cy="240" rx="15" ry="10" fill="none" stroke="#94a3b8" stroke-width="1.5" />
+		<ellipse cx="400" cy="240" rx="15" ry="10" fill="none" stroke="#94a3b8" stroke-width="1.5" />
 
 		<!-- Tail fins - larger -->
 		<path
 			d="M 580 120 L 720 50 L 720 90 L 620 120"
 			fill="none"
-			stroke="#475569"
+			stroke="#cbd5e1"
 			stroke-width="3"
 			class="tail-fin-top"
 		/>
 		<path
 			d="M 580 120 L 720 190 L 720 150 L 620 120"
 			fill="none"
-			stroke="#475569"
+			stroke="#cbd5e1"
 			stroke-width="3"
 			class="tail-fin-bottom"
 		/>
@@ -298,24 +298,24 @@
 		<!-- Vertical stabilizer -->
 		<path
 			d="M 600 120 L 700 120"
-			stroke="#475569"
+			stroke="#cbd5e1"
 			stroke-width="2"
 		/>
 
 		<!-- Propellers at rear - larger -->
 		<g class="propeller-group" transform="translate(735, 70)">
-			<circle r="25" fill="none" stroke="#475569" stroke-width="2" />
-			<line x1="-20" y1="0" x2="20" y2="0" stroke="#64748b" stroke-width="3" class="prop-blade" />
-			<line x1="0" y1="-20" x2="0" y2="20" stroke="#64748b" stroke-width="3" class="prop-blade" />
+			<circle r="25" fill="none" stroke="#cbd5e1" stroke-width="2" />
+			<line x1="-20" y1="0" x2="20" y2="0" stroke="#cbd5e1" stroke-width="3" class="prop-blade" />
+			<line x1="0" y1="-20" x2="0" y2="20" stroke="#cbd5e1" stroke-width="3" class="prop-blade" />
 		</g>
 		<g class="propeller-group" transform="translate(735, 170)">
-			<circle r="25" fill="none" stroke="#475569" stroke-width="2" />
-			<line x1="-20" y1="0" x2="20" y2="0" stroke="#64748b" stroke-width="3" class="prop-blade" />
-			<line x1="0" y1="-20" x2="0" y2="20" stroke="#64748b" stroke-width="3" class="prop-blade" />
+			<circle r="25" fill="none" stroke="#cbd5e1" stroke-width="2" />
+			<line x1="-20" y1="0" x2="20" y2="0" stroke="#cbd5e1" stroke-width="3" class="prop-blade" />
+			<line x1="0" y1="-20" x2="0" y2="20" stroke="#cbd5e1" stroke-width="3" class="prop-blade" />
 		</g>
 
 		<!-- Nose cone -->
-		<ellipse cx="50" cy="120" rx="15" ry="40" fill="none" stroke="#475569" stroke-width="2" />
+		<ellipse cx="50" cy="120" rx="15" ry="40" fill="none" stroke="#cbd5e1" stroke-width="2" />
 
 		<!-- Section Labels -->
 		<text x="340" y="18" text-anchor="middle" font-size="10" fill="#64748b" font-weight="500">ENVELOPE</text>
@@ -343,7 +343,7 @@
 						class="slot"
 						class:filled={upgrade !== null}
 						class:valid-target={isValidTarget('fabric')}
-						style="--slot-color: {slotColors.fabric}"
+						style="--slot-border: {slotColors.fabric.border}; --slot-bg: {slotColors.fabric.bg}; --slot-text: {slotColors.fabric.text}"
 					/>
 					{#if info}
 						<!-- Cost badge (top right) -->
@@ -363,7 +363,7 @@
 						</g>
 						<!-- Name below icons (with text wrapping) -->
 						{@const nameLines = splitName(info.name)}
-						<text x={slotWidth/2} y={nameLines.length > 1 ? 42 : 48} text-anchor="middle" class="slot-name" style="--slot-color: {slotColors.fabric}">
+						<text x={slotWidth/2} y={nameLines.length > 1 ? 42 : 48} text-anchor="middle" class="slot-name" style="--slot-text: {slotColors.fabric.text}">
 							{#each nameLines as line, i}
 								<tspan x={slotWidth/2} dy={i === 0 ? 0 : 10}>{line}</tspan>
 							{/each}
@@ -396,7 +396,7 @@
 						class="slot"
 						class:filled={upgrade !== null}
 						class:valid-target={isValidTarget('frame')}
-						style="--slot-color: {slotColors.frame}"
+						style="--slot-border: {slotColors.frame.border}; --slot-bg: {slotColors.frame.bg}; --slot-text: {slotColors.frame.text}"
 					/>
 					{#if info}
 						<!-- Cost badge (top right) -->
@@ -416,7 +416,7 @@
 						</g>
 						<!-- Name below icons (with text wrapping) -->
 						{@const nameLines = splitName(info.name)}
-						<text x={slotWidth/2} y={nameLines.length > 1 ? 42 : 48} text-anchor="middle" class="slot-name" style="--slot-color: {slotColors.frame}">
+						<text x={slotWidth/2} y={nameLines.length > 1 ? 42 : 48} text-anchor="middle" class="slot-name" style="--slot-text: {slotColors.frame.text}">
 							{#each nameLines as line, i}
 								<tspan x={slotWidth/2} dy={i === 0 ? 0 : 10}>{line}</tspan>
 							{/each}
@@ -449,7 +449,7 @@
 						class="slot"
 						class:filled={upgrade !== null}
 						class:valid-target={isValidTarget('drive')}
-						style="--slot-color: {slotColors.drive}"
+						style="--slot-border: {slotColors.drive.border}; --slot-bg: {slotColors.drive.bg}; --slot-text: {slotColors.drive.text}"
 					/>
 					{#if info}
 						<!-- Cost badge (top right) -->
@@ -469,7 +469,7 @@
 						</g>
 						<!-- Name below icons (with text wrapping) -->
 						{@const nameLines = splitName(info.name)}
-						<text x={slotWidth/2} y={nameLines.length > 1 ? 42 : 48} text-anchor="middle" class="slot-name" style="--slot-color: {slotColors.drive}">
+						<text x={slotWidth/2} y={nameLines.length > 1 ? 42 : 48} text-anchor="middle" class="slot-name" style="--slot-text: {slotColors.drive.text}">
 							{#each nameLines as line, i}
 								<tspan x={slotWidth/2} dy={i === 0 ? 0 : 10}>{line}</tspan>
 							{/each}
@@ -502,7 +502,7 @@
 						class="slot"
 						class:filled={upgrade !== null}
 						class:valid-target={isValidTarget('component')}
-						style="--slot-color: {slotColors.component}"
+						style="--slot-border: {slotColors.component.border}; --slot-bg: {slotColors.component.bg}; --slot-text: {slotColors.component.text}"
 					/>
 					{#if info}
 						<!-- Cost badge (top right) -->
@@ -522,7 +522,7 @@
 						</g>
 						<!-- Name below icons (with text wrapping) -->
 						{@const nameLines = splitName(info.name)}
-						<text x={slotWidth/2} y={nameLines.length > 1 ? 42 : 48} text-anchor="middle" class="slot-name" style="--slot-color: {slotColors.component}">
+						<text x={slotWidth/2} y={nameLines.length > 1 ? 42 : 48} text-anchor="middle" class="slot-name" style="--slot-text: {slotColors.component.text}">
 							{#each nameLines as line, i}
 								<tspan x={slotWidth/2} dy={i === 0 ? 0 : 10}>{line}</tspan>
 							{/each}
@@ -539,10 +539,10 @@
 	<div class="legend">
 		<div class="legend-section">
 			<span class="legend-title">SLOTS:</span>
-			<span class="legend-item" style="--color: {slotColors.fabric}">Fabric</span>
-			<span class="legend-item" style="--color: {slotColors.frame}">Frame</span>
-			<span class="legend-item" style="--color: {slotColors.drive}">Drive</span>
-			<span class="legend-item" style="--color: {slotColors.component}">Component</span>
+			<span class="legend-item" style="--color: {slotColors.fabric.border}">Fabric</span>
+			<span class="legend-item" style="--color: {slotColors.frame.border}">Frame</span>
+			<span class="legend-item" style="--color: {slotColors.drive.border}">Drive</span>
+			<span class="legend-item" style="--color: {slotColors.component.border}">Component</span>
 		</div>
 		<div class="legend-section">
 			<span class="legend-title">STATS:</span>
@@ -671,20 +671,20 @@
 
 	.slot {
 		fill: rgba(30, 41, 59, 0.8);
-		stroke: var(--slot-color);
+		stroke: var(--slot-border);
 		stroke-width: 2;
 		stroke-dasharray: 6 3;
 		transition: all 0.15s ease;
 	}
 
 	.slot-group:hover .slot {
-		fill: color-mix(in srgb, var(--slot-color) 25%, transparent);
+		fill: color-mix(in srgb, var(--slot-bg) 70%, transparent);
 		stroke-dasharray: none;
 		stroke-width: 2.5;
 	}
 
 	.slot.filled {
-		fill: color-mix(in srgb, var(--slot-color) 20%, rgba(30, 41, 59, 0.9));
+		fill: var(--slot-bg);
 		stroke-dasharray: none;
 	}
 
@@ -696,20 +696,19 @@
 
 	@keyframes pulse-target {
 		0%, 100% {
-			fill: color-mix(in srgb, var(--slot-color) 30%, transparent);
+			fill: color-mix(in srgb, var(--slot-bg) 50%, transparent);
 		}
 		50% {
-			fill: color-mix(in srgb, var(--slot-color) 50%, transparent);
+			fill: color-mix(in srgb, var(--slot-bg) 80%, transparent);
 		}
 	}
 
 	.slot-name {
 		font-size: 9px;
-		font-weight: 600;
-		fill: var(--slot-color);
+		font-weight: 700;
+		fill: var(--slot-text);
 		pointer-events: none;
 		font-family: var(--font-sans);
-		opacity: 0.9;
 	}
 
 	.slot-empty {

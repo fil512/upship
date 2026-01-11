@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>UP SHIP! Player Board</title>
+  <title>UP SHIP! Player Board - Blueprint</title>
   <style>
-    /* Player Board Styles - 11" x 8.5" at 300 DPI = 3300 x 2550 px (landscape) */
+    /* Blueprint Board - 11" x 8.5" at 300 DPI = 3300 x 2550 px (landscape) */
 
     * {
       box-sizing: border-box;
@@ -26,29 +26,28 @@
       width: 3300px;
       height: 2550px;
       background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-      padding: 28px;
-      display: grid;
-      grid-template-columns: 1fr 380px;
-      grid-template-rows: auto 1fr auto;
-      gap: 20px;
+      padding: 40px;
+      display: flex;
+      flex-direction: column;
+      gap: 30px;
       color: #e8e4d9;
     }
 
     /* === FACTION HEADER === */
     .faction-header {
-      grid-column: 1 / 3;
       display: flex;
       align-items: center;
-      gap: 24px;
-      padding: 16px 28px;
+      gap: 30px;
+      padding: 20px 40px;
       background: var(--faction-color);
-      border-radius: 14px;
-      border: 4px solid var(--faction-border);
+      border-radius: 16px;
+      border: 5px solid var(--faction-border);
+      flex-shrink: 0;
     }
 
     .faction-flag {
-      width: 90px;
-      height: 60px;
+      width: 120px;
+      height: 80px;
     }
 
     .faction-flag svg {
@@ -59,7 +58,7 @@
     .faction-info { flex: 1; }
 
     .faction-name {
-      font-size: 44px;
+      font-size: 56px;
       font-weight: 800;
       text-transform: uppercase;
       letter-spacing: 0.1em;
@@ -68,56 +67,48 @@
     }
 
     .faction-ability {
-      font-size: 20px;
+      font-size: 26px;
       color: rgba(255,255,255,0.85);
-      margin-top: 4px;
+      margin-top: 6px;
     }
 
     .age-badge {
-      padding: 8px 24px;
-      border-radius: 20px;
-      font-size: 28px;
+      padding: 12px 32px;
+      border-radius: 24px;
+      font-size: 36px;
       font-weight: 700;
       background: rgba(255,255,255,0.2);
       color: white;
-      border: 3px solid rgba(255,255,255,0.4);
+      border: 4px solid rgba(255,255,255,0.4);
     }
 
     .age-badge.age-1 { background: #8B4513; border-color: #A0522D; }
     .age-badge.age-2 { background: #2E7D32; border-color: #4CAF50; }
     .age-badge.age-3 { background: #1565C0; border-color: #2196F3; }
 
-    /* === MAIN CONTENT === */
-    .main-content {
-      grid-column: 1 / 2;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
-
-    /* === BLUEPRINT WITH AIRSHIP SHAPE === */
+    /* === BLUEPRINT SECTION === */
     .blueprint-section {
       background: rgba(30, 41, 59, 0.9);
-      border-radius: 14px;
-      padding: 20px;
-      border: 3px solid #475569;
+      border-radius: 16px;
+      padding: 24px;
+      border: 4px solid #475569;
       flex: 1;
-      position: relative;
+      display: flex;
+      flex-direction: column;
     }
 
     .blueprint-title {
-      font-size: 24px;
+      font-size: 32px;
       font-weight: 700;
       color: #c4a35a;
       text-transform: uppercase;
       letter-spacing: 0.1em;
-      margin-bottom: 12px;
+      margin-bottom: 16px;
     }
 
     .airship-container {
-      position: relative;
-      width: 100%;
-      height: calc(100% - 50px);
+      flex: 1;
+      min-height: 0;
     }
 
     .airship-svg {
@@ -125,12 +116,12 @@
       height: 100%;
     }
 
-    /* Tech tile slots - 450x285px to match printed tiles (1.5" x 0.95") */
+    /* Tech tile slots - scaled in SVG */
     .tile-slot {
       fill: rgba(30, 41, 59, 0.8);
-      stroke-width: 4;
-      stroke-dasharray: 12 6;
-      rx: 8;
+      stroke-width: 5;
+      stroke-dasharray: 15 8;
+      rx: 10;
     }
 
     .tile-slot.frame { stroke: #3b82f6; }
@@ -139,203 +130,50 @@
     .tile-slot.component { stroke: #10b981; }
 
     .slot-label {
-      font-size: 14px;
+      font-size: 24px;
       fill: #64748b;
       text-anchor: middle;
-      font-weight: 500;
-    }
-
-    /* === RIGHT PANEL === */
-    .right-panel {
-      grid-column: 2 / 3;
-      grid-row: 2 / 3;
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-    }
-
-    .panel-section {
-      background: rgba(30, 41, 59, 0.9);
-      border-radius: 14px;
-      padding: 16px;
-      border: 3px solid #475569;
-    }
-
-    .panel-title {
-      font-size: 20px;
-      font-weight: 700;
-      color: #c4a35a;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      margin-bottom: 12px;
-      text-align: center;
-    }
-
-    /* === VERTICAL INCOME TRACKS === */
-    .income-tracks {
-      display: flex;
-      gap: 16px;
-      justify-content: center;
-    }
-
-    .vertical-track {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .track-label {
-      font-size: 14px;
-      font-weight: 600;
-      text-transform: uppercase;
-      writing-mode: horizontal-tb;
-      margin-bottom: 4px;
-    }
-
-    .track-label.officers { color: #a855f7; }
-    .track-label.engineers { color: #f59e0b; }
-    .track-label.research { color: #06b6d4; }
-
-    /* Cube slots - 12mm with clearance = 142px at 300 DPI, scaled for panel */
-    .cube-slot {
-      width: 48px;
-      height: 48px;
-      background: #0f172a;
-      border: 3px solid #334155;
-      border-radius: 6px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 16px;
-      font-weight: 600;
-      color: #475569;
-    }
-
-    .vertical-track.officers .cube-slot { border-color: rgba(168, 85, 247, 0.5); }
-    .vertical-track.engineers .cube-slot { border-color: rgba(245, 158, 11, 0.5); }
-    .vertical-track.research .cube-slot { border-color: rgba(6, 182, 212, 0.5); }
-
-    /* === LIFT/WEIGHT TRACKS (0-15) === */
-    .physics-tracks {
-      display: flex;
-      gap: 24px;
-      justify-content: center;
-    }
-
-    .physics-track {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 4px;
-    }
-
-    .physics-label {
-      font-size: 16px;
-      font-weight: 700;
-      text-transform: uppercase;
-      margin-bottom: 4px;
-    }
-
-    .physics-label.lift { color: #4caf50; }
-    .physics-label.weight { color: #ef4444; }
-
-    .physics-track .cube-slot {
-      width: 44px;
-      height: 44px;
-      font-size: 14px;
-    }
-
-    .physics-track.lift .cube-slot { border-color: rgba(76, 175, 80, 0.5); }
-    .physics-track.weight .cube-slot { border-color: rgba(239, 68, 68, 0.5); }
-
-    /* === GAS STORAGE (single combined area) === */
-    .gas-storage {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .gas-area {
-      background: #0f172a;
-      border: 3px solid #334155;
-      border-radius: 10px;
-      padding: 12px;
-      min-height: 140px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .gas-labels {
-      display: flex;
-      justify-content: center;
-      gap: 24px;
-    }
-
-    .gas-label {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 14px;
       font-weight: 600;
     }
 
-    .gas-label.hydrogen { color: #3b82f6; }
-    .gas-label.helium { color: #e5e7eb; }
-
-    .gas-icon {
-      width: 24px;
-      height: 24px;
-    }
-
-    .gas-icon svg {
-      width: 100%;
-      height: 100%;
-    }
-
-    .gas-cube-area {
-      flex: 1;
-      border: 2px dashed #334155;
-      border-radius: 6px;
-      min-height: 80px;
-    }
-
-    /* === SHIP STATS TABLE === */
+    /* === SHIP STATS SECTION === */
     .stats-section {
       background: rgba(30, 41, 59, 0.9);
-      border-radius: 14px;
-      padding: 16px;
-      border: 3px solid #475569;
+      border-radius: 16px;
+      padding: 24px 40px;
+      border: 4px solid #475569;
+      flex-shrink: 0;
     }
 
     .stats-title {
-      font-size: 20px;
+      font-size: 32px;
       font-weight: 700;
       color: #c4a35a;
       text-transform: uppercase;
-      letter-spacing: 0.08em;
-      margin-bottom: 12px;
+      letter-spacing: 0.1em;
+      margin-bottom: 20px;
     }
 
     .stat-table {
       display: flex;
-      flex-direction: column;
-      gap: 8px;
+      flex-wrap: wrap;
+      gap: 16px;
     }
 
     .stat-row {
       display: flex;
       align-items: center;
-      gap: 10px;
-      padding: 6px 10px;
-      background: rgba(15, 23, 42, 0.4);
-      border-radius: 6px;
+      gap: 16px;
+      padding: 12px 20px;
+      background: rgba(15, 23, 42, 0.5);
+      border-radius: 12px;
+      flex: 0 0 calc(50% - 8px);
     }
 
     .stat-icon {
-      width: 32px;
-      height: 32px;
+      width: 60px;
+      height: 60px;
+      flex-shrink: 0;
     }
 
     .stat-icon svg {
@@ -344,10 +182,11 @@
     }
 
     .stat-name {
-      width: 110px;
-      font-size: 16px;
+      width: 180px;
+      font-size: 28px;
       font-weight: 700;
       text-transform: uppercase;
+      flex-shrink: 0;
     }
 
     .stat-row.speed .stat-name { color: #f59e0b; }
@@ -359,125 +198,37 @@
 
     .stat-cubes {
       display: flex;
-      gap: 6px;
+      gap: 12px;
     }
 
-    .stat-cubes .cube-slot {
-      width: 48px;
-      height: 48px;
-      font-size: 16px;
+    /* Cube slots - 12mm with clearance = 142px at 300 DPI */
+    .cube-slot {
+      width: 142px;
+      height: 142px;
+      background: #0f172a;
+      border: 4px solid #334155;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 48px;
+      font-weight: 700;
+      color: #475569;
     }
 
-    .stat-row.speed .cube-slot { border-color: rgba(245, 158, 11, 0.4); }
-    .stat-row.range .cube-slot { border-color: rgba(59, 130, 246, 0.4); }
-    .stat-row.ceiling .cube-slot { border-color: rgba(156, 163, 175, 0.4); }
-    .stat-row.reliability .cube-slot { border-color: rgba(76, 175, 80, 0.4); }
-    .stat-row.luxury .cube-slot { border-color: rgba(196, 163, 90, 0.4); }
-    .stat-row.armor .cube-slot { border-color: rgba(239, 68, 68, 0.4); }
+    .stat-row.speed .cube-slot { border-color: rgba(245, 158, 11, 0.5); }
+    .stat-row.range .cube-slot { border-color: rgba(59, 130, 246, 0.5); }
+    .stat-row.ceiling .cube-slot { border-color: rgba(156, 163, 175, 0.5); }
+    .stat-row.reliability .cube-slot { border-color: rgba(76, 175, 80, 0.5); }
+    .stat-row.luxury .cube-slot { border-color: rgba(196, 163, 90, 0.5); }
+    .stat-row.armor .cube-slot { border-color: rgba(239, 68, 68, 0.5); }
 
     .stat-note {
-      font-size: 12px;
+      font-size: 20px;
       color: #64748b;
       font-style: italic;
       margin-left: auto;
-    }
-
-    /* === BOTTOM ROW === */
-    .bottom-row {
-      grid-column: 1 / 3;
-      display: flex;
-      gap: 16px;
-    }
-
-    .hangar-section {
-      flex: 1;
-      background: rgba(30, 41, 59, 0.9);
-      border-radius: 14px;
-      padding: 16px;
-      border: 3px solid #475569;
-    }
-
-    .hangar-title {
-      font-size: 18px;
-      font-weight: 700;
-      color: #c4a35a;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      margin-bottom: 10px;
-    }
-
-    .hangar-slots {
-      display: flex;
-      gap: 10px;
-    }
-
-    /* Ship storage: 3cm x 2cm = 354px x 236px at 300 DPI, scaled for display */
-    .hangar-slot {
-      width: 118px;
-      height: 79px;
-      background: #0f172a;
-      border: 3px dashed #475569;
-      border-radius: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .hangar-slot .ship-icon {
-      width: 50px;
-      height: 30px;
-      opacity: 0.3;
-    }
-
-    .hangar-slot .ship-icon svg {
-      width: 100%;
-      height: 100%;
-    }
-
-    .insurance-section {
-      width: 280px;
-      background: rgba(30, 41, 59, 0.9);
-      border-radius: 14px;
-      padding: 16px;
-      border: 3px solid #475569;
-    }
-
-    .insurance-title {
-      font-size: 18px;
-      font-weight: 700;
-      color: #c4a35a;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      margin-bottom: 10px;
-    }
-
-    .insurance-slots {
-      display: flex;
-      gap: 8px;
-    }
-
-    .insurance-slot {
-      flex: 1;
-      height: 70px;
-      background: #0f172a;
-      border: 3px dashed #475569;
-      border-radius: 8px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 4px;
-    }
-
-    .insurance-number {
-      font-size: 20px;
-      font-weight: 700;
-      color: #64748b;
-    }
-
-    .insurance-cost {
-      font-size: 12px;
-      color: #ef4444;
+      white-space: nowrap;
     }
 
     /* === FACTION COLORS === */
@@ -507,14 +258,6 @@
 
   <script>
     const ICONS = {
-      hydrogen: `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-        <rect x="4" y="4" width="16" height="16" rx="2" fill="#3b82f6"/>
-        <text x="12" y="16" text-anchor="middle" font-size="11" font-weight="bold" fill="white">H2</text>
-      </svg>`,
-      helium: `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-        <rect x="4" y="4" width="16" height="16" rx="2" fill="#e5e7eb" stroke="#9ca3af" stroke-width="1"/>
-        <text x="12" y="16" text-anchor="middle" font-size="11" font-weight="bold" fill="#1f2937">He</text>
-      </svg>`,
       speed: `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
         <defs><path id="blade" d="M12 12 C 11 12 10 9 10 5 C 10 3 11 2 12 2 C 13 2 14 3 14 5 C 14 9 13 12 12 12 Z" fill="#f59e0b" stroke="#d97706" stroke-width="0.5"/></defs>
         <use href="#blade"/><use href="#blade" transform="rotate(120 12 12)"/><use href="#blade" transform="rotate(240 12 12)"/>
@@ -538,11 +281,6 @@
       armor: `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
         <path d="M12 2L4 6v5c0 5.5 3.4 10.4 8 12 4.6-1.6 8-6.5 8-12V6l-8-4z" fill="#ef4444" stroke="#dc2626" stroke-width="1"/>
       </svg>`,
-      ship: `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-        <ellipse cx="12" cy="12" rx="10" ry="5" fill="#4b5563"/>
-        <rect x="4" y="11" width="5" height="3" rx="1" fill="#6b7280"/>
-        <rect x="15" y="11" width="5" height="3" rx="1" fill="#6b7280"/>
-      </svg>`,
       germany: `<svg viewBox="0 0 5 3"><rect width="5" height="1" fill="#000"/><rect y="1" width="5" height="1" fill="#D00"/><rect y="2" width="5" height="1" fill="#FFCE00"/></svg>`,
       britain: `<svg viewBox="0 0 60 30"><rect width="60" height="30" fill="#012169"/><path d="M0,0 L60,30 M60,0 L0,30" stroke="#fff" stroke-width="6"/><path d="M0,0 L60,30 M60,0 L0,30" stroke="#C8102E" stroke-width="4"/><path d="M30,0 V30 M0,15 H60" stroke="#fff" stroke-width="10"/><path d="M30,0 V30 M0,15 H60" stroke="#C8102E" stroke-width="6"/></svg>`,
       usa: `<svg viewBox="0 0 190 100"><rect width="190" height="100" fill="#B22234"/><g fill="#fff"><rect y="7.69" width="190" height="7.69"/><rect y="23.08" width="190" height="7.69"/><rect y="38.46" width="190" height="7.69"/><rect y="53.85" width="190" height="7.69"/><rect y="69.23" width="190" height="7.69"/><rect y="84.62" width="190" height="7.69"/></g><rect width="76" height="53.85" fill="#3C3B6E"/></svg>`,
@@ -559,8 +297,6 @@
     const AGE_NAMES = { 1: 'Pioneer Era', 2: 'Great War', 3: 'Golden Age' };
 
     // Slot counts by age and faction
-    // Standard: Age I (2,2,2,2), Age II (2,2,3,3), Age III (3,3,3,4)
-    // Italy: Same except Component is -1 in Ages II & III
     function getSlotCounts(faction, age) {
       const standard = {
         1: { frame: 2, fabric: 2, drive: 2, component: 2 },
@@ -574,77 +310,62 @@
       return counts;
     }
 
-    // Tech tile dimensions: 450x285px (1.5" x 0.95" at 300 DPI)
-    // SVG viewBox 1400x850 renders to fit container
-    const TILE_W = 220;
-    const TILE_H = 139;
+    // Tech tile dimensions in SVG units (will scale with viewBox)
+    // Actual tiles are 450x285px (1.5" x 0.95" at 300 DPI)
+    const TILE_W = 280;
+    const TILE_H = 177;
 
     function renderAirshipBlueprint(faction, age) {
       const slots = getSlotCounts(faction, age);
 
       // Generate fabric slots (top of envelope)
       let fabricSlots = '';
-      const fabricPositions = [
-        { x: 125, y: 185 },
-        { x: 360, y: 185 },
-        { x: 595, y: 185 }
-      ];
+      const fabricStartX = 100;
+      const fabricY = 120;
       for (let i = 0; i < slots.fabric; i++) {
-        const pos = fabricPositions[i];
+        const x = fabricStartX + i * (TILE_W + 20);
         fabricSlots += `
-          <rect x="${pos.x}" y="${pos.y}" width="${TILE_W}" height="${TILE_H}" class="tile-slot fabric"/>
-          <text x="${pos.x + TILE_W/2}" y="${pos.y + TILE_H/2 + 5}" class="slot-label">+ FABRIC</text>
+          <rect x="${x}" y="${fabricY}" width="${TILE_W}" height="${TILE_H}" class="tile-slot fabric"/>
+          <text x="${x + TILE_W/2}" y="${fabricY + TILE_H/2 + 8}" class="slot-label">FABRIC</text>
         `;
       }
 
       // Generate frame slots (central keel)
       let frameSlots = '';
-      const framePositions = [
-        { x: 125, y: 340 },
-        { x: 360, y: 340 },
-        { x: 595, y: 340 }
-      ];
+      const frameY = fabricY + TILE_H + 30;
       for (let i = 0; i < slots.frame; i++) {
-        const pos = framePositions[i];
+        const x = fabricStartX + i * (TILE_W + 20);
         frameSlots += `
-          <rect x="${pos.x}" y="${pos.y}" width="${TILE_W}" height="${TILE_H}" class="tile-slot frame"/>
-          <text x="${pos.x + TILE_W/2}" y="${pos.y + TILE_H/2 + 5}" class="slot-label">+ FRAME</text>
-        `;
-      }
-
-      // Generate drive slots (tail section)
-      let driveSlots = '';
-      const drivePositions = [
-        { x: 950, y: 195 },
-        { x: 950, y: 415 },
-        { x: 835, y: 305 }
-      ];
-      for (let i = 0; i < slots.drive; i++) {
-        const pos = drivePositions[i];
-        driveSlots += `
-          <rect x="${pos.x}" y="${pos.y}" width="${TILE_W}" height="${TILE_H}" class="tile-slot drive"/>
-          <text x="${pos.x + TILE_W/2}" y="${pos.y + TILE_H/2 + 5}" class="slot-label">+ DRIVE</text>
+          <rect x="${x}" y="${frameY}" width="${TILE_W}" height="${TILE_H}" class="tile-slot frame"/>
+          <text x="${x + TILE_W/2}" y="${frameY + TILE_H/2 + 8}" class="slot-label">FRAME</text>
         `;
       }
 
       // Generate component slots (gondola)
       let componentSlots = '';
-      const componentPositions = [
-        { x: 125, y: 535 },
-        { x: 360, y: 535 },
-        { x: 595, y: 535 },
-        { x: 830, y: 535 }
-      ];
+      const componentY = frameY + TILE_H + 30;
       for (let i = 0; i < slots.component; i++) {
-        const pos = componentPositions[i];
+        const x = fabricStartX + i * (TILE_W + 20);
         componentSlots += `
-          <rect x="${pos.x}" y="${pos.y}" width="${TILE_W}" height="${TILE_H}" class="tile-slot component"/>
-          <text x="${pos.x + TILE_W/2}" y="${pos.y + TILE_H/2 + 5}" class="slot-label">+ COMP</text>
+          <rect x="${x}" y="${componentY}" width="${TILE_W}" height="${TILE_H}" class="tile-slot component"/>
+          <text x="${x + TILE_W/2}" y="${componentY + TILE_H/2 + 8}" class="slot-label">COMPONENT</text>
+        `;
+      }
+
+      // Generate drive slots (tail section - vertical stack)
+      let driveSlots = '';
+      const driveX = 1150;
+      const driveStartY = 150;
+      for (let i = 0; i < slots.drive; i++) {
+        const y = driveStartY + i * (TILE_H + 20);
+        driveSlots += `
+          <rect x="${driveX}" y="${y}" width="${TILE_W}" height="${TILE_H}" class="tile-slot drive"/>
+          <text x="${driveX + TILE_W/2}" y="${y + TILE_H/2 + 8}" class="slot-label">DRIVE</text>
         `;
       }
 
       return `
-        <svg viewBox="0 0 1400 850" class="airship-svg" preserveAspectRatio="xMidYMid meet">
+        <svg viewBox="0 0 1500 750" class="airship-svg" preserveAspectRatio="xMidYMid meet">
           <!-- Background -->
           <defs>
             <linearGradient id="skyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
@@ -652,75 +373,51 @@
               <stop offset="100%" style="stop-color:#0f172a"/>
             </linearGradient>
           </defs>
-          <rect width="100%" height="100%" fill="url(#skyGrad)" rx="12"/>
+          <rect width="100%" height="100%" fill="url(#skyGrad)" rx="16"/>
 
-          <!-- Airship envelope (main body) -->
-          <ellipse cx="580" cy="360" rx="520" ry="180" fill="none" stroke="#475569" stroke-width="4" class="envelope"/>
+          <!-- Airship envelope outline -->
+          <ellipse cx="550" cy="320" rx="480" ry="200" fill="none" stroke="#475569" stroke-width="4"/>
 
           <!-- Internal frame lines -->
-          <line x1="80" y1="360" x2="1080" y2="360" stroke="#334155" stroke-width="2" stroke-dasharray="12 6"/>
-          <line x1="300" y1="200" x2="300" y2="520" stroke="#334155" stroke-width="1.5" stroke-dasharray="8 4"/>
-          <line x1="580" y1="185" x2="580" y2="535" stroke="#334155" stroke-width="2" stroke-dasharray="8 4"/>
-          <line x1="860" y1="200" x2="860" y2="520" stroke="#334155" stroke-width="1.5" stroke-dasharray="8 4"/>
+          <line x1="90" y1="320" x2="1010" y2="320" stroke="#334155" stroke-width="2" stroke-dasharray="15 8"/>
+          <line x1="280" y1="130" x2="280" y2="510" stroke="#334155" stroke-width="2" stroke-dasharray="10 5"/>
+          <line x1="550" y1="125" x2="550" y2="515" stroke="#334155" stroke-width="2" stroke-dasharray="10 5"/>
+          <line x1="820" y1="140" x2="820" y2="500" stroke="#334155" stroke-width="2" stroke-dasharray="10 5"/>
 
           <!-- Gondola (cabin) -->
-          <path d="M 220 520 Q 220 680 320 680 L 780 680 Q 880 680 880 520" fill="none" stroke="#475569" stroke-width="4"/>
-
-          <!-- Gondola windows -->
-          <ellipse cx="380" cy="620" rx="25" ry="16" fill="none" stroke="#64748b" stroke-width="2"/>
-          <ellipse cx="480" cy="620" rx="25" ry="16" fill="none" stroke="#64748b" stroke-width="2"/>
-          <ellipse cx="580" cy="620" rx="25" ry="16" fill="none" stroke="#64748b" stroke-width="2"/>
-          <ellipse cx="680" cy="620" rx="25" ry="16" fill="none" stroke="#64748b" stroke-width="2"/>
+          <path d="M 200 510 Q 200 680 320 680 L 780 680 Q 900 680 900 510" fill="none" stroke="#475569" stroke-width="4"/>
 
           <!-- Tail fins -->
-          <path d="M 1000 360 L 1250 200 L 1250 280 L 1080 360" fill="none" stroke="#475569" stroke-width="4"/>
-          <path d="M 1000 360 L 1250 520 L 1250 440 L 1080 360" fill="none" stroke="#475569" stroke-width="4"/>
-          <line x1="1040" y1="360" x2="1220" y2="360" stroke="#475569" stroke-width="3"/>
+          <path d="M 980 320 L 1200 140 L 1200 220 L 1040 320" fill="none" stroke="#475569" stroke-width="4"/>
+          <path d="M 980 320 L 1200 500 L 1200 420 L 1040 320" fill="none" stroke="#475569" stroke-width="4"/>
+          <line x1="1020" y1="320" x2="1150" y2="320" stroke="#475569" stroke-width="3"/>
 
           <!-- Propellers -->
-          <g transform="translate(1280, 240)">
-            <circle r="40" fill="none" stroke="#475569" stroke-width="3"/>
-            <line x1="-30" y1="0" x2="30" y2="0" stroke="#64748b" stroke-width="4"/>
-            <line x1="0" y1="-30" x2="0" y2="30" stroke="#64748b" stroke-width="4"/>
+          <g transform="translate(1230, 180)">
+            <circle r="35" fill="none" stroke="#475569" stroke-width="3"/>
+            <line x1="-25" y1="0" x2="25" y2="0" stroke="#64748b" stroke-width="4"/>
+            <line x1="0" y1="-25" x2="0" y2="25" stroke="#64748b" stroke-width="4"/>
           </g>
-          <g transform="translate(1280, 480)">
-            <circle r="40" fill="none" stroke="#475569" stroke-width="3"/>
-            <line x1="-30" y1="0" x2="30" y2="0" stroke="#64748b" stroke-width="4"/>
-            <line x1="0" y1="-30" x2="0" y2="30" stroke="#64748b" stroke-width="4"/>
+          <g transform="translate(1230, 460)">
+            <circle r="35" fill="none" stroke="#475569" stroke-width="3"/>
+            <line x1="-25" y1="0" x2="25" y2="0" stroke="#64748b" stroke-width="4"/>
+            <line x1="0" y1="-25" x2="0" y2="25" stroke="#64748b" stroke-width="4"/>
           </g>
 
           <!-- Nose cone -->
-          <ellipse cx="70" cy="360" rx="25" ry="70" fill="none" stroke="#475569" stroke-width="3"/>
+          <ellipse cx="80" cy="320" rx="25" ry="80" fill="none" stroke="#475569" stroke-width="3"/>
 
           <!-- Section labels -->
-          <text x="420" y="168" text-anchor="middle" font-size="18" fill="#64748b" font-weight="600">ENVELOPE</text>
-          <text x="450" y="735" text-anchor="middle" font-size="18" fill="#64748b" font-weight="600">GONDOLA</text>
-          <text x="1100" y="365" text-anchor="middle" font-size="18" fill="#64748b" font-weight="600">DRIVE</text>
+          <text x="440" y="95" text-anchor="middle" font-size="26" fill="#64748b" font-weight="600">ENVELOPE</text>
+          <text x="440" y="720" text-anchor="middle" font-size="26" fill="#64748b" font-weight="600">GONDOLA</text>
+          <text x="1290" y="325" text-anchor="middle" font-size="26" fill="#64748b" font-weight="600">DRIVE</text>
 
           <!-- Tech tile slots -->
           ${fabricSlots}
           ${frameSlots}
-          ${driveSlots}
           ${componentSlots}
+          ${driveSlots}
         </svg>
-      `;
-    }
-
-    function renderVerticalTrack(values, label, cssClass) {
-      return `
-        <div class="vertical-track ${cssClass}">
-          <span class="track-label ${cssClass}">${label}</span>
-          ${values.map(v => `<div class="cube-slot">${v}</div>`).join('')}
-        </div>
-      `;
-    }
-
-    function renderPhysicsTrack(values, label, cssClass) {
-      return `
-        <div class="physics-track ${cssClass}">
-          <span class="physics-label ${cssClass}">${label}</span>
-          ${values.map(v => `<div class="cube-slot">${v}</div>`).join('')}
-        </div>
       `;
     }
 
@@ -728,6 +425,18 @@
       const data = FACTION_DATA[faction];
       const board = document.getElementById('board');
       board.className = `player-board ${faction}`;
+
+      // Only show Armor stat in Age 2
+      const armorRow = age === 2 ? `
+        <div class="stat-row armor">
+          <div class="stat-icon">${ICONS.armor}</div>
+          <div class="stat-name">Armor</div>
+          <div class="stat-cubes">
+            ${[1,2,3,4].map(n => `<div class="cube-slot">${n}</div>`).join('')}
+          </div>
+          <span class="stat-note">flak defense</span>
+        </div>
+      ` : '';
 
       board.innerHTML = `
         <!-- Faction Header -->
@@ -740,132 +449,59 @@
           <div class="age-badge age-${age}">Age ${['I','II','III'][age-1]}: ${AGE_NAMES[age]}</div>
         </div>
 
-        <!-- Main Content -->
-        <div class="main-content">
-          <!-- Blueprint with Airship Shape -->
-          <div class="blueprint-section">
-            <div class="blueprint-title">Blueprint</div>
-            <div class="airship-container">
-              ${renderAirshipBlueprint(faction, age)}
-            </div>
-          </div>
-
-          <!-- Ship Stats -->
-          <div class="stats-section">
-            <div class="stats-title">Ship Stats</div>
-            <div class="stat-table">
-              <div class="stat-row speed">
-                <div class="stat-icon">${ICONS.speed}</div>
-                <div class="stat-name">Speed</div>
-                <div class="stat-cubes">
-                  ${[1,2,3,4,5].map(n => `<div class="cube-slot">${n}</div>`).join('')}
-                </div>
-                <span class="stat-note">min 1</span>
-              </div>
-              <div class="stat-row range">
-                <div class="stat-icon">${ICONS.range}</div>
-                <div class="stat-name">Range</div>
-                <div class="stat-cubes">
-                  ${[1,2,3,4,5].map(n => `<div class="cube-slot">${n}</div>`).join('')}
-                </div>
-                <span class="stat-note">min 1</span>
-              </div>
-              <div class="stat-row ceiling">
-                <div class="stat-icon">${ICONS.ceiling}</div>
-                <div class="stat-name">Ceiling</div>
-                <div class="stat-cubes">
-                  ${[1,2,3,4,5].map(n => `<div class="cube-slot">${n}</div>`).join('')}
-                </div>
-                <span class="stat-note">route req</span>
-              </div>
-              <div class="stat-row reliability">
-                <div class="stat-icon">${ICONS.reliability}</div>
-                <div class="stat-name">Reliability</div>
-                <div class="stat-cubes">
-                  ${[1,2,3,4,5].map(n => `<div class="cube-slot">${n}</div>`).join('')}
-                </div>
-                <span class="stat-note">hazard</span>
-              </div>
-              <div class="stat-row luxury">
-                <div class="stat-icon">${ICONS.luxury}</div>
-                <div class="stat-name">Luxury</div>
-                <div class="stat-cubes">
-                  ${[1,2,3,4,5].map(n => `<div class="cube-slot">${n}</div>`).join('')}
-                </div>
-                <span class="stat-note">Age III</span>
-              </div>
-              ${age === 2 ? `
-              <div class="stat-row armor">
-                <div class="stat-icon">${ICONS.armor}</div>
-                <div class="stat-name">Armor</div>
-                <div class="stat-cubes">
-                  ${[1,2,3,4].map(n => `<div class="cube-slot">${n}</div>`).join('')}
-                </div>
-                <span class="stat-note">flak</span>
-              </div>
-              ` : ''}
-            </div>
+        <!-- Blueprint with Airship Shape -->
+        <div class="blueprint-section">
+          <div class="blueprint-title">Blueprint</div>
+          <div class="airship-container">
+            ${renderAirshipBlueprint(faction, age)}
           </div>
         </div>
 
-        <!-- Right Panel -->
-        <div class="right-panel">
-          <!-- Income Tracks (vertical) -->
-          <div class="panel-section">
-            <div class="panel-title">Income Tracks</div>
-            <div class="income-tracks">
-              ${renderVerticalTrack([1,2,3,4,5], 'Officer', 'officers')}
-              ${renderVerticalTrack([1,2,3,4,5], 'Engineer', 'engineers')}
-              ${renderVerticalTrack([1,2,3,4,5], 'Research', 'research')}
-            </div>
-          </div>
-
-          <!-- Lift/Weight Tracks (0-15) -->
-          <div class="panel-section">
-            <div class="panel-title">Lift / Weight</div>
-            <div class="physics-tracks">
-              ${renderPhysicsTrack([0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15], 'Lift', 'lift')}
-              ${renderPhysicsTrack([0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15], 'Weight', 'weight')}
-            </div>
-          </div>
-
-          <!-- Gas Storage (combined area) -->
-          <div class="panel-section">
-            <div class="panel-title">Gas Storage</div>
-            <div class="gas-storage">
-              <div class="gas-area">
-                <div class="gas-labels">
-                  <div class="gas-label hydrogen">
-                    <div class="gas-icon">${ICONS.hydrogen}</div>
-                    <span>Hydrogen (blue)</span>
-                  </div>
-                  <div class="gas-label helium">
-                    <div class="gas-icon">${ICONS.helium}</div>
-                    <span>Helium (white)</span>
-                  </div>
-                </div>
-                <div class="gas-cube-area"></div>
+        <!-- Ship Stats -->
+        <div class="stats-section">
+          <div class="stats-title">Ship Stats</div>
+          <div class="stat-table">
+            <div class="stat-row speed">
+              <div class="stat-icon">${ICONS.speed}</div>
+              <div class="stat-name">Speed</div>
+              <div class="stat-cubes">
+                ${[1,2,3,4,5].map(n => `<div class="cube-slot">${n}</div>`).join('')}
               </div>
+              <span class="stat-note">min 1 required</span>
             </div>
-          </div>
-        </div>
-
-        <!-- Bottom Row -->
-        <div class="bottom-row">
-          <div class="hangar-section">
-            <div class="hangar-title">Hangar (max 6 ships)</div>
-            <div class="hangar-slots">
-              ${[1,2,3,4,5,6].map(() => `<div class="hangar-slot"><div class="ship-icon">${ICONS.ship}</div></div>`).join('')}
+            <div class="stat-row range">
+              <div class="stat-icon">${ICONS.range}</div>
+              <div class="stat-name">Range</div>
+              <div class="stat-cubes">
+                ${[1,2,3,4,5].map(n => `<div class="cube-slot">${n}</div>`).join('')}
+              </div>
+              <span class="stat-note">min 1 required</span>
             </div>
-          </div>
-
-          <div class="insurance-section">
-            <div class="insurance-title">Insurance</div>
-            <div class="insurance-slots">
-              <div class="insurance-slot"><div class="insurance-number">1</div><div class="insurance-cost">-1 Inc</div></div>
-              <div class="insurance-slot"><div class="insurance-number">2</div><div class="insurance-cost">-1 Inc</div></div>
-              <div class="insurance-slot"><div class="insurance-number">3</div><div class="insurance-cost">-1 Inc</div></div>
+            <div class="stat-row ceiling">
+              <div class="stat-icon">${ICONS.ceiling}</div>
+              <div class="stat-name">Ceiling</div>
+              <div class="stat-cubes">
+                ${[1,2,3,4,5].map(n => `<div class="cube-slot">${n}</div>`).join('')}
+              </div>
+              <span class="stat-note">route requirement</span>
             </div>
+            <div class="stat-row reliability">
+              <div class="stat-icon">${ICONS.reliability}</div>
+              <div class="stat-name">Reliability</div>
+              <div class="stat-cubes">
+                ${[1,2,3,4,5].map(n => `<div class="cube-slot">${n}</div>`).join('')}
+              </div>
+              <span class="stat-note">hazard checks</span>
+            </div>
+            <div class="stat-row luxury">
+              <div class="stat-icon">${ICONS.luxury}</div>
+              <div class="stat-name">Luxury</div>
+              <div class="stat-cubes">
+                ${[1,2,3,4,5].map(n => `<div class="cube-slot">${n}</div>`).join('')}
+              </div>
+              <span class="stat-note">Age III bonus</span>
+            </div>
+            ${armorRow}
           </div>
         </div>
       `;

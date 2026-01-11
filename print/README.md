@@ -15,7 +15,7 @@ npm run generate boards   # Generate all boards
 Output files will be in `output/`:
 - `output/cards/` - Individual card PNGs (750×1050px)
 - `output/tiles/` - Tech tile PNGs (450×285px)
-- `output/boards/` - Action board and player boards
+- `output/boards/` - Action board and player boards (12 boards: 4 factions × 3 ages)
 - `output/sheets/` - Print sheets (9 cards per letter page)
 
 ## Prerequisites
