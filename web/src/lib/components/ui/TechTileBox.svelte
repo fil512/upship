@@ -6,23 +6,23 @@
 	export let tile: TechTile;
 	export let alreadyOwned: boolean = false;
 
-	// Slot type colors - professional boardgame palette (flat colors)
+	// Slot type colors - professional boardgame palette with gradients
 	const slotColors: Record<string, { color: string; bg: string }> = {
 		frameSlots: {
 			color: '#1d4ed8',
-			bg: '#bfdbfe'
+			bg: 'linear-gradient(135deg, #dbeafe 0%, #bfdbfe 50%, #93c5fd 100%)'
 		},
 		fabricSlots: {
 			color: '#7c3aed',
-			bg: '#ddd6fe'
+			bg: 'linear-gradient(135deg, #ede9fe 0%, #ddd6fe 50%, #c4b5fd 100%)'
 		},
 		driveSlots: {
 			color: '#d97706',
-			bg: '#fde68a'
+			bg: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 50%, #fcd34d 100%)'
 		},
 		componentSlots: {
 			color: '#059669',
-			bg: '#a7f3d0'
+			bg: 'linear-gradient(135deg, #d1fae5 0%, #a7f3d0 50%, #6ee7b7 100%)'
 		}
 	};
 

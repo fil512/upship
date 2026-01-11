@@ -140,11 +140,11 @@
 		]
 	};
 
-	const slotColors: Record<string, { border: string; bg: string; text: string }> = {
-		frame: { border: '#1d4ed8', bg: '#bfdbfe', text: '#1d4ed8' },
-		fabric: { border: '#7c3aed', bg: '#ddd6fe', text: '#7c3aed' },
-		drive: { border: '#d97706', bg: '#fde68a', text: '#d97706' },
-		component: { border: '#059669', bg: '#a7f3d0', text: '#059669' }
+	const slotColors: Record<string, { border: string; bg: string; gradient: string; text: string }> = {
+		frame: { border: '#1d4ed8', bg: '#bfdbfe', gradient: 'url(#frameGradient)', text: '#1d4ed8' },
+		fabric: { border: '#7c3aed', bg: '#ddd6fe', gradient: 'url(#fabricGradient)', text: '#7c3aed' },
+		drive: { border: '#d97706', bg: '#fde68a', gradient: 'url(#driveGradient)', text: '#d97706' },
+		component: { border: '#059669', bg: '#a7f3d0', gradient: 'url(#componentGradient)', text: '#059669' }
 	};
 
 	// Get list of stats to display as icons with positioning info
@@ -232,6 +232,27 @@
 			<linearGradient id="skyGradient" x1="0%" y1="0%" x2="0%" y2="100%">
 				<stop offset="0%" style="stop-color:#1e293b;stop-opacity:1" />
 				<stop offset="100%" style="stop-color:#0f172a;stop-opacity:1" />
+			</linearGradient>
+			<!-- Slot type gradients (135deg diagonal) -->
+			<linearGradient id="frameGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+				<stop offset="0%" stop-color="#dbeafe" />
+				<stop offset="50%" stop-color="#bfdbfe" />
+				<stop offset="100%" stop-color="#93c5fd" />
+			</linearGradient>
+			<linearGradient id="fabricGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+				<stop offset="0%" stop-color="#ede9fe" />
+				<stop offset="50%" stop-color="#ddd6fe" />
+				<stop offset="100%" stop-color="#c4b5fd" />
+			</linearGradient>
+			<linearGradient id="driveGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+				<stop offset="0%" stop-color="#fef3c7" />
+				<stop offset="50%" stop-color="#fde68a" />
+				<stop offset="100%" stop-color="#fcd34d" />
+			</linearGradient>
+			<linearGradient id="componentGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+				<stop offset="0%" stop-color="#d1fae5" />
+				<stop offset="50%" stop-color="#a7f3d0" />
+				<stop offset="100%" stop-color="#6ee7b7" />
 			</linearGradient>
 		</defs>
 		<rect width="100%" height="100%" fill="url(#skyGradient)" rx="8" />
@@ -343,7 +364,8 @@
 						class="slot"
 						class:filled={upgrade !== null}
 						class:valid-target={isValidTarget('fabric')}
-						style="--slot-border: {slotColors.fabric.border}; --slot-bg: {slotColors.fabric.bg}; --slot-text: {slotColors.fabric.text}"
+						fill={upgrade !== null ? 'url(#fabricGradient)' : 'rgba(30, 41, 59, 0.8)'}
+						stroke={slotColors.fabric.border}
 					/>
 					{#if info}
 						<!-- Cost badge (top right) -->
@@ -363,7 +385,7 @@
 						</g>
 						<!-- Name below icons (with text wrapping) -->
 						{@const nameLines = splitName(info.name)}
-						<text x={slotWidth/2} y={nameLines.length > 1 ? 42 : 48} text-anchor="middle" class="slot-name" style="--slot-text: {slotColors.fabric.text}">
+						<text x={slotWidth/2} y={nameLines.length > 1 ? 42 : 48} text-anchor="middle" class="slot-name" fill={slotColors.fabric.text}>
 							{#each nameLines as line, i}
 								<tspan x={slotWidth/2} dy={i === 0 ? 0 : 10}>{line}</tspan>
 							{/each}
@@ -396,7 +418,8 @@
 						class="slot"
 						class:filled={upgrade !== null}
 						class:valid-target={isValidTarget('frame')}
-						style="--slot-border: {slotColors.frame.border}; --slot-bg: {slotColors.frame.bg}; --slot-text: {slotColors.frame.text}"
+						fill={upgrade !== null ? 'url(#frameGradient)' : 'rgba(30, 41, 59, 0.8)'}
+						stroke={slotColors.frame.border}
 					/>
 					{#if info}
 						<!-- Cost badge (top right) -->
@@ -416,7 +439,7 @@
 						</g>
 						<!-- Name below icons (with text wrapping) -->
 						{@const nameLines = splitName(info.name)}
-						<text x={slotWidth/2} y={nameLines.length > 1 ? 42 : 48} text-anchor="middle" class="slot-name" style="--slot-text: {slotColors.frame.text}">
+						<text x={slotWidth/2} y={nameLines.length > 1 ? 42 : 48} text-anchor="middle" class="slot-name" fill={slotColors.frame.text}>
 							{#each nameLines as line, i}
 								<tspan x={slotWidth/2} dy={i === 0 ? 0 : 10}>{line}</tspan>
 							{/each}
@@ -449,7 +472,8 @@
 						class="slot"
 						class:filled={upgrade !== null}
 						class:valid-target={isValidTarget('drive')}
-						style="--slot-border: {slotColors.drive.border}; --slot-bg: {slotColors.drive.bg}; --slot-text: {slotColors.drive.text}"
+						fill={upgrade !== null ? 'url(#driveGradient)' : 'rgba(30, 41, 59, 0.8)'}
+						stroke={slotColors.drive.border}
 					/>
 					{#if info}
 						<!-- Cost badge (top right) -->
@@ -469,7 +493,7 @@
 						</g>
 						<!-- Name below icons (with text wrapping) -->
 						{@const nameLines = splitName(info.name)}
-						<text x={slotWidth/2} y={nameLines.length > 1 ? 42 : 48} text-anchor="middle" class="slot-name" style="--slot-text: {slotColors.drive.text}">
+						<text x={slotWidth/2} y={nameLines.length > 1 ? 42 : 48} text-anchor="middle" class="slot-name" fill={slotColors.drive.text}>
 							{#each nameLines as line, i}
 								<tspan x={slotWidth/2} dy={i === 0 ? 0 : 10}>{line}</tspan>
 							{/each}
@@ -502,7 +526,8 @@
 						class="slot"
 						class:filled={upgrade !== null}
 						class:valid-target={isValidTarget('component')}
-						style="--slot-border: {slotColors.component.border}; --slot-bg: {slotColors.component.bg}; --slot-text: {slotColors.component.text}"
+						fill={upgrade !== null ? 'url(#componentGradient)' : 'rgba(30, 41, 59, 0.8)'}
+						stroke={slotColors.component.border}
 					/>
 					{#if info}
 						<!-- Cost badge (top right) -->
@@ -522,7 +547,7 @@
 						</g>
 						<!-- Name below icons (with text wrapping) -->
 						{@const nameLines = splitName(info.name)}
-						<text x={slotWidth/2} y={nameLines.length > 1 ? 42 : 48} text-anchor="middle" class="slot-name" style="--slot-text: {slotColors.component.text}">
+						<text x={slotWidth/2} y={nameLines.length > 1 ? 42 : 48} text-anchor="middle" class="slot-name" fill={slotColors.component.text}>
 							{#each nameLines as line, i}
 								<tspan x={slotWidth/2} dy={i === 0 ? 0 : 10}>{line}</tspan>
 							{/each}
@@ -670,43 +695,28 @@
 	}
 
 	.slot {
-		fill: rgba(30, 41, 59, 0.8);
-		stroke: var(--slot-border);
 		stroke-width: 2;
 		stroke-dasharray: 6 3;
-		transition: all 0.15s ease;
+		transition: stroke-width 0.15s ease, stroke-dasharray 0.15s ease;
 	}
 
 	.slot-group:hover .slot {
-		fill: color-mix(in srgb, var(--slot-bg) 70%, transparent);
 		stroke-dasharray: none;
 		stroke-width: 2.5;
 	}
 
 	.slot.filled {
-		fill: var(--slot-bg);
 		stroke-dasharray: none;
 	}
 
 	.slot.valid-target {
 		stroke-width: 3;
 		stroke-dasharray: none;
-		animation: pulse-target 1s ease-in-out infinite;
-	}
-
-	@keyframes pulse-target {
-		0%, 100% {
-			fill: color-mix(in srgb, var(--slot-bg) 50%, transparent);
-		}
-		50% {
-			fill: color-mix(in srgb, var(--slot-bg) 80%, transparent);
-		}
 	}
 
 	.slot-name {
 		font-size: 9px;
 		font-weight: 700;
-		fill: var(--slot-text);
 		pointer-events: none;
 		font-family: var(--font-sans);
 	}

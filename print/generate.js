@@ -677,16 +677,20 @@ async function generateBoard(browser) {
   console.log(`  Saved to: ${outputPath}`);
 
   // Generate Helium Board
-  console.log('\nGenerating Helium Board (8.5" x 11" at 300 DPI)...');
+  console.log('\nGenerating Helium Board (8.5" x 11" at 300 DPI - Portrait)...');
+  const heliumPage = await browser.newPage();
+  await heliumPage.setViewportSize({ width: BOARD_HEIGHT, height: BOARD_WIDTH }); // Portrait: swap width/height
+
   const heliumTemplatePath = `file://${join(PATHS.templates, 'helium-board.html')}`;
-  await page.goto(heliumTemplatePath);
-  await page.waitForTimeout(500);
+  await heliumPage.goto(heliumTemplatePath);
+  await heliumPage.waitForTimeout(500);
   const heliumOutputPath = join(PATHS.output, 'boards', 'helium-board.png');
-  await page.screenshot({
+  await heliumPage.screenshot({
     path: heliumOutputPath,
     type: 'png',
   });
   console.log(`  Saved to: ${heliumOutputPath}`);
+  await heliumPage.close();
 
   await page.close();
   console.log('Completed Boards.');
