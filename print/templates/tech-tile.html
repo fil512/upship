@@ -58,14 +58,15 @@
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
     }
 
-    /* Icons area - centered */
+    /* Icons area - left justified, max 4 per row */
     .tile-icons {
       display: flex;
       flex-wrap: wrap;
-      justify-content: center;
-      align-items: center;
+      justify-content: flex-start;
+      align-items: flex-start;
+      align-content: center;
       gap: 12px;
-      max-width: 380px;
+      max-width: 292px; /* 4 icons (64px each) + 3 gaps (12px each) = 292px */
       flex: 1;
       padding-top: 12px;
     }

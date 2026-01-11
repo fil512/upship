@@ -93,6 +93,7 @@ const TECH_CARD_TO_IMAGE: Record<string, string> = {
 	'Trapeze System': 'sparrowhawk_hangar',
 	'Radio Equipment': 'communications_suite',
 	'Armored Gondola': 'light_armor_plating',
+	'Pressurized Cabin': 'pressurized_cabin_tech',
 	'Reinforced Hull': 'heavy_armor_plating',
 	'Luxury Accommodation': 'luxury_cabin',
 	'Dining Saloon': 'dining_saloon', // Same name

@@ -1,6 +1,6 @@
 # Generate Printable Map
 
-Capture a game map from the browser and create a print-ready PDF that spans two 8.5x11" sheets with overlap for easy alignment.
+Capture a game map from the browser and create a print-ready PDF that spans four 8.5x11" sheets (2x2 grid) with overlap for easy alignment.
 
 Arguments: $ARGUMENTS
 
@@ -110,39 +110,16 @@ mcp__chrome-devtools__take_screenshot fullPage=true filePath="print/output/maps/
 
 ### Step 7: Process the Image
 
-After capturing, run these commands to split and create the PDF:
+After capturing, use the map_to_pdf.sh script to split and create the PDF:
 
 ```bash
-cd print/output/maps
-
-# Get image dimensions
-identify age{N}-map.png
-
-# For a ~3840px wide image, split at midpoint with 150px (0.5") overlap
-# Left piece: 0 to midpoint+150
-# Right piece: midpoint-150 to end
-
-WIDTH=$(identify -format "%w" age{N}-map.png)
-HEIGHT=$(identify -format "%h" age{N}-map.png)
-MIDPOINT=$((WIDTH / 2))
-OVERLAP=150
-
-# Create left half with overlap
-magick age{N}-map.png -crop $((MIDPOINT + OVERLAP))x${HEIGHT}+0+0 +repage age{N}-map-left.png
-
-# Create right half with overlap
-magick age{N}-map.png -crop $((MIDPOINT + OVERLAP))x${HEIGHT}+$((MIDPOINT - OVERLAP))+0 +repage age{N}-map-right.png
-
-# Create print-ready PDF (letter landscape: 11x8.5" = 3300x2550px at 300dpi)
-magick age{N}-map-left.png -resize 3000x2400 -gravity center -extent 3300x2550 \
-  -units PixelsPerInch -density 300 page1.pdf
-magick age{N}-map-right.png -resize 3000x2400 -gravity center -extent 3300x2550 \
-  -units PixelsPerInch -density 300 page2.pdf
-magick page1.pdf page2.pdf age{N}-map-print.pdf
-rm page1.pdf page2.pdf
-
-echo "Created: age{N}-map-print.pdf"
+./scripts/map_to_pdf.sh print/output/maps/age{N}-map.png
 ```
+
+This script will:
+1. Split the image into 4 quadrants (2x2 grid) with 0.5" overlap on all edges
+2. Create letter-sized landscape PDF pages at 300 DPI
+3. Combine into a single 4-page PDF
 
 ## Output Files
 
@@ -151,18 +128,28 @@ After completion, you'll have:
 ```
 print/output/maps/
   age{N}-map.png        # Original full capture
-  age{N}-map-left.png   # Left half with overlap
-  age{N}-map-right.png  # Right half with overlap
-  age{N}-map-print.pdf  # 2-page print-ready PDF
+  age{N}-map-tl.png     # Top-left quadrant
+  age{N}-map-tr.png     # Top-right quadrant
+  age{N}-map-bl.png     # Bottom-left quadrant
+  age{N}-map-br.png     # Bottom-right quadrant
+  age{N}-map-print.pdf  # 4-page print-ready PDF
 ```
 
 ## Printing Instructions
 
 1. Open the PDF in Preview
-2. Print both pages on 8.5x11" paper (landscape orientation is built-in)
-3. The two halves overlap by 0.5" in the middle
-4. Cut along one edge of the overlap on the right sheet
-5. Align the matching imagery and tape from behind
+2. Print all 4 pages on 8.5x11" paper (landscape orientation is built-in)
+3. Arrange pages in a 2x2 grid:
+   ```
+   +------+------+
+   | p1   | p2   |  (top-left, top-right)
+   +------+------+
+   | p3   | p4   |  (bottom-left, bottom-right)
+   +------+------+
+   ```
+4. Pages overlap by 0.5" on all edges
+5. Trim overlap from right edge of p1/p3 and bottom edge of p1/p2
+6. Align the matching imagery and tape from behind
 
 ## Map Dimensions Reference
 

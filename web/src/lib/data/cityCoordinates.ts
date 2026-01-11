@@ -63,34 +63,34 @@ export const AGE_I_CITIES: Record<string, CityPosition> = {
  */
 export const AGE_III_CITIES: Record<string, CityPosition> = {
   // North America - West Coast
-  'San Francisco': { x: 190, y: 180, labelPosition: 'left' },
+  'San Francisco': { x: 150, y: 140, labelPosition: 'left' },  // moved northwest
   'Los Angeles': { x: 230, y: 280, labelPosition: 'left' },
   'Honolulu': { x: 170, y: 480, labelPosition: 'left' },
 
   // North America - Central/East
-  'Chicago': { x: 330, y: 160, labelPosition: 'top' },
-  'New York': { x: 470, y: 180, labelPosition: 'top' },
-  'Lakehurst': { x: 510, y: 260, labelPosition: 'right' },
+  'Chicago': { x: 330, y: 120, labelPosition: 'top' },  // moved north
+  'New York': { x: 520, y: 180, labelPosition: 'top' },  // moved east
+  'Lakehurst': { x: 560, y: 260, labelPosition: 'right' },  // moved east
   'Miami': { x: 450, y: 380, labelPosition: 'right' },
 
   // Caribbean
-  'Havana': { x: 410, y: 460, labelPosition: 'left' },
+  'Havana': { x: 370, y: 500, labelPosition: 'left' },  // moved southwest
 
   // South America
-  'Manaus': { x: 550, y: 540, labelPosition: 'left' },
-  'Recife': { x: 710, y: 520, labelPosition: 'right' },
-  'Rio de Janeiro': { x: 650, y: 620, labelPosition: 'bottom' },
-  'Buenos Aires': { x: 590, y: 740, labelPosition: 'left' },
-  'Valparaiso': { x: 490, y: 740, labelPosition: 'left' },
+  'Manaus': { x: 500, y: 500, labelPosition: 'left' },  // moved northwest
+  'Recife': { x: 700, y: 480, labelPosition: 'right' },  // moved west
+  'Rio de Janeiro': { x: 650, y: 620, labelPosition: 'right' },  // label moved east
+  'Buenos Aires': { x: 590, y: 740, labelPosition: 'right' },  // label moved east
+  'Valparaiso': { x: 360, y: 740, labelPosition: 'left' },  // moved quite a bit west
 
   // Europe
   'London': { x: 910, y: 200, labelPosition: 'top' },
   'Berlin': { x: 1050, y: 180, labelPosition: 'top' },
-  'Frankfurt': { x: 1010, y: 280, labelPosition: 'left' },
-  'Friedrichshafen': { x: 1050, y: 380, labelPosition: 'right' },
-  'Rome': { x: 1130, y: 480, labelPosition: 'right' },
+  'Frankfurt': { x: 920, y: 320, labelPosition: 'left' },  // moved southwest
+  'Friedrichshafen': { x: 990, y: 380, labelPosition: 'bottom' },  // label below
+  'Rome': { x: 1030, y: 530, labelPosition: 'left' },  // moved further west
   'Oslo': { x: 990, y: 80, labelPosition: 'left' },
-  'Svalbard': { x: 1110, y: 60, labelPosition: 'right' },
+  'Svalbard': { x: 1200, y: 60, labelPosition: 'right' },  // moved further east
 
   // Africa/Middle East
   'Cairo': { x: 1230, y: 580, labelPosition: 'right' }

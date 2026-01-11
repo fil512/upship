@@ -26,10 +26,10 @@
       width: 3300px;
       height: 2550px;
       background: #ffffff;
-      padding: 40px;
+      padding: 30px;
       display: flex;
       flex-direction: column;
-      gap: 24px;
+      gap: 20px;
       color: #1a1a1a;
     }
 
@@ -38,7 +38,7 @@
       display: flex;
       align-items: center;
       gap: 30px;
-      padding: 16px 40px;
+      padding: 12px 40px;
       background: var(--faction-color);
       border-radius: 16px;
       border: 5px solid var(--faction-border);
@@ -46,8 +46,8 @@
     }
 
     .faction-flag {
-      width: 100px;
-      height: 66px;
+      width: 80px;
+      height: 53px;
     }
 
     .faction-flag svg {
@@ -58,7 +58,7 @@
     .faction-info { flex: 1; }
 
     .faction-name {
-      font-size: 48px;
+      font-size: 42px;
       font-weight: 800;
       text-transform: uppercase;
       letter-spacing: 0.1em;
@@ -67,15 +67,15 @@
     }
 
     .faction-ability {
-      font-size: 22px;
+      font-size: 20px;
       color: rgba(255,255,255,0.85);
-      margin-top: 4px;
+      margin-top: 2px;
     }
 
     .age-badge {
-      padding: 10px 28px;
-      border-radius: 20px;
-      font-size: 32px;
+      padding: 8px 24px;
+      border-radius: 16px;
+      font-size: 28px;
       font-weight: 700;
       background: rgba(255,255,255,0.2);
       color: white;
@@ -88,94 +88,122 @@
 
     /* === BLUEPRINT SECTION === */
     .blueprint-section {
-      background: #f8f9fa;
+      background: linear-gradient(180deg, #e8e4dc 0%, #f5f3ee 50%, #e8e4dc 100%);
       border-radius: 16px;
-      padding: 20px;
       border: 4px solid #6b7280;
       flex: 1;
-      display: flex;
-      flex-direction: column;
-      min-height: 0;
+      position: relative;
+      overflow: hidden;
     }
 
     .blueprint-title {
-      font-size: 28px;
+      position: absolute;
+      top: 15px;
+      left: 30px;
+      font-size: 24px;
       font-weight: 700;
       color: #92400e;
       text-transform: uppercase;
       letter-spacing: 0.1em;
-      margin-bottom: 12px;
-      flex-shrink: 0;
     }
 
-    .airship-container {
-      flex: 1;
-      min-height: 0;
+    /* Airship container - positions the whole airship layout */
+    .airship-layout {
+      position: absolute;
+      top: 50px;
+      left: 0;
+      right: 0;
+      bottom: 0;
     }
 
-    .airship-svg {
+    /* Airship outline SVG */
+    .airship-outline {
+      position: absolute;
+      top: 0;
+      left: 0;
       width: 100%;
       height: 100%;
+      pointer-events: none;
     }
 
-    /* Tech tile slots - scaled in SVG */
-    .tile-slot {
-      fill: #ffffff;
-      stroke-width: 5;
-      stroke-dasharray: 15 8;
-      rx: 10;
-    }
-
-    .tile-slot.frame { stroke: #1d4ed8; }
-    .tile-slot.fabric { stroke: #7c3aed; }
-    .tile-slot.drive { stroke: #d97706; }
-    .tile-slot.component { stroke: #059669; }
-
-    .slot-label {
-      font-size: 24px;
-      fill: #6b7280;
-      text-anchor: middle;
+    /* Section labels */
+    .section-label {
+      position: absolute;
+      font-size: 22px;
       font-weight: 600;
+      color: #6b7280;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
     }
+
+    /* Tech tile slots - EXACT size as printed tiles: 450x285px */
+    .tile-slot {
+      position: absolute;
+      width: 450px;
+      height: 285px;
+      background: rgba(255, 255, 255, 0.7);
+      border: 5px dashed;
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .tile-slot.frame { border-color: #1d4ed8; }
+    .tile-slot.fabric { border-color: #7c3aed; }
+    .tile-slot.drive { border-color: #d97706; }
+    .tile-slot.component { border-color: #059669; }
+
+    .slot-placeholder {
+      font-size: 22px;
+      font-weight: 600;
+      color: #9ca3af;
+      text-transform: uppercase;
+    }
+
+    .tile-slot.frame .slot-placeholder { color: #1d4ed8; }
+    .tile-slot.fabric .slot-placeholder { color: #7c3aed; }
+    .tile-slot.drive .slot-placeholder { color: #d97706; }
+    .tile-slot.component .slot-placeholder { color: #059669; }
 
     /* === SHIP STATS SECTION === */
     .stats-section {
       background: #f8f9fa;
       border-radius: 16px;
-      padding: 20px 32px;
+      padding: 16px 32px;
       border: 4px solid #6b7280;
       flex-shrink: 0;
     }
 
     .stats-title {
-      font-size: 28px;
+      font-size: 24px;
       font-weight: 700;
       color: #92400e;
       text-transform: uppercase;
       letter-spacing: 0.1em;
-      margin-bottom: 16px;
+      margin-bottom: 12px;
     }
 
     .stat-table {
       display: flex;
       flex-wrap: wrap;
-      gap: 12px;
+      gap: 10px;
     }
 
     .stat-row {
       display: flex;
       align-items: center;
-      gap: 12px;
-      padding: 10px 16px;
+      gap: 10px;
+      padding: 8px 14px;
       background: #ffffff;
       border: 2px solid #e5e7eb;
       border-radius: 10px;
-      flex: 0 0 calc(50% - 6px);
+      flex: 0 0 calc(50% - 5px);
     }
 
     .stat-icon {
-      width: 50px;
-      height: 50px;
+      width: 44px;
+      height: 44px;
       flex-shrink: 0;
     }
 
@@ -185,8 +213,8 @@
     }
 
     .stat-name {
-      width: 160px;
-      font-size: 24px;
+      width: 140px;
+      font-size: 22px;
       font-weight: 700;
       text-transform: uppercase;
       flex-shrink: 0;
@@ -201,20 +229,19 @@
 
     .stat-cubes {
       display: flex;
-      gap: 10px;
+      gap: 8px;
     }
 
-    /* Cube slots - 12mm with clearance = 142px at 300 DPI */
     .cube-slot {
-      width: 130px;
-      height: 130px;
+      width: 110px;
+      height: 110px;
       background: #f8f9fa;
-      border: 4px solid #d1d5db;
-      border-radius: 10px;
+      border: 3px solid #d1d5db;
+      border-radius: 8px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 42px;
+      font-size: 36px;
       font-weight: 700;
       color: #9ca3af;
     }
@@ -227,7 +254,7 @@
     .stat-row.armor .cube-slot { border-color: #dc2626; color: #dc2626; }
 
     .stat-note {
-      font-size: 18px;
+      font-size: 16px;
       color: #6b7280;
       font-style: italic;
       margin-left: auto;
@@ -291,10 +318,10 @@
     };
 
     const FACTION_DATA = {
-      germany: { name: 'Germany', ability: 'Blaugas Pioneers: Use Blaugas for +1 Range' },
-      britain: { name: 'Britain', ability: 'Imperial Mooring: British territories count as home base' },
-      usa: { name: 'United States', ability: 'Helium Monopoly: Buy domestic helium at £2 when market empty' },
-      italy: { name: 'Italy', ability: 'Long Range (+1 Range) / Low Ceiling (-1 Component in Ages II & III)' }
+      germany: { name: 'Germany', ability: 'Blaugas Pioneers: +1 Range with Blaugas' },
+      britain: { name: 'Britain', ability: 'Imperial Mooring: British territories = home base' },
+      usa: { name: 'United States', ability: 'Helium Monopoly: Buy helium at £2 when market empty' },
+      italy: { name: 'Italy', ability: 'Long Range (+1) / Low Ceiling (-1 Component Ages II-III)' }
     };
 
     const AGE_NAMES = { 1: 'Pioneer Era', 2: 'Great War', 3: 'Golden Age' };
@@ -313,111 +340,159 @@
       return counts;
     }
 
-    // Tech tile dimensions in SVG units (will scale with viewBox)
-    // Actual tiles are 450x285px (1.5" x 0.95" at 300 DPI)
-    const TILE_W = 280;
-    const TILE_H = 177;
+    // Slot positions for each age - following airship shape
+    // Tile size: 450x285px
+    // Blueprint area is approximately 3240x1750px
+    // Airship centered, envelope spans left 2/3, drive slots on right
+    function getSlotPositions(age, slots) {
+      const TILE_W = 450;
+      const TILE_H = 285;
+      const GAP = 20;
 
-    function renderAirshipBlueprint(faction, age) {
-      const slots = getSlotCounts(faction, age);
+      // Center of envelope area (left portion of blueprint)
+      const envelopeCenterX = 1100;
+      const envelopeCenterY = 700;
 
-      // Generate fabric slots (top of envelope)
-      let fabricSlots = '';
-      const fabricStartX = 100;
-      const fabricY = 60;
-      for (let i = 0; i < slots.fabric; i++) {
-        const x = fabricStartX + i * (TILE_W + 20);
-        fabricSlots += `
-          <rect x="${x}" y="${fabricY}" width="${TILE_W}" height="${TILE_H}" class="tile-slot fabric"/>
-          <text x="${x + TILE_W/2}" y="${fabricY + TILE_H/2 + 8}" class="slot-label">FABRIC</text>
-        `;
+      // Drive area (right side)
+      const driveX = 2450;
+      const driveCenterY = 700;
+
+      // Gondola area (below envelope)
+      const gondolaY = 1250;
+      const gondolaCenterX = 900;
+
+      const positions = {
+        fabric: [],
+        frame: [],
+        component: [],
+        drive: []
+      };
+
+      // Fabric slots - inside envelope, upper area
+      const fabricCount = slots.fabric;
+      const fabricTotalW = fabricCount * TILE_W + (fabricCount - 1) * GAP;
+      const fabricStartX = envelopeCenterX - fabricTotalW / 2;
+      const fabricY = 374;
+      for (let i = 0; i < fabricCount; i++) {
+        positions.fabric.push({
+          x: fabricStartX + i * (TILE_W + GAP),
+          y: fabricY
+        });
       }
 
-      // Generate frame slots (central keel)
-      let frameSlots = '';
-      const frameY = fabricY + TILE_H + 25;
-      for (let i = 0; i < slots.frame; i++) {
-        const x = fabricStartX + i * (TILE_W + 20);
-        frameSlots += `
-          <rect x="${x}" y="${frameY}" width="${TILE_W}" height="${TILE_H}" class="tile-slot frame"/>
-          <text x="${x + TILE_W/2}" y="${frameY + TILE_H/2 + 8}" class="slot-label">FRAME</text>
-        `;
+      // Frame slots - inside envelope, middle area
+      const frameCount = slots.frame;
+      const frameTotalW = frameCount * TILE_W + (frameCount - 1) * GAP;
+      const frameStartX = envelopeCenterX - frameTotalW / 2;
+      const frameY = 714;
+      for (let i = 0; i < frameCount; i++) {
+        positions.frame.push({
+          x: frameStartX + i * (TILE_W + GAP),
+          y: frameY
+        });
       }
 
-      // Generate component slots (gondola)
-      let componentSlots = '';
-      const componentY = frameY + TILE_H + 25;
-      for (let i = 0; i < slots.component; i++) {
-        const x = fabricStartX + i * (TILE_W + 20);
-        componentSlots += `
-          <rect x="${x}" y="${componentY}" width="${TILE_W}" height="${TILE_H}" class="tile-slot component"/>
-          <text x="${x + TILE_W/2}" y="${componentY + TILE_H/2 + 8}" class="slot-label">COMPONENT</text>
-        `;
+      // Component slots - gondola area
+      const compCount = slots.component;
+      const compTotalW = compCount * TILE_W + (compCount - 1) * GAP;
+      const compStartX = gondolaCenterX - compTotalW / 2 + 200;
+      const compY = 1208;
+      for (let i = 0; i < compCount; i++) {
+        positions.component.push({
+          x: compStartX + i * (TILE_W + GAP),
+          y: compY
+        });
       }
 
-      // Generate drive slots (tail section - vertical stack)
-      let driveSlots = '';
-      const driveX = 1150;
-      const driveStartY = 90;
-      for (let i = 0; i < slots.drive; i++) {
-        const y = driveStartY + i * (TILE_H + 20);
-        driveSlots += `
-          <rect x="${driveX}" y="${y}" width="${TILE_W}" height="${TILE_H}" class="tile-slot drive"/>
-          <text x="${driveX + TILE_W/2}" y="${y + TILE_H/2 + 8}" class="slot-label">DRIVE</text>
-        `;
+      // Drive slots - overlapping the tail/drive image
+      const driveCount = slots.drive;
+      const driveTotalH = driveCount * TILE_H + (driveCount - 1) * GAP;
+      const driveStartY = driveCenterY - driveTotalH / 2;
+      const driveXPos = 2150;
+      for (let i = 0; i < driveCount; i++) {
+        positions.drive.push({
+          x: driveXPos,
+          y: driveStartY + i * (TILE_H + GAP)
+        });
       }
 
+      return positions;
+    }
+
+    function renderAirshipOutline() {
       return `
-        <svg viewBox="0 0 1500 680" class="airship-svg" preserveAspectRatio="xMidYMid meet">
-          <!-- Background - light for ink savings -->
-          <rect width="100%" height="100%" fill="#f8f9fa" rx="16"/>
-
-          <!-- Airship envelope outline -->
-          <ellipse cx="550" cy="280" rx="480" ry="180" fill="none" stroke="#6b7280" stroke-width="4"/>
-
-          <!-- Internal frame lines -->
-          <line x1="90" y1="280" x2="1010" y2="280" stroke="#9ca3af" stroke-width="2" stroke-dasharray="15 8"/>
-          <line x1="280" y1="110" x2="280" y2="450" stroke="#9ca3af" stroke-width="2" stroke-dasharray="10 5"/>
-          <line x1="550" y1="105" x2="550" y2="455" stroke="#9ca3af" stroke-width="2" stroke-dasharray="10 5"/>
-          <line x1="820" y1="115" x2="820" y2="445" stroke="#9ca3af" stroke-width="2" stroke-dasharray="10 5"/>
-
-          <!-- Gondola (cabin) -->
-          <path d="M 200 455 Q 200 620 320 620 L 780 620 Q 900 620 900 455" fill="none" stroke="#6b7280" stroke-width="4"/>
-
-          <!-- Tail fins -->
-          <path d="M 980 280 L 1200 120 L 1200 190 L 1040 280" fill="none" stroke="#6b7280" stroke-width="4"/>
-          <path d="M 980 280 L 1200 440 L 1200 370 L 1040 280" fill="none" stroke="#6b7280" stroke-width="4"/>
-          <line x1="1020" y1="280" x2="1150" y2="280" stroke="#6b7280" stroke-width="3"/>
-
-          <!-- Propellers -->
-          <g transform="translate(1230, 155)">
-            <circle r="30" fill="none" stroke="#6b7280" stroke-width="3"/>
-            <line x1="-20" y1="0" x2="20" y2="0" stroke="#9ca3af" stroke-width="4"/>
-            <line x1="0" y1="-20" x2="0" y2="20" stroke="#9ca3af" stroke-width="4"/>
-          </g>
-          <g transform="translate(1230, 405)">
-            <circle r="30" fill="none" stroke="#6b7280" stroke-width="3"/>
-            <line x1="-20" y1="0" x2="20" y2="0" stroke="#9ca3af" stroke-width="4"/>
-            <line x1="0" y1="-20" x2="0" y2="20" stroke="#9ca3af" stroke-width="4"/>
-          </g>
+        <svg class="airship-outline" viewBox="0 0 3240 1700" preserveAspectRatio="xMidYMid meet">
+          <!-- Main envelope ellipse -->
+          <ellipse cx="1100" cy="620" rx="950" ry="500"
+            fill="none" stroke="#9ca3af" stroke-width="4" stroke-dasharray="20 10"/>
 
           <!-- Nose cone -->
-          <ellipse cx="80" cy="280" rx="22" ry="70" fill="none" stroke="#6b7280" stroke-width="3"/>
+          <ellipse cx="180" cy="620" rx="50" ry="150"
+            fill="none" stroke="#9ca3af" stroke-width="3"/>
 
-          <!-- DRIVE label only -->
-          <text x="1290" y="285" text-anchor="middle" font-size="26" fill="#6b7280" font-weight="600">DRIVE</text>
+          <!-- Internal structure lines -->
+          <line x1="230" y1="620" x2="2000" y2="620"
+            stroke="#d1d5db" stroke-width="2" stroke-dasharray="15 8"/>
+          <line x1="800" y1="150" x2="800" y2="1090"
+            stroke="#d1d5db" stroke-width="2" stroke-dasharray="10 5"/>
+          <line x1="1400" y1="150" x2="1400" y2="1090"
+            stroke="#d1d5db" stroke-width="2" stroke-dasharray="10 5"/>
 
-          <!-- Tech tile slots -->
-          ${fabricSlots}
-          ${frameSlots}
-          ${componentSlots}
-          ${driveSlots}
+          <!-- Tail fins -->
+          <path d="M 2000 620 L 2350 250 L 2350 400 L 2100 620"
+            fill="none" stroke="#9ca3af" stroke-width="3"/>
+          <path d="M 2000 620 L 2350 990 L 2350 840 L 2100 620"
+            fill="none" stroke="#9ca3af" stroke-width="3"/>
+
+          <!-- Gondola -->
+          <path d="M 500 1120 Q 500 1450 700 1450 L 1400 1450 Q 1600 1450 1600 1120"
+            fill="none" stroke="#9ca3af" stroke-width="4" stroke-dasharray="20 10"/>
+
+          <!-- Gondola struts -->
+          <line x1="600" y1="1000" x2="600" y2="1120" stroke="#d1d5db" stroke-width="2"/>
+          <line x1="1050" y1="1050" x2="1050" y2="1120" stroke="#d1d5db" stroke-width="2"/>
+          <line x1="1500" y1="1000" x2="1500" y2="1120" stroke="#d1d5db" stroke-width="2"/>
+
+          <!-- Propeller circles -->
+          <circle cx="2450" cy="330" r="80" fill="none" stroke="#9ca3af" stroke-width="3"/>
+          <line x1="2380" y1="330" x2="2520" y2="330" stroke="#d1d5db" stroke-width="4"/>
+          <line x1="2450" y1="260" x2="2450" y2="400" stroke="#d1d5db" stroke-width="4"/>
+
+          <circle cx="2450" cy="910" r="80" fill="none" stroke="#9ca3af" stroke-width="3"/>
+          <line x1="2380" y1="910" x2="2520" y2="910" stroke="#d1d5db" stroke-width="4"/>
+          <line x1="2450" y1="840" x2="2450" y2="980" stroke="#d1d5db" stroke-width="4"/>
+
         </svg>
       `;
     }
 
+    function renderSlots(positions) {
+      let html = '';
+
+      const slotTypes = [
+        { key: 'fabric', label: 'Fabric' },
+        { key: 'frame', label: 'Frame' },
+        { key: 'component', label: 'Component' },
+        { key: 'drive', label: 'Drive' }
+      ];
+
+      for (const { key, label } of slotTypes) {
+        for (const pos of positions[key]) {
+          html += `
+            <div class="tile-slot ${key}" style="left: ${pos.x}px; top: ${pos.y}px;">
+              <span class="slot-placeholder">${label}</span>
+            </div>
+          `;
+        }
+      }
+
+      return html;
+    }
+
     function renderBoard(faction, age) {
       const data = FACTION_DATA[faction];
+      const slots = getSlotCounts(faction, age);
+      const positions = getSlotPositions(age, slots);
       const board = document.getElementById('board');
       board.className = `player-board ${faction}`;
 
@@ -435,8 +510,9 @@
         <!-- Blueprint with Airship Shape -->
         <div class="blueprint-section">
           <div class="blueprint-title">Blueprint</div>
-          <div class="airship-container">
-            ${renderAirshipBlueprint(faction, age)}
+          <div class="airship-layout">
+            ${renderAirshipOutline()}
+            ${renderSlots(positions)}
           </div>
         </div>
 

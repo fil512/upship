@@ -69,7 +69,7 @@ const cardsOnly = target === 'cards';
 const boardsOnly = target === 'boards';
 
 // Specific card/component types
-const cardType = ['agent', 'hazard', 'tech', 'mission', 'starter', 'tile', 'board', 'playerboard'].includes(target) ? target : null;
+const cardType = ['agent', 'hazard', 'tech', 'mission', 'starter', 'starting-tech', 'tile', 'board', 'playerboard'].includes(target) ? target : null;
 
 /**
  * Load card data from server files

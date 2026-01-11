@@ -189,26 +189,39 @@
   <div id="card" class="mission-card"></div>
 
   <script>
-    // SVG Icons
+    // SVG Icons (from web/src/lib/icons/svg/)
     const ICONS = {
       range: `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-        <path d="M12 2C8.14 2 5 5.14 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.86-3.14-7-7-7zm0 9.5a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5z" fill="#1565c0"/>
+        <!-- Range: Arrow with origin dot -->
+        <circle cx="4" cy="12" r="3" fill="#1565c0"/>
+        <path d="M8 10h8v-3l6 5-6 5v-3H8v-4z" fill="#1565c0"/>
       </svg>`,
       speed: `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-        <path d="M12 16a3 3 0 1 0 0-6 3 3 0 0 0 0 6z" fill="#ff9800"/>
-        <path d="M12 4C6.48 4 2 8.48 2 14h2c0-4.42 3.58-8 8-8s8 3.58 8 8h2c0-5.52-4.48-10-10-10z" fill="#ff9800"/>
-        <path d="M12 8l-1.5 6h3L12 8z" fill="#ff9800"/>
+        <!-- Speed: Propeller -->
+        <defs>
+          <path id="speed-blade" d="M12 12 C 11 12 10 9 10 5 C 10 3 11 2 12 2 C 13 2 14 3 14 5 C 14 9 13 12 12 12 Z" fill="#ff9800"/>
+        </defs>
+        <use href="#speed-blade"/>
+        <use href="#speed-blade" transform="rotate(120 12 12)"/>
+        <use href="#speed-blade" transform="rotate(240 12 12)"/>
+        <circle cx="12" cy="12" r="2" fill="#ff9800" opacity="0.7"/>
       </svg>`,
       ceiling: `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-        <path d="M7 18h2V6H7v12zm4-12v12h2V6h-2zm4 3v9h2V9h-2z" fill="#9c27b0"/>
-        <path d="M3 21h18v2H3v-2z" fill="#9c27b0"/>
+        <!-- Ceiling: Cloud -->
+        <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z" fill="#9c27b0"/>
       </svg>`,
       income: `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="12" cy="12" r="10" fill="#4caf50" stroke="#2e7d32" stroke-width="1.5"/>
-        <text x="12" y="17" text-anchor="middle" font-size="14" font-weight="bold" fill="white" font-family="serif">£</text>
+        <!-- Income: Coin -->
+        <circle cx="12" cy="12" r="11" fill="#4caf50" stroke="#2e7d32" stroke-width="1"/>
+        <circle cx="12" cy="12" r="8.5" fill="none" stroke="#66bb6a" stroke-width="0.5"/>
+        <circle cx="12" cy="12" r="8" fill="none" stroke="#66bb6a" stroke-width="0.5" stroke-dasharray="1 1"/>
+        <path d="M10 8c0-1.65 1.35-3 3-3s2.5 1 2.5 1" fill="none" stroke="#1a1a2e" stroke-width="2" stroke-linecap="round"/>
+        <path d="M13 5c-1.65 0-3 1.35-3 3 0 1.5 1 2.5 2 3.5l-2 4.5h6" fill="none" stroke="#1a1a2e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <line x1="9" y1="11" x2="15" y2="11" stroke="#1a1a2e" stroke-width="2"/>
       </svg>`,
       vp: `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-        <polygon points="12,2 15,9 22,9 17,14 19,22 12,17 5,22 7,14 2,9 9,9" fill="#ff9800" stroke="#e65100" stroke-width="1"/>
+        <!-- VP: Star -->
+        <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26" fill="#4caf50" stroke="#388e3c" stroke-width="1" stroke-linejoin="round"/>
       </svg>`
     };
 
