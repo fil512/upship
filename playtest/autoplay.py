@@ -128,12 +128,13 @@ class StuckDetector:
         return '\n'.join(lines)
 
 
-def autoplay(num_turns: int | None = None, game_id: str | None = None) -> None:
+def autoplay(num_turns: int | None = None, game_id: str | None = None, stop_at_age: int | None = None) -> None:
     """Run AI for all players until game ends or gets stuck.
 
     Args:
         num_turns: Maximum turns to play (None = use DEFAULT_MAX_TURNS)
         game_id: Game ID (uses current game if None)
+        stop_at_age: Stop when this age is reached (e.g., 3 to stop at start of Age 3)
     """
     client = get_client()
 
@@ -148,6 +149,8 @@ def autoplay(num_turns: int | None = None, game_id: str | None = None) -> None:
 
     print(f"=== UP SHIP! Autoplay ===")
     print(f"Game: {game_id}")
+    if stop_at_age:
+        print(f"Stop at: Age {stop_at_age}")
     print(f"Target: {num_turns} turns (max)\n")
 
     logger = get_logger()
@@ -188,6 +191,16 @@ def autoplay(num_turns: int | None = None, game_id: str | None = None) -> None:
                     logger.log_action(None, f"Final score: {faction} = {total} VP", "end")
             print(f"{'='*60}")
             return
+
+        # Check for stop_at_age
+        if stop_at_age:
+            current_age = get_age(game_id)
+            if current_age >= stop_at_age:
+                print(f"\n{'='*60}")
+                print(f"STOPPED AT AGE {current_age}")
+                print(f"{'='*60}")
+                show_summary(game_id)
+                return
 
         # Check for stuck state
         is_stuck, stuck_details = stuck_detector.check(game_id)

@@ -5,7 +5,7 @@ Usage:
     python -m playtest setup-bots            # Create game with playtest_britain + 3 server bots
     python -m playtest setup-interactive     # For /play-with-me: kenny + 3 AI
     python -m playtest start                 # Start the current game (host action)
-    python -m playtest autoplay [num_turns]  # Run AI until game ends
+    python -m playtest autoplay [num_turns] [--stop-at-age N]  # Run AI until game ends
     python -m playtest autoplay-until <faction>  # Run AI until faction's turn
     python -m playtest autoturn <faction>    # Play one turn for faction
     python -m playtest whose-turn            # Show whose turn it is
@@ -608,11 +608,21 @@ def main():
             print(f"✗ Failed to start game: {e}")
 
     elif cmd == "autoplay":
-        if len(sys.argv) > 2:
-            num_turns = int(sys.argv[2])
-        else:
-            num_turns = None
-        autoplay(num_turns)
+        num_turns = None
+        stop_at_age = None
+        # Parse arguments
+        i = 2
+        while i < len(sys.argv):
+            arg = sys.argv[i]
+            if arg == "--stop-at-age" and i + 1 < len(sys.argv):
+                stop_at_age = int(sys.argv[i + 1])
+                i += 2
+            elif not arg.startswith("-"):
+                num_turns = int(arg)
+                i += 1
+            else:
+                i += 1
+        autoplay(num_turns, stop_at_age=stop_at_age)
 
     elif cmd == "autoplay-until":
         if len(sys.argv) < 3:
