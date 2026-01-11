@@ -167,6 +167,7 @@
 	type CenterTab = 'actions' | 'log' | 'map' | 'blueprint' | 'market';
 	let activeTab: CenterTab = 'actions';
 	let wasMyTurn = false;
+	let showMapFullscreen = false;
 
 	// Switch back to Actions tab when player's turn/phase ends
 	$: {
@@ -1238,7 +1239,13 @@
 					<button
 						class="tab-btn"
 						class:active={activeTab === 'map'}
-						on:click={() => (activeTab = 'map')}
+						on:click={() => {
+							if ($gameState?.age === 2) {
+								activeTab = 'map';
+							} else {
+								showMapFullscreen = true;
+							}
+						}}
 					>
 						{$gameState?.age === 2 ? 'Missions' : 'Map'}
 					</button>
@@ -1280,10 +1287,10 @@
 						<div class="log-tab">
 							<GameLog gameId={gameId} logCount={$gameState.logCount || 0} />
 						</div>
-					{:else if activeTab === 'map'}
+					{:else if activeTab === 'map' && $gameState?.age === 2}
 						<div class="map-tab">
 							<MapView
-								age={$gameState?.age || 1}
+								age={2}
 								{routes}
 								{cities}
 								hasShipsInHangar={hasShipsToLaunch}
@@ -1293,9 +1300,6 @@
 								selectable={$isMyTurn && isLaunchpadActive}
 								on:selectRoute={(e) => { selectedRouteId = e.detail.route?.id; }}
 							/>
-							{#if isLaunchpadActive && selectedRouteId}
-								<p class="route-selected">Selected route: {selectedRouteId}</p>
-							{/if}
 						</div>
 					{:else if activeTab === 'blueprint'}
 						<div class="blueprint-tab">
@@ -1777,6 +1781,28 @@
 			cards={drawnMinistryCards}
 			on:select={handleMinistryCardSelect}
 		/>
+	{/if}
+
+	{#if showMapFullscreen}
+		<div class="map-fullscreen-overlay" on:click={() => (showMapFullscreen = false)} on:keydown={(e) => e.key === 'Escape' && (showMapFullscreen = false)} role="dialog" tabindex="-1">
+			<div class="map-fullscreen-content" on:click|stopPropagation role="document">
+				<button class="map-close-btn" on:click={() => (showMapFullscreen = false)} aria-label="Close map">
+					&times;
+				</button>
+				<MapView
+					age={$gameState?.age || 1}
+					{routes}
+					{cities}
+					hasShipsInHangar={hasShipsToLaunch}
+					{playerFactions}
+					missionRow={$gameState?.missionRow || []}
+					myFaction={$myState?.faction}
+					selectable={$isMyTurn && isLaunchpadActive}
+					fullscreen={true}
+					on:selectRoute={(e) => { selectedRouteId = e.detail.route?.id; }}
+				/>
+			</div>
+		</div>
 	{/if}
 
 	{#if $isGameComplete}
@@ -2759,6 +2785,52 @@
 		display: flex;
 		flex-direction: column;
 		gap: var(--spacing-xs);
+	}
+
+	/* Fullscreen Map Overlay */
+	.map-fullscreen-overlay {
+		position: fixed;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		background: rgba(0, 0, 0, 0.9);
+		z-index: 1000;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.map-fullscreen-content {
+		position: relative;
+		width: 100%;
+		height: 100%;
+		padding: var(--spacing-md);
+		display: flex;
+		flex-direction: column;
+	}
+
+	.map-close-btn {
+		position: absolute;
+		top: var(--spacing-md);
+		right: var(--spacing-md);
+		width: 40px;
+		height: 40px;
+		border: none;
+		background: var(--color-bg-tertiary);
+		color: var(--color-text-primary);
+		font-size: 1.5rem;
+		border-radius: var(--radius-md);
+		cursor: pointer;
+		z-index: 10;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		transition: background 0.2s;
+	}
+
+	.map-close-btn:hover {
+		background: var(--color-bg-card);
 	}
 
 	@media (max-width: 900px) {

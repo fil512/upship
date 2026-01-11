@@ -8,8 +8,8 @@ export interface MapDimensions {
 }
 
 export const MAP_DIMENSIONS: Record<number, MapDimensions> = {
-  1: { width: 1000, height: 680 },  // Age I: Western Europe (minimal margins)
-  3: { width: 1160, height: 800 }   // Age III: Atlantic (minimal margins)
+  1: { width: 1200, height: 680 },  // Age I: Western Europe (16:9 optimized)
+  3: { width: 1420, height: 800 }   // Age III: Atlantic (16:9 optimized)
 };
 
 // City marker sizes

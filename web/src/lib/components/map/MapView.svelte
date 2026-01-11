@@ -13,6 +13,7 @@
   export let missionRow: Mission[] = [];
   export let myFaction: string | undefined = undefined;
   export let selectable: boolean = false;
+  export let fullscreen: boolean = false;
 
   const dispatch = createEventDispatcher<{
     claimRoute: { route: Route };
@@ -55,24 +56,26 @@
     />
   {/if}
 
-  <!-- Contextual hint about launching -->
-  {#if hasShipsInHangar}
-    <div class="context-hint">
-      <span class="hint-icon">&#128161;</span>
-      <span class="hint-text">
-        You have ships ready to launch! Visit the <strong>Launchpad</strong> during Worker Placement to send them on routes.
-      </span>
+  {#if !fullscreen}
+    <!-- Contextual hint about launching -->
+    {#if hasShipsInHangar}
+      <div class="context-hint">
+        <span class="hint-icon">&#128161;</span>
+        <span class="hint-text">
+          You have ships ready to launch! Visit the <strong>Launchpad</strong> during Worker Placement to send them on routes.
+        </span>
+      </div>
+    {/if}
+
+    <!-- Legend for faction colors -->
+    <div class="faction-legend">
+      <span class="legend-title">FACTIONS:</span>
+      <span class="legend-item germany">Germany</span>
+      <span class="legend-item britain">Britain</span>
+      <span class="legend-item usa">USA</span>
+      <span class="legend-item italy">Italy</span>
     </div>
   {/if}
-
-  <!-- Legend for faction colors -->
-  <div class="faction-legend">
-    <span class="legend-title">FACTIONS:</span>
-    <span class="legend-item germany">Germany</span>
-    <span class="legend-item britain">Britain</span>
-    <span class="legend-item usa">USA</span>
-    <span class="legend-item italy">Italy</span>
-  </div>
 </div>
 
 <style>
@@ -82,6 +85,7 @@
     min-height: 400px;
     display: flex;
     flex-direction: column;
+    flex: 1;
   }
 
   .context-hint {

@@ -78,8 +78,9 @@
 <style>
   .game-map {
     width: 100%;
-    height: auto;
+    height: 100%;
     min-height: 400px;
+    flex: 1;
     border-radius: var(--radius-md);
     background: #0f172a;
   }

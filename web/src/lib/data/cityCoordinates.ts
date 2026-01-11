@@ -20,80 +20,80 @@ export interface CityBonus {
 }
 
 /**
- * Age I: Western Europe Map (1000x700 viewBox)
+ * Age I: Western Europe Map (1200x680 viewBox - 16:9 optimized)
  * 18 cities, 17 routes forming a fully connected network
  * Positioned with minimal margins (~30px) to fill the map area
  */
 export const AGE_I_CITIES: Record<string, CityPosition> = {
   // British Isles (left side)
-  'London': { x: 80, y: 180, labelPosition: 'left' },
-  'Dover': { x: 160, y: 300, labelPosition: 'left' },
+  'London': { x: 180, y: 180, labelPosition: 'left' },
+  'Dover': { x: 260, y: 300, labelPosition: 'left' },
 
   // France/Benelux (center-left)
-  'Calais': { x: 280, y: 280, labelPosition: 'top' },
-  'Paris': { x: 180, y: 440, labelPosition: 'left' },
-  'Brussels': { x: 360, y: 320, labelPosition: 'top' },
-  'Amsterdam': { x: 400, y: 180, labelPosition: 'top' },
+  'Calais': { x: 380, y: 280, labelPosition: 'top' },
+  'Paris': { x: 280, y: 440, labelPosition: 'left' },
+  'Brussels': { x: 460, y: 320, labelPosition: 'top' },
+  'Amsterdam': { x: 500, y: 180, labelPosition: 'top' },
 
   // Germany (center)
-  'Cologne': { x: 480, y: 280, labelPosition: 'right' },
-  'Hamburg': { x: 540, y: 100, labelPosition: 'top' },
-  'Berlin': { x: 740, y: 140, labelPosition: 'right' },
-  'Frankfurt': { x: 560, y: 380, labelPosition: 'right' },
-  'Friedrichshafen': { x: 640, y: 500, labelPosition: 'right' },
+  'Cologne': { x: 580, y: 280, labelPosition: 'right' },
+  'Hamburg': { x: 640, y: 100, labelPosition: 'top' },
+  'Berlin': { x: 840, y: 140, labelPosition: 'right' },
+  'Frankfurt': { x: 660, y: 380, labelPosition: 'right' },
+  'Friedrichshafen': { x: 740, y: 500, labelPosition: 'right' },
 
   // Scandinavia
-  'Copenhagen': { x: 680, y: 60, labelPosition: 'right' },
+  'Copenhagen': { x: 780, y: 60, labelPosition: 'right' },
 
   // Central Europe
-  'Zurich': { x: 500, y: 520, labelPosition: 'left' },
-  'Vienna': { x: 900, y: 320, labelPosition: 'right' },
+  'Zurich': { x: 600, y: 520, labelPosition: 'left' },
+  'Vienna': { x: 1000, y: 320, labelPosition: 'right' },
 
   // Italy/Mediterranean
-  'Milan': { x: 540, y: 600, labelPosition: 'bottom' },
-  'Rome': { x: 760, y: 620, labelPosition: 'right' },
-  'Marseille': { x: 340, y: 560, labelPosition: 'left' },
-  'Barcelona': { x: 140, y: 620, labelPosition: 'left' }
+  'Milan': { x: 640, y: 600, labelPosition: 'bottom' },
+  'Rome': { x: 860, y: 620, labelPosition: 'right' },
+  'Marseille': { x: 440, y: 560, labelPosition: 'left' },
+  'Barcelona': { x: 240, y: 620, labelPosition: 'left' }
 };
 
 /**
- * Age III: Atlantic Map (1200x800 viewBox)
+ * Age III: Atlantic Map (1420x800 viewBox - 16:9 optimized)
  * 21 cities, 21 routes forming a fully connected global network
  * Positioned with minimal margins (~30px) to fill the map area
  */
 export const AGE_III_CITIES: Record<string, CityPosition> = {
   // North America - West Coast
-  'San Francisco': { x: 60, y: 180, labelPosition: 'left' },
-  'Los Angeles': { x: 100, y: 280, labelPosition: 'left' },
-  'Honolulu': { x: 40, y: 480, labelPosition: 'left' },
+  'San Francisco': { x: 190, y: 180, labelPosition: 'left' },
+  'Los Angeles': { x: 230, y: 280, labelPosition: 'left' },
+  'Honolulu': { x: 170, y: 480, labelPosition: 'left' },
 
   // North America - Central/East
-  'Chicago': { x: 200, y: 160, labelPosition: 'top' },
-  'New York': { x: 340, y: 180, labelPosition: 'top' },
-  'Lakehurst': { x: 380, y: 260, labelPosition: 'right' },
-  'Miami': { x: 320, y: 380, labelPosition: 'right' },
+  'Chicago': { x: 330, y: 160, labelPosition: 'top' },
+  'New York': { x: 470, y: 180, labelPosition: 'top' },
+  'Lakehurst': { x: 510, y: 260, labelPosition: 'right' },
+  'Miami': { x: 450, y: 380, labelPosition: 'right' },
 
   // Caribbean
-  'Havana': { x: 280, y: 460, labelPosition: 'left' },
+  'Havana': { x: 410, y: 460, labelPosition: 'left' },
 
   // South America
-  'Manaus': { x: 420, y: 540, labelPosition: 'left' },
-  'Recife': { x: 580, y: 520, labelPosition: 'right' },
-  'Rio de Janeiro': { x: 520, y: 620, labelPosition: 'bottom' },
-  'Buenos Aires': { x: 460, y: 740, labelPosition: 'left' },
-  'Valparaiso': { x: 360, y: 740, labelPosition: 'left' },
+  'Manaus': { x: 550, y: 540, labelPosition: 'left' },
+  'Recife': { x: 710, y: 520, labelPosition: 'right' },
+  'Rio de Janeiro': { x: 650, y: 620, labelPosition: 'bottom' },
+  'Buenos Aires': { x: 590, y: 740, labelPosition: 'left' },
+  'Valparaiso': { x: 490, y: 740, labelPosition: 'left' },
 
   // Europe
-  'London': { x: 780, y: 200, labelPosition: 'top' },
-  'Berlin': { x: 920, y: 180, labelPosition: 'top' },
-  'Frankfurt': { x: 880, y: 280, labelPosition: 'left' },
-  'Friedrichshafen': { x: 920, y: 380, labelPosition: 'right' },
-  'Rome': { x: 1000, y: 480, labelPosition: 'right' },
-  'Oslo': { x: 860, y: 80, labelPosition: 'left' },
-  'Svalbard': { x: 980, y: 60, labelPosition: 'right' },
+  'London': { x: 910, y: 200, labelPosition: 'top' },
+  'Berlin': { x: 1050, y: 180, labelPosition: 'top' },
+  'Frankfurt': { x: 1010, y: 280, labelPosition: 'left' },
+  'Friedrichshafen': { x: 1050, y: 380, labelPosition: 'right' },
+  'Rome': { x: 1130, y: 480, labelPosition: 'right' },
+  'Oslo': { x: 990, y: 80, labelPosition: 'left' },
+  'Svalbard': { x: 1110, y: 60, labelPosition: 'right' },
 
   // Africa/Middle East
-  'Cairo': { x: 1100, y: 580, labelPosition: 'right' }
+  'Cairo': { x: 1230, y: 580, labelPosition: 'right' }
 };
 
 /**

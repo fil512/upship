@@ -57,6 +57,8 @@
     background: linear-gradient(180deg, #1a1916 0%, #242220 100%);
     border-radius: var(--radius-md);
     min-height: 400px;
+    flex: 1;
+    height: 100%;
     border: 1px solid #3a3830;
   }
 
