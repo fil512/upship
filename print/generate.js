@@ -69,7 +69,7 @@ const cardsOnly = target === 'cards';
 const boardsOnly = target === 'boards';
 
 // Specific card/component types
-const cardType = ['agent', 'hazard', 'tech', 'mission', 'tile', 'board', 'playerboard'].includes(target) ? target : null;
+const cardType = ['agent', 'hazard', 'tech', 'mission', 'starter', 'tile', 'board', 'playerboard'].includes(target) ? target : null;
 
 /**
  * Load card data from server files
@@ -115,6 +115,20 @@ async function loadCardData() {
     { id: 'market_engineering_guild', name: 'Engineering Guild', category: 'organizations', cost: 4, symbol: 'coin', effect: 'Gain 1 Engineer', reveal: { influence: 1, engineers: 1 } },
     // Reserve Card
     { id: 'reserve_aeronaut', name: 'The Aeronaut', category: 'organizations', cost: 2, symbol: 'any', effect: null, reveal: { influence: 2 } },
+  ];
+
+  // Starter deck cards (10 per player, no cost)
+  const starterCards = [
+    { id: 'starter_apprentice', name: 'Apprentice', category: 'starter', cost: null, symbol: 'any', effect: null, reveal: { influence: 2 } },
+    { id: 'starter_mechanic', name: 'Mechanic', category: 'starter', cost: null, symbol: 'wrench', effect: null, reveal: { cash: 1, influence: 1 } },
+    { id: 'starter_draftsman', name: 'Draftsman', category: 'starter', cost: null, symbol: 'wrench', effect: 'Draw 1 card', reveal: { influence: 1, research: 1 } },
+    { id: 'starter_rigger', name: 'Rigger', category: 'starter', cost: null, symbol: 'wrench', effect: '-£2 ship build cost', reveal: { research: 1, influence: 1 } },
+    { id: 'starter_purser', name: 'Purser', category: 'starter', cost: null, symbol: 'coin', effect: 'Gain £2', reveal: { influence: 2 } },
+    { id: 'starter_clerk', name: 'Clerk', category: 'starter', cost: null, symbol: 'coin', effect: 'Gain £1', reveal: { cash: 1, influence: 1 } },
+    { id: 'starter_investor', name: 'Investor', category: 'starter', cost: null, symbol: 'coin', effect: null, reveal: { influence: 2 } },
+    { id: 'starter_researcher', name: 'Researcher', category: 'starter', cost: null, symbol: 'propeller', effect: '-£1 per Research', reveal: { research: 2, influence: 1 } },
+    { id: 'starter_helmsman', name: 'Helmsman', category: 'starter', cost: null, symbol: 'propeller', effect: '+1 ship stat this launch', reveal: { officers: 1, influence: 1 } },
+    { id: 'starter_navigator', name: 'Navigator', category: 'starter', cost: null, symbol: 'propeller', effect: 'Look at top Hazard card', reveal: { influence: 2 } },
   ];
 
   const hazardCards = [
@@ -274,7 +288,7 @@ async function loadCardData() {
     { id: 'long_range_observation', name: 'Long-Range Observation', type: 'artillery_observation', range: 4, ceiling: 3, difficulty: 3, income: 9, vp: 3, special: null },
   ];
 
-  return { agentCards, hazardCards, techCards, missionCards };
+  return { agentCards, hazardCards, techCards, missionCards, starterCards };
 }
 
 /**
@@ -384,6 +398,7 @@ function ensureOutputDirs() {
     join(PATHS.output, 'cards', 'hazard'),
     join(PATHS.output, 'cards', 'tech'),
     join(PATHS.output, 'cards', 'mission'),
+    join(PATHS.output, 'cards', 'starter'),
     join(PATHS.output, 'tiles', 'frame'),
     join(PATHS.output, 'tiles', 'fabric'),
     join(PATHS.output, 'tiles', 'drive'),
@@ -451,7 +466,7 @@ async function generateCards(browser, cards, templateFile, outputDir, cardTypeNa
 async function generateSheets(browser) {
   console.log('\nGenerating print sheets...');
 
-  const cardTypes = ['agent', 'hazard', 'tech', 'mission'];
+  const cardTypes = ['agent', 'hazard', 'tech', 'mission', 'starter'];
   const CARDS_PER_ROW = 3;
   const CARDS_PER_PAGE = 9;
   const PAGE_WIDTH = 2550;  // 8.5" at 300 DPI
@@ -835,15 +850,16 @@ async function main() {
       await generatePlayerAidBoards(browser);
     } else if (cardsOnly) {
       // Cards only (all card types + card sheets)
-      const { agentCards, hazardCards, techCards, missionCards } = await loadCardData();
+      const { agentCards, hazardCards, techCards, missionCards, starterCards } = await loadCardData();
       await generateCards(browser, agentCards, 'agent-card.html', join(PATHS.output, 'cards', 'agent'), 'Agent');
       await generateCards(browser, hazardCards, 'hazard-card.html', join(PATHS.output, 'cards', 'hazard'), 'Hazard');
       await generateCards(browser, techCards, 'tech-card.html', join(PATHS.output, 'cards', 'tech'), 'Tech');
       await generateCards(browser, missionCards, 'mission-card.html', join(PATHS.output, 'cards', 'mission'), 'Mission');
+      await generateCards(browser, starterCards, 'agent-card.html', join(PATHS.output, 'cards', 'starter'), 'Starter');
       await generateSheets(browser);
     } else {
       // Specific type or everything
-      const { agentCards, hazardCards, techCards, missionCards } = await loadCardData();
+      const { agentCards, hazardCards, techCards, missionCards, starterCards } = await loadCardData();
 
       if (!cardType || cardType === 'agent') {
         await generateCards(
@@ -882,6 +898,16 @@ async function main() {
           'mission-card.html',
           join(PATHS.output, 'cards', 'mission'),
           'Mission'
+        );
+      }
+
+      if (!cardType || cardType === 'starter') {
+        await generateCards(
+          browser,
+          starterCards,
+          'agent-card.html',
+          join(PATHS.output, 'cards', 'starter'),
+          'Starter'
         );
       }
 
