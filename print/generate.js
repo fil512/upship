@@ -305,7 +305,56 @@ async function loadCardData() {
     { id: 'long_range_observation', name: 'Long-Range Observation', type: 'artillery_observation', range: 4, ceiling: 3, difficulty: 3, income: 9, vp: 3, special: null },
   ];
 
-  return { agentCards, hazardCards, techCards, missionCards, starterCards };
+  // Starting tech cards - faction starter equipment (no cost, available from start)
+  const STARTING_TILES = {
+    // Germany
+    zeppelin_frame: { name: 'Zeppelin Frame', slotType: 'frame', weight: 2, hullCost: 1, stats: { gas_socket: 1 } },
+    maybach_cx: { name: 'Maybach CX Engine', slotType: 'drive', weight: 1, hullCost: 1, stats: { speed: 1 } },
+    premium_envelope: { name: 'Premium Envelope', slotType: 'fabric', weight: 1, hullCost: 3, stats: { reliability: 1, range: 1 } },
+    blaugas_tank: { name: 'Blaugas Tank', slotType: 'component', weight: 0, hullCost: 1, stats: { range: 1 } },
+    // Britain
+    tensioned_frame: { name: 'Tensioned Frame', slotType: 'frame', weight: 2, hullCost: 1, stats: { gas_socket: 1 } },
+    standard_engine: { name: 'Standard Engine', slotType: 'drive', weight: 1, hullCost: 1, stats: { speed: 1, range: 1 } },
+    doped_covering: { name: 'Doped Covering', slotType: 'fabric', weight: 1, hullCost: 1, stats: {} },
+    passenger_cabin: { name: 'Passenger Cabin', slotType: 'component', weight: 1, hullCost: 1, stats: { income: 1 } },
+    imperial_mast: { name: 'Imperial Mast', slotType: 'component', weight: 1, hullCost: 1, stats: {} },
+    // USA
+    duralumin_frame: { name: 'Duralumin Frame', slotType: 'frame', weight: 2, hullCost: 1, stats: { gas_socket: 1 } },
+    reliable_engine: { name: 'Reliable Engine', slotType: 'drive', weight: 1, hullCost: 1, stats: { speed: 1, range: 1 } },
+    latex_envelope: { name: 'Latex Envelope', slotType: 'fabric', weight: 1, hullCost: 1, stats: {} },
+    helium_gas_cell: { name: 'Helium Gas Cell', slotType: 'component', weight: 1, hullCost: 2, stats: {} },
+    // Italy
+    semi_rigid_keel: { name: 'Semi-Rigid Keel', slotType: 'frame', weight: 2, hullCost: 1, stats: { reliability: 1, gas_socket: 1 } },
+    flexible_frame: { name: 'Flexible Frame', slotType: 'frame', weight: 0, hullCost: 1, stats: { lift: 1, gas_socket: 1 } },
+    expedition_engine: { name: 'Expedition Engine', slotType: 'drive', weight: 1, hullCost: 1, stats: { range: 1 } },
+    cotton_envelope: { name: 'Cotton Envelope', slotType: 'fabric', weight: 1, hullCost: 1, stats: {} },
+  };
+
+  const startingTechCards = [
+    // Germany starters
+    { id: 'zeppelin_frame', name: 'Zeppelin Frame', type: 'structure', faction: 'germany', tile: STARTING_TILES.zeppelin_frame },
+    { id: 'maybach_cx', name: 'Maybach CX Engine', type: 'drive', faction: 'germany', tile: STARTING_TILES.maybach_cx },
+    { id: 'premium_envelope', name: 'Premium Envelope', type: 'fabric', faction: 'germany', tile: STARTING_TILES.premium_envelope },
+    { id: 'blaugas_tank', name: 'Blaugas Tank', type: 'gas', faction: 'germany', tile: STARTING_TILES.blaugas_tank },
+    // Britain starters
+    { id: 'tensioned_frame', name: 'Tensioned Frame', type: 'structure', faction: 'britain', tile: STARTING_TILES.tensioned_frame },
+    { id: 'standard_engine', name: 'Standard Engine', type: 'drive', faction: 'britain', tile: STARTING_TILES.standard_engine },
+    { id: 'doped_covering', name: 'Doped Covering', type: 'fabric', faction: 'britain', tile: STARTING_TILES.doped_covering },
+    { id: 'passenger_cabin', name: 'Passenger Cabin', type: 'component', faction: 'britain', tile: STARTING_TILES.passenger_cabin },
+    { id: 'imperial_mast', name: 'Imperial Mast', type: 'component', faction: 'britain', tile: STARTING_TILES.imperial_mast },
+    // USA starters
+    { id: 'duralumin_frame', name: 'Duralumin Frame', type: 'structure', faction: 'usa', tile: STARTING_TILES.duralumin_frame },
+    { id: 'reliable_engine', name: 'Reliable Engine', type: 'drive', faction: 'usa', tile: STARTING_TILES.reliable_engine },
+    { id: 'latex_envelope', name: 'Latex Envelope', type: 'fabric', faction: 'usa', tile: STARTING_TILES.latex_envelope },
+    { id: 'helium_gas_cell', name: 'Helium Gas Cell', type: 'gas', faction: 'usa', tile: STARTING_TILES.helium_gas_cell },
+    // Italy starters
+    { id: 'semi_rigid_keel', name: 'Semi-Rigid Keel', type: 'structure', faction: 'italy', tile: STARTING_TILES.semi_rigid_keel },
+    { id: 'flexible_frame', name: 'Flexible Frame', type: 'structure', faction: 'italy', tile: STARTING_TILES.flexible_frame },
+    { id: 'expedition_engine', name: 'Expedition Engine', type: 'drive', faction: 'italy', tile: STARTING_TILES.expedition_engine },
+    { id: 'cotton_envelope', name: 'Cotton Envelope', type: 'fabric', faction: 'italy', tile: STARTING_TILES.cotton_envelope },
+  ];
+
+  return { agentCards, hazardCards, techCards, missionCards, starterCards, startingTechCards };
 }
 
 /**
@@ -422,6 +471,7 @@ function ensureOutputDirs() {
     join(PATHS.output, 'cards', 'tech'),
     join(PATHS.output, 'cards', 'mission'),
     join(PATHS.output, 'cards', 'starter'),
+    join(PATHS.output, 'cards', 'starting-tech'),
     join(PATHS.output, 'tiles', 'frame'),
     join(PATHS.output, 'tiles', 'fabric'),
     join(PATHS.output, 'tiles', 'drive'),
@@ -489,7 +539,7 @@ async function generateCards(browser, cards, templateFile, outputDir, cardTypeNa
 async function generateSheets(browser) {
   console.log('\nGenerating print sheets...');
 
-  const cardTypes = ['agent', 'hazard', 'tech', 'mission', 'starter'];
+  const cardTypes = ['agent', 'hazard', 'tech', 'mission', 'starter', 'starting-tech'];
   const CARDS_PER_ROW = 3;
   const CARDS_PER_PAGE = 9;
   const PAGE_WIDTH = 2550;  // 8.5" at 300 DPI
@@ -883,16 +933,17 @@ async function main() {
       await generatePlayerAidBoards(browser);
     } else if (cardsOnly) {
       // Cards only (all card types + card sheets)
-      const { agentCards, hazardCards, techCards, missionCards, starterCards } = await loadCardData();
+      const { agentCards, hazardCards, techCards, missionCards, starterCards, startingTechCards } = await loadCardData();
       await generateCards(browser, agentCards, 'agent-card.html', join(PATHS.output, 'cards', 'agent'), 'Agent');
       await generateCards(browser, hazardCards, 'hazard-card.html', join(PATHS.output, 'cards', 'hazard'), 'Hazard');
       await generateCards(browser, techCards, 'tech-card.html', join(PATHS.output, 'cards', 'tech'), 'Tech');
       await generateCards(browser, missionCards, 'mission-card.html', join(PATHS.output, 'cards', 'mission'), 'Mission');
       await generateCards(browser, starterCards, 'agent-card.html', join(PATHS.output, 'cards', 'starter'), 'Starter');
+      await generateCards(browser, startingTechCards, 'tech-card.html', join(PATHS.output, 'cards', 'starting-tech'), 'Starting Tech');
       await generateSheets(browser);
     } else {
       // Specific type or everything
-      const { agentCards, hazardCards, techCards, missionCards, starterCards } = await loadCardData();
+      const { agentCards, hazardCards, techCards, missionCards, starterCards, startingTechCards } = await loadCardData();
 
       if (!cardType || cardType === 'agent') {
         await generateCards(
@@ -941,6 +992,16 @@ async function main() {
           'agent-card.html',
           join(PATHS.output, 'cards', 'starter'),
           'Starter'
+        );
+      }
+
+      if (!cardType || cardType === 'starting-tech') {
+        await generateCards(
+          browser,
+          startingTechCards,
+          'tech-card.html',
+          join(PATHS.output, 'cards', 'starting-tech'),
+          'Starting Tech'
         );
       }
 

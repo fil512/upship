@@ -248,6 +248,31 @@ EXPECTED_TECHS=(
     "gondola_shielding"
 )
 
+# Expected starting tech card image filenames (faction starter equipment)
+EXPECTED_STARTING_TECHS=(
+    # Germany starters
+    "zeppelin_frame"
+    "maybach_cx_engine"
+    "premium_envelope"
+    "blaugas_tank"
+    # Britain starters
+    "tensioned_frame"
+    "standard_engine"
+    "doped_covering"
+    "passenger_cabin"
+    "imperial_mast"
+    # USA starters
+    "duralumin_frame"
+    "reliable_engine"
+    "latex_envelope"
+    "helium_gas_cell"
+    # Italy starters
+    "semi_rigid_keel"
+    "flexible_frame"
+    "expedition_engine"
+    "cotton_envelope"
+)
+
 # Check missing agent cards
 echo ""
 echo "Missing AGENT card images:"
@@ -278,6 +303,22 @@ if [ $missing_techs -eq 0 ]; then
     echo "  (none - all ${#EXPECTED_TECHS[@]} tech tiles have images)"
 else
     echo "  Total missing: $missing_techs / ${#EXPECTED_TECHS[@]}"
+fi
+
+# Check missing starting tech cards (faction starters - use same tech artwork folder)
+echo ""
+echo "Missing STARTING TECH card images:"
+missing_starting_techs=0
+for tech in "${EXPECTED_STARTING_TECHS[@]}"; do
+    if [ ! -f "$DEST_DIR/tech/${tech}.png" ]; then
+        echo "  - ${tech}.png"
+        ((missing_starting_techs++)) || true
+    fi
+done
+if [ $missing_starting_techs -eq 0 ]; then
+    echo "  (none - all ${#EXPECTED_STARTING_TECHS[@]} starting tech cards have images)"
+else
+    echo "  Total missing: $missing_starting_techs / ${#EXPECTED_STARTING_TECHS[@]}"
 fi
 
 # Check missing mission cards
