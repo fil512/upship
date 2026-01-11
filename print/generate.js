@@ -733,6 +733,43 @@ async function generatePlayerBoards(browser) {
 }
 
 /**
+ * Generate player aid boards for all factions
+ */
+async function generatePlayerAidBoards(browser) {
+  console.log('\nGenerating Player Aid Boards (11" x 8.5" at 300 DPI)...');
+  console.log('  Creating 4 boards: 1 per faction');
+
+  const factions = ['germany', 'britain', 'usa', 'italy'];
+
+  const page = await browser.newPage();
+  await page.setViewportSize({ width: PLAYER_BOARD_WIDTH, height: PLAYER_BOARD_HEIGHT });
+
+  const templatePath = `file://${join(PATHS.templates, 'player-aid.html')}`;
+  await page.goto(templatePath);
+
+  for (const faction of factions) {
+    // Render the board for this faction
+    await page.evaluate((f) => {
+      window.renderBoard(f);
+    }, faction);
+
+    // Wait for content to render
+    await page.waitForTimeout(200);
+
+    const outputPath = join(PATHS.output, 'boards', `player-aid-${faction}.png`);
+    await page.screenshot({
+      path: outputPath,
+      type: 'png',
+    });
+
+    console.log(`  ${faction} -> player-aid-${faction}.png`);
+  }
+
+  await page.close();
+  console.log('Completed Player Aid Boards (4 boards).');
+}
+
+/**
  * Main entry point
  */
 async function main() {
@@ -757,9 +794,10 @@ async function main() {
       await generateTiles(browser, tilesBySlot);
       await generateTileSheets(browser);
     } else if (boardsOnly) {
-      // Boards only (action board + player boards)
+      // Boards only (action board + player boards + player aid boards)
       await generateBoard(browser);
       await generatePlayerBoards(browser);
+      await generatePlayerAidBoards(browser);
     } else if (cardsOnly) {
       // Cards only (all card types + card sheets)
       const { agentCards, hazardCards, techCards, missionCards } = await loadCardData();
@@ -823,9 +861,10 @@ async function main() {
         await generateBoard(browser);
       }
 
-      // Generate player boards
+      // Generate player boards (blueprint + aid boards)
       if (!cardType || cardType === 'playerboard') {
         await generatePlayerBoards(browser);
+        await generatePlayerAidBoards(browser);
       }
 
       // Generate sheets after cards and tiles (only when generating everything)
@@ -842,7 +881,8 @@ async function main() {
   console.log(`Individual cards: ${PATHS.output}/cards/`);
   console.log(`Individual tiles: ${PATHS.output}/tiles/`);
   console.log(`Boards: ${PATHS.output}/boards/`);
-  console.log(`Player boards: ${PATHS.output}/boards/player-board-*.png`);
+  console.log(`Player boards: ${PATHS.output}/boards/player-board-*.png (12 blueprint boards)`);
+  console.log(`Player aid boards: ${PATHS.output}/boards/player-aid-*.png (4 aid boards)`);
   console.log(`Print sheets: ${PATHS.output}/sheets/`);
 }
 
