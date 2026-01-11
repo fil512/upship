@@ -240,6 +240,12 @@ EXPECTED_TECHS=(
     "private_berths"
     "pressurized_lounge"
     "imperial_mast"
+    # Balance fix additions
+    "altitude_compensator"
+    "safety_valves"
+    "pressurized_cabin_tech"
+    "redundant_systems"
+    "gondola_shielding"
 )
 
 # Check missing agent cards

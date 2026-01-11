@@ -240,12 +240,14 @@ Fabric technologies unlock outer covering and gas cell material upgrades.
 | III | Gelatinized Latex | 9 | 2 | — | Synthetic Envelope |
 | III | Composite Covering | 10 | 2 | 1 | Advanced Fabric |
 
-## Gas Systems Track (10 tiles)
+## Gas Systems Track (12 tiles)
 
 | Age | Name | Cost | £ | VP | Unlocks |
 |-----|------|------|---|----|---------|
 | I | Improved Valving | 3 | 1 | — | Pressure Control |
 | I | Manual Ballonets | 3 | 1 | — | Altitude Ballonets |
+| I | Altitude Compensator | 3 | 1 | — | Altitude Compensator |
+| I | Safety Valves | 3 | 1 | — | Safety Valves |
 | II | Multiple Gas Cells | 7 | 1 | — | Compartmented Gas |
 | II | Blaugas Fuel System | 7 | 2 | 2 | Blaugas Tank |
 | II | Automatic Valves | 8 | 2 | 1 | Smart Valving |
@@ -257,18 +259,21 @@ Fabric technologies unlock outer covering and gas cell material upgrades.
 
 *Note: Helium Handling is not in the Technology Bag—it is always available as the Reserve Tech Card.*
 
-## Payload Track (14 tiles)
+## Payload Track (17 tiles)
 
 | Age | Name | Cost | £ | VP | Unlocks |
 |-----|------|------|---|----|---------|
 | I | Observation Platform | 3 | 1 | — | Spotter Gondola |
 | I | Mail Compartment | 3 | 1 | — | Postal Service |
 | I | Cargo Nets | 5 | 1 | 1 | External Cargo |
+| I | Gondola Shielding | 3 | 1 | — | Basic Armor Plating |
 | II | Passenger Gondola | 7 | 1 | — | Basic Cabin |
 | II | Bomb Bay Design | 8 | 2 | 3 | Bombing Equipment |
 | II | Trapeze System | 8 | 2 | 2 | Sparrowhawk Hangar |
 | II | Radio Equipment | 7 | 1 | 1 | Communications Suite |
 | II | Armored Gondola | 7 | 1 | 1 | Light Armor Plating |
+| II | Pressurized Cabin | 5 | 1 | 1 | Pressurized Cabin |
+| II | Redundant Systems | 5 | 1 | 1 | Redundant Systems |
 | II | Reinforced Hull | 8 | 2 | 2 | Heavy Armor Plating |
 | III | Luxury Accommodation | 9 | 2 | — | Luxury Cabin |
 | III | Dining Saloon | 10 | 3 | — | Restaurant |
@@ -290,11 +295,11 @@ These technologies are given to specific factions at game start and are NOT avai
 
 *Note: These 5 tech cards + their tiles are faction-exclusive starting equipment. The other starting techs (Goldbeater's Skin, Wire Bracing, Doped Canvas, etc.) are available in the R&D Board and one copy is removed per faction that starts with it.*
 
-**53 Unique Technology Tiles** (Propulsion 11, Frame 10, Fabric 8, Gas Systems 10, Payload 14) + 1 Reserve Tech Card (Helium Handling)
+**58 Unique Technology Tiles** (Propulsion 11, Frame 10, Fabric 8, Gas Systems 12, Payload 17) + 1 Reserve Tech Card (Helium Handling)
 
 **Tiles by Age:**
-- Age I: 12 tiles (3 Propulsion, 2 Frame, 2 Fabric, 2 Gas, 3 Payload)
-- Age II: 22 tiles (4 Propulsion, 5 Frame, 4 Fabric, 3 Gas, 6 Payload) — *Helium Handling is always available, not in bag*
+- Age I: 15 tiles (3 Propulsion, 2 Frame, 2 Fabric, 4 Gas, 4 Payload)
+- Age II: 24 tiles (4 Propulsion, 5 Frame, 4 Fabric, 3 Gas, 8 Payload) — *Helium Handling is always available, not in bag*
 - Age III: 19 tiles (4 Propulsion, 3 Frame, 2 Fabric, 5 Gas, 5 Payload)
 
 **Player Scaling (§3.1):** The game includes (N−1) copies of each tile where N = number of players. Faction starting technologies are removed from the bag (one copy per player who starts with that tech).
@@ -374,6 +379,8 @@ Fabric tiles go in Fabric slots. The **Hull Cost** column shows how much this ti
 |------|---------------|--------|-------|---------|
 | Pressure Control | Improved Valving | 1 | Ceiling +1 | — |
 | Altitude Ballonets | Manual Ballonets | 1 | Ceiling +1 | — |
+| Altitude Compensator | Altitude Compensator | 1 | Ceiling +1 | — |
+| Safety Valves | Safety Valves | 1 | Reliability +1 | — |
 | Compartmented Gas | Multiple Gas Cells | 1 | Lift +2, Reliability +1 | — |
 | Helium Gas Cell | Helium Handling | 1 | — | Safe (immune to Fire hazards); use Helium cubes |
 | Blaugas Tank | Blaugas Fuel System | 0 | Range +1 | Neutral buoyancy fuel: Pay £2 when launching to keep gas cubes after mission (Germany starting tech) |
@@ -392,7 +399,10 @@ Fabric tiles go in Fabric slots. The **Hull Cost** column shows how much this ti
 | Spotter Gondola | Observation Platform | 1 | Income +1 | — |
 | Postal Service | Mail Compartment | 1 | Income +2 | — |
 | External Cargo | Cargo Nets | 2 | Income +2 | — |
+| Basic Armor Plating | Gondola Shielding | 2 | Armor +1 | Early armor option for Age II preparation |
 | Basic Cabin | Passenger Gondola | 2 | Income +2, Luxury +1 | — |
+| Pressurized Cabin | Pressurized Cabin | 2 | Ceiling +2 | High-altitude passenger operations |
+| Redundant Systems | Redundant Systems | 1 | Reliability +2 | Backup systems for critical components |
 | Bombing Equipment | Bomb Bay Design | 3 | — | Combat Missions: +£3 Income |
 | Sparrowhawk Hangar | Trapeze System | 3 | — | Ignore one route requirement |
 | Communications Suite | Radio Equipment | 1 | Reliability +1 | +1 to Navigation hazards |
@@ -405,7 +415,7 @@ Fabric tiles go in Fabric slots. The **Hull Cost** column shows how much this ti
 | Pressurized Lounge | Smoking Room | 2 | Income +1, Luxury +2 | Requires Helium Gas Cell installed |
 | Imperial Mast | Imperial Mooring System | 1 | — | British Territories count as Home Base (Britain specialty) |
 
-**Total: 62 Tech Tiles** (Propulsion 14, Frame 11, Fabric 9, Gas Systems 11, Payload 17)
+**Total: 67 Tech Tiles** (Propulsion 14, Frame 11, Fabric 9, Gas Systems 13, Payload 20)
 
 ---
 

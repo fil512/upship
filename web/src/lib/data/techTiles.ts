@@ -604,6 +604,31 @@ export const TECH_TILES: Record<string, TechTile> = {
     special: 'helium_cost_reduction',
     age: 3
   },
+  // Balance fix additions - ceiling/reliability paths
+  altitude_compensator: {
+    id: 'altitude_compensator',
+    name: 'Altitude Compensator',
+    type: 'gas',
+    slotType: 'componentSlots',
+    requiredCard: 'altitude_compensator',
+    weight: 1,
+    hullCost: 1,
+    stats: { ceiling: 1 },
+    special: null,
+    age: 1
+  },
+  safety_valves: {
+    id: 'safety_valves',
+    name: 'Safety Valves',
+    type: 'gas',
+    slotType: 'componentSlots',
+    requiredCard: 'safety_valves',
+    weight: 1,
+    hullCost: 1,
+    stats: { reliability: 1 },
+    special: null,
+    age: 1
+  },
 
   // === COMPONENT/PAYLOAD UPGRADES ===
   spotter_gondola: {
@@ -641,6 +666,43 @@ export const TECH_TILES: Record<string, TechTile> = {
     stats: { income: 2 },
     special: null,
     age: 1
+  },
+  // Balance fix additions - early armor and ceiling/reliability options
+  basic_armor_plating: {
+    id: 'basic_armor_plating',
+    name: 'Basic Armor Plating',
+    type: 'component',
+    slotType: 'componentSlots',
+    requiredCard: 'gondola_shielding',
+    weight: 2,
+    hullCost: 1,
+    stats: { armor: 1 },
+    special: null,
+    age: 1
+  },
+  pressurized_cabin_upgrade: {
+    id: 'pressurized_cabin_upgrade',
+    name: 'Pressurized Cabin',
+    type: 'component',
+    slotType: 'componentSlots',
+    requiredCard: 'pressurized_cabin_tech',
+    weight: 2,
+    hullCost: 2,
+    stats: { ceiling: 2 },
+    special: null,
+    age: 2
+  },
+  redundant_systems: {
+    id: 'redundant_systems',
+    name: 'Redundant Systems',
+    type: 'component',
+    slotType: 'componentSlots',
+    requiredCard: 'redundant_systems',
+    weight: 1,
+    hullCost: 1,
+    stats: { reliability: 2 },
+    special: null,
+    age: 2
   },
   passenger_gondola: {
     id: 'passenger_gondola',
@@ -860,6 +922,8 @@ export const TECH_CARDS: Record<string, TechCard> = {
   // Gas System techs (VP per Appendix C)
   improved_valving: { id: 'improved_valving', name: 'Improved Valving', type: 'gas', cost: 1, age: 1 },
   manual_ballonets: { id: 'manual_ballonets', name: 'Manual Ballonets', type: 'gas', cost: 1, age: 1 },
+  altitude_compensator: { id: 'altitude_compensator', name: 'Altitude Compensator', type: 'gas', cost: 3, age: 1 },
+  safety_valves: { id: 'safety_valves', name: 'Safety Valves', type: 'gas', cost: 3, age: 1 },
   multiple_gas_cells: { id: 'multiple_gas_cells', name: 'Multiple Gas Cells', type: 'gas', cost: 3, age: 2 },
   automatic_valves: { id: 'automatic_valves', name: 'Automatic Valves', type: 'gas', cost: 4, age: 2, vp: 1 },
   pressure_altitude_system: { id: 'pressure_altitude_system', name: 'Pressure Altitude System', type: 'gas', cost: 5, age: 3, vp: 1 },
@@ -876,6 +940,8 @@ export const TECH_CARDS: Record<string, TechCard> = {
   passenger_gondola: { id: 'passenger_gondola', name: 'Passenger Gondola', type: 'component', cost: 3, age: 2 },
   bomb_bay_design: { id: 'bomb_bay_design', name: 'Bomb Bay Design', type: 'component', cost: 4, age: 2, vp: 3 },
   armored_gondola: { id: 'armored_gondola', name: 'Armored Gondola', type: 'component', cost: 3, age: 2, vp: 1 },
+  pressurized_cabin_tech: { id: 'pressurized_cabin_tech', name: 'Pressurized Cabin', type: 'component', cost: 5, age: 2, vp: 1 },
+  redundant_systems: { id: 'redundant_systems', name: 'Redundant Systems', type: 'component', cost: 5, age: 2, vp: 1 },
   reinforced_hull: { id: 'reinforced_hull', name: 'Reinforced Hull', type: 'component', cost: 4, age: 2, vp: 2 },
   radio_equipment: { id: 'radio_equipment', name: 'Radio Equipment', type: 'component', cost: 3, age: 2, vp: 1 },
   luxury_accommodation: { id: 'luxury_accommodation', name: 'Luxury Accommodation', type: 'component', cost: 4, age: 3 },

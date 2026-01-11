@@ -1175,8 +1175,8 @@ export const TECH_CARDS: Record<string, TechCard> = {
   // New ceiling/reliability tech cards (Balance Fix)
   altitude_compensator: { id: 'altitude_compensator', name: 'Altitude Compensator', type: 'gas', cost: 3, age: 1 },
   safety_valves: { id: 'safety_valves', name: 'Safety Valves', type: 'gas', cost: 3, age: 1 },
-  pressurized_cabin_tech: { id: 'pressurized_cabin_tech', name: 'Pressurized Cabin', type: 'component', cost: 5, age: 2 },
-  redundant_systems: { id: 'redundant_systems', name: 'Redundant Systems', type: 'component', cost: 5, age: 2 },
+  pressurized_cabin_tech: { id: 'pressurized_cabin_tech', name: 'Pressurized Cabin', type: 'component', cost: 5, age: 2, vp: 1 },
+  redundant_systems: { id: 'redundant_systems', name: 'Redundant Systems', type: 'component', cost: 5, age: 2, vp: 1 },
 
   // Payload techs per Appendix C (VP per Appendix C)
   gondola_shielding: { id: 'gondola_shielding', name: 'Gondola Shielding', type: 'component', cost: 3, age: 1 },

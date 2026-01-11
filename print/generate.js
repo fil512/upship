@@ -181,6 +181,9 @@ async function loadCardData() {
     wooden_framework: { name: 'Wooden Frame', slotType: 'frame', weight: 2, hullCost: 1, stats: { reliability: 1, gas_socket: 1 } },
     steel_framework: { name: 'Steel Frame', slotType: 'frame', weight: 3, hullCost: 1, stats: { reliability: 2, gas_socket: 1 } },
     geodetic_structure: { name: 'Geodetic Frame', slotType: 'frame', weight: 1, hullCost: 3, stats: { reliability: 2, ceiling: 1, gas_socket: 1 } },
+    modular_frame: { name: 'Modular Frame', slotType: 'frame', weight: 1, hullCost: 2, stats: { gas_socket: 1 } },
+    streamlined_hull: { name: 'Streamlined Hull', slotType: 'frame', weight: 1, hullCost: 2, stats: { lift: 2, gas_socket: 1 } },
+    aerodynamic_lift_system: { name: 'Aerodynamic Lift System', slotType: 'frame', weight: 2, hullCost: 3, stats: { lift: 4, gas_socket: 1 } },
     fireproof_coating: { name: 'Fire-Resistant Fabric', slotType: 'fabric', weight: 1, hullCost: 2, stats: { reliability: 1 } },
     aluminum_doping: { name: 'Reflective Covering', slotType: 'fabric', weight: 0, hullCost: 1, stats: { reliability: 1 } },
     grounding_systems: { name: 'Conductive Covering', slotType: 'fabric', weight: 0, hullCost: 1, stats: { reliability: 1 } },
@@ -209,6 +212,12 @@ async function loadCardData() {
     promenade_deck: { name: 'Observation Lounge', slotType: 'component', weight: 2, hullCost: 3, stats: { income: 1, luxury: 3 } },
     sleeping_quarters: { name: 'Private Berths', slotType: 'component', weight: 2, hullCost: 2, stats: { income: 2, luxury: 1 } },
     smoking_room: { name: 'Pressurized Lounge', slotType: 'component', weight: 2, hullCost: 3, stats: { income: 1, luxury: 2 } },
+    // Balance fix additions
+    altitude_compensator: { name: 'Altitude Compensator', slotType: 'component', weight: 1, hullCost: 1, stats: { ceiling: 1 } },
+    safety_valves: { name: 'Safety Valves', slotType: 'component', weight: 1, hullCost: 1, stats: { reliability: 1 } },
+    basic_armor_plating: { name: 'Basic Armor Plating', slotType: 'component', weight: 2, hullCost: 1, stats: { armor: 1 } },
+    pressurized_cabin_upgrade: { name: 'Pressurized Cabin', slotType: 'component', weight: 2, hullCost: 2, stats: { ceiling: 2 } },
+    redundant_systems: { name: 'Redundant Systems', slotType: 'component', weight: 1, hullCost: 1, stats: { reliability: 2 } },
   };
 
   const techCards = [
@@ -239,6 +248,8 @@ async function loadCardData() {
     // Gas System techs (VP per Appendix C)
     { id: 'improved_valving', name: 'Improved Valving', type: 'gas', cost: 3, age: 1, vp: 0, tile: TECH_TILES.improved_valving },
     { id: 'manual_ballonets', name: 'Manual Ballonets', type: 'gas', cost: 4, age: 1, vp: 0, tile: TECH_TILES.manual_ballonets },
+    { id: 'altitude_compensator', name: 'Altitude Compensator', type: 'gas', cost: 3, age: 1, vp: 0, tile: TECH_TILES.altitude_compensator },
+    { id: 'safety_valves', name: 'Safety Valves', type: 'gas', cost: 3, age: 1, vp: 0, tile: TECH_TILES.safety_valves },
     { id: 'multiple_gas_cells', name: 'Multiple Gas Cells', type: 'gas', cost: 5, age: 2, vp: 0, tile: TECH_TILES.multiple_gas_cells },
     { id: 'automatic_valves', name: 'Automatic Valves', type: 'gas', cost: 5, age: 2, vp: 1, tile: TECH_TILES.automatic_valves },
     { id: 'pressure_altitude_system', name: 'Pressure Altitude System', type: 'gas', cost: 6, age: 3, vp: 1, tile: TECH_TILES.pressure_altitude_system },
@@ -251,10 +262,13 @@ async function loadCardData() {
     { id: 'mail_compartment', name: 'Mail Compartment', type: 'component', cost: 3, age: 1, vp: 0, tile: TECH_TILES.mail_compartment },
     { id: 'cargo_nets', name: 'Cargo Nets', type: 'component', cost: 3, age: 1, vp: 1, tile: TECH_TILES.cargo_nets },
     { id: 'passenger_gondola', name: 'Passenger Gondola', type: 'component', cost: 4, age: 1, vp: 0, tile: TECH_TILES.passenger_gondola },
+    { id: 'gondola_shielding', name: 'Gondola Shielding', type: 'component', cost: 3, age: 1, vp: 0, tile: TECH_TILES.basic_armor_plating },
     { id: 'bomb_bay_design', name: 'Bomb Bay Design', type: 'component', cost: 4, age: 2, vp: 3, tile: TECH_TILES.bomb_bay_design },
     { id: 'trapeze_system', name: 'Trapeze System', type: 'component', cost: 5, age: 2, vp: 2, tile: TECH_TILES.trapeze_system },
     { id: 'radio_equipment', name: 'Radio Equipment', type: 'component', cost: 4, age: 2, vp: 1, tile: TECH_TILES.radio_equipment },
     { id: 'armored_gondola', name: 'Armored Gondola', type: 'component', cost: 5, age: 2, vp: 1, tile: TECH_TILES.armored_gondola },
+    { id: 'pressurized_cabin_tech', name: 'Pressurized Cabin', type: 'component', cost: 5, age: 2, vp: 1, tile: TECH_TILES.pressurized_cabin_upgrade },
+    { id: 'redundant_systems', name: 'Redundant Systems', type: 'component', cost: 5, age: 2, vp: 1, tile: TECH_TILES.redundant_systems },
     { id: 'reinforced_hull', name: 'Reinforced Hull', type: 'component', cost: 6, age: 3, vp: 2, tile: TECH_TILES.reinforced_hull },
     { id: 'luxury_accommodation', name: 'Luxury Accommodation', type: 'component', cost: 5, age: 2, vp: 0, tile: TECH_TILES.luxury_accommodation },
     { id: 'dining_saloon', name: 'Dining Saloon', type: 'component', cost: 4, age: 2, vp: 0, tile: TECH_TILES.dining_saloon },
@@ -363,6 +377,11 @@ function loadTileData() {
     { id: 'rapid_descent_system', name: 'Rapid Descent System', slotType: 'componentSlots', weight: 1, hullCost: 2, stats: { reliability: 2 } },
     { id: 'reclamation_system', name: 'Reclamation System', slotType: 'componentSlots', weight: 1, hullCost: 3, stats: { range: 2 } },
     { id: 'exhaust_condensers', name: 'Exhaust Condensers', slotType: 'componentSlots', weight: 2, hullCost: 3, stats: {} },
+    // Balance fix additions (ceiling/reliability paths)
+    { id: 'altitude_compensator', name: 'Altitude Compensator', slotType: 'componentSlots', weight: 1, hullCost: 1, stats: { ceiling: 1 } },
+    { id: 'safety_valves', name: 'Safety Valves', slotType: 'componentSlots', weight: 1, hullCost: 1, stats: { reliability: 1 } },
+    { id: 'pressurized_cabin', name: 'Pressurized Cabin', slotType: 'componentSlots', weight: 2, hullCost: 2, stats: { ceiling: 2 } },
+    { id: 'redundant_systems', name: 'Redundant Systems', slotType: 'componentSlots', weight: 1, hullCost: 1, stats: { reliability: 2 } },
 
     // === COMPONENT TILES (Payload) ===
     { id: 'spotter_gondola', name: 'Spotter Gondola', slotType: 'componentSlots', weight: 1, hullCost: 1, stats: { income: 1 } },
@@ -371,6 +390,7 @@ function loadTileData() {
     { id: 'passenger_gondola', name: 'Basic Cabin', slotType: 'componentSlots', weight: 2, hullCost: 2, stats: { income: 2, luxury: 1 } },
     { id: 'bombing_equipment', name: 'Bombing Equipment', slotType: 'componentSlots', weight: 3, hullCost: 2, stats: {} },
     { id: 'communications_suite', name: 'Communications Suite', slotType: 'componentSlots', weight: 1, hullCost: 2, stats: { reliability: 1 } },
+    { id: 'basic_armor_plating', name: 'Basic Armor Plating', slotType: 'componentSlots', weight: 2, hullCost: 1, stats: { armor: 1 } },
     { id: 'light_armor_plating', name: 'Light Armor Plating', slotType: 'componentSlots', weight: 2, hullCost: 2, stats: { armor: 1 } },
     { id: 'heavy_armor_plating', name: 'Heavy Armor Plating', slotType: 'componentSlots', weight: 3, hullCost: 3, stats: { armor: 2 } },
     { id: 'luxury_cabin', name: 'Luxury Cabin', slotType: 'componentSlots', weight: 3, hullCost: 3, stats: { income: 3, luxury: 2 } },
