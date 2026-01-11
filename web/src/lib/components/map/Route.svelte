@@ -124,7 +124,7 @@
   $: claimedFaction = route.claimed ? playerFactions[route.claimed] : null;
   $: strokeColor = claimedFaction
     ? FACTION_COLORS[claimedFaction] || '#888'
-    : '#64748b'; // Lighter slate gray for unclaimed (more visible)
+    : '#64748b'; // Medium slate gray for unclaimed (print-friendly)
 
   // Thicker lines: 8px claimed, 6px unclaimed
   $: strokeWidth = route.claimed ? 8 : 6;
@@ -208,7 +208,7 @@
         >
           <div class="requirements-row">
             {#each requirementIcons as iconName, i}
-              <Icon name={iconName} size={iconSize} color="white" />
+              <Icon name={iconName} size={iconSize} color="#4b5563" />
             {/each}
           </div>
         </foreignObject>
@@ -289,8 +289,8 @@
   .route-label {
     font-family: var(--font-mono);
     text-shadow:
-      0 0 4px rgba(0, 0, 0, 1),
-      0 1px 3px rgba(0, 0, 0, 0.9);
+      0 0 4px rgba(255, 255, 255, 1),
+      0 1px 3px rgba(255, 255, 255, 0.9);
   }
 
   .requirements-container {
@@ -302,6 +302,6 @@
     align-items: center;
     justify-content: center;
     gap: 2px;
-    filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.8));
+    filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.8));
   }
 </style>

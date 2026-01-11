@@ -134,7 +134,7 @@
     text-anchor={labelOffset.anchor}
     font-size={type === 'major' ? '13' : '11'}
     font-weight={type === 'major' ? '600' : '400'}
-    fill="#e2e8f0"
+    fill="#1e293b"
   >
     {name}
   </text>
@@ -165,7 +165,7 @@
   .bonus-icon {
     font-family: var(--font-sans);
     pointer-events: none;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+    text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
   }
 
   .icon-container {
@@ -180,7 +180,7 @@
   .city-label {
     font-family: var(--font-sans);
     font-weight: 500;
-    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+    text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.8);
     pointer-events: none;
   }
 
