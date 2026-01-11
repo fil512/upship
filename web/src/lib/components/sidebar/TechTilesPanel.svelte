@@ -17,12 +17,24 @@
 		dispatch('select', { tileId });
 	}
 
-	// Slot type colors matching AirshipBlueprint
-	const slotColors: Record<string, string> = {
-		frameSlots: '#3b82f6',
-		fabricSlots: '#8b5cf6',
-		driveSlots: '#f59e0b',
-		componentSlots: '#10b981'
+	// Slot type colors - professional boardgame palette
+	const slotColors: Record<string, { color: string; gradient: string }> = {
+		frameSlots: {
+			color: '#1d4ed8',
+			gradient: 'linear-gradient(135deg, #dbeafe 0%, #bfdbfe 50%, #93c5fd 100%)'
+		},
+		fabricSlots: {
+			color: '#7c3aed',
+			gradient: 'linear-gradient(135deg, #ede9fe 0%, #ddd6fe 50%, #c4b5fd 100%)'
+		},
+		driveSlots: {
+			color: '#d97706',
+			gradient: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 50%, #fcd34d 100%)'
+		},
+		componentSlots: {
+			color: '#059669',
+			gradient: 'linear-gradient(135deg, #d1fae5 0%, #a7f3d0 50%, #6ee7b7 100%)'
+		}
 	};
 
 	const slotLabels: Record<string, string> = {
@@ -69,8 +81,9 @@
 		<div class="tiles-container">
 			{#each Object.entries(tiles) as [slotType, slotTiles]}
 				{#if slotTiles.length > 0}
+					{@const slotStyle = slotColors[slotType] || { color: '#666', gradient: '#f5f3ee' }}
 					<div class="slot-group">
-						<div class="slot-header" style="--slot-color: {slotColors[slotType]}">
+						<div class="slot-header" style="--slot-color: {slotStyle.color}">
 							{slotLabels[slotType]}
 						</div>
 						<div class="tile-grid">
@@ -80,7 +93,7 @@
 									class="tile-box"
 									class:selected={selectedTileId === tile.id}
 									class:selectable
-									style="--slot-color: {slotColors[slotType]}"
+									style="--slot-color: {slotStyle.color}; --slot-gradient: {slotStyle.gradient}"
 									on:click={() => handleTileClick(tile.id)}
 									disabled={!selectable}
 								>
@@ -158,31 +171,35 @@
 		width: 108px;
 		height: 59px;
 		padding: 4px;
-		background: color-mix(in srgb, var(--slot-color) 12%, #f5f3ee);
+		background: var(--slot-gradient, #f5f3ee);
 		border: 2px solid var(--slot-color);
 		border-radius: 6px;
 		cursor: default;
 		transition: all var(--transition-fast);
 		position: relative;
-		box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.08);
+		box-shadow:
+			inset 0 1px 2px rgba(255, 255, 255, 0.5),
+			inset 0 -1px 2px rgba(0, 0, 0, 0.08),
+			0 2px 4px rgba(0, 0, 0, 0.1);
 	}
 
 	.cost-badge {
 		position: absolute;
 		top: 3px;
 		right: 3px;
-		width: 16px;
-		height: 16px;
-		background: #9ca3af;
-		border: 1px solid #6b7280;
+		width: 18px;
+		height: 18px;
+		background: linear-gradient(135deg, #374151 0%, #1f2937 100%);
+		border: 1px solid #4b5563;
 		border-radius: 50%;
-		font-size: 9px;
+		font-size: 10px;
 		font-weight: 700;
-		color: #1f2937;
+		color: #fff;
 		display: flex;
 		align-items: center;
 		justify-content: center;
 		line-height: 1;
+		box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 	}
 
 	.tile-box.selectable {
@@ -190,13 +207,15 @@
 	}
 
 	.tile-box.selectable:hover {
-		background: color-mix(in srgb, var(--slot-color) 20%, #f5f3ee);
-		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+		box-shadow:
+			inset 0 1px 2px rgba(255, 255, 255, 0.5),
+			inset 0 -1px 2px rgba(0, 0, 0, 0.08),
+			0 4px 12px rgba(0, 0, 0, 0.2);
+		transform: translateY(-1px);
 	}
 
 	.tile-box.selected {
-		background: color-mix(in srgb, var(--slot-color) 25%, #f5f3ee);
-		box-shadow: 0 0 0 2px var(--slot-color), 0 2px 8px rgba(0, 0, 0, 0.15);
+		box-shadow: 0 0 0 3px var(--slot-color), 0 4px 12px rgba(0, 0, 0, 0.2);
 		border-width: 2px;
 	}
 
@@ -215,14 +234,15 @@
 	/* Name at bottom of tile */
 	.tile-name {
 		font-size: 9px;
-		font-weight: 700;
-		color: #333;
+		font-weight: 800;
+		color: var(--slot-color, #333);
 		text-align: center;
 		white-space: nowrap;
 		overflow: hidden;
 		text-overflow: ellipsis;
 		max-width: 100%;
 		line-height: 1;
+		text-shadow: 0 1px 0 rgba(255, 255, 255, 0.6);
 	}
 
 	.no-tiles {

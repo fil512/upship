@@ -19,7 +19,16 @@ Icons appear in different UI contexts:
 - **Colored icons** (income, hazard, hydrogen, helium, etc.) retain their semantic colors
 
 ### Tech Tile Background
-Tech tiles use a light cream background (`#f5f3ee` with slot color tint). The dark grey stat icons provide good contrast without needing CSS overrides.
+Tech tiles use gradient backgrounds based on their slot type for a professional boardgame look:
+
+| Slot Type | Border Color | Gradient |
+|-----------|--------------|----------|
+| Frame | #1d4ed8 (Deep Blue) | Light blue gradient (#dbeafe → #bfdbfe → #93c5fd) |
+| Fabric | #7c3aed (Deep Purple) | Light purple gradient (#ede9fe → #ddd6fe → #c4b5fd) |
+| Drive | #d97706 (Deep Amber) | Light amber gradient (#fef3c7 → #fde68a → #fcd34d) |
+| Component | #059669 (Deep Emerald) | Light green gradient (#d1fae5 → #a7f3d0 → #6ee7b7) |
+
+The dark grey stat icons (`#4b5563`) provide good contrast on these gradient backgrounds without needing CSS overrides.
 
 ### Player Colors
 

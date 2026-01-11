@@ -163,12 +163,15 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 16px;
-      background: color-mix(in srgb, var(--slot-color, #666) 12%, #f5f3ee);
-      border: 4px solid var(--slot-color, #666);
-      border-radius: 16px;
+      padding: 20px 24px;
+      background: var(--slot-gradient, #f5f3ee);
+      border: 5px solid var(--slot-color, #666);
+      border-radius: 20px;
       position: relative;
-      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.08);
+      box-shadow:
+        inset 0 2px 4px rgba(255, 255, 255, 0.5),
+        inset 0 -2px 4px rgba(0, 0, 0, 0.1),
+        0 4px 8px rgba(0, 0, 0, 0.15);
     }
 
     .tile-header {
@@ -180,24 +183,27 @@
     }
 
     .tile-name {
-      font-size: 1.8rem;
-      font-weight: 700;
-      color: #333;
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--slot-color, #333);
       text-transform: uppercase;
+      text-shadow: 0 1px 0 rgba(255, 255, 255, 0.8);
+      letter-spacing: 0.5px;
     }
 
     .hull-cost-badge {
-      width: 56px;
-      height: 56px;
-      background: #4b5563;
-      border: 3px solid #6b7280;
+      width: 64px;
+      height: 64px;
+      background: linear-gradient(135deg, #374151 0%, #1f2937 100%);
+      border: 4px solid #4b5563;
       border-radius: 50%;
-      font-size: 2rem;
-      font-weight: 700;
-      color: #1f2937;
+      font-size: 2.4rem;
+      font-weight: 800;
+      color: #fff;
       display: flex;
       align-items: center;
       justify-content: center;
+      box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
     }
 
     .tile-icons {
@@ -205,19 +211,32 @@
       flex-wrap: wrap;
       justify-content: center;
       align-items: center;
-      gap: 12px;
+      gap: 16px;
+      padding: 8px 0;
     }
 
     .tile-icons svg {
-      width: 48px;
-      height: 48px;
+      width: 64px;
+      height: 64px;
     }
 
-    /* Slot type colors */
-    .slot-drive { --slot-color: #f59e0b; }
-    .slot-frame { --slot-color: #3b82f6; }
-    .slot-fabric { --slot-color: #8b5cf6; }
-    .slot-component { --slot-color: #10b981; }
+    /* Slot type colors - professional boardgame palette */
+    .slot-drive {
+      --slot-color: #d97706;
+      --slot-gradient: linear-gradient(135deg, #fef3c7 0%, #fde68a 50%, #fcd34d 100%);
+    }
+    .slot-frame {
+      --slot-color: #1d4ed8;
+      --slot-gradient: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 50%, #93c5fd 100%);
+    }
+    .slot-fabric {
+      --slot-color: #7c3aed;
+      --slot-gradient: linear-gradient(135deg, #ede9fe 0%, #ddd6fe 50%, #c4b5fd 100%);
+    }
+    .slot-component {
+      --slot-color: #059669;
+      --slot-gradient: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 50%, #6ee7b7 100%);
+    }
   </style>
 </head>
 <body>

@@ -27,12 +27,15 @@
       justify-content: space-between;
       width: 450px;
       height: 285px;
-      padding: 16px;
-      background: color-mix(in srgb, var(--slot-color) 12%, #f5f3ee);
+      padding: 20px;
+      background: var(--slot-gradient, #f5f3ee);
       border: 8px solid var(--slot-color);
       border-radius: 24px;
       position: relative;
-      box-shadow: inset 0 4px 8px rgba(0, 0, 0, 0.08);
+      box-shadow:
+        inset 0 3px 6px rgba(255, 255, 255, 0.5),
+        inset 0 -3px 6px rgba(0, 0, 0, 0.1),
+        0 6px 12px rgba(0, 0, 0, 0.15);
     }
 
     /* Hull cost badge */
@@ -40,18 +43,19 @@
       position: absolute;
       top: 12px;
       right: 12px;
-      width: 56px;
-      height: 56px;
-      background: #9ca3af;
-      border: 4px solid #6b7280;
+      width: 64px;
+      height: 64px;
+      background: linear-gradient(135deg, #374151 0%, #1f2937 100%);
+      border: 4px solid #4b5563;
       border-radius: 50%;
-      font-size: 32px;
-      font-weight: 700;
-      color: #1f2937;
+      font-size: 36px;
+      font-weight: 800;
+      color: #fff;
       display: flex;
       align-items: center;
       justify-content: center;
       line-height: 1;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
     }
 
     /* Icons area - centered */
@@ -60,33 +64,47 @@
       flex-wrap: wrap;
       justify-content: center;
       align-items: center;
-      gap: 8px;
+      gap: 12px;
       max-width: 380px;
       flex: 1;
-      padding-top: 8px;
+      padding-top: 12px;
     }
 
     .tile-icons svg {
-      width: 48px;
-      height: 48px;
+      width: 64px;
+      height: 64px;
     }
 
     /* Tile name */
     .tile-name {
-      font-size: 32px;
-      font-weight: 700;
-      color: #333;
+      font-size: 34px;
+      font-weight: 800;
+      color: var(--slot-color, #333);
       text-align: center;
       max-width: 100%;
       line-height: 1.2;
       text-transform: uppercase;
+      text-shadow: 0 2px 0 rgba(255, 255, 255, 0.8);
+      letter-spacing: 0.5px;
     }
 
-    /* Slot type colors */
-    .slot-driveSlots { --slot-color: #f59e0b; }
-    .slot-frameSlots { --slot-color: #3b82f6; }
-    .slot-fabricSlots { --slot-color: #8b5cf6; }
-    .slot-componentSlots { --slot-color: #10b981; }
+    /* Slot type colors - professional boardgame palette */
+    .slot-driveSlots {
+      --slot-color: #d97706;
+      --slot-gradient: linear-gradient(135deg, #fef3c7 0%, #fde68a 50%, #fcd34d 100%);
+    }
+    .slot-frameSlots {
+      --slot-color: #1d4ed8;
+      --slot-gradient: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 50%, #93c5fd 100%);
+    }
+    .slot-fabricSlots {
+      --slot-color: #7c3aed;
+      --slot-gradient: linear-gradient(135deg, #ede9fe 0%, #ddd6fe 50%, #c4b5fd 100%);
+    }
+    .slot-componentSlots {
+      --slot-color: #059669;
+      --slot-gradient: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 50%, #6ee7b7 100%);
+    }
   </style>
 </head>
 <body>

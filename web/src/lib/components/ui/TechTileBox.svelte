@@ -6,12 +6,24 @@
 	export let tile: TechTile;
 	export let alreadyOwned: boolean = false;
 
-	// Slot type colors matching AirshipBlueprint
-	const slotColors: Record<string, string> = {
-		frameSlots: '#3b82f6',
-		fabricSlots: '#8b5cf6',
-		driveSlots: '#f59e0b',
-		componentSlots: '#10b981'
+	// Slot type colors - professional boardgame palette
+	const slotColors: Record<string, { color: string; gradient: string }> = {
+		frameSlots: {
+			color: '#1d4ed8',
+			gradient: 'linear-gradient(135deg, #dbeafe 0%, #bfdbfe 50%, #93c5fd 100%)'
+		},
+		fabricSlots: {
+			color: '#7c3aed',
+			gradient: 'linear-gradient(135deg, #ede9fe 0%, #ddd6fe 50%, #c4b5fd 100%)'
+		},
+		driveSlots: {
+			color: '#d97706',
+			gradient: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 50%, #fcd34d 100%)'
+		},
+		componentSlots: {
+			color: '#059669',
+			gradient: 'linear-gradient(135deg, #d1fae5 0%, #a7f3d0 50%, #6ee7b7 100%)'
+		}
 	};
 
 	// Build array of icons to display (matching blueprint logic)
@@ -35,14 +47,14 @@
 		return icons;
 	}
 
-	$: slotColor = slotColors[tile.slotType] || '#666';
+	$: slotStyle = slotColors[tile.slotType] || { color: '#666', gradient: '#f5f3ee' };
 	$: icons = getIconsList(tile.stats, tile.weight);
 </script>
 
 <div
 	class="tile-box"
 	class:already-owned={alreadyOwned}
-	style="--slot-color: {slotColor}"
+	style="--slot-color: {slotStyle.color}; --slot-gradient: {slotStyle.gradient}"
 	title="{tile.name}"
 >
 	{#if alreadyOwned}
@@ -67,11 +79,14 @@
 		width: 108px;
 		height: 68px;
 		padding: 4px;
-		background: color-mix(in srgb, var(--slot-color) 12%, #f5f3ee);
+		background: var(--slot-gradient, #f5f3ee);
 		border: 2px solid var(--slot-color);
 		border-radius: 6px;
 		position: relative;
-		box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.08);
+		box-shadow:
+			inset 0 1px 2px rgba(255, 255, 255, 0.5),
+			inset 0 -1px 2px rgba(0, 0, 0, 0.08),
+			0 2px 4px rgba(0, 0, 0, 0.1);
 	}
 
 	.tile-box.already-owned {
@@ -83,18 +98,19 @@
 		position: absolute;
 		top: 3px;
 		right: 3px;
-		width: 16px;
-		height: 16px;
-		background: #9ca3af;
-		border: 1px solid #6b7280;
+		width: 18px;
+		height: 18px;
+		background: linear-gradient(135deg, #374151 0%, #1f2937 100%);
+		border: 1px solid #4b5563;
 		border-radius: 50%;
-		font-size: 9px;
+		font-size: 10px;
 		font-weight: 700;
-		color: #1f2937;
+		color: #fff;
 		display: flex;
 		align-items: center;
 		justify-content: center;
 		line-height: 1;
+		box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 	}
 
 	.owned-overlay {
@@ -127,8 +143,8 @@
 	/* Name at bottom of tile - allows wrapping to 2 lines */
 	.tile-name {
 		font-size: 9px;
-		font-weight: 700;
-		color: #333;
+		font-weight: 800;
+		color: var(--slot-color, #333);
 		text-align: center;
 		max-width: 100%;
 		line-height: 1.2;
@@ -137,5 +153,6 @@
 		-webkit-line-clamp: 2;
 		-webkit-box-orient: vertical;
 		word-break: break-word;
+		text-shadow: 0 1px 0 rgba(255, 255, 255, 0.6);
 	}
 </style>
