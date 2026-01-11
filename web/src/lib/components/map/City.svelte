@@ -1,6 +1,5 @@
 <script lang="ts">
   import { createEventDispatcher } from 'svelte';
-  import { FACTION_COLORS } from '$lib/data/mapConfig';
   import { CITY_BONUSES, type CityPosition, type CityBonus } from '$lib/data/cityCoordinates';
   import Icon from '$lib/components/ui/Icon.svelte';
   import type { IconName } from '$lib/icons';
@@ -8,7 +7,6 @@
   export let name: string;
   export let position: CityPosition;
   export let type: 'major' | 'minor' = 'minor';
-  export let homeBase: string | null = null;
 
   const dispatch = createEventDispatcher<{ click: { name: string } }>();
 
@@ -17,7 +15,6 @@
 
   // Sizes for markers - larger if showing bonus (doubled for visibility)
   $: size = bonus ? 40 : (type === 'major' ? 28 : 20);
-  $: homeBaseColor = homeBase ? FACTION_COLORS[homeBase] : null;
 
   // Label offset based on position preference
   $: labelOffset = getLabelOffset(position.labelPosition, size);
@@ -85,18 +82,6 @@
   on:click={handleClick}
   on:keydown={(e) => e.key === 'Enter' && handleClick()}
 >
-  <!-- Home base ring (if applicable) -->
-  {#if homeBase}
-    <circle
-      class="home-base-ring"
-      r={size / 2 + 5}
-      fill="none"
-      stroke={homeBaseColor}
-      stroke-width="2.5"
-      opacity="0.8"
-    />
-  {/if}
-
   <!-- City marker with bonus or plain -->
   {#if bonus}
     <!-- Bonus city: grey circle background with bonus symbol -->
@@ -190,20 +175,6 @@
     width: 100%;
     height: 100%;
     pointer-events: none;
-  }
-
-  .home-base-ring {
-    stroke-dasharray: 4 2;
-    animation: rotate 20s linear infinite;
-  }
-
-  @keyframes rotate {
-    from {
-      transform: rotate(0deg);
-    }
-    to {
-      transform: rotate(360deg);
-    }
   }
 
   .city-label {

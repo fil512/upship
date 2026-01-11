@@ -62,7 +62,6 @@
           {name}
           position={cityPositions[name]}
           type={data.type === 'major' ? 'major' : 'minor'}
-          homeBase={data.homeBase}
           on:click={handleCityClick}
         />
       {/if}

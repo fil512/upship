@@ -15,8 +15,7 @@ export const MAP_DIMENSIONS: Record<number, MapDimensions> = {
 // City marker sizes
 export const CITY_SIZES = {
   major: 14,
-  minor: 10,
-  homeBaseRing: 22
+  minor: 10
 } as const;
 
 // Route styling
