@@ -28,11 +28,11 @@
       background: white;
       display: flex;
       flex-direction: column;
-      color: #e8e4d9;
+      color: #1a1a1a;
     }
 
     .content-area {
-      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+      background: #ffffff;
       padding: 40px;
       display: flex;
       flex-direction: column;
@@ -80,16 +80,16 @@
 
     /* === SECTIONS === */
     .section {
-      background: rgba(30, 41, 59, 0.9);
+      background: #f8f9fa;
       border-radius: 16px;
       padding: 20px 24px;
-      border: 4px solid #475569;
+      border: 4px solid #6b7280;
     }
 
     .section-title {
       font-size: 28px;
       font-weight: 700;
-      color: #c4a35a;
+      color: #92400e;
       text-transform: uppercase;
       letter-spacing: 0.1em;
       margin-bottom: 16px;
@@ -106,8 +106,8 @@
     .ship-slot {
       width: 354px;
       height: 236px;
-      background: #0f172a;
-      border: 4px dashed #475569;
+      background: #ffffff;
+      border: 4px dashed #9ca3af;
       border-radius: 16px;
       display: flex;
       flex-direction: column;
@@ -119,7 +119,7 @@
     .ship-slot .ship-icon {
       width: 120px;
       height: 60px;
-      opacity: 0.3;
+      opacity: 0.4;
     }
 
     .ship-slot .ship-icon svg {
@@ -129,13 +129,14 @@
 
     .ship-slot .slot-label {
       font-size: 24px;
-      color: #475569;
+      color: #6b7280;
       font-weight: 600;
     }
 
     /* === TRACK GROUPS === */
     .track-group {
-      background: rgba(15, 23, 42, 0.5);
+      background: #ffffff;
+      border: 2px solid #e5e7eb;
       border-radius: 12px;
       padding: 16px 24px;
       display: flex;
@@ -146,7 +147,7 @@
     .track-group-title {
       font-size: 24px;
       font-weight: 700;
-      color: #94a3b8;
+      color: #6b7280;
       text-transform: uppercase;
       letter-spacing: 0.05em;
       margin-bottom: 8px;
@@ -166,9 +167,9 @@
       flex-shrink: 0;
     }
 
-    .track-label.lift { color: #4caf50; }
-    .track-label.weight { color: #ef4444; }
-    .track-label.income { color: #22c55e; }
+    .track-label.lift { color: #15803d; }
+    .track-label.weight { color: #dc2626; }
+    .track-label.income { color: #15803d; }
 
     .track-cubes {
       display: flex;
@@ -182,21 +183,21 @@
       flex: 1;
       max-width: 180px;
       height: 140px;
-      background: #0f172a;
-      border: 4px solid #334155;
+      background: #f8f9fa;
+      border: 4px solid #d1d5db;
       border-radius: 12px;
       display: flex;
       align-items: center;
       justify-content: center;
       font-size: 44px;
       font-weight: 700;
-      color: #475569;
+      color: #9ca3af;
     }
 
-    .track-row.lift .cube-slot { border-color: rgba(76, 175, 80, 0.5); }
-    .track-row.weight .cube-slot { border-color: rgba(239, 68, 68, 0.5); }
-    .track-row.ones .cube-slot { border-color: rgba(34, 197, 94, 0.5); }
-    .track-row.tens .cube-slot { border-color: rgba(34, 197, 94, 0.7); }
+    .track-row.lift .cube-slot { border-color: #4caf50; color: #15803d; }
+    .track-row.weight .cube-slot { border-color: #ef4444; color: #dc2626; }
+    .track-row.ones .cube-slot { border-color: #22c55e; color: #15803d; }
+    .track-row.tens .cube-slot { border-color: #16a34a; color: #15803d; }
 
     /* === FACTION COLORS === */
     .player-aid.germany {

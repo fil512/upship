@@ -87,6 +87,27 @@
     .age-badge.age-2 { background: #2E7D32; }
     .age-badge.age-3 { background: #1565C0; }
 
+    /* VP badge */
+    .vp-badge {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      background: linear-gradient(135deg, #4caf50 0%, #388e3c 100%);
+      color: white;
+      font-size: 2rem;
+      font-weight: 700;
+      padding: 12px 20px;
+      border-radius: 16px;
+      margin-left: 16px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    .vp-badge svg {
+      width: 32px;
+      height: 32px;
+    }
+
     /* Type badge */
     .type-badge {
       font-size: 1.6rem;
@@ -356,6 +377,10 @@
       </svg>`,
       armor: `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
         <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z" fill="#4b5563"/>
+      </svg>`,
+      vp: `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <!-- VP: Star -->
+        <path d="M12 2l2.4 7.4h7.6l-6 4.6 2.3 7-6.3-4.6-6.3 4.6 2.3-7-6-4.6h7.6z" fill="white"/>
       </svg>`
     };
 
@@ -399,6 +424,11 @@
           </div>`
         : '';
 
+      // VP badge (only show if VP > 0)
+      const vpHtml = tech.vp && tech.vp > 0
+        ? `<span class="vp-badge">${STAT_ICONS.vp}${tech.vp} VP</span>`
+        : '';
+
       // Age badge
       const ageHtml = tech.age
         ? `<span class="age-badge age-${tech.age}">Age ${tech.age}</span>`
@@ -435,14 +465,15 @@
         `;
       }
 
-      // Footer with type and age
+      // Footer with type, age, and VP
       let footerHtml = '';
-      if (tech.type || tech.age) {
+      if (tech.type || tech.age || (tech.vp && tech.vp > 0)) {
         footerHtml = `
           <div class="tech-footer">
             <div class="tech-type-info">
               ${tech.type ? `<span>${typeLabel}</span>` : ''}
               ${tech.age ? `<span class="age-badge age-${tech.age}">Age ${tech.age}</span>` : ''}
+              ${vpHtml}
             </div>
           </div>
         `;

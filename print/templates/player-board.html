@@ -25,12 +25,12 @@
     .player-board {
       width: 3300px;
       height: 2550px;
-      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+      background: #ffffff;
       padding: 40px;
       display: flex;
       flex-direction: column;
       gap: 24px;
-      color: #e8e4d9;
+      color: #1a1a1a;
     }
 
     /* === FACTION HEADER === */
@@ -88,10 +88,10 @@
 
     /* === BLUEPRINT SECTION === */
     .blueprint-section {
-      background: rgba(30, 41, 59, 0.9);
+      background: #f8f9fa;
       border-radius: 16px;
       padding: 20px;
-      border: 4px solid #475569;
+      border: 4px solid #6b7280;
       flex: 1;
       display: flex;
       flex-direction: column;
@@ -101,7 +101,7 @@
     .blueprint-title {
       font-size: 28px;
       font-weight: 700;
-      color: #c4a35a;
+      color: #92400e;
       text-transform: uppercase;
       letter-spacing: 0.1em;
       margin-bottom: 12px;
@@ -120,37 +120,37 @@
 
     /* Tech tile slots - scaled in SVG */
     .tile-slot {
-      fill: rgba(30, 41, 59, 0.8);
+      fill: #ffffff;
       stroke-width: 5;
       stroke-dasharray: 15 8;
       rx: 10;
     }
 
-    .tile-slot.frame { stroke: #3b82f6; }
-    .tile-slot.fabric { stroke: #8b5cf6; }
-    .tile-slot.drive { stroke: #f59e0b; }
-    .tile-slot.component { stroke: #10b981; }
+    .tile-slot.frame { stroke: #1d4ed8; }
+    .tile-slot.fabric { stroke: #7c3aed; }
+    .tile-slot.drive { stroke: #d97706; }
+    .tile-slot.component { stroke: #059669; }
 
     .slot-label {
       font-size: 24px;
-      fill: #64748b;
+      fill: #6b7280;
       text-anchor: middle;
       font-weight: 600;
     }
 
     /* === SHIP STATS SECTION === */
     .stats-section {
-      background: rgba(30, 41, 59, 0.9);
+      background: #f8f9fa;
       border-radius: 16px;
       padding: 20px 32px;
-      border: 4px solid #475569;
+      border: 4px solid #6b7280;
       flex-shrink: 0;
     }
 
     .stats-title {
       font-size: 28px;
       font-weight: 700;
-      color: #c4a35a;
+      color: #92400e;
       text-transform: uppercase;
       letter-spacing: 0.1em;
       margin-bottom: 16px;
@@ -167,7 +167,8 @@
       align-items: center;
       gap: 12px;
       padding: 10px 16px;
-      background: rgba(15, 23, 42, 0.5);
+      background: #ffffff;
+      border: 2px solid #e5e7eb;
       border-radius: 10px;
       flex: 0 0 calc(50% - 6px);
     }
@@ -191,12 +192,12 @@
       flex-shrink: 0;
     }
 
-    .stat-row.speed .stat-name { color: #f59e0b; }
-    .stat-row.range .stat-name { color: #3b82f6; }
-    .stat-row.ceiling .stat-name { color: #9ca3af; }
-    .stat-row.reliability .stat-name { color: #4caf50; }
-    .stat-row.luxury .stat-name { color: #c4a35a; }
-    .stat-row.armor .stat-name { color: #ef4444; }
+    .stat-row.speed .stat-name { color: #d97706; }
+    .stat-row.range .stat-name { color: #1d4ed8; }
+    .stat-row.ceiling .stat-name { color: #6b7280; }
+    .stat-row.reliability .stat-name { color: #15803d; }
+    .stat-row.luxury .stat-name { color: #92400e; }
+    .stat-row.armor .stat-name { color: #dc2626; }
 
     .stat-cubes {
       display: flex;
@@ -207,27 +208,27 @@
     .cube-slot {
       width: 130px;
       height: 130px;
-      background: #0f172a;
-      border: 4px solid #334155;
+      background: #f8f9fa;
+      border: 4px solid #d1d5db;
       border-radius: 10px;
       display: flex;
       align-items: center;
       justify-content: center;
       font-size: 42px;
       font-weight: 700;
-      color: #475569;
+      color: #9ca3af;
     }
 
-    .stat-row.speed .cube-slot { border-color: rgba(245, 158, 11, 0.5); }
-    .stat-row.range .cube-slot { border-color: rgba(59, 130, 246, 0.5); }
-    .stat-row.ceiling .cube-slot { border-color: rgba(156, 163, 175, 0.5); }
-    .stat-row.reliability .cube-slot { border-color: rgba(76, 175, 80, 0.5); }
-    .stat-row.luxury .cube-slot { border-color: rgba(196, 163, 90, 0.5); }
-    .stat-row.armor .cube-slot { border-color: rgba(239, 68, 68, 0.5); }
+    .stat-row.speed .cube-slot { border-color: #d97706; color: #d97706; }
+    .stat-row.range .cube-slot { border-color: #1d4ed8; color: #1d4ed8; }
+    .stat-row.ceiling .cube-slot { border-color: #6b7280; color: #6b7280; }
+    .stat-row.reliability .cube-slot { border-color: #15803d; color: #15803d; }
+    .stat-row.luxury .cube-slot { border-color: #92400e; color: #92400e; }
+    .stat-row.armor .cube-slot { border-color: #dc2626; color: #dc2626; }
 
     .stat-note {
       font-size: 18px;
-      color: #64748b;
+      color: #6b7280;
       font-style: italic;
       margin-left: auto;
       white-space: nowrap;
@@ -368,49 +369,43 @@
 
       return `
         <svg viewBox="0 0 1500 680" class="airship-svg" preserveAspectRatio="xMidYMid meet">
-          <!-- Background -->
-          <defs>
-            <linearGradient id="skyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" style="stop-color:#1e293b"/>
-              <stop offset="100%" style="stop-color:#0f172a"/>
-            </linearGradient>
-          </defs>
-          <rect width="100%" height="100%" fill="url(#skyGrad)" rx="16"/>
+          <!-- Background - light for ink savings -->
+          <rect width="100%" height="100%" fill="#f8f9fa" rx="16"/>
 
           <!-- Airship envelope outline -->
-          <ellipse cx="550" cy="280" rx="480" ry="180" fill="none" stroke="#475569" stroke-width="4"/>
+          <ellipse cx="550" cy="280" rx="480" ry="180" fill="none" stroke="#6b7280" stroke-width="4"/>
 
           <!-- Internal frame lines -->
-          <line x1="90" y1="280" x2="1010" y2="280" stroke="#334155" stroke-width="2" stroke-dasharray="15 8"/>
-          <line x1="280" y1="110" x2="280" y2="450" stroke="#334155" stroke-width="2" stroke-dasharray="10 5"/>
-          <line x1="550" y1="105" x2="550" y2="455" stroke="#334155" stroke-width="2" stroke-dasharray="10 5"/>
-          <line x1="820" y1="115" x2="820" y2="445" stroke="#334155" stroke-width="2" stroke-dasharray="10 5"/>
+          <line x1="90" y1="280" x2="1010" y2="280" stroke="#9ca3af" stroke-width="2" stroke-dasharray="15 8"/>
+          <line x1="280" y1="110" x2="280" y2="450" stroke="#9ca3af" stroke-width="2" stroke-dasharray="10 5"/>
+          <line x1="550" y1="105" x2="550" y2="455" stroke="#9ca3af" stroke-width="2" stroke-dasharray="10 5"/>
+          <line x1="820" y1="115" x2="820" y2="445" stroke="#9ca3af" stroke-width="2" stroke-dasharray="10 5"/>
 
           <!-- Gondola (cabin) -->
-          <path d="M 200 455 Q 200 620 320 620 L 780 620 Q 900 620 900 455" fill="none" stroke="#475569" stroke-width="4"/>
+          <path d="M 200 455 Q 200 620 320 620 L 780 620 Q 900 620 900 455" fill="none" stroke="#6b7280" stroke-width="4"/>
 
           <!-- Tail fins -->
-          <path d="M 980 280 L 1200 120 L 1200 190 L 1040 280" fill="none" stroke="#475569" stroke-width="4"/>
-          <path d="M 980 280 L 1200 440 L 1200 370 L 1040 280" fill="none" stroke="#475569" stroke-width="4"/>
-          <line x1="1020" y1="280" x2="1150" y2="280" stroke="#475569" stroke-width="3"/>
+          <path d="M 980 280 L 1200 120 L 1200 190 L 1040 280" fill="none" stroke="#6b7280" stroke-width="4"/>
+          <path d="M 980 280 L 1200 440 L 1200 370 L 1040 280" fill="none" stroke="#6b7280" stroke-width="4"/>
+          <line x1="1020" y1="280" x2="1150" y2="280" stroke="#6b7280" stroke-width="3"/>
 
           <!-- Propellers -->
           <g transform="translate(1230, 155)">
-            <circle r="30" fill="none" stroke="#475569" stroke-width="3"/>
-            <line x1="-20" y1="0" x2="20" y2="0" stroke="#64748b" stroke-width="4"/>
-            <line x1="0" y1="-20" x2="0" y2="20" stroke="#64748b" stroke-width="4"/>
+            <circle r="30" fill="none" stroke="#6b7280" stroke-width="3"/>
+            <line x1="-20" y1="0" x2="20" y2="0" stroke="#9ca3af" stroke-width="4"/>
+            <line x1="0" y1="-20" x2="0" y2="20" stroke="#9ca3af" stroke-width="4"/>
           </g>
           <g transform="translate(1230, 405)">
-            <circle r="30" fill="none" stroke="#475569" stroke-width="3"/>
-            <line x1="-20" y1="0" x2="20" y2="0" stroke="#64748b" stroke-width="4"/>
-            <line x1="0" y1="-20" x2="0" y2="20" stroke="#64748b" stroke-width="4"/>
+            <circle r="30" fill="none" stroke="#6b7280" stroke-width="3"/>
+            <line x1="-20" y1="0" x2="20" y2="0" stroke="#9ca3af" stroke-width="4"/>
+            <line x1="0" y1="-20" x2="0" y2="20" stroke="#9ca3af" stroke-width="4"/>
           </g>
 
           <!-- Nose cone -->
-          <ellipse cx="80" cy="280" rx="22" ry="70" fill="none" stroke="#475569" stroke-width="3"/>
+          <ellipse cx="80" cy="280" rx="22" ry="70" fill="none" stroke="#6b7280" stroke-width="3"/>
 
           <!-- DRIVE label only -->
-          <text x="1290" y="285" text-anchor="middle" font-size="26" fill="#64748b" font-weight="600">DRIVE</text>
+          <text x="1290" y="285" text-anchor="middle" font-size="26" fill="#6b7280" font-weight="600">DRIVE</text>
 
           <!-- Tech tile slots -->
           ${fabricSlots}

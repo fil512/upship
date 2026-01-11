@@ -2,6 +2,7 @@
 	import { createEventDispatcher } from 'svelte';
 	import CostBadge from '$lib/components/ui/CostBadge.svelte';
 	import TechTileBox from '$lib/components/ui/TechTileBox.svelte';
+	import Icon from '$lib/components/ui/Icon.svelte';
 	import { getTilesForCard } from '$lib/utils/techCardToTiles';
 	import { getTechCardImageFilename } from '$lib/utils/cardImages';
 
@@ -10,6 +11,7 @@
 		name: string;
 		effect?: string;
 		researchCost?: number;
+		vp?: number;
 	};
 	export let selected: boolean = false;
 	export let selectable: boolean = false;
@@ -46,14 +48,22 @@
 		on:click={handleClick}
 		disabled={!selectable}
 	>
-		<!-- Header: Name (left) + Research Cost (right) -->
+		<!-- Header: Name (left) + VP + Research Cost (right) -->
 		<div class="tech-header">
 			<span class="tech-name">{tech.name}</span>
-			{#if tech.researchCost}
-				<div class="tech-cost" title="Costs {tech.researchCost} Research">
-					<CostBadge type="research" value={tech.researchCost} size={31} />
-				</div>
-			{/if}
+			<div class="tech-badges">
+				{#if tech.vp && tech.vp > 0}
+					<div class="tech-vp" title="{tech.vp} Victory Points">
+						<Icon name="vp" size={16} />
+						<span>{tech.vp}</span>
+					</div>
+				{/if}
+				{#if tech.researchCost}
+					<div class="tech-cost" title="Costs {tech.researchCost} Research">
+						<CostBadge type="research" value={tech.researchCost} size={31} />
+					</div>
+				{/if}
+			</div>
 		</div>
 
 		<!-- Image area -->
@@ -149,6 +159,26 @@
 		min-width: 0;
 		overflow: hidden;
 		text-overflow: ellipsis;
+	}
+
+	.tech-badges {
+		display: flex;
+		align-items: center;
+		gap: 4px;
+		flex-shrink: 0;
+	}
+
+	.tech-vp {
+		display: flex;
+		align-items: center;
+		gap: 2px;
+		background: linear-gradient(135deg, #4caf50 0%, #388e3c 100%);
+		color: white;
+		font-size: 0.6rem;
+		font-weight: 700;
+		padding: 2px 4px;
+		border-radius: 4px;
+		box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 	}
 
 	.tech-cost {
