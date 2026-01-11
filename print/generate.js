@@ -114,7 +114,7 @@ async function loadCardData() {
     { id: 'market_aviation_club', name: 'Aero Club', category: 'organizations', cost: 4, symbol: 'coin', effect: 'Recruit 1 Officer free', reveal: { influence: 2, officers: 1 } },
     { id: 'market_engineering_guild', name: 'Engineering Guild', category: 'organizations', cost: 4, symbol: 'coin', effect: 'Gain 1 Engineer', reveal: { influence: 1, engineers: 1 } },
     // Reserve Card
-    { id: 'reserve_aeronaut', name: 'The Aeronaut', category: 'organizations', cost: 2, symbol: 'any', effect: null, reveal: { influence: 1 } },
+    { id: 'reserve_aeronaut', name: 'The Aeronaut', category: 'organizations', cost: 2, symbol: 'any', effect: null, reveal: { influence: 2 } },
   ];
 
   const hazardCards = [

@@ -674,9 +674,9 @@ The Reserve Card is always available for purchase, separate from the Market Row.
 
 | Name | Cost | Symbol | Agent Effect | Reveal | Flavor |
 |------|------|--------|--------------|--------|--------|
-| The Aeronaut | 2 | Any | None | 1 Influence | *Veteran balloonist and lighter-than-air pioneer* |
+| The Aeronaut | 2 | Any | None | 2 Influence | *Veteran balloonist and lighter-than-air pioneer* |
 
-**Design Note:** The Reserve Card prevents market stagnation by ensuring players always have an affordable purchase option. At cost 2, it's accessible early game. The modest reveal bonus (1 Influence) keeps it a fallback option rather than an optimal purchase.
+**Design Note:** The Reserve Card prevents market stagnation by ensuring players always have an affordable purchase option. At cost 2, it's accessible early game. The modest reveal bonus (2 Influence) keeps it a fallback option rather than an optimal purchase.
 
 ## Technical Personnel (10 Agent Cards)
 

@@ -906,7 +906,7 @@ Distribution: 3 Wrench, 3 Coin, 3 Propeller, 1 Any.
 
 Purchase cards from the Market Row using Influence when you Reveal.
 
-**Reserve Card:** The Aeronaut is always available beside the Market Row, separate from the 5 displayed cards. It never runs out, costs 2 Influence, and provides 3 Influence when revealed.
+**Reserve Card:** The Aeronaut is always available beside the Market Row, separate from the 5 displayed cards. It never runs out, costs 2 Influence, and provides 2 Influence when revealed.
 
 **Categories:**
 - **Technical Support:** Engineering bonuses

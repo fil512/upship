@@ -365,7 +365,7 @@ export const RESERVE_CARD: MarketCard = {
   cost: 2,
   symbol: 'any',
   effect: null,
-  reveal: { influence: 1 },
+  reveal: { influence: 2 },
   flavor: 'Veteran balloonist and lighter-than-air pioneer'
 };
 
