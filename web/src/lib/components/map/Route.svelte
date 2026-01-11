@@ -106,6 +106,12 @@
     };
   }
 
+  // Only show labels on single tracks or track 1 of double tracks (avoid duplicate labels)
+  $: showLabels = !route.track || route.track === 1;
+
+  // For double tracks, add extra offset to move labels away from both lines
+  $: doubleTrackExtraOffset = route.track === 1 ? 10 : 0;
+
   // Determine stroke color based on claim status
   // route.claimed is a playerId, so look up their faction
   $: claimedFaction = route.claimed ? playerFactions[route.claimed] : null;
@@ -177,10 +183,10 @@
       opacity={route.claimed ? 1 : 0.8}
     />
 
-    <!-- Labels on opposite sides of the line (only for unclaimed routes) -->
-    {#if !route.claimed}
-      <!-- Requirements above the line -->
-      <g transform="translate({midX + labelOffsets.above.x}, {midY + labelOffsets.above.y}) rotate({lineAngle})">
+    <!-- Labels on opposite sides of the line (only for unclaimed routes, and only on track 1 for double routes) -->
+    {#if !route.claimed && showLabels}
+      <!-- Requirements above the line (extra offset for double tracks) -->
+      <g transform="translate({midX + labelOffsets.above.x * (1 + doubleTrackExtraOffset / 12)}, {midY + labelOffsets.above.y * (1 + doubleTrackExtraOffset / 12)}) rotate({lineAngle})">
         <text
           class="route-label"
           text-anchor="middle"
@@ -192,8 +198,8 @@
           {requirements}
         </text>
       </g>
-      <!-- Income below the line -->
-      <g transform="translate({midX + labelOffsets.below.x}, {midY + labelOffsets.below.y}) rotate({lineAngle})">
+      <!-- Income below the line (extra offset for double tracks) -->
+      <g transform="translate({midX + labelOffsets.below.x * (1 + doubleTrackExtraOffset / 12)}, {midY + labelOffsets.below.y * (1 + doubleTrackExtraOffset / 12)}) rotate({lineAngle})">
         <text
           class="route-label"
           text-anchor="middle"

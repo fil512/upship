@@ -55,7 +55,7 @@
   }
 
   function getLabelOffset(labelPos: string, markerSize: number): { x: number; y: number; anchor: string } {
-    const offset = markerSize + 6;
+    const offset = markerSize / 2 + 6; // 6px gap from marker edge
     switch (labelPos) {
       case 'left':
         return { x: -offset, y: 4, anchor: 'end' };
@@ -64,7 +64,7 @@
       case 'top':
         return { x: 0, y: -offset, anchor: 'middle' };
       case 'bottom':
-        return { x: 0, y: offset + 12, anchor: 'middle' };
+        return { x: 0, y: offset + 8, anchor: 'middle' };
       default:
         return { x: offset, y: 4, anchor: 'start' };
     }

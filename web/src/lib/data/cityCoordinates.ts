@@ -26,34 +26,34 @@ export interface CityBonus {
  */
 export const AGE_I_CITIES: Record<string, CityPosition> = {
   // British Isles (left side)
-  'London': { x: 180, y: 180, labelPosition: 'left' },
-  'Dover': { x: 260, y: 300, labelPosition: 'left' },
+  'London': { x: 140, y: 120, labelPosition: 'left' },
+  'Dover': { x: 360, y: 280, labelPosition: 'right' },
 
   // France/Benelux (center-left)
-  'Calais': { x: 380, y: 280, labelPosition: 'top' },
-  'Paris': { x: 280, y: 440, labelPosition: 'left' },
-  'Brussels': { x: 460, y: 320, labelPosition: 'top' },
-  'Amsterdam': { x: 500, y: 180, labelPosition: 'top' },
+  'Calais': { x: 300, y: 370, labelPosition: 'right' },
+  'Paris': { x: 280, y: 480, labelPosition: 'left' },
+  'Brussels': { x: 500, y: 360, labelPosition: 'bottom' },
+  'Amsterdam': { x: 560, y: 100, labelPosition: 'top' },
 
   // Germany (center)
-  'Cologne': { x: 580, y: 280, labelPosition: 'right' },
-  'Hamburg': { x: 640, y: 100, labelPosition: 'top' },
-  'Berlin': { x: 840, y: 140, labelPosition: 'right' },
-  'Frankfurt': { x: 660, y: 380, labelPosition: 'right' },
-  'Friedrichshafen': { x: 740, y: 500, labelPosition: 'right' },
+  'Cologne': { x: 600, y: 300, labelPosition: 'right' },
+  'Hamburg': { x: 660, y: 80, labelPosition: 'top' },
+  'Berlin': { x: 880, y: 160, labelPosition: 'right' },
+  'Frankfurt': { x: 680, y: 400, labelPosition: 'right' },
+  'Friedrichshafen': { x: 720, y: 520, labelPosition: 'right' },
 
   // Scandinavia
-  'Copenhagen': { x: 780, y: 60, labelPosition: 'right' },
+  'Copenhagen': { x: 780, y: 40, labelPosition: 'right' },
 
   // Central Europe
-  'Zurich': { x: 600, y: 520, labelPosition: 'left' },
-  'Vienna': { x: 1000, y: 320, labelPosition: 'right' },
+  'Zurich': { x: 580, y: 540, labelPosition: 'left' },
+  'Vienna': { x: 1040, y: 360, labelPosition: 'right' },
 
   // Italy/Mediterranean
-  'Milan': { x: 640, y: 600, labelPosition: 'bottom' },
-  'Rome': { x: 860, y: 620, labelPosition: 'right' },
-  'Marseille': { x: 440, y: 560, labelPosition: 'left' },
-  'Barcelona': { x: 240, y: 620, labelPosition: 'left' }
+  'Milan': { x: 680, y: 620, labelPosition: 'bottom' },
+  'Rome': { x: 920, y: 640, labelPosition: 'right' },
+  'Marseille': { x: 400, y: 600, labelPosition: 'right' },
+  'Barcelona': { x: 180, y: 640, labelPosition: 'left' }
 };
 
 /**
