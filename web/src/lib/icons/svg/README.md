@@ -53,9 +53,14 @@ Icons marked "Player color" use `currentColor` and are colored based on the owni
 | `engineers.svg` | Personnel who aid research and handle hazards | Hard hat | #ffa726 (Orange) |
 | `hydrogen.svg` | Cheap but flammable lifting gas | Square with "H" | #f1c40f (Yellow) background |
 | `helium.svg` | Safe but expensive lifting gas (USA monopoly) | Square with "He" | White background, #666 border |
-| `vp.svg` | Victory Points—the win condition | Star | #4caf50 (Green) |
+| `vp.svg` | Victory Points—the win condition | Gold seal with 12 jagged edges | #fbbf24 (Gold) fill, #b45309 (Orange-brown) stroke |
 | `research.svg` | Resource used to unlock technologies | Square | #888888 (Grey) |
 | `influence.svg` | Resource used to purchase market cards | Diamond (rotated square) | #888888 (Grey) |
+
+**Note on VP Display:** Victory Points use a unified gold seal design throughout the game:
+- **Tech cards**: Gold seal icon (`vp.svg`) shown in card headers
+- **Map routes**: Gold seal (inline SVG in Route.svelte) displayed alongside the green income circle
+- Both use #fbbf24 (gold) fill with #b45309 (orange-brown) stroke for a consistent "official seal" appearance
 
 ### Card Symbols
 

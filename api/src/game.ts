@@ -236,6 +236,7 @@ export interface Technology {
 	age: number;
 	description?: string;
 	effect?: string;
+	vp?: number;
 }
 
 // Upgrade tile

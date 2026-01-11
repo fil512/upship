@@ -23,6 +23,7 @@ export interface TechCard {
   cost: number;
   age: number;
   faction?: string;
+  vp?: number;
 }
 
 // Slot type display names
@@ -803,14 +804,14 @@ export const TECH_CARDS: Record<string, TechCard> = {
   // === FACTION STARTING TECHS ===
   // These are pre-printed on player boards (cost 0, don't advance Progress)
 
-  // Germany starting techs
+  // Germany starting techs (VP per Appendix C)
   zeppelin_girders: { id: 'zeppelin_girders', name: 'Zeppelin Girders', type: 'structure', cost: 0, age: 1, faction: 'germany' },
-  goldbeater_skin: { id: 'goldbeater_skin', name: "Goldbeater's Skin", type: 'fabric', cost: 0, age: 1, faction: 'germany' },
-  blaugas_storage: { id: 'blaugas_storage', name: 'Blaugas Fuel System', type: 'gas', cost: 0, age: 1, faction: 'germany' },
+  goldbeater_skin: { id: 'goldbeater_skin', name: "Goldbeater's Skin", type: 'fabric', cost: 0, age: 1, faction: 'germany', vp: 2 },
+  blaugas_storage: { id: 'blaugas_storage', name: 'Blaugas Fuel System', type: 'gas', cost: 0, age: 1, faction: 'germany', vp: 2 },
   maybach_engine: { id: 'maybach_engine', name: 'Maybach Engine', type: 'drive', cost: 0, age: 1, faction: 'germany' },
 
-  // Britain starting techs
-  wire_bracing: { id: 'wire_bracing', name: 'Wire Bracing', type: 'structure', cost: 0, age: 1, faction: 'britain' },
+  // Britain starting techs (VP per Appendix C)
+  wire_bracing: { id: 'wire_bracing', name: 'Wire Bracing', type: 'structure', cost: 0, age: 1, faction: 'britain', vp: 1 },
   doped_canvas: { id: 'doped_canvas', name: 'Doped Canvas', type: 'fabric', cost: 0, age: 1, faction: 'britain' },
   standard_propeller: { id: 'standard_propeller', name: 'Standard Propeller', type: 'drive', cost: 0, age: 1, faction: 'britain' },
   passenger_accommodation: { id: 'passenger_accommodation', name: 'Passenger Accommodation', type: 'component', cost: 0, age: 1, faction: 'britain' },
@@ -821,66 +822,66 @@ export const TECH_CARDS: Record<string, TechCard> = {
   usa_latex_covering: { id: 'usa_latex_covering', name: 'Latex Covering', type: 'fabric', cost: 0, age: 1, faction: 'usa' },
   basic_powerplant: { id: 'basic_powerplant', name: 'Basic Powerplant', type: 'drive', cost: 0, age: 1, faction: 'usa' },
   helium_handling: { id: 'helium_handling', name: 'Helium Handling', type: 'gas', cost: 0, age: 1, faction: 'usa' },
-  trapeze_system: { id: 'trapeze_system', name: 'Trapeze Fighter System', type: 'special', cost: 0, age: 1, faction: 'usa' },
+  trapeze_system: { id: 'trapeze_system', name: 'Trapeze Fighter System', type: 'special', cost: 0, age: 1, faction: 'usa', vp: 2 },
 
-  // Italy starting techs
-  internal_keel: { id: 'internal_keel', name: 'Internal Keel', type: 'structure', cost: 0, age: 1, faction: 'italy' },
+  // Italy starting techs (VP per Appendix C)
+  internal_keel: { id: 'internal_keel', name: 'Internal Keel', type: 'structure', cost: 0, age: 1, faction: 'italy', vp: 1 },
   rubberized_cotton: { id: 'rubberized_cotton', name: 'Rubberized Cotton', type: 'fabric', cost: 0, age: 1, faction: 'italy' },
   expedition_propeller: { id: 'expedition_propeller', name: 'Expedition Propeller', type: 'drive', cost: 0, age: 1, faction: 'italy' },
-  articulated_keel: { id: 'articulated_keel', name: 'Articulated Keel Design', type: 'structure', cost: 0, age: 1, faction: 'italy' },
+  articulated_keel: { id: 'articulated_keel', name: 'Articulated Keel Design', type: 'structure', cost: 0, age: 1, faction: 'italy', vp: 2 },
 
-  // Drive techs
+  // Drive techs (VP per Appendix C)
   daimler_engine: { id: 'daimler_engine', name: 'Daimler Engine', type: 'drive', cost: 2, age: 1 },
   improved_propeller: { id: 'improved_propeller', name: 'Improved Propeller', type: 'drive', cost: 3, age: 1 },
-  // maybach_engine is a Germany faction starting tech defined above
-  dual_engine_mount: { id: 'dual_engine_mount', name: 'Dual Engine Mount', type: 'drive', cost: 4, age: 2 },
-  diesel_powerplant: { id: 'diesel_powerplant', name: 'Diesel Powerplant', type: 'drive', cost: 5, age: 2 },
-  swiveling_propeller: { id: 'swiveling_propeller', name: 'Swiveling Propeller', type: 'drive', cost: 4, age: 2 },
+  dual_engine_mount: { id: 'dual_engine_mount', name: 'Dual Engine Mount', type: 'drive', cost: 4, age: 2, vp: 1 },
+  diesel_powerplant: { id: 'diesel_powerplant', name: 'Diesel Powerplant', type: 'drive', cost: 5, age: 2, vp: 1 },
+  swiveling_propeller: { id: 'swiveling_propeller', name: 'Swiveling Propeller', type: 'drive', cost: 4, age: 2, vp: 1 },
   contra_rotating: { id: 'contra_rotating', name: 'Contra-Rotating Props', type: 'drive', cost: 5, age: 2 },
   streamlined_nacelle: { id: 'streamlined_nacelle', name: 'Streamlined Nacelle', type: 'drive', cost: 5, age: 3 },
-  supercharged_engine: { id: 'supercharged_engine', name: 'Supercharged Engine', type: 'drive', cost: 6, age: 3 },
-  diesel_electric: { id: 'diesel_electric', name: 'Diesel-Electric Drive', type: 'drive', cost: 6, age: 3 },
+  supercharged_engine: { id: 'supercharged_engine', name: 'Supercharged Engine', type: 'drive', cost: 6, age: 3, vp: 1 },
+  diesel_electric: { id: 'diesel_electric', name: 'Diesel-Electric Drive', type: 'drive', cost: 6, age: 3, vp: 1 },
   variable_pitch: { id: 'variable_pitch', name: 'Variable-Pitch Propeller', type: 'drive', cost: 5, age: 3 },
 
-  // Frame techs
+  // Frame techs (VP per Appendix C)
   wooden_framework: { id: 'wooden_framework', name: 'Wooden Framework', type: 'structure', cost: 2, age: 1 },
-  steel_framework: { id: 'steel_framework', name: 'Steel Framework', type: 'structure', cost: 4, age: 2 },
+  steel_framework: { id: 'steel_framework', name: 'Steel Framework', type: 'structure', cost: 4, age: 2, vp: 2 },
   geodetic_structure: { id: 'geodetic_structure', name: 'Geodetic Structure', type: 'structure', cost: 6, age: 3 },
-  modular_construction: { id: 'modular_construction', name: 'Modular Construction', type: 'structure', cost: 4, age: 3 },
-  aerodynamic_hull_design: { id: 'aerodynamic_hull_design', name: 'Aerodynamic Hull Design', type: 'structure', cost: 3, age: 2 },
-  dynamic_lift_surfaces: { id: 'dynamic_lift_surfaces', name: 'Dynamic Lift Surfaces', type: 'structure', cost: 5, age: 3 },
+  modular_construction: { id: 'modular_construction', name: 'Modular Construction', type: 'structure', cost: 4, age: 3, vp: 3 },
+  aerodynamic_hull_design: { id: 'aerodynamic_hull_design', name: 'Aerodynamic Hull Design', type: 'structure', cost: 3, age: 2, vp: 1 },
+  dynamic_lift_surfaces: { id: 'dynamic_lift_surfaces', name: 'Dynamic Lift Surfaces', type: 'structure', cost: 5, age: 3, vp: 2 },
 
-  // Fabric techs
-  fireproof_coating: { id: 'fireproof_coating', name: 'Fireproof Coating', type: 'fabric', cost: 4, age: 2 },
-  aluminum_doping: { id: 'aluminum_doping', name: 'Aluminum Doping', type: 'fabric', cost: 3, age: 2 },
-  grounding_systems: { id: 'grounding_systems', name: 'Grounding Systems', type: 'fabric', cost: 3, age: 2 },
+  // Fabric techs (VP per Appendix C)
+  fireproof_coating: { id: 'fireproof_coating', name: 'Fireproof Coating', type: 'fabric', cost: 4, age: 2, vp: 2 },
+  aluminum_doping: { id: 'aluminum_doping', name: 'Aluminum Doping', type: 'fabric', cost: 3, age: 2, vp: 1 },
+  grounding_systems: { id: 'grounding_systems', name: 'Grounding Systems', type: 'fabric', cost: 3, age: 2, vp: 1 },
   gelatinized_latex: { id: 'gelatinized_latex', name: 'Gelatinized Latex', type: 'fabric', cost: 5, age: 3 },
-  composite_covering: { id: 'composite_covering', name: 'Composite Covering', type: 'fabric', cost: 5, age: 3 },
+  composite_covering: { id: 'composite_covering', name: 'Composite Covering', type: 'fabric', cost: 5, age: 3, vp: 1 },
 
-  // Gas System techs
+  // Gas System techs (VP per Appendix C)
   improved_valving: { id: 'improved_valving', name: 'Improved Valving', type: 'gas', cost: 1, age: 1 },
   manual_ballonets: { id: 'manual_ballonets', name: 'Manual Ballonets', type: 'gas', cost: 1, age: 1 },
   multiple_gas_cells: { id: 'multiple_gas_cells', name: 'Multiple Gas Cells', type: 'gas', cost: 3, age: 2 },
-  automatic_valves: { id: 'automatic_valves', name: 'Automatic Valves', type: 'gas', cost: 4, age: 2 },
-  pressure_altitude_system: { id: 'pressure_altitude_system', name: 'Pressure Altitude System', type: 'gas', cost: 5, age: 3 },
+  automatic_valves: { id: 'automatic_valves', name: 'Automatic Valves', type: 'gas', cost: 4, age: 2, vp: 1 },
+  pressure_altitude_system: { id: 'pressure_altitude_system', name: 'Pressure Altitude System', type: 'gas', cost: 5, age: 3, vp: 1 },
   triple_gas_cell: { id: 'triple_gas_cell', name: 'Triple Gas Cell', type: 'gas', cost: 4, age: 3 },
-  emergency_venting: { id: 'emergency_venting', name: 'Emergency Venting', type: 'gas', cost: 4, age: 3 },
-  gas_recovery: { id: 'gas_recovery', name: 'Gas Recovery', type: 'gas', cost: 5, age: 3 },
-  water_recovery_system: { id: 'water_recovery_system', name: 'Water Recovery System', type: 'gas', cost: 5, age: 3 },
+  emergency_venting: { id: 'emergency_venting', name: 'Emergency Venting', type: 'gas', cost: 4, age: 3, vp: 2 },
+  gas_recovery: { id: 'gas_recovery', name: 'Gas Recovery', type: 'gas', cost: 5, age: 3, vp: 2 },
+  water_recovery_system: { id: 'water_recovery_system', name: 'Water Recovery System', type: 'gas', cost: 5, age: 3, vp: 1 },
 
-  // Payload techs
+  // Payload techs (VP per Appendix C)
+  gondola_shielding: { id: 'gondola_shielding', name: 'Gondola Shielding', type: 'component', cost: 2, age: 1 },
   observation_platform: { id: 'observation_platform', name: 'Observation Platform', type: 'component', cost: 1, age: 1 },
   mail_compartment: { id: 'mail_compartment', name: 'Mail Compartment', type: 'component', cost: 1, age: 1 },
-  cargo_nets: { id: 'cargo_nets', name: 'Cargo Nets', type: 'component', cost: 2, age: 1 },
+  cargo_nets: { id: 'cargo_nets', name: 'Cargo Nets', type: 'component', cost: 2, age: 1, vp: 1 },
   passenger_gondola: { id: 'passenger_gondola', name: 'Passenger Gondola', type: 'component', cost: 3, age: 2 },
-  bomb_bay_design: { id: 'bomb_bay_design', name: 'Bomb Bay Design', type: 'component', cost: 4, age: 2 },
-  armored_gondola: { id: 'armored_gondola', name: 'Armored Gondola', type: 'component', cost: 3, age: 2 },
-  reinforced_hull: { id: 'reinforced_hull', name: 'Reinforced Hull', type: 'component', cost: 4, age: 2 },
-  radio_equipment: { id: 'radio_equipment', name: 'Radio Equipment', type: 'component', cost: 3, age: 2 },
+  bomb_bay_design: { id: 'bomb_bay_design', name: 'Bomb Bay Design', type: 'component', cost: 4, age: 2, vp: 3 },
+  armored_gondola: { id: 'armored_gondola', name: 'Armored Gondola', type: 'component', cost: 3, age: 2, vp: 1 },
+  reinforced_hull: { id: 'reinforced_hull', name: 'Reinforced Hull', type: 'component', cost: 4, age: 2, vp: 2 },
+  radio_equipment: { id: 'radio_equipment', name: 'Radio Equipment', type: 'component', cost: 3, age: 2, vp: 1 },
   luxury_accommodation: { id: 'luxury_accommodation', name: 'Luxury Accommodation', type: 'component', cost: 4, age: 3 },
   dining_saloon: { id: 'dining_saloon', name: 'Dining Saloon', type: 'component', cost: 4, age: 3 },
-  promenade_deck: { id: 'promenade_deck', name: 'Promenade Deck', type: 'component', cost: 6, age: 3 },
-  sleeping_quarters: { id: 'sleeping_quarters', name: 'Sleeping Quarters', type: 'component', cost: 4, age: 3 },
-  smoking_room: { id: 'smoking_room', name: 'Smoking Room', type: 'component', cost: 5, age: 3 },
+  promenade_deck: { id: 'promenade_deck', name: 'Promenade Deck', type: 'component', cost: 6, age: 3, vp: 2 },
+  sleeping_quarters: { id: 'sleeping_quarters', name: 'Sleeping Quarters', type: 'component', cost: 4, age: 3, vp: 1 },
+  smoking_room: { id: 'smoking_room', name: 'Smoking Room', type: 'component', cost: 5, age: 3, vp: 3 },
   advanced_navigation: { id: 'advanced_navigation', name: 'Advanced Navigation', type: 'component', cost: 5, age: 3 }
 };

@@ -44,13 +44,14 @@
 	}
 
 	// Convert tech card ID to display format for TechCard
-	function toTechCardFormat(techId: string): { id: string; name: string; effect?: string; researchCost?: number } {
+	function toTechCardFormat(techId: string): { id: string; name: string; effect?: string; researchCost?: number; vp?: number } {
 		const cardData = TECH_CARDS[techId];
 		if (cardData) {
 			return {
 				id: cardData.id,
 				name: cardData.name,
-				researchCost: cardData.cost > 0 ? cardData.cost : undefined
+				researchCost: cardData.cost > 0 ? cardData.cost : undefined,
+				vp: cardData.vp
 			};
 		}
 		return {
@@ -86,7 +87,8 @@
 									id: tech.id,
 									name: tech.name,
 									effect: tech.effect,
-									researchCost: cardData?.cost > 0 ? cardData.cost : undefined
+									researchCost: cardData?.cost > 0 ? cardData.cost : undefined,
+									vp: cardData?.vp
 								}}
 							/>
 							{#if showUndo}

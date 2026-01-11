@@ -3,9 +3,14 @@
 	import type { Technology, Faction } from '$lib/types/game';
 	import CostBadge from '$lib/components/ui/CostBadge.svelte';
 	import TechTileBox from '$lib/components/ui/TechTileBox.svelte';
+	import Icon from '$lib/components/ui/Icon.svelte';
 	import { getTilesForCard } from '$lib/utils/techCardToTiles';
 	import { TECH_CARDS } from '$lib/data/techTiles';
 	import { getTechCardImageFilename } from '$lib/utils/cardImages';
+
+	function getVp(cardId: string): number {
+		return TECH_CARDS[cardId]?.vp || 0;
+	}
 
 	export let cards: Technology[] = [];
 	export let claimed: Record<string, string> = {};
@@ -87,7 +92,15 @@
 			<!-- Header -->
 			<div class="card-header">
 				<span class="card-name">{card.name}</span>
-				<CostBadge type="research" value={costInfo.cost} size={26} discounted={costInfo.discounted} />
+				<div class="card-badges">
+					{#if getVp(card.id) > 0}
+						<div class="vp-badge" title="{getVp(card.id)} Victory Points">
+							<Icon name="vp" size={18} />
+							<span>{getVp(card.id)}</span>
+						</div>
+					{/if}
+					<CostBadge type="research" value={costInfo.cost} size={26} discounted={costInfo.discounted} />
+				</div>
 			</div>
 
 			<!-- Image area -->
@@ -220,6 +233,22 @@
 		min-width: 0;
 		overflow: hidden;
 		text-overflow: ellipsis;
+	}
+
+	.card-badges {
+		display: flex;
+		align-items: center;
+		gap: 4px;
+		flex-shrink: 0;
+	}
+
+	.vp-badge {
+		display: flex;
+		align-items: center;
+		gap: 1px;
+		font-size: 0.6rem;
+		font-weight: 700;
+		color: #333;
 	}
 
 	.card-image-area {

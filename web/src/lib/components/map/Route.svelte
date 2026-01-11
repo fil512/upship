@@ -10,6 +10,7 @@
   export let cities: Record<string, CityPosition>;
   export let playerFactions: Record<string, string> = {};
   export let selectable: boolean = false;
+  export let hideLabels: boolean = false;
 
   const dispatch = createEventDispatcher<{ select: { route: Route } }>();
 
@@ -109,7 +110,8 @@
   }
 
   // Only show labels on single tracks or track 1 of double tracks (avoid duplicate labels)
-  $: showLabels = !route.track || route.track === 1;
+  // Also hide if parent explicitly set hideLabels (for corridors with multiple route pairs)
+  $: showLabels = (!route.track || route.track === 1) && !hideLabels;
 
   // For double tracks, add extra offset to move requirement icons away from both lines
   $: doubleTrackExtraOffset = route.track === 1 ? 10 : 0;
@@ -211,14 +213,17 @@
           </div>
         </foreignObject>
       </g>
-      <!-- Income below the line (closer for double tracks, farther for single) -->
-      <g transform="translate({midX + labelOffsets.below.x * incomeOffsetMultiplier}, {midY + labelOffsets.below.y * incomeOffsetMultiplier})">
+      <!-- Income and VP below the line (rotated to follow line, like requirements above) -->
+      <g transform="translate({midX + labelOffsets.below.x * incomeOffsetMultiplier}, {midY + labelOffsets.below.y * incomeOffsetMultiplier}) rotate({lineAngle})">
+        <!-- Income circle -->
         <circle
+          cx={route.vp ? -12 : 0}
           r="10"
           fill="#22c55e"
           class="income-circle"
         />
         <text
+          x={route.vp ? -12 : 0}
           text-anchor="middle"
           dominant-baseline="central"
           font-size="11"
@@ -227,6 +232,27 @@
         >
           {route.income}
         </text>
+        <!-- VP seal (only if route has VP) - gold seal with jagged edges centered at (12, 0) -->
+        {#if route.vp}
+          <path
+            d="M12,-10.5 L13.9,-7.2 L17.3,-9.1 L17.3,-5.3 L21.1,-5.3 L19.2,-1.9 L22.5,0 L19.2,1.9 L21.1,5.3 L17.3,5.3 L17.3,9.1 L13.9,7.2 L12,10.5 L10.1,7.2 L6.7,9.1 L6.7,5.3 L2.9,5.3 L4.8,1.9 L1.5,0 L4.8,-1.9 L2.9,-5.3 L6.7,-5.3 L6.7,-9.1 L10.1,-7.2 Z"
+            fill="#fbbf24"
+            stroke="#b45309"
+            stroke-width="0.5"
+            class="vp-seal"
+          />
+          <text
+            x="12"
+            y="0"
+            text-anchor="middle"
+            dominant-baseline="central"
+            font-size="10"
+            font-weight="700"
+            fill="black"
+          >
+            {route.vp}
+          </text>
+        {/if}
       </g>
     {/if}
   </g>
