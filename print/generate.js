@@ -674,9 +674,22 @@ async function generateBoard(browser) {
     type: 'png',
   });
 
-  await page.close();
   console.log(`  Saved to: ${outputPath}`);
-  console.log('Completed Action Board.');
+
+  // Generate Helium Board
+  console.log('\nGenerating Helium Board (8.5" x 11" at 300 DPI)...');
+  const heliumTemplatePath = `file://${join(PATHS.templates, 'helium-board.html')}`;
+  await page.goto(heliumTemplatePath);
+  await page.waitForTimeout(500);
+  const heliumOutputPath = join(PATHS.output, 'boards', 'helium-board.png');
+  await page.screenshot({
+    path: heliumOutputPath,
+    type: 'png',
+  });
+  console.log(`  Saved to: ${heliumOutputPath}`);
+
+  await page.close();
+  console.log('Completed Boards.');
 }
 
 /**
@@ -684,8 +697,10 @@ async function generateBoard(browser) {
  */
 async function generatePlayerBoards(browser) {
   console.log('\nGenerating Player Boards (11" x 8.5" at 300 DPI)...');
+  console.log('  Creating 12 boards: 4 factions × 3 ages');
 
   const factions = ['germany', 'britain', 'usa', 'italy'];
+  const ages = [1, 2, 3];
 
   const page = await browser.newPage();
   await page.setViewportSize({ width: PLAYER_BOARD_WIDTH, height: PLAYER_BOARD_HEIGHT });
@@ -694,25 +709,27 @@ async function generatePlayerBoards(browser) {
   await page.goto(templatePath);
 
   for (const faction of factions) {
-    // Render the board for this faction
-    await page.evaluate((f) => {
-      window.renderBoard(f);
-    }, faction);
+    for (const age of ages) {
+      // Render the board for this faction and age
+      await page.evaluate(({ f, a }) => {
+        window.renderBoard(f, a);
+      }, { f: faction, a: age });
 
-    // Wait for content to render
-    await page.waitForTimeout(200);
+      // Wait for content to render
+      await page.waitForTimeout(200);
 
-    const outputPath = join(PATHS.output, 'boards', `player-board-${faction}.png`);
-    await page.screenshot({
-      path: outputPath,
-      type: 'png',
-    });
+      const outputPath = join(PATHS.output, 'boards', `player-board-${faction}-age${age}.png`);
+      await page.screenshot({
+        path: outputPath,
+        type: 'png',
+      });
 
-    console.log(`  ${faction} -> player-board-${faction}.png`);
+      console.log(`  ${faction} Age ${age} -> player-board-${faction}-age${age}.png`);
+    }
   }
 
   await page.close();
-  console.log('Completed Player Boards.');
+  console.log('Completed Player Boards (12 boards).');
 }
 
 /**

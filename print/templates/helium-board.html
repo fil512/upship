@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>UP SHIP! Helium Market</title>
+  <style>
+    :root {
+      /* Palette - The "Aged Industrial" Look */
+      --board-bg: #b9b19d;
+      --text-dark: #2d3436;
+      --board-border: #4a4036;
+      --helium-light: #d1e9ff;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Georgia', 'Times New Roman', serif;
+      width: 3300px;
+      height: 2550px;
+      margin: 0;
+      padding: 0;
+      background-color: var(--board-bg);
+      color: var(--text-dark);
+    }
+
+    .board {
+      width: 3300px;
+      height: 2550px;
+      padding: 60px;
+      display: flex;
+      flex-direction: column;
+      border: 40px solid var(--board-border);
+      position: relative;
+      box-shadow: inset 0 0 200px rgba(0,0,0,0.2);
+      justify-content: center; /* Center content vertically */
+    }
+
+    .board::after {
+      content: '';
+      position: absolute;
+      top: 20px; left: 20px; right: 20px; bottom: 20px;
+      border: 6px double rgba(0,0,0,0.1);
+      pointer-events: none;
+    }
+
+    /* Header */
+    .board-header {
+      text-align: center;
+      margin-bottom: 60px;
+      border-bottom: 5px solid var(--board-border);
+      padding-bottom: 30px;
+    }
+
+    .board-title {
+      font-size: 110px;
+      font-weight: 900;
+      color: var(--text-dark);
+      letter-spacing: 15px;
+      text-transform: uppercase;
+      font-family: 'Impact', 'Arial Black', sans-serif;
+    }
+
+    /* Helium Market */
+    .helium-section {
+      background: #f1ede4;
+      border: 8px solid var(--board-border);
+      border-radius: 8px;
+      padding: 60px;
+      box-shadow: 12px 12px 0px rgba(0,0,0,0.15);
+      margin: 0 40px;
+    }
+
+    .helium-grid {
+      display: flex;
+      flex-direction: row;
+      justify-content: center;
+      gap: 30px; /* Tighter than action board relative to size */
+    }
+
+    .helium-column {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 30px 20px;
+      border-radius: 6px;
+      min-width: 240px;
+      background: white;
+      border: 3px solid var(--board-border);
+    }
+
+    .helium-column.shaded {
+      background: var(--helium-light);
+    }
+
+    .helium-price {
+      font-size: 72px;
+      font-weight: 900;
+      color: var(--text-dark);
+      margin-bottom: 30px;
+    }
+
+    .helium-slots {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .helium-slot {
+      width: 160px; /* Standard cube size + room */
+      height: 160px;
+      border: 4px solid var(--board-border);
+      border-radius: 6px;
+      background: white;
+      /* Inner shadow to look like a recess */
+      box-shadow: inset 0 0 15px rgba(0,0,0,0.1);
+    }
+  </style>
+</head>
+<body>
+  <div class="board">
+    <!-- Header -->
+    <div class="board-header">
+      <h1 class="board-title">HELIUM MARKET</h1>
+    </div>
+
+    <!-- Helium Market - horizontal with columns for each price -->
+    <div class="helium-section">
+      <div class="helium-grid">
+        <div class="helium-column">
+          <span class="helium-price">£1</span>
+          <div class="helium-slots">
+            <div class="helium-slot"></div>
+            <div class="helium-slot"></div>
+            <div class="helium-slot"></div>
+          </div>
+        </div>
+        <div class="helium-column">
+          <span class="helium-price">£2</span>
+          <div class="helium-slots">
+            <div class="helium-slot"></div>
+            <div class="helium-slot"></div>
+            <div class="helium-slot"></div>
+          </div>
+        </div>
+        <div class="helium-column shaded">
+          <span class="helium-price">£3</span>
+          <div class="helium-slots">
+            <div class="helium-slot"></div>
+            <div class="helium-slot"></div>
+            <div class="helium-slot"></div>
+          </div>
+        </div>
+        <div class="helium-column shaded">
+          <span class="helium-price">£4</span>
+          <div class="helium-slots">
+            <div class="helium-slot"></div>
+            <div class="helium-slot"></div>
+            <div class="helium-slot"></div>
+          </div>
+        </div>
+        <div class="helium-column shaded">
+          <span class="helium-price">£5</span>
+          <div class="helium-slots">
+            <div class="helium-slot"></div>
+            <div class="helium-slot"></div>
+            <div class="helium-slot"></div>
+          </div>
+        </div>
+        <div class="helium-column shaded">
+          <span class="helium-price">£6</span>
+          <div class="helium-slots">
+            <div class="helium-slot"></div>
+            <div class="helium-slot"></div>
+            <div class="helium-slot"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
