@@ -1,5 +1,5 @@
 <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
   <!-- Range: Arrow with origin dot -->
-  <circle cx="4" cy="12" r="3" fill="#4b5563"/>
-  <path d="M8 10h8v-3l6 5-6 5v-3H8v-4z" fill="#4b5563"/>
+  <circle cx="4" cy="12" r="3" fill="currentColor"/>
+  <path d="M8 10h8v-3l6 5-6 5v-3H8v-4z" fill="currentColor"/>
 </svg>

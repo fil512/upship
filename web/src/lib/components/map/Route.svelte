@@ -3,6 +3,8 @@
   import { FACTION_COLORS } from '$lib/data/mapConfig';
   import type { CityPosition } from '$lib/data/cityCoordinates';
   import type { Route } from '$lib/types/game';
+  import Icon from '$lib/components/ui/Icon.svelte';
+  import type { IconName } from '$lib/icons';
 
   export let route: Route;
   export let cities: Record<string, CityPosition>;
@@ -109,8 +111,11 @@
   // Only show labels on single tracks or track 1 of double tracks (avoid duplicate labels)
   $: showLabels = !route.track || route.track === 1;
 
-  // For double tracks, add extra offset to move labels away from both lines
+  // For double tracks, add extra offset to move requirement icons away from both lines
   $: doubleTrackExtraOffset = route.track === 1 ? 10 : 0;
+
+  // Income circle offset: closer for double tracks, farther for single tracks
+  $: incomeOffsetMultiplier = route.track === 1 ? 0.6 : 1.4;
 
   // Determine stroke color based on claim status
   // route.claimed is a playerId, so look up their faction
@@ -128,16 +133,21 @@
     }
   }
 
-  // Build compact requirements display with letters: R2 S1 C1
-  $: requirements = buildRequirementsString();
+  // Build array of requirement icons (e.g., R2 S3 = [range, range, speed, speed, speed])
+  $: requirementIcons = buildRequirementIcons();
 
-  function buildRequirementsString(): string {
-    const parts: string[] = [];
-    if (route.range) parts.push(`R${route.range}`);
-    if (route.speed) parts.push(`S${route.speed}`);
-    if (route.ceiling) parts.push(`C${route.ceiling}`);
-    return parts.join(' ');
+  function buildRequirementIcons(): IconName[] {
+    const icons: IconName[] = [];
+    for (let i = 0; i < (route.range || 0); i++) icons.push('range');
+    for (let i = 0; i < (route.speed || 0); i++) icons.push('speed');
+    for (let i = 0; i < (route.ceiling || 0); i++) icons.push('ceiling');
+    return icons;
   }
+
+  // Calculate total width of requirement icons for centering
+  $: iconSize = 14;
+  $: iconGap = 2;
+  $: totalIconWidth = requirementIcons.length * iconSize + (requirementIcons.length - 1) * iconGap;
 </script>
 
 {#if isValid}
@@ -187,28 +197,35 @@
     {#if !route.claimed && showLabels}
       <!-- Requirements above the line (extra offset for double tracks) -->
       <g transform="translate({midX + labelOffsets.above.x * (1 + doubleTrackExtraOffset / 12)}, {midY + labelOffsets.above.y * (1 + doubleTrackExtraOffset / 12)}) rotate({lineAngle})">
-        <text
-          class="route-label"
-          text-anchor="middle"
-          dominant-baseline="central"
-          font-size="12"
-          font-weight="600"
-          fill="#94a3b8"
+        <foreignObject
+          x={-totalIconWidth / 2}
+          y={-iconSize / 2}
+          width={totalIconWidth}
+          height={iconSize}
+          class="requirements-container"
         >
-          {requirements}
-        </text>
+          <div class="requirements-row">
+            {#each requirementIcons as iconName, i}
+              <Icon name={iconName} size={iconSize} color="white" />
+            {/each}
+          </div>
+        </foreignObject>
       </g>
-      <!-- Income below the line (extra offset for double tracks) -->
-      <g transform="translate({midX + labelOffsets.below.x * (1 + doubleTrackExtraOffset / 12)}, {midY + labelOffsets.below.y * (1 + doubleTrackExtraOffset / 12)}) rotate({lineAngle})">
+      <!-- Income below the line (closer for double tracks, farther for single) -->
+      <g transform="translate({midX + labelOffsets.below.x * incomeOffsetMultiplier}, {midY + labelOffsets.below.y * incomeOffsetMultiplier})">
+        <circle
+          r="10"
+          fill="#22c55e"
+          class="income-circle"
+        />
         <text
-          class="route-label"
           text-anchor="middle"
           dominant-baseline="central"
-          font-size="12"
-          font-weight="600"
-          fill="#4ade80"
+          font-size="11"
+          font-weight="700"
+          fill="black"
         >
-          +£{route.income}
+          {route.income}
         </text>
       </g>
     {/if}
@@ -248,5 +265,17 @@
     text-shadow:
       0 0 4px rgba(0, 0, 0, 1),
       0 1px 3px rgba(0, 0, 0, 0.9);
+  }
+
+  .requirements-container {
+    overflow: visible;
+  }
+
+  .requirements-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.8));
   }
 </style>
