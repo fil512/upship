@@ -25,12 +25,18 @@
     .player-aid {
       width: 3300px;
       height: 2550px;
+      background: white;
+      display: flex;
+      flex-direction: column;
+      color: #e8e4d9;
+    }
+
+    .content-area {
       background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
       padding: 40px;
       display: flex;
       flex-direction: column;
-      gap: 30px;
-      color: #e8e4d9;
+      gap: 24px;
     }
 
     /* === HEADER === */
@@ -38,7 +44,7 @@
       display: flex;
       align-items: center;
       gap: 30px;
-      padding: 20px 40px;
+      padding: 16px 40px;
       background: var(--faction-color);
       border-radius: 16px;
       border: 5px solid var(--faction-border);
@@ -72,41 +78,28 @@
       margin-top: 4px;
     }
 
-    /* === MAIN CONTENT === */
-    .main-content {
-      flex: 1;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      grid-template-rows: auto 1fr;
-      gap: 30px;
-    }
-
     /* === SECTIONS === */
     .section {
       background: rgba(30, 41, 59, 0.9);
       border-radius: 16px;
-      padding: 24px;
+      padding: 20px 24px;
       border: 4px solid #475569;
     }
 
     .section-title {
-      font-size: 32px;
+      font-size: 28px;
       font-weight: 700;
       color: #c4a35a;
       text-transform: uppercase;
       letter-spacing: 0.1em;
-      margin-bottom: 20px;
+      margin-bottom: 16px;
     }
 
     /* === HANGAR === */
-    .hangar-section {
-      grid-column: 1 / 3;
-    }
-
     .hangar-slots {
       display: flex;
       gap: 20px;
-      flex-wrap: wrap;
+      justify-content: space-between;
     }
 
     /* Ship storage: 3cm x 2cm = 354px x 236px at 300 DPI */
@@ -140,222 +133,70 @@
       font-weight: 600;
     }
 
-    /* === INCOME TRACKS === */
-    .income-section {
-      grid-column: 1 / 2;
-    }
-
-    .income-tracks {
-      display: flex;
-      flex-direction: column;
-      gap: 24px;
-    }
-
-    .income-track {
-      display: flex;
-      align-items: center;
-      gap: 20px;
-      padding: 16px 20px;
+    /* === TRACK GROUPS === */
+    .track-group {
       background: rgba(15, 23, 42, 0.5);
       border-radius: 12px;
+      padding: 16px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
     }
 
-    .track-icon {
-      width: 80px;
-      height: 80px;
-      flex-shrink: 0;
+    .track-group-title {
+      font-size: 24px;
+      font-weight: 700;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 8px;
     }
 
-    .track-icon svg {
-      width: 100%;
-      height: 100%;
+    .track-row {
+      display: flex;
+      align-items: center;
+      gap: 16px;
     }
 
     .track-label {
-      width: 180px;
-      font-size: 28px;
+      font-size: 32px;
       font-weight: 700;
       text-transform: uppercase;
+      width: 180px;
       flex-shrink: 0;
     }
 
-    .track-label.officers { color: #a855f7; }
-    .track-label.engineers { color: #f59e0b; }
-    .track-label.research { color: #06b6d4; }
+    .track-label.lift { color: #4caf50; }
+    .track-label.weight { color: #ef4444; }
+    .track-label.income { color: #22c55e; }
 
     .track-cubes {
       display: flex;
-      gap: 12px;
+      gap: 10px;
+      flex: 1;
+      justify-content: space-between;
     }
 
-    /* Cube slots - 12mm with clearance = 142px at 300 DPI */
+    /* Cube slots - sized to fill available space */
     .cube-slot {
-      width: 142px;
-      height: 142px;
+      flex: 1;
+      max-width: 180px;
+      height: 140px;
       background: #0f172a;
       border: 4px solid #334155;
       border-radius: 12px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 48px;
+      font-size: 44px;
       font-weight: 700;
       color: #475569;
     }
 
-    .income-track.officers .cube-slot { border-color: rgba(168, 85, 247, 0.5); }
-    .income-track.engineers .cube-slot { border-color: rgba(245, 158, 11, 0.5); }
-    .income-track.research .cube-slot { border-color: rgba(6, 182, 212, 0.5); }
-
-    .track-note {
-      font-size: 20px;
-      color: #64748b;
-      font-style: italic;
-      margin-left: auto;
-    }
-
-    /* === GAS & INSURANCE SECTION === */
-    .gas-insurance-section {
-      grid-column: 2 / 3;
-      display: flex;
-      flex-direction: column;
-      gap: 24px;
-    }
-
-    /* Gas Storage */
-    .gas-storage {
-      flex: 1;
-      background: rgba(15, 23, 42, 0.5);
-      border-radius: 12px;
-      padding: 20px;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .gas-header {
-      display: flex;
-      justify-content: center;
-      gap: 40px;
-      margin-bottom: 16px;
-    }
-
-    .gas-label {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      font-size: 24px;
-      font-weight: 600;
-    }
-
-    .gas-label.hydrogen { color: #3b82f6; }
-    .gas-label.helium { color: #e5e7eb; }
-
-    .gas-icon {
-      width: 48px;
-      height: 48px;
-    }
-
-    .gas-icon svg {
-      width: 100%;
-      height: 100%;
-    }
-
-    .gas-area {
-      flex: 1;
-      background: #0f172a;
-      border: 4px dashed #334155;
-      border-radius: 12px;
-      min-height: 200px;
-    }
-
-    /* Insurance */
-    .insurance-area {
-      background: rgba(15, 23, 42, 0.5);
-      border-radius: 12px;
-      padding: 20px;
-    }
-
-    .insurance-header {
-      font-size: 24px;
-      font-weight: 700;
-      color: #c4a35a;
-      text-transform: uppercase;
-      margin-bottom: 16px;
-      text-align: center;
-    }
-
-    .insurance-slots {
-      display: flex;
-      gap: 20px;
-      justify-content: center;
-    }
-
-    .insurance-slot {
-      width: 142px;
-      height: 142px;
-      background: #0f172a;
-      border: 4px solid rgba(239, 68, 68, 0.5);
-      border-radius: 12px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-    }
-
-    .insurance-number {
-      font-size: 48px;
-      font-weight: 700;
-      color: #64748b;
-    }
-
-    .insurance-cost {
-      font-size: 20px;
-      color: #ef4444;
-      font-weight: 600;
-    }
-
-    /* === LIFT/WEIGHT REFERENCE === */
-    .physics-section {
-      grid-column: 1 / 3;
-      display: flex;
-      gap: 40px;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .physics-track {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 16px 24px;
-      background: rgba(15, 23, 42, 0.5);
-      border-radius: 12px;
-    }
-
-    .physics-label {
-      font-size: 32px;
-      font-weight: 700;
-      text-transform: uppercase;
-      width: 140px;
-    }
-
-    .physics-label.lift { color: #4caf50; }
-    .physics-label.weight { color: #ef4444; }
-
-    .physics-cubes {
-      display: flex;
-      gap: 8px;
-    }
-
-    .physics-cubes .cube-slot {
-      width: 100px;
-      height: 100px;
-      font-size: 36px;
-    }
-
-    .physics-track.lift .cube-slot { border-color: rgba(76, 175, 80, 0.5); }
-    .physics-track.weight .cube-slot { border-color: rgba(239, 68, 68, 0.5); }
+    .track-row.lift .cube-slot { border-color: rgba(76, 175, 80, 0.5); }
+    .track-row.weight .cube-slot { border-color: rgba(239, 68, 68, 0.5); }
+    .track-row.ones .cube-slot { border-color: rgba(34, 197, 94, 0.5); }
+    .track-row.tens .cube-slot { border-color: rgba(34, 197, 94, 0.7); }
 
     /* === FACTION COLORS === */
     .player-aid.germany {
@@ -384,29 +225,6 @@
 
   <script>
     const ICONS = {
-      hydrogen: `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-        <rect x="4" y="4" width="16" height="16" rx="2" fill="#3b82f6"/>
-        <text x="12" y="16" text-anchor="middle" font-size="11" font-weight="bold" fill="white">H2</text>
-      </svg>`,
-      helium: `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-        <rect x="4" y="4" width="16" height="16" rx="2" fill="#e5e7eb" stroke="#9ca3af" stroke-width="1"/>
-        <text x="12" y="16" text-anchor="middle" font-size="11" font-weight="bold" fill="#1f2937">He</text>
-      </svg>`,
-      officers: `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="12" cy="8" r="4" fill="#a855f7"/>
-        <path d="M4 20c0-4 4-6 8-6s8 2 8 6" fill="#a855f7"/>
-        <path d="M8 6l4-4 4 4" fill="#c084fc" stroke="#a855f7" stroke-width="1"/>
-      </svg>`,
-      engineers: `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="12" cy="8" r="4" fill="#f59e0b"/>
-        <path d="M4 20c0-4 4-6 8-6s8 2 8 6" fill="#f59e0b"/>
-        <path d="M9 7h6M12 4v6" stroke="#fbbf24" stroke-width="2"/>
-      </svg>`,
-      research: `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="10" cy="10" r="6" fill="none" stroke="#06b6d4" stroke-width="3"/>
-        <path d="M14 14l6 6" stroke="#06b6d4" stroke-width="3" stroke-linecap="round"/>
-        <circle cx="10" cy="10" r="2" fill="#06b6d4"/>
-      </svg>`,
       ship: `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
         <ellipse cx="12" cy="12" rx="10" ry="5" fill="#4b5563"/>
         <rect x="4" y="11" width="5" height="3" rx="1" fill="#6b7280"/>
@@ -431,19 +249,18 @@
       board.className = `player-aid ${faction}`;
 
       board.innerHTML = `
-        <!-- Header -->
-        <div class="header">
-          <div class="faction-flag">${ICONS[faction]}</div>
-          <div class="header-info">
-            <div class="header-title">${data.name} — Player Aid</div>
-            <div class="header-subtitle">Hangar, Income Tracks, Gas Storage, Insurance</div>
+        <div class="content-area">
+          <!-- Header -->
+          <div class="header">
+            <div class="faction-flag">${ICONS[faction]}</div>
+            <div class="header-info">
+              <div class="header-title">${data.name} — Player Aid</div>
+              <div class="header-subtitle">Hangar, Lift/Weight, Income</div>
+            </div>
           </div>
-        </div>
 
-        <!-- Main Content -->
-        <div class="main-content">
           <!-- Hangar -->
-          <div class="section hangar-section">
+          <div class="section">
             <div class="section-title">Hangar (max 6 ships)</div>
             <div class="hangar-slots">
               ${[1,2,3,4,5,6].map(n => `
@@ -455,84 +272,40 @@
             </div>
           </div>
 
-          <!-- Income Tracks -->
-          <div class="section income-section">
-            <div class="section-title">Income Tracks</div>
-            <div class="income-tracks">
-              <div class="income-track officers">
-                <div class="track-icon">${ICONS.officers}</div>
-                <div class="track-label officers">Officers</div>
+          <!-- Lift / Weight Group -->
+          <div class="section">
+            <div class="track-group">
+              <div class="track-group-title">Ship Physics</div>
+              <div class="track-row lift">
+                <div class="track-label lift">Lift</div>
                 <div class="track-cubes">
-                  ${[1,2,3,4,5].map(n => `<div class="cube-slot">${n}</div>`).join('')}
+                  ${[0,1,2,3,4,5,6,7,8,9,10].map(n => `<div class="cube-slot">${n}</div>`).join('')}
                 </div>
-                <span class="track-note">+1/turn</span>
               </div>
-              <div class="income-track engineers">
-                <div class="track-icon">${ICONS.engineers}</div>
-                <div class="track-label engineers">Engineers</div>
+              <div class="track-row weight">
+                <div class="track-label weight">Weight</div>
                 <div class="track-cubes">
-                  ${[1,2,3,4,5].map(n => `<div class="cube-slot">${n}</div>`).join('')}
-                </div>
-                <span class="track-note">+1/turn</span>
-              </div>
-              <div class="income-track research">
-                <div class="track-icon">${ICONS.research}</div>
-                <div class="track-label research">Research</div>
-                <div class="track-cubes">
-                  ${[1,2,3,4,5].map(n => `<div class="cube-slot">${n}</div>`).join('')}
-                </div>
-                <span class="track-note">+1/turn</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Gas & Insurance -->
-          <div class="section gas-insurance-section">
-            <div class="section-title">Gas Storage & Insurance</div>
-            <div class="gas-storage">
-              <div class="gas-header">
-                <div class="gas-label hydrogen">
-                  <div class="gas-icon">${ICONS.hydrogen}</div>
-                  <span>Hydrogen (blue cubes)</span>
-                </div>
-                <div class="gas-label helium">
-                  <div class="gas-icon">${ICONS.helium}</div>
-                  <span>Helium (white cubes)</span>
-                </div>
-              </div>
-              <div class="gas-area"></div>
-            </div>
-            <div class="insurance-area">
-              <div class="insurance-header">Insurance Policies</div>
-              <div class="insurance-slots">
-                <div class="insurance-slot">
-                  <div class="insurance-number">1</div>
-                  <div class="insurance-cost">-1 Income</div>
-                </div>
-                <div class="insurance-slot">
-                  <div class="insurance-number">2</div>
-                  <div class="insurance-cost">-1 Income</div>
-                </div>
-                <div class="insurance-slot">
-                  <div class="insurance-number">3</div>
-                  <div class="insurance-cost">-1 Income</div>
+                  ${[0,1,2,3,4,5,6,7,8,9,10].map(n => `<div class="cube-slot">${n}</div>`).join('')}
                 </div>
               </div>
             </div>
           </div>
 
-          <!-- Lift/Weight Tracks -->
-          <div class="section physics-section">
-            <div class="physics-track lift">
-              <div class="physics-label lift">Lift</div>
-              <div class="physics-cubes">
-                ${[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15].map(n => `<div class="cube-slot">${n}</div>`).join('')}
+          <!-- Income Group -->
+          <div class="section">
+            <div class="track-group">
+              <div class="track-group-title">Income Track</div>
+              <div class="track-row ones">
+                <div class="track-label income">Ones</div>
+                <div class="track-cubes">
+                  ${[0,1,2,3,4,5,6,7,8,9,10].map(n => `<div class="cube-slot">${n}</div>`).join('')}
+                </div>
               </div>
-            </div>
-            <div class="physics-track weight">
-              <div class="physics-label weight">Weight</div>
-              <div class="physics-cubes">
-                ${[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15].map(n => `<div class="cube-slot">${n}</div>`).join('')}
+              <div class="track-row tens">
+                <div class="track-label income">Tens</div>
+                <div class="track-cubes">
+                  ${[0,10,20,30,40,50,60,70,80,90,100].map(n => `<div class="cube-slot">${n}</div>`).join('')}
+                </div>
               </div>
             </div>
           </div>

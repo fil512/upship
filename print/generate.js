@@ -460,6 +460,11 @@ async function generateSheets(browser) {
   const MARGIN_TOP = 50;    // Top margin
   const GAP_Y = 25;         // Vertical gap between cards (minimal to fit 3 rows)
 
+  // Filler cards for incomplete sheets (fill remaining slots with these cards)
+  const fillerCards = {
+    agent: 'the_aeronaut.png',  // Fill agent sheets with aeronaut cards
+  };
+
   for (const cardType of cardTypes) {
     const cardDir = join(PATHS.output, 'cards', cardType);
     if (!existsSync(cardDir)) continue;
@@ -473,18 +478,39 @@ async function generateSheets(browser) {
     const page = await browser.newPage();
     await page.setViewportSize({ width: PAGE_WIDTH, height: PAGE_HEIGHT });
 
+    // Pre-load filler card if available for this type
+    let fillerDataUrl = null;
+    if (fillerCards[cardType]) {
+      const fillerPath = join(cardDir, fillerCards[cardType]);
+      if (existsSync(fillerPath)) {
+        const fillerBuffer = readFileSync(fillerPath);
+        const fillerBase64 = fillerBuffer.toString('base64');
+        fillerDataUrl = `data:image/png;base64,${fillerBase64}`;
+      }
+    }
+
     for (let pageNum = 0; pageNum < numPages; pageNum++) {
       const startIdx = pageNum * CARDS_PER_PAGE;
       const pageCards = cardFiles.slice(startIdx, startIdx + CARDS_PER_PAGE);
+      const isLastPage = pageNum === numPages - 1;
+      const blanksToFill = isLastPage && fillerDataUrl ? (CARDS_PER_PAGE - pageCards.length) : 0;
 
       // Create sheet HTML with embedded base64 images
       let cardsHtml = '';
-      for (let i = 0; i < pageCards.length; i++) {
-        const cardFilePath = join(cardDir, pageCards[i]);
-        // Read image and convert to base64 data URL
-        const imageBuffer = readFileSync(cardFilePath);
-        const base64Image = imageBuffer.toString('base64');
-        const dataUrl = `data:image/png;base64,${base64Image}`;
+      const totalCards = pageCards.length + blanksToFill;
+
+      for (let i = 0; i < totalCards; i++) {
+        let dataUrl;
+        if (i < pageCards.length) {
+          // Regular card
+          const cardFilePath = join(cardDir, pageCards[i]);
+          const imageBuffer = readFileSync(cardFilePath);
+          const base64Image = imageBuffer.toString('base64');
+          dataUrl = `data:image/png;base64,${base64Image}`;
+        } else {
+          // Filler card (aeronaut)
+          dataUrl = fillerDataUrl;
+        }
 
         const row = Math.floor(i / CARDS_PER_ROW);
         const col = i % CARDS_PER_ROW;
@@ -511,7 +537,12 @@ async function generateSheets(browser) {
 
       const sheetPath = join(PATHS.output, 'sheets', `${cardType}-sheet-${pageNum + 1}.png`);
       await page.screenshot({ path: sheetPath, type: 'png' });
-      console.log(`    ${cardType}-sheet-${pageNum + 1}.png (${pageCards.length} cards)`);
+
+      if (blanksToFill > 0) {
+        console.log(`    ${cardType}-sheet-${pageNum + 1}.png (${pageCards.length} cards + ${blanksToFill} aeronaut fillers)`);
+      } else {
+        console.log(`    ${cardType}-sheet-${pageNum + 1}.png (${pageCards.length} cards)`);
+      }
     }
 
     await page.close();

@@ -29,7 +29,7 @@
       padding: 40px;
       display: flex;
       flex-direction: column;
-      gap: 30px;
+      gap: 24px;
       color: #e8e4d9;
     }
 
@@ -38,7 +38,7 @@
       display: flex;
       align-items: center;
       gap: 30px;
-      padding: 20px 40px;
+      padding: 16px 40px;
       background: var(--faction-color);
       border-radius: 16px;
       border: 5px solid var(--faction-border);
@@ -46,8 +46,8 @@
     }
 
     .faction-flag {
-      width: 120px;
-      height: 80px;
+      width: 100px;
+      height: 66px;
     }
 
     .faction-flag svg {
@@ -58,7 +58,7 @@
     .faction-info { flex: 1; }
 
     .faction-name {
-      font-size: 56px;
+      font-size: 48px;
       font-weight: 800;
       text-transform: uppercase;
       letter-spacing: 0.1em;
@@ -67,15 +67,15 @@
     }
 
     .faction-ability {
-      font-size: 26px;
+      font-size: 22px;
       color: rgba(255,255,255,0.85);
-      margin-top: 6px;
+      margin-top: 4px;
     }
 
     .age-badge {
-      padding: 12px 32px;
-      border-radius: 24px;
-      font-size: 36px;
+      padding: 10px 28px;
+      border-radius: 20px;
+      font-size: 32px;
       font-weight: 700;
       background: rgba(255,255,255,0.2);
       color: white;
@@ -90,20 +90,22 @@
     .blueprint-section {
       background: rgba(30, 41, 59, 0.9);
       border-radius: 16px;
-      padding: 24px;
+      padding: 20px;
       border: 4px solid #475569;
       flex: 1;
       display: flex;
       flex-direction: column;
+      min-height: 0;
     }
 
     .blueprint-title {
-      font-size: 32px;
+      font-size: 28px;
       font-weight: 700;
       color: #c4a35a;
       text-transform: uppercase;
       letter-spacing: 0.1em;
-      margin-bottom: 16px;
+      margin-bottom: 12px;
+      flex-shrink: 0;
     }
 
     .airship-container {
@@ -140,39 +142,39 @@
     .stats-section {
       background: rgba(30, 41, 59, 0.9);
       border-radius: 16px;
-      padding: 24px 40px;
+      padding: 20px 32px;
       border: 4px solid #475569;
       flex-shrink: 0;
     }
 
     .stats-title {
-      font-size: 32px;
+      font-size: 28px;
       font-weight: 700;
       color: #c4a35a;
       text-transform: uppercase;
       letter-spacing: 0.1em;
-      margin-bottom: 20px;
+      margin-bottom: 16px;
     }
 
     .stat-table {
       display: flex;
       flex-wrap: wrap;
-      gap: 16px;
+      gap: 12px;
     }
 
     .stat-row {
       display: flex;
       align-items: center;
-      gap: 16px;
-      padding: 12px 20px;
+      gap: 12px;
+      padding: 10px 16px;
       background: rgba(15, 23, 42, 0.5);
-      border-radius: 12px;
-      flex: 0 0 calc(50% - 8px);
+      border-radius: 10px;
+      flex: 0 0 calc(50% - 6px);
     }
 
     .stat-icon {
-      width: 60px;
-      height: 60px;
+      width: 50px;
+      height: 50px;
       flex-shrink: 0;
     }
 
@@ -182,8 +184,8 @@
     }
 
     .stat-name {
-      width: 180px;
-      font-size: 28px;
+      width: 160px;
+      font-size: 24px;
       font-weight: 700;
       text-transform: uppercase;
       flex-shrink: 0;
@@ -198,20 +200,20 @@
 
     .stat-cubes {
       display: flex;
-      gap: 12px;
+      gap: 10px;
     }
 
     /* Cube slots - 12mm with clearance = 142px at 300 DPI */
     .cube-slot {
-      width: 142px;
-      height: 142px;
+      width: 130px;
+      height: 130px;
       background: #0f172a;
       border: 4px solid #334155;
-      border-radius: 12px;
+      border-radius: 10px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 48px;
+      font-size: 42px;
       font-weight: 700;
       color: #475569;
     }
@@ -224,7 +226,7 @@
     .stat-row.armor .cube-slot { border-color: rgba(239, 68, 68, 0.5); }
 
     .stat-note {
-      font-size: 20px;
+      font-size: 18px;
       color: #64748b;
       font-style: italic;
       margin-left: auto;
@@ -321,7 +323,7 @@
       // Generate fabric slots (top of envelope)
       let fabricSlots = '';
       const fabricStartX = 100;
-      const fabricY = 120;
+      const fabricY = 60;
       for (let i = 0; i < slots.fabric; i++) {
         const x = fabricStartX + i * (TILE_W + 20);
         fabricSlots += `
@@ -332,7 +334,7 @@
 
       // Generate frame slots (central keel)
       let frameSlots = '';
-      const frameY = fabricY + TILE_H + 30;
+      const frameY = fabricY + TILE_H + 25;
       for (let i = 0; i < slots.frame; i++) {
         const x = fabricStartX + i * (TILE_W + 20);
         frameSlots += `
@@ -343,7 +345,7 @@
 
       // Generate component slots (gondola)
       let componentSlots = '';
-      const componentY = frameY + TILE_H + 30;
+      const componentY = frameY + TILE_H + 25;
       for (let i = 0; i < slots.component; i++) {
         const x = fabricStartX + i * (TILE_W + 20);
         componentSlots += `
@@ -355,7 +357,7 @@
       // Generate drive slots (tail section - vertical stack)
       let driveSlots = '';
       const driveX = 1150;
-      const driveStartY = 150;
+      const driveStartY = 90;
       for (let i = 0; i < slots.drive; i++) {
         const y = driveStartY + i * (TILE_H + 20);
         driveSlots += `
@@ -365,7 +367,7 @@
       }
 
       return `
-        <svg viewBox="0 0 1500 750" class="airship-svg" preserveAspectRatio="xMidYMid meet">
+        <svg viewBox="0 0 1500 680" class="airship-svg" preserveAspectRatio="xMidYMid meet">
           <!-- Background -->
           <defs>
             <linearGradient id="skyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
@@ -376,41 +378,39 @@
           <rect width="100%" height="100%" fill="url(#skyGrad)" rx="16"/>
 
           <!-- Airship envelope outline -->
-          <ellipse cx="550" cy="320" rx="480" ry="200" fill="none" stroke="#475569" stroke-width="4"/>
+          <ellipse cx="550" cy="280" rx="480" ry="180" fill="none" stroke="#475569" stroke-width="4"/>
 
           <!-- Internal frame lines -->
-          <line x1="90" y1="320" x2="1010" y2="320" stroke="#334155" stroke-width="2" stroke-dasharray="15 8"/>
-          <line x1="280" y1="130" x2="280" y2="510" stroke="#334155" stroke-width="2" stroke-dasharray="10 5"/>
-          <line x1="550" y1="125" x2="550" y2="515" stroke="#334155" stroke-width="2" stroke-dasharray="10 5"/>
-          <line x1="820" y1="140" x2="820" y2="500" stroke="#334155" stroke-width="2" stroke-dasharray="10 5"/>
+          <line x1="90" y1="280" x2="1010" y2="280" stroke="#334155" stroke-width="2" stroke-dasharray="15 8"/>
+          <line x1="280" y1="110" x2="280" y2="450" stroke="#334155" stroke-width="2" stroke-dasharray="10 5"/>
+          <line x1="550" y1="105" x2="550" y2="455" stroke="#334155" stroke-width="2" stroke-dasharray="10 5"/>
+          <line x1="820" y1="115" x2="820" y2="445" stroke="#334155" stroke-width="2" stroke-dasharray="10 5"/>
 
           <!-- Gondola (cabin) -->
-          <path d="M 200 510 Q 200 680 320 680 L 780 680 Q 900 680 900 510" fill="none" stroke="#475569" stroke-width="4"/>
+          <path d="M 200 455 Q 200 620 320 620 L 780 620 Q 900 620 900 455" fill="none" stroke="#475569" stroke-width="4"/>
 
           <!-- Tail fins -->
-          <path d="M 980 320 L 1200 140 L 1200 220 L 1040 320" fill="none" stroke="#475569" stroke-width="4"/>
-          <path d="M 980 320 L 1200 500 L 1200 420 L 1040 320" fill="none" stroke="#475569" stroke-width="4"/>
-          <line x1="1020" y1="320" x2="1150" y2="320" stroke="#475569" stroke-width="3"/>
+          <path d="M 980 280 L 1200 120 L 1200 190 L 1040 280" fill="none" stroke="#475569" stroke-width="4"/>
+          <path d="M 980 280 L 1200 440 L 1200 370 L 1040 280" fill="none" stroke="#475569" stroke-width="4"/>
+          <line x1="1020" y1="280" x2="1150" y2="280" stroke="#475569" stroke-width="3"/>
 
           <!-- Propellers -->
-          <g transform="translate(1230, 180)">
-            <circle r="35" fill="none" stroke="#475569" stroke-width="3"/>
-            <line x1="-25" y1="0" x2="25" y2="0" stroke="#64748b" stroke-width="4"/>
-            <line x1="0" y1="-25" x2="0" y2="25" stroke="#64748b" stroke-width="4"/>
+          <g transform="translate(1230, 155)">
+            <circle r="30" fill="none" stroke="#475569" stroke-width="3"/>
+            <line x1="-20" y1="0" x2="20" y2="0" stroke="#64748b" stroke-width="4"/>
+            <line x1="0" y1="-20" x2="0" y2="20" stroke="#64748b" stroke-width="4"/>
           </g>
-          <g transform="translate(1230, 460)">
-            <circle r="35" fill="none" stroke="#475569" stroke-width="3"/>
-            <line x1="-25" y1="0" x2="25" y2="0" stroke="#64748b" stroke-width="4"/>
-            <line x1="0" y1="-25" x2="0" y2="25" stroke="#64748b" stroke-width="4"/>
+          <g transform="translate(1230, 405)">
+            <circle r="30" fill="none" stroke="#475569" stroke-width="3"/>
+            <line x1="-20" y1="0" x2="20" y2="0" stroke="#64748b" stroke-width="4"/>
+            <line x1="0" y1="-20" x2="0" y2="20" stroke="#64748b" stroke-width="4"/>
           </g>
 
           <!-- Nose cone -->
-          <ellipse cx="80" cy="320" rx="25" ry="80" fill="none" stroke="#475569" stroke-width="3"/>
+          <ellipse cx="80" cy="280" rx="22" ry="70" fill="none" stroke="#475569" stroke-width="3"/>
 
-          <!-- Section labels -->
-          <text x="440" y="95" text-anchor="middle" font-size="26" fill="#64748b" font-weight="600">ENVELOPE</text>
-          <text x="440" y="720" text-anchor="middle" font-size="26" fill="#64748b" font-weight="600">GONDOLA</text>
-          <text x="1290" y="325" text-anchor="middle" font-size="26" fill="#64748b" font-weight="600">DRIVE</text>
+          <!-- DRIVE label only -->
+          <text x="1290" y="285" text-anchor="middle" font-size="26" fill="#64748b" font-weight="600">DRIVE</text>
 
           <!-- Tech tile slots -->
           ${fabricSlots}
@@ -425,18 +425,6 @@
       const data = FACTION_DATA[faction];
       const board = document.getElementById('board');
       board.className = `player-board ${faction}`;
-
-      // Only show Armor stat in Age 2
-      const armorRow = age === 2 ? `
-        <div class="stat-row armor">
-          <div class="stat-icon">${ICONS.armor}</div>
-          <div class="stat-name">Armor</div>
-          <div class="stat-cubes">
-            ${[1,2,3,4].map(n => `<div class="cube-slot">${n}</div>`).join('')}
-          </div>
-          <span class="stat-note">flak defense</span>
-        </div>
-      ` : '';
 
       board.innerHTML = `
         <!-- Faction Header -->
@@ -467,7 +455,7 @@
               <div class="stat-cubes">
                 ${[1,2,3,4,5].map(n => `<div class="cube-slot">${n}</div>`).join('')}
               </div>
-              <span class="stat-note">min 1 required</span>
+              <span class="stat-note">min 1</span>
             </div>
             <div class="stat-row range">
               <div class="stat-icon">${ICONS.range}</div>
@@ -475,7 +463,7 @@
               <div class="stat-cubes">
                 ${[1,2,3,4,5].map(n => `<div class="cube-slot">${n}</div>`).join('')}
               </div>
-              <span class="stat-note">min 1 required</span>
+              <span class="stat-note">min 1</span>
             </div>
             <div class="stat-row ceiling">
               <div class="stat-icon">${ICONS.ceiling}</div>
@@ -483,7 +471,7 @@
               <div class="stat-cubes">
                 ${[1,2,3,4,5].map(n => `<div class="cube-slot">${n}</div>`).join('')}
               </div>
-              <span class="stat-note">route requirement</span>
+              <span class="stat-note">route req</span>
             </div>
             <div class="stat-row reliability">
               <div class="stat-icon">${ICONS.reliability}</div>
@@ -491,7 +479,7 @@
               <div class="stat-cubes">
                 ${[1,2,3,4,5].map(n => `<div class="cube-slot">${n}</div>`).join('')}
               </div>
-              <span class="stat-note">hazard checks</span>
+              <span class="stat-note">hazard</span>
             </div>
             <div class="stat-row luxury">
               <div class="stat-icon">${ICONS.luxury}</div>
@@ -499,9 +487,16 @@
               <div class="stat-cubes">
                 ${[1,2,3,4,5].map(n => `<div class="cube-slot">${n}</div>`).join('')}
               </div>
-              <span class="stat-note">Age III bonus</span>
+              <span class="stat-note">Age III</span>
             </div>
-            ${armorRow}
+            <div class="stat-row armor">
+              <div class="stat-icon">${ICONS.armor}</div>
+              <div class="stat-name">Armor</div>
+              <div class="stat-cubes">
+                ${[1,2,3,4].map(n => `<div class="cube-slot">${n}</div>`).join('')}
+              </div>
+              <span class="stat-note">flak</span>
+            </div>
           </div>
         </div>
       `;
