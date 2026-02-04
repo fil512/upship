@@ -16,6 +16,7 @@ jobs:
           node-version: '18'
           cache: 'npm'
       - run: npm ci
+      - run: npm run build:api
       - run: npm run lint
 
   test:
@@ -27,4 +28,5 @@ jobs:
           node-version: '18'
           cache: 'npm'
       - run: npm ci
+      - run: npm run build:api
       - run: npm test
